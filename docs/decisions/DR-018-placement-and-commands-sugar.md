@@ -94,3 +94,11 @@ command の表記が割れ、トップが command である事実が消える。
 - DR-017 (command 定義時1級)
 - DR-019 (構造プリミティブと値伝搬)
 - DR-020 (command の復帰/途中分岐は構造で組む)
+
+## Superseded (歴史)
+
+> 以下の記述は後続 DR で覆された。現役仕様の理解には不要、判断経緯としてのみ残す。
+
+### commands 糖衣の展開式 (DR-041/042 で更新)
+
+> **更新: DR-041/042 により、command の lowering は「positional 面への or 挿入」から「greedy 面のトリガ衛星 (greedy マーク付き exact) + 部分木 = 新しい背骨」に更新された。「commands が先」は先食い (DR-041 §4) から、「素の positional との排他」は完全経路の一意性から、それぞれ創発する。本 DR の決定 — 配置で区別する、commands[] は糖衣である、subcommand の位置に制約を課さない — は引き続き有効。**
