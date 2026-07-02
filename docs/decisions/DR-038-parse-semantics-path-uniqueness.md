@@ -41,6 +41,10 @@
 - 再利用可能: `TryResult{Accept/Reject/Error}` (DR-037 の Reject/Error は既存実装に存在)、`make_or_node` の Reject/Error 構造。
 - 置換対象: `parse_raw` の greedy-commit ループ、`install_short_combine_node` の先勝ちコミット。
 
+## 経路の同一性 (「1本」の判定単位)
+
+完全経路の同一性は**観測可能な束縛列** (どのエントリがどの値をどの順で束縛したか) で判定する。探索の道順が異なっても束縛列が同一なら同一経路 (= 1 本) と数える。interleaving を許す探索実装は同一の束縛列に複数ルートで到達しうるため、この同一視を欠くと偽 ambiguous が出る (垂直スライス PoC で実測)。
+
 ## 受け入れる帰結
 
 1. **greedy より多くの文法が ambiguous になる**。可変アリティ option ＋ 後続 positional は、アリティが一意化を強制しない限り本質的に曖昧 (これは正しい曖昧検出。`mv a b c dst` は dst=ちょうど1個でアリティが固定され一意)。
