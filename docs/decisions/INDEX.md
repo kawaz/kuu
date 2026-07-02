@@ -7,6 +7,7 @@
 - [DR-021](DR-021-longest-match-and-ambiguous.md): 露出キー一意性検査は実行時、静的バリデータは warn のみ — パース成功条件は updated by DR-038 (完全経路一意性に再定義)
 - [DR-037](DR-037-filter-reject-error-and-branch-resolution.md): filter の Reject/Error 区別、解けた枝の数による結末分類
 - [DR-038](DR-038-parse-semantics-path-uniqueness.md): パース意味論の確定 — 「完全経路の一意性」を契約に、最長一致は規則として持たない、実装契約は bounded path-search
+- [DR-041](DR-041-token-reading-semantics.md): トークン読みの意味論 — 読みは枝 (多重 Accept)、greedy は面で優先 (先食い)、prefix ガード非採用、dashdash は再スコープ化
 
 ## 2層 AST / 構造プリミティブ
 
@@ -71,3 +72,4 @@
 - [DR-016](DR-016-result-and-context.md): 結果オブジェクトと ParserContext の2層
 - [DR-035](DR-035-definitions-registry-symmetry.md): definitions は registry と同じ区分の名前空間、解決順の一様化 (DR-007 を再編成)
 - [DR-036](DR-036-multiple-registry-and-accumulators.md): multiple registry 追加、accumulators の属性セット拡張、collectors は filters で代替 (DR-008/010 を更新)
+- [DR-042](DR-042-installer-architecture.md): installer アーキテクチャ — 特殊語彙 (long/short/env/dd) は registry 装置の所有語彙、5 不変則で順序非依存合成、値源はラダー席宣言
