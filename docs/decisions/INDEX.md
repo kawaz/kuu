@@ -59,10 +59,11 @@
 
 ## 制約と継承
 
-- [DR-012](DR-012-constraints-as-attributes.md): 制約は要素属性で表現
+- [DR-012](DR-012-constraints-as-attributes.md): 制約は要素属性で表現 — 評価意味論は DR-047 で確定
 - [DR-013](DR-013-inherit-inheritable.md): inherit / inheritable で階層継承
 - [DR-014](DR-014-config-field.md): config フィールドで階層継承可能な設定
-- [DR-031](DR-031-value-source-precedence.md): 値源の優先順位 (CLI/link > env > config > inherit > default、固定)
+- [DR-031](DR-031-value-source-precedence.md): 値源の優先順位 (CLI/link > env > config > inherit > default、固定) — required の判定入力は updated by DR-047
+- [DR-047](DR-047-constraint-evaluation-layering.md): 制約評価のレイヤリング — 遅延述語は完全経路の成立条件 (経路フィルタ)、required は値充足 (default 込み)、exclusive_group / requires トリガは committed
 
 ## CLI 入口 / variant / filter
 
@@ -73,7 +74,7 @@
 ## レジストリ / 実装連携
 
 - [DR-010](DR-010-external-registry.md): 外部レジストリの階層化と暗黙参照 — updated by DR-035 (definitions/registry 一様化), DR-036 (multiple registry 追加), DR-040 (type 方言の3層上書き)
-- [DR-016](DR-016-result-and-context.md): 結果オブジェクトと ParserContext の2層
+- [DR-016](DR-016-result-and-context.md): 結果オブジェクトと ParserContext の2層 — required の判定入力は updated by DR-047
 - [DR-035](DR-035-definitions-registry-symmetry.md): definitions は registry と同じ区分の名前空間、解決順の一様化 (DR-007 を再編成)
 - [DR-036](DR-036-multiple-registry-and-accumulators.md): multiple registry 追加、accumulators の属性セット拡張、collectors は filters で代替 (DR-008/010 を更新)
 - [DR-042](DR-042-installer-architecture.md): installer アーキテクチャ — 特殊語彙 (long/short/env/dd) は registry 装置の所有語彙、5 不変則で順序非依存合成、値源はラダー席宣言

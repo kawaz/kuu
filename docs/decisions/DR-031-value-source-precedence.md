@@ -37,7 +37,7 @@ source ∈ { cli, link, env, config, inherit, default }
 
 ## committed/selected との直交性 (DR-016 維持)
 
-「その値が明示的に決まったか (committed/selected)」と「値そのもの (default で埋まっただけか)」は別軸。`required` 制約は committed を見る — default で埋まっただけでは required を満たさない。これは優先順位とは直交する別軸で、DR-016 の区別を維持する。
+「その値が明示的に決まったか (committed/selected)」と「値そのもの (default で埋まっただけか)」は別軸。これは優先順位とは直交する別軸で、DR-016 の区別を維持する。制約の判定入力 (required は値の有無、exclusive_group / requires トリガは committed) は DR-047 が確定する。
 
 ## 関連
 
@@ -45,3 +45,14 @@ source ∈ { cli, link, env, config, inherit, default }
 - DR-016 (source, committed/selected) — source 語彙を拡張、committed 区別を維持
 - DR-029 (link は CLI と同列のパース時操作)
 - DR-030 (実体だけノード、appconfig ストア)
+- DR-047 (制約評価のレイヤリング — 遅延述語の評価対象は本ラダー充填後の最終状態)
+
+## Superseded (歴史)
+
+> 以下の記述は後続 DR で覆された。現役仕様の理解には不要、判断経緯としてのみ残す。
+
+### required の判定入力 (DR-047 で更新)
+
+> **更新: DR-047 により required の充足判定は「最終状態の値の有無 (default 込み)」に変更。値源の優先順位・source 記録・committed と値の直交性は引き続き有効。**
+
+元記述: 「`required` 制約は committed を見る — default で埋まっただけでは required を満たさない。」

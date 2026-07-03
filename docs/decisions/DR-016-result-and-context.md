@@ -104,7 +104,7 @@ console.log(context.get("port").source);
 - **selected**: ユーザーが明示的にこの要素を起動したか
 - **値**: 最終結果に出てくる値 (default_value or 消費結果)
 
-両者は別の情報。`required` などの制約は committed/selected を見る (default_value で埋まっただけでは満たさない)。
+両者は別の情報。制約 (required / requires / exclusive_group) がどちらを見るかは DR-047 が確定する。
 
 ## 関連
 
@@ -124,3 +124,9 @@ console.log(context.get("port").source);
 - `cli` / `env` / `default`
 
 DR-031 で値源が拡張され、`link` / `config` / `inherit` 等が追加された。現役の `source` 語彙は DR-031 を参照。
+
+### required の判定入力 (DR-047 で更新)
+
+> **更新: DR-047 により required の充足判定は「最終状態の値の有無 (default 込み)」に変更。exclusive_group / requires のトリガ側は committed を見る。本 DR の 2 層構造 (ParserContext / 結果オブジェクト) と selected / committed / source の軸定義は引き続き有効。**
+
+元記述: 「`required` などの制約は committed/selected を見る (default_value で埋まっただけでは満たさない)。」
