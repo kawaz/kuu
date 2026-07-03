@@ -297,9 +297,10 @@ positionals / options の要素として command を直接置いてよい。
 
 **規則**: global installer は `global` を回収し、子孫の各 command スコープの宣言層へ ref/link 衛星の **宣言的コピー**
 を追加する。判定単位は要素名ではなく **トリガ literal** — 同じトリガ literal を持つ宣言をコピー先スコープが自前で
-持つ場合はコピーを省略する (= shadowing、最小スコープ優先 = lexical 解決 DR-032/033 のパース時適用)。宣言層への
-追加だけが後続 installer の回収対象になるため、global が置いたコピーを long/short が展開するという見かけの依存は
-不動点反復で解ける。
+持つ場合はコピーを省略する (= shadowing、最小スコープ優先 = lexical 解決 DR-032/033 のパース時適用)。**shadow は
+配下 subtree 全体に及ぶ**: 中間 command が shadow したトリガは、その配下の孫スコープ (自前宣言なし) にもコピー
+されない — per-scope の独立判定ではなく lexical 連鎖である。宣言層への追加だけが後続 installer の回収対象になる
+ため、global が置いたコピーを long/short が展開するという見かけの依存は不動点反復で解ける。
 
 **由来**: DR-042
 
