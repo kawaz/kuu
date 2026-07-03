@@ -1,4 +1,4 @@
-# DR-044: 反復グループの結果整形 — 配列が既定、map は to_map + key_from
+# DR-044: 反復グループの結果整形 — 配列が既定、map は from_entries
 
 > 由来: authsock-warden 型の入れ子反復グループ (`--upstream ... --socket ... filters...`) の結果表現の議論と、垂直スライス PoC 第 4 弾の実測。findings `2026-06-29-ast-missing-pieces.md` の F-021 (map 型の key 抽出) の片翼を確定する。
 
@@ -13,18 +13,25 @@
 
 object / スカラで規則は分かれない (発火ごとの蓄積 = 添字付き要素、の一様規則)。
 
-### 2. map 形は collector (to_map + key_from)
+### 2. map 形は collector (from_entries)
 
-配列オブジェクトを「要素内フィールドの値をキーとする object」へ変換するのは **`to_map` collector + `key_from`** (要素オブジェクト内の scalar フィールド名):
+蓄積された配列を object へ変換するのは **`from_entries` collector**。3 用法:
+
+| 用法 | 入力の形 | 挙動 |
+|---|---|---|
+| `from_entries()` | `[[k, v], ...]` (無名 2 要素 seq の配列) | そのまま entries として object 化 |
+| `from_entries({key: "k", value: "v"})` | `[{k, v}, ...]` (named フィールドの object 配列) | 指名 2 フィールドを key / value に |
+| `from_entries({key: "path"})` | object 配列 | key フィールドが昇格・除去され、**残りのオブジェクト全体**が値になる |
 
 ```json
-{"name": "upstreams", "multiple": {"preset": "map", "key_from": "path"}, ...}
+{"name": "upstreams", "multiple": {"preset": "map", "from_entries": {"key": "path"}}, ...}
 ```
 
-- key_from で指名されたフィールドの値がキーに昇格し、要素からは除去される:
-  `{upstreams: {"/path/to/up1": {sockets: {...}}, "/tmp/foo.sock": {...}}}`
-- key_from は反復グループ (name スコープ) ごとに付与する。入れ子の各段が独立に配列 / map を選べる
+→ `{upstreams: {"/path/to/up1": {sockets: {...}}, "/tmp/foo.sock": {...}}}`
+
+- from_entries は反復グループ (name スコープ) ごとに付与する。入れ子の各段が独立に配列 / map を選べる
 - 表記は DR-034 / DR-036 の既存合成順 (type → multiple → 直接書き) にそのまま乗る。collector は filters registry の住人 (DR-036) であり、新しい registry 区分は作らない
+- 蓄積要素を `[k, v]` (無名 = 配列) と `{k, v}` (named = object) のどちらで作るかは DR-025 / §2.5 の name 有無規則そのもの — from_entries の 3 用法はその両方を受ける
 
 ### 3. 例 (authsock-warden)
 
@@ -44,7 +51,7 @@ object / スカラで規則は分かれない (発火ごとの蓄積 = 添字付
     {"path": "/tmp/foo-bar.sock", "filters": []}]}]}
 ```
 
-map 形 (各段に `key_from: "path"`):
+map 形 (各段に `from_entries: {key: "path"}`):
 
 ```json
 {"upstreams": {
@@ -55,7 +62,7 @@ map 形 (各段に `key_from: "path"`):
     "/tmp/foo-bar.sock": {"filters": []}}}}}
 ```
 
-いずれも垂直スライス PoC 第 4 弾で実測済み (配列形は一意成立、map 形は key_from 仮実装で確認)。
+いずれも垂直スライス PoC 第 4 弾で実測済み (配列形は一意成立、map 形は key 昇格の仮実装で確認)。
 
 ## 採用しなかった案
 
@@ -65,7 +72,11 @@ map 形 (各段に `key_from: "path"`):
 
 ### key の自動推定 (最初の scalar フィールドをキーにする等)
 
-暗黙ルール最小化 (§0.1) に反する。key_from の明示指定のみ。
+暗黙ルール最小化 (§0.1) に反する。from_entries の明示指定のみ。
+
+### to_map + key_from (専用 collector + 専用フィールド)
+
+当初案。from_entries (JS の Object.fromEntries と同じ一般語彙) が entries 配列形・指名 2 フィールド形・key 昇格形の 3 用法を一本で覆うため置換した。
 
 ## 射程外
 

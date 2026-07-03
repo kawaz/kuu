@@ -30,6 +30,7 @@
 - [DR-024](DR-024-three-name-layers.md): 名前は3層 (key name / def name / value_name)
 - [DR-025](DR-025-name-creates-scope.md): name が結果スコープを作る、露出は最も浅い name 層
 - [DR-033](DR-033-lexical-scope-equals-name-scope.md): lexical スコープ = name が作るスコープ
+- [DR-046](DR-046-name-axes-decomposition.md): name の軸分解 — id / 結果キー / value_name / display_name の目的別軸、name はデフォルト供給源 (nameless への ref/link が可能に)
 
 ## 配置 / options / positionals / commands
 
@@ -49,7 +50,7 @@
 - [DR-008](DR-008-multiple-field.md): multiple フィールドに複数値関連を統合 — 内部構造は reorganized by DR-034
 - [DR-034](DR-034-multiple-structure.md): multiple の構造モデル (peaceProcessor/separator/mapper/collector、縮退ケース、type と multiple は同じ属性平面)
 - [DR-043](DR-043-repeat-and-multiple-split.md): repeat (構造閉包、min/max は枝生成に効く、ref 再帰へ lowering) と multiple (値の畳み) の分離、両者 installer 化 (DR-019 の統合を部分的に覆す)
-- [DR-044](DR-044-repeated-group-result-shaping.md): 反復グループの結果整形 — 配列が既定、map は to_map + key_from (グループ内フィールドからのキー抽出)
+- [DR-044](DR-044-repeated-group-result-shaping.md): 反復グループの結果整形 — 配列が既定、map は from_entries (entries 配列 / 指名 2 フィールド / key 昇格の 3 用法)
 
 ## ref / link / definitions
 
@@ -67,6 +68,7 @@
 
 - [DR-009](DR-009-filter-chain.md): filter chain 初期形 — reorganized by DR-034 (peaceProcessor + separator + mapper + collector に再編成)
 - [DR-011](DR-011-variant-dsl.md): variant の文字列 DSL とオブジェクト形式
+- [DR-045](DR-045-effect-descriptors.md): 効果記述子 — 値セル操作は純データ (set/default/unset/empty、committed は効果が明示制御)、効果列の判定キー精密化
 
 ## レジストリ / 実装連携
 

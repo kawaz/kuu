@@ -58,3 +58,11 @@ value_name? help? hidden?
 - DR-007 (definitions, ref/link) — def name の土台
 - DR-018 (配置区別) — name の役割が配置で決まる
 - DR-025 (name = 結果スコープ)
+
+## Superseded (歴史)
+
+> 以下は後続 DR で一般化された。現役仕様の理解には DR-046 を参照。
+
+### 3 層の完結性 (DR-046 で一般化)
+
+> **更新: DR-046 により名前軸は id (参照識別子) / display_name (説明ラベル) を加えて一般化され、name は各軸のデフォルト供給源と再定式化された。本 DR の key name / def name / value_name の分離と value_name の uppercase 導出は引き続き有効。**
