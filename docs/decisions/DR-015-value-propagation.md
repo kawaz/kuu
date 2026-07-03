@@ -11,10 +11,16 @@ AST 要素の値の決定は **構造的セマンティクス** (値が tree を
 | `or` | 選ばれた子の値 | 子の値をそのまま伝搬 |
 | `seq` / children sequence | 子の値の配列 (or 単独要素なら単独) | 配列または単独値を親に伝搬 |
 
-リテラルは primitive type + value のシュガー:
-- `"red"` → `{"type": "string", "value": "red"}`
-- `255` → `{"type": "number", "value": 255}`
-- `true` → `{"type": "boolean", "value": true}`
+消費数は値の発生とは別軸である。**消費数は Accept の報告値であり、value の有無から導出しない** (DR-041 §3): `value` /
+`default` を持つ literal は消費 0 が既定、value を持たない primitive は CLI から 1 トークンを消費する (構造位置の裸
+リテラルの照合消費は DESIGN §5.2 / LOWERING A.1・A.3)。
+
+構造位置の裸リテラルは照合消費 + 値産出ノードのシュガー (DESIGN §5.2 / LOWERING A.1・A.3):
+- `"red"` → `{"exact": "red"}` (消費 1、値 "red" を産出)
+- `255` → number として照合消費 (値 255 を産出)
+- `true` → bool として同様
+
+非消費の literal (トークンを照合せず値だけ持つ) は `value:` / `default:` フィールド経由でのみ書く。
 
 ## 経緯
 
@@ -32,9 +38,9 @@ kawaz の整理:
     {"type":"seq", "array": false, "children": [
       {"type":"exact", "name":"--color"},
       {"type":"or", "children": [
-        {"type":"string", "value":"none"},
-        {"type":"string", "value":"always"},
-        {"type":"string", "value":"auto"}
+        {"exact":"none"},
+        {"exact":"always"},
+        {"exact":"auto"}
       ]}
     ]}
   ]
@@ -75,23 +81,21 @@ kawaz の整理:
 
 `--no-color` の exact がマッチすると `value: "none"` の literal が発生、or に伝搬、color の値になる。
 
-**effect 語彙 (`set` / `default` / `empty`) は不要に近い**。`value` フィールドに literal を埋めるだけで「セット」が表現される。
+`set` 相当の効果は `value` フィールドに literal を埋めるだけで表現される (効果記述子の縮退形)。`default` / `unset` / `empty` は literal では表せず、効果記述子 (DR-045) が担う。
 
 ## リテラルもシュガー
 
 ```json
-"value": ["red", "green", "blue"]
+"values": ["red", "green", "blue"]
 ```
 
-正規形:
+正規形 (各要素は照合消費の exact — 非消費の literal では enum にならない、DESIGN §5.3):
 ```json
-"value": {
-  "or": [
-    {"type": "string", "value": "red"},
-    {"type": "string", "value": "green"},
-    {"type": "string", "value": "blue"}
-  ]
-}
+{"or": [
+  {"exact": "red"},
+  {"exact": "green"},
+  {"exact": "blue"}
+]}
 ```
 
 ## values と children の意味分離
