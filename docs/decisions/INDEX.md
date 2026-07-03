@@ -49,6 +49,7 @@
 - [DR-008](DR-008-multiple-field.md): multiple フィールドに複数値関連を統合 — 内部構造は reorganized by DR-034
 - [DR-034](DR-034-multiple-structure.md): multiple の構造モデル (peaceProcessor/separator/mapper/collector、縮退ケース、type と multiple は同じ属性平面)
 - [DR-043](DR-043-repeat-and-multiple-split.md): repeat (構造閉包、min/max は枝生成に効く、ref 再帰へ lowering) と multiple (値の畳み) の分離、両者 installer 化 (DR-019 の統合を部分的に覆す)
+- [DR-044](DR-044-repeated-group-result-shaping.md): 反復グループの結果整形 — 配列が既定、map は to_map + key_from (グループ内フィールドからのキー抽出)
 
 ## ref / link / definitions
 
