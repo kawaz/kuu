@@ -1,6 +1,6 @@
 ---
 title: 失敗時アクションの「候補経路で selected」の精密定義
-status: open
+status: resolved
 category: design
 created: 2026-07-03T17:56:00+09:00
 last_read:
@@ -9,10 +9,10 @@ wip_entered:
 blocked_entered:
 pending_entered:
 discarded_entered:
-resolved_entered:
+resolved_entered: 2026-07-03T18:53:26+09:00
 discard_reason:
 pending_reason:
-close_reason:
+close_reason: ["dr/DR-048","implemented"]
 blocked_by:
 origin: 自リポ TODO
 ---
