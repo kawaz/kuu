@@ -140,12 +140,15 @@ multiple registry のプリセットではないため object 形で accumulator
 入力:  {name: "help", type: "help", long: [], short: "h"}
 出力:  入口部 (long / short 衛星) は §B.1 / B.2 と同型に展開。
        「起動時に ParserContext の help フラグを立てる」アクション部の
-       canonical AtomicAST 形は未予約 (DESIGN §13.9 / F-037、下記 規則 参照)。
+       canonical AtomicAST 形は未予約 (DESIGN §13.9、下記 規則 参照)。
 ```
 
 **規則**: 各プリセットは値プリミティブ + default + 挙動の束を `type:` で参照する糖衣。flag / count の値・default・
-累積は上記のとおり確定するが、help の「アクション」は起動フックとして DESIGN §13.9 で未予約であり、bounded
-path-search との early-exit 整合も未確定 (F-037)。version は専用 type ではなく単なる flag (§14.2)。
+累積は上記のとおり確定する。help のアクション部の AtomicAST 形は DESIGN §13.9 で未予約だが、パースとの整合は
+early-exit ではなく**完走後の表示選択** (失敗時アクション、DR-048 / DESIGN §15.10) として確定済み — help は
+パース失敗時 (完全経路 0 本) も候補経路で selected なら発火する。失敗時アクションは汎用属性 (フィールド名は
+§13.9 で未予約) で、help プリセットがそれを同梱する。version は専用 type ではなく単なる flag (§14.2)、失敗時
+にも出したい場合は同属性を opt-in する。
 
 **由来**: DR-028, DR-015, DR-036, DESIGN §3.3
 

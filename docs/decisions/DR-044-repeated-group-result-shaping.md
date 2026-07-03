@@ -13,6 +13,8 @@
 
 object / スカラで規則は分かれない (発火ごとの蓄積 = 添字付き要素、の一様規則)。
 
+**カーディナリティでも形を変えない**: repeat / multiple を宣言した要素は max の値に依らず配列になる。`repeat: {min: 0, max: 1}` (= `optional: true` 糖衣、DR-043) も `[]` / `[x]` — 「max=1 なら scalar」の特別化はしない。反復を宣言した時点で結果は複数値の形であり、scalar が欲しい場合は collector で畳む (unwrap_single、DR-034 の縮退ケースと同じ部品)。
+
 ### 2. map 形は collector (from_entries)
 
 蓄積された配列を object へ変換するのは **`from_entries` collector**。3 用法:
