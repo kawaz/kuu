@@ -79,3 +79,4 @@
 - [DR-035](DR-035-definitions-registry-symmetry.md): definitions は registry と同じ区分の名前空間、解決順の一様化 (DR-007 を再編成)
 - [DR-036](DR-036-multiple-registry-and-accumulators.md): multiple registry 追加、accumulators の属性セット拡張、collectors は filters で代替 (DR-008/010 を更新)
 - [DR-042](DR-042-installer-architecture.md): installer アーキテクチャ — 特殊語彙 (long/short/env/dd) は registry 装置の所有語彙、5 不変則で順序非依存合成、値源はラダー席宣言
+- [DR-049](DR-049-env-lookup-contract.md): env lookup の契約 — env_provider は単一スロット `(key) → string | null` (null=未設定、prefix 連結済み key)、env 値は peaceProcessor 通過、auto_env はフル修飾導出で明示 env: 優先
