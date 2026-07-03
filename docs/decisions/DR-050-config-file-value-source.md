@@ -41,7 +41,8 @@ config 値の期待型は独立の仕様ではなく、config_key を持つ**要
 - **非 string (number / bool) で型一致** → post_filters のみ。pre_filters / parse は String → 型の関数なので、既に型を持つ値には適用対象が無い — スキップは特別規則ではなく型の帰結
 - **寛容は双方向対称** (DR-040 の「canonical は最も寛容」、狭めたい場合は方言 / pre_filter):
   - number / bool 要素に JSON string (`"8080"` 等) → parse を試みて受理 (テキストから型へ)
-  - **string 要素に JSON scalar (number / bool) → JSON 文字列化で受理** (`1.5` → `"1.5"`、`true` → `"true"`。文字列化は JSON serialize の標準表現)。string 要素は CLI / env では「何でも受ける」型であり、config でも同じ観測になる (引用符の有無で挙動が割れない)
+  - **string 要素に JSON scalar (number / bool) → JSON 文字列化で受理** (`1.5` → `"1.5"`、`true` → `"true"`)。string 要素は CLI / env では「何でも受ける」型であり、config でも同じ観測になる (引用符の有無で挙動が割れない)
+  - 数値の文字列化は **JSON serialize の最短表現** (整数値は小数点なし: `1.0` → `"1"`)。JSON number は整数と浮動小数を区別しない (ECMA-404) ため元の表記は保持できず、常に `.0` を付ける規則は整数 `8080` を `"8080.0"` にしてしまう — 最短形が唯一の一貫解 (slice PoC 第 10 弾の flag で確定。Python 系 serializer の `"1.0"` とは異なるので conformance の比較点)
 - **意味の飛躍は Error**: bool ↔ number の相互変換 (`true` → 1 等) はしない
 - **array** → multiple 要素の**分割済み pieces** として accumulator へ (separator は CLI の 1 引数を分割する機構であり、config では登場しない)
 - **object** → name スコープとの同型対応で子要素へ再帰 (§3 のデフォルト対応と一体)
