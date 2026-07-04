@@ -63,7 +63,8 @@
 
 ## 制約と継承
 
-- [DR-012](DR-012-constraints-as-attributes.md): 制約は要素属性で表現 — 評価意味論は DR-047 で確定
+- [DR-012](DR-012-constraints-as-attributes.md): 制約は要素属性で表現 — 評価意味論は DR-047、語彙拡充は DR-055
+- [DR-055](DR-055-constraint-vocabulary.md): 制約語彙の拡充 — conflicts_with (名指しペア排他、対称)、値依存は値の枝への requires 合成 (新語彙ゼロ)、requires 語彙維持、constraint installer
 - [DR-013](DR-013-inherit-inheritable.md): inherit / inheritable で階層継承
 - [DR-014](DR-014-config-field.md): config フィールドで階層継承可能な設定
 - [DR-031](DR-031-value-source-precedence.md): 値源の優先順位 (CLI/link > env > config > inherit > default、固定) — required の判定入力は updated by DR-047
