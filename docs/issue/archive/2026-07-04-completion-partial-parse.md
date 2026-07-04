@@ -1,6 +1,6 @@
 ---
 title: 補完 — partial parse モードと completer の設計
-status: open
+status: resolved
 category: design
 created: 2026-07-04T15:56:31+09:00
 last_read:
@@ -9,10 +9,10 @@ wip_entered:
 blocked_entered:
 pending_entered:
 discarded_entered:
-resolved_entered:
+resolved_entered: 2026-07-04T18:03:11+09:00
 discard_reason:
 pending_reason:
-close_reason:
+close_reason: ["dr/DR-060","implemented"]
 blocked_by:
 origin: 自リポ TODO
 ---
