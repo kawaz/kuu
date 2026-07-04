@@ -1,6 +1,6 @@
 ---
 title: export の結果整形意味論 — export(bool) + export_key の統合可否
-status: open
+status: resolved
 category: design
 created: 2026-07-03T09:12:30+09:00
 last_read: 2026-07-04T09:33:19+09:00
@@ -9,10 +9,10 @@ wip_entered:
 blocked_entered:
 pending_entered:
 discarded_entered:
-resolved_entered:
+resolved_entered: 2026-07-04T09:58:13+09:00
 discard_reason:
 pending_reason:
-close_reason:
+close_reason: ["dr/DR-052", "implemented"]
 blocked_by:
 origin: 自リポ TODO
 ---
@@ -45,7 +45,7 @@ origin: 自リポ TODO
 
 ## 受け入れ条件
 
-- [ ] `export` (bool) + `export_key` (別名) の 2 フィールド維持 か `export: <名前> | false/null` への 1 フィールド統合 か を決定し DR 化
-- [ ] `false` / `null` 指定時に結果オブジェクトへ一切現れないことを明記 (F-022 の unset/null/default 3 区別との整合を確認した上で)
-- [ ] PoC 第 4 弾で観測した presence marker (空コマンドが `{}` で現れる) の一般規則と export 意味論の整合を取る
-- [ ] DESIGN.md §1.4 (該当箇所は現行 92-132 行あたり) を確定した意味論に更新
+- [x] `export` (bool) + `export_key` (別名) の 2 フィールド維持 か `export: <名前> | false/null` への 1 フィールド統合 か を決定し DR 化
+- [x] `false` / `null` 指定時に結果オブジェクトへ一切現れないことを明記 (F-022 の unset/null/default 3 区別との整合を確認した上で)
+- [x] PoC 第 4 弾で観測した presence marker (空コマンドが `{}` で現れる) の一般規則と export 意味論の整合を取る
+- [x] DESIGN.md §1.4 (該当箇所は現行 92-132 行あたり) を確定した意味論に更新
