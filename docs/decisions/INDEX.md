@@ -78,7 +78,8 @@
 
 ## CLI 入口 / variant / filter
 
-- [DR-009](DR-009-filter-chain.md): filter chain 初期形 — reorganized by DR-034 (pieceProcessor + separator + accumulator + collector に再編成)
+- [DR-009](DR-009-filter-chain.md): filter chain 初期形 — reorganized by DR-034 (pieceProcessor + separator + accumulator + collector に再編成)、@base sentinel は superseded by DR-062
+- [DR-062](DR-062-filter-inheritance-interface.md): filters の継承インターフェース — @base sentinel 廃止 (発見不能な in-band 特殊値・孤立語彙)、string 短縮形 (差し替え) | object 詳細形 ({prepend, append})、ref 継承は後勝ち上書き、中間挿入は非対応 (type shadow で差し替え)
 - [DR-011](DR-011-variant-dsl.md): variant の文字列 DSL とオブジェクト形式
 - [DR-045](DR-045-effect-descriptors.md): 効果記述子 — 値セル操作は純データ (set/default/unset/empty、committed は効果が明示制御)、効果列の判定キー精密化
 
@@ -96,4 +97,5 @@
 - [DR-042](DR-042-installer-architecture.md): installer アーキテクチャ — 特殊語彙 (long/short/env/dd) は registry 装置の所有語彙、5 不変則で順序非依存合成、値源はラダー席宣言
 - [DR-049](DR-049-env-lookup-contract.md): env lookup の契約 — env_provider は単一スロット `(key) → string | null` (null=未設定、prefix 連結済み key)、env 値は pieceProcessor 通過、auto_env はフル修飾導出で明示 env: 優先
 - [DR-050](DR-050-config-file-value-source.md): config ファイル値源 — type: config_file の配線宣言、config_provider は `(path) → 階層オブジェクト | null` (フォーマットは provider の関心)、config_key は同型対応デフォルト + link パス DSL の明示上書き、値の型は要素の type、config は構造に影響しない
-- [DR-056](DR-056-vocabulary-ownership-vs-reference.md): 宣言語彙への関わり方 — 所有 (lowering 責務、排他) と参照 (advisory read、自由)。参照の成果は観測挙動に影響してはならない
+- [DR-056](DR-056-vocabulary-ownership-vs-reference.md): 宣言語彙への関わり方 — 所有 (lowering 責務、排他) と参照 (advisory read、自由)。参照の成果は観測挙動に影響してはならない — 機械可読化は DR-061 (descriptor)
+- [DR-061](DR-061-registry-descriptor-and-configurable-factory.md): registry 装置の自己記述 — installer descriptor (owns / observes / config キー所有)、wire 追加語彙の正当性 = 所有集合の和、configurable factory ({name, config} 参照、canonical = default config)、config はキー平坦・値自由 JSON、factory config と filter の線引きは「相」
