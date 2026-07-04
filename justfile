@@ -8,3 +8,7 @@ push-kuu-v0:
 # origin の main を push (削除予約 or 新 main の反映 — bookmark の状態に従う)
 push-origin-main:
     jj git push --remote origin --bookmark main
+
+# spec 未反映分を kawaz/kuu へ (ast-spec ブランチ経由、push 後に GitHub 側で main へ ff)
+push-kuu-spec:
+    jj git push --remote kuu --bookmark ast-spec
