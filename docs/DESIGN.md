@@ -774,8 +774,9 @@ name を持つノードが結果スコープ = lexical スコープを作る。c
 ```
 
 - 自スコープでは `--ttl`
-- 祖先スコープでは `--<ancestor>-ttl` (prefix 自動付与で衝突回避)
+- 祖先スコープでは `--<定義スコープ名>-ttl` (例: socket 配下なら `--socket-ttl`)。**全祖先で同じ綴り** (深さで変わらない、DR-059)。綴りの衝突は実行時 ambiguous が検出し (§15.1)、別綴りは alias (§14.5) で opt-in
 - 各 scope で書かれた値が、その scope 配下のインスタンスのデフォルトに
+- lowering は inheritable installer が祖先スコープへ prefix 付き入口宣言をコピーする (global の逆方向、祖先の自前宣言優先)。祖先 help での見せ方はレンダラの関心
 
 ### 11.4 値源の優先順位 (DR-031)
 
