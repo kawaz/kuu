@@ -3,7 +3,7 @@ title: alias の正規化と help/completion installer 構想
 status: open
 category: design
 created: 2026-07-03T09:16:54+09:00
-last_read:
+last_read: 2026-07-04T15:01:07+09:00
 open_entered: 2026-07-03T09:16:54+09:00
 wip_entered:
 blocked_entered:
