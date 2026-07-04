@@ -9,6 +9,7 @@
 - [DR-038](DR-038-parse-semantics-path-uniqueness.md): パース意味論の確定 — 「完全経路の一意性」を契約に、最長一致は規則として持たない、実装契約は bounded path-search
 - [DR-041](DR-041-token-reading-semantics.md): トークン読みの意味論 — 読みは枝 (多重 Accept)、greedy は面で優先 (先食い)、prefix ガード非採用、dashdash は再スコープ化
 - [DR-048](DR-048-failure-time-action.md): 失敗時アクション — early-exit は持たない (完走後の表示選択)、汎用属性 + type:help 同梱、衝突は argv 位置の先勝ち、候補経路は dead end 込み、ambiguous では非発火 (誘導行で補完)
+- [DR-053](DR-053-parse-outcome-structure.md): パース結末の構造 — outcome 3 値 discriminated union、errors 全保持 + primary は argv 最深、ambiguous は全解釈列挙 (結果オブジェクト形)、help_entry / tried_triggers はフィールドで文言はレンダラ
 
 ## 2層 AST / 構造プリミティブ
 
