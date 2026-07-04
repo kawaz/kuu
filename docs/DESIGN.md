@@ -246,11 +246,14 @@ definitions.types.X → registry.types.X → warn+string フォールバック
 
 数値 3 種の関係: `number` は汎用数値 (JSON number と同型、整数も小数も受理)。`int` は整数制約付き (非整数は Error)。`float` は小数を明示する意図の別名で、受理域は number と同じ。**整数を意図する要素には int を使う** — config の JSON number が非整数なら Error になり、文字列化の表現揺れ (DR-050 §4) も生じない。
 
+canonical の数値字句は **10 進最小構文のみ** (DR-040)。桁区切り `_`・基数 prefix (0x 等) は標準層 opt-in、`,` 系は方言、単位 suffix は型の領分 (duration / size 等の拡張型)。exact 照合は **codepoint 単位・正規化なし** (NFC は方言)。path / file / dir はバイト列受理 (検証は filters opt-in)。
+
 bytes / binary 型は組み込みに持たない。必要なら拡張 type (registry 登録) で提供する。
 
-**糖衣プリセット**: `flag` / `count` / `command` / `help` 等
+**糖衣プリセット**: `flag` / `count` / `count_or_set` / `command` / `help` 等
 - `flag` = bool + default:false + 起動で true
-- `count` = number + default:0 + increment mapper
+- `count` = number + default:0 + increment mapper (値は取らない — `--verbose=3` は読みが立たず素通し)
+- `count_or_set` = count + optional 値スロット (repeat {min:0,max:1})。`-v` は increment、`-v 3` / `--verbose=3` は set。set / increment の別は取り分選好 (DR-043) が確定する。標準層 (DR-040)
 - `command` = name でスコープを作り、name の完全一致でトリガ
 - `help` = 起動時アクション
 

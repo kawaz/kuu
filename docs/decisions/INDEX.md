@@ -47,7 +47,7 @@
 - [DR-015](DR-015-value-propagation.md): 値の発生と伝搬の構造的セマンティクス
 - [DR-028](DR-028-type-as-reference.md): type は definitions/registry への参照糖衣、解決順、前方互換、flag等は糖衣プリセット
 - [DR-032](DR-032-ref-link-name-resolution.md): ref/link が指すのは name (解決はスコープ内→definitions)、type とは別物
-- [DR-040](DR-040-type-registry-dialects-and-restriction.md): type registry の方言運用 (canonical default / 言語DX / ユーザ差し替えの3層上書き、寛容default+pre_filter vs value_parser 差し替えの2軸)
+- [DR-040](DR-040-type-registry-dialects-and-restriction.md): type registry の方言運用 (canonical default / 言語DX / ユーザ差し替えの3層上書き、寛容default+pre_filter vs value_parser 差し替えの2軸) — canonical 字句仕様 (数値 10 進最小・exact codepoint 比較・path バイト列・count_or_set・filters 3 層) を拡張確定
 
 ## multiple
 

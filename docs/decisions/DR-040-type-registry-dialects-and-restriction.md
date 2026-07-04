@@ -35,6 +35,16 @@ kuu canonical default  ←  言語DX default  ←  ユーザ差し替え (defini
 
 方言は core に入れず拡張パッケージ (DR-010 の3階層、明示 import)。AtomicAST は parser を**名前 (文字列) で参照・実装は外部注入** (DR-027/036) なので**未参照 parser は自明に dead-code** → rollup が効く。`diagnose` が参照名集合を出すのでバンドラが最小セットを判定。`kuu-cli` は全部入りバイナリ、ライブラリは tree-shakeable、と配布で切替。
 
+### canonical default の字句仕様 (F-006/017/018/024/044 の確定)
+
+3 層の基準になる canonical default を以下に固定する:
+
+- **数値 (number / int / float)**: 10 進最小構文のみ (`[+-]? digits [. digits] [e...]`、int は整数構文。number は JSON number と同型、DESIGN §3.3)。桁区切り `_` と基数 prefix (`0x`/`0o`/`0b`) は canonical に含めない — 標準層の opt-in (型パラメータ / pre_filter 正規化)。`,` 系 (欧州小数点・桁区切り) は**多義** (`1,234` が 1234 とも 1.234 とも読める) のため canonical では解決不能な方言軸の見本であり、方言でのみ提供。単位 suffix (`1k` / `30s`) は数値字句ではなく型の領分 (duration / size 等の拡張型)
+- **exact 照合**: Unicode **codepoint 単位の比較、正規化なし**。NFC/NFKC 正規化は方言 (pre_filter / installer パラメータ) で opt-in。言語ランタイム間で照合結果が割れない最小定義
+- **path / file / dir**: OS の文字列 API が通したバイト列をそのまま受理 (エンコーディング検証なし)。存在検証・種別検証は filters の opt-in
+- **count の上限**: 専用フィールドを持たない。上限・飽和は post_filters (in_range 等) で書く。`--verbose=3` は count が値を取らないため eq-split の読みが立たず素通し。値も受けたい場合は **`count_or_set`** プリセット (標準層): increment + optional 値スロット (`repeat: {min:0, max:1}`) の合成で、`-v 3` の set / increment の別は取り分選好 (DR-043、greedy 既定で set 先行・下流失敗で後退) が 1 本に確定する — 新しい評価規則は不要
+- **filters registry の階層**: 本 DR の 3 層 (canonical / 標準 / 拡張) を filters registry にも適用する。組み込み filter の canonical シグネチャ一覧は垂直スライス実装と共設計で確定する (DR-039 の流儀)
+
 ### 再現性の射程 (注意)
 
 名前ピンで得られる再現性は2段階:
