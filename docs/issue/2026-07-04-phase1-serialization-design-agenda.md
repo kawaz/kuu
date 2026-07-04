@@ -37,6 +37,15 @@ ROADMAP.md フェーズ1「直列形の確定 + fixture フォーマット設計
 
 ### A. AtomicAST 直列形の確定 (LOWERING §C.3 の宿題)
 
+#### A-0. wire form の範囲 — 宣言層のみか、lowered 産物込みか (最初の分岐)
+
+宣言層は inert に完全保持され (DR-042 ①'、LOWERING §C.1)、lowering は決定的 (不動点、§C.2) — つまり **lowered 産物は宣言層から常に再導出可能**。すると直列形 (wire form) に 2 つの選択肢が生まれる:
+
+- 選択肢 (a) **宣言層のみを wire に載せる** (受信側が再 lowering)。正規形が小さく可読性・バンドルサイズ有利。conformance は「lowering の決定性」自体を fixture で検証する形になる
+- 選択肢 (b) **lowered 込みを載せる**。DR-039 の字義 (「エンジンのノードグラフのシリアライズ形」) に近い。受信側の lowering 実装が不要になるが、「宣言と lowered の整合」という新しい不変条件が wire に生まれる
+
+判断材料: (a) は「AtomicAST」の語の再定義に近い判断 (DR-039 テーゼとの関係を整理する必要)。LOWERING §C.5 の二段緩比較 (効果列 oracle + lowered 骨格の緩比較) はどちらでも生きる。**C-1 (fixture の定義形式が UsefulAST か AtomicAST か) と同型の判断が wire form 側に現れた構図**であり、両者は連動して決めるべき。A-1〜A-5 の各論点の重みも本分岐で変わる ((a) なら greedy マーク / matcher データの直列形は「lowered 骨格の緩比較用語彙」に格下げされ、(b) なら wire の正規語彙になる)。
+
 #### A-1. greedy マークの直列形
 
 `«greedy»` 注記 (LOWERING 全体で説明用に使われている疑似記法) を実際の JSON でどう表現するか。
@@ -157,9 +166,16 @@ slice PoC の 167 テスト (kuu.mbt slice 枝、フェーズ2 の蒸留元) を
 
 ## メタ論点: フェーズ1着手の前提整理
 
-DR-039 は「AtomicAST は単独で仕様確定せず、実装と同時に削り出す (垂直スライス)」と明言し、JSON Schema は「実装と同時に詰める」と defer 条件を置いている。ROADMAP.md フェーズ構成では、この「実装との共設計」は既に **slice PoC (kuu.mbt slice 枝、第1〜18弾、167テスト、DR-042 に実測記録)** で完了している — フェーズ1は白紙から設計するのではなく、PoC で実証済みの疑似 JSON 表記 (LOWERING 全体に `«greedy»` / `{matcher: ...}` として登場するもの) を正式なシリアライズ仕様に**格上げする**作業、と整理できる。
+DR-039 は「AtomicAST は単独で仕様確定せず、実装と同時に削り出す (垂直スライス)」と明言し、JSON Schema は「実装と同時に詰める」と defer 条件を置いている。この「実装との共設計」は既に **slice PoC (kuu.mbt slice 枝、第1〜18弾、167テスト)** で実質充足されており、フェーズ1は白紙設計ではない — **PoC 実測形と LOWERING 疑似表記が背骨**になる。
 
-この位置づけの確認 (「DR-039 の defer 条件は slice PoC で充足済み、フェーズ1は新規設計でなく確定作業」) 自体を最初の合意事項とすることを提案する。異論があれば、フェーズ1着手前に別途 PoC (新 main での試作) を挟む必要が出るため、最優先の論点。
+ただし「格上げ・確定作業」と框えるのは縮小リスクがある。PoC が答えていない**直列形固有の新規判断**が最低 4 つ残る:
+
+1. PoC の MoonBit enum は直列形の**証拠**であって直列形そのものではない (concrete JSON のフィールド語彙・構造は新規決定。A-0 の wire form 範囲もその一部)
+2. fixture 期待値の厳密度 (byte 厳密 vs 意味論) — DR-040 の方言 spec 精度と絡む新規議論 (C-2)
+3. 効果列の直列形 (conformance oracle として実装間比較可能な canonical 形) も新規の設計対象 (C-3)
+4. F-048 (JSON Schema lifecycle、breaking change 手続き) は純粋に新規 (B-2)
+
+したがって提案する框は: 「**背骨は PoC 実測形。ただし直列形固有の新規論点 (上記 4 点 + A-0) は通常の a/b 提示 → nod → ink で議論する**」。この位置づけの合意を最初の合意事項とする。
 
 ## 参考: 隣接する既決定事項 (本フェーズで再検討しない)
 
@@ -172,7 +188,7 @@ DR-039 は「AtomicAST は単独で仕様確定せず、実装と同時に削り
 
 ## 受け入れ条件
 
-- [ ] A群 (greedy マーク / matcher データ / 効果記述子 / repeat 匿名id / 一意性 / pending 状態) の各論点に決定が付き、新規 DR (DR-061 以降を想定) または既存 DR 拡張として記録される
+- [ ] A群 (wire form 範囲 (A-0) / greedy マーク / matcher データ / 効果記述子 / repeat 匿名id / 一意性 / pending 状態) の各論点に決定が付き、新規 DR (DR-061 以降を想定) または既存 DR 拡張として記録される
 - [ ] B群 (F-042 invariant、F-048 lifecycle) が解消され、findings 2026-06-29-ast-missing-pieces.md の該当2件がクローズ可能になる
 - [ ] C群 (fixture フォーマット) が確定し、フェーズ2 (fixture 蒸留) に着手可能な仕様書 (DESIGN.md 追記 or 新規 docs/ ファイル) が揃う
 - [ ] メタ論点 (DR-039 defer 条件充足の確認) に決着が付く
