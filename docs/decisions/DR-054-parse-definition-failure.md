@@ -15,6 +15,8 @@
 | **Error** | 不在の ref / link 参照 (解決スコープ + definitions のどこにも無い) | DR-032 |
 | **Error** | 循環 ref (構造継承の無限展開) | DR-007/032 |
 | **Error** | ゼロ進捗再帰 (repeat unfold の 1 周が 1 トークンも消費しない) | DR-043 |
+
+循環 ref とゼロ進捗の判定は同一の**左再帰原理**に統一される: 検査対象は「**head 位置 (トークン消費前に到達可能な位置) にあるサイクル**」であり、repeat lowering の正当な自己 ref (cons 尾部 — head の消費ノードの後ろに置かれる) は head 位置でないため通る。基準はこの一点で、曖昧な境界を持たない (slice PoC 第 14 弾で対照実測済み)。
 | **Error** | config_file 要素自身への config 席 (循環) | DR-050 §5 |
 | **Error** | installer 所有語彙の交差 (registry 登録時) | DR-042 不変則③ |
 | warn | 露出キー衝突の可能性 | DR-021 (実行時 ambiguous で捕まる) |
