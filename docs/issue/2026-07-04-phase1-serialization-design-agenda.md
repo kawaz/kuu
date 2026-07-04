@@ -35,7 +35,9 @@ ROADMAP.md フェーズ1「直列形の確定 + fixture フォーマット設計
 
 ## 論点ツリー
 
-### A. AtomicAST 直列形の確定 (LOWERING §C.3 の宿題)
+### A. AtomicAST 直列形の確定 (LOWERING §C.3 の宿題) — **決着済み (2026-07-05)**
+
+> A-0〜A-5 は **DR-063** として ink (wire = 宣言層のみ、lowered 断面表記は面構造 + 緩比較)。A-6 は評価器契約 = フェーズ 3 の論点と整理 (fixture 側は C-5 で扱う)。A-7 / A-8 は **DR-061** (descriptor + configurable factory)、filter 継承は **DR-062**。DR-039 注記・LOWERING §C.3・DESIGN §15.7 / §8.5 / §3.4 / §13.1 / 用語表も反映済み。以下の各節は議論経緯の記録。
 
 #### A-0. wire form の範囲 — 宣言層のみか、lowered 産物込みか (最初の分岐)
 
@@ -262,7 +264,7 @@ DR-039 は「AtomicAST は単独で仕様確定せず、実装と同時に削り
 
 ## 受け入れ条件
 
-- [ ] A群 (wire form 範囲 (A-0) / greedy マーク / matcher データ / 効果記述子 / repeat 匿名id / 一意性 / pending 状態 / installer descriptor (A-7) / configurable factory (A-8)) の各論点に決定が付き、新規 DR (DR-061 以降を想定) または既存 DR 拡張として記録される
+- [x] A群 (wire form 範囲 (A-0) / greedy マーク / matcher データ / 効果記述子 / repeat 匿名id / 一意性 / pending 状態 / installer descriptor (A-7) / configurable factory (A-8)) の各論点に決定が付き、新規 DR (DR-061 以降を想定) または既存 DR 拡張として記録される — **DR-061 / DR-062 / DR-063 で ink 済み (pending 状態はフェーズ 3 送りで決着)**
 - [ ] B群 (F-042 invariant、F-048 lifecycle) が解消され、findings 2026-06-29-ast-missing-pieces.md の該当2件がクローズ可能になる
 - [ ] C群 (fixture フォーマット) が確定し、フェーズ2 (fixture 蒸留) に着手可能な仕様書 (DESIGN.md 追記 or 新規 docs/ ファイル) が揃う
-- [ ] メタ論点 (DR-039 defer 条件充足の確認) に決着が付く
+- [x] メタ論点 (DR-039 defer 条件充足の確認) に決着が付く — **DR-063 の DR-039 注記で確定 (defer 条件は slice PoC で充足、框は「背骨 + 新規論点は通常議論」)**
