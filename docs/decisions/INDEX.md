@@ -32,6 +32,7 @@
 - [DR-025](DR-025-name-creates-scope.md): name が結果スコープを作る、露出は最も浅い name 層
 - [DR-033](DR-033-lexical-scope-equals-name-scope.md): lexical スコープ = name が作るスコープ
 - [DR-046](DR-046-name-axes-decomposition.md): name の軸分解 — id / 結果キー / value_name / display_name の目的別軸、name はデフォルト供給源 (nameless への ref/link が可能に)
+- [DR-052](DR-052-export-key-unification.md): 結果キー軸の一本化 — export_key: string | null (export bool 廃止)、null = nameless 同化の透過 (値は流れる)、選ばれた name スコープは空でも `{}`
 
 ## 配置 / options / positionals / commands
 
