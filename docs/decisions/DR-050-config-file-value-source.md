@@ -39,6 +39,8 @@ config 値の期待型は独立の仕様ではなく、config_key を持つ**要
 
 - **string** → CLI / env と完全に同一の全段 pipeline (pre_filters → parse → post_filters、DR-034 / DR-049)
 - **非 string (number / bool) で型一致** → post_filters のみ。pre_filters / parse は String → 型の関数なので、既に型を持つ値には適用対象が無い — スキップは特別規則ではなく型の帰結
+- **int 要素** (整数制約付き数値、DESIGN §3.3): JSON number が整数値なら受理、非整数 (`1.5`) は Error。JSON string は整数構文のみ parse 受理
+- **JSON null** → 供給なし (provider lookup が値を返さないのと同義)。null という値は要素に流れない (DR-051)
 - **寛容は双方向対称** (DR-040 の「canonical は最も寛容」、狭めたい場合は方言 / pre_filter):
   - number / bool 要素に JSON string (`"8080"` 等) → parse を試みて受理 (テキストから型へ)
   - **string 要素に JSON scalar (number / bool) → JSON 文字列化で受理** (`1.5` → `"1.5"`、`true` → `"true"`)。string 要素は CLI / env では「何でも受ける」型であり、config でも同じ観測になる (引用符の有無で挙動が割れない)

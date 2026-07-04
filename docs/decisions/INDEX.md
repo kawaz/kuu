@@ -76,6 +76,7 @@
 
 - [DR-010](DR-010-external-registry.md): 外部レジストリの階層化と暗黙参照 — updated by DR-035 (definitions/registry 一様化), DR-036 (multiple registry 追加), DR-040 (type 方言の3層上書き)
 - [DR-016](DR-016-result-and-context.md): 結果オブジェクトと ParserContext の2層 — required の判定入力は updated by DR-047
+- [DR-051](DR-051-absent-result-semantics.md): 結果の欠落表現 — 値の無い要素は absent (キーなし)、null は値空間に持たない (config null = 供給なし)、型導出は required/default/反復系 → T・それ以外 → T?
 - [DR-035](DR-035-definitions-registry-symmetry.md): definitions は registry と同じ区分の名前空間、解決順の一様化 (DR-007 を再編成)
 - [DR-036](DR-036-multiple-registry-and-accumulators.md): multiple registry 追加、accumulators の属性セット拡張、collectors は filters で代替 (DR-008/010 を更新)
 - [DR-042](DR-042-installer-architecture.md): installer アーキテクチャ — 特殊語彙 (long/short/env/dd) は registry 装置の所有語彙、5 不変則で順序非依存合成、値源はラダー席宣言
