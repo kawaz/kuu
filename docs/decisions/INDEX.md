@@ -10,6 +10,7 @@
 - [DR-041](DR-041-token-reading-semantics.md): トークン読みの意味論 — 読みは枝 (多重 Accept)、greedy は面で優先 (先食い)、prefix ガード非採用、dashdash は再スコープ化
 - [DR-048](DR-048-failure-time-action.md): 失敗時アクション — early-exit は持たない (完走後の表示選択)、汎用属性 + type:help 同梱、衝突は argv 位置の先勝ち、候補経路は dead end 込み、ambiguous では非発火 (誘導行で補完)
 - [DR-053](DR-053-parse-outcome-structure.md): パース結末の構造 — outcome 3 値 discriminated union、errors 全保持 + primary は argv 最深、ambiguous は全解釈列挙 (結果オブジェクト形)、help_entry / tried_triggers はフィールドで文言はレンダラ
+- [DR-054](DR-054-parse-definition-failure.md): parse_definition の失敗挙動 — 構成不能/全入力破壊 = Error・一部入力の驚き = warn の境界基準、v1 Error は構文/値域/参照検査まで、定義エラーは全列挙 + hint
 
 ## 2層 AST / 構造プリミティブ
 
