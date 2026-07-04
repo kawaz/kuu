@@ -23,7 +23,8 @@
 - [DR-023](DR-023-structural-primitives-finalized.md): 構造プリミティブ確定形 (4 + multiple + 糖衣)
 - [DR-026](DR-026-leaf-branch-and-sugar.md): 葉/枝、exact は値プリミティブの一種、構造記法の糖衣 (裸文字列=exact, 裸配列=seq)
 - [DR-027](DR-027-serial-renamed-seq.md): serial → seq 改名 (or/seq/multiple = alternation/concatenation/closure)
-- [DR-039](DR-039-atomicast-convergence-and-vertical-slice.md): AtomicAST = ボトムアップエンジンのシリアライズ形、垂直スライスで実装と共設計、JSON Schema は最後
+- [DR-039](DR-039-atomicast-convergence-and-vertical-slice.md): AtomicAST = ボトムアップエンジンのシリアライズ形、垂直スライスで実装と共設計、JSON Schema は最後 — 直列形の範囲は DR-063 で確定
+- [DR-063](DR-063-atomicast-serialization.md): AtomicAST 直列形の確定 — wire form = 宣言層のみ (A 群適用済み + installer 語彙 inert、lowered は決定的再導出)、lowered 断面表記 (面構造 / matcher kind + name 参照 entries / 効果記述子 / `#` 予約内部 id) は段階別 fixture 用で緩比較、構造等価で byte 一致不要
 
 ## 名前とスコープ
 

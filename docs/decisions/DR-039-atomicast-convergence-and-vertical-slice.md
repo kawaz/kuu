@@ -50,6 +50,11 @@ UsefulAST と registry はトップダウンの設計ドキュメントのまま
 - trait object `&Trait` 有り。**generic trait `trait Foo[T]` と custom derive は未提供**。
 - → 存在型ストレージが要る所はクロージャ型消去が依然必要だが、**ノードADT は素直な再帰 enum で表せる**ので、新コアは旧来の型消去ハック (OptRef/Accessor/node_templates) の多くを回避できる可能性が高い。実装時に再評価。
 
+## 直列形の範囲は DR-063 で確定
+
+> **更新: DR-063 により直列形が確定 — wire form は宣言層のみ (A 群糖衣適用済み + installer 語彙 inert)、lowered 産物は決定的 lowering による再導出に委ねる。本 DR の合流テーゼ (AtomicAST = エンジンのノードグラフを宣言的にシリアライズした形) は維持され、wire はその宣言層射影と整理された。「JSON Schema は最後」の defer 条件 (垂直スライスとの共設計) は slice PoC 第 1〜18 弾で充足。**
+
 ## 関連
 - 再設計 DR-015/021/025/026/027/034/037、DR-038 (パース意味論)
 - ボトムアップ kuu: `kuu/core/parse.mbt`、`kuu/core/nodes.mbt`、`kuu/core/types.mbt` (TryResult/ExactNode)、[external: kuu.mbt DR-042] (struct-first DX、derive 待ち)
+- DR-063 (直列形の確定)
