@@ -181,6 +181,17 @@ DR 番号ベース (`fixtures/dr-038-path-search/*.json`) か機能領域別 (`f
 
 slice PoC の 167 テスト (kuu.mbt slice 枝、フェーズ2 の蒸留元) を 1:1 で fixture 化するか、意味論単位 (DR 単位 / 領域単位) で再編するかは本フェーズでなくフェーズ2の主題だが、C-1/C-6 の設計がフェーズ2の変換コストを左右するため、フェーズ1側で「蒸留のしやすさ」を設計基準に含めるかどうかは論点として明記しておく。
 
+#### C-8. lowering の段階別 fixture (2026-07-04 追加、kawaz 提案)
+
+installer 適用が順序非依存 (不動点、§C.2) であることの帰結として、**installer 部分集合の適用結果も well-defined** になる。これを利用し、lowering の概念確認・エッジケース固定のための段階別 fixture を仕様資産にする:
+
+- **粒度の例**: A 群糖衣のみ (values → or 展開だけ確認) / 単独 installer (long installer だけ登録して long シュガー展開を確認) / installer 組合せ / 全 installer 収束形 (= AtomicAST)
+- **比較の厳密度**: byte 厳密でなく §C.5 の緩比較 (構造骨格 + matcher 種別/エントリ表) — 中間形を byte 厳密にすると DR-041/042 が「観測挙動同一なら自由」とした実装内部の自由度 (dd の severed フラグ encoding 等) を殺すため
+- **ref は展開段階の軸に乗せない**: repeat lowering は ref 再帰 (cons) なので展開したら無限。ref は AtomicAST の一級住人で、展開は評価器の実行時関心 (slice 第2弾 F-6 の実測)。段階の軸は「A 群 → installer 部分集合 → 収束」の lowering 次元のみ
+- fixture 量は大量になってよい (概念確認・エッジケース固定のためにブレないことが優先)
+
+A-0 (a) 採用時はこのカテゴリが「受信側 parse_definition の仕様準拠」を担保する主力になる (A-0 ②)。
+
 ## メタ論点: フェーズ1着手の前提整理
 
 DR-039 は「AtomicAST は単独で仕様確定せず、実装と同時に削り出す (垂直スライス)」と明言し、JSON Schema は「実装と同時に詰める」と defer 条件を置いている。この「実装との共設計」は既に **slice PoC (kuu.mbt slice 枝、第1〜18弾、167テスト)** で実質充足されており、フェーズ1は白紙設計ではない — **PoC 実測形と LOWERING 疑似表記が背骨**になる。
