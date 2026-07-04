@@ -71,7 +71,7 @@
 - [DR-013](DR-013-inherit-inheritable.md): inherit / inheritable で階層継承 — prefix 生成は updated by DR-059
 - [DR-059](DR-059-inheritable-prefix.md): inheritable の prefix 生成 — 定義スコープ名 1 個の固定 prefix (全祖先同綴り)、衝突は実行時 ambiguous、別綴りは alias、lowering は global の逆方向コピー
 - [DR-014](DR-014-config-field.md): config フィールドで階層継承可能な設定
-- [DR-031](DR-031-value-source-precedence.md): 値源の優先順位 (CLI/link > env > config > inherit > default、固定) — required の判定入力は updated by DR-047
+- [DR-031](DR-031-value-source-precedence.md): 値源の優先順位 (CLI/link > env > config > inherit > default、固定) — required の判定入力は updated by DR-047、source 確定ルール (境界条件) を拡張確定
 - [DR-047](DR-047-constraint-evaluation-layering.md): 制約評価のレイヤリング — 遅延述語は完全経路の成立条件 (経路フィルタ)、required は値充足 (default 込み)、exclusive_group / requires トリガは committed
 
 ## CLI 入口 / variant / filter

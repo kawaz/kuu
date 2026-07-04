@@ -35,6 +35,16 @@ source ∈ { cli, link, env, config, inherit, default }
 
 結果オブジェクトで「この値はどこから来たか」を引ける。appconfig ストア用途 (DR-030) で、値源を隠蔽しつつ必要なら由来を確認できる。
 
+### source の確定ルール (境界条件)
+
+source は「**最終値を確定させた効果 / 充填の由来**」であり、以下で一意に決まる:
+
+- 自分の入口 (long/short/alias 等) からの効果 = `cli`、**link 越しの効果** (他要素の入口から link で飛んできた) = `link`。両者はラダー同順位で、区別は経路の違いのみ
+- 席の充填 = その席の名 (`env` / `config` / `inherit` / `default`)。config が立つ条件は DR-050 (config 席の lookup 成功)
+- **あと勝ち mutation 後は最後に勝った効果の source** (履歴は効果列 = 詳細モードの関心、DR-045)
+- **effect op=default** (`--no-x` の "no:default"、committed=true) 適用後は `cli` — 値の内容が default 値と同じでも、その値を確定させたのはユーザの明示操作
+- **effect op=unset** (committed=false) は「触っていないことにする」ので source を確定させない — その後に勝った席の充填の source になる (env が埋めれば `env`、最後まで無ければ `default`)
+
 ## committed/selected との直交性 (DR-016 維持)
 
 「その値が明示的に決まったか (committed/selected)」と「値そのもの (default で埋まっただけか)」は別軸。これは優先順位とは直交する別軸で、DR-016 の区別を維持する。制約の判定入力 (required は値の有無、exclusive_group / requires トリガは committed) は DR-047 が確定する。
