@@ -29,7 +29,7 @@ kuu canonical default  ←  言語DX default  ←  ユーザ差し替え (defini
 
 → **「寛容 default ＋ pre フィルタ制限」が素のデフォルト経路** (実用の大半をカバー)、**named 方言パーサは解釈を変えたい時の逃げ道**。両方が同じ registry に共存。
 
-注: カンマ除去を default number に焼き込むと `multiple.item_separator=","` と衝突 (`"1,000"` が数値か `[1,000]` か曖昧) → カンマ除去はデフォルトに入れず明示 pre_filter に。
+注: カンマ除去を default number に焼き込むと `multiple.separator=","` と衝突 (`"1,000"` が数値か `[1,000]` か曖昧) → カンマ除去はデフォルトに入れず明示 pre_filter に。
 
 ### バイナリサイズ / tree-shaking
 

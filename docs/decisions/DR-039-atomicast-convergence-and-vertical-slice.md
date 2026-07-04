@@ -13,7 +13,7 @@
 - `parse_raw` は `Array[ExactNode]` だけを舐め、`commit : () -> Unit` という型を持たない普遍クロージャで解釈を確定 → AtomicAST の {exact/or/seq/primitive} と bounded path-search (DR-038) で構造同型。
 - `make_or_node` = `or`、`serial` = `seq`、`make_value_node` = primitive、`install_eq_split`/`install_short_combine` = `--k=v`/`-abc` の合成ノード。
 - `TryResult{Accept(consumed, commit) | Reject | Error}` が DR-037 の Reject/Error を**先取りで実装済み**。
-- `make_reducer(pre, accum)` = DR-034 の peaceProcessor + mapper。
+- `make_reducer(pre, accum)` = DR-034 の pieceProcessor + accumulator。
 
 ### 三層アーキテクチャ (合流後の実装像)
 

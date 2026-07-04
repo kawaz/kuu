@@ -97,7 +97,7 @@ multiple registry を経由しない直接指定
 両者は位置が違うので自然な順序で合成される:
 
 ```
-peaceProcessor 内:
+pieceProcessor 内:
   piece (String)
     → pre filter (FilterChain[String, String])
     → parse (types registry の value_parser、String → T)
@@ -116,7 +116,7 @@ type の post は **各 piece 単位**、multiple の collector は **累積後*
 ## registry 区分の現状 (8区分)
 
 ```
-types         値型 (peaceProcessor の構成プリセット)
+types         値型 (pieceProcessor の構成プリセット)
 filters       純粋 FilterChain[A,B] (collector もここ)
 accumulators  accumulator の属性セット
 multiple      accumulator+collector+separator の糖衣プリセット (新規)

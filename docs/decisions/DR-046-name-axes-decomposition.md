@@ -11,7 +11,7 @@
 | 軸 | フィールド | 役割 | 結果露出 | デフォルト |
 |---|---|---|---|---|
 | 参照識別子 | `id` | ref / link の解決対象 | しない | name |
-| 結果キー | export 系 (issue `2026-07-03-export-result-semantics` で一本化検討) | 結果オブジェクトのキー、スコープ生成 | する | name |
+| 結果キー | `export_key` (DR-052 で確定) | 結果オブジェクトのキー、スコープ生成 | する | name |
 | 値プレースホルダ | `value_name` (既存、DR-024) | help / usage の `<PLACEHOLDER>` | しない | upper(name) |
 | 説明ラベル | `display_name` | help でその引数を指す人間可読名 (例: ポート番号) | しない | name |
 
@@ -49,7 +49,7 @@ nameless 要素への参照が不可能になり、目的間の namespace 被り
 
 ## 射程外
 
-結果キー軸の表現の一本化 (`export: <名前> | false` 案) は issue `2026-07-03-export-result-semantics` で別途確定する。本 DR は軸の分解と id / display_name の新設まで。
+結果キー軸の表現は DR-052 で `export_key: string | null` に確定した。本 DR は軸の分解と id / display_name の新設までを扱う。
 
 ## 関連
 
@@ -57,6 +57,10 @@ nameless 要素への参照が不可能になり、目的間の namespace 被り
 - DR-024 (key name / def name / value_name の 3 層分離 — 一般化元)
 - DR-025 / DR-033 (スコープ生成は結果キー軸の責務)
 - DR-029 / DR-032 (ref / link の解決 — 対象は id 軸、解決順は不変)
-- issue `2026-07-03-export-result-semantics` (結果キー軸)
+- DR-052 (結果キー軸 export_key の確定 — bool の export 廃止)
 - issue `2026-07-03-alias-normalization-help-completion-installer` (内部 id の利用先)
 - findings F-012 (help メタは AtomicAST 非搬送)
+
+## Superseded (歴史)
+
+> **更新: DR-052 により結果キー軸の表現が `export_key: string | null` に確定 (bool の `export: <名前> | false` 案は却下)。本 DR の軸分解 (id / 結果キー / value_name / display_name) と id / display_name の新設は引き続き有効。**

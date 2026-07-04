@@ -103,7 +103,7 @@ console.log(context.get("port").source);
 - **selected**: ユーザーが明示的にこの要素を起動したか
 - **値**: 最終結果に出てくる値 (default_value or 消費結果)
 
-両者は別の情報。制約 (required / requires / exclusive_group) がどちらを見るかは DR-047 が確定する。
+両者は別の情報。制約 (required / requires / exclusive_group) がどちらを見るかは DR-047 で確定した (下記 Superseded 参照)。
 
 ## 関連
 

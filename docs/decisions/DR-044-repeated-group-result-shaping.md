@@ -82,12 +82,12 @@ map 形 (各段に `from_entries: {key: "path"}`):
 
 ## 射程外
 
-`-D KEY=VAL` 型 — 1 トークン (piece) 内の separator 分割による kv 抽出と value 型注釈 (findings F-021 の残り半分) — は本 DR では確定しない。本 DR の key_from は「グループ内フィールドからのキー抽出」であり、piece 内 2D separator は別途確定する。
+`-D KEY=VAL` 型 — 1 トークン (piece) 内の separator 分割による kv 抽出と value 型注釈 (findings F-021 の残り半分) — は本 DR では確定しない。本 DR の `from_entries {key: ...}` は「グループ内フィールドからのキー昇格」であり、piece 内 2D separator は別途確定する。
 
 ## 関連
 
 - DR-025 (name が結果スコープを作る — 配列既定はその反復版)
-- DR-034 / DR-036 (collector の座席と合成順 — to_map / key_from はここに乗る)
+- DR-034 / DR-036 (collector の座席と合成順 — from_entries はここに乗る)
 - DR-042 (multiple installer — 「発火ごと蓄積」の宣言)
 - DR-043 (repeat / multiple 分離 — 蓄積 (値面) と反復 (構造面) の役割分担)
 - 垂直スライス PoC 第 4 弾 (journal `2026-07-02-slice-poc.md`)

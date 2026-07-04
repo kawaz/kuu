@@ -20,7 +20,7 @@ DR-007 で定義した `definitions` は当初フラットなマップ (`{color_
       "my_validator": {...}
     },
     "multiple": {
-      "appendThenSet": {...}
+      "append_then_set": {...}
     }
   }
 }
@@ -68,7 +68,7 @@ kawaz の整理:
 
 DR-007 のフラット形式の問題:
 - 同じ名前を別カテゴリで使えない (`color` が type と accumulator 両方で使えない)
-- 中身を見ないと用途が分からない (processor を持つなら type、mapper を持つなら accumulator?)
+- 中身を見ないと用途が分からない (processor を持つなら type、accumulator 関数を持つなら accumulators?)
 - 解決順を明示しにくい (どの registry を引くか曖昧)
 
 区分付き形式の利点:

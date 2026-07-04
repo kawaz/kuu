@@ -44,7 +44,7 @@ kawaz の最終整理:
 
 ```
 ── パース意味論 (結果を左右する) ──
-name? type? value? children? multiple? or? seq? ref? link? export? ...制約 ...filter
+name? type? value? children? multiple? or? seq? ref? link? export_key? ...制約 ...filter
 
 ── 表示メタ (help のみ、パース無影響、AtomicAST 不要) ──
 value_name? help? hidden?

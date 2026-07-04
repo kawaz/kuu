@@ -25,7 +25,7 @@
 ```
 
 - 自分の scope では `--ttl`
-- 祖先 scope では prefix 付き名前 (prefix 生成の具体ルールは本 DR では確定しない、後述 Superseded 参照)
+- 祖先 scope では prefix 付き名前 (prefix 生成ルールは DR-059 で案A = 定義スコープ名 1 個の固定 prefix、全祖先で同綴りに確定)
 - 各 scope で書かれた値は、その scope 配下のインスタンスのデフォルトに
 
 ## 経緯
@@ -57,6 +57,8 @@ kawaz:
 - 暗黙ルールなし
 
 ## 例: ttl の継承
+
+（注: 下記例の `multiple: {"kind": "map"}` は本 DR 制定時の表記。現役の multiple 表現は DR-034 で pieceProcessor/collector 等に再構成済み — DR-034 参照。ここでの map スコープの意図 = key_from による動的名前付きスコープは引き続き有効。）
 
 ```json
 {
@@ -92,7 +94,7 @@ kawaz:
 }
 ```
 
-CLI 入力 (祖先 scope での prefix 形は本 DR では具体化しない。下記は prefix が `--<親要素名>-<name>` 形になる場合の例示):
+CLI 入力 (祖先 scope での prefix 形は DR-059 で確定。定義スコープ名 `socket` が固定 prefix になり、全祖先で `--socket-ttl` と同綴りで書ける):
 ```bash
 # socket レベル
 myapp --upstream --name up1 --socket /s1 --ttl 60
@@ -110,6 +112,8 @@ myapp --socket-ttl 60 --upstream --name up1 --socket /s1
 - DR-008 (key_from、動的名前付きスコープ)
 - DR-022 (フィールド名 snake_case 統一)
 - DR-031 (値源優先順位、inherit は default の上・config の下に位置づけ)
+- DR-034 (multiple の kind 表現を pieceProcessor/collector に再構成)
+- DR-059 (inheritable の prefix 生成ルール確定、案A)
 
 ## Superseded (歴史)
 
@@ -123,8 +127,12 @@ myapp --socket-ttl 60 --upstream --name up1 --socket /s1
 
 > **更新: DR-031 で値源の優先順位 (CLI > env > config > inherit > default) が整理され、inherit は値源スタックの1段として位置づけ直された。本 DR の意味論 (祖先 scope chain から同 name の値を探す) は引き続き有効。他の値源との合成は DR-031 を参照。**
 
+### multiple の kind 表現 (DR-019 → DR-034 で更新)
+
+> **更新: multiple の `{"kind": "map"}` 表現は DR-019 (Superseded) を経て DR-034 で pieceProcessor/collector 等に再構成された。本 DR の例で使う map スコープ (key_from による動的名前付きスコープ) の意図は引き続き有効だが、現役の multiple 表現は DR-034 を参照。**
+
 ### prefix 生成ルール (DR-059 で確定)
 
 > **更新: DR-059 で案A (定義スコープ名 1 個の固定 prefix、全祖先で同綴り) に確定。衝突は実行時 ambiguous、別綴りは alias で opt-in、help の見せ方はレンダラの関心。本 DR の値の意味論 (各 scope で書かれた値が配下のデフォルトに) は引き続き有効。**
 
-経緯としては「基本は案A、ヘルプ表示の見せ方は後で詰める」方向で議論したが、ヘルプ肥大化の懸念 (kawaz: 「A+B'？helpがウザくなりそうなのが心配ではある。」) があり、本 DR では結論を出さなかった。
+本 DR 制定時は「基本は案A、ヘルプ表示の見せ方は後で詰める」方向で議論し、ヘルプ肥大化の懸念 (kawaz: 「A+B'？helpがウザくなりそうなのが心配ではある。」) から結論を保留していた。現在は DR-059 で確定済みのため、本文の prefix 記述は DR-059 を直接参照する形に更新済み。

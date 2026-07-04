@@ -45,7 +45,7 @@ absent は結果オブジェクト (シンプルモード) の表現であり、
 
 ### explicit-null の 3 区別 (findings F-022 の原案: unset=absent / 明示null / default適用)
 
-null を値空間に入れると全 type が nullable 化し、peaceProcessor / filter / 効果記述子の全域に null 分岐が増える。「明示的に無い」は unset (committed=false、ParserContext で観測可能) が既に表現しており、3 区別の実体は committed / source のメタで足りている。
+null を値空間に入れると全 type が nullable 化し、pieceProcessor / filter / 効果記述子の全域に null 分岐が増える。「明示的に無い」は unset (committed=false、ParserContext で観測可能) が既に表現しており、3 区別の実体は committed / source のメタで足りている。
 
 ### 全キーを型のゼロ値で埋める (常に present)
 
@@ -53,7 +53,7 @@ null を値空間に入れると全 type が nullable 化し、peaceProcessor / 
 
 ## 射程外
 
-- 結果キー軸の表現の一本化 (`export` / `export_key`) は issue `2026-07-03-export-result-semantics` で別途確定する (本 DR は「値が無い時」の表現のみ)
+- 結果キー軸の表現の一本化は DR-052 で確定済み (`export` bool 廃止 → `export_key: string|null`)。本 DR は「値が無い時」の表現のみを扱う
 - 数値型の字句仕様全体 (ロケール等、F-017) は DR-040 拡張で別途
 
 ## 関連
@@ -64,5 +64,5 @@ null を値空間に入れると全 type が nullable 化し、peaceProcessor / 
 - DR-045 (unset 効果 — 「明示的に取り消す」の既存表現)
 - DR-047 (required = 値充足 — 型導出規則の根拠)
 - DR-050 (config の JSON null = 供給なし)
+- DR-052 (結果キー軸の表現一本化 — `export_key: string|null`、本 DR 射程外の確定先)
 - findings `2026-06-29-ast-missing-pieces.md` F-022 (解消)、F-017 (射程外)
-- issue `2026-07-03-export-result-semantics` (結果キー軸、隣接)

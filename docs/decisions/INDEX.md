@@ -6,7 +6,7 @@
 
 - [DR-021](DR-021-longest-match-and-ambiguous.md): 露出キー一意性検査は実行時、静的バリデータは warn のみ — パース成功条件は updated by DR-038 (完全経路一意性に再定義)
 - [DR-037](DR-037-filter-reject-error-and-branch-resolution.md): filter の Reject/Error 区別、解けた枝の数による結末分類
-- [DR-038](DR-038-parse-semantics-path-uniqueness.md): パース意味論の確定 — 「完全経路の一意性」を契約に、最長一致は規則として持たない、実装契約は bounded path-search
+- [DR-038](DR-038-parse-semantics-path-uniqueness.md): パース意味論の確定 — 「完全経路の一意性」を契約に、長い経路を優先する規則は持たない、実装契約は bounded path-search
 - [DR-041](DR-041-token-reading-semantics.md): トークン読みの意味論 — 読みは枝 (多重 Accept)、greedy は面で優先 (先食い)、prefix ガード非採用、dashdash は再スコープ化
 - [DR-048](DR-048-failure-time-action.md): 失敗時アクション — early-exit は持たない (完走後の表示選択)、汎用属性 + type:help 同梱、衝突は argv 位置の先勝ち、候補経路は dead end 込み、ambiguous では非発火 (誘導行で補完)
 - [DR-053](DR-053-parse-outcome-structure.md): パース結末の構造 — outcome 3 値 discriminated union、errors 全保持 + primary は argv 最深、ambiguous は全解釈列挙 (結果オブジェクト形)、help_entry / tried_triggers はフィールドで文言はレンダラ
@@ -48,11 +48,12 @@
 - [DR-028](DR-028-type-as-reference.md): type は definitions/registry への参照糖衣、解決順、前方互換、flag等は糖衣プリセット
 - [DR-032](DR-032-ref-link-name-resolution.md): ref/link が指すのは name (解決はスコープ内→definitions)、type とは別物
 - [DR-040](DR-040-type-registry-dialects-and-restriction.md): type registry の方言運用 (canonical default / 言語DX / ユーザ差し替えの3層上書き、寛容default+pre_filter vs value_parser 差し替えの2軸) — canonical 字句仕様 (数値 10 進最小・exact codepoint 比較・path バイト列・count_or_set・filters 3 層) を拡張確定
+- [DR-051](DR-051-absent-result-semantics.md): 結果の欠落表現 — 値の無い要素は absent (キーなし)、null は値空間に持たない (config null = 供給なし)、型導出は required/default/反復系 → T・それ以外 → T?
 
 ## multiple
 
 - [DR-008](DR-008-multiple-field.md): multiple フィールドに複数値関連を統合 — 内部構造は reorganized by DR-034
-- [DR-034](DR-034-multiple-structure.md): multiple の構造モデル (peaceProcessor/separator/mapper/collector、縮退ケース、type と multiple は同じ属性平面)
+- [DR-034](DR-034-multiple-structure.md): multiple の構造モデル (pieceProcessor/separator/accumulator/collector、縮退ケース、type と multiple は同じ属性平面) — mapper→accumulator の改称は updated by DR-036
 - [DR-043](DR-043-repeat-and-multiple-split.md): repeat (構造閉包、min/max は枝生成に効く、ref 再帰へ lowering) と multiple (値の畳み) の分離、両者 installer 化 (DR-019 の統合を部分的に覆す)
 - [DR-044](DR-044-repeated-group-result-shaping.md): 反復グループの結果整形 — 配列が既定、map は from_entries (entries 配列 / 指名 2 フィールド / key 昇格の 3 用法)
 
@@ -60,34 +61,39 @@
 
 - [DR-007](DR-007-definitions-ref-link.md): definitions 領域、ref (構造継承) と link (値同期) — reorganized by DR-035 (definitions と registry の名前空間統一)
 - [DR-029](DR-029-link-revisited.md): link 見直し (値同期、1実体:N参照、固定パス DSL、遅延解決、失敗=パース失敗)
+- [DR-057](DR-057-alias.md): alias — 独立要素の別入口 (参照ファミリー 3 人目: ref/link/alias)、name 導出入口は再導出継承・明示綴りは非継承、結果キーは canonical のみ
 
-## 制約と継承
+## 制約
 
 - [DR-012](DR-012-constraints-as-attributes.md): 制約は要素属性で表現 — 評価意味論は DR-047、語彙拡充は DR-055
 - [DR-055](DR-055-constraint-vocabulary.md): 制約語彙の拡充 — conflicts_with (名指しペア排他、対称)、値依存は値の枝への requires 合成 (新語彙ゼロ)、requires 語彙維持、constraint installer
-- [DR-056](DR-056-vocabulary-ownership-vs-reference.md): 宣言語彙への関わり方 — 所有 (lowering 責務、排他) と参照 (advisory read、自由)。参照の成果は観測挙動に影響してはならない
-- [DR-057](DR-057-alias.md): alias — 独立要素の別入口 (参照ファミリー 3 人目: ref/link/alias)、name 導出入口は再導出継承・明示綴りは非継承、結果キーは canonical のみ
-- [DR-058](DR-058-hidden-deprecated.md): hidden / deprecated の挙動 — hidden は help/補完から除外 (受理不変)、deprecated は受理 + ParserContext.warnings (v1 bool のみ、表示はレンダラ)
-- [DR-060](DR-060-completion-query.md): 補完クエリ — 生存 partial 経路 (dead end 除外) の期待集合の和集合、after 整合フィルタ、素材+メタ返却でポリシーは生成器、completer は名前参照で shell 機能へ委譲、責務 4 層
+- [DR-047](DR-047-constraint-evaluation-layering.md): 制約評価のレイヤリング — 遅延述語は完全経路の成立条件 (経路フィルタ)、required は値充足 (default 込み)、exclusive_group / requires トリガは committed
+
+## 継承
+
 - [DR-013](DR-013-inherit-inheritable.md): inherit / inheritable で階層継承 — prefix 生成は updated by DR-059
 - [DR-059](DR-059-inheritable-prefix.md): inheritable の prefix 生成 — 定義スコープ名 1 個の固定 prefix (全祖先同綴り)、衝突は実行時 ambiguous、別綴りは alias、lowering は global の逆方向コピー
 - [DR-014](DR-014-config-field.md): config フィールドで階層継承可能な設定
 - [DR-031](DR-031-value-source-precedence.md): 値源の優先順位 (CLI/link > env > config > inherit > default、固定) — required の判定入力は updated by DR-047、source 確定ルール (境界条件) を拡張確定
-- [DR-047](DR-047-constraint-evaluation-layering.md): 制約評価のレイヤリング — 遅延述語は完全経路の成立条件 (経路フィルタ)、required は値充足 (default 込み)、exclusive_group / requires トリガは committed
 
 ## CLI 入口 / variant / filter
 
-- [DR-009](DR-009-filter-chain.md): filter chain 初期形 — reorganized by DR-034 (peaceProcessor + separator + mapper + collector に再編成)
+- [DR-009](DR-009-filter-chain.md): filter chain 初期形 — reorganized by DR-034 (pieceProcessor + separator + accumulator + collector に再編成)
 - [DR-011](DR-011-variant-dsl.md): variant の文字列 DSL とオブジェクト形式
 - [DR-045](DR-045-effect-descriptors.md): 効果記述子 — 値セル操作は純データ (set/default/unset/empty、committed は効果が明示制御)、効果列の判定キー精密化
+
+## help / 補完 / 表示メタデータ
+
+- [DR-058](DR-058-hidden-deprecated.md): hidden / deprecated の挙動 — hidden は help/補完から除外 (受理不変)、deprecated は受理 + ParserContext.warnings (v1 bool のみ、表示はレンダラ)
+- [DR-060](DR-060-completion-query.md): 補完クエリ — 生存 partial 経路 (dead end 除外) の期待集合の和集合、after 整合フィルタ、素材+メタ返却でポリシーは生成器、completer は名前参照で shell 機能へ委譲、責務 4 層
 
 ## レジストリ / 実装連携
 
 - [DR-010](DR-010-external-registry.md): 外部レジストリの階層化と暗黙参照 — updated by DR-035 (definitions/registry 一様化), DR-036 (multiple registry 追加), DR-040 (type 方言の3層上書き)
 - [DR-016](DR-016-result-and-context.md): 結果オブジェクトと ParserContext の2層 — required の判定入力は updated by DR-047
-- [DR-051](DR-051-absent-result-semantics.md): 結果の欠落表現 — 値の無い要素は absent (キーなし)、null は値空間に持たない (config null = 供給なし)、型導出は required/default/反復系 → T・それ以外 → T?
 - [DR-035](DR-035-definitions-registry-symmetry.md): definitions は registry と同じ区分の名前空間、解決順の一様化 (DR-007 を再編成)
 - [DR-036](DR-036-multiple-registry-and-accumulators.md): multiple registry 追加、accumulators の属性セット拡張、collectors は filters で代替 (DR-008/010 を更新)
 - [DR-042](DR-042-installer-architecture.md): installer アーキテクチャ — 特殊語彙 (long/short/env/dd) は registry 装置の所有語彙、5 不変則で順序非依存合成、値源はラダー席宣言
-- [DR-049](DR-049-env-lookup-contract.md): env lookup の契約 — env_provider は単一スロット `(key) → string | null` (null=未設定、prefix 連結済み key)、env 値は peaceProcessor 通過、auto_env はフル修飾導出で明示 env: 優先
+- [DR-049](DR-049-env-lookup-contract.md): env lookup の契約 — env_provider は単一スロット `(key) → string | null` (null=未設定、prefix 連結済み key)、env 値は pieceProcessor 通過、auto_env はフル修飾導出で明示 env: 優先
 - [DR-050](DR-050-config-file-value-source.md): config ファイル値源 — type: config_file の配線宣言、config_provider は `(path) → 階層オブジェクト | null` (フォーマットは provider の関心)、config_key は同型対応デフォルト + link パス DSL の明示上書き、値の型は要素の type、config は構造に影響しない
+- [DR-056](DR-056-vocabulary-ownership-vs-reference.md): 宣言語彙への関わり方 — 所有 (lowering 責務、排他) と参照 (advisory read、自由)。参照の成果は観測挙動に影響してはならない

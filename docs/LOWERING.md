@@ -243,9 +243,10 @@ ASCII 単一文字**とし、Unicode (grapheme) short は方言として扱う (
 **規則**: env installer は `env` を回収し、構造衛星を足さずに、エンジンが所有する値源優先順位ラダー (DR-031) の
 env 席へ lookup を宣言する (不変則④)。lookup は `(value, source)` を返し、ParserContext の source タグを保存する。
 ラダーの順序 (CLI/link → env → config → inherit → default) は installer から動かせない。env_prefix が config に
-あれば連結する (`MYAPP_PORT`)。
+あれば連結する (`MYAPP_PORT`)。env 席の lookup 契約は env_provider = 単一スロット (連結済み key)→string|null、
+pieceProcessor 通過が正本 (DR-049)。
 
-**由来**: DR-042 (不変則④), DR-031
+**由来**: DR-042 (不変則④), DR-031, DR-049 (env lookup 契約)
 
 ### B.4 dd installer
 

@@ -51,7 +51,7 @@ camelCase → snake_case:
 
 `exportKey`→`export_key` / `itemSeparator`→`item_separator` / `keyValueSeparator`→`key_value_separator` / `onRepeat`→`on_repeat` / `keyFrom`→`key_from` / `defaultValue`→`default_value` / `longPrefix`→`long_prefix` / `shortPrefix`→`short_prefix` / `exclusiveGroup`→`exclusive_group`
 
-変更なし: `id` / `name` / `type` / `value` / `values` / `short` / `long` / `multiple` / `options` / `positionals` / `commands` / `children` / `required` / `export` / `inherit` / `inheritable` / `config` / `min` / `max` / `kind`
+変更なし: `id` / `name` / `type` / `value` / `values` / `short` / `long` / `multiple` / `options` / `positionals` / `commands` / `children` / `required` / `inherit` / `inheritable` / `config` / `min` / `max` / `kind`
 
 ## 効果
 
@@ -63,4 +63,7 @@ camelCase → snake_case:
 ## 関連
 
 - DR-010 (外部レジストリの外部注入) — case 変換 provider の土台
-- DR-029/030 (cross-language portability)
+
+## Superseded (歴史)
+
+> **更新: DR-052 により `export` (bool) フィールドが `export_key: string | null` に置換。本 DR の snake_case 正規形・pluggable case 変換の方針は引き続き有効 (snake 正規形 `export_key` は既に本 DR の変換対象リストに含まれる)。**

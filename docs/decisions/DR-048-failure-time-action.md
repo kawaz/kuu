@@ -1,6 +1,6 @@
 # DR-048: 失敗時アクション — early-exit は持たず、完走後の表示選択で help を救う
 
-> 由来: findings `2026-06-29-ast-missing-pieces.md` の F-037 (help/version の early-exit と bounded path-search の整合、critical) と LOWERING G-6 の後半 (early-exit 整合)。本セッションの議論で確定。F-037 が同時確定を提案していた F-007 (global) は DR-042 で確定済みのため、本 DR は F-037 単独を解く。
+> 由来: findings `2026-06-29-ast-missing-pieces.md` の F-037 (help/version の early-exit と bounded path-search の整合、critical) と LOWERING の early-exit 整合の論点。本セッションの議論で確定。F-037 が同時確定を提案していた F-007 (global) は DR-042 で確定済みのため、本 DR は F-037 単独を解く。
 
 ## 決定
 
@@ -66,8 +66,8 @@ ambiguous の本体であるエラー内容 (競合解釈の提示) が大きな
 ## 射程外
 
 - 失敗時アクション属性のフィールド名・installer 区分 (§13.9 未予約、issue `2026-07-03-alias-normalization-help-completion-installer` の installer 設計と同時)
-- アクション部の一般形 (「help フラグを立てる」を超える実行フック) の AtomicAST 表現 — DESIGN §13.9 の未予約を維持 (LOWERING G-6 の前半)
-- 誘導行の具体仕様 (文言・条件・JSON 構造上の表現) と失敗時のエラー報告 JSON 構造 — F-043 (DR-059 候補) / help installer の設計
+- アクション部の一般形 (「help フラグを立てる」を超える実行フック) の AtomicAST 表現 — DESIGN §13.9 の未予約を維持
+- 誘導行の具体仕様 (文言・条件・JSON 構造上の表現) と失敗時のエラー報告 JSON 構造 — F-043 / help installer の設計
 
 ## 関連
 
@@ -78,6 +78,6 @@ ambiguous の本体であるエラー内容 (競合解釈の提示) が大きな
 - DR-041 (先食いによる誤発火防止、mode 状態を増やさない同族判断)
 - DR-042 (installer — 属性語彙の将来の所有者)
 - DESIGN §14.1 / §14.2 / §15.10 / §13.9
-- LOWERING §A.5 (help プリセット — G-6 後半の解消)
+- LOWERING §A.5 (help プリセット)
 - findings `2026-06-29-ast-missing-pieces.md` F-037 (解消) / F-039 (接続) / F-043 (射程外)
 - issue `2026-07-03-failure-action-selected-scope` / `2026-07-03-alias-normalization-help-completion-installer`

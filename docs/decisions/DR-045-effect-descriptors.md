@@ -1,6 +1,6 @@
 # DR-045: 効果記述子 — 値セルへの操作は純データで衛星に載る
 
-> 由来: variant の非 set effect (default / unset / empty) の lowering が未定義という gap (LOWERING カタログ G-4/G-5) と、旧実装の考古学 (`main` ws `src/core/` の Variation / Accessor / alias clone の観測)。findings F-... ではなく DR-011 の効果語彙に直接対応する。
+> 由来: variant の非 set effect (default / unset / empty) の lowering が未定義という gap (LOWERING カタログの variant 効果 lowering 節) と、旧実装の考古学 (`main` ws `src/core/` の Variation / Accessor / alias clone の観測)。findings F-... ではなく DR-011 の効果語彙に直接対応する。
 
 ## 決定
 

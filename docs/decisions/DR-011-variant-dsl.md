@@ -13,8 +13,8 @@ long の variant (`--no-X` のような同 opt の別入口) を以下で表現:
 例:
 - `"no:set:false"` — `--no-<name>` で false をセット
 - `"no:set:none"` — `--no-<name>` で "none" をセット
-- `"no:default"` — defaultValue に戻す (committed=true)
-- `"no:unset"` — defaultValue に戻す (committed=false)
+- `"no:default"` — default_value に戻す (committed=true)
+- `"no:unset"` — default_value に戻す (committed=false)
 - `"reset:empty"` — 配列/Map を空に
 - `"red:set:rgb:255:0:0"` — `--red-<name>` で複合値をセット
 
@@ -35,8 +35,8 @@ long の variant (`--no-X` のような同 opt の別入口) を以下で表現:
 | effect | args | 意味 |
 |---|---|---|
 | `set` | 1個以上 (string[]) | 固定値をセット |
-| `default` | なし | defaultValue に戻す (committed=true) |
-| `unset` | なし | defaultValue に戻す (committed=false) |
+| `default` | なし | default_value に戻す (committed=true) |
+| `unset` | なし | default_value に戻す (committed=false) |
 | `empty` | なし | 配列/Map を空に |
 
 ## 経緯
@@ -68,7 +68,7 @@ pub enum Variation {
 
 ### Reset と Unset の差は committed
 
-`default` (committed=true) と `unset` (committed=false) で残す。`required` 等の制約検査に影響する。
+`default` (committed=true) と `unset` (committed=false) で残す。committed の差は値源ラダーの後段上書き可否 (DR-045) と exclusive_group / requires トリガの判定 (DR-047) に影響する。
 
 ## "no" ショートハンドは入れない
 
@@ -113,8 +113,16 @@ variant 構造は **AtomicAST には残らない**。parseDefinition() の時点
 }
 ```
 
-variant は **exact + literal value 発生**に展開され、構造としては消える。
+`set` 効果の variant は **exact + literal value 発生**に展開され、構造としては消える。
 
 ## 関連
 
 - DR-009 (filter chain は同じ文法を使う)
+- DR-022 (value オブジェクトの snake_case フィールド命名: `default_value`)
+- DR-045 (非-set 効果の lowering を担う効果記述子)
+
+## Superseded (歴史)
+
+> **更新: DR-045 により、非-set 効果 (`default`/`unset`/`empty`) の lowering が exact + literal value 展開から効果記述子 (effect descriptor) に変更。本 DR の `set` 効果の exact + literal value 展開、variant の文字列 DSL / オブジェクト形式 / effect 語彙 (4種) の定義は引き続き有効。**
+
+> **更新: DR-022 により、value オブジェクトのフィールド命名が camelCase から snake_case に変更 (`defaultValue` → `default_value`)。本 DR の variant DSL / effect 語彙の定義は引き続き有効。**

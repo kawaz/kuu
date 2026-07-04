@@ -2,12 +2,12 @@
 
 ## 決定
 
-command の「スコープ復帰」「途中分岐」「再帰」といった消費パターンに **専用概念 (フラグ・専用 type) を AST に持たせない**。これらは構造プリミティブ (exact / or / seq / multiple) の **組み合わせでユーザが組む**。
+command の「スコープ復帰」「途中分岐」「再帰」といった消費パターンに **専用概念 (フラグ・専用 type) を AST に持たせない**。これらは構造プリミティブ (exact / or / seq / primitive) の **組み合わせでユーザが組む**。
 
 例:
 
 ```
-type: repeat(= multiple), children: [ --command, (or: サブコマンドs) ]
+type: repeat, children: [ --command, (or: サブコマンドs) ]
 ```
 
 のように、既存プリミティブを構成すれば「同じ command を何度も」「途中で別 command に分岐」「消費後に親へ復帰」が表現できる。
@@ -39,3 +39,7 @@ type: repeat(= multiple), children: [ --command, (or: サブコマンドs) ]
 - DR-015 (値の伝搬)
 - DR-019 (構造プリミティブ4つ + multiple)
 - DR-021 (パース ambiguous 判定)
+
+## Superseded (歴史)
+
+> **更新: DR-043 により `repeat = multiple` の等式が分離・覆された (repeat は multiple 属性の別名ではなく、両者は別概念)。本 DR の「復帰・途中分岐・再帰に専用概念を持たせず、構造プリミティブの組み合わせでユーザが組む」という中核方針は引き続き有効。上記の例からは `repeat(= multiple)` の等式注記を除去済み。**
