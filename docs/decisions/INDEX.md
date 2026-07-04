@@ -68,6 +68,7 @@
 - [DR-056](DR-056-vocabulary-ownership-vs-reference.md): 宣言語彙への関わり方 — 所有 (lowering 責務、排他) と参照 (advisory read、自由)。参照の成果は観測挙動に影響してはならない
 - [DR-057](DR-057-alias.md): alias — 独立要素の別入口 (参照ファミリー 3 人目: ref/link/alias)、name 導出入口は再導出継承・明示綴りは非継承、結果キーは canonical のみ
 - [DR-058](DR-058-hidden-deprecated.md): hidden / deprecated の挙動 — hidden は help/補完から除外 (受理不変)、deprecated は受理 + ParserContext.warnings (v1 bool のみ、表示はレンダラ)
+- [DR-060](DR-060-completion-query.md): 補完クエリ — 生存 partial 経路 (dead end 除外) の期待集合の和集合、after 整合フィルタ、素材+メタ返却でポリシーは生成器、completer は名前参照で shell 機能へ委譲、責務 4 層
 - [DR-013](DR-013-inherit-inheritable.md): inherit / inheritable で階層継承 — prefix 生成は updated by DR-059
 - [DR-059](DR-059-inheritable-prefix.md): inheritable の prefix 生成 — 定義スコープ名 1 個の固定 prefix (全祖先同綴り)、衝突は実行時 ambiguous、別綴りは alias、lowering は global の逆方向コピー
 - [DR-014](DR-014-config-field.md): config フィールドで階層継承可能な設定
