@@ -1,14 +1,40 @@
-# kuu.mbt 枝再編の移送 task 群 (2026-07 の spec-as-core 再編用)
-# spec の正本は kawaz/kuu に移行済み。恒常運用の push はそちらの clone から行う。
+# kuu justfile
+#
+# kuu は仕様正本リポ (docs 中心、ビルド/リリース成果物なし)。
+# task は push 経路のみ。VCS 操作は bump-semver vcs に委譲する。
+# workflow (.github/) を持たないため watch 系 task は無い。
 
-# 旧実装枝 kuu-v0 を origin へ
-push-kuu-v0:
-    jj git push --remote origin --bookmark kuu-v0
+set shell := ["bash", "-euo", "pipefail", "-c"]
 
-# origin の main を push (削除予約 or 新 main の反映 — bookmark の状態に従う)
-push-origin-main:
-    jj git push --remote origin --bookmark main
+# default behaviour: alias for `list`
+default: list
 
-# spec 未反映分を kawaz/kuu へ (ast-spec ブランチ経由、push 後に GitHub 側で main へ ff)
-push-kuu-spec:
-    jj git push --remote kuu --bookmark ast-spec
+# show the recipe list
+list:
+    @just --list --unsorted
+
+# ---------- gates ----------
+
+# working copy is clean
+[private]
+ensure-clean:
+    bump-semver vcs is clean
+
+# fail if the current bookmark / branch is not the default
+[private]
+check-on-default-branch:
+    bump-semver vcs is on-default-branch
+
+# ---------- push flow ----------
+
+# push default branch (main) to origin
+push: check-on-default-branch ensure-clean
+    bump-semver vcs push --branch "$(bump-semver vcs get default-branch)" --jj-bookmark-auto-advance
+
+# 現在の worktree を default branch (= origin/main) に rebase
+sync:
+    bump-semver vcs sync --onto $(bump-semver vcs get default-branch)@origin
+
+# secondary workspace の change を default branch bookmark に forward (push はしない)
+promote:
+    bump-semver vcs promote
