@@ -42,7 +42,7 @@
   - `op`: `set` / `default` / `unset` / `empty` (DR-045。通常の値バインドは set)
   - `operand`: op が要求する場合のみ。JSON 表現は canonical 規約 (数値は最短形 `1.0` → `1`、DR-050 §4)
   - `source`: 値源タグ (DR-031)。parse fixture では `cli` のみ登場する (下記)
-- **effects に載るのは cli / link 由来のパース時効果のみ** — 値源ラダー充填 (env / config / inherit / default) は完走後の値確定であり argv 順の全順序を持たないため、その結果は `result` 側で検証する (例: 未発火 flag の `false` は result に現れ、effects には現れない)。source 検証つきの effects 拡張は値源系 fixture (フェーズ 2) で確定する
+- **effects に載るのは cli / link 由来のパース時効果のみ** — 値源ラダー充填 (env / config / inherit / default) は完走後の値確定であり argv 順の全順序を持たないため、effects には載せない (例: 未発火 flag の `false` は result に現れ、effects には現れない)。ラダー充填の**値**は `result` で、**由来**は `sources` フィールドで検証する (effects への source 拡張は「充填同士の順序が非規範で全順序規約を汚す」ため不採用 — DR-065)
 - **`result` は最終結果オブジェクト** (ラダー充填込みの確定値、DR-051 の absent 規則適用後)。runner は effects / result の両方を検証する
 - **`sources` (optional)**: entity → 値源タグ (`cli` / `env` / `config` / `inherit` / `default`) のマップ。最終値の由来 (ParserContext の source メタ、DR-031) を検証する — 値源系 fixture で使用。effects が cli / link 効果のみである規約は不変 (ラダー充填の順序を effects に持ち込まず、由来の検証は本フィールドが担う)。**キーは scope-path 修飾** (root 直下は `"ttl"`、入れ子 scope 内のセルは `"sub.ttl"`) — 同名セルが複数 scope に存在するケース (inheritable の祖先 write-target 等) の一意化
 
@@ -84,7 +84,7 @@
 
 ```
 fixtures/<機能領域>/*.json     例: fixtures/dd/ fixtures/repeat/ fixtures/constraints/
-fixtures/lowering/<installer>/  lowering 段階別 fixture (query: "lower"、フォーマットはフェーズ 2 で確定)
+fixtures/lowering/<installer>/  lowering 段階別 fixture (query: "lower"、フォーマットは DR-070)
 ```
 
 DR への遡及は各 `why` 内の DR ref で辿る (機能領域は複数 DR の合成で決まるため、DR 番号をディレクトリ名にしない)。
