@@ -1,0 +1,59 @@
+{
+  "why": "config ファイル値源を加えた 4 席ラダー cli > env > config > default (DR-050 §5 / DR-031 #3)。config は席宣言型で構造 (matcher/経路探索) に一切関与せず (DR-050 §5)、完走後の resolve フェーズ (経路確定 → config_file 値確定 → provider 読込 → config 席有効化 → 最終値確定) で効く。port は env 席 (PORT) + config_key [port] + default 1 を持ち、4 つの値源が順に供給する。source タグ (cli/env/config/default) が保存される (DR-050 §5 config 席 = source:config)。config 由来値もラダー充填なので effects 非掲載、result/sources で検証 (CONFORMANCE §2)。config_file 要素 config はインフラで結果に出ない (値源解決の足場)。\n\nCONFIG 入力表記 (本領域が提案、findings 参照): case に `config` フィールドを足し、config_provider が任意パスに対し返す階層オブジェクトを置く (slice の provider_obj と同型)。定義の config_file 要素のパス (cli/env/default で解決) がどれでも同じオブジェクトを返す抽象化。読込失敗は別 fixture (config/path.json) で `config` 省略により表現。蒸留元 slice phase20:44 (DR-050/031 env × config_key)。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {"name": "config", "type": "config_file", "long": true, "env": "MYAPP_CONFIG", "default": "/app.toml"},
+      {"name": "port", "type": "number", "long": true, "env": "PORT", "config_key": ["port"], "default": 1}
+    ]
+  },
+  "cases": [
+    {
+      "why": "cli 最上席: --port 9090 が config {port:3000} と env を差し置いて勝つ。effects に cli set、result/sources は cli。config_file 要素はインフラで結果非掲載。",
+      "argv": ["--port", "9090"],
+      "config": {"port": 3000},
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "port", "op": "set", "operand": 9090, "source": "cli"}
+        ],
+        "result": {"port": 9090},
+        "sources": {"port": "cli"}
+      }
+    },
+    {
+      "why": "cli 無し・env あり → env が config に勝つ (env は config の上席)。PORT=8080 が config {port:3000} を上書き。env 由来は effects 非掲載。",
+      "argv": [],
+      "env": {"PORT": "8080"},
+      "config": {"port": 3000},
+      "expect": {
+        "outcome": "success",
+        "effects": [],
+        "result": {"port": 8080},
+        "sources": {"port": "env"}
+      }
+    },
+    {
+      "why": "cli/env 無し → config 席が供給 (source:config)。config {port:3000} が default 1 を上書き。config 席は env と default の間。",
+      "argv": [],
+      "config": {"port": 3000},
+      "expect": {
+        "outcome": "success",
+        "effects": [],
+        "result": {"port": 3000},
+        "sources": {"port": "config"}
+      }
+    },
+    {
+      "why": "cli/env 無し + config に port キー無し → ラダー最下席の default 1。config オブジェクトが空でも黙って通過し default に落ちる (config は供給しないだけ、エラーでない)。",
+      "argv": [],
+      "config": {},
+      "expect": {
+        "outcome": "success",
+        "effects": [],
+        "result": {"port": 1},
+        "sources": {"port": "default"}
+      }
+    }
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "why": "prefix ガードを持たない — 素通しで positional に落ちる (DR-041 §5): 値プリミティブは「option 風に見えるトークン」を形の理由で拒否しない。-v だけが定義された greedy トリガで、未定義の `-x` はどの matcher にも読まれず、寛容な string positional a が素通し消費する。`-` 始まりを positional が拒否する prefix 従属ガードは非採用 (採用すると評価器に mode 状態が要り dd が純糖衣で閉じなくなる、DR-041 §5)。typo が positional に化けるのは受容された帰結。DR 系譜は DR-041 (token-reading-semantics) — 台帳表では D1 path-search に列挙されるが DR-041 §5 の matcher 読み契約 (prefix ガードなし) が本体。(path-search 領域から一本化 — DR-041 §5 トークン読み契約の住所)",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {"name": "v", "type": "flag", "short": "v"}
+    ],
+    "positionals": [
+      {"name": "a", "type": "string"}
+    ]
+  },
+  "cases": [
+    {
+      "why": "未定義 `-x` が string positional へフォールスルー (DR-041 §5): -x はどの matcher にも一致せず (定義トリガは -v のみ)、読みゼロなので素通し枝が生き、string positional a が raw で `-x` を値消費 → a=\"-x\"、success。v は不発なので result で default false。option 形トークンでも string positional なら成功する側の固定 (number 側の held Error 対照は prefix-guard-number.json)。",
+      "argv": ["-x"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "a", "op": "set", "operand": "-x", "source": "cli"}
+        ],
+        "result": {"a": "-x", "v": false}
+      }
+    }
+  ]
+}

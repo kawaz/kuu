@@ -1,0 +1,57 @@
+{
+  "why": "config_file 要素のパス自身が cli > env > default ラダーで解決する (DR-050 path ladder)。config_file 要素は普通の要素であり、その値 (=ファイルパス) が cli/env/default の 3 席で決まる。どのパスが勝ったかは、パスごとに別オブジェクトを返す provider で観測する。加えて default 由来パスの読込失敗は黙認 (設定ファイルはオプショナル) で値要素は自前 default に落ちる。config 由来値は effects 非掲載、result/sources で検証。config_file 要素はインフラで結果非掲載。蒸留元 slice phase20:218 (path ladder) + phase20:252 (default path 読込失敗は黙認)。\n\nCONFIG 入力表記 2 種 (本領域が提案、findings 参照): (1) パス依存の観測には `config_files` フィールド {パス→オブジェクト} を使い、provider がパスごとに返す値を表す (マップ外パスは None)。(2) 読込全失敗 (provider が全パスで None) は case トップの `config` を null にして表す (config/null-supply.json のネスト null = 値の供給なし とは別 — こちらはファイル自体が読めない)。committed パス (cli/env 明示) の読込失敗は Error だが、resolve フェーズのエラーは argv_pos を持たず failure schema に収まらないため findings 送り。本 fixture は成功輪郭 (どのパスが勝つか + default パス不在の黙認) のみ固定する。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {"name": "config", "type": "config_file", "long": true, "env": "MYAPP_CONFIG", "default": "/default.toml"},
+      {"name": "port", "type": "number", "long": true, "config_key": ["port"], "default": 7}
+    ]
+  },
+  "cases": [
+    {
+      "why": "cli パスが勝つ: --config /cli.toml が env/default パスを差し置いて選ばれ、provider が /cli.toml に返す {port:11} が読まれる → port=11@config。パス自身のラダーの最上席が cli。",
+      "argv": ["--config", "/cli.toml"],
+      "config_files": {"/cli.toml": {"port": 11}, "/env.toml": {"port": 22}, "/default.toml": {"port": 33}},
+      "expect": {
+        "outcome": "success",
+        "effects": [],
+        "result": {"port": 11},
+        "sources": {"port": "config"}
+      }
+    },
+    {
+      "why": "cli 無し・env パス: MYAPP_CONFIG=/env.toml が選ばれ {port:22} → port=22@config。パスラダーの env 席が default パスに勝つ。",
+      "argv": [],
+      "env": {"MYAPP_CONFIG": "/env.toml"},
+      "config_files": {"/cli.toml": {"port": 11}, "/env.toml": {"port": 22}, "/default.toml": {"port": 33}},
+      "expect": {
+        "outcome": "success",
+        "effects": [],
+        "result": {"port": 22},
+        "sources": {"port": "config"}
+      }
+    },
+    {
+      "why": "cli/env 無し → default パス /default.toml が選ばれ {port:33} → port=33@config。パス自身も最下席が default。",
+      "argv": [],
+      "config_files": {"/cli.toml": {"port": 11}, "/env.toml": {"port": 22}, "/default.toml": {"port": 33}},
+      "expect": {
+        "outcome": "success",
+        "effects": [],
+        "result": {"port": 33},
+        "sources": {"port": "config"}
+      }
+    },
+    {
+      "why": "default 由来パスの読込失敗は黙認: cli/env 無しで default パス /default.toml を provider が読めない (config 全体 null = 全パス None) → 設定ファイルはオプショナルなので Error でなく、config 席は空で port は自前 default 7 に落ちる。committed パス (cli/env 明示) の読込失敗との非対称 (committed→Error) は findings 送り。",
+      "argv": [],
+      "config": null,
+      "expect": {
+        "outcome": "success",
+        "effects": [],
+        "result": {"port": 7},
+        "sources": {"port": "default"}
+      }
+    }
+  ]
+}

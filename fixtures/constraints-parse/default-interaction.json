@@ -1,0 +1,45 @@
+{
+  "why": "遅延述語と値源 default の相互作用 = DR-047 の『trigger=committed / target=値充足』非対称の固定。値依存の制約は専用 DSL を持たず『値の枝 (exact 要素) への requires 合成』で書く (DR-055 §1 / DESIGN §9.3 — format の or 枝の json に requires:[schema])。同じ「default による充足」でも述語の trigger 側と target 側で扱いが逆になる: (a) requires の TARGET は『値の有無』で判定するので default 値でも充足する (目的語が default を持てば requires は満たされる)。(b) 値枝 requires の TRIGGER は committed 判定 (その要素が CLI で発火したか、DR-045) なので default 値では発火しない (ユーザが CLI で選んでいない default の json 枝は要求を立てない)。この非対称は DR-047 の split からそのまま導かれる意図的な仕様で、default を持つ同一定義で両面を対照する。制約は完全経路の全消費後に評価される遅延述語 (DR-047)。蒸留元: slice phase25 第15弾の『目的語は値の有無 (key_file default 充足)』と『committed-vs-default asymmetry (defaulted json 枝は trigger を発火させない)』。default は値源なので result に present (source=default、ラダー充填値、DR-051 §2a)。CONFORMANCE §2 通り default 由来の値は effects には載らず (effects は cli/link 由来のみ) result 側で検証する。reason は requires_violated (無条件 requires と値枝 requires は同一 requires 属性ゆえ同一 reason、DR-066)。値枝の宣言元参照: 匿名 exact 枝に露出直交な id (DR-052) を付け element でそれを指す (帰属先の親 name format と宣言元 json 枝の非対称)。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {"name": "decrypt", "type": "flag", "long": true, "requires": ["key_file"]},
+      {"name": "key_file", "type": "string", "long": true, "default": "/id.key"},
+      {"name": "format", "long": true, "default": "json", "or": [
+        {"exact": "json", "id": "fmt_json", "requires": ["schema"]},
+        {"exact": "yaml"}
+      ]},
+      {"name": "schema", "type": "string", "long": true}
+    ]
+  },
+  "cases": [
+    {
+      "why": "全 default ベースライン: 何も committed でないので requires (decrypt 未 committed) も json 枝の requires (format=default json は committed でない = json 枝が CLI で発火していない、DR-045) も発火せず success。default は値源なので key_file / format は result に present (source=default)。effects は空 (default 由来は effects に載らない、CONFORMANCE §2)。未発火 flag decrypt は preset default false。schema は default なしで absent。",
+      "argv": [],
+      "expect": {
+        "outcome": "success",
+        "effects": [],
+        "result": {"decrypt": false, "key_file": "/id.key", "format": "json"}
+      }
+    },
+    {
+      "why": "requires TARGET は default で充足 (DR-047『目的語は値の有無』): decrypt committed で key_file を requires するが、key_file は CLI 未供給でも default `/id.key` を持つ = 値充足 → 述語成立で success。目的語充足は committed でなく『値の有無』で判定される面の固定。effects は decrypt の cli set のみ (key_file は default 由来で effects 非掲載)。result は decrypt=true + key_file/format の default 値。",
+      "argv": ["--decrypt"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "decrypt", "op": "set", "operand": true, "source": "cli"}
+        ],
+        "result": {"decrypt": true, "key_file": "/id.key", "format": "json"}
+      }
+    },
+    {
+      "why": "値枝 requires の TRIGGER は committed でのみ発火 (case 1 の default json との対照): format を CLI で json に committed すると json 枝の requires:[schema] が立ち schema を要求、未供給で違反 → failure kind:constraint。ベースライン (case 1) では同じ json が default 由来ゆえ json 枝が発火しなかった — committed 判定 (DR-045) の非対称を crisp に示す対。値の帰属先は親 name format だが制約の宣言元は json 枝なので element=fmt_json (匿名 exact 枝に付けた id、DR-052 と直交)。argv_pos=2=argv.length。reason=requires_violated (無条件 requires と値枝 requires は同一 requires 属性、DR-066)。",
+      "argv": ["--format", "json"],
+      "expect": {
+        "outcome": "failure",
+        "errors": [{"element": "fmt_json", "argv_pos": 2, "kind": "constraint", "reason": "requires_violated"}]
+      }
+    }
+  ]
+}

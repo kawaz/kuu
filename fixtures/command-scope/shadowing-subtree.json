@@ -1,0 +1,56 @@
+{
+  "why": "shadowing はレベルごと、中間スコープの自前 global 宣言が subtree を統治する (DR-042): root global を中間 a が同一トリガの自前 global で shadow すると、root コピーは a で止まり、以降 a の subtree (孫 b) には a の宣言由来のコピーが伝播する (root のではなく)。root rverb (トリガ --verbose・global)、中間 a が averb (トリガ --verbose・global) を宣言、孫 b は無宣言。a b --verbose は averb を発火 — 孫 b は a の averb コピーを受けており、root rverb でも b 独自セルでもなく a の averb セルへ書く (中間 shadow が subtree を governs)。averb は a で宣言された global なので値セルは a に在り、result では a キーの下に present。未発火 root rverb は preset default false (DR-051 §2)。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {"name": "rverb", "type": "flag", "long": ["verbose"], "global": true}
+    ],
+    "commands": [
+      {
+        "type": "command",
+        "name": "a",
+        "options": [
+          {"name": "averb", "type": "flag", "long": ["verbose"], "global": true}
+        ],
+        "commands": [
+          {"type": "command", "name": "b"}
+        ]
+      }
+    ]
+  },
+  "cases": [
+    {
+      "why": "孫で発火: a が root rverb を shadow し、a の averb を自前 global として宣言 → 孫 b には a の averb コピーが伝播する。b 内 --verbose は a の averb セルへ書く (root rverb には届かない)。averb は a キー下に present、b は selected 空 {}、root rverb は未発火 preset false。中間 shadow が subtree 全体を統治することの固定。",
+      "argv": ["a", "b", "--verbose"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "averb", "op": "set", "operand": true, "source": "cli"}
+        ],
+        "result": {"rverb": false, "a": {"averb": true, "b": {}}}
+      }
+    },
+    {
+      "why": "中間で直接発火: a 内 --verbose は a の averb を発火 (root rverb を shadow)。b は未入場 → absent、rverb 未発火 preset false。中間レベルでの shadow 成立の直接確認。",
+      "argv": ["a", "--verbose"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "averb", "op": "set", "operand": true, "source": "cli"}
+        ],
+        "result": {"rverb": false, "a": {"averb": true}}
+      }
+    },
+    {
+      "why": "対照: root で --verbose を発火させると root 自身の rverb が発火する (shadow は a subtree 内の話)。a は未入場 → absent。",
+      "argv": ["--verbose"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "rverb", "op": "set", "operand": true, "source": "cli"}
+        ],
+        "result": {"rverb": true}
+      }
+    }
+  ]
+}

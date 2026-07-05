@@ -1,0 +1,28 @@
+{
+  "why": "失敗時アクション (DR-048) の到達可能性の輪郭: 完全経路 0 本の失敗時、候補経路のいずれかで失敗時アクション持ち要素 (help) が selected なら、保持 Error に代えて help を発火する (DR-048 §2)。発火するには help のトリガ (--help) が argv 順で実際に到達・消費される必要がある。fired_action は発火要素の name (DR-053 §2)。help が発火しても errors は構造として残る (表示が置換されるだけ、DR-053 §2)。help は type:\"help\" プリセット (失敗時アクション同梱、long:true で --help トリガ生成、DR-071)。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {"name": "help", "type": "help", "long": true}
+    ]
+  },
+  "cases": [
+    {
+      "why": "help 先行 + 後続失敗トークン: --help が pos0 で発火 (help satellite が --help を消費し FailMark を立てる)、続く --typo は消費者不在で残余。完全経路 0 本だが候補 (help を撃った scope 終端 Accept) に help がいるので発火。errors は残余トークンの躓き (element 省略 = スコープレベル、argv_pos = 残余先頭 = --typo の位置 1、reason unexpected_token、DR-065 §3)。fired_action と errors が 1 Failure に両立 (DR-053 §2)。",
+      "argv": ["--help", "--typo"],
+      "expect": {
+        "outcome": "failure",
+        "errors": [{"argv_pos": 1, "kind": "parse", "reason": "unexpected_token"}],
+        "fired_action": "help"
+      }
+    },
+    {
+      "why": "失敗トークン先行 → help 到達不能で非発火 (case 1 と対、argv 順が効くことの固定)。先頭 --typo は消費できる positional が無くパースが pos0 で詰まり、pos1 の --help に到達しない → help satellite は一度も発火しない。候補経路に help marker が無いので保持 Error のまま (fired_action なし)。errors は残余 --typo (argv_pos 0、unexpected_token)。",
+      "argv": ["--typo", "--help"],
+      "expect": {
+        "outcome": "failure",
+        "errors": [{"argv_pos": 0, "kind": "parse", "reason": "unexpected_token"}]
+      }
+    }
+  ]
+}

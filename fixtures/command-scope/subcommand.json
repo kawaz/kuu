@@ -1,0 +1,60 @@
+{
+  "why": "サブコマンドの入場と結果ネストの基本輪郭 (DR-018/025/041 §4): サブコマンドは親 greedy 面の『greedy マーク付き exact トリガ衛星』であり、その name を消費すると子スコープの新しい背骨に入る (親の greedy はそこへ届かない、DR-041 §4)。子スコープは結果スコープでもあるので (DR-025) 子で発火した効果はコマンド名の 1 段下にネストする。子だけが宣言するオプションは親スコープでは読めず、親に素で現れると残余トークン失敗になる (背骨が別、DR-041 §4)。未発火の flag は preset default false で result に present (DR-051 §2)、default なしの値オプションは未発火なら absent (キー消失、DR-051)。effects は cli 由来のパース時効果のみ (CONFORMANCE §2)、result はネスト込みの確定値。",
+  "query": "parse",
+  "definition": {
+    "commands": [
+      {
+        "type": "command",
+        "name": "serve",
+        "options": [
+          {"name": "port", "type": "number", "long": true},
+          {"name": "release", "type": "flag", "long": true}
+        ]
+      }
+    ]
+  },
+  "cases": [
+    {
+      "why": "serve 入場 + 子スコープで値/flag 両方が発火し、結果はコマンド名 serve の下にネストする (DR-025)。effects は消費順で port(pos1-2) の後に release(pos3)。port は number 値セル、release は flag set true。",
+      "argv": ["serve", "--port", "80", "--release"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "port", "op": "set", "operand": 80, "source": "cli"},
+          {"entity": "release", "op": "set", "operand": true, "source": "cli"}
+        ],
+        "result": {"serve": {"port": 80, "release": true}}
+      }
+    },
+    {
+      "why": "serve 入場で release のみ発火。port は default なしの number で未発火 → absent (キー消失、DR-051)。release は set true で子スコープにネスト。未発火の値オプションが result から消えることの固定。",
+      "argv": ["serve", "--release"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "release", "op": "set", "operand": true, "source": "cli"}
+        ],
+        "result": {"serve": {"release": true}}
+      }
+    },
+    {
+      "why": "serve を素で入場 (何も発火せず) も complete parse: 子に required positional が無いため成功。effects 空。entered-but-empty な子スコープでも flag release は preset default false で present (DR-051 §2)、port は absent。selected スコープが {} でなく {release:false} になるのは flag preset の効果。",
+      "argv": ["serve"],
+      "expect": {
+        "outcome": "success",
+        "effects": [],
+        "result": {"serve": {"release": false}}
+      }
+    },
+    {
+      "why": "子 serve だけが宣言する --release を親 (root) に素で置くと、root 背骨には --release の消費者が居らず (serve の背骨は別、DR-041 §4)、残余トークンで完全経路 0 本。element 省略 = スコープレベルの躓き、argv_pos は残余先頭 0、kind parse / reason unexpected_token (DR-065 §3)。serve は greedy トリガであり必須ではないため『serve 未指定』自体は失敗理由にならない。",
+      "argv": ["--release"],
+      "expect": {
+        "outcome": "failure",
+        "errors": [
+          {"argv_pos": 0, "kind": "parse", "reason": "unexpected_token"}
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,35 @@
+{
+  "why": "export_key null on an option = 透過 (DR-052 §2): 結果キー軸を持たない要素は name 無しノードと同一の露出挙動になる (DESIGN §2.3〜2.5、新特例なし)。kv 文脈 (options 直下) では『結果キー持ちだけが現れる』ため値ごと結果から消える — ただし値の伝搬は止まらない。値セルへの発火 (effects) は起き、link/計算があれば流れる。「export しない」のではなく「名前が無くなるだけ」(DR-052 §1)。effects に verbose が現れるのに result に verbose キーが無い、が透過の核心証拠。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {"name": "verbose", "type": "flag", "long": true, "export_key": null},
+      {"name": "keep", "type": "flag", "long": true}
+    ]
+  },
+  "cases": [
+    {
+      "why": "`--verbose --keep`: verbose は発火する (effects に entity=verbose の set true が載る = 値は伝搬) が export_key null なので kv result からキーごと消える。keep は通常キーで present。result は {keep:true} のみ。effects (2 発火) と result (1 キー) の差が『値は流れるがキーが無い』を固定する。",
+      "argv": ["--verbose", "--keep"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "verbose", "op": "set", "operand": true, "source": "cli"},
+          {"entity": "keep", "op": "set", "operand": true, "source": "cli"}
+        ],
+        "result": {"keep": true}
+      }
+    },
+    {
+      "why": "`--verbose` のみ: verbose は発火するが透過で result に出ない。keep は未発火の flag = preset default false で present (DR-051 §2)。result は {keep:false} — 透過要素 verbose が発火していても結果に痕跡を残さない一方、通常 flag keep は未発火でも false として現れる、の対比。",
+      "argv": ["--verbose"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "verbose", "op": "set", "operand": true, "source": "cli"}
+        ],
+        "result": {"keep": false}
+      }
+    }
+  ]
+}

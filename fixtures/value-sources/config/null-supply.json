@@ -1,0 +1,35 @@
+{
+  "why": "config の JSON null は『供給なし』でラダーを通過する (DR-050 §4 / DR-051 §4)。null は kuu の値空間に存在しない (in-band null 不採用)。config の `key: null` は何も供給せず、その要素はラダーを下り default があれば default、無ければ absent になる。実値との対照で、null がゼロ値でも空文字でもなく『席を素通り』することを固定する。config 由来値は effects 非掲載、result/sources で検証。config_file 要素はインフラで結果非掲載。蒸留元 slice phase21:81 (config JSON null は 供給なし)。\n\n表記注記: config オブジェクト内のネスト null (`{\"port\": null}`) は CNull = 供給なし。case トップの `config` フィールド全体を null にする表記 (config/path.json 参照) は『provider 読込失敗』を表し意味が異なる — ネスト null (値の供給なし) と config 全体 null (ファイル読込不能) を区別する。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {"name": "config", "type": "config_file", "long": true, "default": "/app.toml"},
+      {"name": "port", "type": "number", "long": true, "config_key": ["port"], "default": 9},
+      {"name": "name", "type": "string", "long": true, "config_key": ["name"]}
+    ]
+  },
+  "cases": [
+    {
+      "why": "config {port:null, name:null} → null は供給なし。port は config 席を素通りして default 9 に落ち (source:default)、name は default なしなので absent (キー消失)。null がラダーを止めず通過することの固定。",
+      "argv": [],
+      "config": {"port": null, "name": null},
+      "expect": {
+        "outcome": "success",
+        "effects": [],
+        "result": {"port": 9},
+        "sources": {"port": "default"}
+      }
+    },
+    {
+      "why": "対照: 実値は config から正常供給。config {port:3000} → port=3000@config。name は未供給 (キー無し) で absent。null (case 1) と実値の差 = 供給の有無。",
+      "argv": [],
+      "config": {"port": 3000},
+      "expect": {
+        "outcome": "success",
+        "effects": [],
+        "result": {"port": 3000},
+        "sources": {"port": "config"}
+      }
+    }
+  ]
+}

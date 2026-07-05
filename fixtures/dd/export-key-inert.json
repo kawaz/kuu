@@ -1,0 +1,25 @@
+{
+  "why": "dd に export_key を付けても結果に何も現れない (DR-064 §5): dd は値セルも子も持たないため結果キー軸に値が発生せず (DR-051 の absent)、export_key は綴りでもトリガでもない結果キー軸のメタなので dd では作用点が無い。無意味だが無害 — definition Error にはせず lint (静的 warn) の関心に留める (DR-021 の流儀)。dd の値効果なしは §4 の『値効果なし → 重複合流』創発の前提でもあり、export_key で値効果を得たりはしない。DR-064 §5 の仕様断定を固定 (slice に直接テストは無く DR 由来の蒸留 — fixture が仕様正本)。export_key を持つ dd も普通に sever し、結果には dd 由来のキー (`marker` も `--` も) が一切出ないことを固定。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {"name": "--", "type": "dd", "export_key": "marker"}
+    ],
+    "positionals": [
+      {"name": "x", "type": "string"}
+    ]
+  },
+  "cases": [
+    {
+      "why": "export_key 付き dd も値セルを持たない: -- が sever し -v が raw で x に落ちる (`x=-v`) のは basic.json と同じ。export_key=`marker` を設定しても結果に `marker` キーも `--` キーも現れず、result は positional x のみ。dd の export_key が inert (無意味・無害) であることを固定 (DR-064 §5)。effects は x の raw 消費のみ (dd は値効果を持たない)。",
+      "argv": ["--", "-v"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "x", "op": "set", "operand": "-v", "source": "cli"}
+        ],
+        "result": {"x": "-v"}
+      }
+    }
+  ]
+}

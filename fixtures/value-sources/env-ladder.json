@@ -1,0 +1,46 @@
+{
+  "why": "値源ラダー cli > env > default の骨格 (DR-031 #3 / DR-042 不変則④): env は席宣言型 installer で、構造 (matcher/経路探索) を一切生まず、値源ラダーの env 席に lookup を宣言するだけ (LOWERING §B.3)。優先順位はエンジン所有のラダーが決める。この領域は sources フィールドを期待値の主語彙として使う初出領域 — 各要素の最終値の由来 (cli/env/config/inherit/default) を sources で検証する。env 由来値は argv 順の全順序を持たない完走後の値確定なので effects には載らず (effects は cli/link 由来のみ、CONFORMANCE §2)、result + sources 側で検証する。env の文字列値は cli と同じ値パイプライン (pieceProcessor) を通って型付けされる: PORT=\"8080\" は number 要素で 8080 にパースされる (cli の --port 8080 と同一経路)。蒸留元 slice phase2:133 (DR-042 ④ env is a ladder-seat declaration)。定義 wire form は DR-063、env 席は属性名 env をそのまま綴りに使う (lowering/env/basic と同型)。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {"name": "port", "type": "number", "long": true, "env": "PORT", "default": 3000}
+    ]
+  },
+  "cases": [
+    {
+      "why": "cli present → cli が勝つ (ラダー最上席)。env に PORT=8080 があっても cli の --port 9090 が優先。effects に cli set が載り、result/sources は cli 由来。env 席は下位なので発火しない。",
+      "argv": ["--port", "9090"],
+      "env": {"PORT": "8080"},
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "port", "op": "set", "operand": 9090, "source": "cli"}
+        ],
+        "result": {"port": 9090},
+        "sources": {"port": "cli"}
+      }
+    },
+    {
+      "why": "cli なし・env あり → env 席が値を供給し default を上書き。文字列 \"8080\" は number 要素の値パイプラインで 8080 にパースされる (env の pieceProcessor 通過)。env 由来は完走後の値確定なので effects は空、result/sources で由来 env を検証する。",
+      "argv": [],
+      "env": {"PORT": "8080"},
+      "expect": {
+        "outcome": "success",
+        "effects": [],
+        "result": {"port": 8080},
+        "sources": {"port": "env"}
+      }
+    },
+    {
+      "why": "cli も env も無い → ラダー最下席の default 3000。default は値源なので result に必ず present (absent にならない、DR-051 §2a)。default 由来も effects 非掲載、sources=default で由来を固定する。",
+      "argv": [],
+      "env": {},
+      "expect": {
+        "outcome": "success",
+        "effects": [],
+        "result": {"port": 3000},
+        "sources": {"port": "default"}
+      }
+    }
+  ]
+}

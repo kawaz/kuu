@@ -1,0 +1,34 @@
+{
+  "why": "export_key は link/id と直交 (DR-052 §2 / DESIGN §2.4): 同一 name の long と short は 1 つの値セルへ合流し (name による link、値同期はパース時/id 層の関心)、export_key はその合流後の結果キーだけを差し替える。合流 (last-wins DR-015) も効果列の消費順保存 (DR-045) も export_key の有無で変わらない — 値の伝搬は止まらず、キー名だけが変わる。effects の entity は両入口とも合流先セル `port`、result キーだけ `portnum`。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {"name": "port", "type": "number", "long": true, "short": "p", "export_key": "portnum"}
+    ]
+  },
+  "cases": [
+    {
+      "why": "`--port 80 -p 90`: long と short は同一 name のセル port へ link 合流し、消費順に 80 → 90 の 2 効果を積んで last-wins で 90 (DR-015)。effects は entity=port の 2 連 (順序が同一性成分、DR-045)。結果射影で export_key portnum が name 由来キー port を差し替え、result は {portnum:90}。合流は export_key と無関係に成立する。",
+      "argv": ["--port", "80", "-p", "90"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "port", "op": "set", "operand": 80, "source": "cli"},
+          {"entity": "port", "op": "set", "operand": 90, "source": "cli"}
+        ],
+        "result": {"portnum": 90}
+      }
+    },
+    {
+      "why": "short 入口単独 `-p 90`: どちらの入口から発火しても同一セル port を経て export_key portnum で露出する。long/short の入口差は結果キーに影響しない (キーは export_key、入口は綴り軸)。",
+      "argv": ["-p", "90"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "port", "op": "set", "operand": 90, "source": "cli"}
+        ],
+        "result": {"portnum": 90}
+      }
+    }
+  ]
+}

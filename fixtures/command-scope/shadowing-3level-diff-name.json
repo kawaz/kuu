@@ -1,0 +1,45 @@
+{
+  "why": "3 段 shadowing の name-vs-trigger 判別 (ケース: 別 name・同トリガ、DR-042): root global verbose を中間 mid が別 name chatty・同トリガ --verbose・非 global で宣言、孫 sub は無宣言。shadow はトリガ literal 判定なので mid で root コピーが止まる。中間宣言が非 global のため subtree (孫 sub) には何も伝播しない — sub は verbose 入口を持たず、--verbose は sub 閉じ→mid 再開 (早閉じ抑制) で mid の chatty に読まれる。root global verbose は未発火 → preset default false で root に present (DR-051 §2)。chatty:true が『root verbose ではなく mid の自前宣言が読んだ』ことを示し、別 name でも同トリガなら shadow する (= トリガ判定・name 非依存) ことを固定。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {"name": "verbose", "type": "flag", "long": true, "global": true}
+    ],
+    "commands": [
+      {
+        "type": "command",
+        "name": "mid",
+        "options": [
+          {"name": "chatty", "type": "flag", "long": ["verbose"]}
+        ],
+        "commands": [
+          {"type": "command", "name": "sub"}
+        ]
+      }
+    ]
+  },
+  "cases": [
+    {
+      "why": "孫スコープで発火: sub は verbose 入口を持たない (mid の chatty は非 global で伝播せず、root コピーは mid で止まる) → sub 閉じ→mid 再開で mid の chatty が拾う。root verbose は未発火 preset false、sub は selected 空 {}。effect entity は勝者 chatty。",
+      "argv": ["mid", "sub", "--verbose"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "chatty", "op": "set", "operand": true, "source": "cli"}
+        ],
+        "result": {"verbose": false, "mid": {"chatty": true, "sub": {}}}
+      }
+    },
+    {
+      "why": "中間スコープで発火 (発火が先・sub 入場が後): mid の chatty が --verbose を直接拾い、続く sub トークンで sub に入場する。root verbose 未発火 preset false、sub は selected 空 {}。case 1 と発火位置が違うだけで同一 outcome。",
+      "argv": ["mid", "--verbose", "sub"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "chatty", "op": "set", "operand": true, "source": "cli"}
+        ],
+        "result": {"verbose": false, "mid": {"chatty": true, "sub": {}}}
+      }
+    }
+  ]
+}

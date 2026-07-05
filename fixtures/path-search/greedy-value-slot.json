@@ -1,0 +1,45 @@
+{
+  "why": "DR-041 §4 の「発火した greedy はその値スロットを一体の束として raw 消費する」を固定する。値を取る option (--color) が発火すると、次のトークンを無条件に自分の値として raw 消費する — たとえそれが別の定義済みトリガ (-v) の綴りでも (getopt 同型)。greedy の内部消費が一体である帰結であり、--color 専用の特別規則ではない。値 option が未発火なら結果に現れない (absent、DR-051 §1 — flag と違い preset default を持たない)。unfired flag (-v) は preset default false で現れる (DR-051 §2)。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {"name": "color", "type": "string", "long": true},
+      {"name": "v", "type": "flag", "short": "v"}
+    ]
+  },
+  "cases": [
+    {
+      "why": "発火した値 greedy が次トークンを無条件 raw 消費 (getopt 同型)。--color が発火し、次の -v を値スロットで raw 消費するので color='-v'。-v は定義済み flag だが --color の値スロットに食われて発火しない (先食いは greedy トリガの綴り保護であって、既に発火した greedy の値スロットには効かない)。完全経路は 1 本 (--color 未発火だと '--color' の消費者が居らず残余で不成立)。unfired v は preset default false。",
+      "argv": ["--color", "-v"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "color", "op": "set", "operand": "-v", "source": "cli"}
+        ],
+        "result": {"color": "-v", "v": false}
+      }
+    },
+    {
+      "why": "通常の値消費の対照: --color が普通のトークン x を値に取る。case 1 と対で、raw 消費が「次トークンが option 綴りかどうかに無関係」であることを固定 (x でも -v でも同じ挙動)。",
+      "argv": ["--color", "x"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "color", "op": "set", "operand": "x", "source": "cli"}
+        ],
+        "result": {"color": "x", "v": false}
+      }
+    },
+    {
+      "why": "値 option 未発火 → absent の対照。-v だけ発火し v=true。--color は未発火で、flag と違い preset default を持たない値 option なのでキー自体が結果から消える (absent、DR-051 §1)。case 1 の color present と対で「値 option は発火してはじめて結果に載る」ことを固定。",
+      "argv": ["-v"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "v", "op": "set", "operand": true, "source": "cli"}
+        ],
+        "result": {"v": true}
+      }
+    }
+  ]
+}

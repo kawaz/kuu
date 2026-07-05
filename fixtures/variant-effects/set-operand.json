@@ -1,0 +1,41 @@
+{
+  "why": "効果記述子 DR-045 の SET op と operand の輪郭: variant は同一値セルへ別トリガで EFFECT を適用する別入口 (DR-011 variant DSL / DR-045)。set は operand を運ぶ縮退形 — 値バインドそのものが set (DR-045 §1) で、operand ありの set variant は「固定値を commit する別入口」になる。base 入口 `:set` (args なし) は値スロット (トークンを消費する通常入口、DR-071 §2) なので --mode は CLI から任意値を取る一方、`safe:set:readonly` (args あり) は固定値 readonly を運ぶ。両者とも同じ mode セルへ set 効果を積む。effects の operand は canonical 規約 (DR-050 §4)、source は cli (parse fixture の effect は cli/link 由来のみ、CONFORMANCE §2)。default 由来の値 (mode 未供給時の auto) は effects 非掲載で result/sources 側検証。⚠ divergence note: slice phase13:82 は Variant 構造体を直接 `{trigger:\"gzip\", op:Set, operand:VStr(\"gzip\")}` と手組みし --gzip (name compress を含まない綴り) を試験する。だが wire DSL (DR-011) の綴りは `<prefix>-<name>` 導出 (installer.mbt:1089 の alias 再導出が variant トリガに name 埋込を要求する根拠、DR-057) なので --gzip 単独は wire で表現不能 (alias か name 由来 variant に限る)。本 fixture は op/operand 意味論を保ったまま導出可能な綴り `--safe-mode` (prefix safe + name mode) に置換した。挙動 (set が operand を運ぶ) は同一。蒸留元: slice phase13 第9弾 DR-045 set-variant。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {"name": "mode", "type": "string", "default": "auto", "long": [":set", "safe:set:readonly"]}
+    ]
+  },
+  "cases": [
+    {
+      "why": "set variant が固定 operand を運ぶ (SET 縮退形): --safe-mode は mode セルへ set(readonly) を積む。args あり set は operand を Bind 値として持つ (DR-045 §1)。トリガ発火のみで 0-token (operand は DSL 側に固定)。effects の source=cli (トリガは CLI 由来)、result は set された readonly、sources=cli (最終値の由来も CLI 選択)。",
+      "argv": ["--safe-mode"],
+      "expect": {
+        "outcome": "success",
+        "effects": [{"entity": "mode", "op": "set", "operand": "readonly", "source": "cli"}],
+        "result": {"mode": "readonly"},
+        "sources": {"mode": "cli"}
+      }
+    },
+    {
+      "why": "base 入口 `:set` は値スロット (DR-071 §2 args なし set = トークン消費形): --mode fast は次トークン fast を operand に取り set(fast) を積む。variant (固定値) と base (CLI 値) が同じ set op / 同じ mode セルで、operand の供給元だけ違うことを対照する。",
+      "argv": ["--mode", "fast"],
+      "expect": {
+        "outcome": "success",
+        "effects": [{"entity": "mode", "op": "set", "operand": "fast", "source": "cli"}],
+        "result": {"mode": "fast"},
+        "sources": {"mode": "cli"}
+      }
+    },
+    {
+      "why": "未発火ベースライン: どちらの入口も撃たれず effects 空。mode は default auto がラダー充填で present (source=default、DR-051 §2a)。default 由来は effects に載らない (CONFORMANCE §2) ので sources が唯一の由来検証チャネル。",
+      "argv": [],
+      "expect": {
+        "outcome": "success",
+        "effects": [],
+        "result": {"mode": "auto"},
+        "sources": {"mode": "default"}
+      }
+    }
+  ]
+}

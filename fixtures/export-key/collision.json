@@ -1,0 +1,34 @@
+{
+  "why": "露出キーの一意性検査は実行時 (DR-021 / DESIGN §15.5): 同じ export_key 値へ解決する 2 つの相異なる要素が、同一入力で両方露出したときのみ衝突 = ambiguous エラー (DESIGN §15.5、静的 reject ではなく warn + 実行時検出)。export_key は結果キーの指定なので、2 要素が同じキーへ落ちる構造は定義時には許され (§15.6 warn どまり)、実際の共露出でのみ ambiguous になる。片方のみ露出なら衝突しない (検査は実際の共露出に対してで、静的宣言に対してではない)。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {"name": "a", "type": "flag", "long": true, "export_key": "x"},
+      {"name": "b", "type": "flag", "long": true, "export_key": "x"}
+    ]
+  },
+  "cases": [
+    {
+      "why": "`--a --b`: 相異なる 2 要素 a・b が同一入力で両方 export_key `x` へ露出 → 実行時衝突で ambiguous (DESIGN §15.5)。interpretations は競合する結果ビューの列挙 (DR-053) で、キー x が a 由来の値を持つ解釈と b 由来の値を持つ解釈。※両要素が flag のため両ビューとも {x:true} に退化する — 衝突は結果キーの provenance (どちらの要素が x を占めるか) の曖昧さであって値の相違ではないため。この退化は下記 §divergence の要確認点。",
+      "argv": ["--a", "--b"],
+      "expect": {
+        "outcome": "ambiguous",
+        "interpretations": [
+          {"x": true},
+          {"x": true}
+        ]
+      }
+    },
+    {
+      "why": "`--a` のみ: a だけが export_key x へ実際に露出し、衝突なし (検査は実際の共露出に対して、静的宣言に対してではない — §15.5)。result {x:true}。b は未発火の flag だが、その preset default false は共露出キー x のもとに現れない (result に {x:false} は混ざらない) — preset default が export_key 共露出に参加するかは要確認 (下記 §divergence)。",
+      "argv": ["--a"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "a", "op": "set", "operand": true, "source": "cli"}
+        ],
+        "result": {"x": true}
+      }
+    }
+  ]
+}

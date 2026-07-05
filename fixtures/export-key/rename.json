@@ -1,0 +1,31 @@
+{
+  "why": "export_key string が結果キーを name 由来 (DR-046) から上書きする輪郭 (DR-052 §1)。export_key は『出す/出さない』のスイッチではなく結果キー軸の指定であり、上書きしても値セル (entity)・パースは不変で結果キーだけが変わる — したがって effects の entity は上書き後のキーではなく元の値セル name `port` のまま、result のキーだけが `alias` になる。未発火なら値源のない非反復要素は absent (DR-051) で、上書きキーごと結果に現れない (上書きは『存在する時のキー名』の指定であって存在を作らない)。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {"name": "port", "type": "number", "long": true, "export_key": "alias"}
+    ]
+  },
+  "cases": [
+    {
+      "why": "`--port 80`: 値セル port が 80 を得て発火 (effects の entity は cell name `port`)。結果への射影時に export_key `alias` が name 由来キー `port` を差し替え、result は {alias:80}。effects と result でキーが食い違う (entity=cell、result key=export_key) ことが『パース不変・結果キーのみ変化』の証拠。",
+      "argv": ["--port", "80"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "port", "op": "set", "operand": 80, "source": "cli"}
+        ],
+        "result": {"alias": 80}
+      }
+    },
+    {
+      "why": "未発火の対照: port は値源 (cli/env/config/inherit/default) を持たず未指定なので absent (DR-051 §1) — 上書きキー alias ごと結果に現れない。export_key は存在時のキー名の指定であって存在自体を作らないことを固定する。",
+      "argv": [],
+      "expect": {
+        "outcome": "success",
+        "effects": [],
+        "result": {}
+      }
+    }
+  ]
+}

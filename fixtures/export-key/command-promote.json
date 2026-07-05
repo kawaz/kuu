@@ -1,0 +1,38 @@
+{
+  "why": "export_key null on a command (scope-generating element) = 昇格露出 (DR-052 §2/§3, DESIGN §2.4): 露出規則 (最も浅い name 層) は export_key null の層を結果キー層と数えないため、その command のスコープキーは落ち、子の結果キー持ちが親スコープへ昇格する。透過は既存の露出規則 1 本で閉じ、subtree の値は消えない (完全消滅案は不採用、DR-052 採用しなかった案)。対照: 通常 command は子を自名の下に 1 段ネストする (command-scope/subcommand.json)。command は綴り軸の name (トリガ) を保つので `serve` トークンでの入場は不変 — 変わるのは結果キー軸のみ (lexical スコープと直交、DR-052 §2)。",
+  "query": "parse",
+  "definition": {
+    "commands": [
+      {
+        "type": "command",
+        "name": "serve",
+        "export_key": null,
+        "options": [
+          {"name": "port", "type": "number", "long": true}
+        ]
+      }
+    ]
+  },
+  "cases": [
+    {
+      "why": "`serve --port 80`: serve トークンで command スコープに入場 (綴り軸不変) し port が 80 発火。export_key null なので serve のスコープキーは結果に現れず、子 port が親 (root) へ昇格して result は {port:80} (通常なら {serve:{port:80}})。effects の entity は値セル port。",
+      "argv": ["serve", "--port", "80"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "port", "op": "set", "operand": 80, "source": "cli"}
+        ],
+        "result": {"port": 80}
+      }
+    },
+    {
+      "why": "`serve` のみ (子未発火): 通常の選ばれた command は空でも presence marker {} を持つ (DR-052 §3) が、export_key null のスコープは選ばれてもキーが無い (§3 末尾) ため {serve:{}} にならない。子 port は値源なし未発火で absent (DR-051)。昇格すべき子キーが無いので root は空 {} になる — null command は presence marker も昇格キーも生まない。",
+      "argv": ["serve"],
+      "expect": {
+        "outcome": "success",
+        "effects": [],
+        "result": {}
+      }
+    }
+  ]
+}

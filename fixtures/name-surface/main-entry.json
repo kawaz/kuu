@@ -1,0 +1,31 @@
+{
+  "why": "主入口 long の name 由来トリガ生成 (DR-071 + LOWERING §B.1): wire form の `long: true` は主入口記法 (糖衣 = variant 配列 [\":set\"]) で、要素の name から `--<name>` トリガを 1 本生成する。ここでは name=`v` の flag が `--v` を植える。DR-071 二形 (long は true | variant 配列) のうち true 側 = 主入口ありの輪郭を parse 観測で固定する。未発火時は flag の preset default false が result に現れる (LOWERING §A.5 / DR-051 §2) — この false は cli 効果ではないので effects には載らず result のみ (CONFORMANCE §2 の「未発火 flag の false は result 側」)。slice phase29 gap2 (`:set` 主入口記述子 → 名前由来 --<name>) の parse 断面。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {"name": "v", "type": "flag", "long": true}
+    ]
+  },
+  "cases": [
+    {
+      "why": "主入口が生成した `--v` トリガが発火 → 値セル v へ set(true)。name (v) から綴りを導出した long installer の主入口規則 (LOWERING §B.1) が parse で観測できることを固定。effects は cli 由来 1 本、result も同値。",
+      "argv": ["--v"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "v", "op": "set", "operand": true, "source": "cli"}
+        ],
+        "result": {"v": true}
+      }
+    },
+    {
+      "why": "未発火: flag の preset default false が result に present で現れる (LOWERING §A.5 / DR-051 §2、absent ではない)。cli 効果が無いので effects は空 (CONFORMANCE §2: ラダー/preset 充填は result 側検証)。主入口ありでも発火しなければ default に落ちる対照。",
+      "argv": [],
+      "expect": {
+        "outcome": "success",
+        "effects": [],
+        "result": {"v": false}
+      }
+    }
+  ]
+}

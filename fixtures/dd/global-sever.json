@@ -1,0 +1,58 @@
+{
+  "why": "dd × global の相互作用 (DR-042 ②構造コピー × ⑤sever): global option は宣言層コピーで子コマンドスコープの greedy 面へ衛星として植わり (不変則②)、その衛星は子スコープの dd sever にそのまま従う — global だからといって特別扱いされず、コピーされた衛星は子の普通の greedy 住人なので追加規則ゼロで sever に服する。同時に sever 境界は『子の -- の位置』であって『サブコマンド入場』ではないことを固定する。root global verbose (flag) + run コマンド (dd + positional x) の 1 定義で、コピー衛星が (a) dd 前なら発火し (b) dd 後なら severed で raw positional に落ちる、を対で固定。global 発火は root verbose セルへ link 同期し root キーに現れ (DR-042 link 同期)、x は run の positional なので run スコープ下にネストする (DR-025)。未発火 global flag は preset default false で root に present (DR-051 §2)。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {"name": "verbose", "type": "flag", "long": true, "global": true}
+    ],
+    "commands": [
+      {
+        "type": "command",
+        "name": "run",
+        "options": [
+          {"name": "--", "type": "dd"}
+        ],
+        "positionals": [
+          {"name": "x", "type": "string"}
+        ]
+      }
+    ]
+  },
+  "cases": [
+    {
+      "why": "dd 不使用: run に入り、run へコピーされた global --verbose が子内で発火 → root verbose セルへ link 同期する (root キーに現れる)。y は run の positional x が消費し run スコープ下にネスト。コピー衛星が子内で普通に発火することの対照ケース。effects は消費順で verbose(pos1) → x(pos2)。",
+      "argv": ["run", "--verbose", "y"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "verbose", "op": "set", "operand": true, "source": "cli"},
+          {"entity": "x", "op": "set", "operand": "y", "source": "cli"}
+        ],
+        "result": {"verbose": true, "run": {"x": "y"}}
+      }
+    },
+    {
+      "why": "dd 後は global コピー衛星も severed: run の -- が greedy 面を切った後、コピーされた --verbose は発火せず raw トークンとして positional x に落ちる (`x=--verbose`)。global であってもコピー衛星は子の普通の greedy 住人なので sever に服する (DR-042 ⑤、追加規則不要)。未発火の verbose は preset default false で root に present。case 1 と同じ argv 語彙 (--verbose) が dd の有無で発火/非発火に反転する。",
+      "argv": ["run", "--", "--verbose"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "x", "op": "set", "operand": "--verbose", "source": "cli"}
+        ],
+        "result": {"verbose": false, "run": {"x": "--verbose"}}
+      }
+    },
+    {
+      "why": "sever 境界は『子の -- の位置』でありサブコマンド入場ではない: `run --verbose -- z` は run 入場後 --verbose が先に発火し (root へ同期)、その後 -- が sever、続く z が raw positional x に落ちる。入場直後に severed になるのではなく、コピー衛星は dd より前なら正常発火する (case 2 との境界確定)。effects は verbose(pos1) → x(pos3)。",
+      "argv": ["run", "--verbose", "--", "z"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "verbose", "op": "set", "operand": true, "source": "cli"},
+          {"entity": "x", "op": "set", "operand": "z", "source": "cli"}
+        ],
+        "result": {"verbose": true, "run": {"x": "z"}}
+      }
+    }
+  ]
+}

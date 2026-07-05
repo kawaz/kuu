@@ -1,0 +1,31 @@
+{
+  "why": "matcher の多重 Accept (DR-041 §3): 短オプション束 `-n1.0f` を short_combine matcher が読むとき、値付着と cluster 分割の全読みを対等な枝として列挙する。ここで n は number 値、f は flag。寛容な number value_parser は `1.0f` も `1.0` も受理する (DR-041 §3 の canonical 例、DR-041 本文 §3: 「値付着 n=\"1.0f\" と分割 n=\"1.0\"+-f の 2 経路」) ため、単一トークンに 2 読みが立つ: (A) n が `1.0` を取り残り `f` が flag 発火 → {n:1,f:true}、(B) n が `1.0f` 全体を値として取り f 不発 → {n:1,f:false}。両読みとも単一トークンを全消費するので完全経路 2 本 → ambiguous (DR-038)。ambiguity は token の形でなく定義に宿る (f が定義されているから分割点が生きる) — 対照は cluster-split-no-flag.json (f 未定義 → B のみ生存)。数値の canonical 形は最短表現 1.0→1 (DR-050 §4)。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {"name": "n", "type": "number", "short": "n"},
+      {"name": "f", "type": "flag", "short": "f"}
+    ]
+  },
+  "cases": [
+    {
+      "why": "多重 Accept の ambiguous 表出 (DR-041 §3 / DR-038 / DR-053 §3): `-n1.0f` は値付着読み {n:1} と分割読み {n:1,f:true} の 2 経路が両方全消費で完成 → ambiguous。interpretations は各読みを結果オブジェクト形ビューで全列挙する (DR-053 §3)。2 読みは entity n では同値 (共に 1) だが f で分岐 (true vs false) — 値が効果同一性の成分だから同 entity・同 source でも別解釈として残り merge しない (DR-038 の効果列判定、slice phase9:32 の趣旨)。第 2 解釈の f 省略 = default false と構造等価 (CONFORMANCE §3)、これが f:true との差を作る。列挙順は非規範想定 (§3 は interpretations を構造等価と規定、effects と違い順序は同一性成分でない) だが slice golden の並び (分割先・全体後) を保持。",
+      "argv": ["-n1.0f"],
+      "expect": {
+        "outcome": "ambiguous",
+        "interpretations": [{"n": 1, "f": true}, {"n": 1}]
+      }
+    },
+    {
+      "why": "分割点なしで単一読みに潰れる (DR-041 §3): `-n1.0` は f が定義されていても `1.0` に有効な value/flag 分割点がない (末尾に flag 化できる文字が残らない) ため読みは 1 本 = n が `1.0` を取る。ambiguity が token 形の内在でなく「定義が suffix を吸収できるか」に依存する証拠 (case 1 との対照)。f は不発なので result で default false、effects には cli 由来の n=1 のみ載る (未発火 flag の false は result 側で確定、CONFORMANCE §2)。",
+      "argv": ["-n1.0"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "n", "op": "set", "operand": 1, "source": "cli"}
+        ],
+        "result": {"n": 1, "f": false}
+      }
+    }
+  ]
+}

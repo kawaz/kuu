@@ -1,0 +1,34 @@
+{
+  "why": "config_key を持たない要素は同型 path (結果スコープパス + name) で config を引く (DR-050 §3 同型対応)。明示 config_key (絶対パス DSL) との対照: config_key なしの port は結果と同じ形で config オブジェクトを辿る (root スコープ → path [port])。これは『結果と同じ形』の対応 (DR-030 appconfig 統合ストア) であり、config オブジェクトの入れ子が結果スコープの入れ子に一致すれば引ける。一致しなければ default に落ちる (エラーでなく供給なし)。config 由来値は effects 非掲載、result/sources で検証。config_file 要素はインフラで結果非掲載。蒸留元 slice phase20:94 (DR-050 §3 同型 default)。config 入力表記は config/ladder.json の注記と同じ (case の `config` フィールド = provider が任意パスに返すオブジェクト)。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {"name": "config", "type": "config_file", "long": true, "default": "/app.toml"},
+      {"name": "port", "type": "number", "long": true, "default": 1}
+    ]
+  },
+  "cases": [
+    {
+      "why": "config トップレベルに port → 同型 path [port] が発見 → port=5000@config。config_key 宣言なしでも結果スコープパス (root の port) で引ける。",
+      "argv": [],
+      "config": {"port": 5000},
+      "expect": {
+        "outcome": "success",
+        "effects": [],
+        "result": {"port": 5000},
+        "sources": {"port": "config"}
+      }
+    },
+    {
+      "why": "別の入れ子 (server.port) は同型 path [port] では見つからない → default 1。同型対応はパス形が一致した時だけ供給し、不一致は供給なしで default に落ちる (明示 config_key ならこの server.port を絶対指定できるが、同型では引かない)。",
+      "argv": [],
+      "config": {"server": {"port": 5000}},
+      "expect": {
+        "outcome": "success",
+        "effects": [],
+        "result": {"port": 1},
+        "sources": {"port": "default"}
+      }
+    }
+  ]
+}

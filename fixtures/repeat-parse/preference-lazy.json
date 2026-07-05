@@ -1,0 +1,27 @@
+{
+  "why": "取り分の選好 lazy (DR-043): 閉包に `lazy: true` を付けると選好が反転し、短い取り分から試す (regex の `.+?` 相当)。左の xs を lazy にすると、xs は残りが完結できる最短取りを取り、greedy な ys が残り全部を取る。選好は取り分次元にのみ効き、構造差の ambiguous は消さない (別 fixture preference-greedy と対、選好の向きだけが違う)。",
+  "query": "parse",
+  "definition": {
+    "positionals": [
+      {"name": "xs", "type": "string", "repeat": {"min": 1, "lazy": true}},
+      {"name": "ys", "type": "string", "repeat": {"min": 1}}
+    ]
+  },
+  "cases": [
+    {
+      "why": "lazy + greedy に `a b c d e`: lazy な xs は必須の min:1 だけ (`[a]`) を取り、greedy な ys が残り `[b,c,d,e]` を取る。preference-greedy の同入力 `[a,b,c,d],[e]` と鏡像 — 選好の向きだけで確定点が反転することの固定。",
+      "argv": ["a", "b", "c", "d", "e"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "xs", "op": "set", "operand": "a", "source": "cli"},
+          {"entity": "ys", "op": "set", "operand": "b", "source": "cli"},
+          {"entity": "ys", "op": "set", "operand": "c", "source": "cli"},
+          {"entity": "ys", "op": "set", "operand": "d", "source": "cli"},
+          {"entity": "ys", "op": "set", "operand": "e", "source": "cli"}
+        ],
+        "result": {"xs": ["a"], "ys": ["b", "c", "d", "e"]}
+      }
+    }
+  ]
+}

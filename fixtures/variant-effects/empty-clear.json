@@ -1,0 +1,39 @@
+{
+  "why": "DR-045 empty op: empty variant は蓄積コレクションを [] にリセットする効果記述子。tag は multiple (accumulate) オプションで --tag が値を append する。empty variant (`clear:empty` → --clear-tag) は committed=true でコレクションを決定論的に空にする。効果は result builder で適用順に畳まれる (効果列の順序は同一性成分、DR-038/045): set a → set b → empty で [] に潰れ、empty より後の --tag は空になったコレクションへ再蓄積する。これは empty op がコレクションセルに作用する輪郭 (DR-045) と、効果列順序が最終形を決める輪郭 (DR-015 の集合版) を 1 定義で固定する。effects は各トークンの cli 効果 (append の set と empty)、source=cli。⚠ divergence note: slice phase13:143 は --clear-tags (複数形) を手組みトリガで試すが、wire DSL は prefix clear + name tag = `--clear-tag` (単数形) を導出する (DR-011)。op=empty の意味は不変。⚠ 領域クロス: 本テストは multiple 領域 (D5) にも属す (accumulator の append 対 empty)。D9 は empty op 語彙の正本として保持、multiple 側は accumulator 蓄積の正本。蓄積の append 意味論は multiple 領域を参照。蒸留元: slice phase13 第9弾 DR-045 empty。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {"name": "tag", "type": "string", "multiple": "append", "long": [":set", "clear:empty"]}
+    ]
+  },
+  "cases": [
+    {
+      "why": "empty は末尾で全消し: --tag a --tag b で [a,b] を蓄積後、--clear-tag が empty 効果でコレクションを [] にリセット。効果列 [set a, set b, empty] を適用順に畳むと最終形は空リスト。empty の後にトークンが無いので再蓄積なし。result は空配列 (absent ではない — multiple は 0 要素でも [] で present、DR-051 §2)。sources=cli (empty は CLI 発火の効果)。",
+      "argv": ["--tag", "a", "--tag", "b", "--clear-tag"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "tag", "op": "set", "operand": "a", "source": "cli"},
+          {"entity": "tag", "op": "set", "operand": "b", "source": "cli"},
+          {"entity": "tag", "op": "empty", "source": "cli"}
+        ],
+        "result": {"tag": []},
+        "sources": {"tag": "cli"}
+      }
+    },
+    {
+      "why": "empty 後の再蓄積: --tag a --clear-tag --tag c は効果列 [set a, empty, set c]。empty が a を消した後 c を空コレクションへ append するので最終形は [c]。empty が『それまでの蓄積だけ』を消し以降の append を妨げないこと (効果列の局所性) を固定する。前ケースと同じ定義で empty の位置だけ変え、順序が同一性成分であることを対照する。",
+      "argv": ["--tag", "a", "--clear-tag", "--tag", "c"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "tag", "op": "set", "operand": "a", "source": "cli"},
+          {"entity": "tag", "op": "empty", "source": "cli"},
+          {"entity": "tag", "op": "set", "operand": "c", "source": "cli"}
+        ],
+        "result": {"tag": ["c"]},
+        "sources": {"tag": "cli"}
+      }
+    }
+  ]
+}

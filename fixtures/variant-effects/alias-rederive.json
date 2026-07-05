@@ -1,0 +1,62 @@
+{
+  "why": "long alias が name 由来 base とその variant を alias 名で再導出する (DR-057 §3)。canonical ssl (flag, default true) に SET-false variant `no:set:false` (→ --no-ssl で ssl=false) を持たせ、alias {alias:ssl, name:tls} を貼る。alias の継承原理: name 導出入口 (long 配列の base `:set` と、name を綴りに埋め込む variant) は alias の name で再導出される — base --ssl は --tls に、variant --no-ssl は --no-tls に (variant トリガが canonical name ssl を含むため str_replace で ssl→tls 再導出、installer.mbt:1089 / DR-057 §3)。よって --tls と --no-tls の両方が効き、どちらも canonical の ssl セルへ link する。効果は canonical セルへ流れ結果キーは canonical のみ (alias は結果スコープも新エンティティも作らない、DR-057 §2)。canonical の綴り --ssl / --no-ssl も不変で残る。これは『variant トリガが name 由来だからこそ alias 再導出が可能』という設計整合の証跡 — 逆に name を含まない綴りは variant でなく alias で書く (DR-057/071、set-operand.json の divergence note と同根)。effects は全て source=cli。蒸留元: slice phase26 第16弾 DR-057 §3 (long alias re-derives base AND variant)。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {"name": "ssl", "type": "flag", "default": true, "long": [":set", "no:set:false"]},
+      {"alias": "ssl", "name": "tls"}
+    ]
+  },
+  "cases": [
+    {
+      "why": "base 再導出: --tls は alias 名で再導出された base 入口 (canonical --ssl の対応物) として発火し ssl セルへ set(true) を積む。結果キーは canonical ssl (alias は表示帰属を持たない、DR-057 §2)。sources=cli。",
+      "argv": ["--tls"],
+      "expect": {
+        "outcome": "success",
+        "effects": [{"entity": "ssl", "op": "set", "operand": true, "source": "cli"}],
+        "result": {"ssl": true},
+        "sources": {"ssl": "cli"}
+      }
+    },
+    {
+      "why": "variant 再導出: --no-tls は canonical variant --no-ssl (トリガに name ssl を含む) を ssl→tls 置換で再導出した入口。発火すると SET-false variant の operand false を ssl セルへ積む。結果は ssl=false、キーは canonical。variant が alias 名で再導出される核 (DR-057 §3)。",
+      "argv": ["--no-tls"],
+      "expect": {
+        "outcome": "success",
+        "effects": [{"entity": "ssl", "op": "set", "operand": false, "source": "cli"}],
+        "result": {"ssl": false},
+        "sources": {"ssl": "cli"}
+      }
+    },
+    {
+      "why": "canonical base 不変: alias を貼っても canonical の --ssl は消えず ssl=true を積む。alias は別入口の追加であって canonical 綴りの置換ではない (DR-057 §2 の add-if-absent)。",
+      "argv": ["--ssl"],
+      "expect": {
+        "outcome": "success",
+        "effects": [{"entity": "ssl", "op": "set", "operand": true, "source": "cli"}],
+        "result": {"ssl": true},
+        "sources": {"ssl": "cli"}
+      }
+    },
+    {
+      "why": "canonical variant 不変: --no-ssl も残り ssl=false。canonical の base/variant と alias の base/variant が 4 綴りとも同じ ssl セルへ合流することを固定 (再導出は追加であって移動ではない)。",
+      "argv": ["--no-ssl"],
+      "expect": {
+        "outcome": "success",
+        "effects": [{"entity": "ssl", "op": "set", "operand": false, "source": "cli"}],
+        "result": {"ssl": false},
+        "sources": {"ssl": "cli"}
+      }
+    },
+    {
+      "why": "未発火ベースライン: どの綴りも撃たれず effects 空。ssl は明示 default true がラダー充填で present (source=default、flag の preset false でなく明示 default が勝つ、DR-051 §2a)。alias が結果に新キーを作らないこと (result は ssl 1 キーのみ、tls キーは存在しない) も同時に固定する。",
+      "argv": [],
+      "expect": {
+        "outcome": "success",
+        "effects": [],
+        "result": {"ssl": true},
+        "sources": {"ssl": "default"}
+      }
+    }
+  ]
+}

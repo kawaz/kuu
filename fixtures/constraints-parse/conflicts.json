@@ -1,0 +1,52 @@
+{
+  "why": "遅延述語の負の依存 (対称排他) と unset との相互作用 (DR-055 / DR-047 / DR-045)。conflicts_with: 『2 要素が両方 committed なら衝突』。片側にのみ宣言しても判定は対称 — 『誰が宣言したか』ではなく『両方 committed か』だけを見るので、宣言の向きに依らず両方向で発火する (DR-055)。committed 判定は最終効果 (DR-045): 発火後に unset variant で取り消せば非 committed になり、衝突は立たない — 制約が「値セルの最終状態」を見る遅延述語であることの帰結。違反 = 完全経路の不成立 = failure kind:constraint (DR-053)。argv_pos は評価時点 = argv.length (全消費後)。element=宣言元 foo。reason=conflicts_with_violated (<属性名>_violated、DR-066、fixture では optional §2)。効果列は適用順 (順序は同一性成分 DR-038/045)。蒸留元: slice phase25 第15弾 conflicts_with (foo conflicts bar、片側宣言で両方向、unset で取消)。⚠ 注記: unset variant の wire 綴り (`long` 内の `no:unset`) は variant.json の DSL パターン (`no:set:false`→trigger `no-<name>`) から類推した表記で、変体効果 (variant-effects) 領域の wire 語彙確定に依存する — 監督者確認対象 (下記報告参照)。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {"name": "foo", "type": "flag", "long": [":set", "no:unset"], "conflicts_with": ["bar"]},
+      {"name": "bar", "type": "flag", "long": true}
+    ]
+  },
+  "cases": [
+    {
+      "why": "conflict 発火: foo と bar が両方 committed → 衝突で failure kind:constraint。宣言は foo 側にのみ置いたが判定は『両方 committed』なので発火する。element=宣言元 foo、argv_pos=2=argv.length。",
+      "argv": ["--foo", "--bar"],
+      "expect": {
+        "outcome": "failure",
+        "errors": [{"element": "foo", "argv_pos": 2, "kind": "constraint", "reason": "conflicts_with_violated"}]
+      }
+    },
+    {
+      "why": "両方向対称: bar を先に出しても衝突は同じく発火する (宣言の向きに非依存、DR-055)。前ケースと argv 順を反転しても同一の failure。element/argv_pos は前ケースと同じ (element は宣言元 foo で不変、argv_pos は全消費後の argv.length)。",
+      "argv": ["--bar", "--foo"],
+      "expect": {
+        "outcome": "failure",
+        "errors": [{"element": "foo", "argv_pos": 2, "kind": "constraint", "reason": "conflicts_with_violated"}]
+      }
+    },
+    {
+      "why": "片側のみ committed → 衝突なし: foo だけなら bar は未 committed で述語不成立、success。result は foo=true、未発火 flag bar は preset default false で present (LOWERING §A.5 / DR-051 §2)。",
+      "argv": ["--foo"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "foo", "op": "set", "operand": true, "source": "cli"}
+        ],
+        "result": {"foo": true, "bar": false}
+      }
+    },
+    {
+      "why": "unset で取消 → 非衝突 (committed 判定は最終効果、DR-045): foo→bar→no-foo の順で発火すると foo の最終効果は unset なので foo は非 committed、conflict は立たず success。効果列は 3 効果を適用順で全保持 (foo set / bar set / foo unset — 最終勝ち collapse は is_committed / ladder 時点で起き、効果列自体は畳まれない、順序は同一性成分)。result: foo は unset でラダー開放 → preset default false、bar=true。unset op は operand を持たない (DR-045)。",
+      "argv": ["--foo", "--bar", "--no-foo"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "foo", "op": "set", "operand": true, "source": "cli"},
+          {"entity": "bar", "op": "set", "operand": true, "source": "cli"},
+          {"entity": "foo", "op": "unset", "source": "cli"}
+        ],
+        "result": {"foo": false, "bar": true}
+      }
+    }
+  ]
+}

@@ -1,0 +1,57 @@
+{
+  "why": "inheritable の祖先綴りは『定義スコープ名を prefix した固定綴り』で、深さで伸びない (DR-059 §1、採用しなかった案: 深さ毎に延長)。3 段 root > mid > sub で ttl を sub に inheritable 宣言すると、root と mid の両祖先へ同一の入口 --sub-ttl (prefix=定義スコープ sub) がコピーされる — root で --mid-sub-ttl のように中間名を積まない。この file は (1) root レベルで --sub-ttl が効く、(2) mid レベルでも同じ --sub-ttl が効く (深さ非依存)、(3) 中間名を積んだ --mid-sub-ttl は綴りとして存在せず失敗、を固定する。逆方向コピーは add-if-absent + 不動点反復で全祖先へ多段伝播する (global の逆, DR-042)。蒸留元: slice phase27 §2。result は各祖先スコープの write-target 値 (cli 由来)。",
+  "query": "parse",
+  "definition": {
+    "commands": [
+      {
+        "type": "command",
+        "name": "mid",
+        "commands": [
+          {
+            "type": "command",
+            "name": "sub",
+            "options": [
+              {"name": "ttl", "type": "number", "long": true, "inheritable": true, "default": 60}
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "cases": [
+    {
+      "why": "root レベルの祖先綴り: root に --sub-ttl 30 を素で置くと root の write-target セル ttl=30@cli が効く (mid/sub は未入場)。祖先綴りが最上位 root でも --sub-ttl (=定義スコープ名 sub 固定) であることを固定。",
+      "argv": ["--sub-ttl", "30"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "ttl", "op": "set", "operand": 30, "source": "cli"}
+        ],
+        "result": {"ttl": 30},
+        "sources": {"ttl": "cli"}
+      }
+    },
+    {
+      "why": "mid レベルでも同綴り: mid に入場後 --sub-ttl 30 が mid の write-target セルを束縛 → mid 配下にネスト。root と mid で綴りが同じ --sub-ttl (--mid-sub-ttl ではない = 深さで伸びない) ことを root case と対で固定。sources は mid.ttl=cli。",
+      "argv": ["mid", "--sub-ttl", "30"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "ttl", "op": "set", "operand": 30, "source": "cli"}
+        ],
+        "result": {"mid": {"ttl": 30}},
+        "sources": {"mid.ttl": "cli"}
+      }
+    },
+    {
+      "why": "深さ延長綴りの否定: --mid-sub-ttl は綴りとして存在しない (prefix は定義スコープ sub のみ、中間 mid を積まない, DR-059 §1)。root 背骨に消費者が居ず positional も無いため残余トークンで完全経路 0 本。element 省略=スコープレベルの躓き、argv_pos=残余先頭 0、kind parse / reason unexpected_token (CONFORMANCE §2, subcommand.json 未知トリガと同型)。『深さで伸びない』契約の負側を固定。",
+      "argv": ["--mid-sub-ttl", "30"],
+      "expect": {
+        "outcome": "failure",
+        "errors": [
+          {"argv_pos": 0, "kind": "parse", "reason": "unexpected_token"}
+        ]
+      }
+    }
+  ]
+}

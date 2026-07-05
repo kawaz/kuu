@@ -1,0 +1,24 @@
+{
+  "why": "export_key \"\" は null へ正規化され、null と同一の透過挙動になる (DR-052 §1 / §4)。キー名として空文字は無意味であり、かつ null を書けないフォーマット (UsefulAST 生成) 経由の逃げ道を兼ねて `\"\"` = null と規定する (DR-052 §4)。したがって transparent-kv.json (export_key null) と同じく、verbose は発火するが kv result からキーごと消える。DR-051 の『null は値空間に存在しない』は値セルの話で、ここでの \"\"→null は軸メタの無指定であり別物 (DR-052 §4)。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {"name": "verbose", "type": "flag", "long": true, "export_key": ""},
+      {"name": "keep", "type": "flag", "long": true}
+    ]
+  },
+  "cases": [
+    {
+      "why": "`--verbose --keep`: export_key \"\" は null 正規化されるので verbose は発火 (effects に載る) しつつ result からキーが消え、keep のみ残る。result {keep:true} は export_key null (transparent-kv.json case 1) と完全一致 — \"\" と null が同義であることの固定。",
+      "argv": ["--verbose", "--keep"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "verbose", "op": "set", "operand": true, "source": "cli"},
+          {"entity": "keep", "op": "set", "operand": true, "source": "cli"}
+        ],
+        "result": {"keep": true}
+      }
+    }
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "why": "command alias (DR-057 §2/§3): canonical command `checkout` に command alias `{alias:\"checkout\", type:command, name:\"co\"}` を貼ると、co は checkout の部分木 (背骨) へ入る別トリガになる (name 照合入口の再導出、DR-057 §3)。効果は canonical subtree の実体セルへ流れ、結果キーは canonical のみ — co で入っても結果は `checkout` の下にネストする (DR-057 §2、DR-052、DR-025 の子スコープ=結果スコープ)。alias は結果スコープ (co) を作らない。サブコマンドは親 greedy 面の greedy マーク付き exact トリガ衛星であり、name を消費すると子の新しい背骨に入る (親 greedy はそこへ届かない、DR-041 §4)。子で発火した効果はコマンド名の 1 段下にネストする。effects は子セル名を直接指す (ネストは result 側の関心、CONFORMANCE §2)。蒸留元: slice phase26 test 5 (command alias enters canonical subtree; result key stays canonical)。",
+  "query": "parse",
+  "definition": {
+    "commands": [
+      {"type": "command", "name": "checkout", "options": [
+        {"name": "branch", "type": "string", "long": true}
+      ]},
+      {"alias": "checkout", "type": "command", "name": "co"}
+    ]
+  },
+  "cases": [
+    {
+      "why": "alias トリガ co で checkout 部分木へ入場。子の --branch x が branch セルへ set。結果は canonical 名 checkout の下にネスト ({checkout:{branch:x}}) — 入口が co でも結果キーは co ではなく checkout (DR-057 §2)。effect entity は子セル branch そのもの (ネスト位置は result 側)。",
+      "argv": ["co", "--branch", "x"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "branch", "op": "set", "operand": "x", "source": "cli"}
+        ],
+        "result": {"checkout": {"branch": "x"}}
+      }
+    },
+    {
+      "why": "canonical トリガ checkout も同一部分木・同一結果キー。case 1 との対で『co と checkout が同じ canonical subtree に合流し結果キーも一致する』ことを固定する。",
+      "argv": ["checkout", "--branch", "y"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "branch", "op": "set", "operand": "y", "source": "cli"}
+        ],
+        "result": {"checkout": {"branch": "y"}}
+      }
+    }
+  ]
+}

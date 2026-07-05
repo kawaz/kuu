@@ -1,0 +1,61 @@
+{
+  "why": "unset op がラダーを開放し、set/default が commit する対照 (DR-045 §2 / DR-031)。値源系の核心: 効果記述子の op によって『下位席 (env) が後から勝てるか』が変わる。color は env 席 (COLOR) と default \"auto\" を持ち、unset 変異 (--no-color) / default 変異 (--reset-color) / 主入口の set (--color <値>) の 3 経路で発火する。unset は committed=false のまま残すのでラダーが env まで落ちて env が勝つ。set/default は committed=true で確定し env を無視する — ただし final 値の source タグは『値の由来席』を指すので、set は cli、default は default (commit 機構が cli でも値の出所は default 席) となる。unset/default 変異の cli 発火自体は effects (op:unset / op:default、operand なし) に載るが、最終値のラダー充填は result/sources で検証する (CONFORMANCE §2)。蒸留元 slice phase13:103 (DR-045 §2 unset opens the ladder)。\n\nVARIANT WIRE FORM の注記 (D9 variant-effects 領域と要調整): 変異は long DSL で表現する (lowering/long/variant.json の `no:set:false` と同型)。set 以外の op (unset/default/empty) の DSL 綴りは未確立のため、本 fixture は `no:unset` → トリガ --no-color、`reset:default` → トリガ --reset-color と仮定した。トリガ綴り自体は例示 (ラダー意味論に非依存)。op トークンの DSL 文法確定は D9 に委ねる (findings 報告)。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {"name": "color", "type": "string", "long": [":set", "no:unset", "reset:default"], "env": "COLOR", "default": "auto"}
+    ]
+  },
+  "cases": [
+    {
+      "why": "unset (--no-color) はラダーを開放: committed=false のまま残るので env 席まで落ちて env=always が勝つ (unset の狙い = 後続席に勝たせる)。cli の unset 発火は effects に op:unset で載るが、最終値 always の由来は env。set/default との差はこの『下位席が勝てる』一点。",
+      "argv": ["--no-color"],
+      "env": {"COLOR": "always"},
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "color", "op": "unset", "source": "cli"}
+        ],
+        "result": {"color": "always"},
+        "sources": {"color": "env"}
+      }
+    },
+    {
+      "why": "set (--color red) は commit: cli が確定し env は無視される。final 値の source は値の出所 = cli。unset (case 1) と対照で、同じ env 存在下でも set は env を勝たせない。",
+      "argv": ["--color", "red"],
+      "env": {"COLOR": "always"},
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "color", "op": "set", "operand": "red", "source": "cli"}
+        ],
+        "result": {"color": "red"},
+        "sources": {"color": "cli"}
+      }
+    },
+    {
+      "why": "default (--reset-color) も commit だが値は default 席から取る: env を無視して auto に固定 (LOCKED)。commit 機構は cli 発火だが final 値の source は値の出所 = default。unset と『どちらも default に戻す』が、unset は env に勝たせ default は勝たせない、が全体の主眼。",
+      "argv": ["--reset-color"],
+      "env": {"COLOR": "always"},
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "color", "op": "default", "source": "cli"}
+        ],
+        "result": {"color": "auto"},
+        "sources": {"color": "default"}
+      }
+    },
+    {
+      "why": "color 引数なし → cli 席が空でラダーが env まで落ちて env=always が供給 (unset case 1 と同じ結果)。cli 未発火なので effects 空。unset は『明示的に cli を空席化する』ので引数なしと同じ挙動になる、という等価性の固定。",
+      "argv": [],
+      "env": {"COLOR": "always"},
+      "expect": {
+        "outcome": "success",
+        "effects": [],
+        "result": {"color": "always"},
+        "sources": {"color": "env"}
+      }
+    }
+  ]
+}

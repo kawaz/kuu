@@ -1,0 +1,34 @@
+{
+  "why": "append.json の対照: accumulator を持たない (multiple 無し) scalar 値オプションは複数発火でも last-wins (DR-015) であってリストにならない。--name を 2 度発火すると効果列には 2 個の set が適用順で全保持される (効果列は畳まれない、primary oracle・順序は同一性成分 DR-038/045) が、scalar セルの最終 result は最後の値。これで append.json のリスト形が『反復そのもの』でなく『accumulator』由来であることが証明される (反復は両者で同じ、差は accumulator の有無)。effects は cli 効果のみ・配列順 = 適用順。蒸留元 slice phase7 (non-accumulator last-wins contrast)。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {"name": "name", "type": "string", "long": true}
+    ]
+  },
+  "cases": [
+    {
+      "why": "2 回発火 → last-wins scalar: --name a の後 --name b で name セルの最終値は b。効果列は set a / set b を適用順で 2 個とも保持する (最終勝ちの collapse は result 確定時に起き、効果列自体は畳まれない、conflicts.json case 4 と同型)。result は scalar 単値 b (append.json の [a,b] と対照)。",
+      "argv": ["--name", "a", "--name", "b"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "name", "op": "set", "operand": "a", "source": "cli"},
+          {"entity": "name", "op": "set", "operand": "b", "source": "cli"}
+        ],
+        "result": {"name": "b"}
+      }
+    },
+    {
+      "why": "1 回発火の baseline: scalar は 1 度発火なら素の単値 a。append.json の 1 回発火 [a] と対照して、accumulator の有無が『単値 vs 要素 1 件リスト』を分けることを固定する。",
+      "argv": ["--name", "a"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "name", "op": "set", "operand": "a", "source": "cli"}
+        ],
+        "result": {"name": "a"}
+      }
+    }
+  ]
+}

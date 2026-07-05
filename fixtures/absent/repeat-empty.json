@@ -1,0 +1,31 @@
+{
+  "why": "『反復系は 0 発火でも absent にならず空配列 []』(DR-051 §2b、DR-044 uniform array) を固定する。反復セル (repeat) は常に多値の形を持つ = 0 発火は空リスト [] であって absent ではない。optional な positional は repeat{min:0,max:1} と同一 (DR: optional=repeat identity) なので、未発火時の値は null でも absent でもなく [] になる。これは §2a (default 持ち) / §2c (required) と並ぶ『absent にならない 3 族』の一つで、スコープ生成の {} (selected-scope-empty.json) と同型の『形の発生 = 値の発生』原理。蒸留元: slice phase21 第11弾 §2b (`result_str(sc, [])` が `{xs:[]}` を凍結観測)。注意 — 本 fixture の観測は既存 command-scope/early-close.json (case 1 の why が『未発火 optional positional は absent』と述べる) と割れる: 専用 absent テスト (本領域) + DR-051 §2b/DR-044 に照らせば 0 発火 optional positional は [] が正 (divergence 候補として台帳報告済み)。max:1 越え (`a b` で失敗) は repeat 領域 (D4) の輪郭であり本 fixture の射程外。",
+  "query": "parse",
+  "definition": {
+    "positionals": [
+      {"name": "xs", "type": "string", "optional": true}
+    ]
+  },
+  "cases": [
+    {
+      "why": "0 発火: optional positional xs はトークンを 1 個も得ないが、repeat セルの一様形により結果は空配列 []。absent (キー消失) ではない — 反復系は形が先に在る (DR-051 §2b、DR-044)。effects は空 (発火なし)。§1 の非反復 absent (キーが消える) との決定的対照。",
+      "argv": [],
+      "expect": {
+        "outcome": "success",
+        "effects": [],
+        "result": {"xs": []}
+      }
+    },
+    {
+      "why": "1 発火: a を 1 個消費 → [a]。0 発火の [] と合わせ、xs が scalar でなく多値セル (配列) であることを固定する (DR-044)。effects は xs の cli set 1 件。",
+      "argv": ["a"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "xs", "op": "set", "operand": "a", "source": "cli"}
+        ],
+        "result": {"xs": ["a"]}
+      }
+    }
+  ]
+}

@@ -1,0 +1,34 @@
+{
+  "why": "absent の芯 (DR-051 §1) と『default 持ちは絶対に absent にならない』(DR-051 §2a) を 1 定義の同一結果内で対照する。kuu の値空間には null が無い (DR-051): 値源ラダー (cli>env>config>inherit>default, DR-031) を回しても値の湧かない非反復要素は、結果オブジェクトから『キーごと消える』= absent。in-band の null でも型ゼロ値でもない。対して default は立派な値源なので、ラダーが常に値を生み、キーは常に present (source=default)。name (値源なし: default/env/config なし) と port (default 持ち) を並べ、未指定時に name=absent・port=present を同時に観測する。effects は cli 由来のパース時効果のみ (CONFORMANCE §2): default 由来の値は argv 順の全順序を持たないため effects に載らず、由来は sources / result 側で検証する — つまり『source=default』を機械検証できる唯一のチャネルが sources (default は effects に現れないため)。補足 (fixture 射程外): DR-051 §5 の 2 層分離 (result はキーを省くが ParserContext の roster+bindings は『name は present=false/committed=false で存在は知っている』『port は present=true だが committed=false = ユーザ選択でない』と問合せ可能) は outcome union の外の ParserContext メタ (INTERNAL) であり、本 fixture は result 射影のみを固定する。蒸留元: slice phase21 第11弾 §1 (absent no key) / §2a (default present) / §5 (roster 2層) の result 面。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {"name": "name", "type": "string", "long": true},
+      {"name": "port", "type": "number", "long": true, "default": 5}
+    ]
+  },
+  "cases": [
+    {
+      "why": "未指定ベースライン: name は値源ゼロで未供給 → ラダー枯渇で absent (result にキー無し、DR-051 §1)。port は CLI 未供給でも default 5 が値源として充填され present (DR-051 §2a、source=default)。effects は空 (cli 発火なし、default は effects 非掲載, CONFORMANCE §2)。sources で port の由来=default を固定 — これは effects では表現できない『default は present だが cli 選択でない』面の唯一の検証点。",
+      "argv": [],
+      "expect": {
+        "outcome": "success",
+        "effects": [],
+        "result": {"port": 5},
+        "sources": {"port": "default"}
+      }
+    },
+    {
+      "why": "name を CLI で供給すると absent → present に転じる (§1 の対照): --name x で name セルが発火し result にキーが現れる。port は依然 default 由来で present。effects は name の cli set のみ (port の default は非掲載)。sources で cli 源と default 源が同一結果内で共存することを固定。数値 default は canonical 最短形 5 (DR-050 §4)。",
+      "argv": ["--name", "x"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "name", "op": "set", "operand": "x", "source": "cli"}
+        ],
+        "result": {"name": "x", "port": 5},
+        "sources": {"name": "cli", "port": "default"}
+      }
+    }
+  ]
+}

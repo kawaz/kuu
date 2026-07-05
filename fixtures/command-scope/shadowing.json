@@ -1,0 +1,51 @@
+{
+  "why": "global shadowing はトリガ (綴り) 判定であり name 非依存 (DR-042): 子が同一トリガを別 name で自前宣言すると global コピーが抑制され、子の自前宣言が勝つ (コピーが漏れれば両 name 発火で ambiguous になるが、抑制で一意)。root は gverb (name gverb・トリガ --verbose・global)、子 build は lverb (name lverb・トリガ --verbose・非 global) を宣言。異なる name でも同一トリガ --verbose なので shadow が成立し、build の lverb が一意に勝つことを固定 (name が違っても shadow する = トリガ判定)。effects の entity は発火セルの name。未発火 flag は preset default false で present (DR-051 §2)。root global gverb の値セルは root に 1 個。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {"name": "gverb", "type": "flag", "long": ["verbose"], "global": true}
+    ],
+    "commands": [
+      {
+        "type": "command",
+        "name": "build",
+        "options": [
+          {"name": "lverb", "type": "flag", "long": ["verbose"]}
+        ]
+      }
+    ]
+  },
+  "cases": [
+    {
+      "why": "子 build が同一トリガ --verbose を別 name lverb で宣言 → root gverb コピーが shadow され、build 内 --verbose は build の lverb を一意に発火 (ambiguous でない)。gverb は未発火 → root に preset default false。effect entity は勝者 lverb。",
+      "argv": ["build", "--verbose"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "lverb", "op": "set", "operand": true, "source": "cli"}
+        ],
+        "result": {"gverb": false, "build": {"lverb": true}}
+      }
+    },
+    {
+      "why": "対照: build に入らず root で --verbose を発火させると root 自身の gverb が発火する (shadow は子スコープ内の話)。build は未入場 → absent。root の own トリガが root で効くことの固定。",
+      "argv": ["--verbose"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "gverb", "op": "set", "operand": true, "source": "cli"}
+        ],
+        "result": {"gverb": true}
+      }
+    },
+    {
+      "why": "build を素で入場: 何も発火せず、両 flag は preset default false で present (gverb は root、lverb は build スコープ)。effects 空。selected 空スコープでも flag preset が present になることの固定 (DR-051 §2)。",
+      "argv": ["build"],
+      "expect": {
+        "outcome": "success",
+        "effects": [],
+        "result": {"gverb": false, "build": {"lverb": false}}
+      }
+    }
+  ]
+}

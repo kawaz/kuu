@@ -1,0 +1,54 @@
+{
+  "why": "DR-041 §4 の porous 面が repeat 反復の間にも適用されることを固定する。repeat の各反復は Many と同じく多孔質で、greedy option (--verbose) が反復の途中に割り込める。割り込んでも末尾の単一 dst は arity で一意に固定される (dst はちょうど 1 トークン後置を要求し、それが repeat の取り分境界を pin する、DR-038 一意性創発)。effects の配列順 = 消費順で、割り込みの位置が順序に反映される (DR-045)。src は無制限 repeat (min 0) なので 0 回発火でも [] を持つ (DR-051 §1)。unfired verbose は結果に preset default false で載る (DR-051 §2)。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {"name": "verbose", "type": "flag", "long": true}
+    ],
+    "positionals": [
+      {"name": "src", "type": "string", "repeat": {"min": 0}},
+      {"name": "dst", "type": "string"}
+    ]
+  },
+  "cases": [
+    {
+      "why": "greedy が repeat 反復と末尾 dst の間に割り込む。src=[a] を取り、--verbose が発火し、dst=b。src が --verbose を raw 消費しないのは greedy が先食い (背骨上のトリガは matcher が読み、positional の raw-eat に落ちない、DR-041 §4)。完全経路は 1 本 — dst に末尾 1 トークンを残す分割だけが全消費する。効果列は消費順 src→verbose→dst。",
+      "argv": ["a", "--verbose", "b"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "src", "op": "set", "operand": "a", "source": "cli"},
+          {"entity": "verbose", "op": "set", "operand": true, "source": "cli"},
+          {"entity": "dst", "op": "set", "operand": "b", "source": "cli"}
+        ],
+        "result": {"src": ["a"], "dst": "b", "verbose": true}
+      }
+    },
+    {
+      "why": "反復の途中 (a と b の間ではなく b の後) に割り込む変形: src が 2 回発火し (a, b)、その後 --verbose、末尾 dst=c。repeat の unfold が現背骨上に留まる (porous) ため反復は Many と同型に振る舞う。src の 2 発火は効果列に 2 エントリとして消費順で現れ、結果では flatten されて ['a','b'] になる (DR-043 repeat の flatten accumulator / DR-036)。",
+      "argv": ["a", "b", "--verbose", "c"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "src", "op": "set", "operand": "a", "source": "cli"},
+          {"entity": "src", "op": "set", "operand": "b", "source": "cli"},
+          {"entity": "verbose", "op": "set", "operand": true, "source": "cli"},
+          {"entity": "dst", "op": "set", "operand": "c", "source": "cli"}
+        ],
+        "result": {"src": ["a", "b"], "dst": "c", "verbose": true}
+      }
+    },
+    {
+      "why": "割り込みなしの対照: 2 トークンで src=[a], dst=b。末尾 dst の arity が取り分境界を pin し、src は残り全部 (ここでは a のみ) を取る一意分割。case 1/2 で示した割り込みが、この基本の取り分一意性を壊さないことを固定 (DR-038)。unfired verbose は preset default false。",
+      "argv": ["a", "b"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "src", "op": "set", "operand": "a", "source": "cli"},
+          {"entity": "dst", "op": "set", "operand": "b", "source": "cli"}
+        ],
+        "result": {"src": ["a"], "dst": "b", "verbose": false}
+      }
+    }
+  ]
+}

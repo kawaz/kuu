@@ -49,12 +49,12 @@ DR-038/041 のパース意味論コア (完全経路の数 → success/ambiguous
 | phase1:78 | greedy が 2 positional の間に割り込む (porous 面) |
 | phase1:88 | greedy が repeat 反復の間に割り込む |
 | phase1:101 | 発火した value greedy は次トークンを無条件 raw 消費 (getopt 同型) |
-| phase1:113 | 未定義 -x が string positional へフォールスルー |
-| phase1:120 | 未定義 -x が number positional で値パーサ拒否 → held Error |
 | phase1:130 | 親 greedy が子スコープの positional 消費を妨げない |
 | phase1:147 | 可変アリティ option (3数値/1文字列) + 末尾受け皿 → ambiguous(2) |
 | phase23:15 | 異位置で失敗する複数経路の Error 全保持、primary=最深 |
 | phase23:30 | 同位置失敗は同深タイで両方 primary |
+
+> 注: phase1:113/120 (prefix ガードなし素通し) は DR-041 §5 の系譜により D2 matcher-readings へ移管 (fixtures/matcher-readings/prefix-guard-{string,number}.json)。
 
 ### D2. matcher-readings — `fixtures/matcher-readings/`
 

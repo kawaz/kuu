@@ -1,0 +1,25 @@
+{
+  "why": "下流失敗での正規表現的バックトラック (DR-043): greedy が好んだ取り分が後続の型制約で失敗すると、閉包は取り分を 1 つ縮めて再分割する (regex エンジンの backtrack と同型)。取り分選好は事後検証でなく path-search の枝生成に効く構造制約なので (DR-043)、選好経路が下流で詰まったら次点の取り分を試す。ここでは string repeat の後に number repeat を置き、greedy の最長取りが number 側をトークン枯渇させたときの縮小再分割を固定。",
+  "query": "parse",
+  "definition": {
+    "positionals": [
+      {"name": "xs", "type": "string", "repeat": {"min": 1}},
+      {"name": "ys", "type": "number", "repeat": {"min": 1}}
+    ]
+  },
+  "cases": [
+    {
+      "why": "`a b 3`: greedy な xs はまず `[a,b,3]` を掴むが ys (number, min:1) の取るトークンが無く失敗 → 1 つ縮めて xs=`[a,b]`、ys が `3` を number として取り完結。よって `[a,b],[3]`。ys の効果 operand は number 3 (canonical 数値、DR-050 §4)。result の ys は number 配列 `[3]`。",
+      "argv": ["a", "b", "3"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "xs", "op": "set", "operand": "a", "source": "cli"},
+          {"entity": "xs", "op": "set", "operand": "b", "source": "cli"},
+          {"entity": "ys", "op": "set", "operand": 3, "source": "cli"}
+        ],
+        "result": {"xs": ["a", "b"], "ys": [3]}
+      }
+    }
+  ]
+}

@@ -1,0 +1,35 @@
+{
+  "why": "presence marker (DR-051 §3): スコープ生成要素 (command) が『選ばれた (selected)』なら、たとえ子が全て absent でも値は空オブジェクト {} になる — スコープ生成 = 値の発生であり、反復系の [] (repeat-empty.json) と同型の『形が先に在る』原理。選ばれなければ (unselected) absent (キー消失、DR-051 §1)。子 port を default なし number にすることで、serve 入場時に子が 1 つも発火せず全 absent でも serve キーは {} で present になる面を crisp に切り出す (flag を子に置くと preset default false, DR-051 §2 が混ざって {} が観測できないため、あえて値オプションのみ)。root スコープは常に selected なので、serve 未選択時の全体は空 root = {} (serve キー無し = serve が absent)。蒸留元: slice phase22 第12弾 §3 presence marker (`serve` → `{serve:{}}`、`[]` → `{}`)。export-key 領域 (D12) とクロスするが、ここでは export_key 無指定の素の command で『selected {} vs unselected absent』のみを固定する。",
+  "query": "parse",
+  "definition": {
+    "commands": [
+      {
+        "type": "command",
+        "name": "serve",
+        "options": [
+          {"name": "port", "type": "number", "long": true}
+        ]
+      }
+    ]
+  },
+  "cases": [
+    {
+      "why": "serve 選択・子は全 absent: serve に入場するが port (default なし number) は未発火 → port は absent (子スコープ内でキー消失)。しかし serve スコープ自体は選ばれた = 値が発生し {} になる (DR-051 §3、スコープ生成=値の発生)。effects は空 (発火なし)。selected な空スコープが absent でなく {} である面の固定。",
+      "argv": ["serve"],
+      "expect": {
+        "outcome": "success",
+        "effects": [],
+        "result": {"serve": {}}
+      }
+    },
+    {
+      "why": "serve 未選択: serve トリガが消費されないためスコープ生成が起きず serve は absent (root からキー消失、DR-051 §1)。root は常に selected なので全体は空 root = {}。前ケースの {serve:{}} との対照で『生成された空 {}』と『生成されない absent』を区別する。serve は greedy トリガであり必須ではないため未選択自体は失敗にならない。",
+      "argv": [],
+      "expect": {
+        "outcome": "success",
+        "effects": [],
+        "result": {}
+      }
+    }
+  ]
+}

@@ -1,0 +1,70 @@
+{
+  "why": "config 値の型解釈 (DR-050 §4 / DESIGN §3.3 数値 3 種)。config 値の期待型は要素の型で、寛容性は双方向対称 (DR-040 canonical 最寛容): (a) 文字列は任意型へパース (\"8080\"→number 8080、\"true\"→bool true、\"42\"→int 42)、(b) JSON スカラは string 要素へ文字列化 (1.5→\"1.5\"、true→\"true\")。config ファイルのクォート有無で挙動が割れてはならない (string 要素は cli/env で何でも受けるので config も同じ)。int は整数制約 (42 受理)、number は一般数値 (1.5 受理) で、両者の対照を n(int)/port(number) で示す。config 由来値は effects 非掲載、result/sources で検証。未供給の値要素 (default なし) は absent、flag は未供給でも preset default false で present (DR-051 §2)。config_file 要素はインフラで結果非掲載。蒸留元 slice phase20:120 (双方向対称寛容) + phase21:107/130 (int/number)。\n\n本 fixture は成功 (型変換が通る) ケースのみ。config 値の型不一致エラー (bool↔number 非強制、array→scalar 構造不一致、非整数 1.5→int) は failure だが、resolve フェーズ (経路確定後) のエラーは argv_pos を持たず outcome union の failure schema (argv_pos + kind parse/filter/constraint) に収まらない — この空白は findings で報告し、本 fixture では成功輪郭のみ固定する。整数値 number→string の表記 (1.0→\"1\" vs \"1.0\") も serialize 依存で spec 未確定 (phase20:196、findings 参照) のため非整数 1.5 のみ扱う。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {"name": "config", "type": "config_file", "long": true, "default": "/app.toml"},
+      {"name": "name", "type": "string", "long": true, "config_key": ["name"]},
+      {"name": "port", "type": "number", "long": true, "config_key": ["port"]},
+      {"name": "flag", "type": "flag", "long": true, "config_key": ["flag"]},
+      {"name": "n", "type": "int", "long": true, "config_key": ["n"]}
+    ]
+  },
+  "cases": [
+    {
+      "why": "型一致: string→VStr、number→VNum、bool→VBool、int→整数。各要素が config の同型値をそのまま受ける基準ケース。全て source:config。",
+      "argv": [],
+      "config": {"name": "hi", "port": 8080, "flag": true, "n": 42},
+      "expect": {
+        "outcome": "success",
+        "effects": [],
+        "result": {"name": "hi", "port": 8080, "flag": true, "n": 42},
+        "sources": {"name": "config", "port": "config", "flag": "config", "n": "config"}
+      }
+    },
+    {
+      "why": "文字列→型の寛容パース (対称性の半分): \"8080\"→8080、\"true\"→true、\"42\"→42。config のクォート付き値も cli/env の文字列トークンと同じ値パイプラインを通る。name は未供給で absent。",
+      "argv": [],
+      "config": {"port": "8080", "flag": "true", "n": "42"},
+      "expect": {
+        "outcome": "success",
+        "effects": [],
+        "result": {"port": 8080, "flag": true, "n": 42},
+        "sources": {"port": "config", "flag": "config", "n": "config"}
+      }
+    },
+    {
+      "why": "JSON 数値スカラ→string 要素へ文字列化 (対称性のもう半分): 1.5→\"1.5\"。string 要素は何でも受けるので config の number もクォートなしで文字列化される。他要素は未供給 (port/n は default なし absent、flag は preset default false@default)。",
+      "argv": [],
+      "config": {"name": 1.5},
+      "expect": {
+        "outcome": "success",
+        "effects": [],
+        "result": {"name": "1.5", "flag": false},
+        "sources": {"name": "config", "flag": "default"}
+      }
+    },
+    {
+      "why": "JSON bool スカラ→string 要素へ文字列化: true→\"true\"。case 3 と同じ対称性、bool 側。flag は preset default false。",
+      "argv": [],
+      "config": {"name": true},
+      "expect": {
+        "outcome": "success",
+        "effects": [],
+        "result": {"name": "true", "flag": false},
+        "sources": {"name": "config", "flag": "default"}
+      }
+    },
+    {
+      "why": "number vs int の対照: port(number) は非整数 1.5 を受理、n(int) は整数 42 を受理。同じ config で number は小数を許し int は整数のみ (非整数を int に入れると Error だが resolve エラーの表現は findings 送り)。name 未供給 absent、flag preset default false。",
+      "argv": [],
+      "config": {"port": 1.5, "n": 42},
+      "expect": {
+        "outcome": "success",
+        "effects": [],
+        "result": {"port": 1.5, "n": 42, "flag": false},
+        "sources": {"port": "config", "n": "config", "flag": "default"}
+      }
+    }
+  ]
+}

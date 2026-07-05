@@ -1,0 +1,39 @@
+{
+  "why": "name 由来主入口トリガの綴り正規化 (DR-022 + DR-071): name は snake_case が正規形 (AST キー / 結果キーの軸、DR-022)。主入口 `long: true` が name から導出するトリガは CLI 慣習に合わせ kebab-case に変換される (`dry_run` → `--dry-run`)。生成されるトリガは kebab 綴りのみで、snake 綴りの `--dry_run` は植わらない。よって『name=snake / トリガ=kebab / 結果キー=snake』の 3 軸分離を parse 観測で固定する。slice phase29 gap2 (DR-022 snake→kebab lowering) の断面。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {"name": "dry_run", "type": "flag", "long": true}
+    ]
+  },
+  "cases": [
+    {
+      "why": "kebab トリガ `--dry-run` が発火 → 結果キーは name のまま snake (dry_run) で set(true)。トリガ綴り (kebab) と結果キー綴り (snake) が別軸であることを固定 (DR-022)。",
+      "argv": ["--dry-run"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "dry_run", "op": "set", "operand": true, "source": "cli"}
+        ],
+        "result": {"dry_run": true}
+      }
+    },
+    {
+      "why": "snake 綴りの `--dry_run` は生成されていない (主入口の name 由来トリガは kebab のみ)。消費者が居ず残余トークンとして完全経路 0 本 → failure。element 省略 = スコープレベルの躓き、argv_pos=0 は残余先頭 (CONFORMANCE §2 / DR-065 §3 の unexpected_token)。『snake トリガは存在しない』ことの negative-control。",
+      "argv": ["--dry_run"],
+      "expect": {
+        "outcome": "failure",
+        "errors": [{"argv_pos": 0, "kind": "parse", "reason": "unexpected_token"}]
+      }
+    },
+    {
+      "why": "未発火でも結果キーは snake (dry_run): preset default false が result に present で現れ、キー綴りが name (snake) 由来であること (トリガの kebab とは無関係) を固定。cli 効果なしで effects は空。",
+      "argv": [],
+      "expect": {
+        "outcome": "success",
+        "effects": [],
+        "result": {"dry_run": false}
+      }
+    }
+  ]
+}

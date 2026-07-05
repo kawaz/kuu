@@ -1,0 +1,62 @@
+{
+  "why": "config の構造値: 配列は multiple セルの piece 列へ、入れ子オブジェクトは絶対 config_key で同型ナビ (DR-050 §4)。config の配列値 [a,b] は multiple 要素 tag の 2 piece として供給され (各 piece は §4 で型付け)、結果は配列 [a,b] になる。入れ子オブジェクト (server.port) は絶対 config_key [server,port] でルートから辿る (lookup レベルの同型対応)。config 由来値は effects 非掲載、multiple 由来のリストと単値をまとめて result/sources で検証。config_file 要素はインフラで結果非掲載。蒸留元 slice phase20:173 (array → multiple pieces; object → 同型 navigation)。config 入力表記は config/ladder.json 注記と同じ。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {
+        "name": "config",
+        "type": "config_file",
+        "long": true,
+        "default": "/app.toml"
+      },
+      {
+        "name": "tag",
+        "type": "string",
+        "long": true,
+        "multiple": "append",
+        "config_key": [
+          "tags"
+        ]
+      },
+      {
+        "name": "port",
+        "type": "number",
+        "long": true,
+        "config_key": [
+          "server",
+          "port"
+        ]
+      }
+    ]
+  },
+  "cases": [
+    {
+      "why": "config {tags:[a,b], server:{port:9000}} → tag は multiple なので配列の 2 要素が 2 piece となり result で [a,b]、port は入れ子オブジェクトを絶対 config_key [server,port] で辿って 9000。配列→piece 列の flatten と object の同型ナビを 1 ケースで固定。両者 source:config。",
+      "argv": [],
+      "config": {
+        "tags": [
+          "a",
+          "b"
+        ],
+        "server": {
+          "port": 9000
+        }
+      },
+      "expect": {
+        "outcome": "success",
+        "effects": [],
+        "result": {
+          "tag": [
+            "a",
+            "b"
+          ],
+          "port": 9000
+        },
+        "sources": {
+          "tag": "config",
+          "port": "config"
+        }
+      }
+    }
+  ]
+}

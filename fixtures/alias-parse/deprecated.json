@@ -1,0 +1,49 @@
+{
+  "why": "deprecated alias (DR-058 §2 + DR-057): deprecated:true が付いた alias 入口は受理不変 (canonical セルへ普通に束縛) だが、その入口で起動されると ParserContext の warnings に構造化警告 {element, kind:\"deprecated\"} を積む。canonical `port` (-p) + 通常 alias -n + deprecated alias -o の 3 入口はすべて port セルへ合流する (link 同型) が、警告を積むのは deprecated 入口 -o のみ。警告の element は canonical (port) — 「use <canonical> instead」の自動導出素材 (DR-058 §2、DR-057 §2)。deprecated 値は v1 では bool のみ。警告の表示・文言はレンダラの関心で仕様外 (DR-058: 素材はフィールド、文言はレンダラ)。DR-021 の filter warn (パース中警告) とは別層 (パース成功後の利用推奨警告)。**SPEC GAP (下記報告)**: CONFORMANCE §2 の outcome union に warnings フィールドは未記載。本 fixture は DR-058 の構造 {element, kind} に沿って success 内 optional `warnings` 配列で検証する提案形 (sources と同じ optional 検証の先例に倣う) — outcome union への warnings 追加要否は監督者確認対象 (ledger §4-3)。蒸留元: slice phase26 test 7。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {"name": "port", "type": "number", "short": "p"},
+      {"alias": "port", "short": "n"},
+      {"alias": "port", "short": "o", "deprecated": true}
+    ]
+  },
+  "cases": [
+    {
+      "why": "deprecated 入口 -o: 受理は不変で port=80 へ束縛 (effect entity port)、かつ deprecation 警告を積む。警告 element は canonical port (どの入口が deprecated かでなく『代替すべき canonical』を指す、DR-058 §2)。受理と警告が両立する (deprecated は reject でなく warn) ことの固定。",
+      "argv": ["-o", "80"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "port", "op": "set", "operand": 80, "source": "cli"}
+        ],
+        "result": {"port": 80},
+        "warnings": [{"element": "port", "kind": "deprecated"}]
+      }
+    },
+    {
+      "why": "非 deprecated alias -n: 同じ port セルへ束縛するが警告は積まれない (warnings 空)。deprecated 属性が入口限定であること (-o だけが警告源、-n は無警告) の固定 (DR-057 §2 入口限定 deprecated)。",
+      "argv": ["-n", "80"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "port", "op": "set", "operand": 80, "source": "cli"}
+        ],
+        "result": {"port": 80},
+        "warnings": []
+      }
+    },
+    {
+      "why": "canonical 入口 -p: 当然無警告 (warnings 空)。-o (deprecated, 警告あり) との対照で『警告は deprecated 入口の発火にのみ紐付く』ことを固定する。",
+      "argv": ["-p", "80"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "port", "op": "set", "operand": 80, "source": "cli"}
+        ],
+        "result": {"port": 80},
+        "warnings": []
+      }
+    }
+  ]
+}

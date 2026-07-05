@@ -1,0 +1,41 @@
+{
+  "why": "inheritable の祖先コピーは素の long option なので、long installer が space 形 (--sub-ttl 30) と eq-split 形 (--sub-ttl=30) の両方の matcher を与える (DR-042 のインストーラ合成 = 『lowering は入口 installer が展開』, DR-059 §3)。inheritable × long はマトリクスの本命で、逆方向コピーされた入口が通常の long と同じく両綴り形で読めることを固定する。この file は root レベルの write-target (sub は未入場) に対する space/eq-split 等価を確認する。蒸留元: slice phase27 §6。",
+  "query": "parse",
+  "definition": {
+    "commands": [
+      {
+        "type": "command",
+        "name": "sub",
+        "options": [
+          {"name": "ttl", "type": "number", "long": true, "inheritable": true, "default": 60}
+        ]
+      }
+    ]
+  },
+  "cases": [
+    {
+      "why": "space 形: long installer の space 衛星が --sub-ttl の次トークン 30 を operand として読む。root の write-target ttl=30@cli。",
+      "argv": ["--sub-ttl", "30"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "ttl", "op": "set", "operand": 30, "source": "cli"}
+        ],
+        "result": {"ttl": 30},
+        "sources": {"ttl": "cli"}
+      }
+    },
+    {
+      "why": "eq-split 形: 同じ祖先コピーに対し long installer の eq-split matcher が --sub-ttl=30 を 1 トークン内で分割して読む。space 形 case と同一 outcome — 逆方向コピーが通常 long と同じ両綴り形を持つことを固定 (inheritable × long 合成の本命)。",
+      "argv": ["--sub-ttl=30"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "ttl", "op": "set", "operand": 30, "source": "cli"}
+        ],
+        "result": {"ttl": 30},
+        "sources": {"ttl": "cli"}
+      }
+    }
+  ]
+}

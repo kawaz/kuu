@@ -1,0 +1,37 @@
+{
+  "why": "効果列の順序が同一性成分であること (DR-045 §1 / DR-038) と、同一セルへ合流する複数入口の scalar あと勝ち (DR-015) を link 合流の 2 形で固定する。link 合流 = 別トリガ (long と short) が同一実体セルへ link 同期する構成。同じ argv 内で両入口が別トークンで発火すると効果 [set 80, set 90] が 1 セルへ積まれ、効果列は消費順に保存される (順序が同一性成分)。scalar セルなので最終値は効果列の最後 = あと勝ち (DR-015)。argv 順を反転すれば効果列も反転し最終値も反転する — 効果列順序が最終値を決める証跡。これは ambiguous ではない正常系の合流 (1 完全経路、複数入口が 1 セルへ収束)。effects は全て cli 源 (両入口とも CLI トークン由来)。蒸留元: slice phase18 第7弾タスク2 (long/short 同一セル別トークン合流) + phase18 link-sync (global の root 入口と command 内コピーが別トークン発火)。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {"name": "port", "type": "number", "long": true, "short": "p"}
+    ]
+  },
+  "cases": [
+    {
+      "why": "long+short 同一セル合流のあと勝ち: --port 80 -p 90 は long 入口と short 入口が別トークンで port セルへ発火。効果列 [port=80, port=90] が消費順に積まれ、scalar あと勝ちで result=90。effects の配列順 (80 が先、90 が後) は §3 の順序込み完全一致で検証される (順序が同一性成分)。",
+      "argv": ["--port", "80", "-p", "90"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "port", "op": "set", "operand": 80, "source": "cli"},
+          {"entity": "port", "op": "set", "operand": 90, "source": "cli"}
+        ],
+        "result": {"port": 90},
+        "sources": {"port": "cli"}
+      }
+    },
+    {
+      "why": "順序反転であと勝ちも反転 (前ケースと対): -p 90 --port 80 は効果列 [port=90, port=80] になり scalar あと勝ちで result=80。同じ 2 入口・同じ 2 値でも argv 順が違えば効果列順が違い最終値が違う — 効果列順序が最終値を決めることの直接対照 (DR-045/015)。",
+      "argv": ["-p", "90", "--port", "80"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "port", "op": "set", "operand": 90, "source": "cli"},
+          {"entity": "port", "op": "set", "operand": 80, "source": "cli"}
+        ],
+        "result": {"port": 80},
+        "sources": {"port": "cli"}
+      }
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "why": "取り分の選好 (DR-043): 同じトークン列を 2 つの閉包が奪い合うとき、切り方の違いは ambiguous ではなく『同一解釈の切り方の自由』であり、閉包の宣言的選好で代表 1 本に確定する。既定は greedy — 左 (外側) の閉包が長い取り分から試す。無制限 string repeat が 2 本並ぶと path-search は全切り方を枚挙するが、これは効果の異なる別解釈ではないので DR-038 の ambiguous 検出は無傷 (完全経路の数え上げは切り方でなく構造差にのみ反応する)。",
+  "query": "parse",
+  "definition": {
+    "positionals": [
+      {"name": "xs", "type": "string", "repeat": {"min": 1}},
+      {"name": "ys", "type": "string", "repeat": {"min": 1}}
+    ]
+  },
+  "cases": [
+    {
+      "why": "greedy + greedy に `a b c d e`: 左の xs が最長取りを試す。`[a,b,c,d,e],[]` は ys の min:1 を満たせず失敗するので、それより 1 つ短い `[a,b,c,d],[e]` で確定 (さらに短い取り分は試さない)。一意・非 ambiguous。効果列は消費順に各トークンの set が並ぶ (DR-045 効果列 = 適用順)。result は flatten 蓄積で配列化 (DR-043/051)。",
+      "argv": ["a", "b", "c", "d", "e"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "xs", "op": "set", "operand": "a", "source": "cli"},
+          {"entity": "xs", "op": "set", "operand": "b", "source": "cli"},
+          {"entity": "xs", "op": "set", "operand": "c", "source": "cli"},
+          {"entity": "xs", "op": "set", "operand": "d", "source": "cli"},
+          {"entity": "ys", "op": "set", "operand": "e", "source": "cli"}
+        ],
+        "result": {"xs": ["a", "b", "c", "d"], "ys": ["e"]}
+      }
+    }
+  ]
+}

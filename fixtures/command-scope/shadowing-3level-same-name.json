@@ -1,0 +1,45 @@
+{
+  "why": "3 段 shadowing の name-vs-trigger 判別 (ケース: 同 name・同トリガ = 通常 shadow の 3 段版、DR-042): root global verbose を中間 mid が同 name verbose・同トリガ --verbose・非 global で宣言、孫 sub は無宣言。トリガ判定で mid が root コピーを止め、中間宣言が非 global なので孫 sub には伝播しない。孫での --verbose は sub 閉じ→mid 再開で mid の自前 verbose が拾う。shadow がトリガ判定 (name が同じでも別でも同じ結果、shadowing-3level-diff-name と対) であることの確認。effect entity は発火セルの name 'verbose' — root verbose と mid verbose は同名だが、各 argv で発火するのは mid の verbose 1 個だけなので effects に衝突は出ず、どちらのセルかは result のネスト位置 (mid 下の verbose vs root の verbose) で判別する。root verbose は未発火 preset false (DR-051 §2)。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {"name": "verbose", "type": "flag", "long": true, "global": true}
+    ],
+    "commands": [
+      {
+        "type": "command",
+        "name": "mid",
+        "options": [
+          {"name": "verbose", "type": "flag", "long": true}
+        ],
+        "commands": [
+          {"type": "command", "name": "sub"}
+        ]
+      }
+    ]
+  },
+  "cases": [
+    {
+      "why": "孫スコープで発火: sub は verbose 入口を持たず (mid の非 global verbose は伝播せず root コピーは mid で止まる) → sub 閉じ→mid 再開で mid の自前 verbose が拾う。effect entity 'verbose' は mid のセル (result で mid 下に present)、root verbose は未発火 preset false。",
+      "argv": ["mid", "sub", "--verbose"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "verbose", "op": "set", "operand": true, "source": "cli"}
+        ],
+        "result": {"verbose": false, "mid": {"verbose": true, "sub": {}}}
+      }
+    },
+    {
+      "why": "中間スコープで発火: mid の自前 verbose が --verbose を直接拾い、続く sub トークンで sub に入場。root verbose 未発火 preset false、sub は selected 空 {}。case 1 と同一 outcome。",
+      "argv": ["mid", "--verbose", "sub"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "verbose", "op": "set", "operand": true, "source": "cli"}
+        ],
+        "result": {"verbose": false, "mid": {"verbose": true, "sub": {}}}
+      }
+    }
+  ]
+}

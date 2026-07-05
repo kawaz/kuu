@@ -1,0 +1,64 @@
+{
+  "why": "inheritable (DR-059) の芯: sub スコープで inheritable 宣言された ttl は、自スコープでは name 由来の --ttl (DR-071 kebab) として効き、同時に inheritable installer が『定義スコープ名を prefix した入口 --sub-ttl』を祖先 (root) スコープへ逆方向コピーする (global の逆、DR-042 の構造コピー)。祖先で書かれた値は配下インスタンスの inherit 席 (値源ラダー cli>env>config>inherit>default, DR-031) を通って子のデフォルトになる。この file は 1 定義で (1) 自スコープ --ttl の直接束縛、(2) 祖先 --sub-ttl 書込み → sub への inherit 流下、(3) 何も書かなければ sub 自身の default、(4) 祖先書込みがあっても sub 自身の CLI が勝つ (ladder cli>inherit) の 4 面を固定する。result は『ラダー充填込みの確定値』(CONFORMANCE §2) — inheritable の inherit/default 由来値はパース時効果 (effects) には載らず (effects は cli/link 由来のみ)、由来は sources マップで検証する (source=default/inherit は effects に現れないため sources が唯一の検証チャネル、absent fixture と同型)。数値は canonical 最短形 (DR-050 §4)。蒸留元: slice phase27 §1 (自/祖先両綴り) / §3 (値の流下・cli 優先/default 落ち)。注: sub を entered して inherit 由来値を result に出すには runner が値源ラダーを command サブツリーへ通す必要がある (slice の低位射影 result_str は inherited context を空で渡すため sub を空に見せるが、それはラダー未実行の parse-tree ビューであって本 fixture の ladder-filled 射影ではない)。",
+  "query": "parse",
+  "definition": {
+    "commands": [
+      {
+        "type": "command",
+        "name": "sub",
+        "options": [
+          {"name": "ttl", "type": "number", "long": true, "inheritable": true, "default": 60}
+        ]
+      }
+    ]
+  },
+  "cases": [
+    {
+      "why": "自スコープ綴り: sub に入場後 --ttl 30 が sub の ttl セルを直接束縛。inheritable でも自スコープでは素の name 由来 --ttl (DR-071)。effects は cli 発火 (entity=ttl, set 30)、result は sub 配下にネスト。sources で sub.ttl の由来=cli を固定。",
+      "argv": ["sub", "--ttl", "30"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "ttl", "op": "set", "operand": 30, "source": "cli"}
+        ],
+        "result": {"sub": {"ttl": 30}},
+        "sources": {"sub.ttl": "cli"}
+      }
+    },
+    {
+      "why": "祖先綴り + inherit 流下: root へ逆方向コピーされた入口 --sub-ttl (prefix=定義スコープ名 sub) が 30 を書く → root の write-target セル ttl=30@cli が root キーに現れる。続く sub 入場で sub の ttl は自身の cli 無し → inherit 席が祖先書込み 30 を引く (DR-031)。よって root.ttl は cli 由来、sub.ttl は inherit 由来の同値 30。effects は cli 発火 (root write-target への --sub-ttl) 1 件のみ — sub の inherit はラダー充填で argv 順を持たず effects 非掲載 (CONFORMANCE §2)。sources が inherit 由来を検証する唯一のチャネル。注 (要確認, findings 参照): root の write-target と sub のセルは共に name=ttl のため、flat な entity キーでは両者を区別できない — result は入れ子で自然に分かれるが sources は scope-path 修飾キー (root は \"ttl\"、sub は \"sub.ttl\") で表現する (absent fixture の flat キーの入れ子拡張)。root write-target が result キーを export するか (Model Y: slice が一貫して {ttl:30} を書く) 導管に留めるか (Model X: {sub:{ttl:30}} のみ) は仕様未確定 — ここでは slice 挙動 (Model Y) に従う。",
+      "argv": ["--sub-ttl", "30", "sub"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "ttl", "op": "set", "operand": 30, "source": "cli"}
+        ],
+        "result": {"ttl": 30, "sub": {"ttl": 30}},
+        "sources": {"ttl": "cli", "sub.ttl": "inherit"}
+      }
+    },
+    {
+      "why": "default 落ち: どこにも書込みなし。root の write-target は default 無し → 値源ラダー枯渇で absent (root に ttl キー無し, DR-051 §1)。sub に素で入場すると sub の ttl は cli/env/config/inherit いずれも供給なし → 自身の default 60 に落ちる (source=default, DR-031 default 席)。inheritable 非 flag セルの default は parse-tree 射影 (build_result) では出ず値源ラダー完走で確定するため (result.mbt: 非 flag は inherit 席等でラダー依存)、result=ladder-filled でのみ 60 が現れる。effects 空 (cli 発火なし)。sources で sub.ttl=default を固定 (absent fixture の port=default と同型)。",
+      "argv": ["sub"],
+      "expect": {
+        "outcome": "success",
+        "effects": [],
+        "result": {"sub": {"ttl": 60}},
+        "sources": {"sub.ttl": "default"}
+      }
+    },
+    {
+      "why": "ladder cli>inherit: 祖先が --sub-ttl 30 を書き (root write-target=30@cli)、さらに sub 入場後 --ttl 10 で sub の ttl を直接書く。sub の値源ラダーは cli 席が最優先なので、祖先書込み由来の inherit 席 (30) より sub 自身の cli (10) が勝つ (DR-031)。root.ttl は依然 30@cli。effects は 2 つの cli 発火 (--sub-ttl 30 が root write-target、--ttl 10 が sub セル) — 配列順=適用順 (argv 消費順で --sub-ttl が先, DR-038)。注: 両効果とも entity=ttl で name 重複するが、順序+値で決定的に一致する (effects は順序付きリスト比較, CONFORMANCE §3)。sources: root.ttl=cli, sub.ttl=cli (sub は inherit でなく自身の cli で確定)。",
+      "argv": ["--sub-ttl", "30", "sub", "--ttl", "10"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "ttl", "op": "set", "operand": 30, "source": "cli"},
+          {"entity": "ttl", "op": "set", "operand": 10, "source": "cli"}
+        ],
+        "result": {"ttl": 30, "sub": {"ttl": 10}},
+        "sources": {"ttl": "cli", "sub.ttl": "cli"}
+      }
+    }
+  ]
+}

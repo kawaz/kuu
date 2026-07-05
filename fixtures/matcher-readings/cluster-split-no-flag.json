@@ -1,0 +1,22 @@
+{
+  "why": "ambiguity は定義依存であることの決定的対照 (DR-041 §3): cluster-split.json と同一トークン `-n1.0f` だが f を定義から外す。すると `1.0` の後の `f` を flag として立てる読みが消え、n が `1.0f` 全体を値として取る 1 読みだけが完全経路として生き残る → success。同じ token 形でも定義次第で ambiguous にも単一にもなる (matcher の多重 Accept は定義が吸収できる suffix の数で決まる)。number value_parser の寛容性 (`1.0f`→1.0、DR-041 §3) と canonical 最短形 1.0→1 (DR-050 §4)。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {"name": "n", "type": "number", "short": "n"}
+    ]
+  },
+  "cases": [
+    {
+      "why": "f 未定義なので分割枝が生成されず単一読み (DR-041 §3): n が cluster 残余 `1.0f` を丸ごと値として消費 → n=1。もう一方の「n=`1.0` + 残 `f`」読みは f を読む matcher が無く `f` が未消費残余になるため完全経路にならず脱落。よって非 ambiguous、success で n=1。",
+      "argv": ["-n1.0f"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "n", "op": "set", "operand": 1, "source": "cli"}
+        ],
+        "result": {"n": 1}
+      }
+    }
+  ]
+}

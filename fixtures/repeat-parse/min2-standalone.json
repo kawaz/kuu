@@ -1,0 +1,44 @@
+{
+  "why": "repeat min:2 の unroll (DR-043): min は閉包の必須反復回数であり path-search の枝生成に効く構造制約 (required = 値の充足 DR-047 とは別概念、DR-043)。min:2 は必須 head を 1 段 unroll してから Ref(>=1) の末尾を続ける = 合計 2 個以上、上限なし。1 個は最小未達で失敗、2 個以上は成功して flatten 蓄積で配列化。single 要素の閉包でも min 未達は構造的必須の不成立 = held ParseError を emit する (DR-053/065/066 — 末尾要素の有無に依らない)。",
+  "query": "parse",
+  "definition": {
+    "positionals": [
+      {"name": "f", "type": "string", "repeat": {"min": 2}}
+    ]
+  },
+  "cases": [
+    {
+      "why": "`a` 1 個は min:2 未達。2 個目の必須 head がトークンを得られず完全経路 0 本 → 構造的必須の不成立で kind=parse / reason=missing_operand を f に紐付けて emit。argv_pos はトークンが尽きて要求した位置 = argv.length = 1 (DR-065 §3)。exact-count.json の同型 `[a]` ケース (min:2,max:2 でも `missing operand for f`) と一致すべき — min 未達の失敗は max の有無に依らない。",
+      "argv": ["a"],
+      "expect": {
+        "outcome": "failure",
+        "errors": [{"element": "f", "argv_pos": 1, "kind": "parse", "reason": "missing_operand"}]
+      }
+    },
+    {
+      "why": "`a b` 2 個で min:2 充足。flatten 蓄積で `[a,b]`。",
+      "argv": ["a", "b"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "f", "op": "set", "operand": "a", "source": "cli"},
+          {"entity": "f", "op": "set", "operand": "b", "source": "cli"}
+        ],
+        "result": {"f": ["a", "b"]}
+      }
+    },
+    {
+      "why": "`a b c` 3 個。上限なしなので Ref 末尾が伸びて全消費、`[a,b,c]`。min:2 は下限のみを縛る。",
+      "argv": ["a", "b", "c"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "f", "op": "set", "operand": "a", "source": "cli"},
+          {"entity": "f", "op": "set", "operand": "b", "source": "cli"},
+          {"entity": "f", "op": "set", "operand": "c", "source": "cli"}
+        ],
+        "result": {"f": ["a", "b", "c"]}
+      }
+    }
+  ]
+}

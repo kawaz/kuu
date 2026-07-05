@@ -1,0 +1,36 @@
+{
+  "why": "dd × failure-action のクロス (DR-041 §4 先食い/内部一体 × DR-048): dd が発火して以降のトークンを内部 raw 消費にするので、severed 領域に入った failure-action (help) は発火しない — help トリガ衛星が一度も撃たれず raw で positional に食われるため。対照として help が dd sever より前 (到達可能位置) に来れば普通に発火する。failure-action の発火は失敗 (完全経路 0 本) と両立し、発火時も保持 Error は消えず fired_action と併存する (DR-053 §2)。本ファイルは dd の raw 消費が failure-action の到達可能性を断つことを固定する (failure-action の候補経路ポリシー軸 DR-048 §5 とは独立 — 両ケースとも全ポリシーで同一 outcome)。help は type:help プリセット相当の失敗時アクション付き flag。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {"name": "help", "type": "help", "long": true},
+      {"name": "--", "type": "dd"}
+    ],
+    "positionals": [
+      {"name": "p", "type": "string"}
+    ]
+  },
+  "cases": [
+    {
+      "why": "dd 後の --help は raw 消費で非発火: `-- --help x` は先頭 -- が sever、以降が内部 raw 領域になるので --help は help トリガを撃たず positional p が raw 消費 (`p=--help`)。末尾 x は消費者が居らず残余トークンで完全経路 0 本 → 失敗。help は発火しない (fired_action なし)。dd の先食いが failure-action の到達を断つことの固定。element 省略 = スコープレベルの躓き、argv_pos は残余先頭 2、reason unexpected_token (DR-065 §3)。",
+      "argv": ["--", "--help", "x"],
+      "expect": {
+        "outcome": "failure",
+        "errors": [
+          {"argv_pos": 2, "kind": "parse", "reason": "unexpected_token"}
+        ]
+      }
+    },
+    {
+      "why": "対照 — dd sever より前の --help は到達可能で発火する: `--help x y` は先頭 --help が pos0 で help を発火 (sever 領域外)、p が x を消費し scope-end に到達、末尾 y が残余。完全経路 0 本の失敗だが、到達可能な位置で failure-action が selected されたので help 発火。発火は保持 Error と併存する (DR-053 §2) ため、残余 y の unexpected_token (argv_pos 2) が errors に残りつつ fired_action=help が立つ。case 1 との対比で『dd sever の有無』が help 発火/非発火を決めることを固定。",
+      "argv": ["--help", "x", "y"],
+      "expect": {
+        "outcome": "failure",
+        "errors": [
+          {"argv_pos": 2, "kind": "parse", "reason": "unexpected_token"}
+        ],
+        "fired_action": "help"
+      }
+    }
+  ]
+}

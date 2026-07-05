@@ -1,0 +1,47 @@
+{
+  "why": "repeat min:2 と末尾の単一 positional の相互作用 (DR-043 / DR-038): min:2 の src が必須 head を 2 段確保しつつ、末尾の scalar dst が必ず 1 トークンを要求することで分割点が一意に決まる (DR-038 の創発 = ちょうど 1 本の完全経路)。cp 系の `cp src... dst` を min:2 にした形。トークン不足時の失敗は starve された末尾要素 dst に紐付く。",
+  "query": "parse",
+  "definition": {
+    "positionals": [
+      {"name": "src", "type": "string", "repeat": {"min": 2}},
+      {"name": "dst", "type": "string"}
+    ]
+  },
+  "cases": [
+    {
+      "why": "`a b` は src の min:2 が両トークンを消費し、末尾 dst にトークンが残らず完全経路 0 本 → dst が operand を得られない構造的失敗。element=dst / kind=parse / reason=missing_operand、argv_pos=argv.length=2 (dd/basic case 3 と同型: 末尾 scalar の operand 不足)。",
+      "argv": ["a", "b"],
+      "expect": {
+        "outcome": "failure",
+        "errors": [{"element": "dst", "argv_pos": 2, "kind": "parse", "reason": "missing_operand"}]
+      }
+    },
+    {
+      "why": "`a b c`: greedy な src は dst が 1 トークン得られる範囲で最長取り = `[a,b]`、dst=`c`。src は flatten で配列、dst は scalar。",
+      "argv": ["a", "b", "c"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "src", "op": "set", "operand": "a", "source": "cli"},
+          {"entity": "src", "op": "set", "operand": "b", "source": "cli"},
+          {"entity": "dst", "op": "set", "operand": "c", "source": "cli"}
+        ],
+        "result": {"src": ["a", "b"], "dst": "c"}
+      }
+    },
+    {
+      "why": "`a b c d`: src=`[a,b,c]`、dst=`d`。min:2 は下限のみなので src は末尾に 1 個残す最長取り。",
+      "argv": ["a", "b", "c", "d"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "src", "op": "set", "operand": "a", "source": "cli"},
+          {"entity": "src", "op": "set", "operand": "b", "source": "cli"},
+          {"entity": "src", "op": "set", "operand": "c", "source": "cli"},
+          {"entity": "dst", "op": "set", "operand": "d", "source": "cli"}
+        ],
+        "result": {"src": ["a", "b", "c"], "dst": "d"}
+      }
+    }
+  ]
+}

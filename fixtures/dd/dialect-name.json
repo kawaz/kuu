@@ -1,0 +1,39 @@
+{
+  "why": "dd の name はトリガ綴り軸にのみ効く (DR-064 §5): dd プリセットは name デフォルト `--` を供給するが、明示 name は合成順で上書きされ dd の綴りを差し替える (方言 CLI 対応)。ここでは name=`++` の dd が `++` を sever トリガにし、既定綴りの `--` は dd トリガとしての意味を失い普通の positional トークンになる。値効果なし・消費 1・severed 化という dd の実態 (DR-041/042) は綴りに依らず不変で、basic.json の `--` ケースと綴りだけ違う同型挙動になることを固定。name はトリガ綴り軸専用で結果キー軸には値を生まない (dd は値セルを持たない、DR-051 の absent)。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {"name": "++", "type": "dd"},
+      {"name": "a", "type": "flag", "short": "a"}
+    ],
+    "positionals": [
+      {"name": "x", "type": "string"}
+    ]
+  },
+  "cases": [
+    {
+      "why": "`++` が sever トリガ: -a が flag 発火した後、`++` が greedy 面を切り、続く -b は severed で raw 消費され positional x に落ちる (`x=-b`)。basic.json case 1 (`-a -- -b` → a=true, x=-b) と綴りだけ違う完全同型。dd の実態は綴り軸の差し替えに不変であることを固定。effects は a(pos0) → x(pos2)。",
+      "argv": ["-a", "++", "-b"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "a", "op": "set", "operand": true, "source": "cli"},
+          {"entity": "x", "op": "set", "operand": "-b", "source": "cli"}
+        ],
+        "result": {"a": true, "x": "-b"}
+      }
+    },
+    {
+      "why": "既定綴り `--` は dd トリガではない: dd の name が `++` に差し替わっているので、`--` は sever を起こさず普通の positional トークンとして x に食われる (`x=--`)。case 1 の対照で『dd の意味は name 軸の綴りにのみ宿り、`--` という綴り自体には特権がない』ことを固定 (DR-064 §5)。effects は a(pos0) → x(pos1)。",
+      "argv": ["-a", "--"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "a", "op": "set", "operand": true, "source": "cli"},
+          {"entity": "x", "op": "set", "operand": "--", "source": "cli"}
+        ],
+        "result": {"a": true, "x": "--"}
+      }
+    }
+  ]
+}

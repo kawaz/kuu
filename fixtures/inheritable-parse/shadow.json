@@ -1,0 +1,44 @@
+{
+  "why": "inheritable コピーの自前優先 shadow (DR-059 §3): 祖先スコープが inheritable の祖先綴りと同一 literal のトリガを自前で宣言していると、逆方向コピーは追加されない (global shadowing と対称、add-if-absent の absent 判定で既存トリガに負ける)。よって root で --sub-ttl は祖先自身の option (other) を束縛し、sub の write-target には向かわない。shadow は祖先の綴りだけを覆い、sub 自身の --ttl 綴りは無傷。この file は (1) 祖先の自前 --sub-ttl が inheritable コピーを shadow して other を食う、(2) shadow 下でも sub 自身の --ttl は正常、を固定する。蒸留元: slice phase27 §4。basic.json (shadow 無しでは --sub-ttl が ttl の write-target を束縛) との対照でコピー抑制が観測できる。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {"name": "other", "type": "string", "long": ["sub-ttl"]}
+    ],
+    "commands": [
+      {
+        "type": "command",
+        "name": "sub",
+        "options": [
+          {"name": "ttl", "type": "number", "long": true, "inheritable": true, "default": 60}
+        ]
+      }
+    ]
+  },
+  "cases": [
+    {
+      "why": "自前優先 shadow: root が自前で --sub-ttl (option other, 明示綴り) を持つため inheritable の逆方向コピーは抑制される。--sub-ttl hello は root の other を束縛し ttl write-target には向かわない (basic.json では同綴りが ttl を束縛したのと反転)。result は other=hello、sub は未入場で不在。sources で other=cli を固定。",
+      "argv": ["--sub-ttl", "hello"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "other", "op": "set", "operand": "hello", "source": "cli"}
+        ],
+        "result": {"other": "hello"},
+        "sources": {"other": "cli"}
+      }
+    },
+    {
+      "why": "shadow は自スコープ綴りに無干渉: 祖先の自前 --sub-ttl が inheritable コピーを覆っても、sub 自身の name 由来 --ttl は独立に効く。sub 入場後 --ttl 30 が sub の ttl を束縛 → {sub:{ttl:30}}。root の other は未書込み・default 無しで absent。shadow が祖先綴りのみを覆い子綴りを壊さないことを固定。",
+      "argv": ["sub", "--ttl", "30"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "ttl", "op": "set", "operand": 30, "source": "cli"}
+        ],
+        "result": {"sub": {"ttl": 30}},
+        "sources": {"sub.ttl": "cli"}
+      }
+    }
+  ]
+}

@@ -1,0 +1,55 @@
+{
+  "why": "同一値セルへの複数入口形が全て一致 (DR-041/042 link 合流): port を long (--port) と short (-p) の両方で入口宣言すると、long installer は exact 綴り衛星 + eq-split matcher を、short installer は short_combine matcher を greedy 面に積むが、全入口が同じ実体 port の値セルへ link 合流する (DR-042 §展開の標準パターン)。よって 4 つの CLI 綴り形 — long-space `--port 8080` / eq-split `--port=8080` / short-attach `-p8080` / short-next-token `-p 8080` — は同一の効果 (port=8080@cli) を生む。matcher の読み分岐 (値付着 vs 次トークン借用、DR-041 §3) が入口の違いを吸収し観測結果を一致させることの固定。long: true は名前由来綴り --port の糖衣 (DR-071)。数値 canonical 最短形 (DR-050 §4)。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {"name": "port", "type": "number", "long": true, "short": "p"}
+    ]
+  },
+  "cases": [
+    {
+      "why": "long-space 形: exact 綴り衛星 `--port` が発火し次トークン `8080` を値スロットで借用 (DR-041 §3 の外側 2 トークン借用方向) → port=8080。",
+      "argv": ["--port", "8080"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "port", "op": "set", "operand": 8080, "source": "cli"}
+        ],
+        "result": {"port": 8080}
+      }
+    },
+    {
+      "why": "eq-split 形: eq_split matcher が単一トークン `--port=8080` を内部で `--port` と `8080` に割る (DR-041 §3 の内部断片分割方向) → 同じ port=8080。long-space と同一セル・同一効果。",
+      "argv": ["--port=8080"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "port", "op": "set", "operand": 8080, "source": "cli"}
+        ],
+        "result": {"port": 8080}
+      }
+    },
+    {
+      "why": "short-attach 形: short_combine matcher が `-p8080` を p=値付着で読み `8080` を p の値に (DR-041 §3 値付着) → 同じ port=8080。short 入口も同じ port セルへ link 合流。",
+      "argv": ["-p8080"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "port", "op": "set", "operand": 8080, "source": "cli"}
+        ],
+        "result": {"port": 8080}
+      }
+    },
+    {
+      "why": "short-next-token 形: `-p` が値を付着せず次トークン `8080` を借用 (DR-041 §3 外側借用) → 同じ port=8080。4 形全て同値である最後の一致点。",
+      "argv": ["-p", "8080"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "port", "op": "set", "operand": 8080, "source": "cli"}
+        ],
+        "result": {"port": 8080}
+      }
+    }
+  ]
+}

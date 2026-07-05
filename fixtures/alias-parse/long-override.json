@@ -1,0 +1,42 @@
+{
+  "why": "alias の long 明示上書きで継承 variant を切る (DR-057 §3 の差分上書き = DR-007 と同じ). canonical `ssl` (bool, default true) は long DSL `[\":set\", \"no:set:false\"]` (--ssl + --no-ssl)。alias `{alias:\"ssl\", name:\"tls\", long:[\":set\"]}` は long を明示指定して継承をまるごと差し替える → 主入口 `:set` だけを name tls で再導出し --tls のみ生成、variant `no:set:false` は継承されず --no-tls は作られない。canonical の綴り (--ssl / --no-ssl) は実体側なので不変。DIVERGENCE (下記報告): slice phase26 test 3 は override を `long:[]` (空配列) と書き『素の --tls は残り --no-tls が切れる』を期待するが、DR-071 §1 が `long:[]` の意味を破壊的に変更 (旧『主入口を生成』→ 新『入口なし = false = [] 全て同義』) したため、`long:[]` は現行仕様では --tls すら生成しない。test 3 の意味論 (base 存置 + variant 切除) を仕様準拠 wire で表現する唯一形は `long:[\":set\"]` (主入口 variant を明示列挙) なので、本 fixture はそちらを golden とする (DR-070 §1b: golden は仕様準拠値)。蒸留元: slice phase26 test 3。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {"name": "ssl", "type": "bool", "default": true, "long": [":set", "no:set:false"]},
+      {"alias": "ssl", "name": "tls", "long": [":set"]}
+    ]
+  },
+  "cases": [
+    {
+      "why": "上書き後も base は残る: alias long=[\":set\"] の主入口 --tls が ssl セルへ set true。差分上書きは継承 long を丸ごと差し替えるが、明示した :set 分の主入口は生成される (DR-057 §3)。",
+      "argv": ["--tls"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "ssl", "op": "set", "operand": true, "source": "cli"}
+        ],
+        "result": {"ssl": true}
+      }
+    },
+    {
+      "why": "variant が切れた: 継承 long に含まれていた `no:set:false` が override で除かれたため --no-tls は未定義トリガ。消費者が居らず完全経路 0 本 → failure。element 省略 = スコープレベルの残余躓き、argv_pos=0 (残余先頭)、kind parse / reason unexpected_token (DR-065 §3、slice の render_outcome=fail:unexpected token と同型)。『override は variant を切る』の負側の固定。",
+      "argv": ["--no-tls"],
+      "expect": {
+        "outcome": "failure",
+        "errors": [{"argv_pos": 0, "kind": "parse", "reason": "unexpected_token"}]
+      }
+    },
+    {
+      "why": "canonical variant は不変: override は alias 入口だけの差分であり実体側の綴りに触れない。--no-ssl は従来どおり ssl=false。alias override が canonical を退化させないことの固定。",
+      "argv": ["--no-ssl"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "ssl", "op": "set", "operand": false, "source": "cli"}
+        ],
+        "result": {"ssl": false}
+      }
+    }
+  ]
+}

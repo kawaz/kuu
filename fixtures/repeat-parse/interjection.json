@@ -1,0 +1,42 @@
+{
+  "why": "反復の間への greedy 割り込み = porous (DR-043 / DR-041 §4): repeat の ref-recursion unfold は現在の背骨 (greedy 面) 上で行われるので、反復と反復の間でも greedy 衛星が発火できる — Many と全く同じ porous 性。src は --verbose を raw 消費できない (先食い: greedy 衛星の読めるトークンは素通し枝を作らない、DR-041 §4) ため、割り込みが優先され unfold は継続する。効果列は消費順を保つので、割り込んだ flag の効果が repeat 効果の間に挟まる (DR-045)。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {"name": "verbose", "type": "flag", "long": ["verbose"]}
+    ],
+    "positionals": [
+      {"name": "src", "type": "string", "repeat": {"min": 1}},
+      {"name": "dst", "type": "string"}
+    ]
+  },
+  "cases": [
+    {
+      "why": "`a --verbose b`: src=`[a]` の後で --verbose が発火し (src は先食いで --verbose を掴めない)、dst=`b`。効果列は消費順 src(a) → verbose(true) → dst(b) で、flag 効果が repeat と scalar の間に挟まる。",
+      "argv": ["a", "--verbose", "b"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "src", "op": "set", "operand": "a", "source": "cli"},
+          {"entity": "verbose", "op": "set", "operand": true, "source": "cli"},
+          {"entity": "dst", "op": "set", "operand": "b", "source": "cli"}
+        ],
+        "result": {"src": ["a"], "dst": "b", "verbose": true}
+      }
+    },
+    {
+      "why": "`a b --verbose c`: 反復の途中 (src が 2 個目まで進んだ後) に割り込んでも unfold は背骨上で継続 = src=`[a,b]`、--verbose 発火、dst=`c`。repeat が Many と同じ porous であることの確認。",
+      "argv": ["a", "b", "--verbose", "c"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "src", "op": "set", "operand": "a", "source": "cli"},
+          {"entity": "src", "op": "set", "operand": "b", "source": "cli"},
+          {"entity": "verbose", "op": "set", "operand": true, "source": "cli"},
+          {"entity": "dst", "op": "set", "operand": "c", "source": "cli"}
+        ],
+        "result": {"src": ["a", "b"], "dst": "c", "verbose": true}
+      }
+    }
+  ]
+}

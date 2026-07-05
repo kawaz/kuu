@@ -1,0 +1,31 @@
+{
+  "why": "失敗時アクションの候補集合ポリシー (DR-048 §5) の確定: 完全経路 0 本のとき、候補経路 = scope 終端 Accept に達した経路 **に加えて Error で停止した dead-end 経路の部分状態** (F-039 失敗時部分状態) を含む (= dead-end 込み候補)。この候補集合でいずれかに失敗時アクションが selected なら発火する。dead-end を候補に含めるのが確定仕様。根拠: 先食い (DR-041 §4) が --help の raw 消費を禁じるため、--help を通過した経路は必ず help satellite を撃つ — ゆえに「最深候補のみ数える」と「dead-end 含む全候補」は実質一致し (help を撃たずに深く進む候補が存在しない)、両者が割れるのは dead-end を完全に無視するポリシーとの間だけ。仕様は dead-end を候補に含める側を採る。help は type:\"help\" プリセット、n は number positional (DR-071)。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {"name": "help", "type": "help", "long": true}
+    ],
+    "positionals": [
+      {"name": "n", "type": "number"}
+    ]
+  },
+  "cases": [
+    {
+      "why": "help 発火後に number positional が dead-end: --help が pos0 で発火 (先食いにより --help は必ず help satellite が消費、n には落ちない)。続く number positional n が \"abc\" のパースに失敗し、この経路は scope 終端 Accept に達せず Error 保持点で停止する (dead-end)。dead-end 込み候補ポリシー (確定仕様) では、この dead-end の部分状態に載る help marker が selected と数えられ help が発火する。errors は保持された n の型不一致 (argv_pos 1、kind parse — reason は型不一致で spec 未命名のため省略、fixture optional 検証)。fired_action=help (argv 最小の意図) と errors (最深の躓き) が 1 Failure に両立 (DR-053 §2)。",
+      "argv": ["--help", "abc"],
+      "expect": {
+        "outcome": "failure",
+        "errors": [{"element": "n", "argv_pos": 1, "kind": "parse"}],
+        "fired_action": "help"
+      }
+    },
+    {
+      "why": "対照 (case 1 と対、argv 順が効く): 失敗トークン先行で help 未到達。\"abc\" が pos0 で number positional n に食われて型不一致で dead-end 停止 (Error @0)、この経路は --help に到達せず help satellite を撃たない。候補集合 (dead-end 込み) のどの経路にも help marker が無いので保持 Error のまま (fired_action なし)。errors は n の型不一致 (argv_pos 0)。",
+      "argv": ["abc", "--help"],
+      "expect": {
+        "outcome": "failure",
+        "errors": [{"element": "n", "argv_pos": 0, "kind": "parse"}]
+      }
+    }
+  ]
+}

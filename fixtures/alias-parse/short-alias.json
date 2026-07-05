@@ -1,0 +1,46 @@
+{
+  "why": "alias (DR-057) の別入口 = link + 表示帰属の最小輪郭 (short 綴りの入口)。alias は参照ファミリー 3 人目 (ref=構造継承 / link=値同期 / alias=別入口)。canonical `port` (short -p) に short-only alias `{alias:\"port\", short:\"n\"}` を貼ると、-n は port セルへの 2 本目の入口になる (link 同型、DR-057 §2)。効果は canonical 実体セルへ流れ (entity=port)、結果キーも canonical のみ — alias は結果スコープを作らない (DR-057 §2、DR-052)。どの入口が発火したかは ParserContext の selected_names 側の関心で result 形には出ない。同一セルへの複数入口発火は最終効果があと勝ちで確定する (DR-015)。effects は cli 由来のパース時効果のみ・配列順=適用順が同一性成分 (CONFORMANCE §2, DR-038/045)。蒸留元: slice phase26 test 1 (short alias binds canonical cell)。port の型は slice TNum に対応する number (整数 80/90 はいずれの数値型でも同一挙動)。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {"name": "port", "type": "number", "short": "p"},
+      {"alias": "port", "short": "n"}
+    ]
+  },
+  "cases": [
+    {
+      "why": "alias 入口 -n が canonical セル port へ束縛。値 80 は port の operand。結果キーは alias 名 n ではなく canonical の port (DR-057 §2: alias は結果スコープを作らない)。effect entity も port セル (link 同型)。",
+      "argv": ["-n", "80"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "port", "op": "set", "operand": 80, "source": "cli"}
+        ],
+        "result": {"port": 80}
+      }
+    },
+    {
+      "why": "canonical 入口 -p も同じ port セル。case 1 との対で『別入口が同一実体に合流する』ことを固定する — 入口が -p でも -n でも結果は同一形。",
+      "argv": ["-p", "80"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "port", "op": "set", "operand": 80, "source": "cli"}
+        ],
+        "result": {"port": 80}
+      }
+    },
+    {
+      "why": "同一セルへの 2 入口発火はあと勝ち (DR-015)。-p (80) → -n (90) の順で両方 port へ set 効果を積む (effects は適用順に 2 件 = 順序が同一性成分 DR-038/045) が、最終値は後発の 90。alias と canonical が同一の値セル状態機械を共有することの固定。",
+      "argv": ["-p", "80", "-n", "90"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "port", "op": "set", "operand": 80, "source": "cli"},
+          {"entity": "port", "op": "set", "operand": 90, "source": "cli"}
+        ],
+        "result": {"port": 90}
+      }
+    }
+  ]
+}

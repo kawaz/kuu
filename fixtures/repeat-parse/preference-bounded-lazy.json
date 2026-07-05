@@ -1,0 +1,26 @@
+{
+  "why": "有界 repeat の末尾も lazy 選好を通す (DR-043 / LOWERING §B.8): preference-bounded-greedy の鏡像。有界の BoundedTail は無制限 (Ref) 経路と同じく greedy/lazy を運ぶので、lazy を付けた有界閉包は最短取りに反転する。greedy/lazy 両方が有界末尾を流れることの確認 (有限 max との併用)。",
+  "query": "parse",
+  "definition": {
+    "positionals": [
+      {"name": "xs", "type": "string", "repeat": {"min": 1, "max": 3, "lazy": true}},
+      {"name": "ys", "type": "string", "repeat": {"min": 1, "max": 3}}
+    ]
+  },
+  "cases": [
+    {
+      "why": "有界 lazy {1,3} + greedy {1,3} に `a b c d`: lazy な xs は必須の `a` だけ、greedy な ys が残り `[b,c,d]` を自分の max 3 まで取る。preference-bounded-greedy の `[a,b,c],[d]` と鏡像。",
+      "argv": ["a", "b", "c", "d"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "xs", "op": "set", "operand": "a", "source": "cli"},
+          {"entity": "ys", "op": "set", "operand": "b", "source": "cli"},
+          {"entity": "ys", "op": "set", "operand": "c", "source": "cli"},
+          {"entity": "ys", "op": "set", "operand": "d", "source": "cli"}
+        ],
+        "result": {"xs": ["a"], "ys": ["b", "c", "d"]}
+      }
+    }
+  ]
+}
