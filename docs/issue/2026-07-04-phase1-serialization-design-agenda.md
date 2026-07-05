@@ -37,7 +37,7 @@ ROADMAP.md フェーズ1「直列形の確定 + fixture フォーマット設計
 
 ### A. AtomicAST 直列形の確定 (LOWERING §C.3 の宿題) — **決着済み (2026-07-05)**
 
-> A-0〜A-5 は **DR-063** として ink (wire = 宣言層のみ、lowered 断面表記は面構造 + 緩比較)。A-6 は評価器契約 = フェーズ 3 の論点と整理 (fixture 側は C-5 で扱う)。A-7 / A-8 は **DR-061** (descriptor + configurable factory)、filter 継承は **DR-062**。DR-039 注記・LOWERING §C.3・DESIGN §15.7 / §8.5 / §3.4 / §13.1 / 用語表も反映済み。以下の各節は議論経緯の記録。
+> A-0〜A-5 は **DR-063** として ink (wire = 宣言層のみ、lowered 断面表記は面構造 + 緩比較)。A-6 は評価器契約 = フェーズ 3 の論点と整理 (fixture 側は C-5 で扱う)。A-7 / A-8 は **DR-061** (descriptor + configurable factory)、filter 継承は **DR-062**。派生論点「dd の宣言配置」は **DR-064** (canonical = options[]、配置は挙動不問、usage 表示はレンダラ)。DR-039 注記・LOWERING §C.3 / §B.4・DESIGN §15.7 / §8.5 / §4.1 / §3.4 / §13.1 / 用語表も反映済み。以下の各節は議論経緯の記録。
 
 #### A-0. wire form の範囲 — 宣言層のみか、lowered 産物込みか (最初の分岐)
 

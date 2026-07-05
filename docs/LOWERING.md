@@ -252,7 +252,7 @@ pieceProcessor 通過が正本 (DR-049)。
 
 ```
 所有語彙: type: "dd"
-入力:  {name: "--", type: "dd"}   (positionals[] に書かれる)
+入力:  {name: "--", type: "dd"}   (canonical 配置は options[] = DR-064。配置不問で回収され lowered 形は同一)
 出力 (greedy 面の exact 衛星、matcher は素の exact 一致):
   «greedy» {exact: "--"}          // 発火・マーカー 1 トークン消費・値なし
                                   // 発火後は以降の positional 継続を内部消費として引き継ぐ

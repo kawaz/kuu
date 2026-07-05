@@ -41,6 +41,7 @@
 
 - [DR-004](DR-004-options-positionals-split.md): options / positionals の2分割、commands は or でラップ
 - [DR-030](DR-030-entity-only-node.md): 実体だけノード (入口属性なしの値ノード、appconfig ストア用途)
+- [DR-064](DR-064-dd-declaration-placement.md): dd の宣言配置 — canonical は options[] (順不同・greedy 面住人の分類一致、dd = 効果が severed 化の特殊 flag)、配置は挙動不問、usage の [--] 表示はレンダラの慣習 (宣言と表示の分離)
 
 ## 値と型 / type 参照糖衣
 

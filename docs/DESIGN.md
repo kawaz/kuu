@@ -300,7 +300,7 @@ canonical default (kuu core 提供、最も寛容な仕様)
 
 ### 4.1 配置で役割分け (DR-018)
 
-- **options**: ハイフン起動、順不同
+- **options**: ハイフン起動、順不同。dd (`{"name": "--", "type": "dd"}`) もここに置くのが canonical (DR-064 — 順不同・greedy 面住人という分類の一致。配置は挙動に影響せず、usage の `[--]` を operands 直前に出すのはレンダラの慣習)
 - **positionals**: 順序で消費
 - **commands**: サブコマンド糖衣 (下記)
 
