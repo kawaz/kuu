@@ -134,6 +134,15 @@ increment は accumulators registry の住人 (発火ごとに 1 を寄与、def
 multiple registry のプリセットではないため object 形で accumulator を直指定する。count は構造的セマンティクスでは
 表せない (現在値依存の increment は accumulator の仕事) が、`type: "count"` の糖衣として隠蔽される (DR-015)。
 
+**dd** = オプション終了マーカー (canonical 配置は options[]、DR-064):
+
+```
+入力:  {type: "dd"}
+出力:  name のデフォルト "--" を供給する (明示 name で上書き可 = 綴り差し替え)。
+       値セルなし・子なし — name はトリガ綴り軸にのみ効く (DR-064 §5)。
+       構造の lowering は §B.4 (greedy 面の exact 衛星 + 発火で severed 化)。
+```
+
 **help** = 起動時アクション:
 
 ```
@@ -252,7 +261,7 @@ pieceProcessor 通過が正本 (DR-049)。
 
 ```
 所有語彙: type: "dd"
-入力:  {name: "--", type: "dd"}   (canonical 配置は options[] = DR-064。配置不問で回収され lowered 形は同一)
+入力:  {type: "dd"}   (name はプリセットが "--" を供給 = §A.5 / DR-064 §5。canonical 配置は options[] = DR-064。配置不問で回収され lowered 形は同一)
 出力 (greedy 面の exact 衛星、matcher は素の exact 一致):
   «greedy» {exact: "--"}          // 発火・マーカー 1 トークン消費・値なし
                                   // 発火後は以降の positional 継続を内部消費として引き継ぐ
