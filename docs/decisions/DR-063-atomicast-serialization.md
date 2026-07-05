@@ -24,7 +24,10 @@
 
 wire ではないが、lowering 段階別 fixture の期待断面として lowered 形の表記を定める。比較は常に緩比較 (LOWERING §C.5: 構造骨格の一致 + matcher は種別とエントリ表の一致):
 
-- **scope 断面は面構造**: `{greedy: [...], positionals: [...], entities: {...}}`。greedy マークは**配置で表現**し、専用フィールド (`greedy: true`) を持たない。根拠: PoC の Scope 実測 (matcher も exact 衛星も greedy 配列の同列市民)、DR-041 の仕様語彙「greedy 面 / positional 面」との一致、ノード属性方式では「positional 配列内の greedy ノード」という不正状態が表現可能になる
+- **scope 断面は面構造**: `{greedy: [...], positionals: [...], entities: {...}, constraints: [...]}` の **4 面**。greedy マークは**配置で表現**し、専用フィールド (`greedy: true`) を持たない。根拠: PoC の Scope 実測 (matcher も exact 衛星も greedy 配列の同列市民)、DR-041 の仕様語彙「greedy 面 / positional 面」との一致、ノード属性方式では「positional 配列内の greedy ノード」という不正状態が表現可能になる。**constraints 面**は遅延述語 (DR-047/055) のデータ形 — 要素は `{kind: "requires" | "requires_if" | "conflicts_with" | "exclusive_group", element/group, targets/members, value?}` (constraint installer の回収結果、slice 第 15 弾の Constraint 4 値と同型)
+- **greedy 衛星の値スロットは ref + link の宣言形が正規**: `{seq: [{exact: "--port"}, {ref: "port", link: "port"}]}` (LOWERING §B 冒頭の標準パターン。ref は name 参照 = 実体の構造継承であり template 専用の語ではない)。実装が ref 解決を済ませた inline 形 (値プリミティブ直埋め) を内部に持つのは自由で、緩比較は両者を同一骨格として扱う
+- **matcher entries のキーの語義は matcher kind が定義する**: `eq_split` = prefix 畳み込み済みのトリガ綴り (`{"--port": "port"}`)、`short_combine` = cluster 内の 1 文字 (`{"p": "port"}`)。prefix は断面に独立フィールドとして現れない (畳み込み済みキー、または種別の意味論に内包)
+- **entities は最小投影が canonical**: 意味を持つフィールド (type / default / 席宣言 / accumulator 名) のみを書く。省略 = default 値と等価 (§4 の構造等価) なので情報は失われない
 - **entities は値セルの表**: 実体だけノード (DR-030) の置き場。type / default / 値源ラダーの席宣言 (env 席・inherit 席・config 席、DR-042 不変則④) / accumulator 名を持つ。効果列 (DR-045) の「実体」はここの住人
 - **matcher**: `{matcher: "<kind>", entries: {"<トリガ/文字>": "<実体 name/id>"}}`。kind は open set (方言 matcher は registry + descriptor で増える) なので専用ノード型の閉じた列挙にしない。**entries の値は実体への name / id 文字列参照** — 構造埋め込みは実体の複製になり link 合流 (同一セル前提) の同一性を壊す
 - **効果記述子**: set は縮退形 `{exact, value, link}`、非 set は `{exact, link, effect: {op}}` (DR-045 / LOWERING §B.1 のとおり)。複数 args の set variant (`"red:set:rgb:255:0:0"`、DR-011) は **value に配列を沈める** (`{exact: "--red", value: ["rgb", "255", "0", "0"], link: "color"}`、args は全 string で CLI 入力と同じ手順を通る)
