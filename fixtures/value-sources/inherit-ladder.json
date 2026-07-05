@@ -17,6 +17,7 @@
   },
   "cases": [
     {
+      "id": "parent-cli-inherited",
       "why": "親 CLI で ttl=50 → 子 up は cli/env 無しなので inherit 席が親の解決値 50 を参照 (@inherit)。--ttl 50 は up トークンより前なので root 背骨で発火し root ttl を set。effects は root の cli set のみ (子 inherit は effects 非掲載)。result は root ttl=50 + up ネストに inherit 50。",
       "argv": ["--ttl", "50", "up"],
       "expect": {
@@ -29,6 +30,7 @@
       }
     },
     {
+      "id": "parent-default-inherited",
       "why": "親も CLI/env 無し → root ttl は自前 default 30 に落ちる。子は親の解決値 30 を inherit で継承する (default が inherit 経由で下流へ流れる、DR-031 inherit は default の上に座る)。子自前の default 99 には落ちない (親に値があるため)。effects 空、両 ttl とも非 cli 由来。",
       "argv": ["up"],
       "expect": {
@@ -39,6 +41,7 @@
       }
     },
     {
+      "id": "child-cli-over-inherit",
       "why": "子自前の CLI が inherit に勝つ (cli は最上席): up 入場後の --ttl 7 は子背骨で発火し子 ttl=7。root ttl は CLI 未供給なので default 30。子の inherit 席は cli に負ける。effects は子の cli set のみ (root は default 由来で非掲載)。inherit が cli の下 = ラダー順の固定。",
       "argv": ["up", "--ttl", "7"],
       "expect": {

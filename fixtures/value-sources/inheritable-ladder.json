@@ -14,6 +14,7 @@
   },
   "cases": [
     {
+      "id": "ancestor-write-inherited",
       "why": "祖先が --sub-ttl 30 で書き込み → sub 未指定 → sub は祖先書込値 30 を inherit 席で継承 (@inherit)。--sub-ttl は inheritable 逆方向コピーが祖先に植えた書込入口で、共有 ttl セル (root 結果キー ttl) に cli set。書込セルは default を持たないが cli 書込があるので root 結果に ttl=30 が present。effects は root の cli set のみ。",
       "argv": ["--sub-ttl", "30", "sub"],
       "expect": {
@@ -26,6 +27,7 @@
       }
     },
     {
+      "id": "child-cli-over-inherit",
       "why": "sub 自前 CLI が祖先継承に勝つ (cli 最上席): sub 入場後の --ttl 10 で子 ttl=10。祖先は --sub-ttl 未使用なので書込セルは無書き込み=absent (default を持たないため root 結果に ttl キー無し)。effects は子の cli set のみ。inherit より cli 上の固定。",
       "argv": ["sub", "--ttl", "10"],
       "expect": {
@@ -38,6 +40,7 @@
       }
     },
     {
+      "id": "own-default-fallback",
       "why": "どこも書かない → 祖先書込セルは default を持たず absent、inherit 席は空、sub は自前 default 60 に落ちる (inherit は default の上に座り、祖先に値が無ければ自前 default が最終フォールバック、DR-059 §3)。effects 空。root に ttl キーは現れない (書込なし + default なし)。",
       "argv": ["sub"],
       "expect": {

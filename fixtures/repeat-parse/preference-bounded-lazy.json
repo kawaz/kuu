@@ -9,6 +9,7 @@
   },
   "cases": [
     {
+      "id": "bounded-lazy-min-left",
       "why": "有界 lazy {1,3} + greedy {1,3} に `a b c d`: lazy な xs は必須の `a` だけ、greedy な ys が残り `[b,c,d]` を自分の max 3 まで取る。preference-bounded-greedy の `[a,b,c],[d]` と鏡像。",
       "argv": ["a", "b", "c", "d"],
       "expect": {

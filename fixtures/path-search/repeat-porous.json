@@ -12,6 +12,7 @@
   },
   "cases": [
     {
+      "id": "interject-before-dst",
       "why": "greedy が repeat 反復と末尾 dst の間に割り込む。src=[a] を取り、--verbose が発火し、dst=b。src が --verbose を raw 消費しないのは greedy が先食い (背骨上のトリガは matcher が読み、positional の raw-eat に落ちない、DR-041 §4)。完全経路は 1 本 — dst に末尾 1 トークンを残す分割だけが全消費する。効果列は消費順 src→verbose→dst。",
       "argv": ["a", "--verbose", "b"],
       "expect": {
@@ -25,6 +26,7 @@
       }
     },
     {
+      "id": "interject-after-repeats",
       "why": "反復の途中 (a と b の間ではなく b の後) に割り込む変形: src が 2 回発火し (a, b)、その後 --verbose、末尾 dst=c。repeat の unfold が現背骨上に留まる (porous) ため反復は Many と同型に振る舞う。src の 2 発火は効果列に 2 エントリとして消費順で現れ、結果では flatten されて ['a','b'] になる (DR-043 repeat の flatten accumulator / DR-036)。",
       "argv": ["a", "b", "--verbose", "c"],
       "expect": {
@@ -39,6 +41,7 @@
       }
     },
     {
+      "id": "no-interjection",
       "why": "割り込みなしの対照: 2 トークンで src=[a], dst=b。末尾 dst の arity が取り分境界を pin し、src は残り全部 (ここでは a のみ) を取る一意分割。case 1/2 で示した割り込みが、この基本の取り分一意性を壊さないことを固定 (DR-038)。unfired verbose は preset default false。",
       "argv": ["a", "b"],
       "expect": {

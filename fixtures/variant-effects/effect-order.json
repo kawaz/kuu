@@ -8,6 +8,7 @@
   },
   "cases": [
     {
+      "id": "long-then-short-last-wins",
       "why": "long+short 同一セル合流のあと勝ち: --port 80 -p 90 は long 入口と short 入口が別トークンで port セルへ発火。効果列 [port=80, port=90] が消費順に積まれ、scalar あと勝ちで result=90。effects の配列順 (80 が先、90 が後) は §3 の順序込み完全一致で検証される (順序が同一性成分)。",
       "argv": ["--port", "80", "-p", "90"],
       "expect": {
@@ -21,6 +22,7 @@
       }
     },
     {
+      "id": "short-then-long-last-wins",
       "why": "順序反転であと勝ちも反転 (前ケースと対): -p 90 --port 80 は効果列 [port=90, port=80] になり scalar あと勝ちで result=80。同じ 2 入口・同じ 2 値でも argv 順が違えば効果列順が違い最終値が違う — 効果列順序が最終値を決めることの直接対照 (DR-045/015)。",
       "argv": ["-p", "90", "--port", "80"],
       "expect": {

@@ -9,6 +9,7 @@
   },
   "cases": [
     {
+      "id": "alias-base-rederive",
       "why": "base 再導出: --tls は alias 名で再導出された base 入口 (canonical --ssl の対応物) として発火し ssl セルへ set(true) を積む。結果キーは canonical ssl (alias は表示帰属を持たない、DR-057 §2)。sources=cli。",
       "argv": ["--tls"],
       "expect": {
@@ -19,6 +20,7 @@
       }
     },
     {
+      "id": "alias-variant-rederive",
       "why": "variant 再導出: --no-tls は canonical variant --no-ssl (トリガに name ssl を含む) を ssl→tls 置換で再導出した入口。発火すると SET-false variant の operand false を ssl セルへ積む。結果は ssl=false、キーは canonical。variant が alias 名で再導出される核 (DR-057 §3)。",
       "argv": ["--no-tls"],
       "expect": {
@@ -29,6 +31,7 @@
       }
     },
     {
+      "id": "canonical-base-intact",
       "why": "canonical base 不変: alias を貼っても canonical の --ssl は消えず ssl=true を積む。alias は別入口の追加であって canonical 綴りの置換ではない (DR-057 §2 の add-if-absent)。",
       "argv": ["--ssl"],
       "expect": {
@@ -39,6 +42,7 @@
       }
     },
     {
+      "id": "canonical-variant-intact",
       "why": "canonical variant 不変: --no-ssl も残り ssl=false。canonical の base/variant と alias の base/variant が 4 綴りとも同じ ssl セルへ合流することを固定 (再導出は追加であって移動ではない)。",
       "argv": ["--no-ssl"],
       "expect": {
@@ -49,6 +53,7 @@
       }
     },
     {
+      "id": "unfired-default",
       "why": "未発火ベースライン: どの綴りも撃たれず effects 空。ssl は明示 default true がラダー充填で present (source=default、flag の preset false でなく明示 default が勝つ、DR-051 §2a)。alias が結果に新キーを作らないこと (result は ssl 1 キーのみ、tls キーは存在しない) も同時に固定する。",
       "argv": [],
       "expect": {

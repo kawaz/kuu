@@ -9,6 +9,7 @@
   },
   "cases": [
     {
+      "id": "greedy-backtrack-shrink",
       "why": "`a b 3`: greedy な xs はまず `[a,b,3]` を掴むが ys (number, min:1) の取るトークンが無く失敗 → 1 つ縮めて xs=`[a,b]`、ys が `3` を number として取り完結。よって `[a,b],[3]`。ys の効果 operand は number 3 (canonical 数値、DR-050 §4)。result の ys は number 配列 `[3]`。",
       "argv": ["a", "b", "3"],
       "expect": {

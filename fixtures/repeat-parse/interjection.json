@@ -12,6 +12,7 @@
   },
   "cases": [
     {
+      "id": "interject-before-dst",
       "why": "`a --verbose b`: src=`[a]` の後で --verbose が発火し (src は先食いで --verbose を掴めない)、dst=`b`。効果列は消費順 src(a) → verbose(true) → dst(b) で、flag 効果が repeat と scalar の間に挟まる。",
       "argv": ["a", "--verbose", "b"],
       "expect": {
@@ -25,6 +26,7 @@
       }
     },
     {
+      "id": "interject-mid-repeat",
       "why": "`a b --verbose c`: 反復の途中 (src が 2 個目まで進んだ後) に割り込んでも unfold は背骨上で継続 = src=`[a,b]`、--verbose 発火、dst=`c`。repeat が Many と同じ porous であることの確認。",
       "argv": ["a", "b", "--verbose", "c"],
       "expect": {

@@ -8,6 +8,7 @@
   },
   "cases": [
     {
+      "id": "under-min",
       "why": "`a` 1 個は min:2 未達。2 個目の必須 head がトークンを得られず → element=f / kind=parse / reason=missing_operand、argv_pos=argv.length=1。",
       "argv": ["a"],
       "expect": {
@@ -16,6 +17,7 @@
       }
     },
     {
+      "id": "exact-two",
       "why": "`a b` ちょうど 2 個で成立。`[a,b]`。",
       "argv": ["a", "b"],
       "expect": {
@@ -28,6 +30,7 @@
       }
     },
     {
+      "id": "over-max",
       "why": "`a b c` 3 個目は max 2 超過。閉包が閉じた後の残余トークンで失敗 → element 省略 / kind=parse / reason=unexpected_token、argv_pos=残余先頭=2。",
       "argv": ["a", "b", "c"],
       "expect": {

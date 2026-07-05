@@ -31,6 +31,7 @@
   },
   "cases": [
     {
+      "id": "array-and-nested-object",
       "why": "config {tags:[a,b], server:{port:9000}} → tag は multiple なので配列の 2 要素が 2 piece となり result で [a,b]、port は入れ子オブジェクトを絶対 config_key [server,port] で辿って 9000。配列→piece 列の flatten と object の同型ナビを 1 ケースで固定。両者 source:config。",
       "argv": [],
       "config": {

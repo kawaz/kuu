@@ -9,6 +9,7 @@
   },
   "cases": [
     {
+      "id": "cli-path-wins",
       "why": "cli パスが勝つ: --config /cli.toml が env/default パスを差し置いて選ばれ、provider が /cli.toml に返す {port:11} が読まれる → port=11@config。パス自身のラダーの最上席が cli。",
       "argv": ["--config", "/cli.toml"],
       "config_files": {"/cli.toml": {"port": 11}, "/env.toml": {"port": 22}, "/default.toml": {"port": 33}},
@@ -20,6 +21,7 @@
       }
     },
     {
+      "id": "env-path-wins",
       "why": "cli 無し・env パス: MYAPP_CONFIG=/env.toml が選ばれ {port:22} → port=22@config。パスラダーの env 席が default パスに勝つ。",
       "argv": [],
       "env": {"MYAPP_CONFIG": "/env.toml"},
@@ -32,6 +34,7 @@
       }
     },
     {
+      "id": "default-path-wins",
       "why": "cli/env 無し → default パス /default.toml が選ばれ {port:33} → port=33@config。パス自身も最下席が default。",
       "argv": [],
       "config_files": {"/cli.toml": {"port": 11}, "/env.toml": {"port": 22}, "/default.toml": {"port": 33}},
@@ -43,6 +46,7 @@
       }
     },
     {
+      "id": "default-read-tolerated",
       "why": "default 由来パスの読込失敗は黙認: cli/env 無しで default パス /default.toml を provider が読めない (config 全体 null = 全パス None) → 設定ファイルはオプショナルなので Error でなく、config 席は空で port は自前 default 7 に落ちる。committed パス (cli/env 明示) の読込失敗との非対称 (committed→Error) は findings 送り。",
       "argv": [],
       "config": null,

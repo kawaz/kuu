@@ -8,6 +8,7 @@
   },
   "cases": [
     {
+      "id": "empty-clears-tail",
       "why": "empty は末尾で全消し: --tag a --tag b で [a,b] を蓄積後、--clear-tag が empty 効果でコレクションを [] にリセット。効果列 [set a, set b, empty] を適用順に畳むと最終形は空リスト。empty の後にトークンが無いので再蓄積なし。result は空配列 (absent ではない — multiple は 0 要素でも [] で present、DR-051 §2)。sources=cli (empty は CLI 発火の効果)。",
       "argv": ["--tag", "a", "--tag", "b", "--clear-tag"],
       "expect": {
@@ -22,6 +23,7 @@
       }
     },
     {
+      "id": "empty-then-reaccumulate",
       "why": "empty 後の再蓄積: --tag a --clear-tag --tag c は効果列 [set a, empty, set c]。empty が a を消した後 c を空コレクションへ append するので最終形は [c]。empty が『それまでの蓄積だけ』を消し以降の append を妨げないこと (効果列の局所性) を固定する。前ケースと同じ定義で empty の位置だけ変え、順序が同一性成分であることを対照する。",
       "argv": ["--tag", "a", "--clear-tag", "--tag", "c"],
       "expect": {

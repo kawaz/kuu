@@ -9,6 +9,7 @@
   },
   "cases": [
     {
+      "id": "cli-wins",
       "why": "cli 最上席: --port 9090 が config {port:3000} と env を差し置いて勝つ。effects に cli set、result/sources は cli。config_file 要素はインフラで結果非掲載。",
       "argv": ["--port", "9090"],
       "config": {"port": 3000},
@@ -22,6 +23,7 @@
       }
     },
     {
+      "id": "env-over-config",
       "why": "cli 無し・env あり → env が config に勝つ (env は config の上席)。PORT=8080 が config {port:3000} を上書き。env 由来は effects 非掲載。",
       "argv": [],
       "env": {"PORT": "8080"},
@@ -34,6 +36,7 @@
       }
     },
     {
+      "id": "config-over-default",
       "why": "cli/env 無し → config 席が供給 (source:config)。config {port:3000} が default 1 を上書き。config 席は env と default の間。",
       "argv": [],
       "config": {"port": 3000},
@@ -45,6 +48,7 @@
       }
     },
     {
+      "id": "default-fallback",
       "why": "cli/env 無し + config に port キー無し → ラダー最下席の default 1。config オブジェクトが空でも黙って通過し default に落ちる (config は供給しないだけ、エラーでない)。",
       "argv": [],
       "config": {},

@@ -8,6 +8,7 @@
   },
   "cases": [
     {
+      "id": "set-variant-fixed-operand",
       "why": "set variant が固定 operand を運ぶ (SET 縮退形): --safe-mode は mode セルへ set(readonly) を積む。args あり set は operand を Bind 値として持つ (DR-045 §1)。トリガ発火のみで 0-token (operand は DSL 側に固定)。effects の source=cli (トリガは CLI 由来)、result は set された readonly、sources=cli (最終値の由来も CLI 選択)。",
       "argv": ["--safe-mode"],
       "expect": {
@@ -18,6 +19,7 @@
       }
     },
     {
+      "id": "base-value-slot",
       "why": "base 入口 `:set` は値スロット (DR-071 §2 args なし set = トークン消費形): --mode fast は次トークン fast を operand に取り set(fast) を積む。variant (固定値) と base (CLI 値) が同じ set op / 同じ mode セルで、operand の供給元だけ違うことを対照する。",
       "argv": ["--mode", "fast"],
       "expect": {
@@ -28,6 +30,7 @@
       }
     },
     {
+      "id": "unfired-default",
       "why": "未発火ベースライン: どちらの入口も撃たれず effects 空。mode は default auto がラダー充填で present (source=default、DR-051 §2a)。default 由来は effects に載らない (CONFORMANCE §2) ので sources が唯一の由来検証チャネル。",
       "argv": [],
       "expect": {
