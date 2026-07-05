@@ -8,6 +8,7 @@
   },
   "cases": [
     {
+      "id": "long-space",
       "why": "long-space 形: exact 綴り衛星 `--port` が発火し次トークン `8080` を値スロットで借用 (DR-041 §3 の外側 2 トークン借用方向) → port=8080。",
       "argv": ["--port", "8080"],
       "expect": {
@@ -19,6 +20,7 @@
       }
     },
     {
+      "id": "eq-split",
       "why": "eq-split 形: eq_split matcher が単一トークン `--port=8080` を内部で `--port` と `8080` に割る (DR-041 §3 の内部断片分割方向) → 同じ port=8080。long-space と同一セル・同一効果。",
       "argv": ["--port=8080"],
       "expect": {
@@ -30,6 +32,7 @@
       }
     },
     {
+      "id": "short-attach",
       "why": "short-attach 形: short_combine matcher が `-p8080` を p=値付着で読み `8080` を p の値に (DR-041 §3 値付着) → 同じ port=8080。short 入口も同じ port セルへ link 合流。",
       "argv": ["-p8080"],
       "expect": {
@@ -41,6 +44,7 @@
       }
     },
     {
+      "id": "short-next-token",
       "why": "short-next-token 形: `-p` が値を付着せず次トークン `8080` を借用 (DR-041 §3 外側借用) → 同じ port=8080。4 形全て同値である最後の一致点。",
       "argv": ["-p", "8080"],
       "expect": {

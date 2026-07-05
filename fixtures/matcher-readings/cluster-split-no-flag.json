@@ -8,6 +8,7 @@
   },
   "cases": [
     {
+      "id": "no-flag-single-reading",
       "why": "f 未定義なので分割枝が生成されず単一読み (DR-041 §3): n が cluster 残余 `1.0f` を丸ごと値として消費 → n=1。もう一方の「n=`1.0` + 残 `f`」読みは f を読む matcher が無く `f` が未消費残余になるため完全経路にならず脱落。よって非 ambiguous、success で n=1。",
       "argv": ["-n1.0f"],
       "expect": {

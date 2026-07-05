@@ -8,6 +8,7 @@
   },
   "cases": [
     {
+      "id": "split-three-pieces",
       "why": "1 トークン → 3 piece: `a,b,c` を separator \",\" で [a,b,c] に割り、各 piece が set 効果を生み append で fold。効果列は piece 順に 3 個の set (DR-034 分割 × DR-045 set)。result は {xs:[a,b,c]}。値軸分割の基本輪郭。",
       "argv": ["a,b,c"],
       "expect": {
@@ -21,6 +22,7 @@
       }
     },
     {
+      "id": "no-separator-single",
       "why": "separator 文字を含まない 1 トークンは 1 piece: `solo` は割れず [solo] の要素 1 件リスト。separator セルは piece 数に関わらずリスト形 (0/1 piece でも scalar へ unwrap しない) であることの固定。効果列は set 1 個。",
       "argv": ["solo"],
       "expect": {
@@ -32,6 +34,7 @@
       }
     },
     {
+      "id": "second-token-fails",
       "why": "境界: separator ≠ repeat — repeat 無しの positional は 1 トークンしか消費しない (DR-018)。`a b` の 2 トークンは xs が \"a\" を消費 ([a]) した後 \"b\" の消費者が居ない (背骨終端・repeat 無し) → 残余トークンで完全経路 0 本。element 省略 = スコープレベルの躓き、argv_pos = 残余先頭 1、kind parse / reason unexpected_token (DR-065 §3、subcommand.json case 4 と同型)。separator が値軸のみで働きトークン数を増やし取らないことを固定 (対比: separator-repeat.json では repeat があるので 2 トークンとも消費できる)。",
       "argv": ["a", "b"],
       "expect": {

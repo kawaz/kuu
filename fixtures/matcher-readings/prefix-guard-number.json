@@ -11,6 +11,7 @@
   },
   "cases": [
     {
+      "id": "undefined-into-number",
       "why": "未定義 `-x` が number positional で値パーサ拒否 → held Error で failure (DR-041 §5 / DR-038): -x は matcher に読まれず number positional n へ素通しするが value_parser(`-x`) が失敗。これが唯一の枝なので完全経路 0 本 → failure。errors は保持された 1 件 (element=n, argv_pos=0, kind=parse)。",
       "argv": ["-x"],
       "expect": {

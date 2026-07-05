@@ -14,6 +14,7 @@
   },
   "cases": [
     {
+      "id": "space-form",
       "why": "space 形: long installer の space 衛星が --sub-ttl の次トークン 30 を operand として読む。root の write-target ttl=30@cli。",
       "argv": ["--sub-ttl", "30"],
       "expect": {
@@ -26,6 +27,7 @@
       }
     },
     {
+      "id": "eq-split-form",
       "why": "eq-split 形: 同じ祖先コピーに対し long installer の eq-split matcher が --sub-ttl=30 を 1 トークン内で分割して読む。space 形 case と同一 outcome — 逆方向コピーが通常 long と同じ両綴り形を持つことを固定 (inheritable × long 合成の本命)。",
       "argv": ["--sub-ttl=30"],
       "expect": {

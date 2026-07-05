@@ -17,6 +17,7 @@
   },
   "cases": [
     {
+      "id": "shadow-suppresses-copy",
       "why": "自前優先 shadow: root が自前で --sub-ttl (option other, 明示綴り) を持つため inheritable の逆方向コピーは抑制される。--sub-ttl hello は root の other を束縛し ttl write-target には向かわない (basic.json では同綴りが ttl を束縛したのと反転)。result は other=hello、sub は未入場で不在。sources で other=cli を固定。",
       "argv": ["--sub-ttl", "hello"],
       "expect": {
@@ -29,6 +30,7 @@
       }
     },
     {
+      "id": "child-spelling-unaffected",
       "why": "shadow は自スコープ綴りに無干渉: 祖先の自前 --sub-ttl が inheritable コピーを覆っても、sub 自身の name 由来 --ttl は独立に効く。sub 入場後 --ttl 30 が sub の ttl を束縛 → {sub:{ttl:30}}。root の other は未書込み・default 無しで absent。shadow が祖先綴りのみを覆い子綴りを壊さないことを固定。",
       "argv": ["sub", "--ttl", "30"],
       "expect": {

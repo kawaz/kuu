@@ -8,6 +8,7 @@
   },
   "cases": [
     {
+      "id": "two-fires-append",
       "why": "2 回発火 → append 累積: --tag が 2 度発火し、tag セルは last-wins でなく [a,b] を蓄積する。効果列は消費順に 2 個の set が並ぶ (DR-045 効果列 = 適用順)、result は append fold で配列化 (DR-036)。append 由来のリスト形をこのケースが固定する。",
       "argv": ["--tag", "a", "--tag", "b"],
       "expect": {
@@ -20,6 +21,7 @@
       }
     },
     {
+      "id": "single-fire-list",
       "why": "1 回発火でもリスト: 発火 1 度でも accumulate セルの形はリストなので要素 1 件の [a] になる (scalar への unwrap はしない)。リスト形が『発火回数』でなく『セルが accumulator を持つこと』由来であることの固定。",
       "argv": ["--tag", "a"],
       "expect": {
@@ -31,6 +33,7 @@
       }
     },
     {
+      "id": "zero-fires-empty",
       "why": "0 回発火でも `[]` (DR-044 uniform array): accumulate セルは fire 0 回でも absent (キー消失) にならず、home level で空配列を描く。default なし scalar 値オプションが未発火で absent になる (subcommand.json) のと対照 — accumulate セルの空表現は `[]`。効果列は空。",
       "argv": [],
       "expect": {

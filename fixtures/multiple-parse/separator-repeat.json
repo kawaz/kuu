@@ -8,6 +8,7 @@
   },
   "cases": [
     {
+      "id": "two-tokens-flat",
       "why": "2 トークン × 各 2 piece → 平坦 4 要素: `a,b c,d` は repeat が 2 発火 (トークン a,b と c,d)、各発火で separator が 2 piece に割る。全 4 piece が 1 本のリストに fold されて [a,b,c,d]。効果列は消費順 a,b (第 1 発火) → c,d (第 2 発火) の 4 set。2 軸合成の主輪郭。",
       "argv": ["a,b", "c,d"],
       "expect": {
@@ -22,6 +23,7 @@
       }
     },
     {
+      "id": "one-token-two-pieces",
       "why": "1 トークン × 2 piece: `a,b` は repeat 1 発火・separator 2 piece で [a,b]。separator-split.json の同入力 (repeat 無し) と result は同じだが、こちらは repeat があるため 2 トークン目も消費可能 (次ケースと合わせて構造軸の存在を示す)。",
       "argv": ["a,b"],
       "expect": {
@@ -34,6 +36,7 @@
       }
     },
     {
+      "id": "single-token-single-piece",
       "why": "1 トークン × 1 piece: separator 文字を含まない `solo` は 1 発火 1 piece で [solo]。両軸とも最小の縮退形 (発火 1・piece 1) でも accumulate セルはリスト形を保つ。",
       "argv": ["solo"],
       "expect": {

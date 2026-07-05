@@ -11,6 +11,7 @@
   },
   "cases": [
     {
+      "id": "multiple-and-repeat",
       "why": "`--tag x a --tag y b`: tag が x,y で 2 発火 (append→[x,y])、src が a,b を反復消費 (repeat flatten→[a,b])。--tag は greedy トリガとして positional 消費 (a) の後にも割り込んで発火する (多孔質 positional 面、DR-041 §4)。効果列は消費順 tag x → src a → tag y → src b。2 accumulator が独立に fold され result は {tag:[x,y],src:[a,b]}。",
       "argv": ["--tag", "x", "a", "--tag", "y", "b"],
       "expect": {
