@@ -1,0 +1,24 @@
+{
+  "why": "multiple installer の最小断面: 値オプション tag (string) を multiple:\"append\" プリセットのみで lowering する。この fixture の主眼は席宣言型 (能力宣言型) installer の『構造出力なし、値セルへの pipeline 構成のみ』という型の固定 (LOWERING §B.9)。multiple installer は `multiple` を回収し、env / inherit と同型に greedy / positional 面へ構造衛星を一切足さず、要素の値セルへ separator→accumulator→collector の pipeline (DR-034 / DR-036) を構成するだけ。したがって断面の greedy / positionals 面は空になり、最小投影 (DR-063 §3) で省略する — expect が entities のみを持つことが『構造を生まない能力宣言型』の表現。文字列 \"append\" は multiple registry のプリセット参照で、append = {accumulator: append, collector: identity, separator: なし} に展開される。identity collector は default なので collector フィールドは書かない (collector が identity 以外の時だけ明示、DR-070 指定表記)、separator も なし なので省略。よって値セルには accumulator: \"append\" のみが席として残る。accumulator 名は accumulators registry の住人 (DR-036) で、多重発火・separator 分割片が生む値列を配列に畳むのが責務 (出現回数・位置の制約は持たない、回数は repeat・位置は greedy の軸)。席宣言は仕様語彙で表記する (DR-063 §3): 実装内部の略名 (accum 等) でなく `accumulator` を使う。元要素 tag は実体だけノード (DR-030) に降格 (LOWERING §C.1)。断面表記は DR-063 §3、比較は緩比較 (LOWERING §C.5)。slice PoC (installer.mbt inst_multiple / ensure_entities の accum 決定, installers=[MultipleInst] 単独) の canon 実測が写像元 oracle: greedy.len=0 / positional.len=0 / entity tag が ty=TStr・accum=Some(append)・env_key=None・inherit=false を観測 (slice は multiple を Bool で持ち常に append accumulator をインストールする実装だが、append プリセットの意味論 accumulator:append は仕様と一致。期待値の権威は仕様、DR-070 §1b)。",
+  "query": "lower",
+  "definition": {
+    "options": [
+      {
+        "name": "tag",
+        "type": "string",
+        "multiple": "append"
+      }
+    ]
+  },
+  "installers": [
+    "multiple"
+  ],
+  "expect": {
+    "entities": {
+      "tag": {
+        "type": "string",
+        "accumulator": "append"
+      }
+    }
+  }
+}

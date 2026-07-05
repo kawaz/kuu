@@ -1,0 +1,24 @@
+{
+  "why": "env installer の最小断面: 値オプション port (number) を env のみで lowering する。この fixture の主眼は席宣言型 installer の『構造出力なし、席宣言のみ』という型の固定 (LOWERING §B.3)。env installer は `env` を回収し、greedy 面にも positional 面にも構造衛星を一切足さず、エンジンが所有する値源優先順位ラダー (DR-031, cli>env>inherit>default) の env 席へ lookup を宣言するだけ (DR-042 不変則④)。したがって断面の greedy / positionals 面は空になり、最小投影 (DR-063 §3) で省略する — expect が entities のみを持つこと自体が『この installer は構造を生まない』ことの表現であり、緩比較 (LOWERING §C.5) は省略面=空として扱うので構造衛星が誤って生えれば構造骨格の不一致で捕捉される。元要素 port は実体だけノード (DR-030) に降格し entities の値セルになる (LOWERING §C.1)。席宣言は仕様語彙で表記する (DR-063 §3): env 席は宣言層の属性名 `env` をそのまま使い値に連結前の key を置く (env_prefix があれば実装が連結、MYAPP_PORT — DR-049 env lookup 契約)。type は number スカラ値セルで accumulator は持たない (最小投影で省略=default)。断面表記は DR-063 §3、比較は緩比較。slice PoC (installer.mbt inst_env, installers=[EnvInst] 単独) の canon 実測が写像元 oracle: greedy.len=0 / positional.len=0 / entity port が ty=TNum・env_key=Some(PORT)・inherit=false・accum=None を観測 (期待値の権威は仕様、DR-070 §1b)。",
+  "query": "lower",
+  "definition": {
+    "options": [
+      {
+        "name": "port",
+        "type": "number",
+        "env": "PORT"
+      }
+    ]
+  },
+  "installers": [
+    "env"
+  ],
+  "expect": {
+    "entities": {
+      "port": {
+        "type": "number",
+        "env": "PORT"
+      }
+    }
+  }
+}

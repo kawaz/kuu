@@ -1,0 +1,24 @@
+{
+  "why": "inherit installer の最小断面: 値オプション ttl (number) を inherit のみで lowering する。この fixture の主眼は席宣言型 installer の『構造出力なし、席宣言のみ』という型の固定 (LOWERING §B.7)。inherit installer は `inherit` を回収し、env と同型に greedy / positional 面へ構造衛星を一切足さず、値源ラダー (DR-031, cli>env>inherit>default) の inherit 席へ『最近祖先の同名実体の値セルを参照する』lookup を宣言するだけ (DR-042 不変則④)。したがって断面の greedy / positionals 面は空になり、最小投影 (DR-063 §3) で省略する — expect が entities のみを持つこと自体が『構造を生まない席宣言型』の表現であり、緩比較 (LOWERING §C.5) が省略面=空として扱う。inherit は default と排他で、値は祖先 scope が持つ (DESIGN §11.2) ため本 fixture の単一 scope では値は解決されず、席の存在だけを固定する。元要素 ttl は実体だけノード (DR-030) に降格し entities の値セルになる (LOWERING §C.1)。席宣言は仕様語彙で表記する (DR-063 §3): inherit 席は宣言層の属性名 `inherit` を真偽値 true で置く。type は number スカラ値セルで accumulator は持たない (最小投影で省略=default)。断面表記は DR-063 §3、比較は緩比較。slice PoC (installer.mbt inst_inherit, installers=[InheritInst] 単独) の canon 実測が写像元 oracle: greedy.len=0 / positional.len=0 / entity ttl が ty=TNum・inherit=true・env_key=None・accum=None を観測 (期待値の権威は仕様、DR-070 §1b)。",
+  "query": "lower",
+  "definition": {
+    "options": [
+      {
+        "name": "ttl",
+        "type": "number",
+        "inherit": true
+      }
+    ]
+  },
+  "installers": [
+    "inherit"
+  ],
+  "expect": {
+    "entities": {
+      "ttl": {
+        "type": "number",
+        "inherit": true
+      }
+    }
+  }
+}
