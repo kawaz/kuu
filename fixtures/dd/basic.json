@@ -1,0 +1,89 @@
+{
+  "why": "dd (--) の基本輪郭: greedy 面の住人 (トリガ兼消費者・マーカー消費・値なし) + 発火後 severed という公理だけで、古典 getopt の観測挙動 (位置自由・マーカー非 operand・2 個目はリテラル・operand 不足エラー) が dd 専用規則ゼロで創発することを固定する (DR-041/042/064)。GNU cp の実機観測 (2026-07-05: cp -- a b / cp a -- b / cp a b -- は全て a b、cp a -- は missing destination) と一致。定義は DR-064 の canonical 配置 (dd は options)。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {"name": "a", "type": "flag", "short": "a"},
+      {"name": "b", "type": "flag", "short": "b"},
+      {"name": "--", "type": "dd"}
+    ],
+    "positionals": [
+      {"name": "x", "type": "string"}
+    ]
+  },
+  "cases": [
+    {
+      "why": "dd 再スコープ: -- 後の -b は severed (greedy 面 off) で raw 消費され positional x に落ちる。-- が x に値として食われないのは先食い (DdSat が読めるトークンは素通し枝を生成しない、DR-041 §4) から。",
+      "argv": ["-a", "--", "-b"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "a", "op": "set", "operand": true, "source": "cli"},
+          {"entity": "x", "op": "set", "operand": "-b", "source": "cli"}
+        ],
+        "result": {"a": true, "b": false, "x": "-b"}
+      }
+    },
+    {
+      "why": "dd 不使用の対照 (case 1 と対): 同じ -b が flag として発火し、c が x へ落ちる。-- の有無で -b の解釈が反転する (DR-042 の dd の狙い)。",
+      "argv": ["-a", "-b", "c"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "a", "op": "set", "operand": true, "source": "cli"},
+          {"entity": "b", "op": "set", "operand": true, "source": "cli"},
+          {"entity": "x", "op": "set", "operand": "c", "source": "cli"}
+        ],
+        "result": {"a": true, "b": true, "x": "c"}
+      }
+    },
+    {
+      "why": "構造的必須の不成立: 背骨の x (required 属性なしだが seq の子は消費必須) がトークンを得られず完全経路 0 本。kind は parse (経路構築の失敗 — 明示 required の constraint とは層が違う、DR-065 §3)。argv_pos はトークンが尽きて要求した位置 = argv.length。",
+      "argv": ["-a", "-b"],
+      "expect": {
+        "outcome": "failure",
+        "errors": [{"element": "x", "argv_pos": 2, "kind": "parse"}]
+      }
+    },
+    {
+      "why": "残余トークンの不成立: -- で severed 後、x が -a を raw 消費し、-b の消費者が居ない (背骨終端・greedy 面 off)。全消費できず失敗。element 省略 = スコープレベルの躓き、argv_pos は残余先頭 (DR-065 §3)。case 3 (値不足) との失敗理由の書き分け例。",
+      "argv": ["--", "-a", "-b"],
+      "expect": {
+        "outcome": "failure",
+        "errors": [{"argv_pos": 2, "kind": "parse"}]
+      }
+    },
+    {
+      "why": "マーカー消費 + 値不足: 3 トークンとも消費者は居た (a, b, DdSat) がマーカーは値を生まず、x が空のまま。「トークン全消費」と「完全解決経路」(全消費 + 構造完了、DR-038) の区別を固定する。GNU cp の `cp a --` = missing destination と同型。",
+      "argv": ["-a", "-b", "--"],
+      "expect": {
+        "outcome": "failure",
+        "errors": [{"element": "x", "argv_pos": 3, "kind": "parse"}]
+      }
+    },
+    {
+      "why": "2 個目の -- はリテラル: 1 個目で severed (greedy 面ごと off) になるため 2 個目は DdSat 自身にも読まれず raw で x へ。「-- は 1 回のみ」が回数制限規則でなく severed の創発であることの固定 (DR-064 §4)。",
+      "argv": ["-a", "-b", "--", "--"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "a", "op": "set", "operand": true, "source": "cli"},
+          {"entity": "b", "op": "set", "operand": true, "source": "cli"},
+          {"entity": "x", "op": "set", "operand": "--", "source": "cli"}
+        ],
+        "result": {"a": true, "b": true, "x": "--"}
+      }
+    },
+    {
+      "why": "dd の位置非拘束: -- が operand の後に来ても成功する。greedy は背骨上のどこでも発火できる (DR-041 §4) の dd への適用。dd と x をセット構造 (or/seq) で書く設計だとこの入力が失敗になる — greedy 住人化が古典 getopt (cp a b -- が成功) と一致する根拠ケース。",
+      "argv": ["hello", "--"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "x", "op": "set", "operand": "hello", "source": "cli"}
+        ],
+        "result": {"a": false, "b": false, "x": "hello"}
+      }
+    }
+  ]
+}
