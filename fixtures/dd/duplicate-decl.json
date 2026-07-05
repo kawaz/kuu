@@ -1,0 +1,26 @@
+{
+  "why": "同一スコープに dd を複数宣言した場合の効果列合流の固定 (DR-064 §4): DR-041 の一般則「トリガ重複 = 静的 warn + 実行時 ambiguous」は重複読みが異なる実体への異なる効果を生む通常ケースの帰結であり、dd は値効果を持たない (severed 化 + 消費 1・値なし) ため両宣言の読みが同効果に落ち、経路同一性 (DR-038 の効果列判定) により 1 本に合流する — 例外規則ではなく同じ原理の帰結。冗長宣言の指摘は lint (静的 warn) の関心でパースは正常。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {"name": "--", "type": "dd"},
+      {"id": "dd2", "name": "--", "type": "dd"}
+    ],
+    "positionals": [
+      {"name": "x", "type": "string"}
+    ]
+  },
+  "cases": [
+    {
+      "why": "-- で両 dd 宣言の読みが同時に立つが、どちらも同効果 (severed + マーカー 1 消費・値なし) なので効果列 dedup で 1 解釈に合流。success であって ambiguous でない。後続の -v は severed 下で x が raw 消費。",
+      "argv": ["--", "-v"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "x", "op": "set", "operand": "-v", "source": "cli"}
+        ],
+        "result": {"x": "-v"}
+      }
+    }
+  ]
+}

@@ -23,7 +23,7 @@ wire (AtomicAST 直列形) 上の語彙の正当性は「**登録済み installe
 registry 住人の登録を「名前 → 実装」から「**名前 + config → factory**」へ一般化する:
 
 ```json
-"registry": {"types": {"number": {
+"definitions": {"types": {"number": {
   "name": "kuu_number_parser",
   "config": {"thousand_sep": [",", "_"],
              "base_prefix": {"0x": 16, "0o": 8, "0b": 2},
@@ -31,6 +31,7 @@ registry 住人の登録を「名前 → 実装」から「**名前 + config →
 ```
 
 - バリエーションごとに value_parser を作るのではなく、動作調整可能な factory + 純データ config で表現する
+- **wire に現れるのは definitions 側のみ** (DR-035 の区別: definitions = ユーザが書くポータブルな上書き機構、registry = ホスト言語側が注入する非ポータブル名前空間)。registry 層 (言語 DX default) も同じ `{name, config}` 形で登録するが、それはホスト側コードであって wire ではない。解決順 (definitions.X → registry.X → warn+フォールバック、DR-035) は不変
 - **canonical default = factory の default config**。DR-040 の標準層 opt-in (桁区切り `_`・基数 prefix)・方言 (`,` 系・NFC) は config キーの列挙になる
 - config は純データなので wire に載る = **方言構成がシリアライズ可能**。DR-040 の再現性課題 (クロスホストの canonical 参照 / moving target ロック) の実装手段になる (クロージャ差し替えでは原理的に不可能だった)
 - types (value_parser) を筆頭に、filters / accumulators / completers / installer 自身の config (§1) にも一様に適用できる

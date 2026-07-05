@@ -30,10 +30,12 @@ descriptor (DR-061) に **`reasons`** (emit しうる reason 識別子の列挙)
 |---|---|---|
 | parse | `missing_operand` | トークンが尽きて要素の消費要求が満たせない (構造的必須の不成立を含む) |
 | parse | `unexpected_token` | 消費者の居ないトークンが残る (残余トークン) |
-| constraint | `required_unsatisfied` | required の値充足 (DR-047) 失敗 |
-| constraint | `requires_unmet` | requires の目的語不足 |
-| constraint | `exclusive_conflict` | exclusive_group 内の committed 衝突 |
-| constraint | `conflicts` | conflicts_with の committed 衝突 |
+| constraint | `required_violated` | required の値充足 (DR-047) 失敗 |
+| constraint | `requires_violated` | requires の目的語不足 |
+| constraint | `exclusive_group_violated` | exclusive_group 内の committed 衝突 |
+| constraint | `conflicts_with_violated` | conflicts_with の committed 衝突 |
+
+constraint 系は **`<属性名>_violated`** で機械的に統一する (属性への遡及が名前だけで自明、L10n キーとしても一様)。
 
 value_parser 系 (not_a_number / not_an_integer 等) は canonical factory の descriptor 宣言として列挙する (DR-040 の canonical 語彙を config キーとともに写像する作業の一部、フェーズ 1 の Schema 実体化で行う)。filter 系は各 filter の descriptor 宣言 (例: in_range が `too_small` / `too_large`)。
 

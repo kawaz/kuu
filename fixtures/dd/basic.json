@@ -13,7 +13,7 @@
   },
   "cases": [
     {
-      "why": "dd 再スコープ: -- 後の -b は severed (greedy 面 off) で raw 消費され positional x に落ちる。-- が x に値として食われないのは先食い (DdSat が読めるトークンは素通し枝を生成しない、DR-041 §4) から。",
+      "why": "dd 再スコープ: -- 後の -b は severed (greedy 面 off) で raw 消費され positional x に落ちる。-- が x に値として食われないのは先食い (dd の exact 衛星が読めるトークンは素通し枝を生成しない、DR-041 §4) から。",
       "argv": ["-a", "--", "-b"],
       "expect": {
         "outcome": "success",
@@ -54,7 +54,7 @@
       }
     },
     {
-      "why": "マーカー消費 + 値不足: 3 トークンとも消費者は居た (a, b, DdSat) がマーカーは値を生まず、x が空のまま。「トークン全消費」と「完全解決経路」(全消費 + 構造完了、DR-038) の区別を固定する。GNU cp の `cp a --` = missing destination と同型。",
+      "why": "マーカー消費 + 値不足: 3 トークンとも消費者は居た (a, b, dd 衛星) がマーカーは値を生まず、x が空のまま。「トークン全消費」と「完全解決経路」(全消費 + 構造完了、DR-038) の区別を固定する。GNU cp の `cp a --` = missing destination と同型。",
       "argv": ["-a", "-b", "--"],
       "expect": {
         "outcome": "failure",
@@ -62,7 +62,7 @@
       }
     },
     {
-      "why": "2 個目の -- はリテラル: 1 個目で severed (greedy 面ごと off) になるため 2 個目は DdSat 自身にも読まれず raw で x へ。「-- は 1 回のみ」が回数制限規則でなく severed の創発であることの固定 (DR-064 §4)。",
+      "why": "2 個目の -- はリテラル: 1 個目で severed (greedy 面ごと off) になるため 2 個目は dd の exact 衛星自身にも読まれず raw で x へ。「-- は 1 回のみ」が回数制限規則でなく severed の創発であることの固定 (DR-064 §4)。",
       "argv": ["-a", "-b", "--", "--"],
       "expect": {
         "outcome": "success",

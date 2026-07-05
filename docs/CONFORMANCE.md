@@ -58,7 +58,7 @@
 - `kind` の割当 (DR-065 §3):
   - `parse` — 型照合・経路構築の失敗。**構造的必須の不成立** (required 属性なしの positional がトークンを得られない、reason: `missing_operand`) と**残余トークン** (element 省略、argv_pos = 残余先頭、reason: `unexpected_token`) を含む
   - `filter` — filter chain の Error (DR-037)。reason は filter の descriptor 宣言 (例: in_range の `too_small` / `too_large`)
-  - `constraint` — 遅延述語の違反 (DR-047)。reason: `required_unsatisfied` / `requires_unmet` / `exclusive_conflict` / `conflicts` (DR-066 §3)
+  - `constraint` — 遅延述語の違反 (DR-047)。reason: `required_violated` / `requires_violated` / `exclusive_group_violated` / `conflicts_with_violated` (`<属性名>_violated` で統一、DR-066 §3)
 - `fired_action`: 失敗時アクション (DR-048) が発火した場合のみ
 
 ### ambiguous
@@ -75,7 +75,7 @@
 - **構造等価** (DR-063 §4): key 順序非規範、フィールド省略 = default 値と等価。byte 一致は要求しない
 - effects は配列順込みの完全一致 (順序が同一性成分)
 - result / interpretations は構造等価
-- errors は集合比較 (element, argv_pos, kind の 3 つ組。message 無視)
+- errors は集合比較 (element, argv_pos, kind, reason の組。**reason は fixture 側に書かれている要素でのみ比較対象** (§2 の optional 検証)、message は常に無視)
 
 ## 4. ディレクトリ構成
 

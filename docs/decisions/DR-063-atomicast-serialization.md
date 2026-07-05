@@ -70,5 +70,6 @@ DR-041/042 が「観測挙動が同一なら自由」とした実装内部の自
 - DR-046 (内部 id — `#` 予約名前空間の出所)
 - DR-056 / DR-061 (observes — 宣言層が正本である根拠、descriptor — 追加語彙の判定)
 - DR-062 (filters 二形 — 宣言層 wire に載る filters フィールドの形)
+- DR-068 (lifecycle — canonical default の変更が再導出可能性を暗黙に変える変更は「同じ wire の解釈が変わる」= major として捕捉される)
 - LOWERING §C.3 (未確定範囲 — 本 DR で解消) / §C.5 (緩比較 — §3 の比較規約)
 - docs/issue/2026-07-04-phase1-serialization-design-agenda.md (A-0〜A-5 の議論経緯)
