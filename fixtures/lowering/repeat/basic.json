@@ -1,0 +1,30 @@
+{
+  "why": "repeat installer の最小断面: `cp src... dst` 形 — 可変長 positional src (string, min 1) + 単一 positional dst (string) を repeat のみで lowering する。LOWERING §B.8 の主規則 — repeat installer は `repeat` を回収し、ref を使った再帰リスト構造 (cons `[T, T[]]`) へ lowering する。min:1 は必須段 unroll が 0 段なので背骨には再帰尾部 `Ref(src)` が 1 個載るだけ (>=1 porous)。テンプレート `src = seq([head, opt(ref src)])` は自己参照する cons で、背骨の `Ref(src)` と尾部の `{ref: src, optional: true}` が同一テンプレートへ収束する (DR-063 §34 の再帰尾部)。`optional: true` は `repeat: {min:0, max:1}` の糖衣 (DR-043) で、slice では `Or([Ref(src), Seq([])])` として実現される。平坦化 (`[T,[T,…]]` → `T[]`) は組み込み accumulator `flatten` (accumulators registry、DR-036) を src の値セルへ同時インストールする。dst は repeat を持たないので scalar セル (accum なし)。断面表記は DR-063 §3 の面構造 {greedy, positionals, entities} + 提案面 templates (下記)。比較は緩比較 (LOWERING §C.5 / DR-070 §2: 構造骨格 + accumulator 名 + link 先の一致、内部 id の綴りは非規範)。slice PoC (installer.mbt lower_positional, installers=[RepeatInst] 単独) の canon_scope + registry 実測を写像 — 実測 spine `P[Ref(src),StrArg(dst)]`、entities `src {accum: Some(flatten)}` / `dst {accum: None}`、registry `src = Seq([StrArg(src), Or([Ref(src), Seq([])])])`。",
+  "query": "lower",
+  "definition": {
+    "positionals": [
+      { "name": "src", "type": "string", "repeat": { "min": 1 } },
+      { "name": "dst", "type": "string" }
+    ]
+  },
+  "installers": ["repeat"],
+  "expect": {
+    "greedy": [],
+    "positionals": [
+      { "ref": "src" },
+      { "type": "string", "link": "dst" }
+    ],
+    "entities": {
+      "src": { "type": "string", "accum": "flatten" },
+      "dst": { "type": "string" }
+    },
+    "templates": {
+      "src": {
+        "seq": [
+          { "type": "string", "link": "src" },
+          { "ref": "src", "optional": true }
+        ]
+      }
+    }
+  }
+}

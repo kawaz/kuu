@@ -19,6 +19,10 @@
 - **installers は installer 名の列挙** (省略 = 登録済み全 installer)。適用は順序非依存 (LOWERING §C.2) なので**集合**であり、JSON 配列の順序は非規範
 - A 群糖衣のみの段階は `"installers": []` で表す (純構文正規化は installer 以前に常に適用、§C.4)
 
+### 1b. golden の期待値は仕様準拠値で書く (実装の実測ミラーではない)
+
+golden fixture は仕様の正本であり、参照実装の現状挙動の写しではない。実装が仕様に未追従の箇所 (例: flag preset default 未実装で値セルが bool + default:false に降格されない) は、**fixture は仕様準拠値 (§A.5 なら `{type: "bool", default: false}`) を書き、実装側 runner が KNOWN GAP として差分を可視化する**。実測はあくまで表記写像の確立と fixture 誤り検出の oracle である。
+
 ### 2. expect は DR-063 §3 の断面表記が正規形
 
 `{greedy: [...], positionals: [...], entities: {...}}` + matcher `{matcher: kind, entries}` + 効果記述子。比較は緩比較 (LOWERING §C.5):
