@@ -25,11 +25,18 @@ ROADMAP フェーズ 2-① (codex 方向性レビューを受けた再構成 —
 - **characterization と conformance の区別**: 現 runner は inspect による挙動凍結 (green = 凍結であって準拠ではない)。乖離解消後は「divergence = fail」の conformance モードへ育てる (slice issue 2 件目の関連メモに記録)
 - runner の proj_effects は source を明示フィルタしていない (parse 時 binding は cli のみなので現状無害)。value-source fixture (フェーズ 2 後続) 導入時に要 1 行フィルタ
 
+## 修正の完遂 (同日追記)
+
+- **2 乖離とも修正済み**: (1) inst_dd を options/positionals 両面走査化 (inst_env/inst_inherit と対称のパターン、重複は add-if-absent が単一 DdSat に collapse)。(2) 構造的枯渇は scope 走査で Held ParseError (element/argv_pos=argv.length/kind=parse) を、残余トークンは top-level で element 省略・argv_pos=残余先頭の ParseError を合成 (両者は errors 空判定で排他)
+- **既存 phase テスト 11 件の期待値更新**: 旧値「fail:no complete parse」は空 errors バグの characterization だった。全 11 件 failure→failure のメッセージ enrichment のみ (outcome flip ゼロ) で、意図を保った仕様準拠化として更新。エラー文言 (missing operand for X / unexpected token) は slice ローカルの選択 (message は仕様非拘束、DR-053/065)
+- **runner を conformance モード化**: DIAG 6 件削除、faithful 8 cases の最終形 = **6 pass (2/3/4/5/6/dup1) + 2 preset-default gap のみ (1/7、KNOWN GAP コメントで可視化)**。case 3/4/5 の errors (kind/element 省略/argv_pos 規約) が実測検証可能になった
+- moon test **175/175 green**。slice bookmark を新設し origin へ push 済み (ccdb99a7)。slice に justfile (test gate 付き push task) を新設
+- 残 gap: flag preset default 未実装 (LOWERING §A.5) — case 1/7 の result 差分。別 issue として slice 側で追跡
+
 ## 次
 
-- slice の 2 issue 修正 + runner の conformance モード化 (修正 Workflow 実行中)
-- 修正後の期待形: 3 pass (2/6/dup1) + 2 preset-gap (1/7) + 3 が errors 検証可能に (3/4/5)
-- その後フェーズ 2-② (lowering conformance: `query: "lower"` 形式 + golden 断面) へ
+- フェーズ 2-② (lowering conformance: `query: "lower"` 形式 + golden 断面) へ
+- preset default (LOWERING §A.5) の slice 実装で case 1/7 も完全一致にできる
 
 ## 関連
 
