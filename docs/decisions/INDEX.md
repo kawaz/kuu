@@ -24,7 +24,6 @@
 - [DR-026](DR-026-leaf-branch-and-sugar.md): 葉/枝、exact は値プリミティブの一種、構造記法の糖衣 (裸文字列=exact, 裸配列=seq)
 - [DR-027](DR-027-serial-renamed-seq.md): serial → seq 改名 (or/seq/multiple = alternation/concatenation/closure)
 - [DR-039](DR-039-atomicast-convergence-and-vertical-slice.md): AtomicAST = ボトムアップエンジンのシリアライズ形、垂直スライスで実装と共設計、JSON Schema は最後 — 直列形の範囲は DR-063 で確定
-- [DR-063](DR-063-atomicast-serialization.md): AtomicAST 直列形の確定 — wire form = 宣言層のみ (A 群適用済み + installer 語彙 inert、lowered は決定的再導出)、lowered 断面表記 (面構造 / matcher kind + name 参照 entries / 効果記述子 / `#` 予約内部 id) は段階別 fixture 用で緩比較、構造等価で byte 一致不要
 
 ## 名前とスコープ
 
@@ -89,6 +88,11 @@
 
 - [DR-058](DR-058-hidden-deprecated.md): hidden / deprecated の挙動 — hidden は help/補完から除外 (受理不変)、deprecated は受理 + ParserContext.warnings (v1 bool のみ、表示はレンダラ)
 - [DR-060](DR-060-completion-query.md): 補完クエリ — 生存 partial 経路 (dead end 除外) の期待集合の和集合、after 整合フィルタ、素材+メタ返却でポリシーは生成器、completer は名前参照で shell 機能へ委譲、責務 4 層
+
+## conformance / 直列形
+
+- [DR-063](DR-063-atomicast-serialization.md): AtomicAST 直列形の確定 — wire form = 宣言層のみ (A 群適用済み + installer 語彙 inert、lowered は決定的再導出)、lowered 断面表記 (面構造 / matcher kind + name 参照 entries / 効果記述子 / `#` 予約内部 id) は段階別 fixture 用で緩比較、構造等価で byte 一致不要
+- [DR-065](DR-065-conformance-fixture-format.md): conformance fixture フォーマット — why 必須 / query タグ (parse 定義、lower・complete・definition_error 予約) / definition は wire form / expect は DR-053 union 転用 (effects = cli 効果のみが正本、result = ラダー込み最終値) / error kind 割当 (構造的不足・残余 = parse) / 機能領域別ディレクトリ。正本は docs/CONFORMANCE.md
 
 ## レジストリ / 実装連携
 

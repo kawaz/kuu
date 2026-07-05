@@ -8,7 +8,7 @@
 
 実装間で交換される AtomicAST JSON (wire form) は**宣言層のみ**を載せる:
 
-- 切り口: A 群糖衣 (LOWERING §A の純構文正規化 — 裸文字列 → exact、values → or 等) は**適用済み**。installer 所有語彙 (`long` / `short` / `env` / `repeat` 等) は **inert のまま残る**
+- 切り口: A 群糖衣のうち**純構文正規化 (LOWERING §C.4 の列挙 = A.1〜A.4: 裸文字列 → exact、裸配列 → seq、裸リテラル → 照合消費、values → or) は適用済み**。type プリセット参照 (§A.5 の flag / count / help 等) は**展開せず `type:` 参照のまま残る** (registry 参照糖衣の解決は parse_definition の関心)。installer 所有語彙 (`long` / `short` / `env` / `repeat` 等) は **inert のまま残る**
 - lowered 産物 (greedy 衛星 / matcher データ / 席宣言) は**載せない** — lowering は決定的 (不動点、DR-042) なので宣言層から常に再導出可能
 - 受信側 parse_definition の仕様準拠は lowering 段階別 fixture (フェーズ 2、conformance の一部) が担保する
 
