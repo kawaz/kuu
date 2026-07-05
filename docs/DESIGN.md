@@ -202,7 +202,7 @@ kv (object 的な結果) は専用構造を持たない。**name を持つ子が
 
 ### 2.6 値の無い要素は結果に出ない (absent、DR-051)
 
-値源ラダー (§11.4) を回しても値が無い要素は、結果オブジェクトに**キー自体が現れない** (in-band の null は使わない)。absent が起きるのは値源を持たない非反復要素のみ — 反復系 (repeat / multiple) は 0 回発火でも `[]` が出る (§6.1)、flag / count は default を同梱、required 要素は値が無ければ経路不成立 (§9.1)。**結果キーを持つスコープ生成要素 (command 含む) は、選ばれたら子が全部 absent でも空 kv `{}` を持つ** (スコープ生成 = 値の発生、反復系の `[]` と同型)。選ばれなければ absent (DR-052)。言語バインディングの型導出: required / default あり / 反復系 → `T`、それ以外 → `T?`。**null は kuu の値空間に存在しない** — config の JSON null は「供給なし」(DR-050)、明示的な取り消しは unset 効果 (DR-045)。absent 要素のメタ (committed / selected / source) は ParserContext から引ける (§0.3)。
+値源ラダー (§11.4) を回しても値が無い要素は、結果オブジェクトに**キー自体が現れない** (in-band の null は使わない)。absent が起きるのは値源を持たない非反復要素のみ — 反復系 (repeat / multiple / `optional: true` 糖衣を含む — optional は repeat {min:0, max:1} なので反復系そのもの) は 0 回発火でも `[]` が出る (§6.1)、flag / count は default を同梱、required 要素は値が無ければ経路不成立 (§9.1)。**結果キーを持つスコープ生成要素 (command 含む) は、選ばれたら子が全部 absent でも空 kv `{}` を持つ** (スコープ生成 = 値の発生、反復系の `[]` と同型)。選ばれなければ absent (DR-052)。言語バインディングの型導出: required / default あり / 反復系 → `T`、それ以外 → `T?`。**null は kuu の値空間に存在しない** — config の JSON null は「供給なし」(DR-050)、明示的な取り消しは unset 効果 (DR-045)。absent 要素のメタ (committed / selected / source) は ParserContext から引ける (§0.3)。
 
 ### 2.7 lexical スコープ = name が作るスコープ (DR-033)
 

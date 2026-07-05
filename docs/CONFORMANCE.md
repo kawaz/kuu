@@ -23,6 +23,8 @@
 | `query` | ✓ | `"parse"` (本書 §2) / `"lower"` (lowering 断面、DR-070 — `installers` 列挙 (省略 = 全登録、順序非規範)、expect は DR-063 §3 の面構造を緩比較、順列検査は runner 組み込みで fixture に順列を列挙しない)。`"complete"` / `"definition_error"` は予約 |
 | `definition` | ✓ | **wire form** (DR-063: 純構文正規化 (LOWERING §C.4) 適用済み + installer 語彙 inert + type 参照はそのまま) |
 | `cases[].argv` | ✓ | 前処理済みトークン列 (`Array[String]`、DESIGN §0.1) |
+| `cases[].env` | | 値源系 fixture の環境変数供給: key → 値のマップ。runner が env_provider (DR-049) に注入する |
+| `cases[].config` | | config_provider (DR-050) が返す階層オブジェクト。`cases[].config_files` (パス → オブジェクトのマップ) でパス別供給も可 |
 | `cases[].expect` | ✓ | §2 の outcome union |
 
 ## 2. expect — DR-053 の outcome union
@@ -42,7 +44,7 @@
   - `source`: 値源タグ (DR-031)。parse fixture では `cli` のみ登場する (下記)
 - **effects に載るのは cli / link 由来のパース時効果のみ** — 値源ラダー充填 (env / config / inherit / default) は完走後の値確定であり argv 順の全順序を持たないため、その結果は `result` 側で検証する (例: 未発火 flag の `false` は result に現れ、effects には現れない)。source 検証つきの effects 拡張は値源系 fixture (フェーズ 2) で確定する
 - **`result` は最終結果オブジェクト** (ラダー充填込みの確定値、DR-051 の absent 規則適用後)。runner は effects / result の両方を検証する
-- **`sources` (optional)**: entity → 値源タグ (`cli` / `env` / `config` / `inherit` / `default`) のマップ。最終値の由来 (ParserContext の source メタ、DR-031) を検証する — 値源系 fixture で使用。effects が cli / link 効果のみである規約は不変 (ラダー充填の順序を effects に持ち込まず、由来の検証は本フィールドが担う)
+- **`sources` (optional)**: entity → 値源タグ (`cli` / `env` / `config` / `inherit` / `default`) のマップ。最終値の由来 (ParserContext の source メタ、DR-031) を検証する — 値源系 fixture で使用。effects が cli / link 効果のみである規約は不変 (ラダー充填の順序を effects に持ち込まず、由来の検証は本フィールドが担う)。**キーは scope-path 修飾** (root 直下は `"ttl"`、入れ子 scope 内のセルは `"sub.ttl"`) — 同名セルが複数 scope に存在するケース (inheritable の祖先 write-target 等) の一意化
 
 ### failure
 
