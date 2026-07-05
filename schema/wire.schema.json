@@ -18,7 +18,8 @@
         "name": {
           "type": "string",
           "minLength": 1,
-          "description": "key/def name の各名前軸デフォルト供給源 (DR-046)。非空 string のみ制約 (DR-067)。文字種・長さ・非 ASCII は制約しない (i18n サブコマンド名は正規)。"
+          "pattern": "^[^#]+$",
+          "description": "key/def name の各名前軸デフォルト供給源 (DR-046)。非空 string + `#` 禁止 (id 未指定時に name が id を兼ねるため、id と同じ `#` 予約が適用される — DR-067)。文字種・長さ・非 ASCII は制約しない (i18n サブコマンド名は正規)。"
         },
         "id": {
           "type": "string",
@@ -95,6 +96,30 @@
         "post_filters": {
           "$ref": "#/$defs/filterChain",
           "description": "parse 後段の T→T チェイン (DR-062 の二形)。"
+        },
+        "env": {
+          "type": "string",
+          "description": "環境変数名 (env installer の所有語彙、DESIGN §12 / DR-049)。env_prefix があれば連結される。"
+        },
+        "inherit": {
+          "type": "boolean",
+          "description": "祖先 scope chain からの default 取得 (inherit installer、DESIGN §11.2)。default と排他。"
+        },
+        "repeat": {
+          "description": "構造閉包 (repeat installer、DR-043)。true | {min?, max?, lazy?}。",
+          "oneOf": [
+            { "type": "boolean" },
+            { "type": "object" }
+          ]
+        },
+        "alias": {
+          "type": "string",
+          "description": "canonical 要素への別入口参照 (alias installer、DR-057)。参照ファミリー 3 人目。"
+        },
+        "config_key": {
+          "type": "array",
+          "items": { "type": ["string", "integer"] },
+          "description": "config 階層への明示対応パス (config installer、DR-050)。未指定なら name スコープ階層と同型対応。"
         },
         "long": {
           "type": "array",
