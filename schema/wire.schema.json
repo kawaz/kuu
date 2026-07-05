@@ -122,9 +122,11 @@
           "description": "config 階層への明示対応パス (config installer、DR-050)。未指定なら name スコープ階層と同型対応。"
         },
         "long": {
-          "type": "array",
-          "items": { "$ref": "#/$defs/longItem" },
-          "description": "long 起動綴りと variant (DR-011)。要素は二形: 綴り/variant DSL 文字列 | {prefix, effect, args?} オブジェクト形。空配列は --<name> 生成 (DESIGN §7.1)。variant は installer 所有語彙として wire に inert 残存 (lowering 前)。"
+          "description": "long 入口 (DR-071 の二形)。bool: true = [\":set\"] の糖衣 (主入口のみ)。配列: variant DSL の一級リストで各要素が入口を 1 個生む (:set = 主入口、no:set:false 等 = variant)。absent = false = [] = 入口なし (presence を absent/空の区別に載せない)。要素は文字列 DSL | {prefix, effect, args?} オブジェクト形 (DR-011)。",
+          "oneOf": [
+            { "type": "boolean" },
+            { "type": "array", "items": { "$ref": "#/$defs/longItem" } }
+          ]
         },
         "short": {
           "type": "string",

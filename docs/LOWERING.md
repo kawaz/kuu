@@ -114,7 +114,7 @@ exact であり、`value:` だけの literal は入力を検査しない (DESIGN
 **flag** = bool + default:false + 起動で true:
 
 ```
-入力:  {name: "verbose", type: "flag", long: []}
+入力:  {name: "verbose", type: "flag", long: true}
 出力:  値セルは {name: "verbose", type: "bool", default: false} (実体だけノード)。
        入口衛星は long / short installer が植える exact で、発火時に literal true を産出し値セルへ link する:
          {exact: "--verbose", value: true, link: "verbose"}
@@ -146,7 +146,7 @@ multiple registry のプリセットではないため object 形で accumulator
 **help** = 起動時アクション:
 
 ```
-入力:  {name: "help", type: "help", long: [], short: "h"}
+入力:  {name: "help", type: "help", long: true, short: "h"}
 出力:  入口部 (long / short 衛星) は §B.1 / B.2 と同型に展開。
        「起動時に ParserContext の help フラグを立てる」アクション部の
        canonical AtomicAST 形は未予約 (DESIGN §13.9、下記 規則 参照)。
@@ -172,31 +172,32 @@ installer は特殊語彙 (属性名・type 値) の所有者であり、parse_d
 以下の例では、共通の実体を次のように置く:
 
 ```
-{name: "port", type: "number", long: [], short: "p", env: "PORT"}
+{name: "port", type: "number", long: true, short: "p", env: "PORT"}
 ```
 
 ### B.1 long installer
 
 ```
 所有語彙: long 属性 (variant DSL の値語彙 DR-011 を含む)
-入力:  {name: "port", ..., long: []}
+入力:  {name: "port", ..., long: true}
 出力 (greedy 衛星 + 実体だけノード):
   «greedy» {or: [
     {seq: [{exact: "--port"}, {ref: "port", link: "port"}]}]}
   {matcher: "eq_split", entries: {"--port": port}}   // --port=80 の読み生成
 ```
 
-**規則**: long installer は `long` を回収し、greedy 面に「exact 綴り + 値スロット」の衛星を足す。値スロットは
-`ref` で実体の構造を継承し `link` で実体の値セルへ同期する。`--key=value` 用に eq-split 再解釈 matcher を足す
-(config `long_prefix` / `allow_equal_separator` がパラメータ)。`long: []` は空配列でも `--<name>` を生成する
-(未指定なら生成しない)。
+**規則**: long installer は `long` を回収する。値は二形 (DR-071): **`long: true` は `[":set"]` の糖衣**で、正規形は
+variant DSL の配列 — **各要素が入口を 1 個生む**。`:set` (prefix 空) が主入口で、greedy 面に「exact 綴り + 値スロット」
+の衛星を足す。値スロットは `ref` で実体の構造を継承し `link` で実体の値セルへ同期する。`--key=value` 用に eq-split
+再解釈 matcher を足す (config `long_prefix` / `allow_equal_separator` がパラメータ)。**absent = `false` = `[]` =
+入口なし** (全て同義 — presence を absent/空の区別に載せない)。CLI 綴りは name の kebab 変換 (DR-022)。
 
-variant DSL (`long: ["no:set:false"]`) は long 属性内の語彙なので long installer の内部で展開される。別入口として
+variant DSL (`long: [":set", "no:set:false"]`) は long 属性内の語彙なので long installer の内部で展開される。別入口として
 greedy exact 衛星をもう 1 本足し、値セルへの操作を効果記述子 (DR-045) として載せて同じ値セルへ link する。
 set は `value:` の縮退形で書ける:
 
 ```
-入力:  {name: "ssl", type: "bool", default: true, long: ["no:set:false"]}
+入力:  {name: "ssl", type: "bool", default: true, long: [":set", "no:set:false"]}
 出力 (主入口 + variant 入口):
   «greedy» {or: [
     {seq: [{exact: "--ssl"}, {ref: "ssl", link: "ssl"}]},
@@ -301,7 +302,7 @@ positionals / options の要素として command を直接置いてよい。
 
 ```
 所有語彙: global 属性
-入力:  {name: "help", type: "help", long: [], short: "h", global: true}
+入力:  {name: "help", type: "help", long: true, short: "h", global: true}
 出力 (子孫 command スコープへの宣言的コピー):
   各子孫 command スコープの宣言層へ help の ref/link 衛星宣言をコピー
   (コピー先は不動点反復で long/short installer が展開する)

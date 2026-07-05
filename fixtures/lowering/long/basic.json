@@ -1,12 +1,12 @@
 {
-  "why": "long installer の最小断面: 値オプション port (number) 1 個を long のみで lowering する。LOWERING §B.1 の主入口規則 — long installer は `long` を回収し greedy 面に「exact 綴り + 値スロット」の空間形衛星を足し、`--key=value` 用に eq-split 再解釈 matcher を足す。値スロットは ref で実体の構造を継承し link で実体の値セルへ同期する (DR-042 §展開の標準パターン)。元要素 port は実体だけノード (DR-030) に降格し entities の値セルになる (LOWERING §C.1)。定義の `long: []` は空配列でも `--<name>` を生成する規則 (LOWERING §B.1)。断面表記は DR-063 §3 の5 面構造 (空面省略) + matcher {matcher, entries}。比較は緩比較 (LOWERING §C.5: 構造骨格 + matcher 種別/エントリ表)。slice PoC (installer.mbt inst_long, installers=[LongInst] 単独) の canon_scope 実測が写像元 oracle (期待値の権威は仕様、DR-070 §1b)。",
+  "why": "long installer の最小断面: 値オプション port (number) 1 個を long のみで lowering する。LOWERING §B.1 の主入口規則 — long installer は `long` を回収し greedy 面に「exact 綴り + 値スロット」の空間形衛星を足し、`--key=value` 用に eq-split 再解釈 matcher を足す。値スロットは ref で実体の構造を継承し link で実体の値セルへ同期する (DR-042 §展開の標準パターン)。元要素 port は実体だけノード (DR-030) に降格し entities の値セルになる (LOWERING §C.1)。定義の `long: true` (糖衣 = [\":set\"]、DR-071) は空配列でも `--<name>` を生成する規則 (LOWERING §B.1)。断面表記は DR-063 §3 の5 面構造 (空面省略) + matcher {matcher, entries}。比較は緩比較 (LOWERING §C.5: 構造骨格 + matcher 種別/エントリ表)。slice PoC (installer.mbt inst_long, installers=[LongInst] 単独) の canon_scope 実測が写像元 oracle (期待値の権威は仕様、DR-070 §1b)。",
   "query": "lower",
   "definition": {
     "options": [
       {
         "name": "port",
         "type": "number",
-        "long": []
+        "long": true
       }
     ]
   },

@@ -6,7 +6,7 @@
       {
         "name": "port",
         "type": "int",
-        "long": [],
+        "long": true,
         "short": "p"
       },
       {

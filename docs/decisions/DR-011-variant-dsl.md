@@ -126,3 +126,5 @@ variant 構造は **AtomicAST には残らない**。parseDefinition() の時点
 > **更新: DR-045 により、非-set 効果 (`default`/`unset`/`empty`) の lowering が exact + literal value 展開から効果記述子 (effect descriptor) に変更。本 DR の `set` 効果の exact + literal value 展開、variant の文字列 DSL / オブジェクト形式 / effect 語彙 (4種) の定義は引き続き有効。**
 
 > **更新: DR-022 により、value オブジェクトのフィールド命名が camelCase から snake_case に変更 (`defaultValue` → `default_value`)。本 DR の variant DSL / effect 語彙の定義は引き続き有効。**
+
+> **更新: DR-071 により long は bool | variant 配列の二形になり、主入口は `:set` (prefix 空文字列) としてリストの一級要素になった。`set` の effect に args なし形が追加: args なし = 値スロット (主入口。非消費 type では type 相応の固定値供給)、args 1 個以上 = 固定値 (本 DR の定義どおり不変)。`"set"` 単独 (`:` なし) は文法エラーのまま。**

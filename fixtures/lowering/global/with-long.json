@@ -6,7 +6,7 @@
       {
         "name": "verbose",
         "type": "flag",
-        "long": [],
+        "long": true,
         "global": true
       }
     ],

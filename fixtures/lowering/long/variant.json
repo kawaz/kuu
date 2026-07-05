@@ -8,6 +8,7 @@
         "type": "bool",
         "default": true,
         "long": [
+          ":set",
           "no:set:false"
         ]
       }

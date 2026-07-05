@@ -1,12 +1,12 @@
 {
-  "why": "constraint installer の最小断面かつ constraints 面 (DR-063 §3 の 5 面目 = 遅延述語面) の初実例: 値を持たない flag decrypt が値オプション key_file を requires する正の依存 (DR-055 / DR-047)。installers は constraint + long の 2 枚。主眼は constraints 面の表記固定 — 要素は {kind, element, targets} (DR-063 §3)。constraint installer (DR-055 席宣言型) は requires / conflicts_with / exclusive_group / requires_if (値の枝への requires 合成、DR-055) を回収し、env / inherit / multiple と同型に greedy 面にも positional 面にも構造衛星を一切足さず、スコープの遅延述語 (DR-047) として宣言するだけ (能力宣言型)。requires は『自分が committed なら列挙 name も充足していること』(正の依存、目的語は値の有無であり default 充足でも成立 — DR-047)。ここでは decrypt requires [key_file] を CRequires(elem, targets) 相当 = {kind: \"requires\", element: \"decrypt\", targets: [\"key_file\"]} として constraints 面に置く。requires 語彙は constraint installer が無いと unknown-vocab (DR-054) になる所有語彙。element / targets は要素 name への参照であり snake_case 正規形 (DR-022) の key_file をそのまま用いる。co-installer の long 面: decrypt / key_file はともに `long: []` で名前由来綴りを生成 (LOWERING §B.1『long: [] は空配列でも --<name> を生成』)。CLI 綴りは kebab-case (DR-022: キー名は snake 正規形・CLI 値は kebab 慣習) なので name key_file → 綴り --key-file、link / entity name は snake の key_file のまま。decrypt は flag なので set の縮退形 exact 衛星 {exact: \"--decrypt\", value: true, link: \"decrypt\"} を 1 本足し、値トークンを取らないため eq_split matcher には載らない (matcher は long の値付き綴りにのみ生成)。key_file は string なので {seq: [{exact: \"--key-file\"}, {ref: \"key_file\", link: \"key_file\"}]} + eq_split matcher {\"--key-file\": \"key_file\"}。元要素はともに実体だけノード (DR-030) に降格する (LOWERING §C.1)。entities 面: decrypt は flag プリセット (LOWERING §A.5: flag = bool + default:false)。⚠ KNOWN GAP: slice の ensure_entity は ty=e.ty (=TFlag) をそのまま持ち default:false を注入しない (flag preset default 未実装)。DR-070 §1b の通り fixture は仕様準拠値 {type: \"bool\", default: false} を書き、実装差分は runner が可視化する。key_file は string スカラ値セル {type: \"string\"}。写像元 oracle は slice 第 15 弾 phase25_wbtest の Constraint 4 値 CRequires(elem, targets) (installer.mbt inst_constraint) と inst_long の flag / value 分岐 (期待値の権威は仕様、DR-070 §1b)。断面表記は DR-063 §3 の 5 面構造 (空の templates 面は最小投影で省略)、比較は緩比較 (LOWERING §C.5: 構造骨格 + matcher 種別/エントリ表、constraints は kind/element/targets の一致)。適用は順序非依存 (LOWERING §C.2、installers 配列順は非規範 DR-070 §1)。",
+  "why": "constraint installer の最小断面かつ constraints 面 (DR-063 §3 の 5 面目 = 遅延述語面) の初実例: 値を持たない flag decrypt が値オプション key_file を requires する正の依存 (DR-055 / DR-047)。installers は constraint + long の 2 枚。主眼は constraints 面の表記固定 — 要素は {kind, element, targets} (DR-063 §3)。constraint installer (DR-055 席宣言型) は requires / conflicts_with / exclusive_group / requires_if (値の枝への requires 合成、DR-055) を回収し、env / inherit / multiple と同型に greedy 面にも positional 面にも構造衛星を一切足さず、スコープの遅延述語 (DR-047) として宣言するだけ (能力宣言型)。requires は『自分が committed なら列挙 name も充足していること』(正の依存、目的語は値の有無であり default 充足でも成立 — DR-047)。ここでは decrypt requires [key_file] を CRequires(elem, targets) 相当 = {kind: \"requires\", element: \"decrypt\", targets: [\"key_file\"]} として constraints 面に置く。requires 語彙は constraint installer が無いと unknown-vocab (DR-054) になる所有語彙。element / targets は要素 name への参照であり snake_case 正規形 (DR-022) の key_file をそのまま用いる。co-installer の long 面: decrypt / key_file はともに `long: true` (糖衣 = [\":set\"]、DR-071) で名前由来綴りを生成 (LOWERING §B.1『long: true (糖衣 = [\":set\"]、DR-071) は空配列でも --<name> を生成』)。CLI 綴りは kebab-case (DR-022: キー名は snake 正規形・CLI 値は kebab 慣習) なので name key_file → 綴り --key-file、link / entity name は snake の key_file のまま。decrypt は flag なので set の縮退形 exact 衛星 {exact: \"--decrypt\", value: true, link: \"decrypt\"} を 1 本足し、値トークンを取らないため eq_split matcher には載らない (matcher は long の値付き綴りにのみ生成)。key_file は string なので {seq: [{exact: \"--key-file\"}, {ref: \"key_file\", link: \"key_file\"}]} + eq_split matcher {\"--key-file\": \"key_file\"}。元要素はともに実体だけノード (DR-030) に降格する (LOWERING §C.1)。entities 面: decrypt は flag プリセット (LOWERING §A.5: flag = bool + default:false)。⚠ KNOWN GAP: slice の ensure_entity は ty=e.ty (=TFlag) をそのまま持ち default:false を注入しない (flag preset default 未実装)。DR-070 §1b の通り fixture は仕様準拠値 {type: \"bool\", default: false} を書き、実装差分は runner が可視化する。key_file は string スカラ値セル {type: \"string\"}。写像元 oracle は slice 第 15 弾 phase25_wbtest の Constraint 4 値 CRequires(elem, targets) (installer.mbt inst_constraint) と inst_long の flag / value 分岐 (期待値の権威は仕様、DR-070 §1b)。断面表記は DR-063 §3 の 5 面構造 (空の templates 面は最小投影で省略)、比較は緩比較 (LOWERING §C.5: 構造骨格 + matcher 種別/エントリ表、constraints は kind/element/targets の一致)。適用は順序非依存 (LOWERING §C.2、installers 配列順は非規範 DR-070 §1)。",
   "query": "lower",
   "definition": {
     "options": [
       {
         "name": "decrypt",
         "type": "flag",
-        "long": [],
+        "long": true,
         "requires": [
           "key_file"
         ]
@@ -14,7 +14,7 @@
       {
         "name": "key_file",
         "type": "string",
-        "long": []
+        "long": true
       }
     ]
   },
