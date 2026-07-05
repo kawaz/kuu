@@ -1,6 +1,6 @@
 ---
 title: フェーズ2-② lowering conformance (query:"lower" fixture フォーマット) 設計叩き台
-status: open
+status: resolved
 category: design
 created: 2026-07-05T14:00:33+09:00
 last_read:
@@ -9,10 +9,10 @@ wip_entered:
 blocked_entered:
 pending_entered:
 discarded_entered:
-resolved_entered:
+resolved_entered: 2026-07-05T14:17:47+09:00
 discard_reason:
 pending_reason:
-close_reason:
+close_reason: ["dr/DR-070","implemented"]
 blocked_by:
 origin: 自リポ TODO (ROADMAP.md フェーズ2-②、docs/journal/2026-07-05-phase2-fixture-runner-first-run.md の「次」)
 ---
