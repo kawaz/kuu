@@ -208,6 +208,8 @@ LOWERING §C.5 の2段比較戦略 (主 oracle = 効果列、lowered中間形 = 
 
 **推奨 (2026-07-05)**: **DR-053 の outcome union をそのまま期待値スキーマに転用** (fixture 専用の簡略形は作らない — 公理を増やさない。仕様の返値構造がそのまま fixture 語彙になるのは spec-as-core として最も素直)。効果列の出力契約は DR-063 §3 の効果表記 (JSON 配列)。**エラー message 文字列は比較対象外** (kind / element / argv_pos が仕様、文言はレンダラ = DR-053/054)。
 
+**詰め残し (2026-07-05 発見、dd fixture 例の failure 側輪郭の議論から)**: **構造的必須の不成立の error kind が未確定** — required 属性なしの positional が背骨上でトークンを得られない場合 (例: `{positionals: [x]}` に空 argv)、DR-053 の kind 3 値のどれに割るか。明示 `required: true` の未充足は constraint (DR-047 の値充足述語、PoC 第 13 弾実測) だが、構造的不足は未実測・未規定。候補: (a) parse (経路構築の失敗 — required は default で充足しうる最終状態の述語なのに対し、構造的不足は経路が組めない段階で層が違う) / (b) constraint (値充足の失敗として required と同族視)。推奨は (a)。
+
 #### C-4. fixture の意図コメント埋め込み
 
 `tdd-and-test-design` (テスト = 真の仕様書) の原則を fixture にも適用する ROADMAP.md の明言 (「fixture の意図コメント (なぜこの入力・なぜこの期待、DR 根拠) は fixture データに同梱する」) をどう実現するか。JSON はコメント不可のため:
