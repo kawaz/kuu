@@ -16,10 +16,18 @@ ROADMAP フェーズ 2-② (lowering conformance) の spec 側資産の整備記
 - codex review gate が「DR-063 更新 → 参照先の追従漏れ」を 3 巡捕捉。断面規約の変更は LOWERING §0/§B/§C・DESIGN §15.7・既存 fixture の why まで横断掃除が必要という型
 - 「golden は仕様準拠値 (実測ミラーでない)」の原則 (DR-070 §1b) が量産で効いた — slice 未追従箇所が全て KNOWN GAP として台帳化され、fixture の期待値は汚れなかった
 
+## runner 実働化の完了 (同日追記)
+
+- **lower query runner 実装 + 18 fixture 全 pass**: installers 部分適用 / canon → 5 面断面射影 (inline → ref+link collapse) / 緩比較 (故意破壊実験で過剰吸収でないことを実証) / 決定的 3 順列検査。moon test 200/200
+- **gap 台帳 4 件解消** (旧 1/2/4/5): flag preset default 注入 (parse fixture の dd 8 cases も完全一致に)、long presence の Option 化 (absent / present-empty 区別 — LOWERING §B.1 の要点)、dd spurious entity、global 子 entity。残存は reason 未実装と alias add-if-absent の 2 件のみ
+- **実食が新バグを 1 つ検出して即修正**: absent long conflation (present-empty 修正の初版が absent にも --name を発明、6 fixture divergence として検出) — 「fixture 実食が実装バグを検出する」ループが lower 側でも実働した
+- codex フェーズ 2-② レビュー 7 指摘反映済み (name にも `#` 予約 / 面配列の順序規範 / 台帳一元化 等)
+- **parse 8/8 + lower 18/18 の両クエリで conformance が実働** — フェーズ 2 の骨格完成。slice push 済み (41eb1cdb)
+
 ## 次
 
-- **slice runner の lower query 対応** (最後のピース): 表層正規化層 (long:[] 綴り生成 / snake→kebab / dd name デフォルト / flag preset 降格 — gap 台帳 1/2 の解消を兼ねる)、canon → 断面 JSON 射影、installers 部分適用、緩比較、順列検査 (常時 = 決定的少数 / opt-in = 全順列)
-- 解消された gap は台帳から消し、対応する KNOWN GAP 差分が fixture green に変わることを確認
+- long フィールドの責務混載 (presence + 主入口 + variants) の設計見直し検討中 — kawaz 提起、codex 検討並行中。B 案 (long: bool + variants 分離、presence 罠の構造的消滅) が有力
+- フェーズ 2-③: slice 167 テストの parse fixture 蒸留 + 参照実装 (新 main) の縦切り並行
 
 ## 関連
 

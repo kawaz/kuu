@@ -23,14 +23,10 @@
 
 golden fixture は仕様の正本であり、参照実装の現状挙動の写しではない。実装が仕様に未追従の箇所 (例: flag preset default 未実装で値セルが bool + default:false に降格されない) は、**fixture は仕様準拠値 (§A.5 なら `{type: "bool", default: false}`) を書き、実装側 runner が KNOWN GAP として差分を可視化する**。実測はあくまで表記写像の確立と fixture 誤り検出の oracle である。
 
-**既知 gap 台帳 (slice PoC、2026-07-05 時点)** — why の個別注記は本台帳への参照で足りる (全 fixture への網羅記載は要求しない):
+**既知 gap 台帳 (slice PoC)** — why の個別注記は本台帳への参照で足りる (全 fixture への網羅記載は要求しない):
 
-1. flag preset default 未降格 (値セルが TFlag のまま、bool + default:false にならない — 第 11 弾 note 1)
-2. `long: []` present-empty の名前由来綴り生成 未実装 (slice は明示綴りリストのモデル、snake→kebab 正規化も同様)
-3. reason フィールド未実装 (parse fixture の errors 検証は kind まで)
-4. dd の options[] 配置で ensure_entities が余分な `--` 実体を生成 (not_dd ガードが positionals ループにのみあり options ループに無い — 配置依存の乖離、slice issue で追跡)
-5. global の子スコープに自前 verbose セルが生成される (Rooted 衛星は root セルへ link 同期するが entity 生成が残る — 断面 golden は子 entities 空が仕様準拠)
-6. alias 再導出時の add-if-absent 未適用 (short alias の entry-copy が既存エントリと重複しうる — JSON entries object ではキー重複が潰れて観測不能になりうるため、runner での可視化可能性自体に再確認が必要。fixtures/lowering/alias/basic.json の KNOWN GAP 2)
+1. reason フィールド未実装 (parse fixture の errors 検証は kind まで)
+2. alias 再導出時の add-if-absent 未適用 (short alias の entry-copy が既存エントリと重複しうる — JSON entries object ではキー重複が潰れて観測不能になりうるため、runner での可視化可能性自体に再確認が必要。fixtures/lowering/alias/basic.json の KNOWN GAP 2)
 
 ### 2. expect は DR-063 §3 の断面表記が正規形
 
