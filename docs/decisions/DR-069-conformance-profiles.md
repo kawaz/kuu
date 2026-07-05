@@ -11,7 +11,7 @@
 | プロファイル | 内容 | fixture |
 |---|---|---|
 | `parse-core` | wire を読み parse を実行、outcome を再現 | query: "parse" |
-| `lowering` | parse_definition の決定的 lowering を再現 | query: "lower" (フェーズ 2 で確定) |
+| `lowering` | parse_definition の決定的 lowering を再現 | query: "lower" (DR-070) |
 | `definition-error` | 定義時検査 (DR-054) を再現 | query: "definition_error" |
 | `completion` | complete クエリ (DR-060) を再現 | query: "complete" |
 
