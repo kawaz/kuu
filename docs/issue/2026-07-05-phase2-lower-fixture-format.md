@@ -75,6 +75,14 @@ CONFORMANCE §4 は `fixtures/lowering/<installer>/` というディレクトリ
 
 本フェーズで実装を進める中で DR-063 の表記だけでは決まらない細部 (例: 骨格正規化の具体規則、順列 property の fixture 語彙) が判明した場合、DR-063 の拡張 (追記) にするか新規 DR を起こすかの判断が要る。フェーズ2-① の教訓 (docs/journal/2026-07-05-phase2-fixture-runner-first-run.md: 「追加設計でなく最小 runner の実測で前提を退役させる」) に倣うなら、本フェーズも先に机上で全部決めようとせず、slice PoC 上で `query: "lower"` runner を小さく動かして実測から論点を潰す進め方が有力候補。
 
+## 推奨 (2026-07-05、フェーズ 1 の議論文脈から)
+
+- **論点 1**: installers は **installer 名の列挙 (省略 = 全登録)**。適用は順序非依存 (LOWERING §C.2) なので集合として書く — 配列だが順序は非規範と明記
+- **論点 2**: 正規化規則は **DR-063 §3 の断面表記自体を正規形**とし、緩比較で無視するのは (a) 内部 id の具体綴り (`#` 系、DR-063 が非規範と確定済み)、(b) entities 内の席の記載順。matcher は種別 + エントリ表の一致 (§C.5 どおり)
+- **論点 3**: 順列一致 property は **runner の組み込み検査** (lower fixture が与えられたら runner が installer 順列を自動生成して canon 一致を検査)。fixture 形式に順列を列挙するとデータ爆発し、property の普遍性 (全順列) を事例列挙で偽装することになる
+- **論点 4**: 基本 3 点セット = **A 群のみ / 単独 installer 全種 / 全収束**。組合せは相互作用が実在するものだけ厳選 (global×long/short の decl コピー展開、inheritable×long の逆方向コピー、alias×command — slice の phase 2/8/17/26 テストが蒸留元)
+- **論点 5**: **新 DR 1 本** (lower fixture フォーマット) に論点 1〜4 の決定を集約し、DR-063 §3 は参照で繋ぐ (DR-063 の書き換えはしない — 断面表記自体は不変のはず)
+
 ## 受け入れ条件
 
 - [ ] `query: "lower"` fixture の構造 (definition / installers 指定語彙 / cases / expect) が確定し docs/CONFORMANCE.md に明文化される
