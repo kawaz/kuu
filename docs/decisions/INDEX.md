@@ -97,6 +97,7 @@
 - [DR-067](DR-067-wire-well-formedness.md): wire form の well-formedness — 合法性 3 層 (構文 / 語彙 / 参照)、空 or・空 seq・1 児・トリガ重複は合法 (warn は lint)、name は非空のみ制約 (`#` id はユーザ禁止の予約)、multiple の配置制約なし (F-042 解消)
 - [DR-068](DR-068-json-schema-lifecycle.md): JSON Schema と spec バージョンの lifecycle — 確定版 v1.0.0 = 参照実装 fixture green (フェーズ 3)、バージョン単位は spec バンドル一体、semver (語彙追加 = minor だが旧実装は unknown-vocab で正しく拒否、意味論変更 = major)、$schema は確定版から (F-048 解消) — 準拠宣言の単位は updated by DR-069
 - [DR-069](DR-069-conformance-profiles.md): 準拠プロファイル — 段階準拠 (parse-core 必須 / lowering / definition-error / completion opt-in)、descriptor の実装要求は owns + reasons のみ (observes / factory 一般化は canonical 実装の装備 = 準拠非要求)
+- [DR-070](DR-070-lower-fixture-format.md): lower fixture フォーマット — installers 列挙 (省略 = 全登録、順序非規範)、expect = DR-063 §3 断面の緩比較 (内部 id 綴りと席順は無視)、順列検査は runner 組み込み 2 段 (常時 = 決定的少数 / opt-in = 全順列)、粒度は基本 3 点セット + 厳選組合せ
 
 ## レジストリ / 実装連携
 

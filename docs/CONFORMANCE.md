@@ -20,7 +20,7 @@
 | フィールド | 必須 | 内容 |
 |---|---|---|
 | `why` | ✓ | file / case の両レベルで必須。仕様意図と DR 根拠。lint は why 欠落を検出する |
-| `query` | ✓ | `"parse"`。`"lower"` / `"complete"` / `"definition_error"` は予約 (フォーマット未確定、後続で定義) |
+| `query` | ✓ | `"parse"` (本書 §2) / `"lower"` (lowering 断面、DR-070 — `installers` 列挙 (省略 = 全登録、順序非規範)、expect は DR-063 §3 の面構造を緩比較、順列検査は runner 組み込みで fixture に順列を列挙しない)。`"complete"` / `"definition_error"` は予約 |
 | `definition` | ✓ | **wire form** (DR-063: 純構文正規化 (LOWERING §C.4) 適用済み + installer 語彙 inert + type 参照はそのまま) |
 | `cases[].argv` | ✓ | 前処理済みトークン列 (`Array[String]`、DESIGN §0.1) |
 | `cases[].expect` | ✓ | §2 の outcome union |
