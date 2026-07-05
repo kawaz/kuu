@@ -1,11 +1,11 @@
 ---
 title: 蒸留 wave1/wave2 監査で出た仕様詰め所の集約 (フェーズ2-③ 議論球)
-status: open
+status: wip
 category: design
 created: 2026-07-05T22:04:45+09:00
 last_read: 2026-07-06T00:48:55+09:00
 open_entered: 2026-07-05T22:04:45+09:00
-wip_entered:
+wip_entered: 2026-07-06T00:52:45+09:00
 blocked_entered:
 pending_entered:
 discarded_entered:
@@ -41,6 +41,10 @@ origin: フェーズ2-③ 蒸留 wave1/wave2 監査 (自リポ TODO)
 10. **separator の standalone wire フィールド不在**: multiple パイプライン経由に一本化されているかの確認。
 
 各項の詳細根拠は該当 fixture の why コメントと関連 DR を参照。
+
+## 進捗
+
+- 10 論点の並列分析 (議論材料の準備) に着手。分析完了後 kawaz と議論し決着分を DR 化する。
 
 ## 受け入れ条件
 
