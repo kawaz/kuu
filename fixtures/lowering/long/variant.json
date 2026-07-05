@@ -1,0 +1,20 @@
+{
+  "why": "long installer の variant 断面: set variant (`no:set:false`) を持つ bool オプション ssl。LOWERING §B.1 の variant 規則 — variant DSL は long 属性内の語彙なので long installer 内部で展開され、主入口の他に別入口として greedy exact 衛星をもう 1 本足し、値セルへの操作を効果記述子 (DR-045) として同じ値セルへ link する。set は value を沈める縮退形で書ける ({exact, value, link} — DR-063 §3 の効果記述子表記)。bool の主入口 --ssl も flag と同型に set の縮退形 (--ssl → value true、LOWERING §A.5) であり、値トークンを取らないため eq-split matcher は立たない (matcher は long の値付き綴りにのみ生成)。op 語彙 set = operand を書く/committed=true (DR-045)。実体 ssl は bool 値セル + default true。断面表記は DR-063 §3、比較は緩比較 (LOWERING §C.5)。slice PoC 実測 (installers=[LongInst] 単独, variant op=Set operand=false; slice の parsed 形は long=[\"ssl\"]+variants=[{trigger:\"no-ssl\",op:Set,operand:false}])。",
+  "query": "lower",
+  "definition": {
+    "options": [
+      { "name": "ssl", "type": "bool", "default": true, "long": ["no:set:false"] }
+    ]
+  },
+  "installers": ["long"],
+  "expect": {
+    "greedy": [
+      { "exact": "--ssl", "value": true, "link": "ssl" },
+      { "exact": "--no-ssl", "value": false, "link": "ssl" }
+    ],
+    "positionals": [],
+    "entities": {
+      "ssl": { "type": "bool", "default": true }
+    }
+  }
+}
