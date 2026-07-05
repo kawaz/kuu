@@ -3,18 +3,38 @@
   "query": "lower",
   "definition": {
     "options": [
-      { "name": "ssl", "type": "bool", "default": true, "long": ["no:set:false"] }
+      {
+        "name": "ssl",
+        "type": "bool",
+        "default": true,
+        "long": [
+          "no:set:false"
+        ]
+      }
     ]
   },
-  "installers": ["long"],
+  "installers": [
+    "long"
+  ],
   "expect": {
     "greedy": [
-      { "exact": "--ssl", "value": true, "link": "ssl" },
-      { "exact": "--no-ssl", "value": false, "link": "ssl" }
+      {
+        "exact": "--ssl",
+        "value": true,
+        "link": "ssl"
+      },
+      {
+        "exact": "--no-ssl",
+        "value": false,
+        "link": "ssl"
+      }
     ],
     "positionals": [],
     "entities": {
-      "ssl": { "type": "bool", "default": true }
+      "ssl": {
+        "type": "bool",
+        "default": true
+      }
     }
   }
 }
