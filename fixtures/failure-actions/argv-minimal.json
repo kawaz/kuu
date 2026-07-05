@@ -9,6 +9,7 @@
   },
   "cases": [
     {
+      "id": "help-before-version",
       "why": "--help が --version より前 → help 発火。--help@0 と --version@1 が両方 selected されるが、argv 消費位置最小 (help@0) が勝つ。--typo@2 は残余で完全経路 0 本。errors は残余トークン (argv_pos 2、unexpected_token)。",
       "argv": ["--help", "--version", "--typo"],
       "expect": {
@@ -18,6 +19,7 @@
       }
     },
     {
+      "id": "version-before-help",
       "why": "順序反転で発火も反転 (case 1 と対、argv 順が最終決定): --version が --help より前 → version@0 が argv 最小で勝つ。効果列順序 (argv 順) が発火アクションを決める。errors は残余 --typo (argv_pos 2、unexpected_token)。",
       "argv": ["--version", "--help", "--typo"],
       "expect": {

@@ -8,6 +8,7 @@
   },
   "cases": [
     {
+      "id": "rename-projection",
       "why": "`--port 80`: 値セル port が 80 を得て発火 (effects の entity は cell name `port`)。結果への射影時に export_key `alias` が name 由来キー `port` を差し替え、result は {alias:80}。effects と result でキーが食い違う (entity=cell、result key=export_key) ことが『パース不変・結果キーのみ変化』の証拠。",
       "argv": ["--port", "80"],
       "expect": {
@@ -19,6 +20,7 @@
       }
     },
     {
+      "id": "unfired-absent",
       "why": "未発火の対照: port は値源 (cli/env/config/inherit/default) を持たず未指定なので absent (DR-051 §1) — 上書きキー alias ごと結果に現れない。export_key は存在時のキー名の指定であって存在自体を作らないことを固定する。",
       "argv": [],
       "expect": {

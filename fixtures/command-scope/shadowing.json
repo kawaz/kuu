@@ -17,6 +17,7 @@
   },
   "cases": [
     {
+      "id": "child-shadows-global",
       "why": "子 build が同一トリガ --verbose を別 name lverb で宣言 → root gverb コピーが shadow され、build 内 --verbose は build の lverb を一意に発火 (ambiguous でない)。gverb は未発火 → root に preset default false。effect entity は勝者 lverb。",
       "argv": ["build", "--verbose"],
       "expect": {
@@ -28,6 +29,7 @@
       }
     },
     {
+      "id": "root-own-fires",
       "why": "対照: build に入らず root で --verbose を発火させると root 自身の gverb が発火する (shadow は子スコープ内の話)。build は未入場 → absent。root の own トリガが root で効くことの固定。",
       "argv": ["--verbose"],
       "expect": {
@@ -39,6 +41,7 @@
       }
     },
     {
+      "id": "bare-enter-presets",
       "why": "build を素で入場: 何も発火せず、両 flag は preset default false で present (gverb は root、lverb は build スコープ)。effects 空。selected 空スコープでも flag preset が present になることの固定 (DR-051 §2)。",
       "argv": ["build"],
       "expect": {

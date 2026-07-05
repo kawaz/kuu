@@ -9,6 +9,7 @@
   },
   "cases": [
     {
+      "id": "unspecified-baseline",
       "why": "未指定ベースライン: name は値源ゼロで未供給 → ラダー枯渇で absent (result にキー無し、DR-051 §1)。port は CLI 未供給でも default 5 が値源として充填され present (DR-051 §2a、source=default)。effects は空 (cli 発火なし、default は effects 非掲載, CONFORMANCE §2)。sources で port の由来=default を固定 — これは effects では表現できない『default は present だが cli 選択でない』面の唯一の検証点。",
       "argv": [],
       "expect": {
@@ -19,6 +20,7 @@
       }
     },
     {
+      "id": "name-supplied-cli",
       "why": "name を CLI で供給すると absent → present に転じる (§1 の対照): --name x で name セルが発火し result にキーが現れる。port は依然 default 由来で present。effects は name の cli set のみ (port の default は非掲載)。sources で cli 源と default 源が同一結果内で共存することを固定。数値 default は canonical 最短形 5 (DR-050 §4)。",
       "argv": ["--name", "x"],
       "expect": {

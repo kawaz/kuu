@@ -14,6 +14,7 @@
   },
   "cases": [
     {
+      "id": "serve-selected-child-absent",
       "why": "serve 選択・子は全 absent: serve に入場するが port (default なし number) は未発火 → port は absent (子スコープ内でキー消失)。しかし serve スコープ自体は選ばれた = 値が発生し {} になる (DR-051 §3、スコープ生成=値の発生)。effects は空 (発火なし)。selected な空スコープが absent でなく {} である面の固定。",
       "argv": ["serve"],
       "expect": {
@@ -23,6 +24,7 @@
       }
     },
     {
+      "id": "serve-unselected-absent",
       "why": "serve 未選択: serve トリガが消費されないためスコープ生成が起きず serve は absent (root からキー消失、DR-051 §1)。root は常に selected なので全体は空 root = {}。前ケースの {serve:{}} との対照で『生成された空 {}』と『生成されない absent』を区別する。serve は greedy トリガであり必須ではないため未選択自体は失敗にならない。",
       "argv": [],
       "expect": {

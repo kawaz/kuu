@@ -9,6 +9,7 @@
   },
   "cases": [
     {
+      "id": "empty-string-to-null",
       "why": "`--verbose --keep`: export_key \"\" は null 正規化されるので verbose は発火 (effects に載る) しつつ result からキーが消え、keep のみ残る。result {keep:true} は export_key null (transparent-kv.json case 1) と完全一致 — \"\" と null が同義であることの固定。",
       "argv": ["--verbose", "--keep"],
       "expect": {

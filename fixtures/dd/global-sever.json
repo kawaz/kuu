@@ -20,6 +20,7 @@
   },
   "cases": [
     {
+      "id": "no-dd-global-sync",
       "why": "dd 不使用: run に入り、run へコピーされた global --verbose が子内で発火 → root verbose セルへ link 同期する (root キーに現れる)。y は run の positional x が消費し run スコープ下にネスト。コピー衛星が子内で普通に発火することの対照ケース。effects は消費順で verbose(pos1) → x(pos2)。",
       "argv": ["run", "--verbose", "y"],
       "expect": {
@@ -32,6 +33,7 @@
       }
     },
     {
+      "id": "dd-severs-global",
       "why": "dd 後は global コピー衛星も severed: run の -- が greedy 面を切った後、コピーされた --verbose は発火せず raw トークンとして positional x に落ちる (`x=--verbose`)。global であってもコピー衛星は子の普通の greedy 住人なので sever に服する (DR-042 ⑤、追加規則不要)。未発火の verbose は preset default false で root に present。case 1 と同じ argv 語彙 (--verbose) が dd の有無で発火/非発火に反転する。",
       "argv": ["run", "--", "--verbose"],
       "expect": {
@@ -43,6 +45,7 @@
       }
     },
     {
+      "id": "sever-boundary-child-dd",
       "why": "sever 境界は『子の -- の位置』でありサブコマンド入場ではない: `run --verbose -- z` は run 入場後 --verbose が先に発火し (root へ同期)、その後 -- が sever、続く z が raw positional x に落ちる。入場直後に severed になるのではなく、コピー衛星は dd より前なら正常発火する (case 2 との境界確定)。effects は verbose(pos1) → x(pos3)。",
       "argv": ["run", "--verbose", "--", "z"],
       "expect": {

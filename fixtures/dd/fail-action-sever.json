@@ -12,6 +12,7 @@
   },
   "cases": [
     {
+      "id": "dd-severs-help",
       "why": "dd 後の --help は raw 消費で非発火: `-- --help x` は先頭 -- が sever、以降が内部 raw 領域になるので --help は help トリガを撃たず positional p が raw 消費 (`p=--help`)。末尾 x は消費者が居らず残余トークンで完全経路 0 本 → 失敗。help は発火しない (fired_action なし)。dd の先食いが failure-action の到達を断つことの固定。element 省略 = スコープレベルの躓き、argv_pos は残余先頭 2、reason unexpected_token (DR-065 §3)。",
       "argv": ["--", "--help", "x"],
       "expect": {
@@ -22,6 +23,7 @@
       }
     },
     {
+      "id": "help-before-sever",
       "why": "対照 — dd sever より前の --help は到達可能で発火する: `--help x y` は先頭 --help が pos0 で help を発火 (sever 領域外)、p が x を消費し scope-end に到達、末尾 y が残余。完全経路 0 本の失敗だが、到達可能な位置で failure-action が selected されたので help 発火。発火は保持 Error と併存する (DR-053 §2) ため、残余 y の unexpected_token (argv_pos 2) が errors に残りつつ fired_action=help が立つ。case 1 との対比で『dd sever の有無』が help 発火/非発火を決めることを固定。",
       "argv": ["--help", "x", "y"],
       "expect": {

@@ -8,6 +8,7 @@
   },
   "cases": [
     {
+      "id": "missing-required",
       "why": "未指定: 必須 positional file がトークンを得られず完全経路 0 本 → failure。absent (キー消失) には決してならない (それは非必須・値源なし要素の挙動)。kind=parse (経路構築の失敗、DR-065 §3)、reason=missing_operand、argv_pos はトークンが尽きて要求した位置 = argv.length = 0。element=file。",
       "argv": [],
       "expect": {
@@ -18,6 +19,7 @@
       }
     },
     {
+      "id": "supplied-present",
       "why": "指定: x を消費し success。success は必ず file の値を持つ (§2c の本旨: 必須は present か、さもなくば parse 失敗の二択で、absent という第三状態を取らない)。effects は file の cli set。",
       "argv": ["x"],
       "expect": {

@@ -15,6 +15,7 @@
   },
   "cases": [
     {
+      "id": "nested-value-and-flag",
       "why": "serve 入場 + 子スコープで値/flag 両方が発火し、結果はコマンド名 serve の下にネストする (DR-025)。effects は消費順で port(pos1-2) の後に release(pos3)。port は number 値セル、release は flag set true。",
       "argv": ["serve", "--port", "80", "--release"],
       "expect": {
@@ -27,6 +28,7 @@
       }
     },
     {
+      "id": "flag-only-port-absent",
       "why": "serve 入場で release のみ発火。port は default なしの number で未発火 → absent (キー消失、DR-051)。release は set true で子スコープにネスト。未発火の値オプションが result から消えることの固定。",
       "argv": ["serve", "--release"],
       "expect": {
@@ -38,6 +40,7 @@
       }
     },
     {
+      "id": "bare-enter-complete",
       "why": "serve を素で入場 (何も発火せず) も complete parse: 子に required positional が無いため成功。effects 空。entered-but-empty な子スコープでも flag release は preset default false で present (DR-051 §2)、port は absent。selected スコープが {} でなく {release:false} になるのは flag preset の効果。",
       "argv": ["serve"],
       "expect": {
@@ -47,6 +50,7 @@
       }
     },
     {
+      "id": "child-flag-on-root-fails",
       "why": "子 serve だけが宣言する --release を親 (root) に素で置くと、root 背骨には --release の消費者が居らず (serve の背骨は別、DR-041 §4)、残余トークンで完全経路 0 本。element 省略 = スコープレベルの躓き、argv_pos は残余先頭 0、kind parse / reason unexpected_token (DR-065 §3)。serve は greedy トリガであり必須ではないため『serve 未指定』自体は失敗理由にならない。",
       "argv": ["--release"],
       "expect": {

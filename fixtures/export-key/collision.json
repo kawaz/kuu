@@ -9,6 +9,7 @@
   },
   "cases": [
     {
+      "id": "co-exposure-collision",
       "why": "`--a --b`: 相異なる 2 要素 a・b が同一入力で両方 export_key `x` へ露出 → 実行時衝突で ambiguous (DESIGN §15.5)。interpretations は競合する結果ビューの列挙 (DR-053) で、キー x が a 由来の値を持つ解釈と b 由来の値を持つ解釈。※両要素が flag のため両ビューとも {x:true} に退化する — 衝突は結果キーの provenance (どちらの要素が x を占めるか) の曖昧さであって値の相違ではないため。この退化は下記 §divergence の要確認点。",
       "argv": ["--a", "--b"],
       "expect": {
@@ -20,6 +21,7 @@
       }
     },
     {
+      "id": "single-exposure-ok",
       "why": "`--a` のみ: a だけが export_key x へ実際に露出し、衝突なし (検査は実際の共露出に対して、静的宣言に対してではない — §15.5)。result {x:true}。b は未発火の flag だが、その preset default false は共露出キー x のもとに現れない (result に {x:false} は混ざらない) — preset default が export_key 共露出に参加するかは要確認 (下記 §divergence)。",
       "argv": ["--a"],
       "expect": {

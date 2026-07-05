@@ -9,6 +9,7 @@
   },
   "cases": [
     {
+      "id": "rederive-main-entry",
       "why": "base 再導出: alias name tls の主入口 --tls が canonical の :set を再導出し ssl セルへ set true。結果キーは canonical の ssl (DR-057 §2)。default true の bool でも --tls 明示発火で set true の効果が effects に載る (未発火なら effect なしで result のみ true = default、本ケースは明示発火の対照)。",
       "argv": ["--tls"],
       "expect": {
@@ -20,6 +21,7 @@
       }
     },
     {
+      "id": "rederive-variant",
       "why": "variant 再導出 (本命): canonical の variant `no:set:false` が name tls で再導出され --no-tls になる。--no-tls → ssl セルへ set false。alias が主入口だけでなく variant DSL 全体を継承・再導出することの固定 (DR-057 §3)。",
       "argv": ["--no-tls"],
       "expect": {
@@ -31,6 +33,7 @@
       }
     },
     {
+      "id": "canonical-base-intact",
       "why": "canonical base 不変: alias 追加は canonical の綴りを消さない。--ssl も従来どおり ssl=true。alias が『別入口の追加』であって『置換』でないことの固定。",
       "argv": ["--ssl"],
       "expect": {
@@ -42,6 +45,7 @@
       }
     },
     {
+      "id": "canonical-variant-intact",
       "why": "canonical variant 不変: --no-ssl も従来どおり ssl=false。alias の再導出 (--no-tls) と canonical (--no-ssl) が同一 ssl セルへの独立した別入口として並存する。",
       "argv": ["--no-ssl"],
       "expect": {

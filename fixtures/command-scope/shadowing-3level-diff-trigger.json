@@ -20,6 +20,7 @@
   },
   "cases": [
     {
+      "id": "grandchild-root-copy",
       "why": "孫で --verbose 発火: mid は --chatty しか持たず shadow しないので root verbose コピーが sub まで伝播し、sub の衛星が root verbose セルへ link 同期する → verbose は root キーに present。mid の自前 verbose (トリガ --chatty) は未発火 → mid 下に preset false、sub は selected 空 {}。effect entity 'verbose' は root のセル (result で root 直下に present)。",
       "argv": ["mid", "sub", "--verbose"],
       "expect": {
@@ -31,6 +32,7 @@
       }
     },
     {
+      "id": "mid-root-copy",
       "why": "中間で --verbose 発火: mid のコピー (root verbose への link 衛星) が発火し root verbose セルへ同期、続く sub へ入場。verbose は root キー present、mid の自前 verbose (--chatty) は未発火 preset false、sub は {}。case 1 と同一 outcome。",
       "argv": ["mid", "--verbose", "sub"],
       "expect": {
@@ -42,6 +44,7 @@
       }
     },
     {
+      "id": "mid-own-trigger",
       "why": "中間の own トリガ --chatty で発火: mid の自前 verbose (別入口・別セル、トリガ --chatty) が発火する。これは root verbose の link 衛星ではなく mid スコープの独立セルなので、値は mid 下に present。root verbose は未発火 preset false。同 name でもトリガが違えば別セルに書かれる (case 1/2 の root 発火と effects 文字列は同じ 'verbose:set(true)' だが result のネスト位置で判別) ことの固定。",
       "argv": ["mid", "--chatty", "sub"],
       "expect": {

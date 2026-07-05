@@ -11,6 +11,7 @@
   },
   "cases": [
     {
+      "id": "alias-trigger-enters",
       "why": "alias トリガ co で checkout 部分木へ入場。子の --branch x が branch セルへ set。結果は canonical 名 checkout の下にネスト ({checkout:{branch:x}}) — 入口が co でも結果キーは co ではなく checkout (DR-057 §2)。effect entity は子セル branch そのもの (ネスト位置は result 側)。",
       "argv": ["co", "--branch", "x"],
       "expect": {
@@ -22,6 +23,7 @@
       }
     },
     {
+      "id": "canonical-trigger-same-subtree",
       "why": "canonical トリガ checkout も同一部分木・同一結果キー。case 1 との対で『co と checkout が同じ canonical subtree に合流し結果キーも一致する』ことを固定する。",
       "argv": ["checkout", "--branch", "y"],
       "expect": {

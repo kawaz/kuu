@@ -24,6 +24,7 @@
   },
   "cases": [
     {
+      "id": "innermost-consumes",
       "why": "読める最内スコープが勝つ: build 内で --out は readable なので build は閉じる前に消費する義務があり (早閉じ抑制)、build の out セルが一意に勝つ (sever 不要)。root out は未発火 → absent、rootopt 未発火 → preset false。build の arg は反復系ゆえ 0 発火で [] (DR-044/051)、sub は未発火 → absent。",
       "argv": ["build", "--out", "X"],
       "expect": {
@@ -35,6 +36,7 @@
       }
     },
     {
+      "id": "root-consumes-first",
       "why": "root で先に readable: build より前の --out は root スコープが読む — root は --out を読める間 閉じられない (早閉じ抑制) ので root の out が発火し、その後 build は空で入場する。build の out ではなく root の out が勝つことを effects の同一 name + result のネスト位置 (build 外の out) で区別。build は selected で out/sub は束縛なし → absent、arg は反復系ゆえ 0 発火でも [] で present (DR-044/051)。",
       "argv": ["--out", "X", "build"],
       "expect": {
@@ -46,6 +48,7 @@
       }
     },
     {
+      "id": "parent-backbone-resume",
       "why": "親背骨の再開: build は --rootopt のトリガを持たないので、positional arg で x を消費した後は次トークン --rootopt が readable でなく build は閉じられる → 親 root 背骨が再開し root の rootopt が発火する (旧 sever 規則なら親は恒久 off で失敗していた)。effects は消費順で arg(pos1) の後に rootopt(pos2)、operand はトークン値 x。arg は反復系ゆえ発火 1 回でも配列 [x] (DR-044 一様配列)。build の out/sub は未発火 → absent。",
       "argv": ["build", "x", "--rootopt"],
       "expect": {
@@ -58,6 +61,7 @@
       }
     },
     {
+      "id": "three-level-early-close",
       "why": "早閉じ抑制の再帰的創発: 3 段 (root/build/sub) で sub は --out を宣言しないため sub 内で --out は readable でなく sub は閉じる → build 背骨が再開し build の out が発火 (build が --out を読める最内スコープ)。孫が読めない option を中間コマンドが拾う再帰早閉じ。sub は selected 空 → {}、rootopt preset false。build の arg は反復系ゆえ 0 発火で [] (DR-044/051)。",
       "argv": ["build", "sub", "--out", "X"],
       "expect": {

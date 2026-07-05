@@ -10,6 +10,7 @@
   },
   "cases": [
     {
+      "id": "deprecated-entry-warns",
       "why": "deprecated 入口 -o: 受理は不変で port=80 へ束縛 (effect entity port)、かつ deprecation 警告を積む。警告 element は canonical port (どの入口が deprecated かでなく『代替すべき canonical』を指す、DR-058 §2)。受理と警告が両立する (deprecated は reject でなく warn) ことの固定。",
       "argv": ["-o", "80"],
       "expect": {
@@ -22,6 +23,7 @@
       }
     },
     {
+      "id": "alias-no-warn",
       "why": "非 deprecated alias -n: 同じ port セルへ束縛するが警告は積まれない (warnings 空)。deprecated 属性が入口限定であること (-o だけが警告源、-n は無警告) の固定 (DR-057 §2 入口限定 deprecated)。",
       "argv": ["-n", "80"],
       "expect": {
@@ -34,6 +36,7 @@
       }
     },
     {
+      "id": "canonical-no-warn",
       "why": "canonical 入口 -p: 当然無警告 (warnings 空)。-o (deprecated, 警告あり) との対照で『警告は deprecated 入口の発火にのみ紐付く』ことを固定する。",
       "argv": ["-p", "80"],
       "expect": {

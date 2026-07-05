@@ -9,6 +9,7 @@
   },
   "cases": [
     {
+      "id": "conflict-fires",
       "why": "conflict 発火: foo と bar が両方 committed → 衝突で failure kind:constraint。宣言は foo 側にのみ置いたが判定は『両方 committed』なので発火する。element=宣言元 foo、argv_pos=2=argv.length。",
       "argv": ["--foo", "--bar"],
       "expect": {
@@ -17,6 +18,7 @@
       }
     },
     {
+      "id": "conflict-symmetric",
       "why": "両方向対称: bar を先に出しても衝突は同じく発火する (宣言の向きに非依存、DR-055)。前ケースと argv 順を反転しても同一の failure。element/argv_pos は前ケースと同じ (element は宣言元 foo で不変、argv_pos は全消費後の argv.length)。",
       "argv": ["--bar", "--foo"],
       "expect": {
@@ -25,6 +27,7 @@
       }
     },
     {
+      "id": "single-side-ok",
       "why": "片側のみ committed → 衝突なし: foo だけなら bar は未 committed で述語不成立、success。result は foo=true、未発火 flag bar は preset default false で present (LOWERING §A.5 / DR-051 §2)。",
       "argv": ["--foo"],
       "expect": {
@@ -36,6 +39,7 @@
       }
     },
     {
+      "id": "unset-cancels-conflict",
       "why": "unset で取消 → 非衝突 (committed 判定は最終効果、DR-045): foo→bar→no-foo の順で発火すると foo の最終効果は unset なので foo は非 committed、conflict は立たず success。効果列は 3 効果を適用順で全保持 (foo set / bar set / foo unset — 最終勝ち collapse は is_committed / ladder 時点で起き、効果列自体は畳まれない、順序は同一性成分)。result: foo は unset でラダー開放 → preset default false、bar=true。unset op は operand を持たない (DR-045)。",
       "argv": ["--foo", "--bar", "--no-foo"],
       "expect": {

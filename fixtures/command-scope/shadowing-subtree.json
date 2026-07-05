@@ -20,6 +20,7 @@
   },
   "cases": [
     {
+      "id": "grandchild-subtree-global",
       "why": "孫で発火: a が root rverb を shadow し、a の averb を自前 global として宣言 → 孫 b には a の averb コピーが伝播する。b 内 --verbose は a の averb セルへ書く (root rverb には届かない)。averb は a キー下に present、b は selected 空 {}、root rverb は未発火 preset false。中間 shadow が subtree 全体を統治することの固定。",
       "argv": ["a", "b", "--verbose"],
       "expect": {
@@ -31,6 +32,7 @@
       }
     },
     {
+      "id": "mid-shadow-fires",
       "why": "中間で直接発火: a 内 --verbose は a の averb を発火 (root rverb を shadow)。b は未入場 → absent、rverb 未発火 preset false。中間レベルでの shadow 成立の直接確認。",
       "argv": ["a", "--verbose"],
       "expect": {
@@ -42,6 +44,7 @@
       }
     },
     {
+      "id": "root-own-fires",
       "why": "対照: root で --verbose を発火させると root 自身の rverb が発火する (shadow は a subtree 内の話)。a は未入場 → absent。",
       "argv": ["--verbose"],
       "expect": {

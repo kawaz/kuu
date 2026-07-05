@@ -8,6 +8,7 @@
   },
   "cases": [
     {
+      "id": "zero-fire-empty-array",
       "why": "0 発火: optional positional xs はトークンを 1 個も得ないが、repeat セルの一様形により結果は空配列 []。absent (キー消失) ではない — 反復系は形が先に在る (DR-051 §2b、DR-044)。effects は空 (発火なし)。§1 の非反復 absent (キーが消える) との決定的対照。",
       "argv": [],
       "expect": {
@@ -17,6 +18,7 @@
       }
     },
     {
+      "id": "one-fire-single",
       "why": "1 発火: a を 1 個消費 → [a]。0 発火の [] と合わせ、xs が scalar でなく多値セル (配列) であることを固定する (DR-044)。effects は xs の cli set 1 件。",
       "argv": ["a"],
       "expect": {

@@ -10,6 +10,7 @@
   },
   "cases": [
     {
+      "id": "alias-requires-unmet",
       "why": "alias 起動でも制約発動: -d が decrypt を commit させ、canonical の requires [key_file] が評価されるが key_file 未供給 (CLI なし・default なし) → 完全経路不成立で failure。kind:constraint (遅延述語違反、型照合や残余の parse 失敗とは層が違う DR-065 §3)。element=宣言元 decrypt (alias 名ではない — 制約は実体側)。argv_pos=1=argv.length (全消費後評価)。reason=requires_violated (DR-066)。--decrypt 直接発火と同一挙動になることの固定。",
       "argv": ["-d"],
       "expect": {
@@ -18,6 +19,7 @@
       }
     },
     {
+      "id": "alias-requires-satisfied",
       "why": "requires 充足: -d (alias 起動で decrypt commit) + --key-file k で目的語充足 → success。effects は適用順 (decrypt の set が先、key_file の set が後、順序は同一性成分 DR-038/045)。alias 入口経由でも制約充足の成立面が canonical 発火と同一であることの固定。result は decrypt=true (flag set) と key_file=k。",
       "argv": ["-d", "--key-file", "k"],
       "expect": {

@@ -18,6 +18,7 @@
   },
   "cases": [
     {
+      "id": "child-entry-fires",
       "why": "子入場後の global 発火: a に入り、a へコピーされた --verbose が発火 → root の verbose 実体へ link 同期する。よって verbose は root キーに現れ a は空 {} (子セル非新設、DR-042 link 同期)。out は default なし未発火 → absent。",
       "argv": ["a", "--verbose"],
       "expect": {
@@ -29,6 +30,7 @@
       }
     },
     {
+      "id": "root-entry-fires",
       "why": "argv 順非依存: root 入口で直接 --verbose を発火させても、子経由コピーで発火させても同一の root verbose セルに書く (link 同期)。case 1 と同一 outcome で、global の値配置が発火位置に依らないことを固定。",
       "argv": ["--verbose", "a"],
       "expect": {
@@ -40,6 +42,7 @@
       }
     },
     {
+      "id": "grandchild-propagation",
       "why": "孫コマンドへの不動点伝播: a>b と 2 段入れ子でも global verbose のコピーが root->a->b と伝播し、孫 b 内の --verbose が root verbose セルへ link 同期する。verbose は root キー、a は b を selected 空で内包 {b:{}}。",
       "argv": ["a", "b", "--verbose"],
       "expect": {
@@ -51,6 +54,7 @@
       }
     },
     {
+      "id": "valued-global-sync",
       "why": "値持ち global の root セル同期: 子 a 内で --out X を発火させても out=X は root セルへ同期し a は空 {} (flag 版と同型、DR-042 link 同期)。未発火の global flag verbose は preset default false で root に present。",
       "argv": ["a", "--out", "X"],
       "expect": {

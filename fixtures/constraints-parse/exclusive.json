@@ -9,6 +9,7 @@
   },
   "cases": [
     {
+      "id": "both-members-violate",
       "why": "重複宣言の両述語独立発火: a と b が両方 committed。(a,b) は exclusive_group `g` に属し、かつ a conflicts_with b。両方が独立に違反判定され 2 errors。conflicts の error は宣言元要素 a に (element=a)、exclusive の error は group ラベル g に (element=g) 紐付く。両方 argv_pos=2=argv.length。errors は集合として比較 (順序非規範)。",
       "argv": ["--a", "--b"],
       "expect": {
@@ -20,6 +21,7 @@
       }
     },
     {
+      "id": "single-member-ok",
       "why": "単一 member committed → 排他成立せず success: グループ `g` で committed は a のみ (1 つ) なので exclusive も conflicts も立たない。result は a=true、未発火 flag b は preset default false で present。",
       "argv": ["--a"],
       "expect": {
@@ -31,6 +33,7 @@
       }
     },
     {
+      "id": "b-alone-ok",
       "why": "対称確認 (b 単独): b だけ committed でも group member は 1 つで success。conflicts は a 側宣言だが a 未 committed で不成立。前ケースと対で『最大 1 つ committed は許容』を両 member で固定。result は b=true、a は preset default false。",
       "argv": ["--b"],
       "expect": {

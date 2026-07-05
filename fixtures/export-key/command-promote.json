@@ -15,6 +15,7 @@
   },
   "cases": [
     {
+      "id": "promote-with-child",
       "why": "`serve --port 80`: serve トークンで command スコープに入場 (綴り軸不変) し port が 80 発火。export_key null なので serve のスコープキーは結果に現れず、子 port が親 (root) へ昇格して result は {port:80} (通常なら {serve:{port:80}})。effects の entity は値セル port。",
       "argv": ["serve", "--port", "80"],
       "expect": {
@@ -26,6 +27,7 @@
       }
     },
     {
+      "id": "promote-empty-child",
       "why": "`serve` のみ (子未発火): 通常の選ばれた command は空でも presence marker {} を持つ (DR-052 §3) が、export_key null のスコープは選ばれてもキーが無い (§3 末尾) ため {serve:{}} にならない。子 port は値源なし未発火で absent (DR-051)。昇格すべき子キーが無いので root は空 {} になる — null command は presence marker も昇格キーも生まない。",
       "argv": ["serve"],
       "expect": {

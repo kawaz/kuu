@@ -14,6 +14,7 @@
   },
   "cases": [
     {
+      "id": "requires-violated",
       "why": "無条件 requires 違反: decrypt が committed だが目的語 key_file が値を持たない (CLI 未供給・default なし) → 完全経路が不成立で failure。kind:constraint (遅延述語違反、型照合や残余の parse 失敗とは層が違う、DR-065 §3)。argv_pos=1=argv.length (制約は全消費後に評価)。element=宣言元 decrypt。reason=requires_violated (DR-066)。",
       "argv": ["--decrypt"],
       "expect": {
@@ -22,6 +23,7 @@
       }
     },
     {
+      "id": "requires-satisfied",
       "why": "無条件 requires 充足: decrypt committed かつ key_file が値 k を持つ → 述語成立で success。効果列は argv 適用順 (decrypt の set が先、key_file の set が後、順序は同一性成分 DR-038/045)。result は key_file present、format 系は未供給で absent。",
       "argv": ["--decrypt", "--key-file", "k"],
       "expect": {
@@ -34,6 +36,7 @@
       }
     },
     {
+      "id": "requires-vacuous",
       "why": "requires は committed にのみ発火 (vacuous satisfaction): decrypt を出さなければ requires は評価されず success。空 argv でも制約違反にならないことの固定。result は未発火 flag decrypt が preset default false で present、値オプションは全て absent (DR-051 §1)。",
       "argv": [],
       "expect": {
@@ -43,6 +46,7 @@
       }
     },
     {
+      "id": "value-requires-violated",
       "why": "値依存 requires 発火 → 違反: format の committed 値が json (json 枝が照合消費で選ばれた) なので枝の requires:[schema] が立つが schema 未供給 → failure kind:constraint。値の帰属先は親 name format (entity=format) だが制約の宣言元は json 枝なので element=fmt_json (匿名 exact 枝に付けた id、DR-052 と直交)。argv_pos=2=argv.length。reason=requires_violated (無条件 requires と同じ属性なので同一 reason、DR-066 §3)。yaml 枝には requires が無い = 次ケースの対照。",
       "argv": ["--format", "json"],
       "expect": {
@@ -51,6 +55,7 @@
       }
     },
     {
+      "id": "value-requires-nonfiring",
       "why": "値依存 requires 非発火: format=yaml は yaml 枝を選び、この枝に requires は無いので schema を要求せず success。同じ format 定義でも committed 値でどの枝の述語が立つかが分岐することの固定 (DR-055 §1『値の枝に付いた requires』)。値は親 name format に格納 (entity=format, operand=yaml)。result は format present、schema absent、未発火 flag decrypt は preset default false。",
       "argv": ["--format", "yaml"],
       "expect": {
@@ -62,6 +67,7 @@
       }
     },
     {
+      "id": "value-requires-satisfied",
       "why": "値依存 requires 充足: format=json で json 枝の requires:[schema] が立ち、schema=s がそれを満たす → success。前ケース (json 単独→違反) との対で『値枝の条件発火 + 目的語充足』の成立面を固定。値は親 name format に格納 (entity=format, operand=json)、schema も cli set。",
       "argv": ["--format", "json", "--schema", "s"],
       "expect": {

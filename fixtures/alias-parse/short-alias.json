@@ -9,6 +9,7 @@
   },
   "cases": [
     {
+      "id": "alias-entry-binds",
       "why": "alias 入口 -n が canonical セル port へ束縛。値 80 は port の operand。結果キーは alias 名 n ではなく canonical の port (DR-057 §2: alias は結果スコープを作らない)。effect entity も port セル (link 同型)。",
       "argv": ["-n", "80"],
       "expect": {
@@ -20,6 +21,7 @@
       }
     },
     {
+      "id": "canonical-entry-same-cell",
       "why": "canonical 入口 -p も同じ port セル。case 1 との対で『別入口が同一実体に合流する』ことを固定する — 入口が -p でも -n でも結果は同一形。",
       "argv": ["-p", "80"],
       "expect": {
@@ -31,6 +33,7 @@
       }
     },
     {
+      "id": "two-entries-last-wins",
       "why": "同一セルへの 2 入口発火はあと勝ち (DR-015)。-p (80) → -n (90) の順で両方 port へ set 効果を積む (effects は適用順に 2 件 = 順序が同一性成分 DR-038/045) が、最終値は後発の 90。alias と canonical が同一の値セル状態機械を共有することの固定。",
       "argv": ["-p", "80", "-n", "90"],
       "expect": {
