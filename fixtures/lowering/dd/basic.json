@@ -1,0 +1,39 @@
+{
+  "why": "dd installer の最小断面: dd マーカー (options[] 配置 = DR-064 canonical) + 単一 positional x (string) を dd のみで lowering する。LOWERING §B.4 の主規則 — dd installer は `type: \"dd\"` を回収し、greedy 面にトリガ兼消費者として exact 衛星を足す。`--` の完全一致で発火し、マーカー 1 トークンを消費し値を生まず、以降の positional 継続を自分の内部消費として引き継ぐ (sever)。この fixture の核心は greedy 衛星の断面表記が『素の exact 一致』であること (第一候補の確定): dd の matcher はトークン境界の再解釈をしない (再解釈 matcher が要るのは long の eq-split / short の cluster だけ、§B.4) ので greedy 面には {exact: \"--\"} 1 個のみ・別 matcher なし。専用の sever マークは断面に持たない — sever は DR-041 §4『greedy の内部消費は一体』から導出される創発であり dd 専用の特別規則はゼロ (§B.4)。dd 性は (1) 宣言層に残る inert な type:\"dd\" (wire form、DR-063 §1) と (2) 効果列 oracle (§C.5 主 oracle) で観測される sever 挙動が担い、断面骨格ではない。したがって『sever の実装表現は観測挙動が同一なら自由』(LOWERING §C.3 / DR-063 §4) と整合し、断面には素 exact を書けば十分で専用マークは不要 (slice PoC の DdSat 節点は同一挙動の一実装表現であり、緩比較 §C.5 は素 exact-on-`--` の骨格として同一視する)。positional x は repeat/multiple を持たない plain positional なので背骨に消費点として乗り、golden は正規形 ref+link で書く (DR-063 §3、inline 解決形 StrArg は緩比較が吸収 — repeat/basic の dst と同型)。entities は x のみ (type string、最小投影で accumulator/default 省略=None)。dd マーカー `--` は entities に現れない: DR-064 §1『dd は効果が値セル書き込みでなく severed 化である特殊な flag』・§B.4『値なし』のとおり dd は値セルを持たないため。断面表記は DR-063 §3 の面構造 (空の constraints/templates 面は省略=空と等価、§4)、比較は緩比較 (LOWERING §C.5 / DR-070 §2: 構造骨格 + matcher 種別/エントリ表)。installers は installer 名の列挙で順序非規範 (DR-070 §1)。slice PoC (installer.mbt inst_dd, installers=[DdInst] 単独) の canon_scope 実測が写像元 oracle: G[DdSat(--)] / P[StrArg(x)] を観測し greedy=素 exact-on-`--`・positional=x 消費点の写像を確認 (期待値の権威は仕様、DR-070 §1b)。KNOWN GAP: slice の ensure_entities は options[] ループに `not_dd` ガードが無く (positionals[] ループのみガード済み)、options 配置 dd に対し余分な実体 {name:\"--\", ty:TStr} を生成する — 実測 E[{name:--,...},{name:x,...}] で観測。これは dd が値セルを持つという spec 違反 (§B.4 値なし) であり、かつ positionals 配置 dd では `--` 実体が出ない非対称なので DR-064 §2『dd は配置不問で lowered 形が同一』にも反する placement-dependent divergence。golden は spec 準拠値 (entities={x} のみ) を書き、runner が KNOWN GAP として差分を可視化する (DR-070 §1b)。",
+  "query": "lower",
+  "definition": {
+    "options": [
+      {
+        "name": "--",
+        "type": "dd"
+      }
+    ],
+    "positionals": [
+      {
+        "name": "x",
+        "type": "string"
+      }
+    ]
+  },
+  "installers": [
+    "dd"
+  ],
+  "expect": {
+    "greedy": [
+      {
+        "exact": "--"
+      }
+    ],
+    "positionals": [
+      {
+        "ref": "x",
+        "link": "x"
+      }
+    ],
+    "entities": {
+      "x": {
+        "type": "string"
+      }
+    }
+  }
+}

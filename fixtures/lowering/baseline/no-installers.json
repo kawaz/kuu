@@ -1,0 +1,26 @@
+{
+  "why": "installer ゼロの境界断面: 単一 positional x (string) を installers=[] で lowering する。この fixture の主眼は lowering の『恒等部分』の固定 — installer が 1 個も居なくても常に走る層 (A 群純構文正規化 §C.4 + core lowering ensure_entities/lower_positional) だけが動いたときの断面を凍結する。installers=[] は A 群糖衣のみの段階を表す (DR-070 §1: 純構文正規化は installer 以前に常に適用)。x は long/short/env/repeat 等の installer 所有語彙を一切持たない裸の値 positional なので、どの installer にも回収されず、構造衛星 (greedy) は一切生えない — greedy 面は空で最小投影 (DR-063 §3) で省略する。x に対して起きるのは 2 点のみ: (1) 背骨の消費点として positionals 面に載る (lower_positional の恒等ケース: repeat なしの値 positional は head 1 個をそのまま背骨へ)、(2) 実体だけノード (DR-030) として entities 面に降格する (ensure_entities は installer 順序と無関係な core lowering、DR-042 の installer 群の外側で常時走る)。背骨の消費点は ref+link の宣言形が正規 ({ref:x, link:x} — DR-063 §3『golden の消費点は ref+link の宣言形で統一』、実装の inline 解決形 StrArg(x) は緩比較が同一骨格として吸収)。entities は最小投影 (DR-063 §3): x は type:string のスカラ値セルで、env/inherit 席も accumulator も持たないため type のみを書く (省略=default 等価)。constraints/templates 面は空なので省略。断面表記は DR-063 §3、比較は緩比較 (LOWERING §C.5 / DR-070 §2)。slice PoC (parse_definition, order=[]) の canon_scope 実測が写像元 oracle: G[]|P[StrArg(x)]|E[x: ty=TStr, env_key=None, inherit=false, accum=None] を観測 (期待値の権威は仕様、DR-070 §1b)。",
+  "query": "lower",
+  "definition": {
+    "positionals": [
+      {
+        "name": "x",
+        "type": "string"
+      }
+    ]
+  },
+  "installers": [],
+  "expect": {
+    "positionals": [
+      {
+        "ref": "x",
+        "link": "x"
+      }
+    ],
+    "entities": {
+      "x": {
+        "type": "string"
+      }
+    }
+  }
+}

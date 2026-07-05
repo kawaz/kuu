@@ -1,0 +1,52 @@
+{
+  "why": "global installer の子 scope link 同期断面: flag オプション verbose (global:true) を build コマンド 1 個の下へ global+long+command の 3 installer で lowering する。核心は LOWERING §B.6 の宣言的コピー — global installer は `global` を回収し子孫 command スコープの宣言層へ ref/link 衛星のコピーを追加、long installer が不動点反復 (LOWERING §C.2) で子スコープに展開する。verbose は type:flag (§A.5) なので値セルは bool + default:false の実体だけノード、入口衛星は set 縮退形 {exact:--verbose, value:true, link:verbose} (long/variant.json の bool 主入口 --ssl と同型 — 値トークンを取らないため eq_split matcher は立たない)。\n\n子 scope への link 同期 (slice の Rooted、第 4 弾) の断面表記の核心 = root マーク不要が成立する: 子 greedy の衛星 {exact:--verbose, value:true, link:verbose} は親 (root) の verbose 実体へ link する。link の解決は lexical — 子スコープが自前の verbose 実体を持たない (DR-063 §3 の link 合流『同一セル前提』= global オプションの値セルは root に 1 個のみ) ため、name 参照 verbose は最近祖先 root の値セルへ一意に解決する。したがって root フラグ・root マークは断面に不要で、root/child 両スコープに同一の衛星表記が現れる (セルの所在=root が結果配置を決め、link は純粋な name 解決)。build は entity にならず CmdSat の name として greedy 内インライン (command/basic.json と同型、DR-063 §3『command は greedy トリガ衛星、実体埋め込みでない』)、子 scope attach は {exact:build, scope:{子の面}}。子 entities は空 (verbose セルは root のみ) なので最小投影で省略。\n\n実測 oracle (installers=[GlobalInst,LongInst,CommandInst], slice build_or_fail の canon): root greedy=[Seq([Exact(--verbose),Bind(verbose,true)]), CmdSat(build, 子scope)]、子 greedy=[Rooted(Seq([Exact(--verbose),Bind(verbose,true)]))]; result_str(build --verbose)=result_str(--verbose build)={verbose:true,build:{}} で値が root セルに同期 (build:{} = 子セル非出現) を確認、両 argv 順で同一 (link-sync)。\n\nKNOWN GAP (DR-070 §1b: golden は spec 準拠値、実測は表記写像 oracle):\n(1) flag preset 未展開 — slice は値セルを ty:TFlag のまま保持し bool + default:false に降格しない (§A.5 未実装)。golden は spec 準拠 {type:bool, default:false} を書く (long/variant.json の --ssl bool 主入口が set 縮退形を出す実測が値=true 縮退の裏取り)。\n(2) 子 scope の root-targeting 表現の分岐 — slice は子スコープに自前の verbose 実体を作り (ensure_entities が copy した宣言から entity を生成)、衛星を Rooted でラップして結果 nesting から脱出させる実装エンコーディングを採る。canonical 断面 (同一セル前提) は子セルを作らず衛星は素の {exact,value,link}、root-targeting はセル所在の lexical 解決に内包される。両者は同一 observable ({verbose:true,build:{}}) を出すが緩比較の構造骨格は一致しない (slice 側は Rooted wrapper + 余分な子 entity)。golden は canonical 側 (子 entities 空 + 素の衛星) を書き、runner が slice の Rooted+子entity を GAP として可視化。\n(3) long:[] present-empty — long/basic・command/basic と同型、slice helper は present-empty と absent を区別できず絶対 absent 扱い。実測では long=[\"verbose\"] を明示して --verbose 衛星生成を裏取り。golden は spec 準拠 long:[] (--<name>=--verbose を生成、LOWERING §B.1)。\n\n断面表記は DR-063 §3 の 5 面構造 (空面省略)、比較は緩比較 (LOWERING §C.5 / DR-070 §2: 構造骨格 + matcher 種別/エントリ表 + 効果記述子 op/link 先)。",
+  "query": "lower",
+  "definition": {
+    "options": [
+      {
+        "name": "verbose",
+        "type": "flag",
+        "long": [],
+        "global": true
+      }
+    ],
+    "commands": [
+      {
+        "type": "command",
+        "name": "build"
+      }
+    ]
+  },
+  "installers": [
+    "global",
+    "long",
+    "command"
+  ],
+  "expect": {
+    "greedy": [
+      {
+        "exact": "--verbose",
+        "value": true,
+        "link": "verbose"
+      },
+      {
+        "exact": "build",
+        "scope": {
+          "greedy": [
+            {
+              "exact": "--verbose",
+              "value": true,
+              "link": "verbose"
+            }
+          ]
+        }
+      }
+    ],
+    "entities": {
+      "verbose": {
+        "type": "bool",
+        "default": false
+      }
+    }
+  }
+}

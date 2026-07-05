@@ -29,7 +29,6 @@
         "link": "ssl"
       }
     ],
-    "positionals": [],
     "entities": {
       "ssl": {
         "type": "bool",

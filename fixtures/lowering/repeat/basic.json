@@ -20,7 +20,6 @@
     "repeat"
   ],
   "expect": {
-    "greedy": [],
     "positionals": [
       {
         "ref": "src#cons"

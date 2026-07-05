@@ -3,19 +3,39 @@
   "query": "lower",
   "definition": {
     "options": [
-      { "name": "port", "type": "number", "short": "p" },
-      { "name": "verbose", "type": "flag", "short": "v" }
+      {
+        "name": "port",
+        "type": "number",
+        "short": "p"
+      },
+      {
+        "name": "verbose",
+        "type": "flag",
+        "short": "v"
+      }
     ]
   },
-  "installers": ["short"],
+  "installers": [
+    "short"
+  ],
   "expect": {
     "greedy": [
-      { "matcher": "short_combine", "entries": { "p": "port", "v": "verbose" } }
+      {
+        "matcher": "short_combine",
+        "entries": {
+          "p": "port",
+          "v": "verbose"
+        }
+      }
     ],
-    "positionals": [],
     "entities": {
-      "port": { "type": "number" },
-      "verbose": { "type": "bool", "default": false }
+      "port": {
+        "type": "number"
+      },
+      "verbose": {
+        "type": "bool",
+        "default": false
+      }
     }
   }
 }

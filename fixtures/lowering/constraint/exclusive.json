@@ -1,0 +1,62 @@
+{
+  "why": "constraints 面の 2 例目: exclusive_group による N 者排他 (DR-047 / DR-055)。json / yaml が同一グループ `format` に属し、最大 1 つだけ committed 可 (DESIGN §9.2)。installers は constraint + long の 2 枚。constraint installer は各要素の exclusive_group ラベルをスコープ横断で集め、グループごとに 1 つの遅延述語を宣言する (slice inst_constraint: groups をラベル出現順に集約し、各 g の members を定義順に回収 → CExclusive(g, members))。断面表記は DR-063 §3 の group / members 形: {kind: \"exclusive_group\", group: \"format\", members: [\"json\", \"yaml\"]}。requires が element / targets を持つのと対に、exclusive_group は group (ラベル) / members (要素 name 群) を持つ (DR-063 §3 の element/group・targets/members の二形)。members の並びは緩比較で非規範 (面内の席順は無視、DR-063 §3) だが定義順で提示する。> 1 member committed で違反 = 完全経路の不成立 (DR-047、kind:constraint の Error)。exclusive_group と conflicts_with の同一ペア重複宣言は両方評価される (冗長は lint 対象で放置が仕様、phase25 test 4) が、本 fixture は単一 exclusive のみを載せる。co-installer の long 面: json / yaml はともに flag・`long: []` で名前由来綴り --json / --yaml を生成 (LOWERING §B.1、単語 1 つなので kebab 変換の可視差は出ないが綴り規則は DR-022 の CLI 値=kebab)。flag は set の縮退形 exact 衛星 {exact, value: true, link} を各 1 本足し、値トークンを取らないため eq_split matcher は立たない。元要素はともに実体だけノード (DR-030) に降格 (LOWERING §C.1)。entities 面: json / yaml はともに flag プリセット (LOWERING §A.5: flag = bool + default:false)。⚠ KNOWN GAP (basic.json と同型): slice の ensure_entity は ty=TFlag のまま default:false を注入しない (flag preset default 未実装)。DR-070 §1b の通り fixture は仕様準拠値 {type: \"bool\", default: false} を書く。写像元 oracle は slice 第 15 弾 phase25_wbtest の Constraint 4 値 CExclusive(group, members) (installer.mbt inst_constraint、exclusive_group ラベル横断集約) と inst_long の flag 分岐 (期待値の権威は仕様、DR-070 §1b)。断面表記は DR-063 §3 の 5 面構造 (空の templates 面は最小投影で省略)、比較は緩比較 (LOWERING §C.5)。適用は順序非依存 (LOWERING §C.2、installers 配列順は非規範 DR-070 §1)。",
+  "query": "lower",
+  "definition": {
+    "options": [
+      {
+        "name": "json",
+        "type": "flag",
+        "long": [],
+        "exclusive_group": [
+          "format"
+        ]
+      },
+      {
+        "name": "yaml",
+        "type": "flag",
+        "long": [],
+        "exclusive_group": [
+          "format"
+        ]
+      }
+    ]
+  },
+  "installers": [
+    "constraint",
+    "long"
+  ],
+  "expect": {
+    "greedy": [
+      {
+        "exact": "--json",
+        "value": true,
+        "link": "json"
+      },
+      {
+        "exact": "--yaml",
+        "value": true,
+        "link": "yaml"
+      }
+    ],
+    "entities": {
+      "json": {
+        "type": "bool",
+        "default": false
+      },
+      "yaml": {
+        "type": "bool",
+        "default": false
+      }
+    },
+    "constraints": [
+      {
+        "kind": "exclusive_group",
+        "group": "format",
+        "members": [
+          "json",
+          "yaml"
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,56 @@
+{
+  "why": "alias installer の option 別入口断面: canonical port (int, long:[], short p) に short-only alias {alias:\"port\", short:\"n\"} を貼り、alias + long + short の 3 installer で lowering する。DR-057 の核 — alias は参照ファミリー 3 人目 (ref 構造継承 / link 値同期 / alias 別入口) であり、独立要素で書く別入口。意味論は link + 表示帰属: 効果は canonical 実体セルへ流れ、結果キーは canonical のみ (§2、alias は結果スコープを作らない)。alias installer の lowering (§4) は global installer の宣言的コピーと同型 — alias 宣言から入口衛星の宣言を作り canonical 実体への ref/link 衛星として宣言層に追加するだけで、実際の衛星展開は long/short/command installer が不動点反復で担う (alias installer は入口形式を知らない、DR-042 §C.2)。だから installers に long/short が同乗する (alias 単独だと入口が展開されず不完全)。継承原理 (§3): name 導出入口 (long 配列の base + variant DSL、command の name 照合) は alias の name で再導出、明示綴り (short) は非継承。本 alias は name 省略 → canonical name \"port\" を再利用する short-only alias であり、宣言した short 'n' は alias 自身の明示綴りなので -n が canonical セル port へ合流する。short 非継承の帰結: canonical の -p を alias が再生成しない (継承したら同一スコープに -p が二重化して不正)。long 面: canonical port の present-empty long:[] は --port を生成する (LOWERING §B.1 空配列でも --<name>)。alias は name=\"port\" 再利用のため long base を再導出するが、再導出された --port は canonical の --port と完全同一の寄与 → add-if-absent (DR-042 §C.2 同一寄与の再追加は no-op) で collapse し、greedy には --port 主入口衛星 1 本 + eq_split matcher 1 本のみが残る。値スロットは ref+link 宣言形が正規 (DR-063 §3、inline 解決形は緩比較が吸収)。short 面: canonical -p (→port) + alias -n (→port) が 1 個の short_combine 再解釈 matcher に合流する (entries {p:port, n:port}、両エントリとも canonical セル port を name 参照 = link 同型 = 別入口が同一セルに合流、DR-015 あと勝ち)。long との非対称: long は greedy に exact 綴り衛星 + eq_split の 2 本立てだが、short は単文字入口も short_combine matcher に subsume されるため exact 衛星を別途積まない (short/basic の matcher-seat finding)。元要素 port は実体だけノード (DR-030) に降格し、alias 宣言含む所有語彙は inert に残る (LOWERING §C.1、help/diagnose 用に非削除)。entity は port (type int) のみ — alias は結果キーも新エンティティも作らない (§2)。断面表記は DR-063 §3 の 5 面構造 {greedy, positionals, entities}(空の constraints/templates 面は省略=空と等価、§4)。比較は緩比較 (LOWERING §C.5 / DR-070 §2: 構造骨格 + matcher 種別/エントリ表)。installers は installer 名の列挙で順序非規範 (DR-070 §1、順序非依存 §C.2)。表記写像の裏取り (slice canon_scope 実測, installers=[AliasInst,LongInst,ShortInst]): (a) literal long=[] は G[ShortCombine(p→port,n→port)]|E[port,int] で --port なし、(b) canonical へ明示 long=[\"port\"] を与えた裏取りが Seq([Exact(--port),NumArg(port)]) + EqSplit(entries=[{--port:port}]) + ShortCombine({p→port,n→port}) を出すことを確認 (ref+link golden ↔ NumArg inline 実測 は緩比較で同一骨格、§C.5)。short 別入口の canonical セル合流・結果キー port・あと勝ちは slice 第 16 弾 phase26 test 1 で実測 (-n 80 → {port:80}、-p 80 -n 90 → {port:90})。KNOWN GAP 1 (present-empty): slice helper opt(long=[]) が present-empty と absent を区別できず absent 扱いになり literal 定義では --port 衛星が出ない (long/basic・command/basic と同型の未実装、DR-070 §1b: golden は spec 準拠値 = --port 衛星 + eq_split を書き runner が KNOWN GAP として差分を可視化)。KNOWN GAP 2 (alias re-derive の add-if-absent 未適用): 明示 long=[\"port\"] 裏取り時、alias が name 再利用で --port を再導出し EqSplit entries が [{--port:port},{--port:port}] と重複する (greedy の Seq 衛星は 1 本だが matcher entries のみ重複)。spec は同一寄与の add-if-absent 冪等 (DR-042 §C.2) で単一 {--port:port} へ collapse する → golden は eq_split entries を単一エントリで固定。",
+  "query": "lower",
+  "definition": {
+    "options": [
+      {
+        "name": "port",
+        "type": "int",
+        "long": [],
+        "short": "p"
+      },
+      {
+        "alias": "port",
+        "short": "n"
+      }
+    ]
+  },
+  "installers": [
+    "alias",
+    "long",
+    "short"
+  ],
+  "expect": {
+    "greedy": [
+      {
+        "seq": [
+          {
+            "exact": "--port"
+          },
+          {
+            "ref": "port",
+            "link": "port"
+          }
+        ]
+      },
+      {
+        "matcher": "eq_split",
+        "entries": {
+          "--port": "port"
+        }
+      },
+      {
+        "matcher": "short_combine",
+        "entries": {
+          "p": "port",
+          "n": "port"
+        }
+      }
+    ],
+    "entities": {
+      "port": {
+        "type": "int"
+      }
+    }
+  }
+}

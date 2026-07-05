@@ -33,7 +33,6 @@
         }
       }
     ],
-    "positionals": [],
     "entities": {
       "port": {
         "type": "number"

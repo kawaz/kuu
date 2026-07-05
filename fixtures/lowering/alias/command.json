@@ -1,0 +1,23 @@
+{
+  "why": "command alias 断面: canonical command checkout (空 body) に command alias {alias:\"checkout\", type:command, name:\"co\"} を貼り、alias + command の 2 installer で lowering する。DR-057 §1 — alias は独立要素で書く別入口で、command 文脈では type:command + name(自分の綴り) + alias(canonical への参照) を持つ。lowering (§4) は alias installer の宣言的コピー (global 同型): command alias は canonical command の body を clone した新しい command def を宣言層に追加し、実際の CmdSat トリガ衛星への展開は command installer が不動点反復で担う (alias installer は入口形式を知らない、DR-042)。だから installers に command が同乗する (alias 単独だと部分木トリガが展開されない)。LOWERING §B.5 の主規則 — command installer は commands[] / type:command を回収し、greedy 面に「greedy マーク付き exact (name 完全一致) トリガ衛星」を植え、各コマンドの部分木を新しい背骨として宣言する (祖先の greedy はそこに届かない、DR-041 §4)。継承原理 (§3): command の name 照合入口は alias の name (co) で再導出される — checkout 部分木が co トリガでも入れる。実測の核心 (canon_scope, installers=[AliasInst,CommandInst]): 親 greedy に CmdSat(checkout,<子scope>) と CmdSat(co,<子scope>) の 2 個、positional 空、entities も空 — checkout も co も entity にならず CmdSat の name として greedy 内にインラインで持つ (DR-063 §3『command は greedy CmdSat であり実体埋め込みではない』『greedy マークは配置で表現』、command/basic と同型)。checkout の body が空なので両子 scope は空の 5 面 {} (最小投影、§4 空面省略)。結果キー統合の要点 (§2 結果キーは canonical のみ): co で入っても結果は checkout に nest する。ただし断面上は checkout / co が **それぞれ自前の (構造的に同一な) 空子 scope** を持つ — 実測は alias が canonical body を clone_def するため構造上は別 scope であり、「co が checkout と同じ子 scope を指す」の同一性は断面 (greedy/scope 面) ではなく **断面外の export_key = EkKey(\"checkout\") が担う** (build_export_map 実測: co⇒EkKey(checkout), checkout⇒EkUnset)。export_key は DR-063 §3 の 5 面 (greedy/positionals/entities/constraints/templates) に含まれない result builder の関心であり、co→checkout の結果寄せは実行時 result nesting の軸 (co --branch x → {checkout:{...}} は phase26 test 5 で実測、本 fixture の空 body では結果構造まで踏まない)。したがって command alias の断面は「構造の二重化 (checkout/co 両 CmdSat) と結果キー同一性 (export_key、断面外) の分離」を最初に明示する事例になる。断面表記は DR-063 §3 の面構造 (空面省略)、子 scope の attach 表記は greedy exact トリガに scope 面を持たせる形 (command/basic と同一、CmdSat 相当の JSON キーは DR-063 §3 未確定 — 要ratification)。空子 scope は {} (5 面全空=最小投影) と表記する (本 fixture で提案、代替案: 各空面を明示列挙する冗長形は §4 最小投影に反するため不採用)。比較は緩比較 (LOWERING §C.5 / DR-070 §2: 構造骨格 + matcher 種別/エントリ表)。installers は順序非規範 (DR-070 §1)、順列一致 (AliasInst-early/late で同一 canon_scope) は slice 第 16 弾 phase26 test 6 で実測。KNOWN GAP: なし (空 body の command alias は present-empty long ギャップ等に触れない — canon_scope 実測が golden とそのまま一致する構造。ただし CmdSat の JSON 直列キー (exact+scope) は DR-063 §3 で未確定のため command/basic と歩調を合わせ ratification 対象)。",
+  "query": "lower",
+  "definition": {
+    "commands": [
+      { "type": "command", "name": "checkout" },
+      { "alias": "checkout", "type": "command", "name": "co" }
+    ]
+  },
+  "installers": ["alias", "command"],
+  "expect": {
+    "greedy": [
+      {
+        "exact": "checkout",
+        "scope": {}
+      },
+      {
+        "exact": "co",
+        "scope": {}
+      }
+    ]
+  }
+}

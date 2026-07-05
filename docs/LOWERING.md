@@ -215,19 +215,21 @@ filter が variant にも効く)。variant 構造は AtomicAST に残らず exac
 ```
 所有語彙: short 属性
 入力:  {name: "port", short: "p"}, {name: "version", type: "flag", short: "v"}
-出力 (greedy 衛星 + 再解釈 matcher):
-  «greedy» {seq: [{exact: "-p"}, {ref: "port", link: "port"}]}
-  «greedy» {seq: [{exact: "-v"}, ...]}
-  {matcher: "short_combine", entries: {"p": port, "v": version}}
+出力 (再解釈 matcher 単独 — exact 衛星は積まない):
+  {matcher: "short_combine", entries: {"p": "port", "v": "version"}}
 ```
 
-**規則**: short installer は `short` を回収し、各文字を個別の greedy exact 衛星にする。加えて cluster 分解 (`-pv`)
-と値付着 (`-p80`) の全読みを枝として列挙する再解釈 matcher を足す (config `short_prefix` / `short_combine` が
-パラメータ)。回収したエントリ表 `{p: port, v: version}` が matcher の構成データである。分割単位は **canonical では
-ASCII 単一文字**とし、Unicode (grapheme) short は方言として扱う (DR-041)。曖昧になる定義 (`-cv` 問題) は DR-038 の
-完全経路一意性により正しく ambiguous になる。
+**規則**: short installer は `short` を回収し、greedy 面に short_combine 再解釈 matcher **1 個だけ**を足す。
+単文字 (`-v` / `-p 80`)・cluster 分解 (`-pv`)・値付着 (`-p80`) の全読みを matcher が列挙して被覆するため、
+単文字用の exact 衛星は**積まない** (積むと単文字読みが matcher と二重経路になり DR-038 の効果列 dedup に
+無駄な合流を強いる。垂直スライス第 1 弾で実測確定 — long の「exact 衛星 + eq_split の 2 本立て」と非対称なのは、
+eq_split が外側トークンを borrow しないため `--port 80` の空間形に衛星が必要なのに対し、short_combine は
+次トークン borrow (`-p 80` = 外向き 2 消費、§0 の消費モデル) も回収するから)。config `short_prefix` /
+`short_combine` がパラメータ。回収したエントリ表 `{"p": "port", "v": "version"}` が matcher の構成データ
+(キーは cluster 内の 1 文字、DR-063 §3)。分割単位は **canonical では ASCII 単一文字**とし、Unicode (grapheme)
+short は方言として扱う (DR-041)。曖昧になる定義 (`-cv` 問題) は DR-038 の完全経路一意性により正しく ambiguous になる。
 
-**由来**: DR-042, DR-041
+**由来**: DR-042, DR-041, DR-063 (matcher 単独被覆は fixtures/lowering/short が golden)
 
 ### B.3 env installer
 
