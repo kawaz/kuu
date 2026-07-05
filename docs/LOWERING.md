@@ -328,37 +328,42 @@ positionals / options の要素として command を直接置いてよい。
 ```
 所有語彙: repeat 属性
 入力:  {name: "file", type: "string", repeat: {min: 1}}
-出力 (ref 再帰の cons 構造 + 平坦化 accumulator):
-  {name: "file", seq: [{type: "string"}, {ref: "file", optional: true}]}
+出力 (背骨の参照 + templates 面の cons + 平坦化 accumulator — 断面表記は DR-063 §3):
+  背骨:      {ref: "file#cons"}
+  templates: file#cons = {seq: [{ref: "file", link: "file"},          // head: file 実体の構造継承 + 値同期
+                                {ref: "file#cons", optional: true}]}  // 尾部: template 自身への再帰
+  値セル:    file = {type: "string", accumulator: "flatten"}
 ```
 
-ref 要素にもそのまま付く:
+ref 要素にもそのまま付く (head の構造継承先が変わるだけ):
 
 ```
 入力:  {name: "hlcolors", ref: "color", repeat: {min: 1}}
-出力:  {name: "hlcolors", seq: [{ref: "color"}, {ref: "hlcolors", optional: true}]}
+出力:  背骨:      {ref: "hlcolors#cons"}
+       templates: hlcolors#cons = {seq: [{ref: "color", link: "hlcolors"}, {ref: "hlcolors#cons", optional: true}]}
 ```
 
 下限が 2 以上・上限が有限の repeat も unroll で書き下す:
 
 ```
 入力:  {name: "file", type: "string", repeat: {min: 2}}   (必須 2 段 + 0 個以上の尾部)
-出力:  {name: "file", seq: [
-         {type: "string"},                          // 必須 1 段目
-         {type: "string"},                          // 必須 2 段目
-         {ref: "file#geq1", optional: true}]}       // 尾部 (0 個以上)
-       file#geq1 = {seq: [{type: "string"}, {ref: "file#geq1", optional: true}]}   // 1 個以上の cons
+出力:  背骨:      [{ref: "file", link: "file"},              // 必須 1 段目
+                   {ref: "file", link: "file"},              // 必須 2 段目
+                   {ref: "file#geq1", optional: true}]       // 尾部 (0 個以上)
+       templates: file#geq1 = {seq: [{ref: "file", link: "file"}, {ref: "file#geq1", optional: true}]}
 
-入力:  {name: "file", type: "string", repeat: {min: 1, max: 3}}   (3 段で打ち止め、再帰尾部なし)
-出力:  {name: "file", seq: [
-         {type: "string"},                                  // 1 段目 (必須)
-         {seq: [{type: "string"},                           // 2 段目 (任意)
-                {seq: [{type: "string"}], optional: true}], // 3 段目 (任意)
+入力:  {name: "file", type: "string", repeat: {min: 1, max: 3}}   (3 段で打ち止め、再帰なし = templates 不要)
+出力:  背骨: {seq: [
+         {ref: "file", link: "file"},                                  // 1 段目 (必須)
+         {seq: [{ref: "file", link: "file"},                           // 2 段目 (任意)
+                {seq: [{ref: "file", link: "file"}], optional: true}], // 3 段目 (任意)
           optional: true}]}
 ```
 
-`file#geq1` は unfold が要求する再帰尾部の内部識別子 (実装が匿名ノードに振る内部 id、DR-046 §4)、直列形は DR-039
-で確定する。max 有限では再帰尾部を持たず、上限段数だけ optional をネストして打ち止める。
+`file#cons` / `file#geq1` は **`#` 予約名前空間の内部名** (lowering 産物の匿名構造、ユーザの name ではない — DR-046 §4)。
+綴りは非規範 (緩比較が吸収)、置き場は断面の templates 面 (DR-063 §3。プレーン名だと head の `{ref: "file"}` =
+実体参照と template 自己参照が曖昧になるため `#` 修飾が必須)。max 有限では再帰尾部を持たず、上限段数だけ optional を
+ネストして打ち止める (再帰がないため templates に載らず背骨に inline)。
 
 **規則**: repeat installer は `repeat` を回収し、**ref を使った再帰リスト構造 (cons)** へ lowering する。`[T, T[]]`
 の cons であり、3 引数なら `[T, [T, [T]]]` と unfold される。min は必須段の unroll、max は unroll 段数の上限、
@@ -373,7 +378,7 @@ unfold は現在の背骨に留まるため、反復間の greedy 割り込み (
 下流が失敗すれば次へ後退する (regex バックトラッキングと同型)。複数閉包が並ぶ場合は先 (左・外) の閉包の選好から
 試す。選好は取り分次元の中だけで働き、or 枝違い・読み違いなど構造の異なる完全経路との ambiguous 検出は保存される。
 
-**由来**: DR-043, DR-020, DR-038, DR-046
+**由来**: DR-043, DR-020, DR-038, DR-046, DR-063 (templates 面と # キーの断面表記)
 
 ### B.9 multiple installer
 
