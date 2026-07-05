@@ -444,10 +444,13 @@ wire form (実装間交換形) は**宣言層のみ** (A 群糖衣適用済み +
 
 lowered 断面の表記 (lowering 段階別 fixture の期待値として使う) は DR-063 §3 で確定した:
 
-- scope 断面は面構造 `{greedy: [...], positionals: [...], entities: {...}}` — 本書の `«greedy»` 注記は
-  「greedy 配列への所属」として正式化される (専用フィールドは持たない)
-- `{matcher: "<種別>", entries: {"<トリガ/文字>": "<実体 name/id>"}}` 表記は正式表記 (kind は open set、
-  entries の値は実体への name/id 参照)
+- scope 断面は **5 面構造** `{greedy: [...], positionals: [...], entities: {...}, constraints: [...], templates: {...}}`
+  (空の面は省略可 = 最小投影、入れ子 scope も再帰的に同構造) — 本書の `«greedy»` 注記は「greedy 配列への所属」
+  として正式化される (専用フィールドは持たない)。constraints は遅延述語のデータ形、templates は ref 再帰・共有
+  template の置き場 (キーは `#` 予約の内部名、§B.8)
+- `{matcher: "<種別>", entries: {...}}` 表記は正式表記 (kind は open set、entries のキー語義は kind が定義 —
+  eq_split = prefix 畳み込み済みトリガ綴り / short_combine = cluster 内の 1 文字。値は実体への name/id 参照)
+- golden fixture の消費点は ref + link の宣言形で統一する (inline 解決済み形の受理は実装出力の観測側で緩比較が担う)
 
 断面の比較は常に §C.5 の緩比較 (構造骨格 + matcher 種別/エントリ表)。「dd の継続を内部消費として引き継ぐ」の
 実装表現 (継続参照の構造 / 経路局所の sever フラグ + 純マーカー) は、観測挙動が同一であれば引き続き自由である。
