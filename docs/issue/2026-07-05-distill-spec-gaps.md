@@ -30,24 +30,30 @@ origin: フェーズ2-③ 蒸留 wave1/wave2 監査 (自リポ TODO)
 ## 論点
 
 1. **wire-form 表面の疑義 (要再検証)**: 共有 or-template / 可変アリティ option / 匿名副スコープが wire で宣言不能と蒸留 agent が報告したが、`definitions.types` テンプレ (DESIGN §3.1) + or キー形 (§1.2) + 可変アリティ `--color` 例 (§15.4) で表現できる可能性が高い。未蒸留 4 テスト: phase1:130/147, phase23:15/30。agent の転写都合 (見落とし) か仕様欠落かの切り分けが先決。
-2. **ambiguous interpretations の配列順序規範**: 集合として扱うか列として扱うか、CONFORMANCE §3 に未明示。
+2. **ambiguous interpretations の配列順序規範**: 集合として扱うか列として扱うか、CONFORMANCE §3 に未明示。 → **[pin 済み・第1バッチ]** 集合的比較・順序非規範 (CONFORMANCE §3 + DR-053 §3)。dedup 多重度軸は論点 7 (export-key 衝突の担体) に従属し本項では定めず #7 送り。
 3. **number value_parser の trailing-suffix 寛容度**: DR-041 §3 の "1.0f" 値付着例と DR-040 の 10 進最小構文の間にテンションがある。明文化が必要。
 4. **backtrack 枯渇時の held errors SET の多重度**: 全取り分の失敗を積むか最深のみ保持するか未 pin。`fixtures/repeat-parse/backtrack.json` が genuine-failure ケースを保留中。
 5. **value_parser 系 reason (not_a_number 等) の descriptor 実体化**: 既知の宿題 (Schema 実体化)。
-6. **inheritable write-target の result キー export**: Model X (子 default への導管のみ、root に出さない) vs Model Y (root にも出す)。slice 実測は Model Y、`fixtures/inheritable-parse` は Model Y 準拠で先行している。
+6. **inheritable write-target の result キー export**: Model X (子 default への導管のみ、root に出さない) vs Model Y (root にも出す)。slice 実測は Model Y、`fixtures/inheritable-parse` は Model Y 準拠で先行している。 → **[pin 済み・第1バッチ]** Model Y (祖先 write-target も自スコープの結果キーに露出) を pin。既存 3 規則の合成で新機構ゼロ (DESIGN §11.3 + DR-059 §5)。導管のみ (per-copy export_key opt-out) はフェーズ2 継続検討。
 7. **export-key の collision fixture での interpretations 表現**: 両解釈が `{x:true}` に退化し ambiguous 期待が弱い。露出キー衝突時の interpretations 表現の詰めが必要。
-8. **deprecated の warnings を期待値語彙 (`expect.warnings`) に足すか**: `fixtures/alias-parse/deprecated.json` が先行使用している。CONFORMANCE §2 の outcome union に warnings は未記載。
-9. **bare separator の accumulator 昇格**: multiple 宣言なしで separator があれば append する挙動。DESIGN §6.3 に未記載だが slice 実装は存在する。明文化が必要。
-10. **separator の standalone wire フィールド不在**: multiple パイプライン経由に一本化されているかの確認。
+8. **deprecated の warnings を期待値語彙 (`expect.warnings`) に足すか**: `fixtures/alias-parse/deprecated.json` が先行使用している。CONFORMANCE §2 の outcome union に warnings は未記載。 → **[pin 済み・第1バッチ]** warnings (optional) を CONFORMANCE §2 success + §3 比較規約に正式追加 (各要素 {element, kind}、sources 同型 projection、kind は optional 検証)。
+9. **bare separator の accumulator 昇格**: multiple 宣言なしで separator があれば append する挙動。DESIGN §6.3 に未記載だが slice 実装は存在する。明文化が必要。 → **[裁定済み・第1バッチ]** #10 の帰結で非-gap (bare separator は仕様概念として存在しない = wire で表現不能、昇格ルール自体が moot)。canonical form は `multiple:{accumulator:"append", separator:","}` (DESIGN §6.3)。残余 (repeat×separator の nested-piece accumulator が平坦か入れ子か) は該当型が現 corpus に無く検証 fixture を書けないため defer。
+10. **separator の standalone wire フィールド不在**: multiple パイプライン経由に一本化されているかの確認。 → **[pin 済み・第1バッチ]** separator は multiple パイプライン成分のみ、standalone wire フィールドは設けない (DESIGN §6.3、全一次資料一致)。reader 死票 whitelist 掃除は #9 決着後の follow-up (別 issue)。
 
 各項の詳細根拠は該当 fixture の why コメントと関連 DR を参照。
 
 ## 進捗
 
-- 10 論点の並列分析 (議論材料の準備) に着手。分析完了後 kawaz と議論し決着分を DR 化する。
+- 10 論点の並列分析 (議論材料の準備) を完了。kawaz が第1バッチ 5 論点 (#10/#9/#2/#8/#6) を推奨案どおり ink。
+- 第1バッチ 5 論点を spec 文書 + fixture ヘッジに反映済み:
+  - **#10+#9**: DESIGN §6.3 に「separator は multiple 内のみ / bare separator は仕様概念として存在しない / 分割の canonical form」を明文化。#9 残余 (repeat×separator の nested-piece accumulator) は該当型が corpus に無く検証 fixture を書けないため **defer**。fixtures/multiple-parse/{separator-split,separator-repeat}.json のヘッジ除去。
+  - **#2**: CONFORMANCE §3 + DR-053 §3 に interpretations の集合的比較・順序非規範を追記。dedup 多重度軸は論点 #7 (export-key 衝突の担体) に従属し本項では定めず **#7 送り**。fixtures/matcher-readings/cluster-split.json のヘッジ除去。
+  - **#8**: CONFORMANCE §2 success + §3 に warnings (optional、{element, kind}) を正式追加。fixtures/alias-parse/deprecated.json の SPEC GAP 注記解消。
+  - **#6**: DESIGN §11.3 + DR-059 §5 に Model Y を明文化。fixtures/inheritable-parse/basic.json のヘッジ除去。
+- 残 5 論点 (#1/#3/#4/#5/#7) は未決 (needs-discussion / 第2バッチ以降)。よって status は wip 継続。
 
 ## 受け入れ条件
 
-- [ ] 各論点について仕様側 (DESIGN.md / CONFORMANCE.md / DR) を pin するか、意図的に「フェーズ2 継続検討」として保留するかを決定
-- [ ] (1) の wire-form 表面疑義は再検証し、表現可能なら蒸留 agent 側の見落としとして是正、不可能なら仕様拡張の要否を判断
-- [ ] pin した内容を該当 DR または DESIGN.md に反映
+- [ ] 各論点について仕様側 (DESIGN.md / CONFORMANCE.md / DR) を pin するか、意図的に「フェーズ2 継続検討」として保留するかを決定 — **5/10 決定済み (#10/#9/#2/#8/#6)。残 #1/#3/#4/#5/#7**
+- [ ] (1) の wire-form 表面疑義は再検証し、表現可能なら蒸留 agent 側の見落としとして是正、不可能なら仕様拡張の要否を判断 — 未着手 (#1 は第1バッチ外)
+- [ ] pin した内容を該当 DR または DESIGN.md に反映 — **第1バッチ分は反映済み (上記 進捗)**
