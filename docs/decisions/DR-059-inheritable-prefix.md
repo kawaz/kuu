@@ -37,7 +37,7 @@ inheritable installer が、**祖先スコープの宣言層へ prefix 付き入
 
 - 祖先で `--<prefix>-<name>` が書いた値は祖先スコープの結果キー `<name>` に露出し、同時に子孫の inherit 席 (DR-031) 経由で子孫スコープのデフォルトへ流下する
 - 祖先キーと子孫キーは**別スコープ・別 provenance** — 由来は sources メタ (DR-031、祖先は `cli`、子孫は `inherit`) で判別でき、同名でも重複ではない (result は入れ子で自然に分離、sources は scope-path 修飾キーで一意化、CONFORMANCE §2)
-- global installer (親 → 子孫、親スコープに書けば親キーに出る) との**鏡像対称**: inheritable は子 → 祖先の逆方向コピーだが、write-target が name を共有する以上「書いた scope の結果キーに出る」挙動は同じ
+- global installer (親 → 子孫、親スコープに書けば親キーに出る) との**鏡像対称**: inheritable は子 → 祖先の逆方向コピーだが、write-target が name を共有する以上「結果キーは name セル (実体) の居場所スコープに出る」原理は同じ (global は子孫入口から書いても親のセルに合流して親キーに出る)
 
 Model Y は既存 3 規則 (§2.3 の name → 結果スコープ / DR-015 の値伝搬 / DR-031 の inherit 席) の合成で導かれ、新機構ゼロ。対する Model X (祖先 write-target は name を持つが結果キーを作らない「導管のみ」) は name = 結果スコープ規則への新特例を要するため採らない。祖先で書いた値を結果に出さず子孫へ流すだけの導管 (per-copy export_key opt-out) が要るユースケースはフェーズ2 継続検討。
 
