@@ -287,7 +287,7 @@
 - **何が未考慮か**: UsefulAST → AtomicAST 変換 (parse_definition) の展開規則が DESIGN.md 全体に散在し、網羅的かつ一意な定義がない。具体的に: (1) variant DSL (`"no:set:false"`) → 主名側入口の AtomicAST が示されない、(2) `type:"flag"` / `type:"count"` / `type:"command"` プリセットの展開後 AtomicAST 形が示されない、(3) `values` 入れ子の再帰展開ルール、(4) DR-011 の `{type:"exact"}` 記法と §1.2 の `{exact:"..."}` 記法の同一性が未定義。同じ UsefulAST から異なる AtomicAST を出す 2 実装が両方仕様準拠に見える状態。
 - **提案**: DR-046 で各糖衣について「入力 UsefulAST → 出力 AtomicAST」のペアを仕様の一部とする。F-023 (definitions.types enum)、F-042 (合法構造 invariant) と同時確定。
 
-#### F-042: AtomicAST の合法構造 (invariant) 定義
+#### F-042: AtomicAST の合法構造 (invariant) 定義 — **解消 (DR-067、2026-07-05)**
 - **何が未考慮か**: bounded path-search を property-based test で検証するには合法 AtomicAST 生成器が必要だが、(1) seq/or の children 最小数 (0個・1個は合法か)、(2) multiple を持つノードを or/seq children に入れる制約、(3) name の文字種・長さ制限、(4) 同一 seq 内の同名 long option 重複の合法性、が未定義。DR-039 が「JSON Schema は実装と同時」と意図的 defer しているが、property-based test の合法性判定根拠が不在。
 - **提案**: DR-046 で AtomicAST の well-formedness 規則を機械可読な invariant チェックリストとして定義。
 
@@ -314,7 +314,7 @@
 - **何が未考慮か**: cleanup runbook は既存 DR 整理 (active/partial/full 分類) のみ扱い、新規 DR 起票の閾値が射程外。垂直スライス実装フェーズで多数の判断発生が確定しているにもかかわらず、(1) 既存判断覆し → 新規 DR、(2) 補完・拡張 → 既存 DR 更新、(3) 完全新領域 → 新規 DR、の分岐が明文化されていない。
 - **提案**: dr-corpus-cleanup runbook に「新規 DR を立てる判断基準」節を追加。
 
-#### F-048: JSON Schema lifecycle と breaking change 手続き
+#### F-048: JSON Schema lifecycle と breaking change 手続き — **解消 (DR-068、2026-07-05)**
 - **何が未考慮か**: DR-039 と §15.7 は「JSON Schema は実装と同時に詰める」と defer するが、(1) いつ確定版として発行するか、(2) フィールド追加/削除/改名時の更新手続き、(3) $schema URI 埋め込み有無、(4) 複数言語バインディングのバージョン参照管理、(5) 「確定済み仕様」と「変更可能な仕様」の区別基準 (= フェーズゲート)、(6) breaking change の定義 (フィールド追加 = 後方互換? 削除 = 破壊的? 意味論変更の扱い)、が未定義。
 - **提案**: DR-060 で JSON Schema lifecycle を確定。実装着手直後に立てる (DR-039 の defer 条件「垂直スライス後」を満たすため)。「現在は共設計中 = 破壊的変更許容」というフェーズ宣言を DESIGN.md §0 に partial fix として先行追加。
 

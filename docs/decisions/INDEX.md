@@ -94,6 +94,8 @@
 - [DR-063](DR-063-atomicast-serialization.md): AtomicAST 直列形の確定 — wire form = 宣言層のみ (A 群適用済み + installer 語彙 inert、lowered は決定的再導出)、lowered 断面表記 (面構造 / matcher kind + name 参照 entries / 効果記述子 / `#` 予約内部 id) は段階別 fixture 用で緩比較、構造等価で byte 一致不要
 - [DR-065](DR-065-conformance-fixture-format.md): conformance fixture フォーマット — why 必須 / query タグ (parse 定義、lower・complete・definition_error 予約) / definition は wire form / expect は DR-053 union 転用 (effects = cli 効果のみが正本、result = ラダー込み最終値) / error kind 割当 (構造的不足・残余 = parse) / 機能領域別ディレクトリ。正本は docs/CONFORMANCE.md
 - [DR-066](DR-066-error-reason-codes.md): 実行時エラーの reason コード層 — errors に機械可読な reason 追加 (DR-053 拡張、組み込み発生源は必ず emit)、発生源は descriptor の reasons で宣言 (DR-061 拡張、完備チェック / typo 検出 / L10n の基盤)、組み込み最小語彙 (missing_operand / unexpected_token / constraint 4 種)、fixture は optional 検証
+- [DR-067](DR-067-wire-well-formedness.md): wire form の well-formedness — 合法性 3 層 (構文 / 語彙 / 参照)、空 or・空 seq・1 児・トリガ重複は合法 (warn は lint)、name は非空のみ制約 (`#` id はユーザ禁止の予約)、multiple の配置制約なし (F-042 解消)
+- [DR-068](DR-068-json-schema-lifecycle.md): JSON Schema と spec バージョンの lifecycle — 確定版 v1.0.0 = 参照実装 fixture green (フェーズ 3)、バージョン単位は spec バンドル一体、semver (語彙追加 = minor だが旧実装は unknown-vocab で正しく拒否、意味論変更 = major)、$schema は確定版から (F-048 解消)
 
 ## レジストリ / 実装連携
 

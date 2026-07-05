@@ -154,7 +154,9 @@ registry.types.number = {
 
 関連: DR-040 (方言 3 層 / 2 軸)、DR-010/035 (registry 解決順)、A-7 (descriptor の config 所有宣言)、B 群 (schema の再帰)。
 
-### B. JSON Schema 実体化
+### B. JSON Schema 実体化 — **決着済み (2026-07-05)**
+
+> B-1 は **DR-067** (well-formedness の 3 層 + 構文 invariant)、B-2 は **DR-068** (確定版 = フェーズ 3 の fixture green、spec バンドル一体バージョン、semver 規則) として ink。findings F-042 / F-048 に解消マーク済み = **台帳 40 件全消化**。Schema ファイル (schema/*.json) のドラフト書き出しは残作業 (機械的写像、DR-067 構文層が正本)。実行時エラーの reason コード層は派生論点として **DR-066** で ink (DR-053/061 拡張)。
 
 #### B-1. F-042: AtomicAST の合法構造 (invariant) 定義
 
@@ -281,6 +283,6 @@ DR-039 は「AtomicAST は単独で仕様確定せず、実装と同時に削り
 ## 受け入れ条件
 
 - [x] A群 (wire form 範囲 (A-0) / greedy マーク / matcher データ / 効果記述子 / repeat 匿名id / 一意性 / pending 状態 / installer descriptor (A-7) / configurable factory (A-8)) の各論点に決定が付き、新規 DR (DR-061 以降を想定) または既存 DR 拡張として記録される — **DR-061 / DR-062 / DR-063 で ink 済み (pending 状態はフェーズ 3 送りで決着)**
-- [ ] B群 (F-042 invariant、F-048 lifecycle) が解消され、findings 2026-06-29-ast-missing-pieces.md の該当2件がクローズ可能になる
+- [x] B群 (F-042 invariant、F-048 lifecycle) が解消され、findings 2026-06-29-ast-missing-pieces.md の該当2件がクローズ可能になる — **DR-067 / DR-068 で ink 済み、台帳 40 件全消化 (2026-07-05)**
 - [x] C群 (fixture フォーマット) が確定し、フェーズ2 (fixture 蒸留) に着手可能な仕様書 (DESIGN.md 追記 or 新規 docs/ ファイル) が揃う — **DR-065 + docs/CONFORMANCE.md + fixtures/dd/basic.json で ink 済み (2026-07-05)**
 - [x] メタ論点 (DR-039 defer 条件充足の確認) に決着が付く — **DR-063 の DR-039 注記で確定 (defer 条件は slice PoC で充足、框は「背骨 + 新規論点は通常議論」)**
