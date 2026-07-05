@@ -3,7 +3,7 @@ title: 蒸留 wave1/wave2 監査で出た仕様詰め所の集約 (フェーズ2
 status: open
 category: design
 created: 2026-07-05T22:04:45+09:00
-last_read:
+last_read: 2026-07-06T00:48:55+09:00
 open_entered: 2026-07-05T22:04:45+09:00
 wip_entered:
 blocked_entered:
