@@ -42,7 +42,7 @@
       "argv": ["-a", "-b"],
       "expect": {
         "outcome": "failure",
-        "errors": [{"element": "x", "argv_pos": 2, "kind": "parse"}]
+        "errors": [{"element": "x", "argv_pos": 2, "kind": "parse", "reason": "missing_operand"}]
       }
     },
     {
@@ -50,7 +50,7 @@
       "argv": ["--", "-a", "-b"],
       "expect": {
         "outcome": "failure",
-        "errors": [{"argv_pos": 2, "kind": "parse"}]
+        "errors": [{"argv_pos": 2, "kind": "parse", "reason": "unexpected_token"}]
       }
     },
     {
@@ -58,7 +58,7 @@
       "argv": ["-a", "-b", "--"],
       "expect": {
         "outcome": "failure",
-        "errors": [{"element": "x", "argv_pos": 3, "kind": "parse"}]
+        "errors": [{"element": "x", "argv_pos": 3, "kind": "parse", "reason": "missing_operand"}]
       }
     },
     {

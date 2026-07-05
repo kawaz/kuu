@@ -92,4 +92,5 @@ DR-056 の「参照」の直写しだが、ref / link / alias の参照ファミ
 - DR-045 (効果記述子 — データ化同族原理)
 - DR-034 (pieceProcessor 相構造 — §5 の線引きの境界)
 - DR-062 (filters の継承インターフェース — filter 側の表記)
+- DR-066 (reason コード層 — descriptor の 4 つ目の宣言軸 `reasons` を追加)
 - docs/issue/2026-07-04-phase1-serialization-design-agenda.md (A-7 / A-8 の議論経緯)
