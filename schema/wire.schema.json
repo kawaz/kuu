@@ -1,0 +1,205 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "kuu AtomicAST wire form (declaration layer)",
+  "description": "kuu の実装間交換形 (wire form = 宣言層のみ) の JSON Schema ドラフト。DR-063 (wire = 宣言層: A 群純構文正規化済み + installer 語彙 inert + type 参照はそのまま) / DR-067 (well-formedness 3 層のうち構文層のみ写像) / DR-068 (ドラフト期は $id を与えない) に基づく。写像するのは構文層のみ: 語彙層 (descriptor 所有集合による未知語彙検査、DR-054/061) と参照層 (ref/link/type の解決・循環検査、DR-054) は Schema の表現力の外であり、additionalProperties を閉じない (未知語彙は parse_definition の unknown-vocab が担う)。糖衣の surface 形 (裸文字列/裸配列/裸リテラル/values) は A 群 (LOWERING §A.1-A.4) として適用済みなので現れない — 正規形 {exact}/{seq}/{or} と type 参照のみ。表示メタ (help/display_name/value_name、DR-046 §3) と lowered 産物 (greedy 衛星/matcher/席宣言/# 内部 id テンプレ) は wire に載らないため properties に持たないが、additionalProperties が開いているため出現しても構文検査は通す (語彙層の関心)。",
+  "$ref": "#/$defs/node",
+
+  "$defs": {
+    "node": {
+      "type": "object",
+      "description": "全ノード共通形。root (= root command node) も or/seq の子も command 部分木も同型 (DR-017、DESIGN §4.3)。葉/枝の区別は or/seq の有無で決まり、専用マーカを持たない。type は葉・枝どちらとも同居できる (DR-067 §2)。ノードは or/seq/exact/type のいずれも持たなくてよい (ref のみ / name のみの透過ノードが正規)。",
+      "$comment": "構造排他 (DR-067 §2 の葉/枝排他): or と seq の同居 (choice か sequence のどちらか)、および exact (葉 = 照合消費プリミティブ) と or/seq (枝) の同一ノード同居は不正。or/seq の「子」に exact ノードが入るのは正常 (values → or 展開の枝等)。DR-067 が合法とする空 or/seq・1 児・トリガ重複・非 ASCII name は制約しない。",
+      "allOf": [
+        { "not": { "required": ["or", "seq"] } },
+        { "not": { "required": ["exact", "or"] } },
+        { "not": { "required": ["exact", "seq"] } }
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "description": "key/def name の各名前軸デフォルト供給源 (DR-046)。非空 string のみ制約 (DR-067)。文字種・長さ・非 ASCII は制約しない (i18n サブコマンド名は正規)。"
+        },
+        "id": {
+          "type": "string",
+          "pattern": "^[^#]+$",
+          "description": "参照識別子。非空 string、かつ '#' を含んではならない (# は unfold 内部 id の予約名前空間、DR-063 §3 / DR-046 §4)。wire (宣言層) には # 入り内部 id は現れない。"
+        },
+        "type": {
+          "type": "string",
+          "minLength": 1,
+          "description": "definitions/registry への型参照糖衣 (DR-028)。wire では展開せず参照文字列のまま残る (DR-063 §1、A.5 の flag/count/help 等プリセットも文字列参照のまま)。"
+        },
+
+        "or": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/node" },
+          "description": "子から 1 つ選ぶ枝 (排他)。空配列 (恒不成立)・1 児 (退化) とも合法 (DR-067 §2)。"
+        },
+        "seq": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/node" },
+          "description": "子を順に消費する枝。空配列 (unit = 0 消費成功)・1 児とも合法 (DR-067 §2)。"
+        },
+        "options": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/node" },
+          "description": "ハイフン起動・順不同の要素群 (配置で役割決定、DR-018)。"
+        },
+        "positionals": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/node" },
+          "description": "位置消費される要素群 (配置で役割決定、DR-018)。"
+        },
+        "commands": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/node" },
+          "description": "サブコマンド要素群 (command installer が展開する糖衣、DESIGN §4.2)。要素は再帰的に同じ node 形。"
+        },
+        "definitions": {
+          "type": "object",
+          "additionalProperties": { "$ref": "#/$defs/definitionsRegion" },
+          "description": "参照・テンプレの名前空間。区分 (types/accumulators/collectors/filters/multiple/completers 等) → 名前 → 定義。区分名は open (DR-035/061)。"
+        },
+
+        "exact": {
+          "type": ["string", "boolean", "number"],
+          "description": "トークン照合消費プリミティブ (DESIGN §5.1/5.2)。綴り照合は string。裸リテラル (bool/number) 由来の型照合ノードも exact 形で直列化されうる (A.3、直列形は DR-063 §3 に従うが具体形は非規範) ため boolean/number も許容。"
+        },
+        "value": {
+          "description": "非消費の literal 値 (消費 0 の実体だけノード、DESIGN §5.2)。任意 JSON。"
+        },
+        "default": {
+          "description": "値源ラダーの default (DESIGN §11.4)。任意 JSON。"
+        },
+        "export_key": {
+          "type": ["string", "null"],
+          "description": "結果キー名の明示上書き (DR-046/052)。null または \"\" で結果キー軸なし (透過)。"
+        },
+
+        "multiple": {
+          "description": "複数値経路のスイッチ (DR-034)。二形: プリセット名 (string) | {accumulator, collector?, separator?} の詳細形 (object)。",
+          "oneOf": [
+            { "type": "string" },
+            { "type": "object" }
+          ]
+        },
+        "filters": {
+          "$ref": "#/$defs/filterChain",
+          "description": "値の変換・検証チェイン (DESIGN §8)。二形: 差し替え配列 | {prepend?, append?} 継承合成形 (DR-062)。"
+        },
+        "pre_filters": {
+          "$ref": "#/$defs/filterChain",
+          "description": "parse 前段の String→String チェイン (DR-062 の二形)。"
+        },
+        "post_filters": {
+          "$ref": "#/$defs/filterChain",
+          "description": "parse 後段の T→T チェイン (DR-062 の二形)。"
+        },
+        "long": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/longItem" },
+          "description": "long 起動綴りと variant (DR-011)。要素は二形: 綴り/variant DSL 文字列 | {prefix, effect, args?} オブジェクト形。空配列は --<name> 生成 (DESIGN §7.1)。variant は installer 所有語彙として wire に inert 残存 (lowering 前)。"
+        },
+        "short": {
+          "type": "string",
+          "description": "各文字が個別 short オプション (DESIGN §7.1)。"
+        },
+
+        "ref": {
+          "type": "string",
+          "minLength": 1,
+          "description": "name 参照 (構造継承、DR-032)。解決可能性は参照層の検査 (Schema 対象外)。"
+        },
+        "link": {
+          "type": "string",
+          "minLength": 1,
+          "description": "値セル参照の固定パス DSL (.name / [int]、DR-029)。解決は参照層 (Schema 対象外)。"
+        },
+
+        "required": {
+          "type": "boolean",
+          "description": "値の存在強制 (DESIGN §9.1)。"
+        },
+        "optional": {
+          "type": "boolean",
+          "description": "repeat {min:0,max:1} 糖衣 (DR-044)。"
+        },
+        "global": {
+          "type": "boolean",
+          "description": "global installer 語彙 (DESIGN §1.4)。"
+        },
+        "inheritable": {
+          "type": "boolean",
+          "description": "祖先スコープからの書き込み許可 (DESIGN §11.3)。"
+        },
+        "exclusive_group": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "排他グループ名 (constraint installer 所有、DESIGN §9.2)。"
+        },
+        "conflicts_with": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "名指しペア排他 (対称、DR-055)。"
+        },
+        "requires": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "正の依存 (DESIGN §9.3)。"
+        },
+        "config": {
+          "type": "object",
+          "description": "installer/factory の config パラメータ (DR-061 §4)。キーは installer 所有 (long_prefix/short_combine 等)、値は任意 JSON。additionalProperties は開いたまま。"
+        }
+      },
+      "additionalProperties": true
+    },
+
+    "definitionsRegion": {
+      "type": "object",
+      "additionalProperties": { "$ref": "#/$defs/node" },
+      "description": "1 区分の名前→定義マップ。定義はテンプレ node、または configurable factory 参照 {name, config} (DR-061 §3) — 後者も name(string)/config(object) を持つ object であり node 形に適合するため同一 $ref で受ける。"
+    },
+
+    "filterChain": {
+      "description": "filter chain の二形表記 (DR-062)。配列 = 継承なしの差し替え、object = 継承 chain への prepend/append 合成。",
+      "oneOf": [
+        {
+          "type": "array",
+          "items": { "$ref": "#/$defs/filterItem" }
+        },
+        {
+          "type": "object",
+          "properties": {
+            "prepend": {
+              "type": "array",
+              "items": { "$ref": "#/$defs/filterItem" }
+            },
+            "append": {
+              "type": "array",
+              "items": { "$ref": "#/$defs/filterItem" }
+            }
+          },
+          "additionalProperties": true
+        }
+      ]
+    },
+
+    "filterItem": {
+      "description": "個々の filter。DSL 短縮形 (string) | 詳細形 (object) の二形 (DESIGN §8.4)。",
+      "oneOf": [
+        { "type": "string" },
+        { "type": "object" }
+      ]
+    },
+
+    "longItem": {
+      "description": "long 配列要素。綴り/variant DSL 文字列 | {prefix, effect, args?} オブジェクト形 (DR-011)。",
+      "oneOf": [
+        { "type": "string" },
+        { "type": "object" }
+      ]
+    }
+  }
+}
