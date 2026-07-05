@@ -9,7 +9,7 @@
   },
   "cases": [
     {
-      "why": "多重 Accept の ambiguous 表出 (DR-041 §3 / DR-038 / DR-053 §3): `-n1.0f` は値付着読み {n:1} と分割読み {n:1,f:true} の 2 経路が両方全消費で完成 → ambiguous。interpretations は各読みを結果オブジェクト形ビューで全列挙する (DR-053 §3)。2 読みは entity n では同値 (共に 1) だが f で分岐 (true vs false) — 値が効果同一性の成分だから同 entity・同 source でも別解釈として残り merge しない (DR-038 の効果列判定、slice phase9:32 の趣旨)。第 2 解釈の f 省略 = default false と構造等価 (CONFORMANCE §3)、これが f:true との差を作る。列挙順は非規範想定 (§3 は interpretations を構造等価と規定、effects と違い順序は同一性成分でない) だが slice golden の並び (分割先・全体後) を保持。",
+      "why": "多重 Accept の ambiguous 表出 (DR-041 §3 / DR-038 / DR-053 §3): `-n1.0f` は値付着読み {n:1} と分割読み {n:1,f:true} の 2 経路が両方全消費で完成 → ambiguous。interpretations は各読みを結果オブジェクト形ビューで全列挙する (DR-053 §3)。2 読みは entity n では同値 (共に 1) だが f で分岐 (true vs false) — 値が効果同一性の成分だから同 entity・同 source でも別解釈として残り merge しない (DR-038 の効果列判定、slice phase9:32 の趣旨)。第 2 解釈の f 省略 = default false と構造等価 (CONFORMANCE §3)、これが f:true との差を作る。列挙順は非規範 (CONFORMANCE §3: interpretations は集合比較、完全経路間に優先がない DR-038 ため順序は同一性成分でない、DR-053 §3) — runner は集合として突き合わせる。ここでの並び (分割先・全体後) は蒸留元 slice golden の順の保持であって規範ではない。",
       "argv": ["-n1.0f"],
       "expect": {
         "outcome": "ambiguous",

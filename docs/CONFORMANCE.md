@@ -77,7 +77,8 @@
 
 - **構造等価** (DR-063 §4): key 順序非規範、フィールド省略 = default 値と等価。byte 一致は要求しない
 - effects は配列順込みの完全一致 (順序が同一性成分)
-- result / interpretations は構造等価
+- result は構造等価
+- interpretations は集合比較 (各解釈は構造等価、**列挙順は非規範**) — 完全経路間に優先がない (DR-038) ため順序は同一性成分でない (effects の順序規範性と対照的、errors と同じ集合扱い)。重複解釈の dedup 可否は「解釈の同一性」定義に従属し本書では定めない (DR-053 §3)
 - errors は集合比較 (element, argv_pos, kind, reason の組。**reason は fixture 側に書かれている要素でのみ比較対象** (§2 の optional 検証)、message は常に無視)
 
 ## 4. ディレクトリ構成
