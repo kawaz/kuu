@@ -1,0 +1,40 @@
+{
+  "why": "同一 argv 位置で複数の候補経路が dead-end になる同深タイでは、全ての躓きが等しく primary になる (DR-053 §2)。定義は or の 2 枝で両枝とも number 1 個 (a, b) の対称形。非数値 1 トークンを与えると両枝が同じ位置 0 で弾かれ、深さが同じなので primary の絞り込みが起きず両 Error が primary。これは held-errors-distinct-depth.json の「最深 1 つが primary」の対極 (同深なら全て primary) を、同じ DR-053 §2 の下で固定する。加えて同じ対称 or 定義は、数値 1 トークンを与えると両枝が同位置で成立して完全経路 2 本 → ambiguous になり、DR-038 の 0/2 双対 (0 本 → failure 全保持 / 2 本 → ambiguous 全列挙) を単一定義で対照できる。errors は集合比較・reason は optional 検証、interpretations は集合比較・順序非規範 (CONFORMANCE §3)。",
+  "query": "parse",
+  "definition": {
+    "positionals": [
+      {
+        "or": [
+          {"type": "number", "name": "a"},
+          {"type": "number", "name": "b"}
+        ]
+      }
+    ]
+  },
+  "cases": [
+    {
+      "id": "both-paths-fail-same-depth-tie",
+      "why": "argv `x` の 2 解釈がどちらも位置 0 で dead-end → 完全経路 0 本 → failure で両躓きを全保持、同深タイなので両方 primary (DR-053 §2)。解釈 A: number a が 'x'@0 を弾く、解釈 B: number b が 'x'@0 を弾く。argv_pos が両者 0 で等しく、最深の絞り込みが起きないため両 Error が等しく primary — 構造としては errors 集合が両方を保持し、primary 抽出 (最大 argv_pos = 0 が複数) はレンダラの関心 (CONFORMANCE §2)。kind:parse / reason:not_a_number (DR-066 §3)。",
+      "argv": ["x"],
+      "expect": {
+        "outcome": "failure",
+        "errors": [
+          {"element": "a", "argv_pos": 0, "kind": "parse", "reason": "not_a_number"},
+          {"element": "b", "argv_pos": 0, "kind": "parse", "reason": "not_a_number"}
+        ]
+      }
+    },
+    {
+      "id": "both-paths-succeed-ambiguous",
+      "why": "対照 (DR-038 の 0/2 双対): 同じ対称 or 定義に数値 1 トークン `5` を与えると、枝 A (a=5) と枝 B (b=5) が両方 1 トークンを全消費して完全経路 2 本 → ambiguous。2 枝は構造の異なる別解釈 (別 entity a/b への束縛) なので取り分選好 (DR-043) では畳めず両解釈を保存する。interpretations は各経路の結果オブジェクト形ビュー (DR-053 §3、数値 canonical 最短形 5、DR-050 §4)、集合比較で順序非規範。case 1 (0 本 → 両 Error 保持) と本ケース (2 本 → 両解釈列挙) が同一定義で 0/2 双対を成す。",
+      "argv": ["5"],
+      "expect": {
+        "outcome": "ambiguous",
+        "interpretations": [
+          {"a": 5},
+          {"b": 5}
+        ]
+      }
+    }
+  ]
+}
