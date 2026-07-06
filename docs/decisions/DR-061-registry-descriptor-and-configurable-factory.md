@@ -47,13 +47,15 @@ descriptor の config 宣言は:
 - **値は任意 JSON** (スカラ / 配列 / map、ネスト自由)
 - **型注釈は任意** (書けば lint が読む。強制検証はしない)
 
+平坦キーの例: `kuu_number_parser` の `number_thousand_sep` / `number_allow_base_prefix` (DR-074 §4)、`kuu_int_parser` の `int_round` (非整数値の丸めモード、値は列挙文字列 `"error"`/`"floor"`/… の 10 種、DR-075)。いずれも parse 相内部の調整 (§5) を 1 平坦キーで表す。
+
 config 値の検証は descriptor でなく **factory 自身の責務**: 不正 config は parse_definition 時に「次の手」hint 付き Error (DESIGN §13.5 の流儀)。descriptor は validator ではなく、typo 検出 + lint/diagnose 素材 + ドキュメントである。
 
 ### 5. factory config と filter の線引きは「相」で切る
 
 pieceProcessor の相構造 (DR-034) を境界にする:
 
-- **factory config = parse 相 (String → T) の内部調整**。「parse が何を T に読めるか」— number_thousand_sep / number_allow_base_prefix はこちら
+- **factory config = parse 相 (String → T) の内部調整**。「parse が何を T に読めるか」— number_thousand_sep / number_allow_base_prefix、`int_round` (int が fractional 値をどう int に読むか、DR-075) はこちら
 - **filter = 相の間の変換・検証** (pre_filters = String → String、post_filters = T → T)。全角→半角 normalize はこちら
 
 「受理域 vs 変換」のような意味論的な切り方は全角 normalize 等で両義的になるため採らない。相で切れば機械的に振り分けられ、同じ結果を 2 経路で書ける redundancy が最小化される。
@@ -96,4 +98,5 @@ DR-056 の「参照」の直写しだが、ref / link / alias の参照ファミ
 - DR-034 (pieceProcessor 相構造 — §5 の線引きの境界)
 - DR-062 (filters の継承インターフェース — filter 側の表記)
 - DR-066 (reason コード層 — descriptor の 4 つ目の宣言軸 `reasons` を追加)
+- DR-075 (int の値空間判定 + int_round — `kuu_int_parser` factory の `int_round` 平坦 config キー、parse 相内部調整の一例)
 - docs/issue/2026-07-04-phase1-serialization-design-agenda.md (A-7 / A-8 の議論経緯)

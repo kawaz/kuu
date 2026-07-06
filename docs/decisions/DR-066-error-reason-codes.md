@@ -31,7 +31,7 @@ descriptor (DR-061) に **`reasons`** (emit しうる reason 識別子の列挙)
 | parse | `missing_operand` | トークンが尽きて要素の消費要求が満たせない (構造的必須の不成立を含む) |
 | parse | `unexpected_token` | 消費者の居ないトークンが残る (残余トークン) |
 | parse | `not_a_number` | number / float の value_parser が構文不一致 (int の数字列でない失敗も含む) |
-| parse | `not_an_integer` | int の value_parser が「number としては読めるが整数でない」入力 (例 "1.5") を弾く精密 reason。float は number と受理域同一 (DESIGN §3.3) のため専用 reason なし |
+| parse | `not_an_integer` | int の value_parser が「number としては読めるが整数でない」入力 (例 "2.5") を弾く精密 reason。**`int_round=error` のときのみ emit** (DR-075) — 丸めモード (`floor` 等) では非整数値も丸めて成功するので emit しない。int は値空間判定なので `"3.0"`/`"1e3"` 等の整数値は全モードで受理 (本 reason に落ちない)。float は number と受理域同一 (DESIGN §3.3) のため専用 reason なし |
 | constraint | `required_violated` | required の値充足 (DR-047) 失敗 |
 | constraint | `requires_violated` | requires の目的語不足 |
 | constraint | `exclusive_group_violated` | exclusive_group 内の committed 衝突 |
@@ -68,6 +68,7 @@ filter / 拡張型由来の reason は open set。組み込み最小語彙 + des
 ## 関連
 
 - DR-053 (errors 構造 — 本 DR が reason を追加)
+- DR-075 (int の値空間判定 + int_round — `not_an_integer` は int_round=error のときのみ emit、新 reason 不要)
 - DR-054 (definition-error の細分 kind — 対称性の先行例)
 - DR-061 (descriptor — reasons は 4 つ目の宣言軸)
 - DR-065 / docs/CONFORMANCE.md (fixture の optional 検証)
