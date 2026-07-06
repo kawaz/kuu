@@ -20,7 +20,7 @@
 | フィールド | 必須 | 内容 |
 |---|---|---|
 | `why` | ✓ | file / case の両レベルで必須。仕様意図と DR 根拠。lint は why 欠落を検出する |
-| `cases[].id` | ✓ | case の安定 slug (DR-072)。kebab-case (`[a-z0-9]` と `-`)、**fixture 内 unique**、意図を表す 2〜4 語 (通し番号禁止)。case オブジェクトの先頭キーに置く。参照表記は `rel::slug` (例 `dd/basic::empty-argv`)。lint は id 欠落・重複を fixture 不備として検出する。parse 入力ではない (メタ) ため §2/§3 の比較には影響しない |
+| `cases[].id` | ✓ | case の安定 slug (DR-072)。kebab-case (`[a-z0-9]` と `-`)、**fixture 内 unique**、意図を表す 2〜4 語 (通し番号禁止)。case オブジェクトの先頭キーに置く。参照表記は `rel::slug` (例 `dd/basic::empty-argv`)。lint は id 欠落・重複を fixture 不備として検出する。parse 入力ではない (メタ) ため §2/§3 の比較には影響しない。**`cases[]` を持つ fixture 固有** — lower fixture (`query: "lower"`, DR-070) は単一トップレベル expect 形式で `cases[]` を持たず、参照は `rel`(`::lower`) で位置非依存のため id 対象外 |
 | `query` | ✓ | `"parse"` (本書 §2) / `"lower"` (lowering 断面、DR-070 — `installers` 列挙 (省略 = 全登録、順序非規範)、expect は DR-063 §3 の面構造を緩比較、順列検査は runner 組み込みで fixture に順列を列挙しない)。`"complete"` / `"definition_error"` は予約 |
 | `definition` | ✓ | **wire form** (DR-063: 純構文正規化 (LOWERING §C.4) 適用済み + installer 語彙 inert + type 参照はそのまま) |
 | `cases[].argv` | ✓ | 前処理済みトークン列 (`Array[String]`、DESIGN §0.1) |

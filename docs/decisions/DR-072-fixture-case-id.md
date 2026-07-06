@@ -4,13 +4,15 @@
 
 ## 決定
 
-### 1. 各 case は required の "id" フィールドを持つ
+### 1. `cases[]` を持つ fixture の各 case は required の "id" フィールドを持つ
 
-fixture (`query: "parse"` / `"lower"` 等いずれも) の `cases[]` の各要素は、安定 slug となる `"id"` を必須で持つ。可読性のため **case オブジェクトの先頭キー**として書く。
+`cases[]` 配列に複数 case を束ねる fixture (現状 `query: "parse"`) の各要素は、安定 slug となる `"id"` を必須で持つ。可読性のため **case オブジェクトの先頭キー**として書く。
 
 ```json
 {"id": "empty-argv", "why": "...", "argv": [], "expect": { ... }}
 ```
+
+DR-070 の lower fixture (`query: "lower"`) は `cases[]` を持たない**単一トップレベル `expect` 形式**であり、参照は `rel`(`::lower`) = ファイル名で**元々位置非依存**なので id の対象外。case-id が解く「配列位置での参照が挿入・削除で壊れる」問題は `cases[]` を束ねる fixture 固有であり、1 fixture = 1 断面の lower fixture には発生しない。今後 `cases[]` を持つ query タグ (`query: "complete"` 等) が確定したら本規約が及ぶ。
 
 ### 2. slug 規約
 
@@ -50,4 +52,4 @@ DR-067 の well-formedness 3 層 (構文 / 語彙 / 参照) は **`definition` (
 
 - DR-065 (conformance fixture フォーマット — `cases[]` 構造と `why` 必須 lint。本 DR は id 必須を追加) / docs/CONFORMANCE.md (現役仕様の正本)
 - DR-067 (wire well-formedness 3 層 — id 一意性が「どの層でもない」= fixture メタ層である根拠)
-- DR-070 (lower fixture フォーマット — `query: "lower"` も cases を持つため id 対象)
+- DR-070 (lower fixture フォーマット — `cases[]` を持たない単一 expect 形式。参照は `rel`(`::lower`) で位置非依存のため id 対象外、§1 の除外根拠)
