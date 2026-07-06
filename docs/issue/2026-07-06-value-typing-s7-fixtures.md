@@ -67,3 +67,15 @@ divergence が出た場合は凍結台帳 (phase23-distill-ledger 系) に記録
 - [ ] `_` 配置文法の negative 系 (`1__000` / `_1` / `1_` / `1_e3` / `1_.5`) と `12_34_5` success、`0x_ff` Error の case を追加
 - [ ] 符号付きゼロ (`-0` / `+0`, int 型含む) の case を追加
 - [ ] slice runner で実食、divergence があれば凍結台帳へ記録
+- [ ] int-round-modes.json に残 6 モード (ceil / away / half_floor / half_ceil / half_trunc / error) の fixture を named type shadow 方式で追加 (DR-075 期待値表準拠)
+
+## 追記: DR-075 (int_round) 派生の残タスク
+
+DR-075 (int_round) 派生の残タスク: int_round の残 6 モード (ceil / away / half_floor /
+half_ceil / half_trunc / error) の fixture 化。fixtures/value-typing/int-round-modes.json
+は判別力の高い代表 4 モード (floor / trunc / half_even / half_away) で輪郭を固定し、
+int-value-space.json が error モードの受理輪郭を被覆済み。残 6 モードの期待値正本は
+DR-075 の期待値表 (負数判別ベクタ -3.7/-2.5/2.5/3.5 の全 10 モード表)。全 10 モード
+fixture 化を本 issue の追加 TODO とする。int-round-modes.json と同じ named type shadow
+方式 (definitions.types で kuu_int_parser を各 int_round config で shadow) で横並び
+検証できる。
