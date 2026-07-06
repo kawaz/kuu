@@ -54,6 +54,8 @@ DR-038/041 のパース意味論コア (完全経路の数 → success/ambiguous
 | phase23:15 | 異位置で失敗する複数経路の Error 全保持、primary=最深 → **蒸留済み**: `path-search/held-errors-distinct-depth.json::both-paths-fail-deepest-primary` (+ 深い枝が全消費して commit する対照 `::deeper-path-commits`) |
 | phase23:30 | 同位置失敗は同深タイで両方 primary → **蒸留済み**: `path-search/held-errors-same-depth.json::both-paths-fail-same-depth-tie` (+ 同一定義で 2 本成立 → ambiguous になる DR-038 0/2 双対の対照 `::both-paths-succeed-ambiguous`) |
 
+> 注: 上記 3 fixture (6 case) は蒸留済みだが、slice runner では structural-or builder 不在により skip 凍結中 (slice リポ docs/issue/2026-07-06-structural-or-builder-missing.md で追跡)。蒸留の完了と slice 実行可能性は別軸 — builder land 時に VANISHED SKIP で loud に検知される。
+
 > 注: phase1:113/120 (prefix ガードなし素通し) は DR-041 §5 の系譜により D2 matcher-readings へ移管 (fixtures/matcher-readings/prefix-guard-{string,number}.json)。
 
 ### D2. matcher-readings — `fixtures/matcher-readings/`
