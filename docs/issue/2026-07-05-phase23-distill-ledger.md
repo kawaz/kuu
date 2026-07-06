@@ -49,10 +49,10 @@ DR-038/041 のパース意味論コア (完全経路の数 → success/ambiguous
 | phase1:78 | greedy が 2 positional の間に割り込む (porous 面) |
 | phase1:88 | greedy が repeat 反復の間に割り込む |
 | phase1:101 | 発火した value greedy は次トークンを無条件 raw 消費 (getopt 同型) |
-| phase1:130 | 親 greedy が子スコープの positional 消費を妨げない |
-| phase1:147 | 可変アリティ option (3数値/1文字列) + 末尾受け皿 → ambiguous(2) |
-| phase23:15 | 異位置で失敗する複数経路の Error 全保持、primary=最深 |
-| phase23:30 | 同位置失敗は同深タイで両方 primary |
+| phase1:130 | 親 greedy が子スコープの positional 消費を妨げない → **消し込み (案 a、DR-042 ⑤ 維持)**: 背骨を作れるのは command 部分木のみ (匿名副スコープは wire で背骨化しない) ため wire fixture 化せず。engine 内部不変則で、背骨境界の greedy 面遮断の意味論は `command-scope/early-close.json` / `command-scope/shadowing*` 群が parse 観測で被覆済み |
+| phase1:147 | 可変アリティ option (3数値/1文字列) + 末尾受け皿 → ambiguous(2) → **蒸留済み**: `path-search/variable-arity-ambiguous.json::color-arity-vs-name-receptacle` (+ 値依存で解消する対照 `::non-number-collapses-to-name`) |
+| phase23:15 | 異位置で失敗する複数経路の Error 全保持、primary=最深 → **蒸留済み**: `path-search/held-errors-distinct-depth.json::both-paths-fail-deepest-primary` (+ 深い枝が全消費して commit する対照 `::deeper-path-commits`) |
+| phase23:30 | 同位置失敗は同深タイで両方 primary → **蒸留済み**: `path-search/held-errors-same-depth.json::both-paths-fail-same-depth-tie` (+ 同一定義で 2 本成立 → ambiguous になる DR-038 0/2 双対の対照 `::both-paths-succeed-ambiguous`) |
 
 > 注: phase1:113/120 (prefix ガードなし素通し) は DR-041 §5 の系譜により D2 matcher-readings へ移管 (fixtures/matcher-readings/prefix-guard-{string,number}.json)。
 

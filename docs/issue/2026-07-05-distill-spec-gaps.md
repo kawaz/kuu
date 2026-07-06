@@ -21,7 +21,7 @@ origin: フェーズ2-③ 蒸留 wave1/wave2 監査 (自リポ TODO)
 
 ## 概要
 
-フェーズ2-③ の parse fixture 蒸留 (wave1/wave2、`docs/issue/2026-07-05-phase23-distill-ledger.md` 台帳ベース) を実施した監査過程で、仕様側の詰め所・要確認事項が複数出た。個別 fixture の実装判断に埋もれさせず、ここに集約して次の議論球とする。未蒸留のまま残っている slice テストは phase1:130/147、phase23:15/30 の 4 件 (下記 (1) に関連)。
+フェーズ2-③ の parse fixture 蒸留 (wave1/wave2、`docs/issue/2026-07-05-phase23-distill-ledger.md` 台帳ベース) を実施した監査過程で、仕様側の詰め所・要確認事項が複数出た。個別 fixture の実装判断に埋もれさせず、ここに集約して次の議論球とする。かつて未蒸留だった slice テスト phase1:130/147、phase23:15/30 の 4 件 (下記 (1)) は決着済み — 3 件を蒸留し phase1:130 は消し込んだ。
 
 ## 背景
 
@@ -29,7 +29,7 @@ origin: フェーズ2-③ 蒸留 wave1/wave2 監査 (自リポ TODO)
 
 ## 論点
 
-1. **wire-form 表面の疑義 (要再検証)**: 共有 or-template / 可変アリティ option / 匿名副スコープが wire で宣言不能と蒸留 agent が報告したが、`definitions.types` テンプレ (DESIGN §3.1) + or キー形 (§1.2) + 可変アリティ `--color` 例 (§15.4) で表現できる可能性が高い。未蒸留 4 テスト: phase1:130/147, phase23:15/30。agent の転写都合 (見落とし) か仕様欠落かの切り分けが先決。
+1. **wire-form 表面の疑義 (要再検証)**: 共有 or-template / 可変アリティ option / 匿名副スコープが wire で宣言不能と蒸留 agent が報告したが、`definitions.types` テンプレ (DESIGN §3.1) + or キー形 (§1.2) + 可変アリティ `--color` 例 (§15.4) で表現できる可能性が高い。未蒸留 4 テスト: phase1:130/147, phase23:15/30。agent の転写都合 (見落とし) か仕様欠落かの切り分けが先決。 → **[pin 済み・第3バッチ (kawaz 裁定 2026-07-06)]** 案 a: 4 件中 3 件 (phase1:147 可変アリティ / phase23:15 異位置失敗 / phase23:30 同深タイ) は蒸留 agent の転写ミス (slice の lowered 形をそのまま literal 転写していた) で wire form で表現可能と確定 → 蒸留した (共有トリガを long/short に factor out し or はアリティ/構造差分のみを担う。or キー形 §1.2 + 可変アリティ --color §15.4 + DR-053 §2/§3、wire schema 検証済み)。残る phase1:130 (匿名副スコープ) は『背骨を作れるのは command 部分木のみ』(DR-042 ⑤) を維持して wire fixture 化せず消し込み — engine 内部不変則で、背骨境界の greedy 面遮断の意味論は fixtures/command-scope/ 群 (early-close / shadowing 系) が parse 観測で被覆済み。DR-042 は無変更。蒸留先・消し込み根拠は台帳 (phase23-distill-ledger.md) D1 に記録。
 2. **ambiguous interpretations の配列順序規範**: 集合として扱うか列として扱うか、CONFORMANCE §3 に未明示。 → **[pin 済み・第1バッチ]** 集合的比較・順序非規範 (CONFORMANCE §3 + DR-053 §3)。dedup 多重度軸は論点 7 (export-key 衝突の担体) に従属し本項では定めず #7 送り。
 3. **number value_parser の trailing-suffix 寛容度**: DR-041 §3 の "1.0f" 値付着例と DR-040 の 10 進最小構文の間にテンションがある。明文化が必要。
 4. **backtrack 枯渇時の held errors SET の多重度**: 全取り分の失敗を積むか最深のみ保持するか未 pin。`fixtures/repeat-parse/backtrack.json` が genuine-failure ケースを保留中。 → **[pin 済み・第2バッチ]** 案 a (全取り分累積) で pin。全取り分が dead-end なら各取り分の躓きを errors に全保持 (最深のみ保持ではない、slice 現行挙動が仕様)。成功側の取り分選好 (DR-043) との層区別: 成功側の畳み = 解釈の同一性、失敗側の全保持 = 診断材料 (層が違うので矛盾しない)。DR-053 §2 に注記、CONFORMANCE §2 に補足、`fixtures/repeat-parse/backtrack.json` に no-number-genuine-failure case 追加 (期待値は DR-053 §2 から導出)。
@@ -53,10 +53,12 @@ origin: フェーズ2-③ 蒸留 wave1/wave2 監査 (自リポ TODO)
 - kawaz が第2バッチ 2 論点 (#4/#7) を裁定 (2026-07-06)。spec 文書 + fixture に反映済み:
   - **#4**: 案 a (全取り分累積) で pin。DESIGN/DR-053 §2 に「取り分次元の dead-end も全保持」を注記 (成功側の取り分選好 DR-043 との層区別 = 解釈の同一性 vs 診断材料)。CONFORMANCE §2 failure に補足。fixtures/repeat-parse/backtrack.json に no-number-genuine-failure case 追加 (全取り分の躓きを errors に列挙、期待値は DR-053 §2 から導出)。
   - **#7**: ambiguous 維持 + 解釈ごとの optional claimants 面で pin。DR-073 新設 (INDEX 追記)。CONFORMANCE §2 ambiguous + §3 に claimants ({result, claimants} の組・集合比較で順序非依存) を定義。DESIGN §15.5 に claimants 言及を追加。fixtures/export-key/collision.json の co-exposure-collision に claimants 追加 (退化ビューを provenance で区別)、要確認注記を DR-073 参照の確定文言へ。single-exposure-ok の preset default 論点は別論点として残置。
-- 残 3 論点 (#1/#3/#5) は未決 (needs-discussion / 第3バッチ以降)。よって status は wip 継続。
+- kawaz が第3バッチ 1 論点 (#1) を裁定 (2026-07-06、案 a)。fixture + 台帳に反映済み:
+  - **#1**: wire-form 表面疑義 4 件は「3 件は蒸留 agent の転写ミス (lowered 形の literal 転写) → wire で表現可能、蒸留する」「phase1:130 (匿名副スコープ) は DR-042 ⑤『背骨は command 部分木のみ』維持で消し込み」で決着。蒸留 3 fixture (path-search/{variable-arity-ambiguous, held-errors-distinct-depth, held-errors-same-depth}.json、共有トリガ factor out + or アリティ差分、wire schema 検証済み) を新設。phase1:130 は engine 内部不変則で背骨境界の意味論は fixtures/command-scope/ 群が被覆。DR-042 は無変更。台帳 (phase23-distill-ledger.md) D1 の 4 行を消し込み。
+- 決着 8/10 (#10/#9/#2/#8/#6/#4/#7/#1)。残 2 論点 (#3 number value_parser の trailing-suffix 寛容度 / #5 value_parser reason の descriptor 実体化) は未決 (needs-discussion)。**#3 の軸裁定が調査中のため status は wip 継続**。
 
 ## 受け入れ条件
 
-- [ ] 各論点について仕様側 (DESIGN.md / CONFORMANCE.md / DR) を pin するか、意図的に「フェーズ2 継続検討」として保留するかを決定 — **7/10 決定済み (#10/#9/#2/#8/#6/#4/#7)。残 #1/#3/#5**
-- [ ] (1) の wire-form 表面疑義は再検証し、表現可能なら蒸留 agent 側の見落としとして是正、不可能なら仕様拡張の要否を判断 — 未着手 (#1 は第1・第2バッチ外)
-- [x] pin した内容を該当 DR または DESIGN.md に反映 — **第1・第2バッチ分は反映済み (上記 進捗)。残 3 論点の反映は決定後**
+- [ ] 各論点について仕様側 (DESIGN.md / CONFORMANCE.md / DR) を pin するか、意図的に「フェーズ2 継続検討」として保留するかを決定 — **8/10 決定済み (#10/#9/#2/#8/#6/#4/#7/#1)。残 #3/#5**
+- [x] (1) の wire-form 表面疑義は再検証し、表現可能なら蒸留 agent 側の見落としとして是正、不可能なら仕様拡張の要否を判断 — **完了**: 4 件中 3 件は転写ミス (lowered 形 literal 転写) と確定し wire form で蒸留 (共有トリガ factor out + or アリティ差分、wire schema 検証済み)、phase1:130 は DR-042 ⑤ 維持で消し込み。仕様拡張は不要 (既存 or キー形 §1.2 + §15.4 + DR-053 で表現可能)
+- [x] pin した内容を該当 DR または DESIGN.md に反映 — **第1・第2・第3バッチ分は反映済み (上記 進捗)。#1 は仕様拡張不要が結論のため DR/DESIGN 無変更、蒸留 fixture + 台帳 D1 に反映。残 #3/#5 の反映は決定後**
