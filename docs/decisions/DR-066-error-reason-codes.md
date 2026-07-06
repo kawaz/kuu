@@ -30,6 +30,8 @@ descriptor (DR-061) に **`reasons`** (emit しうる reason 識別子の列挙)
 |---|---|---|
 | parse | `missing_operand` | トークンが尽きて要素の消費要求が満たせない (構造的必須の不成立を含む) |
 | parse | `unexpected_token` | 消費者の居ないトークンが残る (残余トークン) |
+| parse | `not_a_number` | number / float の value_parser が構文不一致 (int の数字列でない失敗も含む) |
+| parse | `not_an_integer` | int の value_parser が「number としては読めるが整数でない」入力 (例 "1.5") を弾く精密 reason。float は number と受理域同一 (DESIGN §3.3) のため専用 reason なし |
 | constraint | `required_violated` | required の値充足 (DR-047) 失敗 |
 | constraint | `requires_violated` | requires の目的語不足 |
 | constraint | `exclusive_group_violated` | exclusive_group 内の committed 衝突 |
@@ -37,7 +39,7 @@ descriptor (DR-061) に **`reasons`** (emit しうる reason 識別子の列挙)
 
 constraint 系は **`<属性名>_violated`** で機械的に統一する (属性への遡及が名前だけで自明、L10n キーとしても一様)。
 
-value_parser 系 (not_a_number / not_an_integer 等) は canonical factory の descriptor 宣言として列挙する (DR-040 の canonical 語彙を config キーとともに写像する作業の一部、フェーズ 1 の Schema 実体化で行う)。filter 系は各 filter の descriptor 宣言 (例: in_range が `too_small` / `too_large`)。
+value_parser 系 (`not_a_number` / `not_an_integer`) の reason 語彙は本 v1 表で確定する。各 reason を canonical factory の descriptor `reasons` 宣言へ写像する作業 (DR-040 の canonical 語彙を config キーとともに descriptor へ実体化する Schema 実体化) は DR-068 のライフサイクルに従い後続フェーズで行う。filter 系 reason は各 filter の descriptor 宣言 (例: in_range が `too_small` / `too_large`)。
 
 ### 4. fixture では reason は optional 検証 (DR-065 / CONFORMANCE への反映)
 

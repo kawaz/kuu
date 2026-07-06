@@ -61,7 +61,7 @@
 - `argv_pos` は 0-based。トークンが尽きて要求が満たせない失敗は `argv.length` (= 次に要求した位置) を指す
 - `element` の**省略 = 特定要素に紐付かないスコープレベルの躓き** (残余トークン等)
 - `kind` の割当 (DR-065 §3):
-  - `parse` — 型照合・経路構築の失敗。**構造的必須の不成立** (required 属性なしの positional がトークンを得られない、reason: `missing_operand`) と**残余トークン** (element 省略、argv_pos = 残余先頭、reason: `unexpected_token`) を含む
+  - `parse` — 型照合・経路構築の失敗。**構造的必須の不成立** (required 属性なしの positional がトークンを得られない、reason: `missing_operand`) と**残余トークン** (element 省略、argv_pos = 残余先頭、reason: `unexpected_token`) を含む。**value_parser の型照合失敗**は reason: `not_a_number` (number / float の構文不一致) / `not_an_integer` (int が非整数入力を弾く、DR-066 §3)
   - `filter` — filter chain の Error (DR-037)。reason は filter の descriptor 宣言 (例: in_range の `too_small` / `too_large`)
   - `constraint` — 遅延述語の違反 (DR-047)。reason: `required_violated` / `requires_violated` / `exclusive_group_violated` / `conflicts_with_violated` (`<属性名>_violated` で統一、DR-066 §3)
 - `fired_action`: 失敗時アクション (DR-048) が発火した場合のみ
