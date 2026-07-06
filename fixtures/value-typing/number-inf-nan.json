@@ -19,7 +19,7 @@
     },
     {
       "id": "inf-case-insensitive-on-float",
-      "why": "inf は case-insensitive で kuu が語彙固定 (DR-074 §1): `--t Infinity` も float で受理。survey で Java parseDouble=大小厳密 / JS=Infinity 完全一致のみ / strtod=大小無視と割れる語彙を kuu が inf/infinity/Inf 等の慣用形 + ci に固定し host 差を吸収。operand 表現は case 1 同様据え置き。",
+      "why": "inf は case-insensitive で kuu が語彙固定 (DR-074 §1): `--t Infinity` も float で受理。survey で Java parseDouble=大小厳密 / JS=Infinity 完全一致のみ / strtod=大小無視と割れる語彙を kuu が確定 2 語 {inf, infinity} + ci (Inf/INF/Infinity は case variant) + 先頭符号 [+-] 合成に固定し host 差を吸収 (DR-074 §7)。operand 表現は case 1 同様据え置き。",
       "argv": ["--t", "Infinity"],
       "expect": {
         "outcome": "success",
