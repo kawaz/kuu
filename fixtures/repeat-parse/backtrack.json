@@ -21,6 +21,18 @@
         ],
         "result": {"xs": ["a", "b"], "ys": [3]}
       }
+    },
+    {
+      "id": "no-number-genuine-failure",
+      "why": "`a b` (number トークン 0 個): 全取り分が dead-end のとき、各取り分の躓きを errors に全保持する (DR-053 §2 取り分次元の全保持)。完全経路は xs≥1・ys≥1 で両トークン全消費を要するが number が無いため成立しない。greedy (最長 xs 先、DR-043 / DESIGN §15.8) の探索が訪れる取り分は 2 つ: (1) 取り分 xs=[a,b], ys=[] — greedy 最長。ys は repeat min:1 だが operand 0、トークン枯渇点で必須不成立 → missing_operand (element ys, argv_pos 2 = argv.length)。(2) backtrack で 1 つ縮小し取り分 xs=[a], ys=[b] — ys が `b` を number として読もうとして構文不一致 → not_a_number (element ys, argv_pos 1)。xs はこれ以上縮められない (xs=[] は xs 自身の min:1 を破り枝生成されない、DR-043) ため取り分は以上 2 つ。両取り分 dead-end なので outcome=failure、errors は両躓きを保持。primary は argv 最深 = pos 2 の missing_operand (DR-053 §2)。errors は集合比較 (CONFORMANCE §3) で順序非規範だが、可読性のため最深を先頭に置く。",
+      "argv": ["a", "b"],
+      "expect": {
+        "outcome": "failure",
+        "errors": [
+          {"element": "ys", "argv_pos": 2, "kind": "parse", "reason": "missing_operand"},
+          {"element": "ys", "argv_pos": 1, "kind": "parse", "reason": "not_a_number"}
+        ]
+      }
     }
   ]
 }

@@ -56,7 +56,7 @@
  "fired_action": "help"}
 ```
 
-- `errors`: 全保持の配列 (DR-053/066)。**message は仕様でない** (文言はレンダラ) ため fixture に書かず比較しない
+- `errors`: 全保持の配列 (DR-053/066) — 別候補経路の Error に加え、可変長取り分 (DR-043) が全滅した場合の各取り分 dead-end の躓きも積む (DR-053 §2)。**message は仕様でない** (文言はレンダラ) ため fixture に書かず比較しない
 - `reason`: 機械可読な失敗理由の識別子 (DR-066)。**fixture では optional 検証** — 書けば検証、書かなければ kind まで。発生源の emit しうる reason は descriptor の `reasons` 宣言 (DR-061/066) に列挙され、「定義に登場する全パーツの reasons の和 vs fixture のカバー」の完備チェックに使える
 - `argv_pos` は 0-based。トークンが尽きて要求が満たせない失敗は `argv.length` (= 次に要求した位置) を指す
 - `element` の**省略 = 特定要素に紐付かないスコープレベルの躓き** (残余トークン等)
