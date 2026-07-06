@@ -1,0 +1,112 @@
+{
+  "why": "int_round opt-in の丸めモード輪郭 (DR-075 §2 / DR-061 configurable factory): definitions.types で kuu_int_parser を異なる int_round config で 4 つ shadow し (int_floor/int_trunc/int_even/int_away、DR-028 type 参照糖衣 + DR-061 {name,config} 形)、同じ fractional 入力を 4 モードに横流しして判別する。判別ベクタ (2.5 / -2.5 / 3.5 / -3.5 / 3.2 / -3.2) を各 case で 4 モード横並びに固定 — 全 10 モードを網羅すると case が爆発するため判別力の高い代表 4 モードで輪郭を固定し、残 6 モード (ceil/away/half_floor/half_ceil/half_trunc/error) の期待値正本は DR-075 の期待値表とする (全 10 モード fixture 化は value-typing-s7-fixtures issue で追跡)。int_round=error の受理輪郭は int-value-space.json。String 源の丸めは binary64 非経由の厳密判定が必須要件 (DR-075 §5、本ベクタは通常レンジなので host 差なく決まる)。float→int cast でなく parse 相の内部調整 (kuu に暗黙 cast は無い)。",
+  "query": "parse",
+  "definition": {
+    "definitions": {
+      "types": {
+        "int_floor": {"name": "kuu_int_parser", "config": {"int_round": "floor"}},
+        "int_trunc": {"name": "kuu_int_parser", "config": {"int_round": "trunc"}},
+        "int_even": {"name": "kuu_int_parser", "config": {"int_round": "half_even"}},
+        "int_away": {"name": "kuu_int_parser", "config": {"int_round": "half_away"}}
+      }
+    },
+    "options": [
+      {"name": "fl", "type": "int_floor", "long": true},
+      {"name": "tr", "type": "int_trunc", "long": true},
+      {"name": "ev", "type": "int_even", "long": true},
+      {"name": "aw", "type": "int_away", "long": true}
+    ]
+  },
+  "cases": [
+    {
+      "id": "positive-tie-2p5",
+      "why": "正の tie 2.5 (DR-075 期待値表): floor→2 (→−∞)、trunc→2 (→0)、half_even→2 (tie の偶数側 2)、half_away→3 (tie を 0 から away)。half_even と half_away が正の tie で分岐する核 case (2 vs 3)。",
+      "argv": ["--fl", "2.5", "--tr", "2.5", "--ev", "2.5", "--aw", "2.5"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "fl", "op": "set", "operand": 2, "source": "cli"},
+          {"entity": "tr", "op": "set", "operand": 2, "source": "cli"},
+          {"entity": "ev", "op": "set", "operand": 2, "source": "cli"},
+          {"entity": "aw", "op": "set", "operand": 3, "source": "cli"}
+        ],
+        "result": {"fl": 2, "tr": 2, "ev": 2, "aw": 3}
+      }
+    },
+    {
+      "id": "negative-tie-2p5",
+      "why": "負の tie -2.5 (DR-075 期待値表): floor→-3 (→−∞)、trunc→-2 (→0)、half_even→-2 (tie の偶数側 -2)、half_away→-3 (tie を 0 から away)。負数を入れないと floor/half_away (共に負方向へ) と trunc/half_even が区別できない — 負数 tie が判別に必須 (DR-075)。",
+      "argv": ["--fl", "-2.5", "--tr", "-2.5", "--ev", "-2.5", "--aw", "-2.5"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "fl", "op": "set", "operand": -3, "source": "cli"},
+          {"entity": "tr", "op": "set", "operand": -2, "source": "cli"},
+          {"entity": "ev", "op": "set", "operand": -2, "source": "cli"},
+          {"entity": "aw", "op": "set", "operand": -3, "source": "cli"}
+        ],
+        "result": {"fl": -3, "tr": -2, "ev": -2, "aw": -3}
+      }
+    },
+    {
+      "id": "positive-tie-3p5",
+      "why": "正の tie 3.5 (DR-075 期待値表): floor→3、trunc→3、half_even→4 (tie の偶数側 4)、half_away→4 (0 から away)。3.5 では half_even も half_away も 4 に一致 (偶数側 = away 側)。2.5 case と対で half_even の偶奇依存 (2.5→2 だが 3.5→4) を固定。",
+      "argv": ["--fl", "3.5", "--tr", "3.5", "--ev", "3.5", "--aw", "3.5"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "fl", "op": "set", "operand": 3, "source": "cli"},
+          {"entity": "tr", "op": "set", "operand": 3, "source": "cli"},
+          {"entity": "ev", "op": "set", "operand": 4, "source": "cli"},
+          {"entity": "aw", "op": "set", "operand": 4, "source": "cli"}
+        ],
+        "result": {"fl": 3, "tr": 3, "ev": 4, "aw": 4}
+      }
+    },
+    {
+      "id": "negative-tie-3p5",
+      "why": "負の tie -3.5 (DR-075 期待値表): floor→-4 (→−∞)、trunc→-3 (→0)、half_even→-4 (tie の偶数側 -4)、half_away→-4 (0 から away)。-3.5 では half_even も half_away も -4。floor と trunc が負方向で分岐 (-4 vs -3)。",
+      "argv": ["--fl", "-3.5", "--tr", "-3.5", "--ev", "-3.5", "--aw", "-3.5"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "fl", "op": "set", "operand": -4, "source": "cli"},
+          {"entity": "tr", "op": "set", "operand": -3, "source": "cli"},
+          {"entity": "ev", "op": "set", "operand": -4, "source": "cli"},
+          {"entity": "aw", "op": "set", "operand": -4, "source": "cli"}
+        ],
+        "result": {"fl": -4, "tr": -3, "ev": -4, "aw": -4}
+      }
+    },
+    {
+      "id": "positive-nontie-3p2",
+      "why": "正の非 tie 3.2 (DR-075): floor→3、trunc→3、half_even→3 (最近接)、half_away→3 (最近接)。tie でないので half 系は向き無関係に最近接 3、方向系も 0.2 < 0.5 で 3。全モード 3 に収束し「非 tie では half モードの向き差が出ない」ことを固定。",
+      "argv": ["--fl", "3.2", "--tr", "3.2", "--ev", "3.2", "--aw", "3.2"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "fl", "op": "set", "operand": 3, "source": "cli"},
+          {"entity": "tr", "op": "set", "operand": 3, "source": "cli"},
+          {"entity": "ev", "op": "set", "operand": 3, "source": "cli"},
+          {"entity": "aw", "op": "set", "operand": 3, "source": "cli"}
+        ],
+        "result": {"fl": 3, "tr": 3, "ev": 3, "aw": 3}
+      }
+    },
+    {
+      "id": "negative-nontie-3p2",
+      "why": "負の非 tie -3.2 (DR-075): floor→-4 (→−∞)、trunc→-3 (→0)、half_even→-3 (最近接)、half_away→-3 (最近接)。非 tie なので half 系は最近接 -3 に一致し、方向系のみ floor(-4)/trunc(-3) で分岐。方向系が非 tie でも負数で割れることを固定 (floor は小数を必ず −∞ 側へ)。",
+      "argv": ["--fl", "-3.2", "--tr", "-3.2", "--ev", "-3.2", "--aw", "-3.2"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "fl", "op": "set", "operand": -4, "source": "cli"},
+          {"entity": "tr", "op": "set", "operand": -3, "source": "cli"},
+          {"entity": "ev", "op": "set", "operand": -3, "source": "cli"},
+          {"entity": "aw", "op": "set", "operand": -3, "source": "cli"}
+        ],
+        "result": {"fl": -4, "tr": -3, "ev": -3, "aw": -3}
+      }
+    }
+  ]
+}
