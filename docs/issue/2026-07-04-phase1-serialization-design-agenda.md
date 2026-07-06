@@ -201,7 +201,7 @@ LOWERING §C.5 の2段比較戦略 (主 oracle = 効果列、lowered中間形 = 
 - 選択肢 (a) expected を「効果列」(実体, op, operand, source, 順序) の列で持つ — 直列形非依存、実装間の意味論一致を厳密に判定できる (LOWERING §C.5 の主 oracle と直結)
 - 選択肢 (b) expected を「結果オブジェクト」(shallow view、§0.3) で持つ — 利用者に近い形だが optional semantics (F-022/DR-052) の3区別を表現しきれるかが要検証
 - 選択肢 (c) 両方持つ (効果列を正本、結果オブジェクトは導出値としてテストの読みやすさ用に併記)
-- byte 厳密比較が必須なケース (exact 照合の codepoint 単位・正規化なし = DR-040、NFC は方言。canonical default 数値字句 = 10進最小構文・整数値 float の最短形 "1" も DR-040/DR-050 §4 で確定済み) は fixture 側で明示タグ付けし、それ以外は意味論比較に倒す、という DR-040 の「canonical/標準/拡張3層」構造との接続方針も要確認
+- byte 厳密比較が必須なケース (exact 照合の codepoint 単位・正規化なし = DR-040、NFC は方言。canonical default 数値字句 = 実用寛容 10 進固定字句 (DR-074)・整数値 float の最短形 "1" は DR-050 §4 で確定済み) は fixture 側で明示タグ付けし、それ以外は意味論比較に倒す、という DR-040 の「canonical/標準/拡張3層」構造との接続方針も要確認
 
 **推奨 (2026-07-05)**: **(c) 両方持ち、効果列が正本** — expected.effects (効果列 = LOWERING §C.5 の主 oracle、(実体, op, operand, source, 順序)) を判定の正とし、expected.result (結果オブジェクト) は可読性のための併記 (効果列から導出可能、runner は両方検証してよい)。値の JSON 表現は確定済み規約 (数値最短形等) に従い、それ以上の byte 厳密タグは必要になった fixture にだけ付ける。
 
