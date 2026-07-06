@@ -39,7 +39,7 @@ config 値の期待型は独立の仕様ではなく、config_key を持つ**要
 
 - **string** → CLI / env と完全に同一の全段 pipeline (pre_filters → parse → post_filters、DR-034 / DR-049)
 - **非 string (number / bool) で型一致** → post_filters のみ。pre_filters / parse は String → 型の関数なので、既に型を持つ値には適用対象が無い — スキップは特別規則ではなく型の帰結
-- **int 要素** (整数制約付き数値、DESIGN §3.3): int は **値空間判定** (DR-075、updated)。JSON string は整数「値」を parse 受理 (`"3.0"`→3 / `"1e3"`→1000、整数構文に限らない)、真に fractional な値 (`"2.5"`) は `int_round` に従う (canonical default `error` で reason `not_an_integer`)。JSON native number も同ポリシー — 整数値なら受理、非整数 (`1.5`) は int_round に従う。ただし native number は **JSON が既に binary64 化した値**が来る (ECMA-404 は整数/小数を区別せず元の 10 進は復元不能) ため整数判定は原理的に binary64 ベースで、DR-075 §5 の「String 源は binary64 非経由の厳密判定」要件の保証対象外 (native number は整数値制限で fractional 露出が最小)。「string 源は厳密 / native-number 源は JSON 由来 binary64」の非対称を採る
+- **int 要素** (整数制約付き数値、DESIGN §3.3): int は **値空間判定** (DR-075、updated)。JSON string は整数「値」を parse 受理 (`"3.0"`→3 / `"1e3"`→1000、整数構文に限らない)、真に fractional な値 (`"2.5"`) は `int_round` に従う (canonical default `error` で reason `not_an_integer`)。JSON native number も同ポリシー — 整数値なら受理、非整数 (`1.5`) は int_round に従う。ただし native number は **JSON が既に binary64 化した値**が来る (ECMA-404 は整数/小数を区別せず元の 10 進は復元不能) ため整数判定は原理的に binary64 ベースで、DR-075 §5 の「String 源は binary64 非経由の厳密判定」要件の保証対象外 (canonical default `error` では非整数 native を拒否するため、fractional の binary64 露出は default 構成で最小)。「string 源は厳密 / native-number 源は JSON 由来 binary64」の非対称を採る
 - **JSON null** → 供給なし (provider lookup が値を返さないのと同義)。null という値は要素に流れない (DR-051)
 - **寛容は双方向対称** (canonical = 言語中立で再現可能な実用寛容字句、DR-074 §6。狭めたい場合は方言 / pre_filter):
   - number / bool 要素に JSON string (`"8080"` 等) → parse を試みて受理 (テキストから型へ)
