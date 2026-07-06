@@ -70,7 +70,7 @@
 
 ```json
 {"outcome": "ambiguous",
- "interpretations": [{"n": 1, "f": true}, {"n": 1}]}
+ "interpretations": [{"s": "ax"}, {"s": "a", "x": true}]}
 ```
 
 - `interpretations`: 全解釈の列挙、各解釈は結果オブジェクト形のビュー (DR-053)。ビューは解釈の結果オブジェクトを直書きする (result 単独フィールドの省略形、DR-053 §3)

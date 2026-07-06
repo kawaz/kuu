@@ -1,5 +1,5 @@
 {
-  "why": "canonical suffix 非採用の決定的対照 (DR-074 §1 / DR-041 §3): cluster-split.json と同一トークン `-n1.0f` だが f を定義から外す。すると `1.0` の後の `f` を flag として立てる分割読みが消え、n が `1.0f` 全体を値として取る読みだけが残る。canonical の number value_parser は型 suffix `f` を受理しない (DR-074) ため唯一のこの読みが not_a_number Error に落ち → 完全経路 0 本 → failure (DR-041 §5 / DR-038)。cluster-split.json (f 定義あり) では分割枝が救って success だったのに、f を外すと救う枝が消えて failure になる — ambiguity/成否が token 形でなく定義次第で決まる (matcher の多重 Accept は定義が吸収できる suffix 数で決まる、DR-041 §3)。lenient 方言なら `1.0f` を値として受けて success `{n:1}` になる点が canonical との分岐。anchored 契約により value_parser は `1.0f` を `1.0` に prefix 消費して残り `f` を捨てることもしない (DR-074 §5、= Model B 非採用)。",
+  "why": "canonical suffix 非採用の決定的対照 (DR-074 §1 / DR-041 §3): cluster-split.json と同一トークン `-n1.0f` だが f を定義から外す。すると残余 `f` を消費できる flag が無く `1.0` の後で分割する読みが完全経路を成さず、n が `1.0f` 全体を値として取る読みだけが残る。canonical の number value_parser は型 suffix `f` を受理しない (DR-074) ため唯一のこの読みが not_a_number Error に落ち → 完全経路 0 本 → failure (DR-041 §5 / DR-038)。cluster-split.json (f 定義あり) では分割枝が救って success だったのに、f を外すと救う枝が消えて failure になる — ambiguity/成否が token 形でなく定義次第で決まる (matcher の多重 Accept は定義が吸収できる suffix 数で決まる、DR-041 §3)。lenient 方言なら `1.0f` を値として受けて success `{n:1}` になる点が canonical との分岐。anchored 契約により value_parser は `1.0f` を `1.0` に prefix 消費して残り `f` を捨てることもしない (DR-074 §5、= Model B 非採用)。",
   "query": "parse",
   "definition": {
     "options": [
@@ -9,7 +9,7 @@
   "cases": [
     {
       "id": "no-flag-suffix-error",
-      "why": "f 未定義かつ canonical suffix 非採用で唯一の読みが Error → failure (DR-074 §1 / DR-041 §5): n が cluster 残余 `1.0f` を丸ごと値として取る読みが唯一 (分割先 `f` を読む matcher が無く、分割枝は残余 `f` が未消費で完全経路にならず脱落)。その唯一の読みで canonical number が `1.0f` の型 suffix を拒否 → not_a_number の held Error。他に完全経路が無いので held Error が表示される failure (element=n / argv_pos=0 / kind=parse / reason=not_a_number)。argv_pos=0 はトークン `-n1.0f` が位置 0 に存在し値解析で落ちる (present but wrong type、prefix-guard-number.json と同型)。",
+      "why": "f 未定義かつ canonical suffix 非採用で唯一の読みが Error → failure (DR-074 §1 / DR-041 §5): n が cluster 残余 `1.0f` を丸ごと値として取る読みが唯一 (分割先 `f` を読む要素が無く、残余 `f` を消費できないため分割読みは完全経路を成さない)。その唯一の読みで canonical number が `1.0f` の型 suffix を拒否 → not_a_number の held Error。他に完全経路が無いので held Error が表示される failure (element=n / argv_pos=0 / kind=parse / reason=not_a_number)。argv_pos=0 はトークン `-n1.0f` が位置 0 に存在し値解析で落ちる (present but wrong type、prefix-guard-number.json と同型)。",
       "argv": ["-n1.0f"],
       "expect": {
         "outcome": "failure",

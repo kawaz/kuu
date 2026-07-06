@@ -23,7 +23,7 @@
     },
     {
       "id": "no-split-point",
-      "why": "分割点なしで単一読みに潰れる (DR-041 §3): `-n1.0` は f が定義されていても `1.0` の後に flag 化できる文字が残らないため分割枝が生成されず読みは 1 本 = n が `1.0` を取る。canonical number は `1.0` を受理 (最短形 1.0→1、DR-050 §4)。f は不発なので result で default false、effects には cli 由来の n=1 のみ載る (未発火 flag の false は result 側で確定、CONFORMANCE §2)。suffix を含まない値では canonical と lenient で挙動が変わらないことの対照。",
+      "why": "分割点なしで単一読みに潰れる (DR-041 §3): `-n1.0` は f が定義されていても `1.0` の後に flag 化できる文字が残らないため分割読みが完全経路を成さず、読みは 1 本 = n が `1.0` を取る。canonical number は `1.0` を受理 (最短形 1.0→1、DR-050 §4)。f は不発なので result で default false、effects には cli 由来の n=1 のみ載る (未発火 flag の false は result 側で確定、CONFORMANCE §2)。suffix を含まない値では canonical と lenient で挙動が変わらないことの対照。",
       "argv": ["-n1.0"],
       "expect": {
         "outcome": "success",
