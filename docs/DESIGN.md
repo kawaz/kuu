@@ -1167,7 +1167,7 @@ complete(atomic, {before, word, word_suffix?, after?}) → 候補構造
 | **Error** | filter/枝が「私のつもりだが値が不正」と返す (保持、表示候補) |
 | **ambiguous** | 入力を全消費する完全解決経路が2本以上ある状態 |
 | **bounded path-search** | DR-038 の実装契約。AtomicAST 上で候補経路を有限列挙し、全消費経路の本数で結末を決める |
-| **canonical default** | type の3層上書き構造 (DR-040) の最寛容ベース |
+| **canonical default** | type の3層上書き構造 (DR-040) の固定字句ベース (言語中立で再現可能な実用寛容字句、DR-074) |
 | **installer** | 特殊語彙 (long/short/env/dd 等) を所有し、糖衣展開と実行時能力を植え付ける registry 装置 (DR-042) |
 | **matcher** | greedy 面のエントリがトークンを読む機構。素の exact 一致が最小形 (DR-041) |
 | **再解釈 matcher** | トークン境界を再解釈して複数の読みを生成する matcher (eq-split / cluster 等)。installer が名前付きデータとして植える (DR-041/042) |

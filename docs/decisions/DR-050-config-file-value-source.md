@@ -41,7 +41,7 @@ config 値の期待型は独立の仕様ではなく、config_key を持つ**要
 - **非 string (number / bool) で型一致** → post_filters のみ。pre_filters / parse は String → 型の関数なので、既に型を持つ値には適用対象が無い — スキップは特別規則ではなく型の帰結
 - **int 要素** (整数制約付き数値、DESIGN §3.3): JSON number が整数値なら受理、非整数 (`1.5`) は Error。JSON string は整数構文のみ parse 受理
 - **JSON null** → 供給なし (provider lookup が値を返さないのと同義)。null という値は要素に流れない (DR-051)
-- **寛容は双方向対称** (DR-040 の「canonical は最も寛容」、狭めたい場合は方言 / pre_filter):
+- **寛容は双方向対称** (canonical = 言語中立で再現可能な実用寛容字句、DR-074 §6。狭めたい場合は方言 / pre_filter):
   - number / bool 要素に JSON string (`"8080"` 等) → parse を試みて受理 (テキストから型へ)
   - **string 要素に JSON scalar (number / bool) → JSON 文字列化で受理** (`1.5` → `"1.5"`、`true` → `"true"`)。string 要素は CLI / env では「何でも受ける」型であり、config でも同じ観測になる (引用符の有無で挙動が割れない)
   - 数値の文字列化は **JSON serialize の最短表現** (整数値は小数点なし: `1.0` → `"1"`)。JSON number は整数と浮動小数を区別しない (ECMA-404) ため元の表記は保持できず、常に `.0` を付ける規則は整数 `8080` を `"8080.0"` にしてしまう — 最短形が唯一の一貫解 (slice PoC 第 10 弾の flag で確定。Python 系 serializer の `"1.0"` とは異なるので conformance の比較点)
@@ -97,7 +97,7 @@ TOML / YAML parser を core に入れるとフォーマット追加のたびに 
 - DR-029 (link の固定パス DSL — config_key の明示形が流用)
 - DR-046 (デフォルト供給源パターン — config key 軸)
 - DR-030 (appconfig 統合ストア — 同型対応の動機)
-- DR-040 (寛容 canonical — string→parse 受理)
+- DR-074 (実用寛容 canonical 字句 — string→parse 受理) / DR-040 (type registry 方言 3 層)
 - DR-037 (Error — 型不一致・committed パス読込失敗)
 - DR-047 (遅延述語 — config 充填後の最終状態に対して評価)
 - DR-048 (type プリセット = 配線宣言パターンの 1 例目)
