@@ -1,5 +1,5 @@
 {
-  "why": "prefix ガードなし素通しの number 側 (DR-041 §5): prefix-guard-string.json と対で、未定義 `-x` が素通しで落ちる先が number positional の場合。string は `-x` を受理したが number の value_parser は `-x` を拒否する。この失敗はその枝のつもりで値が不正 = DR-037 の Error として保持され、完全経路 0 本のとき表示される (DR-041 §5)。kind は parse (型照合の失敗、DR-053 §2 / DR-065 §3)。message (`\"-x\" is not a number`) は仕様でなくレンダラ管轄なので fixture では比較しない (CONFORMANCE §2)。reason は number 型不一致に対する spec 上の識別子が未確定のため optional 検証として省略 (kind まで固定)。argv_pos は 0 — トークン `-x` は位置 0 に存在し値解析で落ちる (トークン枯渇の missing_operand が argv.length を指すのとは別。ここは present but wrong type)。(path-search 領域から一本化 — DR-041 §5 トークン読み契約の住所)",
+  "why": "prefix ガードなし素通しの number 側 (DR-041 §5): prefix-guard-string.json と対で、未定義 `-x` が素通しで落ちる先が number positional の場合。string は `-x` を受理したが number の value_parser は `-x` を拒否する。この失敗はその枝のつもりで値が不正 = DR-037 の Error として保持され、完全経路 0 本のとき表示される (DR-041 §5)。kind は parse (型照合の失敗、DR-053 §2 / DR-065 §3)。message (`\"-x\" is not a number`) は仕様でなくレンダラ管轄なので fixture では比較しない (CONFORMANCE §2)。reason は not_a_number (DR-066 §3 v1 表) — 本 case は optional 検証 (書かなければ kind までの比較、CONFORMANCE §2) を選び省略。argv_pos は 0 — トークン `-x` は位置 0 に存在し値解析で落ちる (トークン枯渇の missing_operand が argv.length を指すのとは別。ここは present but wrong type)。(path-search 領域から一本化 — DR-041 §5 トークン読み契約の住所)",
   "query": "parse",
   "definition": {
     "options": [

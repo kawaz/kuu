@@ -12,7 +12,7 @@
   "cases": [
     {
       "id": "help-fires-then-deadend",
-      "why": "help 発火後に number positional が dead-end: --help が pos0 で発火 (先食いにより --help は必ず help satellite が消費、n には落ちない)。続く number positional n が \"abc\" のパースに失敗し、この経路は scope 終端 Accept に達せず Error 保持点で停止する (dead-end)。dead-end 込み候補ポリシー (確定仕様) では、この dead-end の部分状態に載る help marker が selected と数えられ help が発火する。errors は保持された n の型不一致 (argv_pos 1、kind parse — reason は型不一致で spec 未命名のため省略、fixture optional 検証)。fired_action=help (argv 最小の意図) と errors (最深の躓き) が 1 Failure に両立 (DR-053 §2)。",
+      "why": "help 発火後に number positional が dead-end: --help が pos0 で発火 (先食いにより --help は必ず help satellite が消費、n には落ちない)。続く number positional n が \"abc\" のパースに失敗し、この経路は scope 終端 Accept に達せず Error 保持点で停止する (dead-end)。dead-end 込み候補ポリシー (確定仕様) では、この dead-end の部分状態に載る help marker が selected と数えられ help が発火する。errors は保持された n の型不一致 (argv_pos 1、kind parse — reason は not_a_number (DR-066 §3 v1 表) だが本 case は optional 検証を選び省略)。fired_action=help (argv 最小の意図) と errors (最深の躓き) が 1 Failure に両立 (DR-053 §2)。",
       "argv": ["--help", "abc"],
       "expect": {
         "outcome": "failure",
