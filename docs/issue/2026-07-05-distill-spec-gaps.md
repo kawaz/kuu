@@ -61,9 +61,11 @@ origin: フェーズ2-③ 蒸留 wave1/wave2 監査 (自リポ TODO)
 - **残 open 事項 (フェーズ2 継続、#3 の裁定に付随)**:
   - **short × 文字系値の ambiguity fixture 化**: `-inf` が short flag 列 `-i -n -f` とも読める等の衝突は matcher の枝生成 + 完全経路一意化で扱う方針が確定 (DR-074 §5、DR-038/041 の既存原則、モード指定なし)。その ambiguity を固定する fixture 化はフェーズ2 継続。
   - **negatable 糖衣 (bool 否定形 B3)**: findings で `--no-` 自動生成が variant DSL 明示宣言方針の反例にならない (糖衣層 = name preset / モデル層 = 明示 variant) と整理済みだが、negatable プリセットを lowering で明示 variant へ展開する糖衣の採否は未裁定。
-  - **int 型の hex 値空間判定** (`0x1.8p3`=12 可 / `0x1.8p0`=1.5 は not_an_integer): DR-074 §2 で規定済みだが fixture は int factory の base_prefix 配線確定後 (number-base-prefix-optin は number 型のみ被覆)。
+  - **int 型の hex 値空間判定** (`0x1.8p3`=12 可 / `0x1.8p0`=1.5 は not_an_integer): DR-074 §2 で規定済みだが fixture は int factory の base_prefix 配線確定後 (number-base-prefix-optin は number 型のみ被覆)。→ **M2 決着 (下記進捗参照)** で DR-075 により確定、fixture 化は base_prefix 配線後 (value-typing-s7-fixtures で追跡) のため継続。
   - **inf の operand/result JSON serialize 規約**: JSON に inf リテラルが無く未確定 (number-inf-nan は accept 側を成功輪郭のみ固定)。value-typing.json の 1.0→"1" 表記未確定と同族。
   - **bool value_parser 失敗の reason**: DR-066 v1 に bool 用 reason 語彙が無く bool-canonical::yes-rejected は kind まで検証。#5 (reason descriptor 実体化) に合流しうる。
+- kawaz が M2 (int の String parse が構文判定か値空間判定か) を裁定 (2026-07-06、DR-075 新設)。spec 文書に反映済み:
+  - **M2**: 値空間判定で確定。int は整数「値」を受理 (`"3.0"`→3 / `"1e3"`→1000)、真に fractional な値のみが `kuu_int_parser` factory の config キー `int_round` (10 種体系完備、canonical default `error`) に従う。DR-074 §2 暫定注記を解消、DR-050 §4 の構文判定寄り読みを supersede、DR-066 §3 の `not_an_integer` は `int_round=error` のときのみ emit と注記、DR-061 に `int_round` 平坦キー例追加、DESIGN §3.3/§3.4 改訂 (値空間判定 + `int_round` + default `error` + factory config 例)。String 源は binary64 非経由の厳密判定を必須要件化 (native-number 源は JSON 由来 binary64 で対象外の非対称)。fixture 2 件新設 (`int-value-space.json` = error モードの受理輪郭 / `int-round-modes.json` = 代表 4 モードの判別ベクタ横並び)。これで残 open 事項の「int 型の hex 値空間判定」は DR-075 で確定 (fixture は int factory の base_prefix 配線後、value-typing-s7-fixtures で追跡)。main 10 論点は #5 (value_parser reason の descriptor 実体化 = Schema 実体化の宿題) が未決のため status は wip 継続 (M2 は #3/#5 派生の詰め所で、main 論点カウントとは別軸)。
 
 ## 受け入れ条件
 
