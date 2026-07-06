@@ -1,0 +1,69 @@
+---
+title: DR-074 §7 の細部規則の輪郭 fixture 追加
+status: open
+category: task
+created: 2026-07-06T16:12:19+09:00
+last_read:
+open_entered: 2026-07-06T16:12:19+09:00
+wip_entered:
+blocked_entered:
+pending_entered:
+discarded_entered:
+resolved_entered:
+discard_reason:
+pending_reason:
+close_reason:
+blocked_by:
+origin: 自リポ TODO (DR-074 反映の codex stop-gate レビューで発見)
+---
+
+# DR-074 §7 の細部規則の輪郭 fixture 追加
+
+## 概要
+
+DR-074 §7 (未規定組合せの pin) で number canonical 字句の細部規則を確定したが、
+`fixtures/value-typing/` が現状被覆するのは基本形のみ (`1_000` / `1e3` / inf 2 語 /
+hex float 系)。§7 で確定した以下の輪郭が fixture 未整備のため、既存 value-typing
+fixture への case 追加で埋める。
+
+1. **指数部符号**: `1e-3` / `1e+3` / `0x1.8p-3` (opt-in) の success
+2. **符号付き inf**: `-inf` / `+Infinity` の success (float 型)
+3. **基数 prefix 大文字**: `0X1F` / `0B101` (opt-in) の success
+4. **0o/0b への小数・指数適用**: `0o1.5` / `0b1.1` の Error (opt-in 有効でも)
+5. **`_` 配置文法の negative**: `1__000` / `_1` / `1_` / `1_e3` / `1_.5` の Error、
+   `12_34_5` の success (幅検証なし)。opt-in 時の `0xff_ff` success と `0x_ff` Error
+6. **符号付きゼロ**: `-0` / `+0` の success (int 型でも)
+
+## 背景
+
+DR-074 §7 は「fixture 被覆は基本形のみ、本節の細部規則の輪郭 fixture は未整備」と
+明記して本 issue への追跡を予告している。発見経緯は DR-074 反映の codex stop-gate
+レビュー (§7 の被覆主張が過大だった → DR 側の文言は正確化済み)。
+
+各 case は DR-072 準拠の安定 id を持たせ、`why` は DR-074 §7 参照で self-contained
+に書く (DR を別タブで開かなくても判断が分かる形、tdd-and-test-design の inline
+仕様書原則)。新規 fixture ファイルは乱立させず、既存 value-typing fixture への
+case 追加が自然 (number-decimal-lexicon / number-base-prefix-optin /
+number-base-prefix-rejected / number-inf-nan の性格に応じて振り分け)。
+
+追加後は slice runner (kuu.mbt slice ws) で実食する。slice の `parse_number` は
+DR-074 に未追従であることが既に判明している (slice リポ
+`docs/issue/2026-07-06-parse-number-bool-dr074-followup.md` 参照) ため、実食で
+divergence が出ても新規発見ではなく既知ギャップの再確認になる可能性が高い。
+divergence が出た場合は凍結台帳 (phase23-distill-ledger 系) に記録する。
+
+## 受け入れ条件
+
+- [ ] `fixtures/value-typing/` に上記 6 項目の輪郭 case が (既存ファイルへの追加として) 揃っている
+- [ ] 各 case が DR-072 準拠の一意な id を持ち、`why` が DR-074 §7 参照で self-contained
+- [ ] slice runner で実食し、divergence の有無を確認・記録
+
+## TODO
+
+- [ ] number-decimal-lexicon.json に指数部符号 (`1e-3`/`1e+3`) の case を追加
+- [ ] number-base-prefix-optin.json に `0x1.8p-3` / `0X1F` / `0B101` / `0xff_ff` の success case を追加
+- [ ] number-base-prefix-rejected.json (または opt-in 側) に `0o1.5` / `0b1.1` の Error case を追加
+- [ ] number-inf-nan.json に `-inf` / `+Infinity` の success case を追加
+- [ ] `_` 配置文法の negative 系 (`1__000` / `_1` / `1_` / `1_e3` / `1_.5`) と `12_34_5` success、`0x_ff` Error の case を追加
+- [ ] 符号付きゼロ (`-0` / `+0`, int 型含む) の case を追加
+- [ ] slice runner で実食、divergence があれば凍結台帳へ記録
