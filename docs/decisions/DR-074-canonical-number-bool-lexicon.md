@@ -91,7 +91,7 @@ DESIGN §3.4 の「canonical = 最も寛容な仕様」と DR-040 の「canonica
 - **`_` (thousand_sep) の配置文法**: 桁区切り `_` は **桁と桁の間のみ** (直前・直後の両隣が当該基数の桁であること)。連続 (`1__000`) 不可、先頭 (`_1`) / 末尾 (`1_`) / 小数点隣接 (`1_.5` / `1._5`) / 指数記号隣接 (`1_e3` / `1e_3`) / prefix 隣接 (`0x_ff` / `0_x`) は不可。意味論は **「配置を検証して除去」** — 配置規則を満たせば除去して数値化し、満たさなければ Error。桁グループ幅 (3 桁区切り等) の検証は **しない** (`12_34_5` も配置規則を満たせば受理)。opt-in 時の hex 内 (`0xff_ff`) も同一規則 (両隣が hex 桁)。
 - **符号付きゼロ `-0` / `+0`**: 通常の数値として受理 (値空間で `0`)。`int` 型でも受理 (0 は整数)。特別扱いしない。
 
-これらは canonical 字句の完全な輪郭を成し、value-typing fixture 群 (`fixtures/value-typing/`) の golden がこの規則を被覆する。
+これらは canonical 字句の完全な輪郭を成す。fixture 被覆は基本形のみ (`fixtures/value-typing/` — `1_000` / `1e3` / inf 2 語 / `0x1.8p3` 系)。本節の細部規則 (指数部符号 / 符号付き inf / prefix 大文字 / `0o`・`0b` への小数適用 Error / `_` 配置文法の negative 系 / 符号付きゼロ) の輪郭 fixture は未整備 — docs/issue/2026-07-06-value-typing-s7-fixtures.md で追跡。
 
 ## cluster-split fixture への波及 (`-n1.0f`)
 
