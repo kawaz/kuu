@@ -247,9 +247,18 @@ definitions.types.X → registry.types.X → warn+string フォールバック
 
 **値プリミティブ (葉)**: `string` / `number` / `int` / `float` / `bool` / `path` / `file` / `dir` / `datetime` / `exact` / カスタム
 
-数値 3 種の関係: `number` は汎用数値 (JSON number と同型、整数も小数も受理)。`int` は整数制約付き (非整数は Error)。`float` は小数を明示する意図の別名で、受理域は number と同じ。**整数を意図する要素には int を使う** — config の JSON number が非整数なら Error になり、文字列化の表現揺れ (DR-050 §4) も生じない。
+数値 3 種の関係: `number` は汎用数値 (整数も小数も受理)。`int` は整数制約付き (非整数は Error、reason `not_an_integer`)。`float` は小数を明示する意図の別名で、**受理域は `number` + inf** (number は inf を受けず float だけが受ける、下記 inf 規定)。**整数を意図する要素には int を使う** — config の JSON number が非整数なら Error になり、文字列化の表現揺れ (DR-050 §4) も生じない。
 
-canonical の数値字句は **10 進最小構文のみ** (DR-040)。桁区切り `_`・基数 prefix (0x 等) は標準層 opt-in、`,` 系は方言、単位 suffix は型の領分 (duration / size 等の拡張型)。exact 照合は **codepoint 単位・正規化なし** (NFC は方言)。path / file / dir はバイト列受理 (検証は filters opt-in)。
+canonical の数値字句は **言語中立で再現可能な実用寛容の 10 進固定字句** (DR-074、「最小」でも「JSON number 同型」でもない):
+
+- 先頭符号 `[+-]` 両方受理 (leading `+` 可、`+5`=5)。先頭 0 は **decimal** (`007`→7、octal 化は opt-in のみ)。小数点のみ `.5` / 末尾小数点 `1.` を受理。指数 `1e3`/`1E3`。桁区切り `_` を **default で受理** (config `number_thousand_sep` default `["_"]`)。
+- 基数 prefix (`0x`/`0o`/`0b`) と hex float (`0x1.8p3`) は **`number_allow_base_prefix` の統合 opt-in** — canonical (default false) では `0x1F` も `0x1.8p3` も Error。有効時は `p`/`P` 任意 (`0xff`→255 も可)、`int` 型は値空間で判定 (`0x1.8p3`=12 可 / `0x1.8p0`=1.5 は Error)。
+- **inf**: `float` 型のみ受理 (`inf`/`infinity`/`Inf` を case-insensitive で kuu 固定)、`number` 型では Error。言語 DX が float の inf 非対応を選ぶのは許容。**nan**: 両型 Error (opt-in も置かない)。**型 suffix (`1.0f`/`100n`) は非採用** (float/double は type で、Big 系は bigxx 型で)。`,` 系桁区切りは方言、単位 suffix は型の領分 (duration/size 等)。
+- **anchored 契約**: value_parser は **token 全体一致**であり prefix 消費 (C `strtod` の endptr 式 = 読めるところまで読んで残りを返す) を **しない** (DR-074 §5、DR-041 §5 の prefix ガード非採用と対)。負数・文字系値 (`-5`/`-inf`/`-1e3`) の消費は **arity 駆動** (宣言から arity を知るので次トークンを無条件に値消費)、short cluster 読みとの衝突は matcher の枝生成 + 完全経路一意化 (DR-038/041) で決着し読みモード指定は持たない。
+
+**bool** の canonical 受理語彙 (DR-074): `true_values` default `["true","1"]` / `false_values` default `["false","0",""]` / `case_insensitive` default `true`。空文字 `""` は false 側 (env の `FLAG=` 対応、`false_values` の要素として表現)。`yes`/`no`/`on`/`off` は canonical 外 (Norway problem 回避、config で opt-in 追加可)。不正 bool 文字列は Error (silent 変換しない)。**bool↔number**: 文字列 `"1"`/`"0"` の parse (String→bool) は可だが、number 型の値 `1` からの型変換 (config native number→bool) は Error (DR-050 の非強制規定は不変)。
+
+exact 照合は **codepoint 単位・正規化なし** (NFC は方言)。path / file / dir はバイト列受理 (検証は filters opt-in)。
 
 bytes / binary 型は組み込みに持たない。必要なら拡張 type (registry 登録) で提供する。
 
@@ -267,17 +276,19 @@ bytes / binary 型は組み込みに持たない。必要なら拡張 type (regi
 プリミティブ型 (number/bool/...) も方言を持つ。3層の上書き構造:
 
 ```
-canonical default (kuu core 提供、最も寛容な仕様)
+canonical default (kuu core 提供、言語中立で再現可能な固定字句)
   ← 言語DX default (各言語慣習に合わせた差分)
   ← ユーザ差し替え (ローカル definitions / registry 上書き)
 ```
+
+canonical は「最も寛容」でも「最小」でもなく、**言語中立で再現可能な、実用寛容を含む固定字句** (DR-074、G8 の文言矛盾解消)。number は §3.3 の実用寛容 10 進字句、bool は §3.3 の `true/1` ↔ `false/0/""`。方言はこの固定点からの逸脱 (狭める / 広げる) を config で表す。
 
 方言の軸は2系統:
 
 - **寛容 default + pre フィルタで狭める/正規化**: canonical の寛容 parser を使い、入力前段で正規化や受理範囲制限を入れる方向。
 - **value_parser 差し替え**: registry の types[X] そのものを置き換えて狭い仕様にする方向。
 
-方言バリエーションは value_parser クロージャの量産でなく **configurable factory** で表現する (DR-061): registry 登録値を `{"name": "<factory名>", "config": {...}}` の形にし、動作差分を純データ config で与える (例: number の `thousand_sep` / `base_prefix`)。**canonical default = factory の default config** であり、標準層 opt-in・方言は config キーの列挙になる。config は純データなので定義とともにシリアライズされ、方言構成の再現性が wire 上で担保される。factory config が調整するのは parse 相 (String → T) の内部のみで、相の間の変換・検証は filter の領分 (§8.3、DR-061 §5 の「相」線引き)。
+方言バリエーションは value_parser クロージャの量産でなく **configurable factory** で表現する (DR-061): registry 登録値を `{"name": "<factory名>", "config": {...}}` の形にし、動作差分を純データ config で与える (`kuu_number_parser`: `number_thousand_sep` default `["_"]` / `number_allow_base_prefix` default `false` / `number_leading_zero` default `"decimal"`。`kuu_bool_parser`: `true_values` default `["true","1"]` / `false_values` default `["false","0",""]` / `case_insensitive` default `true`。DR-074 §4)。**canonical default = factory の default config** であり、標準層 opt-in・方言は config キーの列挙になる。config は純データなので定義とともにシリアライズされ、方言構成の再現性が wire 上で担保される。factory config が調整するのは parse 相 (String → T) の内部のみで、相の間の変換・検証は filter の領分 (§8.3、DR-061 §5 の「相」線引き)。
 
 バイナリサイズは各言語 DX の tree-shake で削る (使われない方言は同梱されない)。再現性は (1) 単一ホスト内の moving target ロック (2) クロスホストでの canonical 参照、の2段階で担保する。
 

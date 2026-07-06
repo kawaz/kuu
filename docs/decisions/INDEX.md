@@ -49,7 +49,8 @@
 - [DR-015](DR-015-value-propagation.md): 値の発生と伝搬の構造的セマンティクス
 - [DR-028](DR-028-type-as-reference.md): type は definitions/registry への参照糖衣、解決順、前方互換、flag等は糖衣プリセット
 - [DR-032](DR-032-ref-link-name-resolution.md): ref/link が指すのは name (解決はスコープ内→definitions)、type とは別物
-- [DR-040](DR-040-type-registry-dialects-and-restriction.md): type registry の方言運用 (canonical default / 言語DX / ユーザ差し替えの3層上書き、寛容default+pre_filter vs value_parser 差し替えの2軸) — canonical 字句仕様 (数値 10 進最小・exact codepoint 比較・path バイト列・count_or_set・filters 3 層) を拡張確定
+- [DR-040](DR-040-type-registry-dialects-and-restriction.md): type registry の方言運用 (canonical default / 言語DX / ユーザ差し替えの3層上書き、寛容default+pre_filter vs value_parser 差し替えの2軸) — canonical 字句仕様 (数値・exact codepoint 比較・path バイト列・count_or_set・filters 3 層) を拡張確定。number 字句は updated by DR-074 (10 進最小 → 実用寛容固定字句)、bool 字句は DR-074 で新設
+- [DR-074](DR-074-canonical-number-bool-lexicon.md): number / bool canonical 字句の確定 — number は実用寛容な 10 進固定字句 (leading `+` / `007`=decimal / `.5`・`1.` / `_` default 桁区切り / inf は float 型のみ・nan は両型 Error / 型 suffix 非採用)、基数 prefix + hex float は `number_allow_base_prefix` 統合 opt-in (canonical では `0x1F` も `0x1.8p3` も Error)、bool は `["true","1"]`/`["false","0",""]`+ci (yes/no は opt-in)、bool↔number は文字列 parse 可・型変換 Error、anchored 契約明文化、負数 arity 駆動消費、G8 (最寛容 vs 最小) 解消。JSON 同型 / 型 suffix / nan 受理 / 個別 base 指定 / empty_is_false / 読みモードを不採用
 - [DR-051](DR-051-absent-result-semantics.md): 結果の欠落表現 — 値の無い要素は absent (キーなし)、null は値空間に持たない (config null = 供給なし)、型導出は required/default/反復系 → T・それ以外 → T?
 
 ## multiple
