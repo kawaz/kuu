@@ -25,10 +25,12 @@ registry 住人の登録を「名前 → 実装」から「**名前 + config →
 ```json
 "definitions": {"types": {"number": {
   "name": "kuu_number_parser",
-  "config": {"thousand_sep": [",", "_"],
-             "base_prefix": {"0x": 16, "0o": 8, "0b": 2},
-             "float_suffix": ["f"], "int_suffix": ["i"]}}}}
+  "config": {"number_thousand_sep": ["_", ","],
+             "number_allow_base_prefix": true,
+             "number_leading_zero": "decimal"}}}}
 ```
+
+> **updated by DR-074**: 本節の初出例は `thousand_sep` (unprefixed) / `base_prefix` map 個別指定 / `float_suffix`・`int_suffix` を挙げていたが、いずれも DR-074 で**明示不採用**となった (型 suffix 非採用 §1、基数 prefix は個別 map でなく単一 bool へ統合 §2)。canonical の number config キーは DR-074 §4 の正本 (`number_thousand_sep` / `number_allow_base_prefix` / `number_leading_zero`) を上例に反映済み。factory + 純データ config で方言を表す本節の構造は不変で、差し替わったのは例示のキー集合のみ。
 
 - バリエーションごとに value_parser を作るのではなく、動作調整可能な factory + 純データ config で表現する
 - **wire に現れるのは definitions 側のみ** (DR-035 の区別: definitions = ユーザが書くポータブルな上書き機構、registry = ホスト言語側が注入する非ポータブル名前空間)。registry 層 (言語 DX default) も同じ `{name, config}` 形で登録するが、それはホスト側コードであって wire ではない。解決順 (definitions.X → registry.X → warn+フォールバック、DR-035) は不変
@@ -42,7 +44,7 @@ registry 住人の登録を「名前 → 実装」から「**名前 + config →
 descriptor の config 宣言は:
 
 - **キー名の列挙は必須** (未知キー検出 = typo 検出、DR-054 と同族。名前空間のみ平坦)
-- **値は任意 JSON** (ネスト自由 — `base_prefix` の map 形のように)
+- **値は任意 JSON** (スカラ / 配列 / map、ネスト自由)
 - **型注釈は任意** (書けば lint が読む。強制検証はしない)
 
 config 値の検証は descriptor でなく **factory 自身の責務**: 不正 config は parse_definition 時に「次の手」hint 付き Error (DESIGN §13.5 の流儀)。descriptor は validator ではなく、typo 検出 + lint/diagnose 素材 + ドキュメントである。
@@ -51,7 +53,7 @@ config 値の検証は descriptor でなく **factory 自身の責務**: 不正 
 
 pieceProcessor の相構造 (DR-034) を境界にする:
 
-- **factory config = parse 相 (String → T) の内部調整**。「parse が何を T に読めるか」— thousand_sep / base_prefix はこちら
+- **factory config = parse 相 (String → T) の内部調整**。「parse が何を T に読めるか」— number_thousand_sep / number_allow_base_prefix はこちら
 - **filter = 相の間の変換・検証** (pre_filters = String → String、post_filters = T → T)。全角→半角 normalize はこちら
 
 「受理域 vs 変換」のような意味論的な切り方は全角 normalize 等で両義的になるため採らない。相で切れば機械的に振り分けられ、同じ結果を 2 経路で書ける redundancy が最小化される。
