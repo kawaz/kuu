@@ -39,9 +39,9 @@ kuu canonical default  ←  言語DX default  ←  ユーザ差し替え (defini
 
 3 層の基準になる canonical default を以下に固定する:
 
-> **updated by DR-074**: 下記の数値項 (10 進最小・JSON number 同型) は DR-074 で **実用寛容な 10 進固定字句へ改訂**された (leading `+` / `007`=decimal / `.5`・`1.` / `_` default 桁区切り / 基数 prefix + hex float の統合 opt-in / inf は float 型のみ・nan は両型 Error / 型 suffix 非採用)。**bool の canonical 字句は DR-040 に項がなく DR-074 で新設**。本節の 3 層構造・2 系統の方言軸・configurable factory 方式 (DR-061) は不変。number/bool 字句の正本は DR-074 + DESIGN §3.3-3.4。
+> **updated by DR-074/DR-075**: 下記の数値項 (10 進最小・JSON number 同型) は DR-074 で **実用寛容な 10 進固定字句へ改訂**された (leading `+` / `007`=decimal / `.5`・`1.` / `_` default 桁区切り / 基数 prefix + hex float の統合 opt-in / inf は float 型のみ・nan は両型 Error / 型 suffix 非採用)。**int の「整数構文」は DR-075 で値空間判定へ改訂** — int は number 字句で parse し整数「値」なら受理 (`3.0`→3 / `1e3`→1000)、fractional は `int_round` (default `error`) に従う。**bool の canonical 字句は DR-040 に項がなく DR-074 で新設**。本節の 3 層構造・2 系統の方言軸・configurable factory 方式 (DR-061) は不変。number/bool/int 字句の正本は DR-074 + DR-075 + DESIGN §3.3-3.4。
 
-- **数値 (number / int / float)**: 10 進最小構文のみ (`[+-]? digits [. digits] [e...]`、int は整数構文。number は JSON number と同型、DESIGN §3.3)。桁区切り `_` と基数 prefix (`0x`/`0o`/`0b`) は canonical に含めない — 標準層の opt-in (型パラメータ / pre_filter 正規化)。`,` 系 (欧州小数点・桁区切り) は**多義** (`1,234` が 1234 とも 1.234 とも読める) のため canonical では解決不能な方言軸の見本であり、方言でのみ提供。単位 suffix (`1k` / `30s`) は数値字句ではなく型の領分 (duration / size 等の拡張型)
+- **数値 (number / int / float)**: 10 進最小構文のみ (`[+-]? digits [. digits] [e...]`。number は JSON number と同型、DESIGN §3.3)。桁区切り `_` と基数 prefix (`0x`/`0o`/`0b`) は canonical に含めない — 標準層の opt-in (型パラメータ / pre_filter 正規化)。`,` 系 (欧州小数点・桁区切り) は**多義** (`1,234` が 1234 とも 1.234 とも読める) のため canonical では解決不能な方言軸の見本であり、方言でのみ提供。単位 suffix (`1k` / `30s`) は数値字句ではなく型の領分 (duration / size 等の拡張型)
 - **exact 照合**: Unicode **codepoint 単位の比較、正規化なし**。NFC/NFKC 正規化は方言 (pre_filter / installer パラメータ) で opt-in。言語ランタイム間で照合結果が割れない最小定義
 - **path / file / dir**: OS の文字列 API が通したバイト列をそのまま受理 (エンコーディング検証なし)。存在検証・種別検証は filters の opt-in
 - **count の上限**: 専用フィールドを持たない。上限・飽和は post_filters (in_range 等) で書く。`--verbose=3` は count が値を取らないため eq-split の読みが立たず素通し。値も受けたい場合は **`count_or_set`** プリセット (標準層): increment + optional 値スロット (`repeat: {min:0, max:1}`) の合成で、`-v 3` の set / increment の別は取り分選好 (DR-043、greedy 既定で set 先行・下流失敗で後退) が 1 本に確定する — 新しい評価規則は不要
