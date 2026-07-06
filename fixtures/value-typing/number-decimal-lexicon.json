@@ -1,0 +1,71 @@
+{
+  "why": "canonical number の実用寛容 10 進字句 (DR-074 §1 / DESIGN §3.3): canonical (factory default config) の number は「最小」でも「JSON number 同型」でもなく、CLI 入力で普通に来る 10 進形を受ける固定字句。leading `+` 受理・先頭 0 は decimal・小数点のみ / 末尾小数点・桁区切り `_` default 受理・指数を 1 本の positional v(number) で固定する。基数 prefix と inf/nan は別 fixture (number-base-prefix-rejected / number-inf-nan)。数値の canonical 最短表現 (1.0→1、DR-050 §4) は operand/result に適用。value_parser は token 全体一致の anchored (prefix 消費しない、DR-074 §5) なので各トークンは全体が number として読める場合のみ成功。",
+  "query": "parse",
+  "definition": {
+    "positionals": [
+      {"name": "v", "type": "number"}
+    ]
+  },
+  "cases": [
+    {
+      "id": "leading-plus",
+      "why": "先頭符号 `+` を受理 (DR-074 §1): `+5` = 5。JSON number は leading `+` を構造的に禁じるが canonical は CLI 慣習 (survey 多数派、拒否は oclif のみ) に合わせ受ける。",
+      "argv": ["+5"],
+      "expect": {
+        "outcome": "success",
+        "effects": [{"entity": "v", "op": "set", "operand": 5, "source": "cli"}],
+        "result": {"v": 5}
+      }
+    },
+    {
+      "id": "leading-zero-decimal",
+      "why": "先頭 0 は decimal 解釈 (DR-074 §1): `007` = 7。octal 化 (007→7 でなく別基数) は canonical ではあり得ず opt-in (number_leading_zero:\"octal\") のみ。同じ `010` が 8/10 に割れる移植事故 (C/Go base0・bash 算術の罠) を canonical から排除。",
+      "argv": ["007"],
+      "expect": {
+        "outcome": "success",
+        "effects": [{"entity": "v", "op": "set", "operand": 7, "source": "cli"}],
+        "result": {"v": 7}
+      }
+    },
+    {
+      "id": "fraction-only",
+      "why": "先頭省略の小数点 `.5` を受理 (DR-074 §1): = 0.5。float 系多数派 (C/Go/Python/Rust/Java) に一致、JSON の `int frac` 構造制約は canonical の基準にしない。0.5 は既に最短形。",
+      "argv": [".5"],
+      "expect": {
+        "outcome": "success",
+        "effects": [{"entity": "v", "op": "set", "operand": 0.5, "source": "cli"}],
+        "result": {"v": 0.5}
+      }
+    },
+    {
+      "id": "trailing-dot",
+      "why": "末尾省略の小数点 `1.` を受理 (DR-074 §1): = 1。canonical 最短表現で 1.→1 (DR-050 §4)。`.5` と対で「小数点の片側省略」を両方向固定。",
+      "argv": ["1."],
+      "expect": {
+        "outcome": "success",
+        "effects": [{"entity": "v", "op": "set", "operand": 1, "source": "cli"}],
+        "result": {"v": 1}
+      }
+    },
+    {
+      "id": "thousand-sep-underscore",
+      "why": "桁区切り `_` を default 受理 (DR-074 §1・§4、config number_thousand_sep default [\"_\"]): `1_000` = 1000。カンマは locale 多義 + multiple.separator 衝突で default 外 (opt-in で追加可)。",
+      "argv": ["1_000"],
+      "expect": {
+        "outcome": "success",
+        "effects": [{"entity": "v", "op": "set", "operand": 1000, "source": "cli"}],
+        "result": {"v": 1000}
+      }
+    },
+    {
+      "id": "exponent",
+      "why": "指数 `1e3` を受理 (DR-074 §1): = 1000。float 系多数派の指数表記、hex の二進指数 `p` とは prefix (0x) で切り替わり衝突しない。整数値なので最短形 1000。",
+      "argv": ["1e3"],
+      "expect": {
+        "outcome": "success",
+        "effects": [{"entity": "v", "op": "set", "operand": 1000, "source": "cli"}],
+        "result": {"v": 1000}
+      }
+    }
+  ]
+}

@@ -1,0 +1,90 @@
+{
+  "why": "bool canonical の受理語彙 (DR-074 §3 / DESIGN §3.3): true_values default [\"true\",\"1\"] / false_values default [\"false\",\"0\",\"\"] / case_insensitive default true。厳密 true/false (survey 中央値) を基準に env の XX_FLAG=1 / FLAG= 慣習の 1/0/空文字だけを足した中庸で、yes/no/on/off は Norway problem 回避のため canonical 外 (config で opt-in)。不正 bool 文字列は Error (Java/Python/JS の silent 変換 = モデル C 非採用、DR-021 の姿勢)。ここでの \"1\"/\"0\"/\"\" は文字列 parse (String→bool) であって number 型の値 1 からの型変換ではない (後者は config native number→bool で従来どおり Error、DR-074 §3 / DR-050 の bool↔number 非強制は不変)。値は eq-separator (--enabled=X) で渡し bool value_parser を通す。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {"name": "enabled", "type": "bool", "long": true}
+    ]
+  },
+  "cases": [
+    {
+      "id": "true-word",
+      "why": "`true` → true (DR-074 §3): true_values の基準語。",
+      "argv": ["--enabled=true"],
+      "expect": {
+        "outcome": "success",
+        "effects": [{"entity": "enabled", "op": "set", "operand": true, "source": "cli"}],
+        "result": {"enabled": true}
+      }
+    },
+    {
+      "id": "one-numeric",
+      "why": "`1` → true (DR-074 §3): env の XX_FLAG=1 慣習が 1 を true_values に含める決め手。文字列 \"1\" の parse であって number 1 の型変換ではない。",
+      "argv": ["--enabled=1"],
+      "expect": {
+        "outcome": "success",
+        "effects": [{"entity": "enabled", "op": "set", "operand": true, "source": "cli"}],
+        "result": {"enabled": true}
+      }
+    },
+    {
+      "id": "true-mixedcase",
+      "why": "`True` → true (DR-074 §3): case_insensitive default true。任意混在 (survey で Go strconv は 3 形のみ・任意混在不可) を kuu は ci で受ける。",
+      "argv": ["--enabled=True"],
+      "expect": {
+        "outcome": "success",
+        "effects": [{"entity": "enabled", "op": "set", "operand": true, "source": "cli"}],
+        "result": {"enabled": true}
+      }
+    },
+    {
+      "id": "true-upper",
+      "why": "`TRUE` → true (DR-074 §3): 全大文字も ci で受理。True/TRUE を同一に固定 (YAML 1.2 の 3 形限定より寛容)。",
+      "argv": ["--enabled=TRUE"],
+      "expect": {
+        "outcome": "success",
+        "effects": [{"entity": "enabled", "op": "set", "operand": true, "source": "cli"}],
+        "result": {"enabled": true}
+      }
+    },
+    {
+      "id": "false-word",
+      "why": "`false` → false (DR-074 §3): false_values の基準語。",
+      "argv": ["--enabled=false"],
+      "expect": {
+        "outcome": "success",
+        "effects": [{"entity": "enabled", "op": "set", "operand": false, "source": "cli"}],
+        "result": {"enabled": false}
+      }
+    },
+    {
+      "id": "zero-numeric",
+      "why": "`0` → false (DR-074 §3): 1/0 対称。文字列 \"0\" の parse。",
+      "argv": ["--enabled=0"],
+      "expect": {
+        "outcome": "success",
+        "effects": [{"entity": "enabled", "op": "set", "operand": false, "source": "cli"}],
+        "result": {"enabled": false}
+      }
+    },
+    {
+      "id": "empty-false",
+      "why": "空文字 `\"\"` → false (DR-074 §3): env の FLAG= パターン対応で false_values に \"\" を含める。eq-separator `--enabled=` は value \"\" を割り出す (entry-forms の --port=8080 と同じ eq_split)。empty_is_false 独立キーは持たず false_values の要素として表現 (要素から外せば \"\" は Error)。",
+      "argv": ["--enabled="],
+      "expect": {
+        "outcome": "success",
+        "effects": [{"entity": "enabled", "op": "set", "operand": false, "source": "cli"}],
+        "result": {"enabled": false}
+      }
+    },
+    {
+      "id": "yes-rejected",
+      "why": "`yes` → Error (DR-074 §3): yes/no/on/off は canonical 外 (Norway problem 回避)。不正 bool 文字列は silent 変換せず Error → failure (element=enabled / argv_pos=0 / kind=parse)。reason は DR-066 v1 に bool value_parser 用の語彙が無いため省略 (kind まで検証、report: bool 用 reason の実体化)。yes を受けたいなら true_values に opt-in 追加。",
+      "argv": ["--enabled=yes"],
+      "expect": {
+        "outcome": "failure",
+        "errors": [{"element": "enabled", "argv_pos": 0, "kind": "parse"}]
+      }
+    }
+  ]
+}

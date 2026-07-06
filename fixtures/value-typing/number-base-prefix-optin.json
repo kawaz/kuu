@@ -1,0 +1,46 @@
+{
+  "why": "number_allow_base_prefix opt-in で整数 hex と hex float を一括有効化 (DR-074 §2・§4 / DR-061 §3 configurable factory): definitions.types.number を `{name: kuu_number_parser, config: {number_allow_base_prefix: true}}` で shadow すると (DR-061 の {name, config} 参照形、wire に載る portable な差し替え)、canonical で Error だった `0xff` (整数 hex) も `0x1.8p3` (hex float) も success に転じる。二進指数 `p` は任意 (C strtod 流) なので p 無しの `0x1.8` も 1.5 として読める — 「16 進整数は書けるが hex float は書けない」ねじれを排すため p を必須にしない。number 型は整数・非整数どちらも受理 (int 型の値空間判定 0x1.8p0→Error はここでは扱わず report 送り、int factory の base_prefix 配線確定後に別 fixture)。number-base-prefix-rejected.json (default false → 両方 Error) と対の opt-in 断面。",
+  "query": "parse",
+  "definition": {
+    "definitions": {
+      "types": {
+        "number": {"name": "kuu_number_parser", "config": {"number_allow_base_prefix": true}}
+      }
+    },
+    "positionals": [
+      {"name": "v", "type": "number"}
+    ]
+  },
+  "cases": [
+    {
+      "id": "hex-int-accepted",
+      "why": "opt-in で整数 hex 成功 (DR-074 §2): `0xff` = 255。number_allow_base_prefix:true が canonical の Error (number-base-prefix-rejected::hex-int-rejected) を成功に反転させる。p が無くても 0x prefix で 16 進解釈。",
+      "argv": ["0xff"],
+      "expect": {
+        "outcome": "success",
+        "effects": [{"entity": "v", "op": "set", "operand": 255, "source": "cli"}],
+        "result": {"v": 255}
+      }
+    },
+    {
+      "id": "hex-float-with-exponent",
+      "why": "opt-in で hex float (二進指数あり) 成功 (DR-074 §2): `0x1.8p3` = (1 + 8/16) * 2^3 = 1.5 * 8 = 12。整数値 12 なので number でも最短形 12。整数 hex と同じ単一フラグで有効化される (ねじれ不在)。",
+      "argv": ["0x1.8p3"],
+      "expect": {
+        "outcome": "success",
+        "effects": [{"entity": "v", "op": "set", "operand": 12, "source": "cli"}],
+        "result": {"v": 12}
+      }
+    },
+    {
+      "id": "hex-float-no-exponent",
+      "why": "p 任意の証拠 (DR-074 §2): `0x1.8` = 1 + 8/16 = 1.5 (二進指数 p 省略)。p を必須にすると float で `0xff` が読めず同種のねじれが残るため任意。number 型は非整数 1.5 も受理 (int 型なら値空間で Error だが本 fixture は number)。",
+      "argv": ["0x1.8"],
+      "expect": {
+        "outcome": "success",
+        "effects": [{"entity": "v", "op": "set", "operand": 1.5, "source": "cli"}],
+        "result": {"v": 1.5}
+      }
+    }
+  ]
+}

@@ -1,0 +1,57 @@
+{
+  "why": "inf は float 型のみ・nan は両型 Error (DR-074 §1): float の受理域 = number + inf。`t`(float) は inf を case-insensitive で受理 (inf/infinity/Inf を kuu 固定)、`n`(number) は inf を Error。nan は科学計算 CLI でも値用途がないため両型 Error (opt-in も置かない)。inf の operand JSON 表現は spec 未確定 (JSON に inf リテラルが無い、value-typing.json の 1.0→\"1\" 表記未確定と同型の serialize 依存) のため、accept 側は成功輪郭 (outcome + source) のみ固定し operand/result は据え置く (report 送り)。reject 側は not_a_number で完全に固定。bool の value_parser 失敗 reason が DR-066 v1 に無いのと違い、inf/nan の Error は number/float value_parser なので not_a_number に落ちる。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {"name": "t", "type": "float", "long": true},
+      {"name": "n", "type": "number", "long": true}
+    ]
+  },
+  "cases": [
+    {
+      "id": "inf-on-float-accepted",
+      "why": "float は inf を受理 (DR-074 §1): `--t inf` は float 型なので成功。operand の JSON 表現が未確定のため成功輪郭 (outcome success + source cli) のみ固定 (report: inf の result/operand serialize 規約)。inf は閾値 CLI (--threshold=inf) の実需があるので float で受ける。",
+      "argv": ["--t", "inf"],
+      "expect": {
+        "outcome": "success",
+        "sources": {"t": "cli"}
+      }
+    },
+    {
+      "id": "inf-case-insensitive-on-float",
+      "why": "inf は case-insensitive で kuu が語彙固定 (DR-074 §1): `--t Infinity` も float で受理。survey で Java parseDouble=大小厳密 / JS=Infinity 完全一致のみ / strtod=大小無視と割れる語彙を kuu が inf/infinity/Inf 等の慣用形 + ci に固定し host 差を吸収。operand 表現は case 1 同様据え置き。",
+      "argv": ["--t", "Infinity"],
+      "expect": {
+        "outcome": "success",
+        "sources": {"t": "cli"}
+      }
+    },
+    {
+      "id": "inf-on-number-rejected",
+      "why": "number は inf を Error (DR-074 §1): `--n inf` は number 型なので拒否 → failure (element=n / argv_pos=1 / kind=parse / reason=not_a_number)。argv_pos=1 はトークン `inf` の位置 (--n が 0、値が 1)。float との受理域差 (float = number + inf) の境界を number 側で固定。",
+      "argv": ["--n", "inf"],
+      "expect": {
+        "outcome": "failure",
+        "errors": [{"element": "n", "argv_pos": 1, "kind": "parse", "reason": "not_a_number"}]
+      }
+    },
+    {
+      "id": "nan-on-float-rejected",
+      "why": "nan は float でも Error (DR-074 §1): `--t nan` は float でも拒否 → failure (not_a_number)。inf と違い nan は CLI で値用途がなく opt-in も置かない。float が inf を受けるのに nan を受けない非対称を固定。",
+      "argv": ["--t", "nan"],
+      "expect": {
+        "outcome": "failure",
+        "errors": [{"element": "t", "argv_pos": 1, "kind": "parse", "reason": "not_a_number"}]
+      }
+    },
+    {
+      "id": "nan-on-number-rejected",
+      "why": "nan は number でも Error (DR-074 §1): `--n nan` も拒否 → failure (not_a_number)。両型で nan Error を固定 (inf の float 限定受理と対照的に nan は全型拒否)。",
+      "argv": ["--n", "nan"],
+      "expect": {
+        "outcome": "failure",
+        "errors": [{"element": "n", "argv_pos": 1, "kind": "parse", "reason": "not_a_number"}]
+      }
+    }
+  ]
+}
