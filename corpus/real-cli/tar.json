@@ -1,0 +1,74 @@
+{
+  "why": "tar (BSD, macOS 実機) のプローブ = 連結 short の限界試験。tar の古典形 `tar czf archive.tar files...` は (1) モード文字 c/t/x が排他 (ちょうど 1 つ)、(2) 全オプション文字が 1 クラスタに連結、(3) クラスタ末尾の値 short (f) の引数がクラスタ全体の後に来る、という getopt 連結の特性を凝縮する。プローブ対象 = 連結 short の末尾に値 short (`-czf` の f) を置いたとき、f がクラスタ後続トークンを値消費できるか (§15.8 の cluster 読み + arity 駆動)。既知の表現ギャップ (issue 候補): BSD tar は先頭ハイフン省略の legacy 形 `tar czf` も許すが、kuu はハイフン起動が前提で `czf` (dash なし) は positional に落ちる — dash 省略 legacy はここでは扱わず `-czf` (modern) のみ定義する。",
+  "query": "parse",
+  "definition": {
+    "config": {"short_combine": true},
+    "options": [
+      {"name": "create", "type": "flag", "short": "c", "exclusive_group": ["mode"]},
+      {"name": "list", "type": "flag", "short": "t", "exclusive_group": ["mode"]},
+      {"name": "extract", "type": "flag", "short": "x", "exclusive_group": ["mode"]},
+      {"name": "verbose", "type": "flag", "short": "v"},
+      {"name": "gzip", "type": "flag", "short": "z"},
+      {"name": "file", "type": "string", "short": "f"}
+    ],
+    "positionals": [
+      {"name": "files", "type": "string", "repeat": {"min": 0}}
+    ]
+  },
+  "cases": [
+    {
+      "id": "create-gzip-cluster",
+      "why": "`tar -czf archive.tar.gz dir/` (実機は dir/ を gzip 圧縮アーカイブ化)。連結 `-czf` が c/z/f に分解、末尾の値 short f がクラスタ後続の \"archive.tar.gz\" を値消費し、残る \"dir/\" が files に落ちる。クラスタ末尾の値 short の後方引数取得がプローブの核。effects は cluster 順 create→gzip→file(archive)→files(dir)。",
+      "argv": ["-czf", "archive.tar.gz", "dir/"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "create", "op": "set", "operand": true, "source": "cli"},
+          {"entity": "gzip", "op": "set", "operand": true, "source": "cli"},
+          {"entity": "file", "op": "set", "operand": "archive.tar.gz", "source": "cli"},
+          {"entity": "files", "op": "set", "operand": "dir/", "source": "cli"}
+        ],
+        "result": {"create": true, "list": false, "extract": false, "verbose": false, "gzip": true, "file": "archive.tar.gz", "files": ["dir/"]}
+      }
+    },
+    {
+      "id": "extract-gzip-cluster",
+      "why": "`tar -xzf archive.tar.gz` (実機は展開)。-xzf 分解、f=archive.tar.gz、files 0 個 `[]`。extract モード単独なので排他成立。create/list false。",
+      "argv": ["-xzf", "archive.tar.gz"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "extract", "op": "set", "operand": true, "source": "cli"},
+          {"entity": "gzip", "op": "set", "operand": true, "source": "cli"},
+          {"entity": "file", "op": "set", "operand": "archive.tar.gz", "source": "cli"}
+        ],
+        "result": {"create": false, "list": false, "extract": true, "verbose": false, "gzip": true, "file": "archive.tar.gz", "files": []}
+      }
+    },
+    {
+      "id": "list-verbose",
+      "why": "`tar -tvf archive.tar` (実機は詳細一覧)。-tvf 分解、list/verbose flag、f=archive.tar。v (verbose) は mode グループ外なので list と共存。値 short f は末尾。",
+      "argv": ["-tvf", "archive.tar"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "list", "op": "set", "operand": true, "source": "cli"},
+          {"entity": "verbose", "op": "set", "operand": true, "source": "cli"},
+          {"entity": "file", "op": "set", "operand": "archive.tar", "source": "cli"}
+        ],
+        "result": {"create": false, "list": true, "extract": false, "verbose": true, "gzip": false, "file": "archive.tar", "files": []}
+      }
+    },
+    {
+      "id": "create-extract-conflict",
+      "why": "`tar -c -x` はモード 2 つで実機エラー。create/extract とも mode グループ committed → exclusive_group_violated。element=mode、argv_pos=argv.length=2。連結でなく個別指定でも排他が立つことを固定。",
+      "argv": ["-c", "-x"],
+      "expect": {
+        "outcome": "failure",
+        "errors": [
+          {"element": "mode", "argv_pos": 2, "kind": "constraint", "reason": "exclusive_group_violated"}
+        ]
+      }
+    }
+  ]
+}

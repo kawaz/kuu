@@ -1,0 +1,98 @@
+{
+  "why": "curl (macOS 実機、主要オプション約13個に絞る) のプローブ: short/long 併記の完全ペア + 反復値オプション (-H/-d は multiple append) + 有名な連結 short (`-fsSL`) + 可変長 URL positional。プローブ対象 = (1) 各オプションが short と long の 2 入口を持ち同一セルを指す (long は綴りにハイフンを含むため long:[\"remote-name\"] 等で明示)、(2) -H ヘッダの複数指定を append でリスト化、(3) 4 連結 short の分解。値オプション未発火の absent と multiple 未発火の `[]` の対比も含む。",
+  "query": "parse",
+  "definition": {
+    "config": {"short_combine": true},
+    "options": [
+      {"name": "request", "type": "string", "short": "X", "long": true},
+      {"name": "header", "type": "string", "short": "H", "long": true, "multiple": "append"},
+      {"name": "data", "type": "string", "short": "d", "long": true, "multiple": "append"},
+      {"name": "output", "type": "string", "short": "o", "long": true},
+      {"name": "user", "type": "string", "short": "u", "long": true},
+      {"name": "remote_name", "type": "flag", "short": "O", "long": ["remote-name"]},
+      {"name": "silent", "type": "flag", "short": "s", "long": true},
+      {"name": "show_error", "type": "flag", "short": "S", "long": ["show-error"]},
+      {"name": "verbose", "type": "flag", "short": "v", "long": true},
+      {"name": "location", "type": "flag", "short": "L", "long": true},
+      {"name": "fail", "type": "flag", "short": "f", "long": true},
+      {"name": "insecure", "type": "flag", "short": "k", "long": true},
+      {"name": "include", "type": "flag", "short": "i", "long": true}
+    ],
+    "positionals": [
+      {"name": "url", "type": "string", "repeat": {"min": 0}}
+    ]
+  },
+  "cases": [
+    {
+      "id": "silent-get",
+      "why": "`curl -s https://example.com` (実機は進捗非表示で GET)。-s flag、url=[https://example.com]。値オプションは全 absent、multiple の header/data は `[]`、他 flag false。最小 GET のケース。",
+      "argv": ["-s", "https://example.com"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "silent", "op": "set", "operand": true, "source": "cli"},
+          {"entity": "url", "op": "set", "operand": "https://example.com", "source": "cli"}
+        ],
+        "result": {"header": [], "data": [], "remote_name": false, "silent": true, "show_error": false, "verbose": false, "location": false, "fail": false, "insecure": false, "include": false, "url": ["https://example.com"]}
+      }
+    },
+    {
+      "id": "post-with-data",
+      "why": "`curl -X POST -d name=foo https://api.test` (実機は POST でボディ送信)。-X が \"POST\"、-d が \"name=foo\" (multiple なので `[\"name=foo\"]`)。値オプション 2 個 + url。消費順 request→data→url。",
+      "argv": ["-X", "POST", "-d", "name=foo", "https://api.test"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "request", "op": "set", "operand": "POST", "source": "cli"},
+          {"entity": "data", "op": "set", "operand": "name=foo", "source": "cli"},
+          {"entity": "url", "op": "set", "operand": "https://api.test", "source": "cli"}
+        ],
+        "result": {"request": "POST", "header": [], "data": ["name=foo"], "remote_name": false, "silent": false, "show_error": false, "verbose": false, "location": false, "fail": false, "insecure": false, "include": false, "url": ["https://api.test"]}
+      }
+    },
+    {
+      "id": "multiple-headers",
+      "why": "`curl -H 'A: 1' -H 'B: 2' https://x` (実機は 2 ヘッダ送信)。-H 2 度発火 → append で `[\"A: 1\",\"B: 2\"]` (DR-036)。反復ヘッダのプローブの核。他値オプション absent。",
+      "argv": ["-H", "A: 1", "-H", "B: 2", "https://x"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "header", "op": "set", "operand": "A: 1", "source": "cli"},
+          {"entity": "header", "op": "set", "operand": "B: 2", "source": "cli"},
+          {"entity": "url", "op": "set", "operand": "https://x", "source": "cli"}
+        ],
+        "result": {"header": ["A: 1", "B: 2"], "data": [], "remote_name": false, "silent": false, "show_error": false, "verbose": false, "location": false, "fail": false, "insecure": false, "include": false, "url": ["https://x"]}
+      }
+    },
+    {
+      "id": "famous-cluster-fsSL",
+      "why": "`curl -fsSL https://get.example.com` (install スクリプトで頻出の連結)。short_combine で -f/-s/-S/-L の 4 読みに分解。effects は cluster 内消費順 fail→silent→show_error→location→url。4 連結の分解を固定。",
+      "argv": ["-fsSL", "https://get.example.com"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "fail", "op": "set", "operand": true, "source": "cli"},
+          {"entity": "silent", "op": "set", "operand": true, "source": "cli"},
+          {"entity": "show_error", "op": "set", "operand": true, "source": "cli"},
+          {"entity": "location", "op": "set", "operand": true, "source": "cli"},
+          {"entity": "url", "op": "set", "operand": "https://get.example.com", "source": "cli"}
+        ],
+        "result": {"header": [], "data": [], "remote_name": false, "silent": true, "show_error": true, "verbose": false, "location": true, "fail": true, "insecure": false, "include": false, "url": ["https://get.example.com"]}
+      }
+    },
+    {
+      "id": "long-forms",
+      "why": "`curl --location --output out.html https://x` (long 形)。--location は flag の long 入口、--output は値オプションの long 入口。同一セルを short/long どちらからでも書ける (long-forms のプローブ)。output=\"out.html\"、location true。",
+      "argv": ["--location", "--output", "out.html", "https://x"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "location", "op": "set", "operand": true, "source": "cli"},
+          {"entity": "output", "op": "set", "operand": "out.html", "source": "cli"},
+          {"entity": "url", "op": "set", "operand": "https://x", "source": "cli"}
+        ],
+        "result": {"header": [], "data": [], "output": "out.html", "remote_name": false, "silent": false, "show_error": false, "verbose": false, "location": true, "fail": false, "insecure": false, "include": false, "url": ["https://x"]}
+      }
+    }
+  ]
+}

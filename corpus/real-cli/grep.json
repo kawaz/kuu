@@ -1,0 +1,93 @@
+{
+  "why": "grep (BSD, macOS 実機) のプローブ: 多数の bool short flag + 値付き文脈オプション (-A/-B/-C num) + long 値オプションの `=` 連結 (--context=num) + 必須 pattern positional + 可変長 files。プローブ対象 = (1) `=` 連結 long 値 (allow_equal_separator による eq-split matcher、§15.8)、(2) 連結 short (`-rn`)、(3) short と long の別綴りが同一セルを指す (-C と --context)。既知の表現ギャップ (別 probe): 実機 grep は `-e pattern` 複数指定 (multiple) を許し、その場合 pattern positional は不要になる (pattern の必須性が -e 有無で反転) — この mode 従属と『1 個目非オプションは pattern か file か』の曖昧 (uniq issue と同類) を避けるため、ここでは pattern 必須の canonical form のみ定義する。",
+  "query": "parse",
+  "definition": {
+    "config": {"short_combine": true, "allow_equal_separator": true},
+    "options": [
+      {"name": "ignore_case", "type": "flag", "short": "i"},
+      {"name": "invert", "type": "flag", "short": "v"},
+      {"name": "line_number", "type": "flag", "short": "n"},
+      {"name": "recursive", "type": "flag", "short": "r"},
+      {"name": "extended", "type": "flag", "short": "E"},
+      {"name": "word", "type": "flag", "short": "w"},
+      {"name": "after", "type": "int", "short": "A"},
+      {"name": "before", "type": "int", "short": "B"},
+      {"name": "context", "type": "int", "short": "C", "long": ["context"]}
+    ],
+    "positionals": [
+      {"name": "pattern", "type": "string", "required": true},
+      {"name": "files", "type": "string", "repeat": {"min": 0}}
+    ]
+  },
+  "cases": [
+    {
+      "id": "ignore-case-one-file",
+      "why": "`grep -i foo file.txt` (実機は大小無視で foo を検索)。-i 発火、pattern=foo (必須 positional exactly 1)、files=[file.txt]。pattern 必須なので 1 個目 non-option が確定的に pattern に落ち、曖昧が生じない (uniq の 2-optional 問題を回避する設計)。",
+      "argv": ["-i", "foo", "file.txt"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "ignore_case", "op": "set", "operand": true, "source": "cli"},
+          {"entity": "pattern", "op": "set", "operand": "foo", "source": "cli"},
+          {"entity": "files", "op": "set", "operand": "file.txt", "source": "cli"}
+        ],
+        "result": {"ignore_case": true, "invert": false, "line_number": false, "recursive": false, "extended": false, "word": false, "pattern": "foo", "files": ["file.txt"]}
+      }
+    },
+    {
+      "id": "recursive-linenum-cluster",
+      "why": "`grep -rn pattern src/` (実機は src/ を再帰・行番号付き検索)。short_combine で -r/-n 分解、pattern=pattern、files=[src/]。連結 short と pattern/files 分離を同時にプローブ。",
+      "argv": ["-rn", "pattern", "src/"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "recursive", "op": "set", "operand": true, "source": "cli"},
+          {"entity": "line_number", "op": "set", "operand": true, "source": "cli"},
+          {"entity": "pattern", "op": "set", "operand": "pattern", "source": "cli"},
+          {"entity": "files", "op": "set", "operand": "src/", "source": "cli"}
+        ],
+        "result": {"ignore_case": false, "invert": false, "line_number": true, "recursive": true, "extended": false, "word": false, "pattern": "pattern", "files": ["src/"]}
+      }
+    },
+    {
+      "id": "after-context-value",
+      "why": "`grep -A 3 foo f.txt` (実機はマッチ後 3 行も表示)。-A が int 3 を値バインド、pattern=foo、files=[f.txt]。消費順 after(0-1)→pattern(2)→files(3)。値付き短オプションと positional の分離。",
+      "argv": ["-A", "3", "foo", "f.txt"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "after", "op": "set", "operand": 3, "source": "cli"},
+          {"entity": "pattern", "op": "set", "operand": "foo", "source": "cli"},
+          {"entity": "files", "op": "set", "operand": "f.txt", "source": "cli"}
+        ],
+        "result": {"ignore_case": false, "invert": false, "line_number": false, "recursive": false, "extended": false, "word": false, "after": 3, "pattern": "foo", "files": ["f.txt"]}
+      }
+    },
+    {
+      "id": "long-context-equal-sep",
+      "why": "`grep --context=2 foo f.txt` (実機はマッチ前後 2 行)。`=` 連結 long 値 → allow_equal_separator の eq-split matcher が `--context=2` を [--context, 2] の読みに分解 (§15.8)。context セルは -C と同一 (long:[\"context\"] で別綴り追加)。effects: context set 2 → pattern → files。eq-split matcher のプローブの核。",
+      "argv": ["--context=2", "foo", "f.txt"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "context", "op": "set", "operand": 2, "source": "cli"},
+          {"entity": "pattern", "op": "set", "operand": "foo", "source": "cli"},
+          {"entity": "files", "op": "set", "operand": "f.txt", "source": "cli"}
+        ],
+        "result": {"ignore_case": false, "invert": false, "line_number": false, "recursive": false, "extended": false, "word": false, "context": 2, "pattern": "foo", "files": ["f.txt"]}
+      }
+    },
+    {
+      "id": "pattern-only-stdin",
+      "why": "`grep foo` (実機は stdin から foo 検索)。pattern=foo (必須)、files 0 個 `[]`。pattern が 1 個埋まれば files 空でも成立 (required は exactly 1、files は min0)。",
+      "argv": ["foo"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "pattern", "op": "set", "operand": "foo", "source": "cli"}
+        ],
+        "result": {"ignore_case": false, "invert": false, "line_number": false, "recursive": false, "extended": false, "word": false, "pattern": "foo", "files": []}
+      }
+    }
+  ]
+}

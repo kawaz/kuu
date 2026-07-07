@@ -1,0 +1,74 @@
+{
+  "why": "find (BSD, macOS 実機 `find path... expression`) のプローブ = 表現力の限界試験。find の expression は演算子 (-a/-o/! と括弧) による優先順位・短絡評価を持つ再帰的述語文法であり、getopt 型の宣言的 CLI ではない。kuu が直接扱えるのは『先頭 paths + ハイフン起動の primary 群』の平坦な近似まで。表現できない (= 設計スコープ外、§13.9 の post-parse ロジックはアプリの関心) もの: (1) 論理演算子 -a/-o/! と括弧 `( )` による述語ツリー、(2) 演算子の優先順位と短絡、(3) `-exec cmd {} \\;` の `\\;` 終端子で区切る可変長コマンド (dd の severed に似るが引数境界が `;` リテラル)、(4) primary の出現順が評価順を決める意味論。ここでは primary を平坦な option 群として近似し、演算子は含めない。これは kuu の限界というより『kuu は述語評価器でなく引数パーサ』という設計境界の確認。",
+  "query": "parse",
+  "definition": {
+    "config": {"long_prefix": "-"},
+    "options": [
+      {"name": "name", "type": "string", "long": ["name"], "multiple": "append"},
+      {"name": "type", "type": "string", "long": ["type"]},
+      {"name": "maxdepth", "type": "int", "long": ["maxdepth"]},
+      {"name": "print", "type": "flag", "long": ["print"]},
+      {"name": "empty", "type": "flag", "long": ["empty"]}
+    ],
+    "positionals": [
+      {"name": "paths", "type": "string", "repeat": {"min": 0}}
+    ]
+  },
+  "cases": [
+    {
+      "id": "path-and-name",
+      "why": "`find . -name '*.txt'` (実機はカレント下の *.txt)。`.` は非ハイフンなので paths に、`-name` は単ハイフン long primary。find の primary は `--name` でなく `-name` の単ハイフン綴りなので config.long_prefix を \"-\" に設定して long \"name\" がトリガするようにする (getopt 系と違う find 固有の綴り規約を config で吸収できるかのプローブでもある)。name は multiple:append で `[\"*.txt\"]`。paths と primary の分離を固定。",
+      "argv": [".", "-name", "*.txt"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "paths", "op": "set", "operand": ".", "source": "cli"},
+          {"entity": "name", "op": "set", "operand": "*.txt", "source": "cli"}
+        ],
+        "result": {"print": false, "empty": false, "name": ["*.txt"], "paths": ["."]}
+      }
+    },
+    {
+      "id": "type-and-name",
+      "why": "`find . -type f -name '*.go'` (実機は通常ファイルの *.go)。paths=[.], type=\"f\", name=[\"*.go\"]。実機ではこれは暗黙 AND だが、kuu の平坦モデルでは両 primary が独立に値バインドされるだけ (AND 評価はアプリの述語ツリー構築の関心 = スコープ外)。primary 複数の共存を固定。",
+      "argv": [".", "-type", "f", "-name", "*.go"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "paths", "op": "set", "operand": ".", "source": "cli"},
+          {"entity": "type", "op": "set", "operand": "f", "source": "cli"},
+          {"entity": "name", "op": "set", "operand": "*.go", "source": "cli"}
+        ],
+        "result": {"print": false, "empty": false, "name": ["*.go"], "type": "f", "paths": ["."]}
+      }
+    },
+    {
+      "id": "maxdepth-print",
+      "why": "`find . -maxdepth 2 -print` (実機は深さ 2 まで、明示出力)。maxdepth=int 2、print flag true。値 primary と flag primary の混在。paths=[.]。",
+      "argv": [".", "-maxdepth", "2", "-print"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "paths", "op": "set", "operand": ".", "source": "cli"},
+          {"entity": "maxdepth", "op": "set", "operand": 2, "source": "cli"},
+          {"entity": "print", "op": "set", "operand": true, "source": "cli"}
+        ],
+        "result": {"print": true, "empty": false, "name": [], "maxdepth": 2, "paths": ["."]}
+      }
+    },
+    {
+      "id": "multiple-paths",
+      "why": "`find src test -name '*.py'` (実機は src と test 両方を探索)。paths=[src,test] (先頭連続する非ハイフンが paths に畳まれる)、その後 primary。可変長 paths と primary 境界の固定 — paths は最初の primary で自然に終わる (ハイフン起動が背骨の positional 消費を止める)。",
+      "argv": ["src", "test", "-name", "*.py"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "paths", "op": "set", "operand": "src", "source": "cli"},
+          {"entity": "paths", "op": "set", "operand": "test", "source": "cli"},
+          {"entity": "name", "op": "set", "operand": "*.py", "source": "cli"}
+        ],
+        "result": {"print": false, "empty": false, "name": ["*.py"], "paths": ["src", "test"]}
+      }
+    }
+  ]
+}
