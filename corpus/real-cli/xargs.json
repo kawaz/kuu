@@ -1,0 +1,59 @@
+{
+  "why": "xargs (macOS 実機 `xargs [-0] [-n number] [-I replstr] [-P maxprocs] [utility [args]]`) のプローブ: 値オプション複数 + utility 以降の command pass-through。プローブ対象 = 先頭のオプション群を解析した後、utility とその引数を raw 列として受ける形。既知の表現ギャップ (env/ssh/docker と共通): utility 以降は xargs の option 解析対象外 (実行対象コマンドの引数、`-x` 等が来ても xargs option でない) だが kuu は背骨上で option 風トークンを拾おうとする。ここでは option 風でない command のみ扱い、pass-through 境界の限界は記録にとどめる。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {"name": "null_delim", "type": "flag", "short": "0"},
+      {"name": "max_args", "type": "int", "short": "n"},
+      {"name": "replace", "type": "string", "short": "I"},
+      {"name": "max_procs", "type": "int", "short": "P"}
+    ],
+    "positionals": [
+      {"name": "command", "type": "string", "repeat": {"min": 0}}
+    ]
+  },
+  "cases": [
+    {
+      "id": "max-args-command",
+      "why": "`xargs -n 1 echo` (実機は入力を 1 個ずつ echo に渡す)。-n が int 1、command=[\"echo\"]。null_delim false、replace/max_procs absent。値オプション + utility positional。",
+      "argv": ["-n", "1", "echo"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "max_args", "op": "set", "operand": 1, "source": "cli"},
+          {"entity": "command", "op": "set", "operand": "echo", "source": "cli"}
+        ],
+        "result": {"null_delim": false, "max_args": 1, "command": ["echo"]}
+      }
+    },
+    {
+      "id": "null-delim-parallel",
+      "why": "`xargs -0 -P 4 rm` (実機は NUL 区切り入力を 4 並列で rm)。-0 flag、-P が int 4、command=[\"rm\"]。flag + 2 値オプション + utility。",
+      "argv": ["-0", "-P", "4", "rm"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "null_delim", "op": "set", "operand": true, "source": "cli"},
+          {"entity": "max_procs", "op": "set", "operand": 4, "source": "cli"},
+          {"entity": "command", "op": "set", "operand": "rm", "source": "cli"}
+        ],
+        "result": {"null_delim": true, "max_procs": 4, "command": ["rm"]}
+      }
+    },
+    {
+      "id": "replace-placeholder",
+      "why": "`xargs -I {} mv {} dest/` (実機は入力を {} に置換して mv)。-I が \"{}\" をバインド、command=[mv,{},dest/]。{} や dest/ は option 風でないので command に落ちる。置換文字列オプションと後続 raw command の共存。",
+      "argv": ["-I", "{}", "mv", "{}", "dest/"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "replace", "op": "set", "operand": "{}", "source": "cli"},
+          {"entity": "command", "op": "set", "operand": "mv", "source": "cli"},
+          {"entity": "command", "op": "set", "operand": "{}", "source": "cli"},
+          {"entity": "command", "op": "set", "operand": "dest/", "source": "cli"}
+        ],
+        "result": {"null_delim": false, "replace": "{}", "command": ["mv", "{}", "dest/"]}
+      }
+    }
+  ]
+}
