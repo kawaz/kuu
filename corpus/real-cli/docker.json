@@ -1,0 +1,100 @@
+{
+  "why": "docker (3 サブコマンド run/ps/build に絞る) のプローブ: サブコマンドごとの option 集合 + 反復値オプション (run の -p/-e) + 連結 short (-it) + 必須 positional (image / context)。プローブ対象 = サブコマンド内での multiple:append と cluster short の組合せ。既知の表現ギャップ (issue 候補): `docker run image cmd args...` の image 以降はコンテナ内コマンドとして raw pass-through され docker 自身の option 解析対象外だが、kuu では option が背骨上で順不同なので image 後の `-la` 等も docker option として拾おうとする — この『positional 以降 raw pass-through』(getopt の `--` に似るが位置トリガ) は dd/sever の変種で、素直な variadic positional では表せない。ここでは option 風でない command 引数のみ扱う。",
+  "query": "parse",
+  "definition": {
+    "config": {"short_combine": true},
+    "commands": [
+      {
+        "type": "command",
+        "name": "run",
+        "options": [
+          {"name": "detach", "type": "flag", "short": "d", "long": true},
+          {"name": "interactive", "type": "flag", "short": "i", "long": true},
+          {"name": "tty", "type": "flag", "short": "t", "long": true},
+          {"name": "publish", "type": "string", "short": "p", "long": true, "multiple": "append"},
+          {"name": "env", "type": "string", "short": "e", "long": true, "multiple": "append"},
+          {"name": "container_name", "type": "string", "long": ["name"]}
+        ],
+        "positionals": [
+          {"name": "image", "type": "string", "required": true},
+          {"name": "command", "type": "string", "repeat": {"min": 0}}
+        ]
+      },
+      {
+        "type": "command",
+        "name": "ps",
+        "options": [
+          {"name": "all", "type": "flag", "short": "a", "long": true},
+          {"name": "quiet", "type": "flag", "short": "q", "long": true}
+        ]
+      },
+      {
+        "type": "command",
+        "name": "build",
+        "options": [
+          {"name": "tag", "type": "string", "short": "t", "long": true},
+          {"name": "file", "type": "string", "short": "f", "long": true}
+        ],
+        "positionals": [
+          {"name": "context", "type": "string", "required": true}
+        ]
+      }
+    ]
+  },
+  "cases": [
+    {
+      "id": "run-detach-publish",
+      "why": "`docker run -d -p 8080:80 nginx` (実機はバックグラウンドでポート公開起動)。run 入場、-d flag、-p が \"8080:80\" (multiple → `[\"8080:80\"]`)、image=\"nginx\"、command 0 個 `[]`。env は未発火 `[]`。サブコマンド内の flag + 反復値 + 必須 positional。",
+      "argv": ["run", "-d", "-p", "8080:80", "nginx"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "detach", "op": "set", "operand": true, "source": "cli"},
+          {"entity": "publish", "op": "set", "operand": "8080:80", "source": "cli"},
+          {"entity": "image", "op": "set", "operand": "nginx", "source": "cli"}
+        ],
+        "result": {"run": {"detach": true, "interactive": false, "tty": false, "publish": ["8080:80"], "env": [], "image": "nginx", "command": []}}
+      }
+    },
+    {
+      "id": "run-it-cluster-with-command",
+      "why": "`docker run -it ubuntu bash` (実機は対話端末で bash 起動)。short_combine で -it → -i/-t。image=\"ubuntu\"、command=[\"bash\"] (option 風でない引数)。cluster short + image + command positional の分離。",
+      "argv": ["run", "-it", "ubuntu", "bash"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "interactive", "op": "set", "operand": true, "source": "cli"},
+          {"entity": "tty", "op": "set", "operand": true, "source": "cli"},
+          {"entity": "image", "op": "set", "operand": "ubuntu", "source": "cli"},
+          {"entity": "command", "op": "set", "operand": "bash", "source": "cli"}
+        ],
+        "result": {"run": {"detach": false, "interactive": true, "tty": true, "publish": [], "env": [], "image": "ubuntu", "command": ["bash"]}}
+      }
+    },
+    {
+      "id": "ps-all",
+      "why": "`docker ps -a` (実機は停止中含む全コンテナ)。ps 入場、-a flag。positional なしの単純サブコマンド。quiet false。",
+      "argv": ["ps", "-a"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "all", "op": "set", "operand": true, "source": "cli"}
+        ],
+        "result": {"ps": {"all": true, "quiet": false}}
+      }
+    },
+    {
+      "id": "build-tag-context",
+      "why": "`docker build -t myimg:latest .` (実機は . を myimg:latest でビルド)。build 入場、-t が \"myimg:latest\"、context=\".\" 必須 positional。tag と context の分離。file は absent。",
+      "argv": ["build", "-t", "myimg:latest", "."],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "tag", "op": "set", "operand": "myimg:latest", "source": "cli"},
+          {"entity": "context", "op": "set", "operand": ".", "source": "cli"}
+        ],
+        "result": {"build": {"tag": "myimg:latest", "context": "."}}
+      }
+    }
+  ]
+}

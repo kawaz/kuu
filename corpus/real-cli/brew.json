@@ -1,0 +1,102 @@
+{
+  "why": "brew (3 サブコマンド install/list/info に絞る) のプローブ: サブコマンド + long-only オプション (brew は --cask 等 long 主体、short をほぼ持たない) + 必須/任意 positional。プローブ対象 = short を持たず long のみのオプション定義 (long: true / long:[\"...\"] だけで short 省略) と、サブコマンドごとの positional arity 差 (install は 1 個以上必須、info は 1 個必須、list は 0 個)。",
+  "query": "parse",
+  "definition": {
+    "commands": [
+      {
+        "type": "command",
+        "name": "install",
+        "options": [
+          {"name": "cask", "type": "flag", "long": true},
+          {"name": "head", "type": "flag", "long": ["HEAD"]}
+        ],
+        "positionals": [
+          {"name": "formulae", "type": "string", "repeat": {"min": 1}}
+        ]
+      },
+      {
+        "type": "command",
+        "name": "list",
+        "options": [
+          {"name": "cask", "type": "flag", "long": true},
+          {"name": "versions", "type": "flag", "long": true}
+        ]
+      },
+      {
+        "type": "command",
+        "name": "info",
+        "options": [
+          {"name": "cask", "type": "flag", "long": true}
+        ],
+        "positionals": [
+          {"name": "formula", "type": "string", "required": true}
+        ]
+      }
+    ]
+  },
+  "cases": [
+    {
+      "id": "install-single",
+      "why": "`brew install wget` (実機は wget を導入)。install 入場、formulae=[\"wget\"] (repeat min1)。cask/head 未発火 false。long-only オプションと必須 positional。",
+      "argv": ["install", "wget"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "formulae", "op": "set", "operand": "wget", "source": "cli"}
+        ],
+        "result": {"install": {"cask": false, "head": false, "formulae": ["wget"]}}
+      }
+    },
+    {
+      "id": "install-cask",
+      "why": "`brew install --cask firefox` (実機は cask で firefox 導入)。--cask long flag、formulae=[\"firefox\"]。long flag とサブコマンド positional の組合せ。",
+      "argv": ["install", "--cask", "firefox"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "cask", "op": "set", "operand": true, "source": "cli"},
+          {"entity": "formulae", "op": "set", "operand": "firefox", "source": "cli"}
+        ],
+        "result": {"install": {"cask": true, "head": false, "formulae": ["firefox"]}}
+      }
+    },
+    {
+      "id": "install-multiple",
+      "why": "`brew install git curl jq` (実機は 3 つ導入)。formulae=[git,curl,jq] (repeat が 3 トークン畳み)。可変長必須 positional。",
+      "argv": ["install", "git", "curl", "jq"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "formulae", "op": "set", "operand": "git", "source": "cli"},
+          {"entity": "formulae", "op": "set", "operand": "curl", "source": "cli"},
+          {"entity": "formulae", "op": "set", "operand": "jq", "source": "cli"}
+        ],
+        "result": {"install": {"cask": false, "head": false, "formulae": ["git", "curl", "jq"]}}
+      }
+    },
+    {
+      "id": "list-versions",
+      "why": "`brew list --versions` (実機は導入済みをバージョン付き一覧)。list 入場、--versions flag。positional なし。cask false。",
+      "argv": ["list", "--versions"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "versions", "op": "set", "operand": true, "source": "cli"}
+        ],
+        "result": {"list": {"cask": false, "versions": true}}
+      }
+    },
+    {
+      "id": "info-formula",
+      "why": "`brew info git` (実機は git の情報)。info 入場、formula=\"git\" 必須 scalar。単一必須 positional のサブコマンド。cask false。",
+      "argv": ["info", "git"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "formula", "op": "set", "operand": "git", "source": "cli"}
+        ],
+        "result": {"info": {"cask": false, "formula": "git"}}
+      }
+    }
+  ]
+}

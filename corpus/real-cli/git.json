@@ -1,0 +1,116 @@
+{
+  "why": "git (4 サブコマンド add/commit/push/log に絞る) のプローブ: commands[] によるサブコマンド dispatch + 子スコープへの結果ネスト (DR-025) + ルートオプション (-C) とサブコマンドの共存。プローブ対象 = (1) サブコマンドごとに独立した option 集合が子スコープを作り結果がネストする (command-scope/subcommand と同型)、(2) ルート直下の値オプション -C がサブコマンド入場前に効き結果ルートに露出する、(3) 各サブコマンドの典型呼び出し。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {"name": "directory", "type": "string", "short": "C"}
+    ],
+    "commands": [
+      {
+        "type": "command",
+        "name": "add",
+        "options": [
+          {"name": "all", "type": "flag", "short": "A", "long": true}
+        ],
+        "positionals": [
+          {"name": "pathspec", "type": "string", "repeat": {"min": 0}}
+        ]
+      },
+      {
+        "type": "command",
+        "name": "commit",
+        "options": [
+          {"name": "message", "type": "string", "short": "m", "long": true},
+          {"name": "all", "type": "flag", "short": "a", "long": true},
+          {"name": "amend", "type": "flag", "long": true}
+        ]
+      },
+      {
+        "type": "command",
+        "name": "push",
+        "options": [
+          {"name": "set_upstream", "type": "flag", "short": "u", "long": ["set-upstream"]},
+          {"name": "force", "type": "flag", "long": true}
+        ],
+        "positionals": [
+          {"name": "remote", "type": "string", "optional": true},
+          {"name": "branch", "type": "string", "optional": true}
+        ]
+      },
+      {
+        "type": "command",
+        "name": "log",
+        "options": [
+          {"name": "oneline", "type": "flag", "long": true},
+          {"name": "max_count", "type": "int", "short": "n"}
+        ]
+      }
+    ]
+  },
+  "cases": [
+    {
+      "id": "add-pathspec",
+      "why": "`git add .` (実機は . 配下を stage)。add サブコマンド入場、pathspec=[.]。結果は add の下にネスト (DR-025)。all は未発火 false。ルート directory は未指定で absent (default なし値オプション)。",
+      "argv": ["add", "."],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "pathspec", "op": "set", "operand": ".", "source": "cli"}
+        ],
+        "result": {"add": {"all": false, "pathspec": ["."]}}
+      }
+    },
+    {
+      "id": "commit-with-message",
+      "why": "`git commit -m 'msg'` (実機はメッセージ付きコミット)。commit 入場、-m が \"msg\" をバインド。結果 {commit:{message:\"msg\", all:false, amend:false}}。値オプションのネストを固定。",
+      "argv": ["commit", "-m", "msg"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "message", "op": "set", "operand": "msg", "source": "cli"}
+        ],
+        "result": {"commit": {"message": "msg", "all": false, "amend": false}}
+      }
+    },
+    {
+      "id": "push-upstream",
+      "why": "`git push -u origin main` (実機は upstream 設定付き push)。push 入場、-u flag、remote=\"origin\"、branch=[\"main\"] (optional)。flag とサブコマンド positional の共存。",
+      "argv": ["push", "-u", "origin", "main"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "set_upstream", "op": "set", "operand": true, "source": "cli"},
+          {"entity": "remote", "op": "set", "operand": "origin", "source": "cli"},
+          {"entity": "branch", "op": "set", "operand": "main", "source": "cli"}
+        ],
+        "result": {"push": {"set_upstream": true, "force": false, "remote": "origin", "branch": ["main"]}}
+      }
+    },
+    {
+      "id": "root-option-with-subcommand",
+      "why": "`git -C /repo commit -m msg` (実機は /repo で commit)。ルートオプション -C がサブコマンド入場前に発火し結果ルートに directory として露出、commit は子スコープにネスト。ルートオプション + サブコマンドの二層結果構造をプローブ (DR-025 の帰結)。effects は消費順 directory(root)→message(child)。",
+      "argv": ["-C", "/repo", "commit", "-m", "msg"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "directory", "op": "set", "operand": "/repo", "source": "cli"},
+          {"entity": "message", "op": "set", "operand": "msg", "source": "cli"}
+        ],
+        "result": {"directory": "/repo", "commit": {"message": "msg", "all": false, "amend": false}}
+      }
+    },
+    {
+      "id": "log-oneline-count",
+      "why": "`git log --oneline -n 10` (実機は 1 行表示で 10 件)。log 入場、--oneline flag、-n が int 10。long flag と short 値オプションの混在をサブコマンド内で固定。",
+      "argv": ["log", "--oneline", "-n", "10"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "oneline", "op": "set", "operand": true, "source": "cli"},
+          {"entity": "max_count", "op": "set", "operand": 10, "source": "cli"}
+        ],
+        "result": {"log": {"oneline": true, "max_count": 10}}
+      }
+    }
+  ]
+}
