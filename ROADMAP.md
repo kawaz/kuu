@@ -19,7 +19,7 @@ kuu の core は特定言語のバイナリではなく、**仕様 (DESIGN / LOW
 | 枝 / ws | 役割 |
 |---|---|
 | `ast-spec` | **仕様正本 + 議論の場** (実装を置かない)。AST 仕様・エンジン契約 (DESIGN §15)・API 契約 (parse_definition = DR-054 / parse = DR-053 / complete = DR-060)・conformance fixtures (フェーズ 1-2 で新設)。仕様 DR (3 桁) の正本 |
-| `main` (新設) | **MoonBit 参照実装**。ゼロから構築。実装 DR は別番号空間。ast-spec を仕様正本として参照する |
+| `main` (新設) | **MoonBit 参照実装** (kuu.mbt)。評価器コアはゼロ設計、葉 / harness は slice から設計優先で移植 (適用範囲はフェーズ 3)。実装 DR は MDR-NNN の別番号空間 (kuu.mbt に置く。spec DR は複製せず参照のみ)。ast-spec を仕様正本として参照する |
 | `kuu-v0` (旧 main を改名) | 初期実験場のアーカイブ。旧実装コードは考古学対象 (直接読まない運用は継続) |
 | `slice` | 垂直スライス PoC (167 テスト、凍結)。conformance fixture の蒸留元 |
 
@@ -33,7 +33,12 @@ kuu の core は特定言語のバイナリではなく、**仕様 (DESIGN / LOW
    3. **蒸留 + 参照実装の縦切り並行**: 167 テストの fixture 化と新 main の参照実装を領域ごとの縦切りで同時に回す (slice PoC の共設計方法論の継続。フェーズ 3 と厳密な直列にしない)。`definition_error` / `complete` の fixture 形式もこの中で確定
    - option: フェーズ 3 の前後で TS 等の tiny spike (descriptor / factory / lowering runner が MoonBit 固有形に寄っていないかの早期検証)。実施はコスト対効果で判断
    - 準拠はプロファイル単位 (parse-core / lowering / definition-error / completion、DR-069)
-3. **参照実装 (新 main)**: fixture を pass させる形で構築。実装順は lowering 層 (記法糖衣 → installer 不動点 → 定義時検査) → 評価器 (path-search + matcher + 背骨 / 先食い / 早閉じ + 取り分選好。**完成オラクルのスコープ境界相対化の根治**と **pending 状態を表現する枝設計**が主要な実装設計論点 — PoC の既知の破れ / 分離判断が入力) → 値確定層 (ラダー + config 2 相 + 遅延述語 + 結果ビルダー) → 出口層 (Outcome + 失敗時アクション + complete)
+3. **参照実装 (kuu.mbt 新 main)**: fixture を pass させる形で構築。「ゼロから構築」の適用範囲は層で異なる (この判断の正本は kuu.mbt の MDR-001):
+   - **評価器コア (eval / complete 相当) はゼロ設計**: PoC の既知の破れ 2 件 (**完成オラクルのスコープ境界相対化** / **pending 状態を表現する枝設計**) を設計入力として、slice を移植せずゼロから再設計する。破れ 1 の根治は slice `poc/phase16_wbtest.mbt` の凍結 fail を受け入れテストとする。破れ 2 (分離恒久化 vs Branch に Pending 追加) は両案の設計スケッチを描いてから決める
+   - **葉 (node / value / matcher / result 相当) と installer lowering は slice を参照して移植**するが、設計的に正しい形への書き直しを厭わない (速度のための妥協をしない)
+   - **conformance harness の設計 + fixtures (kawaz/kuu) は継続利用**
+   - moon 構成は最小開始 (module 名 kawaz/kuu / source=src / まず src/core 単一パッケージ)。予約語衝突 (alias / export / inherit) の命名規約は評価器設計スケッチと同時に決める
+   実装順は lowering 層 (記法糖衣 → installer 不動点 → 定義時検査) → 評価器コア (path-search + matcher + 背骨 / 先食い / 早閉じ + 取り分選好) → 値確定層 (ラダー + config 2 相 + 遅延述語 + 結果ビルダー) → 出口層 (Outcome + 失敗時アクション + complete)
 4. **DX 層**: MoonBit UsefulAST DX、help レンダラ (registry 差し替え可)、completion 生成器 (DR-060 の層 2 — 各 shell の作法をここに封じる)
 5. **多言語展開** (仕様安定後): TS 等。移植の定義は「fixture を pass させる」
 
