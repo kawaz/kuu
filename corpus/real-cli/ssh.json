@@ -1,0 +1,72 @@
+{
+  "why": "ssh (macOS 実機) のプローブ: -o key=value 形式の反復オプション + host positional + command pass-through。プローブ対象 = -o の値が \"Key=Value\" という `=` を含む文字列だが、これは kuu 側で分割せず opaque string として受ける (=split は long option の matcher 語彙であって -o の値には効かない) ことの確認。-o は multiple:append で複数指定を積む。既知の表現ギャップ (env/xargs と共通): `ssh host command args...` の command 以降は remote 実行コマンドで ssh の option 解析対象外だが、kuu では option 風トークンを拾おうとする — ここでは option 風でない command のみ扱う。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {"name": "port", "type": "int", "short": "p"},
+      {"name": "identity", "type": "string", "short": "i"},
+      {"name": "option", "type": "string", "short": "o", "multiple": "append"},
+      {"name": "forward_local", "type": "string", "short": "L", "multiple": "append"},
+      {"name": "verbose", "type": "flag", "short": "v"}
+    ],
+    "positionals": [
+      {"name": "host", "type": "string", "required": true},
+      {"name": "command", "type": "string", "repeat": {"min": 0}}
+    ]
+  },
+  "cases": [
+    {
+      "id": "port-and-host",
+      "why": "`ssh -p 2222 user@host` (実機は 2222 番で接続)。-p が int 2222、host=\"user@host\" (user@ 込みで 1 トークン、@ 分割はアプリの関心)。option/forward は `[]`、verbose false。",
+      "argv": ["-p", "2222", "user@host"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "port", "op": "set", "operand": 2222, "source": "cli"},
+          {"entity": "host", "op": "set", "operand": "user@host", "source": "cli"}
+        ],
+        "result": {"option": [], "forward_local": [], "verbose": false, "port": 2222, "host": "user@host"}
+      }
+    },
+    {
+      "id": "option-key-value-opaque",
+      "why": "`ssh -o StrictHostKeyChecking=no host` (実機は当該オプションで接続)。-o の値 \"StrictHostKeyChecking=no\" は `=` を含むが kuu は分割せず 1 個の string として append (`[\"StrictHostKeyChecking=no\"]`)。=split が long matcher 専用で option 値には効かないことのプローブの核。",
+      "argv": ["-o", "StrictHostKeyChecking=no", "host"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "option", "op": "set", "operand": "StrictHostKeyChecking=no", "source": "cli"},
+          {"entity": "host", "op": "set", "operand": "host", "source": "cli"}
+        ],
+        "result": {"option": ["StrictHostKeyChecking=no"], "forward_local": [], "verbose": false, "host": "host"}
+      }
+    },
+    {
+      "id": "multiple-options",
+      "why": "`ssh -o User=admin -o Port=22 host` (実機は 2 オプション適用)。-o 2 度発火 → append で 2 要素。反復 key=value オプションを固定。",
+      "argv": ["-o", "User=admin", "-o", "Port=22", "host"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "option", "op": "set", "operand": "User=admin", "source": "cli"},
+          {"entity": "option", "op": "set", "operand": "Port=22", "source": "cli"},
+          {"entity": "host", "op": "set", "operand": "host", "source": "cli"}
+        ],
+        "result": {"option": ["User=admin", "Port=22"], "forward_local": [], "verbose": false, "host": "host"}
+      }
+    },
+    {
+      "id": "host-with-command",
+      "why": "`ssh host uptime` (実機は remote で uptime 実行)。host=\"host\"、command=[\"uptime\"] (option 風でない引数)。host positional + 後続 command variadic の分離。",
+      "argv": ["host", "uptime"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "host", "op": "set", "operand": "host", "source": "cli"},
+          {"entity": "command", "op": "set", "operand": "uptime", "source": "cli"}
+        ],
+        "result": {"option": [], "forward_local": [], "verbose": false, "host": "host", "command": ["uptime"]}
+      }
+    }
+  ]
+}
