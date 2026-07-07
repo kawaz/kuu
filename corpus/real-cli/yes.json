@@ -1,0 +1,40 @@
+{
+  "why": "yes [expletive] (BSD, macOS 実機) のプローブ: 0 個 or 1 個の任意 positional。プローブ対象 = 『省略可能な scalar positional に省略時デフォルト値』の表現力。既知の表現ギャップ: 素の positional は構造的必須 (dd/basic) なので省略可にするには optional:true (= repeat {min:0,max:1}) が要り、結果が array `[]`/`[x]` に強制される (DR-044)。実機 yes の『省略時は \"y\" を無限出力』の default \"y\" は scalar フォールバックだが、kuu では省略 = 空 array `[]` になりデフォルト \"y\" を array の空ケースに載せられない — この非対称 (optional scalar positional + default) が表現ギャップの候補。ここでは array 表現で定義し、default 'y' はアプリ層マッピングとして why に留める。",
+  "query": "parse",
+  "definition": {
+    "positionals": [
+      {"name": "expletive", "type": "string", "optional": true}
+    ]
+  },
+  "cases": [
+    {
+      "id": "bare-defaults-to-y",
+      "why": "`yes` 単体 (実機は \"y\" を無限出力)。optional positional 0 個 → `[]` (DR-044、absent でなく空 array)。default \"y\" の充填はここでは起きない — アプリが空を見て \"y\" にマップする関心。kuu 結果は `{expletive: []}`。",
+      "argv": [],
+      "expect": {
+        "outcome": "success",
+        "effects": [],
+        "result": {"expletive": []}
+      }
+    },
+    {
+      "id": "explicit-string",
+      "why": "`yes hello` (実機は \"hello\" を無限出力)。optional positional 1 個 → `[\"hello\"]`。",
+      "argv": ["hello"],
+      "expect": {
+        "outcome": "success",
+        "effects": [{"entity": "expletive", "op": "set", "operand": "hello", "source": "cli"}],
+        "result": {"expletive": ["hello"]}
+      }
+    },
+    {
+      "id": "extra-operand-fails",
+      "why": "`yes a b` — optional は max:1 なので 2 個目 `b` は取り分超過で残余トークン失敗 (repeat-parse/exact-count の over-max と同型)。実機 BSD yes は複数 operand を空白連結で出すが、この定義 (単一 optional) では 2 個目が余る。max:1 の境界を固定するケース。element 省略 / unexpected_token / argv_pos=1。",
+      "argv": ["a", "b"],
+      "expect": {
+        "outcome": "failure",
+        "errors": [{"argv_pos": 1, "kind": "parse", "reason": "unexpected_token"}]
+      }
+    }
+  ]
+}

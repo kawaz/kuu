@@ -1,0 +1,56 @@
+{
+  "why": "wc (BSD, macOS 実機 `wc [-Lclmw] [file ...]`) のプローブ: 全 flag が短オプションで連結可能 (`-lw`) + 可変長の任意 positional (files)。プローブ対象 = (1) 連結 short cluster (`-lw` = `-l -w`) を config.short_combine で有効化し 1 トークンから複数読みを立てられるか (§15.8 matcher の cluster 読み)、(2) 0 個以上の任意 positional を repeat {min:0} で表現できるか。config.short_combine を明示 true にして cluster 挙動を決定的にする。",
+  "query": "parse",
+  "definition": {
+    "config": {"short_combine": true},
+    "options": [
+      {"name": "lines", "type": "flag", "short": "l"},
+      {"name": "words", "type": "flag", "short": "w"},
+      {"name": "bytes", "type": "flag", "short": "c"},
+      {"name": "chars", "type": "flag", "short": "m"},
+      {"name": "max_line", "type": "flag", "short": "L"}
+    ],
+    "positionals": [
+      {"name": "files", "type": "string", "repeat": {"min": 0}}
+    ]
+  },
+  "cases": [
+    {
+      "id": "single-flag-one-file",
+      "why": "`wc -l file.txt` (実機は行数のみ)。-l 発火 true、file.txt が files に落ちる。未発火 flag は preset default false で result に present (DR-051 §2)。files は repeat 配列。",
+      "argv": ["-l", "file.txt"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "lines", "op": "set", "operand": true, "source": "cli"},
+          {"entity": "files", "op": "set", "operand": "file.txt", "source": "cli"}
+        ],
+        "result": {"lines": true, "words": false, "bytes": false, "chars": false, "max_line": false, "files": ["file.txt"]}
+      }
+    },
+    {
+      "id": "clustered-shorts",
+      "why": "`wc -lw a.txt` — 連結 short (実機は行数+単語数)。config.short_combine により `-lw` が `-l`/`-w` の 2 読みに分解 (§15.8)。effects は cluster 内の消費順で lines→words、その後 files。cluster 分解がプローブの核。",
+      "argv": ["-lw", "a.txt"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "lines", "op": "set", "operand": true, "source": "cli"},
+          {"entity": "words", "op": "set", "operand": true, "source": "cli"},
+          {"entity": "files", "op": "set", "operand": "a.txt", "source": "cli"}
+        ],
+        "result": {"lines": true, "words": true, "bytes": false, "chars": false, "max_line": false, "files": ["a.txt"]}
+      }
+    },
+    {
+      "id": "no-args-stdin",
+      "why": "`wc` 単体 (実機は stdin を読む)。flag 全て未発火 → 全 false、files 0 個 → `[]`。stdin 読込は kuu の射程外 (argv のみ)。全 flag が default false で present になることを固定。",
+      "argv": [],
+      "expect": {
+        "outcome": "success",
+        "effects": [],
+        "result": {"lines": false, "words": false, "bytes": false, "chars": false, "max_line": false, "files": []}
+      }
+    }
+  ]
+}

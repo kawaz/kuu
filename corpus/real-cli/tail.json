@@ -1,0 +1,56 @@
+{
+  "why": "tail (BSD, macOS 実機 `tail [-F | -f | -r] [-qv] [-b n | -c n | -n n] [file ...]`) のプローブ: follow 系 flag と値付き量オプション (-n/-c 排他) の共存 + 可変長任意 positional。プローブ対象 = 独立軸の flag (follow) と排他軸の値オプション (amount) が同一定義に同居し互いに干渉しないこと (§9 の制約は宣言した member 間だけに効く)。head.json (量オプションのみ) に follow flag を足した拡張形。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {"name": "lines", "type": "int", "short": "n", "exclusive_group": ["amount"]},
+      {"name": "bytes", "type": "int", "short": "c", "exclusive_group": ["amount"]},
+      {"name": "follow", "type": "flag", "short": "f"},
+      {"name": "reverse", "type": "flag", "short": "r"}
+    ],
+    "positionals": [
+      {"name": "files", "type": "string", "repeat": {"min": 0}}
+    ]
+  },
+  "cases": [
+    {
+      "id": "lines-with-file",
+      "why": "`tail -n 20 log.txt` (実機は末尾 20 行)。-n が int 20、log.txt が files。follow/reverse 未発火 → false。lines/bytes は default なし値オプションなので bytes は absent、lines は set 済。",
+      "argv": ["-n", "20", "log.txt"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "lines", "op": "set", "operand": 20, "source": "cli"},
+          {"entity": "files", "op": "set", "operand": "log.txt", "source": "cli"}
+        ],
+        "result": {"lines": 20, "follow": false, "reverse": false, "files": ["log.txt"]}
+      }
+    },
+    {
+      "id": "follow-mode",
+      "why": "`tail -f log.txt` (実機は追尾)。-f flag 発火 true。量オプション未指定なので lines/bytes とも absent。follow 軸は amount 排他とは独立なので単独で成立。",
+      "argv": ["-f", "log.txt"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "follow", "op": "set", "operand": true, "source": "cli"},
+          {"entity": "files", "op": "set", "operand": "log.txt", "source": "cli"}
+        ],
+        "result": {"follow": true, "reverse": false, "files": ["log.txt"]}
+      }
+    },
+    {
+      "id": "lines-and-follow-coexist",
+      "why": "`tail -n 5 -f` (実機は末尾 5 行から追尾)。lines(amount 軸) と follow(独立軸) は別グループなので共存 OK。exclusive_group は同一グループ member 間だけに効くことを固定 — follow は amount member でないので違反しない。files 0 個 → `[]`。",
+      "argv": ["-n", "5", "-f"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "lines", "op": "set", "operand": 5, "source": "cli"},
+          {"entity": "follow", "op": "set", "operand": true, "source": "cli"}
+        ],
+        "result": {"lines": 5, "follow": true, "reverse": false, "files": []}
+      }
+    }
+  ]
+}

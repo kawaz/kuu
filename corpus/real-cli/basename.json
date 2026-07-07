@@ -1,0 +1,44 @@
+{
+  "why": "basename (BSD, macOS 実機) のプローブ: 必須 scalar positional + 省略可能な 2 個目 positional (suffix)。プローブ対象 = 位置で意味が決まる operand 列 (1 個目=path 必須、2 個目=suffix 任意)。既知の表現ギャップ (issue 候補): basename は 2 つの排他的 usage を持つ — mode1 `basename string [suffix]` (suffix は 2 個目 positional) と mode2 `basename -a [-s suffix] string ...` (-a で全 operand が string、suffix は -s option)。この『トップレベルの usage モード択一』(2 本の synopsis 行) は kuu のトップレベル (flat な options[]/positionals[]) に直接の構文がない (commands はサブコマンド dispatch であってモード択一ではない)。ここでは常用の mode1 のみ定義し、mode2 のモード択一表現は別 issue で扱う。",
+  "query": "parse",
+  "definition": {
+    "positionals": [
+      {"name": "path", "type": "string", "required": true},
+      {"name": "suffix", "type": "string", "optional": true}
+    ]
+  },
+  "cases": [
+    {
+      "id": "path-only",
+      "why": "`basename /usr/bin/foo` → \"foo\" (実機)。path のみ、suffix は optional 0 個 → `[]`。path は required scalar なので set 効果 1 個、結果は scalar。suffix 空 array は absent でなく present (DR-044)。",
+      "argv": ["/usr/bin/foo"],
+      "expect": {
+        "outcome": "success",
+        "effects": [{"entity": "path", "op": "set", "operand": "/usr/bin/foo", "source": "cli"}],
+        "result": {"path": "/usr/bin/foo", "suffix": []}
+      }
+    },
+    {
+      "id": "path-and-suffix",
+      "why": "`basename /a/b/foo.txt .txt` → \"foo\" (実機、suffix 一致で剥がす)。1 個目=path、2 個目=suffix。位置で役割が決まる (positionals 順序消費)。suffix は optional なので array `[\".txt\"]`。剥がす計算はアプリの領分 — kuu は path/suffix を分離して渡すだけ。",
+      "argv": ["/a/b/foo.txt", ".txt"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "path", "op": "set", "operand": "/a/b/foo.txt", "source": "cli"},
+          {"entity": "suffix", "op": "set", "operand": ".txt", "source": "cli"}
+        ],
+        "result": {"path": "/a/b/foo.txt", "suffix": [".txt"]}
+      }
+    },
+    {
+      "id": "no-operand-fails",
+      "why": "`basename` 単体は operand 不足 (実機 usage エラー)。path は required かつ構造的必須 head → missing_operand、argv_pos=0。",
+      "argv": [],
+      "expect": {
+        "outcome": "failure",
+        "errors": [{"element": "path", "argv_pos": 0, "kind": "parse", "reason": "missing_operand"}]
+      }
+    }
+  ]
+}

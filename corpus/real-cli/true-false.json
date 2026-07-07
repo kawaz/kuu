@@ -1,0 +1,46 @@
+{
+  "why": "true / false (POSIX ユーティリティ) のプローブ: 引数を一切解釈せず全て黙殺する『catch-all sink』を表現できるか。true と false は構造的に同型 (差は exit code のみ — exit code は kuu の射程外 = アプリの領分、DESIGN §14.2 の version 同様) なので 1 ファイルで扱う。プローブ対象 = 任意個のトークンを消費して結果に出さない sink を `repeat {min:0}` + `export_key: null` (結果キー軸なし透過、DR-052) で作れるか。既知の論点: 素の positional は構造的必須 (dd/basic の missing-positional) だが min:0 repeat なら 0 個でも成立し、export_key null で結果から消える。",
+  "query": "parse",
+  "definition": {
+    "positionals": [
+      {"name": "ignored", "type": "string", "repeat": {"min": 0}, "export_key": null}
+    ]
+  },
+  "cases": [
+    {
+      "id": "no-args",
+      "why": "`true` 単体。sink は 0 個で成立、export_key null なので結果キーに現れない → 空 result `{}`。effects も空 (発火なし)。",
+      "argv": [],
+      "expect": {
+        "outcome": "success",
+        "effects": [],
+        "result": {}
+      }
+    },
+    {
+      "id": "swallow-args",
+      "why": "`true foo bar` — 実機の true は任意個の引数を黙殺して exit 0。sink が foo/bar を消費するが export_key null で結果から消える。effects には消費が set として現れる (cli 由来効果、CONFORMANCE §2) が entity は透過セル名 ignored。",
+      "argv": ["foo", "bar"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "ignored", "op": "set", "operand": "foo", "source": "cli"},
+          {"entity": "ignored", "op": "set", "operand": "bar", "source": "cli"}
+        ],
+        "result": {}
+      }
+    },
+    {
+      "id": "swallow-optionlike",
+      "why": "`false --anything` — 実機は option 風トークンも黙殺 (GNU の --help/--version を除き POSIX true/false は素通し)。kuu は prefix ガードなし (§15.8) なので未定義 `--anything` は positional sink に落ちる。option 定義が 1 つも無いため素通しが自然。",
+      "argv": ["--anything"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "ignored", "op": "set", "operand": "--anything", "source": "cli"}
+        ],
+        "result": {}
+      }
+    }
+  ]
+}

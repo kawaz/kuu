@@ -1,0 +1,63 @@
+{
+  "why": "head (BSD, macOS 実機 `head [-n count | -c bytes] [file ...]`) のプローブ: 値付き短オプション 2 個が排他 (-n 行数 / -c バイト数) + 可変長任意 positional。プローブ対象 = (1) 値を取る option の int 値バインド、(2) exclusive_group による『-n と -c は同時指定不可』(§9.2 の N 者排他を 2 者に適用)。実機 head は -n/-c 同時指定でエラー。デフォルト 10 行はアプリ挙動 (-n 未指定で lines は absent = kuu には default を持たせずアプリが 10 を採る)。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {"name": "lines", "type": "int", "short": "n", "exclusive_group": ["amount"]},
+      {"name": "bytes", "type": "int", "short": "c", "exclusive_group": ["amount"]}
+    ],
+    "positionals": [
+      {"name": "files", "type": "string", "repeat": {"min": 0}}
+    ]
+  },
+  "cases": [
+    {
+      "id": "lines-with-file",
+      "why": "`head -n 5 file.txt` (実機は先頭 5 行)。-n が int 5 を値バインド、file.txt が files に落ちる。-c は未発火で absent (default なし値オプション、DR-051)。effects は消費順 lines(pos0-1)→files(pos2)。",
+      "argv": ["-n", "5", "file.txt"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "lines", "op": "set", "operand": 5, "source": "cli"},
+          {"entity": "files", "op": "set", "operand": "file.txt", "source": "cli"}
+        ],
+        "result": {"lines": 5, "files": ["file.txt"]}
+      }
+    },
+    {
+      "id": "bytes-no-file",
+      "why": "`head -c 100` (実機は先頭 100 バイト、stdin)。-c が int 100 を値バインド、files 0 個 → `[]`。lines は absent。exclusive_group は片方のみ committed なので不成立。",
+      "argv": ["-c", "100"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "bytes", "op": "set", "operand": 100, "source": "cli"}
+        ],
+        "result": {"bytes": 100, "files": []}
+      }
+    },
+    {
+      "id": "default-behavior-no-flag",
+      "why": "`head file.txt` (実機は先頭 10 行 = アプリの default)。-n/-c とも未発火 → 両方 absent、files に file.txt。デフォルト 10 は kuu に持たせずアプリが absent を見て採る (kuu には値源がない = absent、DR-051)。",
+      "argv": ["file.txt"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "files", "op": "set", "operand": "file.txt", "source": "cli"}
+        ],
+        "result": {"files": ["file.txt"]}
+      }
+    },
+    {
+      "id": "lines-and-bytes-conflict",
+      "why": "`head -n 3 -c 10` は実機エラー (排他違反)。lines/bytes とも committed で exclusive_group `amount` 違反。element=group ラベル amount (constraints-parse/exclusive と同型)、kind=constraint、reason=exclusive_group_violated、argv_pos=argv.length=4 (全消費後評価)。",
+      "argv": ["-n", "3", "-c", "10"],
+      "expect": {
+        "outcome": "failure",
+        "errors": [
+          {"element": "amount", "argv_pos": 4, "kind": "constraint", "reason": "exclusive_group_violated"}
+        ]
+      }
+    }
+  ]
+}
