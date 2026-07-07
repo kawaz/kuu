@@ -1,0 +1,123 @@
+{
+  "why": "kawaz/die (Zig 製、echo 級に見えて深い) のプローブ: `die [opts] -- ARGS...` の dd (--) 経由 variadic string positional + long-only value option (--sep) + enum-like or/exact 糖衣 (--trim each/all/none) + short-only flag (-n) + meta flag (--help/--version、dd 前後で解釈反転) の組合せ。dd 単体輪郭は fixtures/dd/basic.json で既に固定済みなので、本ファイルは実在ツールの正典的な使い方 (=dd 越しの ARGS 収集) をなぞる合成プローブ。2 点の表現ギャップを発見 (issue 起票済み): (1) `--` の**必須化**が表現できない — dd は値セルを持たない (fixtures/dd/export-key-inert.json で export_key すら inert と確認済み) ため `required: true` の判定対象 (値の有無) にならず、『-- が発火しないと ARGS 席に到達できない』という die の実仕様 (`die foo` は構文エラー) を素直な定義では強制できない。args positional は -- の有無に関わらず背骨上で通常消費されるため、kuu の定義は `die foo` を誤って success (args=[\"foo\"]) にしてしまう (case bare-arg-without-dd-diverges で固定、issue: docs/issue/2026-07-07-dd-required-marker-fire-constraint.md)。(2) stdin の TTY 分岐 (bare-TTY → help fallback / non-TTY → stdin forward) は argv 由来ではない ambient probe であり、DR-049 の値源ラダー (env/config/inherit/default) のいずれにも該当しない — 本 definition では一切モデル化していない (env/config で代替もできない、値源として存在しない。issue: docs/issue/2026-07-07-tty-value-as-injected-source.md)。--trim の実際のトリム処理 (ASCII whitespace 除去) は kuu のパース関心外 (enum 選択のみパースし、除去自体はアプリ側ロジック) なので args の値は生文字列のまま。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {"name": "sep", "type": "string", "long": true, "default": " "},
+      {"name": "trim", "long": true, "default": "each", "or": [
+        {"exact": "each"},
+        {"exact": "all"},
+        {"exact": "none"}
+      ]},
+      {"name": "n", "type": "flag", "short": "n"},
+      {"name": "help", "type": "flag", "long": true},
+      {"name": "version", "type": "flag", "long": true},
+      {"name": "--", "type": "dd"}
+    ],
+    "positionals": [
+      {"name": "args", "type": "string", "repeat": {"min": 0}}
+    ]
+  },
+  "cases": [
+    {
+      "id": "args-via-dd",
+      "why": "`die -- \"config error\"` (実機は stderr に \"config error\" を出し exit 1)。-- が sever し raw トークンが args へ。die の正典的な呼び方の基本形。sep/trim は default、n/help/version は未発火 false。",
+      "argv": ["--", "config error"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "args", "op": "set", "operand": "config error", "source": "cli"}
+        ],
+        "result": {"sep": " ", "trim": "each", "n": false, "help": false, "version": false, "args": ["config error"]}
+      }
+    },
+    {
+      "id": "sep-and-multiple-args",
+      "why": "`die --sep ', ' -- \"stale build\" \"no manifest\"` (実機は \"stale build, no manifest\" を出力、結合自体はアプリ側だが sep 値と args 複数値の取得はここで固定)。--sep が dd より前の通常オプションとして発火、-- 後の 2 トークンが args に積まれる。",
+      "argv": ["--sep", ", ", "--", "stale build", "no manifest"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "sep", "op": "set", "operand": ", ", "source": "cli"},
+          {"entity": "args", "op": "set", "operand": "stale build", "source": "cli"},
+          {"entity": "args", "op": "set", "operand": "no manifest", "source": "cli"}
+        ],
+        "result": {"sep": ", ", "trim": "each", "n": false, "help": false, "version": false, "args": ["stale build", "no manifest"]}
+      }
+    },
+    {
+      "id": "trim-enum-all",
+      "why": "`die --trim all -- ' x '` (実機は結合後の前後空白を一括除去して出力)。--trim が or/exact 糖衣で \"all\" を選択。除去処理自体はアプリ側関心なので args の値は生文字列 \" x \" のまま (kuu はモードの選択だけをパースする)。",
+      "argv": ["--trim", "all", "--", " x "],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "trim", "op": "set", "operand": "all", "source": "cli"},
+          {"entity": "args", "op": "set", "operand": " x ", "source": "cli"}
+        ],
+        "result": {"sep": " ", "trim": "all", "n": false, "help": false, "version": false, "args": [" x "]}
+      }
+    },
+    {
+      "id": "n-flag-byte-transparent",
+      "why": "`die -n -- msg` (実機は LF 正規化を無効化、cat 相当の byte-transparent 出力)。-n は long を持たない short-only flag。dd 前で発火。",
+      "argv": ["-n", "--", "msg"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "n", "op": "set", "operand": true, "source": "cli"},
+          {"entity": "args", "op": "set", "operand": "msg", "source": "cli"}
+        ],
+        "result": {"sep": " ", "trim": "each", "n": true, "help": false, "version": false, "args": ["msg"]}
+      }
+    },
+    {
+      "id": "help-alone-no-dd",
+      "why": "`die --help` (実機は help を stderr に出し exit 0)。dd 無しでも成立する — help は meta flag で args 席と無関係、-- を経由せず単独発火。args は repeat min:0 なので `[]`。exit 0 という『meta query は exit 1 の通常経路と違う』事実自体は kuu の parse 結果の外側 (アプリ側の分岐) なので、ここでは help=true という結果のみを固定する。",
+      "argv": ["--help"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "help", "op": "set", "operand": true, "source": "cli"}
+        ],
+        "result": {"sep": " ", "trim": "each", "n": false, "help": true, "version": false, "args": []}
+      }
+    },
+    {
+      "id": "version-alone-no-dd",
+      "why": "`die --version` (実機は `die <version>` を stderr に出し exit 0)。help と対称の meta flag。",
+      "argv": ["--version"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "version", "op": "set", "operand": true, "source": "cli"}
+        ],
+        "result": {"sep": " ", "trim": "each", "n": false, "help": false, "version": true, "args": []}
+      }
+    },
+    {
+      "id": "dd-severs-meta-flag",
+      "why": "`die -- --help` (実機は literal 文字列 \"--help\" を stderr に出し exit 1 — DR-0008/0009 の『-- 後は ARG として安全に通す』性質)。-- が先に sever し、以後の \"--help\" は help flag として解釈されず raw トークンとして args に落ちる。fixtures/dd/global-sever.json の dd-severs-global と同型の反転パターンを meta flag に適用。",
+      "argv": ["--", "--help"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "args", "op": "set", "operand": "--help", "source": "cli"}
+        ],
+        "result": {"sep": " ", "trim": "each", "n": false, "help": false, "version": false, "args": ["--help"]}
+      }
+    },
+    {
+      "id": "bare-arg-without-dd-diverges",
+      "why": "**表現ギャップの固定 (gap (1))**: `die msg` (-- 無し) は実機では構文エラー (die は `--` を必須とする、DESIGN.md Invariants \"`--` is required\")。しかし本 definition では args positional が -- の発火有無に関わらず背骨上で通常消費されるため (fixtures/dd/basic.json の no-dd-flag-fires と同型の創発)、\"msg\" は args=[\"msg\"] として素直に success してしまう — kuu の naive な翻訳が実機の失敗を再現できない具体例。dd に `required: true` を付けても、dd は値セルを持たないため判定対象 (値の有無、DESIGN §9.1) が存在せず意味を持たない (fixtures/dd/export-key-inert.json で export_key が inert と確認済みと同型の限界)。本 case は「kuu がどう出力するか」を固定するものであり「die の正しい挙動」ではない — 乖離自体が issue の証跡 (docs/issue/2026-07-07-dd-required-marker-fire-constraint.md)。",
+      "argv": ["msg"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "args", "op": "set", "operand": "msg", "source": "cli"}
+        ],
+        "result": {"sep": " ", "trim": "each", "n": false, "help": false, "version": false, "args": ["msg"]}
+      }
+    }
+  ]
+}
