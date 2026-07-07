@@ -1,0 +1,69 @@
+{
+  "why": "df (BSD, macOS 実機 `df [-b|-g|-h|-k|-m|-P] [-acIilntY] [-T type] [file...]`) のプローブ: サイズ単位の排他グループ + 独立 bool flag + 値オプション (-T type) + 可変長任意 positional。プローブ対象 = 排他な単位 flag と非排他 flag の共存 (wc/head に近いが df は単位選択が排他)。df の operand はファイル or ファイルシステム名 (どちらも string)。",
+  "query": "parse",
+  "definition": {
+    "config": {"short_combine": true},
+    "options": [
+      {"name": "human", "type": "flag", "short": "h", "exclusive_group": ["unit"]},
+      {"name": "kilobytes", "type": "flag", "short": "k", "exclusive_group": ["unit"]},
+      {"name": "megabytes", "type": "flag", "short": "m", "exclusive_group": ["unit"]},
+      {"name": "inodes", "type": "flag", "short": "i"},
+      {"name": "local_only", "type": "flag", "short": "l"},
+      {"name": "fstype", "type": "string", "short": "T"}
+    ],
+    "positionals": [
+      {"name": "files", "type": "string", "repeat": {"min": 0}}
+    ]
+  },
+  "cases": [
+    {
+      "id": "human-readable-all",
+      "why": "`df -h` (実機は全マウントを人間可読で)。-h 発火 (unit グループ単独 → 排他成立)、files 0 個 `[]`。他 flag false、fstype absent。",
+      "argv": ["-h"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "human", "op": "set", "operand": true, "source": "cli"}
+        ],
+        "result": {"human": true, "kilobytes": false, "megabytes": false, "inodes": false, "local_only": false, "files": []}
+      }
+    },
+    {
+      "id": "human-with-path",
+      "why": "`df -h /` (実機は / のあるファイルシステム)。-h + files に \"/\"。path operand の受理を固定。",
+      "argv": ["-h", "/"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "human", "op": "set", "operand": true, "source": "cli"},
+          {"entity": "files", "op": "set", "operand": "/", "source": "cli"}
+        ],
+        "result": {"human": true, "kilobytes": false, "megabytes": false, "inodes": false, "local_only": false, "files": ["/"]}
+      }
+    },
+    {
+      "id": "inodes-and-type",
+      "why": "`df -i -T apfs` (実機は inode 表示 + apfs のみ)。-i は独立 flag (unit グループ外) なので単位未指定でも成立、-T が \"apfs\" をバインド。inodes true、human/k/m false、fstype set。独立 flag と値オプションの共存。",
+      "argv": ["-i", "-T", "apfs"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "inodes", "op": "set", "operand": true, "source": "cli"},
+          {"entity": "fstype", "op": "set", "operand": "apfs", "source": "cli"}
+        ],
+        "result": {"human": false, "kilobytes": false, "megabytes": false, "inodes": true, "local_only": false, "fstype": "apfs", "files": []}
+      }
+    },
+    {
+      "id": "human-kilo-conflict",
+      "why": "`df -hk` — 連結だが単位 2 つは実機で片方無視/警告。ここでは排他をプローブ: human/kilobytes とも unit グループ committed → exclusive_group_violated。element=unit、argv_pos=argv.length=1 (連結でも消費後の argv 長は 1)。連結内で排他違反が立つケース。",
+      "argv": ["-hk"],
+      "expect": {
+        "outcome": "failure",
+        "errors": [
+          {"element": "unit", "argv_pos": 1, "kind": "constraint", "reason": "exclusive_group_violated"}
+        ]
+      }
+    }
+  ]
+}

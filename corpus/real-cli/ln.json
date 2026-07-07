@@ -1,0 +1,72 @@
+{
+  "why": "ln (BSD, macOS 実機 `ln [-L|-P|-s [-F]] [-f|-iw] [-hnv] source_file [target_file]`) のプローブ: bool flag 群 + 必須 source + 省略可能 target + 排他ペア。プローブ対象 = (1) conflicts_with による -f (force) と -i (interactive) の負の依存 (§9.4、実機で両立しない)、(2) 短連結 (`-sf`)、(3) optional scalar positional (target 省略可、yes/basename と同じギャップ)。target 省略時は source と同名でカレントに張る (アプリ挙動)。",
+  "query": "parse",
+  "definition": {
+    "config": {"short_combine": true},
+    "options": [
+      {"name": "symbolic", "type": "flag", "short": "s"},
+      {"name": "force", "type": "flag", "short": "f", "conflicts_with": ["interactive"]},
+      {"name": "interactive", "type": "flag", "short": "i"},
+      {"name": "verbose", "type": "flag", "short": "v"}
+    ],
+    "positionals": [
+      {"name": "source", "type": "string", "required": true},
+      {"name": "target", "type": "string", "optional": true}
+    ]
+  },
+  "cases": [
+    {
+      "id": "symbolic-link",
+      "why": "`ln -s /a/b link` (実機は symlink 作成)。-s flag、source=/a/b、target=[link]。target は optional なので array。-f/-i 未発火。",
+      "argv": ["-s", "/a/b", "link"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "symbolic", "op": "set", "operand": true, "source": "cli"},
+          {"entity": "source", "op": "set", "operand": "/a/b", "source": "cli"},
+          {"entity": "target", "op": "set", "operand": "link", "source": "cli"}
+        ],
+        "result": {"symbolic": true, "force": false, "interactive": false, "verbose": false, "source": "/a/b", "target": ["link"]}
+      }
+    },
+    {
+      "id": "symbolic-force-cluster",
+      "why": "`ln -sf /a link` — 連結 short (実機は上書き symlink)。short_combine で `-sf` が -s/-f に分解。conflicts_with は -f 単独 committed (相手 -i 未 committed) なので不成立。effects は cluster 順 symbolic→force→source→target。",
+      "argv": ["-sf", "/a", "link"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "symbolic", "op": "set", "operand": true, "source": "cli"},
+          {"entity": "force", "op": "set", "operand": true, "source": "cli"},
+          {"entity": "source", "op": "set", "operand": "/a", "source": "cli"},
+          {"entity": "target", "op": "set", "operand": "link", "source": "cli"}
+        ],
+        "result": {"symbolic": true, "force": true, "interactive": false, "verbose": false, "source": "/a", "target": ["link"]}
+      }
+    },
+    {
+      "id": "target-omitted",
+      "why": "`ln -s /a/b` (実機は cwd に basename で張る)。target 省略 → optional 0 個 `[]`。source のみ required で成立。target のデフォルト (cwd/basename) はアプリ挙動。optional scalar positional のギャップ (yes/basename と同型)。",
+      "argv": ["-s", "/a/b"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "symbolic", "op": "set", "operand": true, "source": "cli"},
+          {"entity": "source", "op": "set", "operand": "/a/b", "source": "cli"}
+        ],
+        "result": {"symbolic": true, "force": false, "interactive": false, "verbose": false, "source": "/a/b", "target": []}
+      }
+    },
+    {
+      "id": "force-interactive-conflict",
+      "why": "`ln -f -i a b` — -f と -i は実機で両立しない (後勝ちだが定義上は排他をプローブ)。conflicts_with が両 committed で違反。element=宣言元 force (conflicts は宣言元要素名に紐付く、constraints-parse/exclusive 参照)、kind=constraint、reason=conflicts_with_violated、argv_pos=argv.length=4。",
+      "argv": ["-f", "-i", "a", "b"],
+      "expect": {
+        "outcome": "failure",
+        "errors": [
+          {"element": "force", "argv_pos": 4, "kind": "constraint", "reason": "conflicts_with_violated"}
+        ]
+      }
+    }
+  ]
+}

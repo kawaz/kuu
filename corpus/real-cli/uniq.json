@@ -1,0 +1,51 @@
+{
+  "why": "uniq (BSD, macOS 実機 `uniq [-cdiu] [-f num] [-s chars] [input] [output]`) のプローブ: 2 個の連続する省略可能 positional (input / output 両方 optional)。プローブ対象 = 『連続する optional positional』が単一 positional トークンで曖昧になるか (§15.4 の複数完全経路 → ambiguous)。定義を小さく保つため flag は -c のみ、値は -f (int) のみに絞る。既知の表現ギャップ (issue 起票): input/output とも optional のとき 1 個のファイル引数はどちらの席にも収まる 2 経路が全消費に到達し ambiguous になる読みが強い (DR-043 の greedy 選好は各 repeat の取り分次元内だけで働き、別要素間の帰属は絞らない)。実機 uniq は 1 個目を必ず input に割り当てる = kuu の素直な 2-optional 定義では表現しきれない候補。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {"name": "count", "type": "flag", "short": "c"},
+      {"name": "skip_fields", "type": "int", "short": "f"}
+    ],
+    "positionals": [
+      {"name": "input", "type": "string", "optional": true},
+      {"name": "output", "type": "string", "optional": true}
+    ]
+  },
+  "cases": [
+    {
+      "id": "both-files-unambiguous",
+      "why": "`uniq in.txt out.txt` (実機は in を読み out に書く)。2 トークンは input→output に順序割り当て、全消費経路が 1 本 (input=[in],output=[] は out.txt が残余、input=[],output=... は in.txt が余る) → 一意。連続 optional でも 2 個埋まれば曖昧でないことを固定。",
+      "argv": ["in.txt", "out.txt"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "input", "op": "set", "operand": "in.txt", "source": "cli"},
+          {"entity": "output", "op": "set", "operand": "out.txt", "source": "cli"}
+        ],
+        "result": {"count": false, "input": ["in.txt"], "output": ["out.txt"]}
+      }
+    },
+    {
+      "id": "no-files-stdin",
+      "why": "`uniq` 単体 (実機は stdin→stdout)。両 optional とも 0 個 → `[]`/`[]`。flag false。0 個なら曖昧でない (両席空が唯一経路)。",
+      "argv": [],
+      "expect": {
+        "outcome": "success",
+        "effects": [],
+        "result": {"count": false, "input": [], "output": []}
+      }
+    },
+    {
+      "id": "single-file-ambiguous",
+      "why": "`uniq -c in.txt` (実機は in を読み stdout に count 付き出力 = in.txt は input)。だが kuu の 2-optional 定義では in.txt が input 席にも output 席にも収まり、両経路とも全消費に到達 → ambiguous (§15.4)。実機の『1 個目は input』という位置優先を素直な定義で表せないことを示すプローブ。interpretations は count=true 共通で input/output の帰属が入れ替わる 2 ビュー。issue: docs/issue/2026-07-07-corpus-sequential-optional-positionals.md。",
+      "argv": ["-c", "in.txt"],
+      "expect": {
+        "outcome": "ambiguous",
+        "interpretations": [
+          {"count": true, "input": ["in.txt"], "output": []},
+          {"count": true, "input": [], "output": ["in.txt"]}
+        ]
+      }
+    }
+  ]
+}

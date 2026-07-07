@@ -1,0 +1,74 @@
+{
+  "why": "sort (BSD, macOS 実機 `sort [-bcdfgiRMmnrsuVz] [-k field] [-o output] [-t char] [file ...]`) のプローブ: 多数の bool flag + 反復可能な値オプション (-k は複数回指定でキー列) + 単発値オプション (-o/-t) + 可変長任意 positional。プローブ対象 = (1) multiple:append による反復値オプション -k (同一オプションの複数発火をリスト化、DR-036)、(2) 連結 short (`-nr`)。",
+  "query": "parse",
+  "definition": {
+    "config": {"short_combine": true},
+    "options": [
+      {"name": "numeric", "type": "flag", "short": "n"},
+      {"name": "reverse", "type": "flag", "short": "r"},
+      {"name": "unique", "type": "flag", "short": "u"},
+      {"name": "key", "type": "string", "short": "k", "multiple": "append"},
+      {"name": "output", "type": "string", "short": "o"},
+      {"name": "field_sep", "type": "string", "short": "t"}
+    ],
+    "positionals": [
+      {"name": "files", "type": "string", "repeat": {"min": 0}}
+    ]
+  },
+  "cases": [
+    {
+      "id": "numeric-sort-file",
+      "why": "`sort -n data.txt` (実機は数値順)。-n 発火、data.txt が files。-k は multiple:append なので 0 回発火でも `[]` (DR-044)、他値オプションは absent。multiple セルの空表現 `[]` と scalar 値オプションの absent の対比を含む。",
+      "argv": ["-n", "data.txt"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "numeric", "op": "set", "operand": true, "source": "cli"},
+          {"entity": "files", "op": "set", "operand": "data.txt", "source": "cli"}
+        ],
+        "result": {"numeric": true, "reverse": false, "unique": false, "key": [], "files": ["data.txt"]}
+      }
+    },
+    {
+      "id": "numeric-reverse-cluster",
+      "why": "`sort -nr data.txt` — 連結 short (実機は数値降順)。short_combine で -n/-r 分解。effects は numeric→reverse→files。",
+      "argv": ["-nr", "data.txt"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "numeric", "op": "set", "operand": true, "source": "cli"},
+          {"entity": "reverse", "op": "set", "operand": true, "source": "cli"},
+          {"entity": "files", "op": "set", "operand": "data.txt", "source": "cli"}
+        ],
+        "result": {"numeric": true, "reverse": true, "unique": false, "key": [], "files": ["data.txt"]}
+      }
+    },
+    {
+      "id": "multiple-keys",
+      "why": "`sort -k 2 -k 3 data.txt` (実機は第2キー→第3キーの多段ソート)。-k が 2 度発火 → append で `[\"2\",\"3\"]` に累積 (DR-036、last-wins でなくリスト)。反復値オプションのプローブの核。effects は消費順に 2 個の key set → files。",
+      "argv": ["-k", "2", "-k", "3", "data.txt"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "key", "op": "set", "operand": "2", "source": "cli"},
+          {"entity": "key", "op": "set", "operand": "3", "source": "cli"},
+          {"entity": "files", "op": "set", "operand": "data.txt", "source": "cli"}
+        ],
+        "result": {"numeric": false, "reverse": false, "unique": false, "key": ["2", "3"], "files": ["data.txt"]}
+      }
+    },
+    {
+      "id": "output-to-file",
+      "why": "`sort -o out.txt in.txt` (実機は out.txt へ書く)。-o が単発値オプションで out.txt をバインド、in.txt が files。-o は multiple でないので scalar。",
+      "argv": ["-o", "out.txt", "in.txt"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "output", "op": "set", "operand": "out.txt", "source": "cli"},
+          {"entity": "files", "op": "set", "operand": "in.txt", "source": "cli"}
+        ],
+        "result": {"numeric": false, "reverse": false, "unique": false, "key": [], "output": "out.txt", "files": ["in.txt"]}
+      }
+    }
+  ]
+}

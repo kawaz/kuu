@@ -1,0 +1,57 @@
+{
+  "why": "touch (BSD, macOS 実機 `touch [-achm] [-r file] [-t stamp] [-d date] file ...`) のプローブ: 複数 bool flag + 値オプション複数 (-r 参照ファイル / -t タイムスタンプ / -d 日付) + 必須可変長 positional。プローブ対象 = 値オプションと flag が混在し、値オプションが未発火なら absent (default なし) になる輪郭。-t/-d の日付書式は文字列受理 (datetime 型もあるが書式が複数あるため string で受けアプリ解釈)。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {"name": "no_create", "type": "flag", "short": "c"},
+      {"name": "access_only", "type": "flag", "short": "a"},
+      {"name": "modify_only", "type": "flag", "short": "m"},
+      {"name": "reference", "type": "string", "short": "r"},
+      {"name": "timestamp", "type": "string", "short": "t"},
+      {"name": "date", "type": "string", "short": "d"}
+    ],
+    "positionals": [
+      {"name": "files", "type": "string", "repeat": {"min": 1}}
+    ]
+  },
+  "cases": [
+    {
+      "id": "bare-touch-file",
+      "why": "`touch file.txt` (実機は無ければ作成、あれば時刻更新)。flag/値オプション全て未指定 → flag は false、値オプションは absent。files に file.txt 1 個。最も典型のケース。",
+      "argv": ["file.txt"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "files", "op": "set", "operand": "file.txt", "source": "cli"}
+        ],
+        "result": {"no_create": false, "access_only": false, "modify_only": false, "files": ["file.txt"]}
+      }
+    },
+    {
+      "id": "no-create-flag",
+      "why": "`touch -c missing.txt` (実機は存在しなければ何もしない)。-c flag 発火 true、files に missing.txt。値オプションは absent。",
+      "argv": ["-c", "missing.txt"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "no_create", "op": "set", "operand": true, "source": "cli"},
+          {"entity": "files", "op": "set", "operand": "missing.txt", "source": "cli"}
+        ],
+        "result": {"no_create": true, "access_only": false, "modify_only": false, "files": ["missing.txt"]}
+      }
+    },
+    {
+      "id": "reference-file",
+      "why": "`touch -r ref.txt target.txt` (実機は ref の時刻を target にコピー)。-r が参照ファイル ref.txt を値バインド、target.txt が files に落ちる。-r の値と positional の区別 (値オプションは次トークンを消費、残りが positional) を固定。",
+      "argv": ["-r", "ref.txt", "target.txt"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "reference", "op": "set", "operand": "ref.txt", "source": "cli"},
+          {"entity": "files", "op": "set", "operand": "target.txt", "source": "cli"}
+        ],
+        "result": {"reference": "ref.txt", "no_create": false, "access_only": false, "modify_only": false, "files": ["target.txt"]}
+      }
+    }
+  ]
+}
