@@ -1,9 +1,9 @@
 {
-  "why": "alias の継承原理の本命 (DR-057 §3): name 導出型の入口 (long 配列 = variant DSL 込み) は alias 要素の name で再導出される。canonical `ssl` (bool, default true) は long DSL `[\":set\", \"no:set:false\"]` を持つ — 主入口 `:set` が --ssl (set true)、variant `no:set:false` が --no-ssl (set false、トリガ綴りは prefix `no` + name `ssl` = --no-ssl、DR-011 の <prefix>-<name> 導出)。alias `{alias:\"ssl\", name:\"tls\"}` は long 全体を name=tls で再導出 → --tls (base 再導出) と --no-tls (variant 再導出) の両方が効き、いずれも同じ ssl セルへ落ちる (DR-057 §2 効果は canonical 実体へ)。variant トリガが name を埋め込む DSL (具象文字列置換でなく affix 構造 + name の合成) だからこそ再導出できる (DR-057 §3、variant-effects/set-operand.json の divergence note と同根: --gzip のような name 非埋込綴りは wire 表現不能)。canonical の綴り (--ssl / --no-ssl) も不変で共存する。bool 主入口/variant は値トークンを取らない set の縮退形で operand を運ぶ (LOWERING §A.5)。effects は cli 由来のみ・順序=適用順 (CONFORMANCE §2)。蒸留元: slice phase26 test 2 (long alias re-derives base AND variant)。",
+  "why": "alias の継承原理の本命 (DR-057 §3): name 導出型の入口 (long 配列 = variant DSL 込み) は alias 要素の name で再導出される。canonical `ssl` (bool, default true) は long DSL `[\":set\", \":set:true\", \"no:set:false\"]` を持つ — `:set` が --ssl の値形 (DR-076 §4)、`:set:true` が裸 --ssl (set true) の縮退形、variant `no:set:false` が --no-ssl (set false、トリガ綴りは prefix `no` + name `ssl` = --no-ssl、DR-011 の <prefix>-<name> 導出)。alias `{alias:\"ssl\", name:\"tls\"}` は long 全体を name=tls で再導出 → --tls (base 再導出) と --no-tls (variant 再導出) の両方が効き、いずれも同じ ssl セルへ落ちる (DR-057 §2 効果は canonical 実体へ)。variant トリガが name を埋め込む DSL (具象文字列置換でなく affix 構造 + name の合成) だからこそ再導出できる (DR-057 §3、variant-effects/set-operand.json の divergence note と同根: --gzip のような name 非埋込綴りは wire 表現不能)。canonical の綴り (--ssl / --no-ssl) も不変で共存する。裸縮退形 (`:set:true`)/variant は値トークンを取らない set の縮退形で operand を運ぶ (DR-076 §4、`:set` の値形とは別入口)。effects は cli 由来のみ・順序=適用順 (CONFORMANCE §2)。蒸留元: slice phase26 test 2 (long alias re-derives base AND variant)。",
   "query": "parse",
   "definition": {
     "options": [
-      {"name": "ssl", "type": "bool", "default": true, "long": [":set", "no:set:false"]},
+      {"name": "ssl", "type": "bool", "default": true, "long": [":set", ":set:true", "no:set:false"]},
       {"alias": "ssl", "name": "tls"}
     ]
   },
