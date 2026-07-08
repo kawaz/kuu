@@ -79,11 +79,39 @@
     },
     {
       "id": "yes-rejected",
-      "why": "`yes` → Error (DR-074 §3): yes/no/on/off は canonical 外 (Norway problem 回避)。不正 bool 文字列は silent 変換せず Error → failure (element=enabled / argv_pos=0 / kind=parse)。reason は DR-066 v1 に bool value_parser 用の語彙が無いため省略 (kind まで検証、report: bool 用 reason の実体化)。yes を受けたいなら true_values に opt-in 追加。",
+      "why": "`yes` → Error (DR-074 §3): yes/no/on/off は canonical 外 (Norway problem 回避)。不正 bool 文字列は silent 変換せず Error → failure (element=enabled / argv_pos=0 / kind=parse / reason=not_a_bool、DR-066 §3 の bool value_parser 語彙)。yes を受けたいなら true_values に opt-in 追加。",
       "argv": ["--enabled=yes"],
       "expect": {
         "outcome": "failure",
-        "errors": [{"element": "enabled", "argv_pos": 0, "kind": "parse"}]
+        "errors": [{"element": "enabled", "argv_pos": 0, "kind": "parse", "reason": "not_a_bool"}]
+      }
+    },
+    {
+      "id": "space-form-true",
+      "why": "space form `--enabled true` → true (DR-076 §4): bool は string/number と同格の値型で、`:set` (long:true の糖衣、DR-071) は空間形衛星 (exact + 値スロット) も立てる。値トークン `true` は canonical 語彙で照合 (DR-074 §3)。positional との取り合いは path-search の解決対象だが、本定義は positional を持たないので一意。",
+      "argv": ["--enabled", "true"],
+      "expect": {
+        "outcome": "success",
+        "effects": [{"entity": "enabled", "op": "set", "operand": true, "source": "cli"}],
+        "result": {"enabled": true}
+      }
+    },
+    {
+      "id": "space-form-noncanonical-rejected",
+      "why": "space form の canonical 外値 `--enabled yes` → Error (DR-076 §4 + DR-074 §3): 空間形の値スロットも eq 形と同じ canonical 語彙で照合し、外れは not_a_bool。argv_pos=1 は値トークン `yes` の位置 (トリガが 0、値が 1)。",
+      "argv": ["--enabled", "yes"],
+      "expect": {
+        "outcome": "failure",
+        "errors": [{"element": "enabled", "argv_pos": 1, "kind": "parse", "reason": "not_a_bool"}]
+      }
+    },
+    {
+      "id": "bare-trigger-missing-value",
+      "why": "裸 `--enabled` 単独 → Error (DR-076 §4 の帰結): `:set` は型に依らず「値を取って set」で、bool でも裸トリガ発火には `:set:true` の明示が要る (本定義 long:true = [\":set\"] のみなので値必須)。argv がトリガで尽きる = 値スロットの missing_operand (argv_pos=1 は値が要求された位置 = argv 長)。裸発火を受けたい定義は long:[\":set\", \":set:true\"] と書く (lowering/long/variant.json の ssl が輪郭)。",
+      "argv": ["--enabled"],
+      "expect": {
+        "outcome": "failure",
+        "errors": [{"element": "enabled", "argv_pos": 1, "kind": "parse", "reason": "missing_operand"}]
       }
     }
   ]

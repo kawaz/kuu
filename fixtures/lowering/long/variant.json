@@ -1,5 +1,5 @@
 {
-  "why": "long installer の variant 断面: set variant (`no:set:false`) を持つ bool オプション ssl。LOWERING §B.1 の variant 規則 — variant DSL は long 属性内の語彙なので long installer 内部で展開され、主入口の他に別入口として greedy exact 衛星をもう 1 本足し、値セルへの操作を効果記述子 (DR-045) として同じ値セルへ link する。set は value を沈める縮退形で書ける ({exact, value, link} — DR-063 §3 の効果記述子表記)。bool の主入口 --ssl も flag と同型に set の縮退形 (--ssl → value true、LOWERING §A.5) であり、値トークンを取らないため eq-split matcher は立たない (matcher は long の値付き綴りにのみ生成)。op 語彙 set = operand を書く/committed=true (DR-045)。実体 ssl は bool 値セル + default true。断面表記は DR-063 §3、比較は緩比較 (LOWERING §C.5)。slice PoC 実測 (installers=[LongInst] 単独, variant op=Set operand=false; slice の parsed 形は long=[\"ssl\"]+variants=[{trigger:\"no-ssl\",op:Set,operand:false}])。",
+  "why": "long installer の variant 断面: 値形 (`:set`) + 裸縮退形 (`:set:true`) + set variant (`no:set:false`) を併せ持つ bool オプション ssl。DR-076 §1/§4 — bool は string/number と同格の値型で、`:set` は型に依らず「値を取って set」(空間形衛星 seq + eq-split matcher が立つ、number の basic.json と同型)。裸トリガ発火は `:set:true` の明示 (operand を沈めた縮退形 {exact, value, link}、DR-063 §3)。variant `no:set:false` は LOWERING §B.1 の規則どおり別入口の greedy exact 衛星として展開され同じ値セルへ link する。op 語彙 set = operand を書く/committed=true (DR-045)。実体 ssl は bool 値セル + default true。断面表記は DR-063 §3、比較は緩比較 (LOWERING §C.5)。期待値の権威は仕様 (DR-070 §1b、DR-076 の裁定に基づく)。",
   "query": "lower",
   "definition": {
     "options": [
@@ -9,6 +9,7 @@
         "default": true,
         "long": [
           ":set",
+          ":set:true",
           "no:set:false"
         ]
       }
@@ -20,6 +21,17 @@
   "expect": {
     "greedy": [
       {
+        "seq": [
+          {
+            "exact": "--ssl"
+          },
+          {
+            "ref": "ssl",
+            "link": "ssl"
+          }
+        ]
+      },
+      {
         "exact": "--ssl",
         "value": true,
         "link": "ssl"
@@ -28,6 +40,12 @@
         "exact": "--no-ssl",
         "value": false,
         "link": "ssl"
+      },
+      {
+        "matcher": "eq_split",
+        "entries": {
+          "--ssl": "ssl"
+        }
       }
     ],
     "entities": {
