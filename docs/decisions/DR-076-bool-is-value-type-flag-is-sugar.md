@@ -13,21 +13,25 @@ bool は元々 **string / number などと同様に引数を受けて `:set` す
 
 引数を持たない **flag や count の方が特殊**な立場であり、bool の設計を flag の都合 (presence-only) で歪めない。
 
-### 2. flag の特殊性は flag 側の展開 (bool への糖衣) で吸収する
+### 2. flag の特殊性は flag 側の展開 (bool への糖衣) で吸収する — 正規形は long 綴り合成 (kawaz 裁定 2026-07-08)
 
-flag を内部的に bool へ展開する際の摩擦 (引数の有無) は、**特殊な立場である flag/count 側の展開で工夫する**。方向性は 2 案あり、いずれも bool 本体には手を入れない:
+flag を内部的に bool へ展開する際の摩擦 (引数の有無) は、**特殊な立場である flag 側の展開で工夫する**。bool 本体には手を入れない。正規形は **long 綴り DSL の合成**で定める:
 
-- **案 A: matcher 無しの値セル + Exact トリガ + link**。値だけ持つ bool セルを置き、綴りは Exact でマッチさせて link の値をセットする形に展開する (引数付き bool が必要ならその値セルへ link すればよいだけ)
-- **案 B: long 綴り DSL の合成で表現する** (kawaz のスケッチ、等価変換のイメージ):
+- **合成規則**: flag installer は宣言された**非空の** long variant リストに `:set:true` (裸トリガで true を set) を補完する (冪等 — 既に含まれていれば足さない)。absent / `false` / `[]` は他の型と同様**入口なし** (DR-071 §1 の三態同義を維持 — 合成を absent/`[]` の区別に載せると、区別が wire 上落ちる serialization 方式 (protobuf3 等、DR-071 の採用しなかった案) で flag の意味が変わってしまう)
+- **flag の `long:true` 糖衣は `[":set:true"]`** (裸発火のみ = 古典 flag)。`long:true` = `[":set"]` (DR-071 §1) は他の型の糖衣で、flag preset はこれを差し替える。糖衣層の default を preset が差すのは count が defaultValue=0 を差すのと同型で、`:set` の代数 (§4、型非依存) には触れない
+- 等価表 (すべて `...filters` / short / env 等の他属性はそのまま):
 
 ```
-{type:"flag", long:[]}                     ≡ {type:"bool", long:[":set:true"], ...filters}
-{type:"flag", long:[":set"]}               ≡ {type:"bool", long:[":set", ":set:true"], ...filters}
-{type:"flag", long:["no:set:false"]}       ≡ {type:"bool", long:["no:set:false", ":set:true"], ...filters}
-{type:"flag", long:[":set", "no:set:false"]} ≡ {type:"bool", long:[":set", "no:set:false", ":set:true"], ...filters}
+{type:"flag"}                                ≡ {type:"bool", default:false}            // long 入口なし (short / env だけの flag)
+{type:"flag", long:true}                     ≡ {type:"bool", long:[":set:true"], default:false}
+{type:"flag", long:[":set"]}                 ≡ {type:"bool", long:[":set", ":set:true"], default:false}   // 値形 + 裸の同居
+{type:"flag", long:["no:set:false"]}         ≡ {type:"bool", long:["no:set:false", ":set:true"], default:false}
+{type:"flag", long:[":set", "no:set:false"]} ≡ {type:"bool", long:[":set", "no:set:false", ":set:true"], default:false}
 ```
 
-つまり flag = 「値なし発火 (`:set:true` = 裸トリガで true を set) を合成した bool」であり、引数あり/なしを同居させたい場合も long 綴りの合成だけで表現できている。
+- **値形のみ / off-switch のみが欲しい場合は type:bool を直接書く** — 補完に opt-out は無く、逃げ道は型選択そのもの
+- **short は不変** (DR-071 §3)。flag の short / 発火 entry は非消費・固定 true 供給 (DR-071 §2「非消費 type では type 相応の固定値供給」がそのまま生きる — flag 型を残す理由の実質はここ: short は variant DSL を持たないため、型が慣習挙動を担わないと裸 `-v` が表現不能になる)
+- AST / 言語 DX 層に flag 概念を残すか展開後で持つかは表現層の自由 (core の意味論は上記展開で閉じる。help のデフォルト文言等はその層の関心事)
 
 ### 3. 参照実装への帰結
 
@@ -55,9 +59,20 @@ bool でだけ `:set` が「値形 + 裸 true」の二役になり、綴り DSL 
 
 消費曖昧性の回避にはなるが、string/number が space form を受ける対称性を bool だけ欠く。曖昧性の解決は path-search の本領であり、値型の対称性を優先 (§4)。
 
+### 展開の正規形を node 語彙で定める (matcher 無しの値セル + Exact トリガ + link)
+
+§2 の綴り合成に対する対案。値だけ持つ bool セルを置き、綴りは Exact でマッチさせて link の値をセットする形。bool の long lowering 仕様を node 層でもう一度記述する重複が生じ、綴り合成なら「flag 定義の lowering 結果 = 等価 bool 定義の lowering 結果」の恒等式として fixture 検証できる利点も失う。
+
+### flag 型の廃止 (bool + `long:[":set:true"]` で足りる)
+
+long 軸では成立するが、short 軸の裸発火 (`-v` で true) の表現手段が消える — short は variant DSL を持たない (DR-071 §3) ため、非消費の慣習挙動を担う型が無くなると逃げ道が無い。short の variant リスト化 (DR-071 §3 の改訂) まで波及させるコストに見合わず、flag を残して糖衣差し替えで済ませる方が変更が局所。
+
+### flag の `long:true` 糖衣を型非依存 (`[":set"]`) のまま補完に載せる
+
+最頻の flag (`long:true`) が値形 (`--verbose=false` / `--verbose false`) まで受けることになり、「宣言していない効果が発動する」ことになる (bool 語彙トークンが後続する argv で Ambiguous が第一級で発生)。flag preset の存在意義は慣習 (presence-only) のエンコードなので、糖衣は古典 flag 側に倒す。値形が欲しければ明示 (`long:[":set"]`) か type:bool。
+
 ## TODO (後続)
 
-- flag → bool の**展開の正規形** (§2 案 A: Exact+link / 案 B: long 綴り合成) は lowering 仕様の確定時に決める (§4 で `:set` 系綴りの意味論は確定済み — 残るのは flag の内部展開経路の選択のみ)
 - count の展開先は bool ではなく **number セル** (DR-005: number + defaultValue=0 + 発火で increment、accumulator 意味論はセル側 = DR-029)。flag と同じ整理 (type preset の合成) で正規形を別途書く
 
 ## 関連

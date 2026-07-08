@@ -13,7 +13,7 @@
 ```
 
 - **正規形は variant DSL の配列**で、各要素が long 入口を 1 個生む。`:set` (prefix 空文字列) が主入口 (`--<name>`)。主入口は特別扱いでなくリストの一級要素 — 「暗黙の set variant」が明示に還元される
-- **`long: true` は `[":set"]` の糖衣** (multiple / filters と同じ string|object 二形イディオムの bool|array 版)。展開は long installer の解釈 (wire には二形とも載る — multiple の文字列プリセットと同じ扱い)
+- **`long: true` は `[":set"]` の糖衣** (multiple / filters と同じ string|object 二形イディオムの bool|array 版)。展開は long installer の解釈 (wire には二形とも載る — multiple の文字列プリセットと同じ扱い)。例外: **type:flag は糖衣を `[":set:true"]` に差し替える** (preset による糖衣差し替え、DR-076 §2)
 - **absent = `false` = `[]` = 入口なし (全て同義)**。「省略 = default 値と等価」の構造等価 (DR-063 §4) に完全に乗り、absent/empty の presence 意味論が仕様から消滅する。JSON 生態系 (protobuf3 / Go encoding/json 等) で区別が落ちても意味が変わらない
 - **`long: []` の意味変更 (破壊的、ドラフト期)**: 旧「主入口を生成」→ 新「入口なし」
 
