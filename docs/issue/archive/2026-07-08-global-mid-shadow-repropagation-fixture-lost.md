@@ -1,6 +1,6 @@
 ---
 title: 「global 中間 shadow の孫への再伝播」の輪郭 fixture が alias 移行で失われた
-status: open
+status: resolved
 category: task
 created: 2026-07-08T20:40:29+09:00
 last_read:
@@ -9,10 +9,10 @@ wip_entered:
 blocked_entered:
 pending_entered:
 discarded_entered:
-resolved_entered:
+resolved_entered: 2026-07-08T21:38:59+09:00
 discard_reason:
 pending_reason:
-close_reason:
+close_reason: ["fixture:fixtures/command-scope/mid-global-repropagation.json (spec commit fa3c6e12)","done:4 case で輪郭回復、shadowing-3level-same-name.json との重複なし確認済み"]
 blocked_by:
 origin: dr066-path worker (spec commit 8f4e1373 の移行作業中に発見)
 ---
