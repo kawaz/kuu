@@ -43,7 +43,16 @@ constraint 系は **`<属性名>_violated`** で機械的に統一する (属性
 
 value_parser 系 (`not_a_number` / `not_an_integer`) の reason 語彙は本 v1 表で確定する。各 reason を canonical factory の descriptor `reasons` 宣言へ写像する作業 (DR-040 の canonical 語彙を config キーとともに descriptor へ実体化する Schema 実体化) は DR-068 のライフサイクルに従い後続フェーズで行う。filter 系 reason は各 filter の descriptor 宣言 (例: in_range が `too_small` / `too_large`)。
 
-### 4. fixture では reason は optional 検証 (DR-065 / CONFORMANCE への反映)
+### 4. path/provenance フィールドの追加 (2026-07-08 改訂)
+
+エラー構造に **optional な `path`** を追加する: `{element, argv_pos, kind, reason, message, path?}`。
+
+- **形は NonEmptyList の snoc 形**: 祖先パス列 + 要素の分離 (`path` = root-first の祖先スコープ名列、`element` = 自分)。`path: []` は root 直下。null ケースを分けて考えない (`Maybe ⊂ List` の包摂、kawaz 裁定 2026-07-08) — Binding の `(scope, key)` 分離と同じ形であり、wire・実装・表示が同型で通る
+- **値は発火時の動的パス**: link/ref 共有で 1 つの派生ノードが複数のユーザパスに仕える場合も、エラーが立った瞬間の walk のパスを記録する (静的な全パス列挙は定義時 warn 等の非実行時文脈用)
+- **表示への含意**: 内部展開で生まれた派生ノード (自動 id `xx#{seq}` 系) は派生元を辿れば必ずユーザ定義要素に着地するため、ユーザ向け表示は「発火時パス + ユーザ起源名」で組む (例: `.color.r` のパスで 300 が値域エラー)。自動 id そのものを表示面に出す必要はない。トークン内 char range 等のさらなる素材追加は将来拡張 (装飾・下線は層 2 = レンダラの関心、DR-053 の素材とポリシー分離)
+- **fixture 互換**: conformance の errors 比較は element/argv_pos/kind/reason の一致で、`path` は reason と同じく **optional 検証** (書けば比較、書かなければ不問)。既存 fixture は無傷
+
+### 5. fixture では reason は optional 検証 (DR-065 / CONFORMANCE への反映)
 
 fixture の errors 期待値に reason を書けば検証し、書かなければ kind までの検証。段階導入を可能にする (既存 fixture を壊さない)。
 
