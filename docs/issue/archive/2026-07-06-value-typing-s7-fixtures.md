@@ -1,6 +1,6 @@
 ---
 title: DR-074 §7 の細部規則の輪郭 fixture 追加
-status: open
+status: resolved
 category: task
 created: 2026-07-06T16:12:19+09:00
 last_read:
@@ -9,10 +9,10 @@ wip_entered:
 blocked_entered:
 pending_entered:
 discarded_entered:
-resolved_entered:
+resolved_entered: 2026-07-08T21:46:20+09:00
 discard_reason:
 pending_reason:
-close_reason:
+close_reason: ["done:DR-074 §7 細部規則 21 case (fixtures/value-typing/ 4 ファイル、spec commit fa3c6e12) + int-round-modes.json の DR-075 全10モード網羅 rewrite 8 case (spec commit a7aa2e14)。全期待値は spec から導出し kuu.mbt 実測で乖離0"]
 blocked_by:
 origin: 自リポ TODO (DR-074 反映の codex stop-gate レビューで発見)
 ---
