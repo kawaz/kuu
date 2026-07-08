@@ -1,0 +1,65 @@
+{
+  "why": "int の値空間判定を hex 経由でも一様に適用する輪郭 (DR-075 §1 + DR-074 §2 の合成): int は number として parse した値が整数なら受理 (§1 M2 確定)。基数 prefix opt-in (`number_allow_base_prefix:true`) で hex 整数と hex float の両方を有効化した場合 (DR-074 §2)、int 型経由でも同じ値空間判定が適用される — `0xff` (整数 hex) は値 255 で整数 → 受理、`0x1.8p3` (hex float) は値 12 で整数 → 受理、`0x1.8p0` (hex float) は値 1.5 で非整数 → int_round に従う (default `error` で `not_an_integer`、丸めモードで丸めて成功)。number-base-prefix-optin.json は number 型の hex 輪郭を担うが、int 型経由の輪郭 (= 値空間判定が hex 値にも適用され、fractional 値は int_round に落ちる) は本 fixture が担う。DR-075 §2 の 10 モード + DR-074 §2 の base_prefix 統合 opt-in は `kuu_int_parser` factory の平坦 config キー 2 個 (`int_round` / `number_allow_base_prefix`) として直交合成できる (DR-061 §4)。int-round-modes.json は 10 進の丸めモード判別、本 fixture は基数 prefix opt-in 経由でも同じ規則が働くことの hex 断面固定。int-value-space.json は default (base_prefix false + int_round error) の受理輪郭を担う (10 進のみ) — 本 fixture は opt-in 経由で hex 側にも同型規則が及ぶことを固定。DR-075 §5 の binary64 非経由必須要件は 10 進 tie 判定に対する規定で、hex float は base-2 aligned のため binary64 で exact に表現可能 (mantissa 53 bit ~13 桁以内、本 fixture の 0x1.8 レベルは binary64 で厳密)。int の値域は実装定義 (DR-075 §後段)、参照実装は Int64 なので 0xff=255 は素通り。",
+  "query": "parse",
+  "definition": {
+    "definitions": {
+      "types": {
+        "int_er": {"name": "kuu_int_parser", "config": {"int_round": "error", "number_allow_base_prefix": true}},
+        "int_fl": {"name": "kuu_int_parser", "config": {"int_round": "floor", "number_allow_base_prefix": true}}
+      }
+    },
+    "options": [
+      {"name": "e", "type": "int_er", "long": true},
+      {"name": "f", "type": "int_fl", "long": true}
+    ]
+  },
+  "cases": [
+    {
+      "id": "hex-integer-value-accepted-both-modes",
+      "why": "hex 整数値は int_round モードによらず受理 (DR-075 §1 値空間判定 + DR-074 §2 base_prefix opt-in): `0xff` は number として parse すると値 255 (整数) なので int 型でも int_round に関わらず素通り (丸め不要)。number-base-prefix-optin.json::hex-int-accepted (number 型) と対称で、int 型でも同じ受理輪郭。error / floor 両モードで結果 255 に収束することを固定 — 整数値には int_round モードが影響しない (DR-075 §M2 との表裏関係の輪郭)。",
+      "argv": ["--e", "0xff", "--f", "0xff"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "e", "op": "set", "operand": 255, "source": "cli"},
+          {"entity": "f", "op": "set", "operand": 255, "source": "cli"}
+        ],
+        "result": {"e": 255, "f": 255}
+      }
+    },
+    {
+      "id": "hex-float-integer-value-accepted-both-modes",
+      "why": "hex float でも値が整数なら int_round モードによらず受理 (DR-075 §1 / DR-074 §2 §「int 型は値空間で判定」): `0x1.8p3` = 1.5 * 2^3 = 12 は hex float だが値 12 は整数 → int 型で素通り。number-base-prefix-optin.json::hex-float-with-exponent (number 型で operand 12) と対称。「10 進 int も値空間で判定する読み」を hex にも一様適用する DR-074 §2 の帰結を int 型経由で固定 — 構文判定 (整数リテラルのみ受理) でなく値空間判定 (整数値なら受理) であることの hex 側裏取り。",
+      "argv": ["--e", "0x1.8p3", "--f", "0x1.8p3"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "e", "op": "set", "operand": 12, "source": "cli"},
+          {"entity": "f", "op": "set", "operand": 12, "source": "cli"}
+        ],
+        "result": {"e": 12, "f": 12}
+      }
+    },
+    {
+      "id": "hex-float-fractional-error-mode-rejected",
+      "why": "hex float の fractional 値は int_round=error で拒否 (DR-075 §2 error モード + §6 reason 規則): `0x1.8p0` = 1.5 は hex float で値 1.5 (非整数) → int_er は `int_round=error` なので failure (element=e / argv_pos=1 / kind=parse / reason=not_an_integer)。number-base-prefix-optin.json::hex-float-no-exponent (number 型で operand 1.5) と対、int 型では non-integer なので rejected。`not_an_integer` は `int_round=error` のときのみ emit する reason (DR-075 §6 / DR-066 §3、丸めモードなら成功するので emit しない — 対照は次 case)。",
+      "argv": ["--e", "0x1.8p0"],
+      "expect": {
+        "outcome": "failure",
+        "errors": [{"element": "e", "argv_pos": 1, "kind": "parse", "reason": "not_an_integer"}]
+      }
+    },
+    {
+      "id": "hex-float-fractional-floor-mode-accepted",
+      "why": "hex float の fractional 値は丸めモードで丸めて受理 (DR-075 §2 floor モード): `0x1.8p0` = 1.5 は int_fl (`int_round=floor`) で −∞ 方向に丸め → 1。10 進 `1.5` を floor に落とすと 1 (int-round-modes.json::positive-tie-... の floor 挙動と同型) を hex 経路でも一様適用することの固定。error モード (前 case) と対で「丸めモードは値空間判定を強制する」(DR-075 §M2) 帰結が hex にも及ぶ裏取り。",
+      "argv": ["--f", "0x1.8p0"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "f", "op": "set", "operand": 1, "source": "cli"}
+        ],
+        "result": {"f": 1}
+      }
+    }
+  ]
+}

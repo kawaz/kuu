@@ -1,0 +1,27 @@
+{
+  "why": "DR-074 §5 の short cluster 読みとの衝突原則 (matcher が両候補を枝として生成、読みモード指定なし) を 3-way multi-Accept ambiguity として固定 (DR-041 §3 / DR-038)。DR-074 §5 が挙げる観念例 `-inf` が short flag 列 `-i -n -f` とも読める衝突を、value 側の受け手を string 値取り short `-s` に置いて具体化する — `-sinf` (attached form) は walk_short が in-token 値長さの毎に独立枝を生成し、string は任意長のプレフィックスを受理するので (A) s=`i` + `-n -f` cluster、(B) s=`in` + `-f` cluster、(C) s=`inf` 全消費 の 3 経路が全て完全経路になる。DR-074 §5 が明文化した「読みモード指定 (『値優先モード』等) は導入しない」方針の帰結として、3 解釈全部が interpretations に列挙され ambiguous になる (単一解釈への収束は宣言側の責任 — s を取り除く / i n f のいずれかの flag 定義を落とす等)。既存 cluster-split-string.json は 2-way (`-sax` → 2 解釈) を固定するが、本 fixture は 3-way に一般化して『値長さの各切り分け点で独立枝が生える』mechanism 自体を具体的な自然数 (3) で固定する。DR-074 §5 の `-inf` 観念例に i / n / f の字を合わせて DR との対応を明示化。string は canonical でも lenient でも受理域が同一 (DR-074 §1) なので lexicon 改訂に影響されない安定した ambiguity 見本 (cluster-split-string.json 設計思想と同型)。値付着枝が全 Accept する condition は値型が string だから — number/float であれば長さごとに parse 判定が分岐して 1 本しか通らないケースがある (cluster-split.json の canonical suffix 拒否と同型)。未発火 short flag は preset default false で present (LOWERING §A.5 / DR-051 §2)。interpretations は集合比較・順序非規範 (CONFORMANCE §3)。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {"name": "s", "type": "string", "short": "s"},
+      {"name": "i", "type": "flag", "short": "i"},
+      {"name": "n", "type": "flag", "short": "n"},
+      {"name": "f", "type": "flag", "short": "f"}
+    ]
+  },
+  "cases": [
+    {
+      "id": "three-way-value-cluster-split",
+      "why": "3-way multi-Accept ambiguity (DR-074 §5 / DR-041 §3 / DR-038): `-sinf` は walk_short が s (string 値取り) の value 長さを 1 / 2 / 3 と生成し、string が全長さを受理するので 3 経路すべて全消費完成する。(A) s=`i` の後 `-n -f` cluster → n=true, f=true, i 未発火 preset false。(B) s=`in` の後 `-f` cluster → f=true, i / n 未発火 preset false。(C) s=`inf` で全消費 → i / n / f いずれも未発火 preset false。3 解釈は s の値と発火 flag 集合の両方で分岐し merge しない (DR-038 の効果列判定)。列挙順は非規範 (集合比較、CONFORMANCE §3)。DR-074 §5 の観念例 `-inf` が短 flag 列 `-i -n -f` と読める衝突を、s prefix で arity 駆動値として攻めた具体化 — s 側の in-token 値長 3 段 = flag 側の cluster 分割点 3 態 に対応する。",
+      "argv": ["-sinf"],
+      "expect": {
+        "outcome": "ambiguous",
+        "interpretations": [
+          {"s": "i", "n": true, "f": true},
+          {"s": "in", "f": true},
+          {"s": "inf"}
+        ]
+      }
+    }
+  ]
+}
