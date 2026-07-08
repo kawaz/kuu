@@ -3,7 +3,7 @@
   "query": "parse",
   "definition": {
     "options": [
-      {"name": "verbose", "type": "flag", "long": ["verbose"]}
+      {"name": "verbose", "type": "flag", "long": true}
     ],
     "positionals": [
       {"name": "src", "type": "string", "repeat": {"min": 1}},

@@ -1,5 +1,5 @@
 {
-  "why": "3 段 shadowing の name-vs-trigger 判別 (ケース: 別 name・同トリガ、DR-042): root global verbose を中間 mid が別 name chatty・同トリガ --verbose・非 global で宣言、孫 sub は無宣言。shadow はトリガ literal 判定なので mid で root コピーが止まる。中間宣言が非 global のため subtree (孫 sub) には何も伝播しない — sub は verbose 入口を持たず、--verbose は sub 閉じ→mid 再開 (早閉じ抑制) で mid の chatty に読まれる。root global verbose は未発火 → preset default false で root に present (DR-051 §2)。chatty:true が『root verbose ではなく mid の自前宣言が読んだ』ことを示し、別 name でも同トリガなら shadow する (= トリガ判定・name 非依存) ことを固定。",
+  "why": "3 段 shadowing の name-vs-trigger 判別 (ケース: 別 name・同トリガ、DR-042)。name とは無関係な綴りで同一トリガを奪い合うシナリオは DR-057 alias 独立要素で表現する (DR-011 明確化 2026-07-08: colon-less な `long` 配列要素は文法エラー、旧 LLiteral 経路は創作構文だったため廃止)。root global verbose (long:true、DR-076 §2 flag 糖衣) を中間 mid が別 name chatty (canonical, トリガなし) + alias `{alias:\"chatty\", name:\"verbose\"}` (トリガ --verbose を name=verbose で再導出、DR-057 §3、非 global) で宣言、孫 sub は無宣言。shadow 判定 (`triggers_overlap`) は long 配列だけでなく variants (alias 由来のトリガ含む) も横断して比較するため、mid の chatty-alias が持つトリガ --verbose と root の verbose 主入口トリガが一致し、root コピーは mid で shadow され止まる。alias は is_global を持たず global 伝播しないため subtree (孫 sub) には何も伝播しない — sub は verbose 入口を持たず、--verbose は sub 閉じ→mid 再開 (DR-041 §4 早閉じ+porous) で mid の chatty-alias に読まれる。root global verbose は未発火 → preset default false で root に present (DR-051 §2)。chatty:true が『root verbose ではなく mid の自前宣言が読んだ』ことを示し、別 name でも同トリガなら shadow する (= トリガ判定・name 非依存) ことを固定。",
   "query": "parse",
   "definition": {
     "options": [
@@ -10,7 +10,8 @@
         "type": "command",
         "name": "mid",
         "options": [
-          {"name": "chatty", "type": "flag", "long": ["verbose"]}
+          {"name": "chatty", "type": "flag"},
+          {"alias": "chatty", "name": "verbose", "long": [":set:true"]}
         ],
         "commands": [
           {"type": "command", "name": "sub"}

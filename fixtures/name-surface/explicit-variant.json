@@ -1,15 +1,16 @@
 {
-  "why": "明示綴り variant 配列は主入口を生成しない (DR-071 二形の variant 側): wire form の `long: [\"v\"]` は variant 配列で、`:set` を含まないため name 由来の主入口 (`--<name>`) は生成されず、書かれた明示綴り `--v` だけが植わる。DR-071 の分岐『`:set` = 名前由来主入口 / それ以外 = 明示綴り素通し (normalize しない)』のうち『主入口なし (variant のみ)』側の輪郭を parse 観測で固定する。結果キーは常に要素の name (verbose) — トリガ綴りが `v` でも result キーは name 軸 (DR-022)。slice phase29 gap2 (EXPLICIT long spelling passes through as-is) の断面を、主入口不在の negative-control 付きで補強。",
+  "why": "name とは無関係な明示綴りの入口は DR-057 alias 独立要素で表現する (DR-011 明確化 2026-07-08: colon-less な `long` 配列要素は文法エラー、旧 LLiteral 経路 (『:set 以外は明示綴り素通し』) は創作構文だったため廃止)。canonical `verbose` (トリガなし) + alias `{alias:\"verbose\", name:\"v\"}` (トリガ --v を name=v の裸発火 `:set:true` で再導出、DR-057 §3・DR-076 §2) で、name 由来の主入口 `--verbose` を生やさず明示綴り `--v` だけを植える構図を実現する。結果キーは常に要素の name (verbose) — alias は結果スコープを作らず canonical 実体へ効果が流れる (DR-057 §2)、トリガ綴りが `v` でも result キーは canonical name 軸。主入口不在の negative-control 付きで、alias が『name 由来の主入口を自動生成しない別入口』であることの輪郭を parse 観測で固定する。",
   "query": "parse",
   "definition": {
     "options": [
-      {"name": "verbose", "type": "flag", "long": ["v"]}
+      {"name": "verbose", "type": "flag"},
+      {"alias": "verbose", "name": "v", "long": [":set:true"]}
     ]
   },
   "cases": [
     {
       "id": "explicit-spelling-fires",
-      "why": "明示綴り `--v` が発火 → 結果キーは name (verbose) で set(true)。トリガ綴り (v) と結果キー (verbose) が別軸で、明示綴りは normalize 素通しで植わることを固定 (DR-071)。",
+      "why": "明示綴り `--v` が発火 → 結果キーは canonical name (verbose) で set(true)。トリガ綴り (v) と結果キー (verbose) が別軸で、alias が canonical 実体へ効果を流すことを固定 (DR-057 §2)。",
       "argv": ["--v"],
       "expect": {
         "outcome": "success",
@@ -21,7 +22,7 @@
     },
     {
       "id": "no-main-entry",
-      "why": "主入口なしの negative-control: `long: [\"v\"]` は `:set` を含まないので name 由来の `--verbose` は生成されない。よって `--verbose` は消費者を持たず残余トークン → failure (unexpected_token, argv_pos=0, element 省略)。『variant 配列を書くと name 由来主入口が自動追加されない』という DR-071 の分岐を固定 (主入口ありの main-entry.json との対照)。",
+      "why": "主入口なしの negative-control: canonical `verbose` は long 無し (トリガなし) なので name 由来の `--verbose` は生成されない。alias は別入口を追加するだけで canonical の主入口を生やさない (DR-057 §2)。よって `--verbose` は消費者を持たず残余トークン → failure (unexpected_token, argv_pos=0, element 省略)。『alias 併用でも name 由来主入口が自動追加されない』ことの固定 (主入口ありの main-entry.json との対照)。",
       "argv": ["--verbose"],
       "expect": {
         "outcome": "failure",

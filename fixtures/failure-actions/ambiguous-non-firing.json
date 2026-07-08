@@ -1,11 +1,13 @@
 {
-  "why": "ambiguous (完全経路 2 本以上) では失敗時アクションが発火しない — help が両経路で selected されていても (DR-048 §2 の確定文言)。発火条件は「完全経路 0 本」に限る。判断本質: ambiguous の本体は競合解釈の提示であり、大きな help でエラー内容を画面から流さない (0 本失敗 = 使い方不明 → help が有益 / ambiguous = どの解釈か明確化したい → 解釈列挙が本体、DR-048)。定義: help (type:\"help\" プリセット) の後に、同一トリガ --v が別実体 a / b を束縛する 2 エントリ (long:[\"v\"] で明示綴り --v、DR-071 の variant 配列形)。トリガ重複は実行時 ambiguous (DR-041)。",
+  "why": "ambiguous (完全経路 2 本以上) では失敗時アクションが発火しない — help が両経路で selected されていても (DR-048 §2 の確定文言)。発火条件は「完全経路 0 本」に限る。判断本質: ambiguous の本体は競合解釈の提示であり、大きな help でエラー内容を画面から流さない (0 本失敗 = 使い方不明 → help が有益 / ambiguous = どの解釈か明確化したい → 解釈列挙が本体、DR-048)。定義: help (type:\"help\" プリセット) の後に、同一トリガ --v が別実体 a / b を束縛する構図を DR-057 alias 独立要素で表現する (DR-011 明確化 2026-07-08: colon-less な `long` 配列要素は文法エラー、旧 LLiteral 経路は創作構文だったため廃止)。a・b それぞれを canonical (トリガなし) + alias `{alias:\"<name>\", name:\"v\"}` (トリガ --v を name=v の裸発火 `:set:true` で再導出、DR-057 §3) にし、同じ綴り --v を持つ 2 つの独立した入口 (alias) が並存する形でトリガ重複を作る。トリガ重複は実行時 ambiguous (DR-041)。",
   "query": "parse",
   "definition": {
     "options": [
       {"name": "help", "type": "help", "long": true},
-      {"name": "a", "type": "flag", "long": ["v"]},
-      {"name": "b", "type": "flag", "long": ["v"]}
+      {"name": "a", "type": "flag"},
+      {"alias": "a", "name": "v", "long": [":set:true"]},
+      {"name": "b", "type": "flag"},
+      {"alias": "b", "name": "v", "long": [":set:true"]}
     ]
   },
   "cases": [

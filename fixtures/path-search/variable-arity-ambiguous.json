@@ -1,11 +1,11 @@
 {
-  "why": "可変アリティ option が生む real ambiguous (DESIGN §15.4 / DR-038)。単一トリガ --color が「3 数値 (r,g,b) を取る枝」と「1 文字列 name を取る枝」の 2 アリティを持ち、末尾に無制限 positional 受け皿 rest を置くと、同じ argv を構造の異なる 2 経路で全消費できる。wire form では共有トリガ --color をノードの long に factor out し (long:[\"color\"] が --color を生成、DR-071 の variant 配列形)、or はアリティ差分のみを担う (or キー形 = DESIGN §1.2、各枝は消費文法。裸配列 seq 糖衣は wire では {seq} 正規形に正規化済み)。これは隣接閉包の取り分次元の配分違い (ambiguous-receptacles.json、DR-043 の選好で代表 1 本に畳む) ではなく、option-positional 境界をまたぐ構造の異なる完全経路が並ぶ real ambiguous で、取り分選好では畳めず全解釈が保存される (DR-038: 完全経路 2 本以上 → ambiguous)。ambiguity は値依存 — 先頭 3 値が数値なら両枝が完成して ambiguous、非数値が混じれば数値枝が死に name 枝のみ生存して確定する (case 対照、ambiguity は token 形でなく定義が値を吸収できるかに宿る)。ambiguous の interpretations は各完全経路の結果オブジェクト形ビュー (DR-053 §3)、集合比較で順序非規範 (CONFORMANCE §3)。",
+  "why": "可変アリティ option が生む real ambiguous (DESIGN §15.4 / DR-038)。単一トリガ --color が「3 数値 (r,g,b) を取る枝」と「1 文字列 name を取る枝」の 2 アリティを持ち、末尾に無制限 positional 受け皿 rest を置くと、同じ argv を構造の異なる 2 経路で全消費できる。wire form では共有トリガ --color を long:true の主入口糖衣で生成し (DR-071 §1: `:set` = name 由来主入口、色名 color がそのまま kebab 綴りになる)、or はアリティ差分のみを担う (or キー形 = DESIGN §1.2、各枝は消費文法。裸配列 seq 糖衣は wire では {seq} 正規形に正規化済み)。これは隣接閉包の取り分次元の配分違い (ambiguous-receptacles.json、DR-043 の選好で代表 1 本に畳む) ではなく、option-positional 境界をまたぐ構造の異なる完全経路が並ぶ real ambiguous で、取り分選好では畳めず全解釈が保存される (DR-038: 完全経路 2 本以上 → ambiguous)。ambiguity は値依存 — 先頭 3 値が数値なら両枝が完成して ambiguous、非数値が混じれば数値枝が死に name 枝のみ生存して確定する (case 対照、ambiguity は token 形でなく定義が値を吸収できるかに宿る)。ambiguous の interpretations は各完全経路の結果オブジェクト形ビュー (DR-053 §3)、集合比較で順序非規範 (CONFORMANCE §3)。",
   "query": "parse",
   "definition": {
     "options": [
       {
         "name": "color",
-        "long": ["color"],
+        "long": true,
         "or": [
           {
             "seq": [

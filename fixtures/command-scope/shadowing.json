@@ -1,16 +1,18 @@
 {
-  "why": "global shadowing はトリガ (綴り) 判定であり name 非依存 (DR-042): 子が同一トリガを別 name で自前宣言すると global コピーが抑制され、子の自前宣言が勝つ (コピーが漏れれば両 name 発火で ambiguous になるが、抑制で一意)。root は gverb (name gverb・トリガ --verbose・global)、子 build は lverb (name lverb・トリガ --verbose・非 global) を宣言。異なる name でも同一トリガ --verbose なので shadow が成立し、build の lverb が一意に勝つことを固定 (name が違っても shadow する = トリガ判定)。effects の entity は発火セルの name。未発火 flag は preset default false で present (DR-051 §2)。root global gverb の値セルは root に 1 個。",
+  "why": "name とは無関係な綴りで同一トリガを奪い合うシナリオは DR-057 alias 独立要素で表現する (DR-011 明確化 2026-07-08: colon-less な `long` 配列要素は文法エラー、旧 LLiteral 経路は創作構文だったため廃止 — 明示綴りの入口は alias が正)。root は canonical gverb (トリガなし、global) + alias `{alias:\"gverb\", name:\"verbose\"}` (トリガ --verbose を name=verbose で再導出、DR-057 §3)。子 build は canonical lverb (トリガなし) + alias `{alias:\"lverb\", name:\"verbose\"}` を自前宣言。alias は AliasDef に is_global が無く global 伝播しない (DR-057 の意図的な範囲外 — global は canonical 実体の属性、alias は別入口の追加) ので、root の gverb-alias (--verbose) はそもそも子スコープへ伝播せず、build 内の --verbose は build 自前の lverb-alias が単独で発火する。旧 fixture が検証していた「同一トリガの global shadow (子の自前宣言が global コピーを抑制する)」という機構そのものは、alias 側にトリガが集まる本設計では発火しない (root canonical はトリガを持たないので子に伝播しても衝突しない) — 得られる observable な結果 (どの case でどの entity が発火するか) は旧 fixture と同一のため、その輪郭を保存する目的でここに残す。root global gverb の値セルは root に 1 個 (トリガは alias 経由のみ)。",
   "query": "parse",
   "definition": {
     "options": [
-      {"name": "gverb", "type": "flag", "long": ["verbose"], "global": true}
+      {"name": "gverb", "type": "flag", "global": true},
+      {"alias": "gverb", "name": "verbose", "long": [":set:true"]}
     ],
     "commands": [
       {
         "type": "command",
         "name": "build",
         "options": [
-          {"name": "lverb", "type": "flag", "long": ["verbose"]}
+          {"name": "lverb", "type": "flag"},
+          {"alias": "lverb", "name": "verbose", "long": [":set:true"]}
         ]
       }
     ]
@@ -18,7 +20,7 @@
   "cases": [
     {
       "id": "child-shadows-global",
-      "why": "子 build が同一トリガ --verbose を別 name lverb で宣言 → root gverb コピーが shadow され、build 内 --verbose は build の lverb を一意に発火 (ambiguous でない)。gverb は未発火 → root に preset default false。effect entity は勝者 lverb。",
+      "why": "build 内 --verbose は build 自前の alias (lverb 再導出) が発火する。root canonical gverb はトリガを持たないので global コピーが build に入っても衝突しない (旧 shadow 機構のテストではなく、alias 併用時に子の自前 --verbose 宣言が一意に効くことの固定)。gverb は未発火 → root に preset default false。effect entity は lverb。",
       "argv": ["build", "--verbose"],
       "expect": {
         "outcome": "success",
@@ -30,7 +32,7 @@
     },
     {
       "id": "root-own-fires",
-      "why": "対照: build に入らず root で --verbose を発火させると root 自身の gverb が発火する (shadow は子スコープ内の話)。build は未入場 → absent。root の own トリガが root で効くことの固定。",
+      "why": "対照: build に入らず root で --verbose を発火させると root の alias (gverb 再導出) が発火する。build は未入場 → absent。root の alias 入口が root で効くことの固定。",
       "argv": ["--verbose"],
       "expect": {
         "outcome": "success",

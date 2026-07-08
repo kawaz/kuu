@@ -1,5 +1,5 @@
 {
-  "why": "3 段 shadowing の name-vs-trigger 判別 (ケース: 同 name・別トリガ = トリガ非衝突なので shadow せず、DR-042): root global verbose (トリガ --verbose) を中間 mid が同 name verbose だが別トリガ --chatty・非 global で宣言、孫 sub は無宣言。shadow 判定はトリガ literal なので --chatty と --verbose は衝突せず、root の verbose コピーは mid を通過して sub まで通常伝播する (mid は shadow しない)。孫での --verbose は sub に届いた root コピー (root verbose 実体への link 同期衛星) が root verbose セルへ書く → root キーに現れる。mid の自前 verbose (トリガ --chatty) は --verbose では発火せず mid 下で preset default false。name が重なるだけでは shadow しない (トリガが違えば別入口・別セル) ことを固定。effect entity 'verbose' は各 argv で発火する 1 セルの name、どちらのセルかは result のネスト位置で判別 (shadowing-3level-same-name と対)。",
+  "why": "3 段 shadowing の name-vs-trigger 判別 (ケース: 同 name・別トリガ = トリガ非衝突なので shadow せず、DR-042)。name とは無関係な綴りで別トリガを持つシナリオは DR-057 alias 独立要素で表現する (DR-011 明確化 2026-07-08: colon-less な `long` 配列要素は文法エラー、旧 LLiteral 経路は創作構文だったため廃止)。root global verbose (long:true、トリガ --verbose、DR-076 §2 flag 糖衣) を中間 mid が同 name verbose (canonical, トリガなし) + alias `{alias:\"verbose\", name:\"chatty\"}` (トリガ --chatty を name=chatty で再導出、DR-057 §3、非 global) で宣言、孫 sub は無宣言。shadow 判定 (`triggers_overlap`、long と variants を横断比較) は --chatty と --verbose の間に一致を見出さないので衝突せず、root の verbose コピーは mid を通過して sub まで通常伝播する (mid は shadow しない)。孫での --verbose は sub に届いた root コピー (root verbose 実体への link 同期衛星) が root verbose セルへ書く → root キーに現れる。mid の自前 verbose (chatty-alias のトリガ --chatty) は --verbose では発火せず mid 下で preset default false。name が重なるだけでは shadow しない (トリガが違えば別入口・別セル) ことを固定。effect entity 'verbose' は各 argv で発火する 1 セルの name、どちらのセルかは result のネスト位置で判別 (shadowing-3level-same-name と対)。",
   "query": "parse",
   "definition": {
     "options": [
@@ -10,7 +10,8 @@
         "type": "command",
         "name": "mid",
         "options": [
-          {"name": "verbose", "type": "flag", "long": ["chatty"]}
+          {"name": "verbose", "type": "flag"},
+          {"alias": "verbose", "name": "chatty", "long": [":set:true"]}
         ],
         "commands": [
           {"type": "command", "name": "sub"}

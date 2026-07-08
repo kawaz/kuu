@@ -3,7 +3,7 @@
   "query": "parse",
   "definition": {
     "options": [
-      {"name": "foo", "type": "flag", "long": [":set", "no:unset"], "conflicts_with": ["bar"]},
+      {"name": "foo", "type": "flag", "long": ["no:unset"], "conflicts_with": ["bar"]},
       {"name": "bar", "type": "flag", "long": true}
     ]
   },

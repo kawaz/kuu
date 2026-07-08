@@ -1,9 +1,10 @@
 {
-  "why": "inheritable コピーの自前優先 shadow (DR-059 §3): 祖先スコープが inheritable の祖先綴りと同一 literal のトリガを自前で宣言していると、逆方向コピーは追加されない (global shadowing と対称、add-if-absent の absent 判定で既存トリガに負ける)。よって root で --sub-ttl は祖先自身の option (other) を束縛し、sub の write-target には向かわない。shadow は祖先の綴りだけを覆い、sub 自身の --ttl 綴りは無傷。この file は (1) 祖先の自前 --sub-ttl が inheritable コピーを shadow して other を食う、(2) shadow 下でも sub 自身の --ttl は正常、を固定する。蒸留元: slice phase27 §4。basic.json (shadow 無しでは --sub-ttl が ttl の write-target を束縛) との対照でコピー抑制が観測できる。",
+  "why": "inheritable コピーの自前優先 shadow (DR-059 §3): 祖先スコープが inheritable の祖先綴りと同一 literal のトリガを自前で宣言していると、逆方向コピーは追加されない (global shadowing と対称、add-if-absent の absent 判定で既存トリガに負ける)。name とは無関係な明示綴り --sub-ttl は DR-057 alias 独立要素で表現する (DR-011 明確化 2026-07-08: colon-less な `long` 配列要素は文法エラー、旧 LLiteral 経路は創作構文だったため廃止)。canonical `other` (トリガなし) + alias `{alias:\"other\", name:\"sub-ttl\", long:true}` (トリガ --sub-ttl を name=sub-ttl の主入口糖衣 `:set` で再導出、DR-057 §3・DR-071 §1、TStr なので値スロット形) で --sub-ttl を生やす。よって root で --sub-ttl は祖先自身の option (other、alias 経由) を束縛し、sub の write-target には向かわない。shadow は祖先の綴りだけを覆い、sub 自身の --ttl 綴りは無傷。この file は (1) 祖先の自前 --sub-ttl が inheritable コピーを shadow して other を食う、(2) shadow 下でも sub 自身の --ttl は正常、を固定する。蒸留元: slice phase27 §4。basic.json (shadow 無しでは --sub-ttl が ttl の write-target を束縛) との対照でコピー抑制が観測できる。",
   "query": "parse",
   "definition": {
     "options": [
-      {"name": "other", "type": "string", "long": ["sub-ttl"]}
+      {"name": "other", "type": "string"},
+      {"alias": "other", "name": "sub-ttl", "long": true}
     ],
     "commands": [
       {
