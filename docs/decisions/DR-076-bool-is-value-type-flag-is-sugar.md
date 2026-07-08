@@ -57,7 +57,8 @@ bool でだけ `:set` が「値形 + 裸 true」の二役になり、綴り DSL 
 
 ## TODO (後続)
 
-- flag/count → bool の**展開の正規形** (案 A: Exact+link / 案 B: long 綴り合成) は lowering 仕様の確定時に決める (§4 で `:set` 系綴りの意味論は確定済み — 残るのは flag の内部展開経路の選択のみ)
+- flag → bool の**展開の正規形** (§2 案 A: Exact+link / 案 B: long 綴り合成) は lowering 仕様の確定時に決める (§4 で `:set` 系綴りの意味論は確定済み — 残るのは flag の内部展開経路の選択のみ)
+- count の展開先は bool ではなく **number セル** (DR-005: number + defaultValue=0 + 発火で increment、accumulator 意味論はセル側 = DR-029)。flag と同じ整理 (type preset の合成) で正規形を別途書く
 
 ## 関連
 
