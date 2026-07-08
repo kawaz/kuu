@@ -1,0 +1,18 @@
+{
+  "why": "DR-076 §2 補完の冪等性: {type:'flag', long:[':set:true']} は明示のユーザ宣言 (:set:true = 裸発火の operand 付き縮退形) が resolve_long の flag preset 補完対象と完全一致するため、補完ループは重複 variant を追加しない (installer.mbt resolve_long の already ガード)。結果として lowering 断面は bare-true.json (Case 1、long:true) と完全同一 — 主入口 (main-entry) なし・eq_split なし・裸発火 Seq([Exact('--verbose'), Bind('verbose', true)]) 1 個のみ。この恒等性が「flag 展開の正規形は :set:true」(kawaz 裁定 2026-07-08、DR-076 §2) の核: {type:'flag', long:true} と {type:'flag', long:[':set:true']} は lowering 断面で等価であり、糖衣層で表現が違っても正規形は 1 個に収束する (糖衣差し替え + 冪等補完のペアが定めるもう 1 つの帰結)。値セルは LOWERING §A.5 で TFlag→TBool + default:false。断面表記は DR-063 §3、比較は緩比較 (LOWERING §C.5 / DR-070 §2)。",
+  "query": "lower",
+  "definition": {
+    "options": [
+      {"name": "verbose", "type": "flag", "long": [":set:true"]}
+    ]
+  },
+  "installers": ["long"],
+  "expect": {
+    "greedy": [
+      {"exact": "--verbose", "value": true, "link": "verbose"}
+    ],
+    "entities": {
+      "verbose": {"type": "bool", "default": false}
+    }
+  }
+}

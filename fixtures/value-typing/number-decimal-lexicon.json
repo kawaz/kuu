@@ -66,6 +66,101 @@
         "effects": [{"entity": "v", "op": "set", "operand": 1000, "source": "cli"}],
         "result": {"v": 1000}
       }
+    },
+    {
+      "id": "exponent-negative-sign",
+      "why": "指数部に `-` 符号を受理 (DR-074 §7): `1e-3` = 0.001。指数部の符号 `[+-]` は任意で、省略 (1e3) も `-`/`+` 明示も等価。C strtod / Python / Rust など float 多数派に一致。canonical 最短表現の `0.001` は既に最短。",
+      "argv": ["1e-3"],
+      "expect": {
+        "outcome": "success",
+        "effects": [{"entity": "v", "op": "set", "operand": 0.001, "source": "cli"}],
+        "result": {"v": 0.001}
+      }
+    },
+    {
+      "id": "exponent-positive-sign",
+      "why": "指数部に `+` 符号を受理 (DR-074 §7): `1e+3` = 1000。`+` を必須にする / 省略のみ許すのどちらもねじれで、`+` 任意 (符号 3 態: 省略 / `+` / `-`) を canonical に固定。整数値なので最短形 1000。",
+      "argv": ["1e+3"],
+      "expect": {
+        "outcome": "success",
+        "effects": [{"entity": "v", "op": "set", "operand": 1000, "source": "cli"}],
+        "result": {"v": 1000}
+      }
+    },
+    {
+      "id": "signed-zero-negative",
+      "why": "符号付きゼロ `-0` を受理 (DR-074 §7): 値空間で 0、特別扱いしない (IEEE754 の -0.0 と 0.0 の識別はここでは意味論を持ち込まない)。number の先頭符号 `[+-]` 規則 (§1) が 0 にも一様に適用されることの固定。canonical 最短表現 0。",
+      "argv": ["-0"],
+      "expect": {
+        "outcome": "success",
+        "effects": [{"entity": "v", "op": "set", "operand": 0, "source": "cli"}],
+        "result": {"v": 0}
+      }
+    },
+    {
+      "id": "signed-zero-positive",
+      "why": "符号付きゼロ `+0` を受理 (DR-074 §7): 値空間で 0。leading-plus (§1、case leading-plus) が 0 にも適用されることの固定 (JSON number は leading + を禁じるが canonical は許す、CLI 慣習との整合)。canonical 最短表現 0。",
+      "argv": ["+0"],
+      "expect": {
+        "outcome": "success",
+        "effects": [{"entity": "v", "op": "set", "operand": 0, "source": "cli"}],
+        "result": {"v": 0}
+      }
+    },
+    {
+      "id": "underscore-multi-groups-accepted",
+      "why": "桁区切り `_` の配置文法は『両隣が当該基数の桁』のみ要求、桁グループ幅 (3 桁区切り等) の検証はしない (DR-074 §7): `12_34_5` は各 `_` の両隣が 10 進桁なので受理 → 12345。不揃いなグループ幅でも通す方針で、Java NumberFormat のような locale grouping 検証を canonical に持ち込まない。",
+      "argv": ["12_34_5"],
+      "expect": {
+        "outcome": "success",
+        "effects": [{"entity": "v", "op": "set", "operand": 12345, "source": "cli"}],
+        "result": {"v": 12345}
+      }
+    },
+    {
+      "id": "underscore-consecutive-rejected",
+      "why": "桁区切り `_` の連続は Error (DR-074 §7): `1__000` は 2 つ目の `_` の左隣が `_` (桁でない) なので配置規則違反 → failure (element=v / argv_pos=0 / kind=parse / reason=not_a_number)。「両隣が桁」を厳密に要求することで、区切りとしての意味を保つ。",
+      "argv": ["1__000"],
+      "expect": {
+        "outcome": "failure",
+        "errors": [{"element": "v", "argv_pos": 0, "kind": "parse", "reason": "not_a_number"}]
+      }
+    },
+    {
+      "id": "underscore-leading-rejected",
+      "why": "桁区切り `_` の先頭配置は Error (DR-074 §7): `_1` は先頭 `_` の左隣が存在しない (桁でない) → 配置規則違反で failure (not_a_number)。identifier lexer (Python 等の _leading name) との衝突を排し、number token 全体一致 (§5 anchored) の下で先頭 `_` は数値の一部にならないことを固定。",
+      "argv": ["_1"],
+      "expect": {
+        "outcome": "failure",
+        "errors": [{"element": "v", "argv_pos": 0, "kind": "parse", "reason": "not_a_number"}]
+      }
+    },
+    {
+      "id": "underscore-trailing-rejected",
+      "why": "桁区切り `_` の末尾配置は Error (DR-074 §7): `1_` は末尾 `_` の右隣が存在しない → 配置規則違反で failure (not_a_number)。「区切り」は必ず両側に桁を要求する構造で、末尾に `_` を許すと桁が続くのか終端なのかが構文上曖昧になる。",
+      "argv": ["1_"],
+      "expect": {
+        "outcome": "failure",
+        "errors": [{"element": "v", "argv_pos": 0, "kind": "parse", "reason": "not_a_number"}]
+      }
+    },
+    {
+      "id": "underscore-adjacent-exponent-rejected",
+      "why": "桁区切り `_` の指数記号隣接は Error (DR-074 §7): `1_e3` は `_` の右隣が `e` (桁でない) → 配置規則違反で failure (not_a_number)。10 進指数 `e` と `_` の間に桁を要求することで、`e` を桁として誤読する余地を排す (hex の `e` は桁だが 0x prefix で切り替わる、§1)。",
+      "argv": ["1_e3"],
+      "expect": {
+        "outcome": "failure",
+        "errors": [{"element": "v", "argv_pos": 0, "kind": "parse", "reason": "not_a_number"}]
+      }
+    },
+    {
+      "id": "underscore-adjacent-dot-rejected",
+      "why": "桁区切り `_` の小数点隣接は Error (DR-074 §7): `1_.5` は `_` の右隣が `.` (桁でない) → 配置規則違反で failure (not_a_number)。integer 部と fraction 部の境界に区切りを置くことは、桁の隣接判定を跨いだ意味を強要するので排す (Rust リテラル文法などと同じ姿勢)。",
+      "argv": ["1_.5"],
+      "expect": {
+        "outcome": "failure",
+        "errors": [{"element": "v", "argv_pos": 0, "kind": "parse", "reason": "not_a_number"}]
+      }
     }
   ]
 }

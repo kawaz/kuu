@@ -52,6 +52,24 @@
         "outcome": "failure",
         "errors": [{"element": "n", "argv_pos": 1, "kind": "parse", "reason": "not_a_number"}]
       }
+    },
+    {
+      "id": "inf-signed-negative-on-float",
+      "why": "先頭符号付き inf を float で受理 (DR-074 §7): `--t -inf` は成功。§1 の先頭符号規則 `[+-]` が inf にも適用され、`-inf` / `+inf` / `-Infinity` / `+Infinity` の 4 態 (符号 × 2 語彙、case-insensitive) を canonical に閉じる。IEEE754 の -∞ を CLI 閾値 (--threshold=-inf) で表す実需に対応。operand の JSON 表現は inf 系と同様に spec 未確定のため成功輪郭 (outcome + source) のみ固定 (case inf-on-float-accepted と同じ扱い、report 送り)。",
+      "argv": ["--t", "-inf"],
+      "expect": {
+        "outcome": "success",
+        "sources": {"t": "cli"}
+      }
+    },
+    {
+      "id": "inf-signed-positive-infinity-on-float",
+      "why": "先頭符号 `+` × 大文字始まり `Infinity` の合成を float で受理 (DR-074 §7): `--t +Infinity` は成功。先頭符号の任意性 (省略 / `+` / `-`) と inf 語彙の case-insensitive 性 ({inf, infinity} + case variant) が独立軸として合成できることの固定。case inf-signed-negative-on-float と同じく operand 表現は据え置き。",
+      "argv": ["--t", "+Infinity"],
+      "expect": {
+        "outcome": "success",
+        "sources": {"t": "cli"}
+      }
     }
   ]
 }

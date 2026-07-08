@@ -1,0 +1,20 @@
+{
+  "why": "DR-076 §2 規則2 (非空リスト補完): {type:'flag', long:[':set']} は明示の値形 main-entry (:set = kebab(name)) に加えて flag preset が bare-fire 用の :set:true variant を冪等に補完する。resolve_long は longs=['verbose'] (main entry) + vars=[{trigger:'verbose', op:Set, operand:VBool(true)}] (補完済み bare-true) を返し、inst_long は (a) 空間形 Seq([Exact('--verbose'), Ref('verbose', link='verbose')])、(b) 裸発火 Seq([Exact('--verbose'), Bind('verbose', VBool(true))])、(c) eq_split matcher {'--verbose':'verbose'} の 3 個を greedy に積む。値形 (--verbose <VALUE> / --verbose=<VALUE>) と裸発火 (--verbose 単独で true) の同居 (DR-076 §2『値形+裸の同居』) を固定 — 明示宣言した値形は消えず preset は追加される。等価表 (§2 の 6 行目): {type:'flag', long:[':set']} ≡ {type:'bool', long:[':set', ':set:true'], default:false}。fixtures/lowering/long/variant.json は同経路の ssl (bool 直宣言 + 3 variant) を扱うが、本 fixture は type:flag 側からの糖衣差し替え + 補完で同一断面へ収束することを固定する (等価表の左辺の lowering)。値セルは LOWERING §A.5 で TBool + default:false。断面表記は DR-063 §3、比較は緩比較 (LOWERING §C.5 / DR-070 §2)。",
+  "query": "lower",
+  "definition": {
+    "options": [
+      {"name": "verbose", "type": "flag", "long": [":set"]}
+    ]
+  },
+  "installers": ["long"],
+  "expect": {
+    "greedy": [
+      {"seq": [{"exact": "--verbose"}, {"ref": "verbose", "link": "verbose"}]},
+      {"exact": "--verbose", "value": true, "link": "verbose"},
+      {"matcher": "eq_split", "entries": {"--verbose": "verbose"}}
+    ],
+    "entities": {
+      "verbose": {"type": "bool", "default": false}
+    }
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "why": "DR-076 §2 規則1 (糖衣差し替え): {type:'flag', long:true} は type-independent の [':set'] 糖衣 (DR-071 §1) でなく flag preset で [':set:true'] へ差し替わる (kawaz 裁定 2026-07-08)。resolve_long は longs=[]・vars=[{trigger:kebab(name)='verbose', op:Set, operand:VBool(true)}] を返し、inst_long の variant 経路のみが裸トリガ発火 Seq([Exact('--verbose'), Bind('verbose', true)]) を 1 個だけ greedy に積む — 主入口 (main-entry) がないので空間形衛星 ({seq:[{exact},{ref,link}]}) も eq-split matcher も立たない。これが古典 flag (presence-only) の正規形 lowering 断面。等価表 (DR-076 §2 の 5 行目): {type:'flag', long:true} ≡ {type:'bool', long:[':set:true'], default:false} — 右辺の恒等式は右辺自体の lowering がここと同一断面を出すことで担保 (:set:true 単独宣言の同型 case は set-true-idempotent.json)。値セルは LOWERING §A.5 (normalize_option) で TFlag→TBool + default:false に降格。断面表記は DR-063 §3 (5 面構造、空面省略)、比較は緩比較 (LOWERING §C.5 / DR-070 §2: 構造骨格 + matcher 種別/エントリ表 + 効果記述子 op/link 先)。fixtures/lowering/long/variant.json の ssl (:set + :set:true + no:set:false の 3 variant) の :set:true 単独を切り出した最小 case。",
+  "query": "lower",
+  "definition": {
+    "options": [
+      {"name": "verbose", "type": "flag", "long": true}
+    ]
+  },
+  "installers": ["long"],
+  "expect": {
+    "greedy": [
+      {"exact": "--verbose", "value": true, "link": "verbose"}
+    ],
+    "entities": {
+      "verbose": {"type": "bool", "default": false}
+    }
+  }
+}

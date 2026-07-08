@@ -54,6 +54,26 @@
         "outcome": "failure",
         "errors": [{"element": "v", "argv_pos": 0, "kind": "parse", "reason": "not_a_number"}]
       }
+    },
+    {
+      "id": "signed-zero-negative-on-int",
+      "why": "int でも符号付きゼロ `-0` を受理 (DR-074 §7): number の先頭符号規則 (§1) が int 型経由でも一様に働くことの固定。値空間で 0 (整数値) なので int_round に到達せず (default error でも Error にならず) 素通り。canonical 最短表現 0。number-decimal-lexicon::signed-zero-negative の int 型版。",
+      "argv": ["-0"],
+      "expect": {
+        "outcome": "success",
+        "effects": [{"entity": "v", "op": "set", "operand": 0, "source": "cli"}],
+        "result": {"v": 0}
+      }
+    },
+    {
+      "id": "signed-zero-positive-on-int",
+      "why": "int でも符号付きゼロ `+0` を受理 (DR-074 §7): leading-plus (§1) が int 型経由でも一様に働くこと。値空間で 0 (整数値) なので int_round=error でも Error にならず受理。canonical 最短表現 0。number-decimal-lexicon::signed-zero-positive の int 型版。",
+      "argv": ["+0"],
+      "expect": {
+        "outcome": "success",
+        "effects": [{"entity": "v", "op": "set", "operand": 0, "source": "cli"}],
+        "result": {"v": 0}
+      }
     }
   ]
 }

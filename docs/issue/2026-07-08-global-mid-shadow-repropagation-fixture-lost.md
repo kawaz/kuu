@@ -48,8 +48,18 @@ porous fallback) に置き換わっている。再設計時は両ファイルを
 
 ## 受け入れ条件
 
-- [ ] global 中間 shadow の再伝播を LLiteral に依存しない構成 (例: 同名
+- [x] global 中間 shadow の再伝播を LLiteral に依存しない構成 (例: 同名
       canonical flag の global 宣言と中間スコープの自前宣言、トリガは name
       由来) で検証する fixture を再設計・追加する
-- [ ] `shadowing-3level-same-name.json` が近い構図なので、そこでカバー済みの
+      → `fixtures/command-scope/mid-global-repropagation.json` として追加
+      (root+mid 共に global 同名 verbose、trigger=name 由来 long:true)。
+      sub に自前 --quiet を持たせて早閉じ抑制下でも mid.verbose 経由の
+      入口再伝播が働くことを case `grandchild-with-own-flag-forces-repropagation`
+      で分離検証。
+- [x] `shadowing-3level-same-name.json` が近い構図なので、そこでカバー済みの
       範囲との差分を先に洗ってから追加すること
+      → same-name.json は mid.verbose 非 global で `mid sub --verbose` が
+      早閉じ+porous で mid に戻る経路。本 fixture の case 1/2 は同じ observable
+      だが機構が異なる (mid が global なので sub 自前入口が発火)。case 3 が
+      両機構を分離する差分ケース (same-name.json 構成で --quiet を足すと
+      unexpected_token 失敗、本 fixture は成功)。

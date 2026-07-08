@@ -41,6 +41,73 @@
         "effects": [{"entity": "v", "op": "set", "operand": 1.5, "source": "cli"}],
         "result": {"v": 1.5}
       }
+    },
+    {
+      "id": "hex-float-negative-exp",
+      "why": "hex float の二進指数部符号 (DR-074 §7): `0x1.8p-3` = 1.5 * 2^-3 = 0.1875。二進指数 `p`/`P` の指数部符号 `[+-]` は 10 進指数 `e` と同様に任意 (省略 / `+` / `-` の 3 態)。opt-in で hex float を受ける以上、指数部符号の一様性を保つ。",
+      "argv": ["0x1.8p-3"],
+      "expect": {
+        "outcome": "success",
+        "effects": [{"entity": "v", "op": "set", "operand": 0.1875, "source": "cli"}],
+        "result": {"v": 0.1875}
+      }
+    },
+    {
+      "id": "hex-int-uppercase-prefix",
+      "why": "基数 prefix の大文字 (DR-074 §7): `0X1F` = 31。prefix 部 (`0x` / `0o` / `0b`) は case-insensitive で `0X` も同値。hex の桁 `A-F` は元々 case-insensitive で、prefix 側もそれに合わせる。opt-in で有効化される。",
+      "argv": ["0X1F"],
+      "expect": {
+        "outcome": "success",
+        "effects": [{"entity": "v", "op": "set", "operand": 31, "source": "cli"}],
+        "result": {"v": 31}
+      }
+    },
+    {
+      "id": "bin-int-uppercase-prefix",
+      "why": "2 進 prefix の大文字 (DR-074 §7): `0B101` = 5。`0b` / `0B` を等価に扱う (prefix case-insensitive の一様適用)。opt-in で 2 進整数を有効化する場合、大文字 prefix も同じ扱いになることの固定。",
+      "argv": ["0B101"],
+      "expect": {
+        "outcome": "success",
+        "effects": [{"entity": "v", "op": "set", "operand": 5, "source": "cli"}],
+        "result": {"v": 5}
+      }
+    },
+    {
+      "id": "hex-int-with-underscore",
+      "why": "hex 内の桁区切り `_` (DR-074 §7): `0xff_ff` = 65535。10 進と同じ配置規則 (両隣が当該基数の桁 — hex なら `_` の両隣が hex 桁) が hex にも適用される。opt-in で hex 整数を有効化する際、桁区切り機能 (number_thousand_sep default [\"_\"]) が hex 内でも一様に働くことの固定。",
+      "argv": ["0xff_ff"],
+      "expect": {
+        "outcome": "success",
+        "effects": [{"entity": "v", "op": "set", "operand": 65535, "source": "cli"}],
+        "result": {"v": 65535}
+      }
+    },
+    {
+      "id": "hex-underscore-prefix-adjacent-rejected",
+      "why": "hex prefix 隣接の `_` は Error (DR-074 §7): `0x_ff` は `_` の左隣が `x` (桁でない、prefix の一部) → 配置規則違反で failure (element=v / argv_pos=0 / kind=parse / reason=not_a_number)。prefix と桁の間に区切りを差し込むと、`_` を prefix の一部とみなす読みが生じかねないので排す。10 進の underscore-leading-rejected (`_1`) と同型の判定を hex 側にも一様適用。",
+      "argv": ["0x_ff"],
+      "expect": {
+        "outcome": "failure",
+        "errors": [{"element": "v", "argv_pos": 0, "kind": "parse", "reason": "not_a_number"}]
+      }
+    },
+    {
+      "id": "octal-with-dot-rejected",
+      "why": "8 進 prefix + 小数点は Error (DR-074 §7): `0o1.5` は opt-in で 8 進整数 prefix を有効化しても、小数点付き (fractional / 指数) は **hex float 限定** で `0o` / `0b` は整数のみ (C / Go / Java と同じ、8 進 float のリテラル文法は存在しない) → failure (element=v / argv_pos=0 / kind=parse / reason=not_a_number)。base prefix opt-in の内側で hex と 8/2 進の受理域差を固定。",
+      "argv": ["0o1.5"],
+      "expect": {
+        "outcome": "failure",
+        "errors": [{"element": "v", "argv_pos": 0, "kind": "parse", "reason": "not_a_number"}]
+      }
+    },
+    {
+      "id": "binary-with-dot-rejected",
+      "why": "2 進 prefix + 小数点は Error (DR-074 §7): `0b1.1` も同様に 2 進 float のリテラル文法が存在しないため、opt-in 有効化下でも failure (not_a_number)。octal-with-dot-rejected と対になり、`0o` / `0b` 共通の『整数のみ』規則を hex の『小数・二進指数付き受理』と分離する境界を固定。",
+      "argv": ["0b1.1"],
+      "expect": {
+        "outcome": "failure",
+        "errors": [{"element": "v", "argv_pos": 0, "kind": "parse", "reason": "not_a_number"}]
+      }
     }
   ]
 }

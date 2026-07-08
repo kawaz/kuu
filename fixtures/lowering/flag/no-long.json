@@ -1,0 +1,15 @@
+{
+  "why": "DR-076 §2 三態同義 (absent = false = []): {type:'flag'} (long 属性なし) は他の型と同様 long 入口を一切生成しない — 合成規則 (規則2 補完) は『非空リスト』を前提条件にするので absent/false/[] のいずれも補完対象外で、classic flag preset は long 側に何も足さない。resolve_long(LBool(false), _, _) は ([], []) を返し (long 属性なしを decode 層が LBool(false) に写す、DR-071 §1 の三態同義)、inst_long は main entry も variant も持たないため greedy 面に何も積まない。値セル自体は LOWERING §A.5 (normalize_option) で TFlag→TBool + default:false に降格し ensure_entities が entities 面に載せる (これは installer 順序と無関係な core lowering で、installers=[] や installers=['long'] でも常時走る、baseline/no-installers.json 参照)。等価表 (§2 の 4 行目): {type:'flag'} ≡ {type:'bool', default:false} — long 入口なし (short / env だけの flag に想定される形)。DR-071 の absent/false/[] 三態同義が JSON エコシステム (protobuf3 / Go omitempty 等、区別が wire 上落ちる方式) を跨いでも意味が変わらないことの lowering 側の裏取り: presence based conflation を仕様から排除した (DR-071) 結果、absent が『何もしない』に閉じ、実装の empty/absent 区別に依存しない。断面表記は DR-063 §3、比較は緩比較 (LOWERING §C.5 / DR-070 §2、空面省略で greedy 面は expect に書かれず = 空と等価)。",
+  "query": "lower",
+  "definition": {
+    "options": [
+      {"name": "verbose", "type": "flag"}
+    ]
+  },
+  "installers": ["long"],
+  "expect": {
+    "entities": {
+      "verbose": {"type": "bool", "default": false}
+    }
+  }
+}

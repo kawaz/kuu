@@ -60,13 +60,13 @@ divergence が出た場合は凍結台帳 (phase23-distill-ledger 系) に記録
 
 ## TODO
 
-- [ ] number-decimal-lexicon.json に指数部符号 (`1e-3`/`1e+3`) の case を追加
-- [ ] number-base-prefix-optin.json に `0x1.8p-3` / `0X1F` / `0B101` / `0xff_ff` の success case を追加
-- [ ] number-base-prefix-rejected.json (または opt-in 側) に `0o1.5` / `0b1.1` の Error case を追加
-- [ ] number-inf-nan.json に `-inf` / `+Infinity` の success case を追加
-- [ ] `_` 配置文法の negative 系 (`1__000` / `_1` / `1_` / `1_e3` / `1_.5`) と `12_34_5` success、`0x_ff` Error の case を追加
-- [ ] 符号付きゼロ (`-0` / `+0`, int 型含む) の case を追加
-- [ ] slice runner で実食、divergence があれば凍結台帳へ記録
+- [x] number-decimal-lexicon.json に指数部符号 (`1e-3`/`1e+3`) の case を追加 (2026-07-08、spec fixture バッチ worker)
+- [x] number-base-prefix-optin.json に `0x1.8p-3` / `0X1F` / `0B101` / `0xff_ff` の success case を追加 (同日)
+- [x] number-base-prefix-rejected.json (または opt-in 側) に `0o1.5` / `0b1.1` の Error case を追加 (opt-in 側に配置、同日)
+- [x] number-inf-nan.json に `-inf` / `+Infinity` の success case を追加 (同日)
+- [x] `_` 配置文法の negative 系 (`1__000` / `_1` / `1_` / `1_e3` / `1_.5`) と `12_34_5` success、`0x_ff` Error の case を追加 (10 進側は number-decimal-lexicon.json、hex 側は number-base-prefix-optin.json に振り分け、同日)
+- [x] 符号付きゼロ (`-0` / `+0`, int 型含む) の case を追加 (number 側は number-decimal-lexicon.json、int 側は int-value-space.json、同日)
+- [x] slice runner で実食、divergence があれば凍結台帳へ記録 (kuu.mbt で全 case 0 mismatch を確認、divergence なし、同日)
 - [ ] int-round-modes.json に残 6 モード (ceil / away / half_floor / half_ceil / half_trunc / error) の fixture を named type shadow 方式で追加 (DR-075 期待値表準拠)
 
 ## 追記: DR-075 (int_round) 派生の残タスク

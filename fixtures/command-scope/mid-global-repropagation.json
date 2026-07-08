@@ -1,0 +1,78 @@
+{
+  "why": "3 段 shadowing の再伝播機構 (DR-042 §canonical installer + §多段): 中間 shadow が自身も global 宣言のとき、shadow は arrest (root コピー停止) だけでなく mid セルの新たな global 伝播を孫まで届ける (不動点反復による多段 global)。root と mid が同 name canonical flag を共に long:true (DR-076 §2 flag 糖衣で trigger は kebab(name)='verbose'、name 由来) + global:true で宣言する — 別綴りに依存しない構成なので DR-011 明確化 (2026-07-08、colon-less な long 配列要素は文法エラー) 後も alias や旧 LLiteral を経由せずに機構を検証可能。DR-042 shadow 判定 (triggers_overlap は long と variants を横断) は root と mid の --verbose 主入口トリガが一致するので root の global コピーは mid で止まる (shadow は subtree 全体に及ぶ、DR-042 lexical 連鎖) — sub には root コピーが届かない。一方で mid の自前 verbose も global なので、そこから mid.verbose セルへの link 衛星が独立に sub まで再伝播する (mid が新たな global 源になる)。sub は mid.verbose セルへ link 同期する --verbose 入口を持つ状態になる。\n\n再伝播機構が『早閉じ+porous による親スコープ復帰 (DR-041 §4)』では代替できない差分を case 3 で証明する: sub に自前 flag --quiet を宣言し、--verbose と --quiet を並べる。sub は --quiet が控えている間は早閉じできない (DR-041 §4) ので、mid が非 global で sub に verbose 入口が届いていない構成 (shadowing-3level-same-name.json の構図) では --verbose を sub でも mid でも読めず unexpected_token になる。本 fixture は mid が global なので sub が mid.verbose への link 衛星を持ち --verbose を直接読める → --quiet も続けて読める。case 1/2 は shadowing-3level-same-name.json と observable が同じ (両者とも {verbose:false, mid:{verbose:true, sub:{}}} — 名前が同じ 'verbose' でも各 argv で発火するセルは 1 個なので effects.entity 'verbose' が root/mid どちらのセルかは result のネスト位置で判別) だが、機構が『sub の自前入口が発火』(本 fixture) vs『早閉じ+porous で mid に戻って発火』(same-name.json) と異なる。case 3 が両機構を分離する差分ケースであり、本 fixture が固定するのは前者。\n\nroot verbose は未発火 → preset default false で root キーに present (DR-051 §2)。mid verbose (発火時) は mid キー下に present。sub の quiet (case 3) は sub キー下に present、未発火時 (case 1/2) は preset false でも構造上 sub:{} と観測される — mid.verbose は sub 経由発火でも link 同期先が mid セルなので値は mid キーに現れ sub は selected 空 {} のまま (global.json case 1/3 と同型の link 同期挙動)。case 3 では sub 自身が quiet を持つので sub:{quiet:true} と埋まる。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {"name": "verbose", "type": "flag", "long": true, "global": true}
+    ],
+    "commands": [
+      {
+        "type": "command",
+        "name": "mid",
+        "options": [
+          {"name": "verbose", "type": "flag", "long": true, "global": true}
+        ],
+        "commands": [
+          {
+            "type": "command",
+            "name": "sub",
+            "options": [
+              {"name": "quiet", "type": "flag", "long": true}
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "cases": [
+    {
+      "id": "grandchild-via-mid-global",
+      "why": "孫スコープで発火: sub は mid.verbose への link 衛星を mid の global 再伝播経由で持つ (root コピーは mid で shadow され sub まで届かない、mid コピーは mid が global なので sub まで届く)。sub 内 --verbose は sub 衛星が拾い link 同期で mid.verbose セルへ書く → mid キー下に verbose:true。root verbose は未発火 preset false (DR-051 §2)、sub は自前 quiet flag を持つが未発火 → sub 下に preset quiet:false のみ (DR-051 §2)。verbose は sub に自セル非新設 (link 同期先が mid) なので sub に verbose キーは現れない (global.json case 1 の link 同期挙動と同型)。effect entity 'verbose' は mid のセル (result で mid 下に present)、root verbose と同名だが 1 argv で発火するのは 1 セルだけなので衝突しない (shadowing-3level-same-name.json と同型の判別)。",
+      "argv": ["mid", "sub", "--verbose"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "verbose", "op": "set", "operand": true, "source": "cli"}
+        ],
+        "result": {"verbose": false, "mid": {"verbose": true, "sub": {"quiet": false}}}
+      }
+    },
+    {
+      "id": "mid-scope-direct-fire",
+      "why": "中間スコープで発火してから sub 入場: mid 内 --verbose は mid の自前 verbose 衛星 (自宣言なので link_depth=0 で Rooted 包まない、自セル直接書き) が拾って mid.verbose = true。続く sub トークンで sub 入場、sub は発火なしなので preset quiet:false のみ (DR-051 §2)。case 1 と observable は完全同一で argv 順非依存を固定 (global の argv 順非依存は global.json case 1/2 と同構造だが、ここでは mid が中間 shadow でありつつ発火セルであることの追加固定)。",
+      "argv": ["mid", "--verbose", "sub"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "verbose", "op": "set", "operand": true, "source": "cli"}
+        ],
+        "result": {"verbose": false, "mid": {"verbose": true, "sub": {"quiet": false}}}
+      }
+    },
+    {
+      "id": "grandchild-with-own-flag-forces-repropagation",
+      "why": "早閉じ抑制下で mid global 再伝播の存在を分離検証 (機構差分ケース): sub 自前 flag --quiet が背骨に控えているため sub は早閉じできない (DR-041 §4「自分の背骨で読めるトークンが次に控えている間は完了できない」) → 早閉じ+porous による親スコープ復帰経路 (shadowing-3level-same-name.json の機構) は使えない。それでも --verbose が sub で読めるのは、mid が global なので sub に mid.verbose への link 衛星が再伝播しているからで、sub が自前入口として直接読み link 同期で mid.verbose へ書く。続く --quiet は sub 自前 flag が読み sub.quiet=true。effects は消費順で [verbose (pos 2), quiet (pos 3)]。result は mid:{verbose:true, sub:{quiet:true}}、root verbose 未発火 preset false。もし mid が非 global (shadowing-3level-same-name の構図) で sub の quiet を同様に付けたなら、sub は verbose 入口を持たず --quiet が控えて早閉じもできないので --verbose は unexpected_token 失敗になる — この分岐が観測差分で、本 case が『mid global 再伝播が新たな入口を植えている』ことの唯一の証拠になる (case 1/2 では観測が共通)。",
+      "argv": ["mid", "sub", "--verbose", "--quiet"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "verbose", "op": "set", "operand": true, "source": "cli"},
+          {"entity": "quiet", "op": "set", "operand": true, "source": "cli"}
+        ],
+        "result": {"verbose": false, "mid": {"verbose": true, "sub": {"quiet": true}}}
+      }
+    },
+    {
+      "id": "root-scope-fires-root-cell",
+      "why": "対照: root スコープで --verbose を直接発火させると root.verbose セルに書く (mid に入場していないので mid の再伝播経路は使わない、root 自身の入口が読む)。root キーに verbose:true が現れ、mid と sub は absent (未入場)。root と mid が同 name でも別セルであり、発火位置がスコープ帰属を決めることの固定 (shadowing-subtree.json case root-own-fires と同型)。",
+      "argv": ["--verbose"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "verbose", "op": "set", "operand": true, "source": "cli"}
+        ],
+        "result": {"verbose": true}
+      }
+    }
+  ]
+}
