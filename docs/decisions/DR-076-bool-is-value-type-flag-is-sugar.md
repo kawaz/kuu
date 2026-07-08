@@ -34,16 +34,30 @@ flag を内部的に bool へ展開する際の摩擦 (引数の有無) は、**
 - kuu.mbt の暫定ガード「variant を持つ TBool は eq_entries 非登録」(installer.mbt `inst_long`) は**撤去方向** — variant 持ち bool も eq-split を登録する
 - `fixtures/lowering/long/variant.json` の why「値トークンを取らない」は本 DR で改訂対象 (fixture 追従は下記 TODO)
 
+### 4. 綴り `:set` の意味論と値形の範囲 (kawaz 裁定 2026-07-08 追記)
+
+- **`:set` = 「値を取って set」で型に依らず一意** (厳密な代数)。裸トリガ発火は常に `:set:true` (operand 付き縮退形) を明示的に書く。`long: true` の糖衣が `[":set"]` (DR-071) である規則とも一様で、bool は number/string と完全に同じ扱いになる — bool の `:set` だけが裸 set-true に縮退する従来の特例は廃止
+  - 帰結: `{type:"bool", long:[":set"]}` の `--ssl` は値必須 (裸 `--ssl` 単独は値の missing operand)。裸発火が欲しければ `:set:true` を足す
+  - 既存 fixture `lowering/long/variant.json` は定義に `:set:true` を追記して裸 `--ssl` を保つ (本裁定に伴う fixture 改訂)
+- **bool の値形は eq-split (`--ssl=false`) と space form (`--ssl false`) の両方** — string/number の衛星 (空間形 Seq([exact, 値スロット]) + eq-split matcher) と完全対称。space form の値と positional の取り合いは path-search が解決する (それが本設計の思想)
+
 ## 採用しなかった案
 
 ### bool を presence-only に寄せる (flag と同一視)
 
 「--enabled=true が書けない bool」は string/number との対称性を壊し、値型としての bool の設計を特殊側 (flag) の都合で歪める。本 DR の向きの逆であり不採用。
 
+### bool の `:set` に裸 set-true 縮退を残す (加算的互換)
+
+bool でだけ `:set` が「値形 + 裸 true」の二役になり、綴り DSL の意味が型依存になる。flag 展開の等価式が「bool 側が暗黙に :set:true を含む」という読み替えを要し代数が濁るため不採用 (§4 の厳密な代数を採る)。
+
+### bool の値形を eq-split のみに絞る
+
+消費曖昧性の回避にはなるが、string/number が space form を受ける対称性を bool だけ欠く。曖昧性の解決は path-search の本領であり、値型の対称性を優先 (§4)。
+
 ## TODO (後続)
 
-- 展開の正規形を案 A / 案 B のどちらで固定するかは lowering 仕様の確定時に決める (本 DR は「bool は値型・特殊性は flag 側で吸収」の向きと等価スケッチまでを確定)
-- fixture 追従: `lowering/long/variant.json` の why 改訂 + variant 持ち bool の eq-split ケース追加、`value-typing/bool-canonical.json` への `--x=value` × variant 共存ケース追加
+- flag/count → bool の**展開の正規形** (案 A: Exact+link / 案 B: long 綴り合成) は lowering 仕様の確定時に決める (§4 で `:set` 系綴りの意味論は確定済み — 残るのは flag の内部展開経路の選択のみ)
 
 ## 関連
 
