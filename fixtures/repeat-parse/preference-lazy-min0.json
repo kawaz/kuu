@@ -1,0 +1,37 @@
+{
+  "why": "取り分の選好 lazy (DR-043) を min:0 UNBOUNDED (Many spine 形) にも固定する。preference-lazy.json は min:1 (必須 1 個だけ取って残りは greedy な ys へ) の輪郭だが、min:0 は 0 個 (空) が最短取りになる — 必須ヘッドが無い分、閉じ判定そのものが違う経路 (Ref 再帰ではなく Many、issue 2026-07-08 min0-lazy-repeat-gap で根治) を通る。",
+  "query": "parse",
+  "definition": {
+    "positionals": [
+      {"name": "xs", "type": "string", "repeat": {"min": 0, "lazy": true}},
+      {"name": "ys", "type": "string", "repeat": {"min": 1}}
+    ]
+  },
+  "cases": [
+    {
+      "id": "lazy-min0-shortest-left-empty",
+      "why": "lazy な xs (min:0) + greedy な ys (min:1) に `a b c`: lazy な xs は最短 (0 個、空) を取り、greedy な ys が残り全部 [a,b,c] を取る (DR-043 の取り分選好、min:0 側は空取りが最短)。xs は反復系なので 0 回発火でも result に [] が出る (DESIGN §「absent」の反復系規約)。",
+      "argv": ["a", "b", "c"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "ys", "op": "set", "operand": "a", "source": "cli"},
+          {"entity": "ys", "op": "set", "operand": "b", "source": "cli"},
+          {"entity": "ys", "op": "set", "operand": "c", "source": "cli"}
+        ],
+        "result": {"xs": [], "ys": ["a", "b", "c"]}
+      }
+    },
+    {
+      "id": "lazy-min0-shortest-left-empty-input",
+      "why": "入力が空の場合、lazy な xs (min:0) は 0 個のまま、必須 min:1 の ys が充足できず missing_operand (DR-066 §3)。xs 側が暴走して ys の入力を先取りしないかの境界確認。",
+      "argv": [],
+      "expect": {
+        "outcome": "failure",
+        "errors": [
+          {"element": "ys", "argv_pos": 0, "kind": "parse", "reason": "missing_operand"}
+        ]
+      }
+    }
+  ]
+}
