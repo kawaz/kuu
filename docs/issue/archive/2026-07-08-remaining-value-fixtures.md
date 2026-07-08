@@ -1,6 +1,6 @@
 ---
 title: 残 fixture 化 2 件 — short × 文字系値 ambiguity / int hex 値空間
-status: open
+status: resolved
 category: task
 created: 2026-07-08T21:54:42+09:00
 last_read:
@@ -9,10 +9,10 @@ wip_entered:
 blocked_entered:
 pending_entered:
 discarded_entered:
-resolved_entered:
+resolved_entered: 2026-07-08T22:24:52+09:00
 discard_reason:
 pending_reason:
-close_reason:
+close_reason: ["fixture/short-cluster-inf-multi-accept:done (spec commit cbcf7ba0, DR-074 §5 x DR-041 §3 合成)","fixture/int-hex-value-space:done (spec commit cbcf7ba0, DR-075 §1 x DR-074 §2 合成、配線確認済み)"]
 blocked_by:
 origin: 自リポ TODO
 ---
