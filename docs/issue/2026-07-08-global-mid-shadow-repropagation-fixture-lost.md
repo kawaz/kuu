@@ -39,6 +39,13 @@ dr066-path worker の fixture 移行報告 (2026-07-08) にて、spec commit 8f4
 の移行作業中に発見された。仕様上の期待値は壊れていないが、検証している機構が
 すり替わっている状態 (= 偶然の green)。
 
+codex レビュー (2026-07-08、節目レビュー) でも同件が Medium 指摘として独立に検出された。
+影響範囲の補足: `shadowing-subtree.json` に加えて `fixtures/command-scope/shadowing.json` も
+同様に「global copy shadow → subtree 支配」という元の検証意図が別経路 (local alias firing /
+porous fallback) に置き換わっている。再設計時は両ファイルを対象にすること。なお
+`shadowing-3level-diff-name.json` / `shadowing-3level-diff-trigger.json` は trigger-vs-name の
+挙動を引き続きカバーしており対象外。
+
 ## 受け入れ条件
 
 - [ ] global 中間 shadow の再伝播を LLiteral に依存しない構成 (例: 同名
