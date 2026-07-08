@@ -111,14 +111,20 @@ exact であり、`value:` だけの literal は入力を検査しない (DESIGN
 `type` の値のうち、独立した値プリミティブではなく「属性プリセットへの名前」であるもの。value_parser 中心の
 組み込み型 (string / number / ...) と同じ `type:` で書くが、展開先は属性の束である (DR-028)。
 
-**flag** = bool + default:false + 起動で true:
+**flag** = bool + default:false + long 綴り合成 (DR-076 §2):
 
 ```
 入力:  {name: "verbose", type: "flag", long: true}
-出力:  値セルは {name: "verbose", type: "bool", default: false} (実体だけノード)。
-       入口衛星は long / short installer が植える exact で、発火時に literal true を産出し値セルへ link する:
+展開:  値セルは {name: "verbose", type: "bool", default: false} (実体だけノード)。
+       long は糖衣差し替え + 補完 (DR-076 §2): `long:true` → `[":set:true"]` (裸のみ = 古典 flag、
+       他の型の `[":set"]` 糖衣を preset が差し替え)。明示リストは非空なら `:set:true` を補完 (冪等)。
+       absent / false / [] = 入口なし (DR-071 §1 三態同義)。
+出力:  展開後の variant lowering は bool と同一経路 (§B.1)。`:set:true` (args あり形 = 固定値、DR-071 §2)
+       は発火時に literal true を産出し値セルへ link する:
          {exact: "--verbose", value: true, link: "verbose"}
        (variant の set effect と同型 = DR-045 の op:set の縮退形、DR-015)。
+       short は variant を持たず (DR-071 §3)、非消費・固定 true 供給 (DR-071 §2) — short installer が
+       直接 fire=true のエントリを植える。
 ```
 
 **count** = number + default:0 + increment accumulator:
