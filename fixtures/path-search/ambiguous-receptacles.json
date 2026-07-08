@@ -1,5 +1,5 @@
 {
-  "why": "隣接する 2 つの無制限 repeat positional (xs*, ys*) の取り分次元を扱う。同じトークン集合を xs/ys にどう配分するかだけが異なる完全経路は「効果の異なる別解釈」ではなく同一解釈の切り方の自由であり、閉包の宣言的選好で代表 1 本に確定する (DR-043「取り分の選好」/ LOWERING §B.8)。greedy 既定 (無記述) は左 (xs) から長い取り分を試し、最初に完全経路へ到達した取り分で確定する — 下流の ys は min:0 なので xs 最長取りで常に完全経路が立つ。取り分の配分違いは DR-038 の ambiguous 対象ではない (選好が働くのは取り分次元の中だけ)。real ambiguous は構造の異なる完全経路 (or 枝違い / option-positional 境界のまたぎ, DESIGN §15.4) が並ぶときのみ保存され選好で畳めないが、それは別 definition の領分でこの単一 definition fixture には現れない。なお greedy の取り分の「向き」(左 xs と右 ys のどちらを最長にするか) は未決着 (DR-043「未決着 — 取り分の向き」参照) で、本 fixture は xs 最長側に寄せた暫定 result。向きが反転すれば result は ys 側に寄るが、各 case が success 1 本に畳まれること自体は向きに依存しない確定事項。",
+  "why": "隣接する 2 つの無制限 repeat positional (xs*, ys*) の取り分次元を扱う。同じトークン集合を xs/ys にどう配分するかだけが異なる完全経路は「効果の異なる別解釈」ではなく同一解釈の切り方の自由であり、閉包の宣言的選好で代表 1 本に確定する (DR-043「取り分の選好」/ LOWERING §B.8)。greedy 既定 (無記述) は左 (xs) から長い取り分を試し、最初に完全経路へ到達した取り分で確定する — 下流の ys は min:0 なので xs 最長取りで常に完全経路が立つ。取り分の配分違いは DR-038 の ambiguous 対象ではない (選好が働くのは取り分次元の中だけ)。real ambiguous は構造の異なる完全経路 (or 枝違い / option-positional 境界のまたぎ, DESIGN §15.4) が並ぶときのみ保存され選好で畳めないが、それは別 definition の領分でこの単一 definition fixture には現れない。greedy の取り分の「向き」(左 xs と右 ys のどちらを最長にするか) は左先・最長で確定 (DR-043「取り分の『向き』= 左先・最長で確定」、kawaz 裁定 2026-07-08) — 本 fixture の xs 最長側の result はこの確定に基づく正式な輪郭。",
   "query": "parse",
   "definition": {
     "positionals": [
