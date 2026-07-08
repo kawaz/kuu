@@ -1,6 +1,6 @@
 ---
 title: int の値域 (Int64 範囲外の入力) が spec 未規定
-status: open
+status: resolved
 category: design
 created: 2026-07-08T12:31:07+09:00
 last_read:
@@ -9,10 +9,10 @@ wip_entered:
 blocked_entered:
 pending_entered:
 discarded_entered:
-resolved_entered:
+resolved_entered: 2026-07-08T14:19:26+09:00
 discard_reason:
 pending_reason:
-close_reason:
+close_reason: ["dr/DR-075","dr/DR-066","implemented","fixture:未決 (マーカー区分は fixture 追加時に判断)"]
 blocked_by:
 origin: 自リポ TODO
 ---

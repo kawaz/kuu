@@ -1,6 +1,6 @@
 ---
 title: variant を持つ bool 要素は --ssl=false (eq-split 値形) を受けるべきか
-status: open
+status: resolved
 category: design
 created: 2026-07-08T11:51:52+09:00
 last_read:
@@ -9,10 +9,10 @@ wip_entered:
 blocked_entered:
 pending_entered:
 discarded_entered:
-resolved_entered:
+resolved_entered: 2026-07-08T14:19:26+09:00
 discard_reason:
 pending_reason:
-close_reason:
+close_reason: ["dr/DR-076","implemented","fixture:DR-076 TODO 節で追跡 (variant.json why 改訂 + 共存ケース)"]
 blocked_by:
 origin: 自リポ TODO
 ---

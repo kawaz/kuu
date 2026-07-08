@@ -1,6 +1,6 @@
 ---
 title: bool 不正入力の reason 語彙が DR-066 v1 に無い
-status: open
+status: resolved
 category: design
 created: 2026-07-07T23:34:31+09:00
 last_read:
@@ -9,10 +9,10 @@ wip_entered:
 blocked_entered:
 pending_entered:
 discarded_entered:
-resolved_entered:
+resolved_entered: 2026-07-08T14:19:26+09:00
 discard_reason:
 pending_reason:
-close_reason:
+close_reason: ["dr/DR-066","implemented","実装変更なし (provisional emit がそのまま正式)"]
 blocked_by:
 origin: 自リポ TODO
 ---
