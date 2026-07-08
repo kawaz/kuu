@@ -24,7 +24,7 @@
       "argv": ["z"],
       "expect": {
         "outcome": "success",
-        "effects": [],
+        "effects": [{"entity": "xs", "op": "set", "operand": "z", "source": "cli"}],
         "result": {"xs": ["z"], "ys": []}
       }
     },
@@ -34,7 +34,7 @@
       "argv": ["a", "b"],
       "expect": {
         "outcome": "success",
-        "effects": [],
+        "effects": [{"entity": "xs", "op": "set", "operand": "a", "source": "cli"}, {"entity": "xs", "op": "set", "operand": "b", "source": "cli"}],
         "result": {"xs": ["a", "b"], "ys": []}
       }
     }
