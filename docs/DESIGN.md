@@ -606,12 +606,13 @@ filter は2箇所に乗る:
 両者は位置が違うので自然な順序で合成 (type post → 各 piece、multiple post → 累積後)。
 
 **効果 op と `filters` (each 相、T→T) の関係**: `filters` は cell に書かれる実値に乗る。
-効果 op のうち値を書くもの — `set` の operand と `update` の適用結果 (update は old に
+効果 op のうち実値を運ぶ / 生むもの — `set` の operand と `update` の適用結果 (update は old に
 transform を適用して書く set の変種、DR-077) — が対象で、**cell 操作** (`unset` / `default` /
-`empty` の発火) は値を書かないため適用対象が存在せず通らない。リセット操作の発火が
-reject される、という事態は起きない (2026-07-09 裁定、kuu.mbt issue
-accum-filters-non-set-op-semantics)。本段は効果 op 側の規定 — 値源席 (env / config /
-inherit) 由来の値がどの chain を通るかは DR-049 / DR-050 が正本。なお `pre_filters`
+`empty` の発火) は **operand (新しい実値) を運ばない**ため、発火に伴って `filters` の適用対象と
+なる piece が生じず通らない。リセット操作の発火が reject される、という事態は起きない
+(2026-07-09 裁定、kuu.mbt issue accum-filters-non-set-op-semantics)。本段は効果 op 側の規定 —
+`default` / `unset` の発火で書き戻される default 席の値や、開放後に供給される下位席の値が
+どの chain を通るかは値源席の規定 (DR-049 / DR-050) の管轄。なお `pre_filters`
 (String→String) は消費した raw string に乗るため、値トークンを消費しない cell 操作の発火には
 そもそも走る場面が無く (帰結は同じ、理由が異なる)、`post_filters` は発火単位でなく累積後の
 最終値に乗るため本規定の対象外。
