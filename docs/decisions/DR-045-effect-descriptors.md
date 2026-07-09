@@ -56,6 +56,10 @@ DR-011 で却下済み (Bool 専用で CLI 慣習として薄い)。旧 Variatio
 
 コレクションの**特定要素の除去** (`--no-x=item` のような差分操作) は本 DR では定めない。旧実装にも値セル効果としては存在せず (mergeable list は値文字列に対する filter)、必要になれば accumulator / filter 側の語彙として検討する。
 
+## 更新
+
+> **DR-077 により op 語彙に `update` を追加 (5 語目)**: 発火時に link 先セルの現在値 old へ transform (filters registry の T=>T エントリ名前参照) を適用して書き戻す 0-token 効果。committed=true、post_filters は結果にも通す。効果が純データ (§3) である原則は不変 — wire に載るのは transform の名前 + args のみ。
+
 ## 関連
 
 - DR-011 (variant DSL — op 語彙の出所。effect 4 種の意味論を本 DR が lowering レベルで確定)

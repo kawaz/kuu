@@ -129,4 +129,6 @@ variant 構造は **AtomicAST には残らない**。parseDefinition() の時点
 
 > **更新: DR-071 により long は bool | variant 配列の二形になり、主入口は `:set` (prefix 空文字列) としてリストの一級要素になった。`set` の effect に args なし形が追加: args なし = 値スロット (主入口。非消費 type では type 相応の固定値供給)、args 1 個以上 = 固定値 (本 DR の定義どおり不変)。`"set"` 単独 (`:` なし) は文法エラーのまま。**
 
-> **明確化 (kawaz 裁定 2026-07-08): colon を含まない文字列 (例 `"verbose"`)、および effect 位置が語彙外 (`set`/`default`/`unset`/`empty` 以外) の文字列は、いずれも variant DSL の文法エラーで definition-error `unknown-vocab` (DR-054) に落とす。「colon 無し = literal 綴り指定」という解釈は不採用 — 実体名と異なる綴りの入口は DR-057 の alias 独立要素で書く (DR-057 が canonical 側リストを不採用にしたのと同根: 綴り指定の関心を long 配列へ二重表現しない)。文法エラーを literal 綴りへ fallback させると定義 typo が「マッチしない入口」として黙って通る (DR-054 の機械検出思想の逆行) ため、fallback も不採用。**
+> **更新: DR-077 により effect 語彙に `update` が追加 (5 語目)。`"<prefix>:update:<transform>[:args...]"` — transform は filters registry の T=>T エントリ名前参照。本 DR の 4 effect の定義は不変。**
+
+> **明確化 (kawaz 裁定 2026-07-08): colon を含まない文字列 (例 `"verbose"`)、および effect 位置が語彙外 (`set`/`default`/`unset`/`empty`/`update` (DR-077) 以外) の文字列は、いずれも variant DSL の文法エラーで definition-error `unknown-vocab` (DR-054) に落とす。「colon 無し = literal 綴り指定」という解釈は不採用 — 実体名と異なる綴りの入口は DR-057 の alias 独立要素で書く (DR-057 が canonical 側リストを不採用にしたのと同根: 綴り指定の関心を long 配列へ二重表現しない)。文法エラーを literal 綴りへ fallback させると定義 typo が「マッチしない入口」として黙って通る (DR-054 の機械検出思想の逆行) ため、fallback も不採用。**
