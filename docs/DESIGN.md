@@ -605,6 +605,12 @@ filter は2箇所に乗る:
 
 両者は位置が違うので自然な順序で合成 (type post → 各 piece、multiple post → 累積後)。
 
+filter が乗る対象は **cell に書かれる実値だけ**: `set` の operand、および `update` の適用結果
+(update は old に transform を適用して書く set の変種 — DR-077、filter から見れば同じ「書かれる
+実値」)。cell 操作の効果 (`unset` / `default` / `empty`) は値を書かないので filter chain は
+通らない — リセット操作の発火が filter で reject される、という事態は起きない
+(2026-07-09 裁定、kuu.mbt issue accum-filters-non-set-op-semantics)。
+
 ### 8.4 DSL 文法
 
 variant と同じ `<name>:<arg>:...` 形式:
