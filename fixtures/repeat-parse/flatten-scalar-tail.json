@@ -1,0 +1,26 @@
+{
+  "why": "repeat 反復のバインドが result で 1 リストに平坦化される輪郭 (DR-043 / DR-044 / DR-051 §2b): min:1 の src (unbounded repeat) と scalar dst の `cp src... dst` 形で、src セルの flatten accumulator が複数発火を 1 リストに畳み、dst は scalar のまま。effects は消費順の独立 event (DR-045 の効果列順序は同一性成分) だが、result builder は同一 name の複数バインドを src セルの flatten accumulator で 1 リストに畳む (DR-044)。`min2-trailing.json::split-one-trailing` は min:2 で同型の flat 化を担い、`min2-standalone.json` は min:2 単独形、`interjection.json` は greedy 割込みを固定するが、min:1 (default 反復のヘッド 1 必須) + scalar tail の最小輪郭は本 fixture が担う。分割点は末尾 scalar dst が 1 トークンを要求することで一意 (DR-038 一意性創発 = 完全経路 1 本)。蒸留元: slice phase7:47 (DR-043 repeat's several same-key bindings flatten into one list in the result)。",
+  "query": "parse",
+  "definition": {
+    "positionals": [
+      {"name": "src", "type": "string", "repeat": {"min": 1}},
+      {"name": "dst", "type": "string"}
+    ]
+  },
+  "cases": [
+    {
+      "id": "flatten-into-list",
+      "why": "min:1 repeat + scalar tail の flat 平坦化 (DR-043 / DR-044): `a b c` は src=[a, b] (repeat 2 発火が flatten で 1 リスト) + dst='c' (scalar)。effects は消費順 src(a) → src(b) → dst(c) の 3 個 (順序は同一性成分、DR-045)、result は src の flat list + dst scalar で構造が違う (accumulator の差)。分割点は dst が末尾 1 トークンを要求することで一意 (DR-038 完全経路 1 本)。",
+      "argv": ["a", "b", "c"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "src", "op": "set", "operand": "a", "source": "cli"},
+          {"entity": "src", "op": "set", "operand": "b", "source": "cli"},
+          {"entity": "dst", "op": "set", "operand": "c", "source": "cli"}
+        ],
+        "result": {"src": ["a", "b"], "dst": "c"}
+      }
+    }
+  ]
+}

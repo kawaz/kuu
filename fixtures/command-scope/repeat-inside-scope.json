@@ -1,0 +1,34 @@
+{
+  "why": "名前付き command scope 内の repeat が nest + flat を両立する輪郭 (DR-025 / DR-043 / DR-044): 名前 command は結果スコープでもある (DR-025) ので、子スコープの効果はコマンド名の 1 段下にネストする。子スコープ内の repeat positional は src と同様に flat 化して 1 リストになる (DR-044)。ネスト境界とリスト畳みは直交機構で、`serve --host h a b` は host = scalar (nest 1 段) + file = repeat flatten で `{serve: {host:'h', file:['a','b']}}` になる。D6 領域の `subcommand.json` はスコープ入場と result nesting のみを扱い、`repeat-parse/flatten-scalar-tail.json` は root scope の flat のみを扱うが、両者の合成 (scope × repeat) は本 fixture が担う。scope 境界は positional 消費点列 (背骨) を切り、repeat の flat accumulator は同一 scope 内で作動する — 別 scope に飛ばない (子 scope 出た瞬間 accumulator は閉じる)。effects は消費順で host → file(a) → file(b)。蒸留元: slice phase7:56 (DR-025/043 a repeat inside a named command scope nests AND flattens)。",
+  "query": "parse",
+  "definition": {
+    "commands": [
+      {
+        "type": "command",
+        "name": "serve",
+        "options": [
+          {"name": "host", "type": "string", "long": true}
+        ],
+        "positionals": [
+          {"name": "file", "type": "string", "repeat": {"min": 1}}
+        ]
+      }
+    ]
+  },
+  "cases": [
+    {
+      "id": "nest-and-flatten",
+      "why": "scope 入場 + 子 scope 内 repeat の flat 平坦化両立 (DR-025 / DR-043 / DR-044): `serve --host h a b` は serve コマンド発火で子 scope 入場、`--host h` で host=scalar 'h' を発火、続く `a b` は file positional の repeat が 2 発火して flat 化。effects は消費順 host → file(a) → file(b)。result は serve キーの下に host scalar と file list が両立して並ぶ (nest + flat は直交機構)。",
+      "argv": ["serve", "--host", "h", "a", "b"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "host", "op": "set", "operand": "h", "source": "cli"},
+          {"entity": "file", "op": "set", "operand": "a", "source": "cli"},
+          {"entity": "file", "op": "set", "operand": "b", "source": "cli"}
+        ],
+        "result": {"serve": {"host": "h", "file": ["a", "b"]}}
+      }
+    }
+  ]
+}
