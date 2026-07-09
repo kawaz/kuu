@@ -1,6 +1,6 @@
 ---
 title: DESIGN.md §6.2 pieceProcessor 図の相ラベル「post_filters」が wire フィールド名と衝突
-status: open
+status: resolved
 category: design
 created: 2026-07-09T16:01:37+09:00
 last_read:
@@ -9,10 +9,10 @@ wip_entered:
 blocked_entered:
 pending_entered:
 discarded_entered:
-resolved_entered:
+resolved_entered: 2026-07-10T03:00:31+09:00
 discard_reason:
 pending_reason:
-close_reason:
+close_reason: ["dr/DR-079","implemented"]
 blocked_by:
 origin: kuu.mbt (pre_filters 配線作業中の spec 一次資料検証)
 ---
