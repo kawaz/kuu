@@ -3,7 +3,7 @@ title: ref テンプレの result が row 配列に写像されない (テンプ
 status: open
 category: bug
 created: 2026-07-09T12:58:37+09:00
-last_read:
+last_read: 2026-07-09T17:03:45+09:00
 open_entered: 2026-07-09T12:58:37+09:00
 wip_entered:
 blocked_entered:
