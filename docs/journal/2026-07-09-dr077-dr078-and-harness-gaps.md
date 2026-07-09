@@ -61,6 +61,32 @@ conformance: 123 fixture / 325 case (朝) → **132 fixture / 344 case / mismatc
 kuu.mbt テスト 114 → 143 本。ワーカー 3 名 (dr066-path / fixture-batch は weekly limit で
 途中交代 → impl-worker2 / fixture-batch2) + team-lead 直の混成。
 
+## 追記: DR-047 requires×bool の決着 (同日午後)
+
+issue constraint-path-filtering-gap は「診断の訂正 + 真因の裁定・根治」の 2 段で close:
+
+1. **診断の訂正**: 「DR-047 path filter 未実装」は誤り — KTop の eval_all_constraints は最初から
+   DR-047 準拠 (worker が raw-node 検証 2 本で実証、slice phase25:225 移植 + sibling greedy 版)。
+   起票時の ambiguous:2 の真因は **requires の bool 目的語が暗黙 default:false で vacuous 充足**
+   していたこと (A/B テスト: 目的語を string に変えるだけで期待挙動になる)
+2. **kawaz 裁定 2 段**: ① bool 目的語の充足 = 「解決後の値が true」(値源不問 — committed 基準だと
+   env YES=true を弾く)。② 制約フィルタの座席 = 全完全経路収集後の後段 (値源ラダーが解ける層)。
+   私の「KTop で env/config を参照」誘導は「outcome 分類を KTop で確定する」前提の帰結で、
+   動かすべきはその前提だった (kawaz の指摘で軌道修正)
+3. **実装**: apply_bool_requires_filter (promote_collision_ambiguous と同型の Outcome 後処理)。
+   eval 層に値源を持ち込まず、生存経路数で success/ambiguous/failure を再構成。
+   KTop は bool 目的語の requires をスキップ (現状 value_present の vacuous 性により観測差なしの
+   防御的コード、と worker が正直に注記)
+4. **fixture 4 本** (constraints-parse/requires-bool-target*.json + failure-actions/
+   bool-requires-fired-action.json): 元構成 3 ケース + 非 bool 対照 + 単一経路 + fired_action 両立。
+   audit 漏れ #6 も解消。config/inherit 経由は既知の限界 (issue bool-requires-config-inherit-gap)
+
+codex stop-gate が 2 回止めた (value_requires の誤導入 / DESIGN 未追従) — DR 改訂時の波及チェックに
+DESIGN の対応節を含める教訓。
+
+最終数値: conformance **136 fixture / 351 case / mismatch 0**、kuu.mbt テスト 153 本、全 push CI green。
+audit 漏れ 8 件は解消 6 + issue 追跡 2 (tried_triggers / ref-template 結果ビュー形)。
+
 ## 残 issue (次セッション候補)
 
 - kuu.mbt: constraint-path-filtering-gap (DR-047 path filter、大型) / pre-split-filters-execution-wiring /
