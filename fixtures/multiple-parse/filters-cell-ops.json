@@ -1,9 +1,9 @@
 {
-  "why": "value_filters(段5) が乗る対象は cell に書かれる実値のみ (set の operand / update の適用結果) — unset/default/empty は値を書かないので filter chain を通らない (DESIGN §8.3 / PIPELINE §2 段5、2026-07-09 裁定、kuu.mbt issue accum-filters-non-set-op-semantics)。本 fixture は accum (multiple append) セルに unset (--reset-ports) を発火させ、in_range:1:100 を持つ value_filters が reject を出さず success になることを固定する — filters-each.json (段5 reject の輪郭) が『値を書く set 発火の reject』を担うのに対し、本 fixture は『値を書かない cell 操作は reject 対象にすらならない』ことを担う。unset × accum の畳みの読みは以下の導出による: DR-045 は unset を『default 値へ戻す (committed=false)』と定義し、scalar/accum を区別しない汎用の cell 操作として書かれている。accum セルの default は DR-044 の一様配列規約により常に `[]` (0 回発火でも absent にならず `[]`、DR-051 §2)。したがって unset は累積列を `[]` へ戻す (『値は残るが committed フラグだけ外れる』という代替読みは、DR-045 の『default 値へ戻す』 が値そのものの書き換えを明記しているため採らない — 導出の詳細は報告に記載)。下位値源 (env 等) を持たない definition のため、unset 後の最終値は default 席の `[]` に確定し、後続の cli set があれば通常通り上書きされる (unset-ladder.json の『unset はラダーを開放し後段が上書き可』と同じ committed=false の効果)。",
+  "why": "value_filters(段5) が乗る対象は cell に書かれる実値のみ (set の operand / update の適用結果) — unset/default/empty は値を書かないので filter chain を通らない (DESIGN §8.3 / PIPELINE §2 段5、2026-07-09 裁定、kuu.mbt issue accum-filters-non-set-op-semantics)。本 fixture は accum (multiple append) セルに unset (--reset-ports) / empty (--clear-ports) を発火させ、in_range:1:100 を持つ value_filters が reject を出さず success になることを固定する — filters-each.json (段5 reject の輪郭) が『値を書く set 発火の reject』を担うのに対し、本 fixture は『値を書かない cell 操作は reject 対象にすらならない』ことを担う。unset × accum の畳みの読みは以下の導出による: DR-045 は unset を『default 値へ戻す (committed=false)』と定義し、scalar/accum を区別しない汎用の cell 操作として書かれている。accum セルの default は DR-044 の一様配列規約により常に `[]` (0 回発火でも absent にならず `[]`、DR-051 §2)。したがって unset は累積列を `[]` へ戻す (『値は残るが committed フラグだけ外れる』という代替読みは、DR-045 の『default 値へ戻す』 が値そのものの書き換えを明記しているため採らない — 導出の詳細は報告に記載)。下位値源 (env 等) を持たない definition のため、unset 後の最終値は default 席の `[]` に確定し、後続の cli set があれば通常通り上書きされる (unset-ladder.json の『unset はラダーを開放し後段が上書き可』と同じ committed=false の効果)。empty (--clear-ports) は committed=true でコレクションを決定論的に `[]` にする (DR-045、empty-clear.json の tag 版と同型) — unset との対比点は sources: unset は default 値へ戻る (『触っていないことにする』) ので sources=default になるのに対し、empty は commit された CLI 操作としての `[]` なので sources=cli になる (両方とも value_filters を素通りする点は同じ — cell 操作は operand を運ばないため filter 適用対象の piece が生じない、DESIGN §8.3)。",
   "query": "parse",
   "definition": {
     "options": [
-      {"name": "ports", "type": "number", "long": [":set", "reset:unset"], "multiple": "append", "value_filters": ["in_range:1:100"]}
+      {"name": "ports", "type": "number", "long": [":set", "reset:unset", "clear:empty"], "multiple": "append", "value_filters": ["in_range:1:100"]}
     ]
   },
   "cases": [
@@ -32,6 +32,20 @@
           {"entity": "ports", "op": "set", "operand": 7, "source": "cli"}
         ],
         "result": {"ports": [7]},
+        "sources": {"ports": "cli"}
+      }
+    },
+    {
+      "id": "empty-after-set-resets-to-empty-with-cli-source",
+      "why": "`--ports 5 --clear-ports`: set(5) が append accumulator に畳まれ [5] になった後、empty (--clear-ports) が発火しコレクションを決定論的に `[]` にする (DR-045、empty-clear.json の tag 版と同型)。empty の発火も unset と同じく operand を持たない cell 操作なので in_range:1:100 を持つ value_filters (each 相) を一切通らない (DESIGN §8.3)。unset-after-set-resets-to-empty-without-filter との対比点: 両者とも最終値は `[]` だが、unset は committed=false で default 値へ『戻る』ため sources=default になるのに対し、empty は committed=true の CLI 操作としてコレクションを直接空にするため sources=cli になる。effects は [set(5,cli), empty(cli)] の 2 個 (発火順)。result `{ports:[]}`、sources `{ports:cli}`。",
+      "argv": ["--ports", "5", "--clear-ports"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "ports", "op": "set", "operand": 5, "source": "cli"},
+          {"entity": "ports", "op": "empty", "source": "cli"}
+        ],
+        "result": {"ports": []},
         "sources": {"ports": "cli"}
       }
     }

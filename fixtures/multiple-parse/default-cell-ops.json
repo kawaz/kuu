@@ -1,0 +1,39 @@
+{
+  "why": "default op (DR-045: 明示の default 選択、committed=true) が accum セル (multiple append) に効く輪郭 — unset (filters-cell-ops.json) との対。両者とも default 値へ戻すが、committed の差で『下位席 (env) が後から勝てるか』が分かれる (DR-031 値源ラダー、scalar 版は unset-ladder.json の default-commits-locked が先行固定済み)。ports は宣言 default を持たないので default 発火は DR-051 §2 の一様形 (accum の default 席は常に `[]`、DR-044 一様配列規約) へ戻り、下位に env があっても committed=true のため無視される (unset なら env が勝つ、default は勝たせない — unset-ladder.json と同じ非対称)。multiple 要素への配列 default 宣言は schema (wire.schema.json の `default` フィールド、DESIGN §11.4) 上は構文的に閉じていないが、DESIGN.md / 関連 DR (DR-044/045/051) のいずれにも意味論の規定が見当たらず、既存 fixture にも実例が無いため本 fixture では扱わない (`[]` へ戻る輪郭のみを固定する。意味論ギャップは issue multiple-declared-default-semantics に記録済み)。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {"name": "ports", "type": "number", "long": [":set", "restore:default"], "env": "PORTS", "multiple": {"accumulator": "append", "separator": ","}}
+    ]
+  },
+  "cases": [
+    {
+      "id": "default-with-no-declared-default-resets-to-empty",
+      "why": "`--ports 5 --restore-ports` (env 未設定): set(5) が append accumulator に畳まれ [5] になった後、default (--restore-ports) が発火。ports は宣言 default を持たないので DR-051 §2 の一様形 (accum の default 席は常に `[]`) へ戻る (DR-045 の『default 値へ戻す』は accum セルでは宣言 default か `[]` のいずれかに解決される、unset fold の導出 — filters-cell-ops.json why 参照 — と同じ規約を default op にも適用)。committed=true の効果自体は operand を運ばないので value_filters/cell_filters の適用対象となる piece が生じない (DESIGN §8.3、unset と同じ理由でここでは対象外)。effects は [set(5,cli), default(cli)] の 2 個。result `{ports:[]}`、sources `{ports:default}`。",
+      "argv": ["--ports", "5", "--restore-ports"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "ports", "op": "set", "operand": 5, "source": "cli"},
+          {"entity": "ports", "op": "default", "source": "cli"}
+        ],
+        "result": {"ports": []},
+        "sources": {"ports": "default"}
+      }
+    },
+    {
+      "id": "default-ignores-lower-env",
+      "why": "`--restore-ports` のみ、env PORTS=\"10,20\": default は committed=true でロックするため、unset (env が勝つ、unset-env-fallback.json 参照) と異なり下位の env 席は無視され、宣言なしの default `[]` に確定する (DR-031 値源ラダー、unset-ladder.json の default-commits-locked が scalar 値で固定した非対称の accum 版)。cli 未発火の set は effects に載らない (CONFORMANCE §2)。effects は default 1 個のみ。result `{ports:[]}`、sources `{ports:default}` (env=\"10,20\" は無視され結果に現れない)。",
+      "argv": ["--restore-ports"],
+      "env": {"PORTS": "10,20"},
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "ports", "op": "default", "source": "cli"}
+        ],
+        "result": {"ports": []},
+        "sources": {"ports": "default"}
+      }
+    }
+  ]
+}
