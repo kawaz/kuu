@@ -12,7 +12,7 @@ discarded_entered:
 resolved_entered: 2026-07-09T16:13:02+09:00
 discard_reason:
 pending_reason:
-close_reason: ["dr/CONFORMANCE.md §2 (commit b8ca68c9)","implemented","(b) discarded: 最小変更の (a) で fixture と正本が整合したため不採用、将来必要になれば conformance-tried-triggers-help-entry-fields の optional フィールド議論と合流"]
+close_reason: ["dr/CONFORMANCE.md §2 (commit ce52ffa5)","implemented","(b) discarded: 最小変更の (a) で fixture と正本が整合したため不採用、将来必要になれば conformance-tried-triggers-help-entry-fields の optional フィールド議論と合流"]
 blocked_by:
 origin: 自リポ TODO
 ---
@@ -34,7 +34,7 @@ fixtures/pre-filters/env-source.json (case env-untrimmed-parse-rejected, 2026-07
 
 (a) が最小。kawaz 裁定を待たず (a) で運用し、覆れば fixture を追従させる。
 
-由来: pre_filters fixture batch (fixtures/pre-filters/, commit 7642a6d8) 作成時に fixture-prefilters worker が発見。
+由来: pre_filters fixture batch (fixtures/pre-filters/, commit 15ce7dcb) 作成時に fixture-prefilters worker が発見。
 
 ## 受け入れ条件
 
