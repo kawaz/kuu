@@ -19,49 +19,37 @@ origin: 自リポ TODO
 
 # ref テンプレ内要素の結果ビュー形が未確定 (repeat 下の flat 化 / ref 要素自身の露出)
 
-## 概要
+## 2026-07-09 kawaz 裁定 — 論点立て自体が誤り、result 形は定義から導出される
 
-repeat 配下にある ref テンプレ (or [rgb seq | colorname] のような構造参照) の
-result / interpretations ビューの形が未確定。repeat 下の複数バインドが
-flat 化されない非対称、および値セルを持たない ref 要素自身がキーとして
-result に露出する挙動、どちらも裁定が必要。
+当初の論点 (「flat 化の要否」「値セルを持たない構造参照の露出」) は誤ったフレーミングだった。
+正しいモデル (kawaz 裁定):
 
-## 背景
+- `hlcolors` は「repeat 付きで color (テンプレ) を取る positional」であり、**値セルは T[]**。
+  T = or の枝の row 形 = name 付き要素の部分オブジェクト ({colorname: string} | {r,g,b})
+- `["red","blue"]` の result = `{hlcolors: [{colorname:"red"}, {colorname:"blue"}]}`。
+  テンプレ内要素名 (colorname) がトップレベルに湧くことこそが誤り
+- last-wins が関わるのは **option 再発火の cell 上書き**のみ:
+  `--hlcolors red blue --hlcolors red` → `[{colorname:"red"}]`。repeat 内の複数バインドとは無関係
+- rgb 枝は name 付き seq (r/g/b) なので row は `{r:255, g:0, b:0}` (object)。name の無い要素なら
+  配列、が定義からの導出
+- 単発 ref (repeat 無し) は縮退形 = row 単体 (`{point: {x:1, y:2}}`)
 
-2026-07-09、kuu.mbt DR-078 decode 実装後の fixture 化作業で露呈した。
+よって本 issue は裁定待ちではなく**実装バグ + result 形の pin 作業**:
+現実装の「colorname がトップに出る / hlcolors が別枠の [] になる」は result 構築
+(build_result) が ref テンプレの row 境界を組み立てていないバグ。
 
-`hlcolors := color+` (definitions.templates の or [rgb seq | colorname]) を
-parse すると:
+## 背景 (当初の観測、2026-07-09 kuu.mbt DR-078 decode 実装後)
 
-- `["red","blue"]` の result = `{colorname: "blue", hlcolors: []}` —
-  colorname は **last-wins スカラー** (repeat 下の複数バインドが
-  flat 化されない)、**hlcolors: [] が混入** (値を持たない ref 構造参照が
-  uniform array 注入を受けている)
-- ambiguous の interpretations にも同じ形が出る
-
-### 論点
-
-1. **repeat 下のテンプレ内要素の flat 化**: repeat 対象そのもの (BCell、
-   例 fixtures/repeat-parse/flatten-scalar-tail.json の src → ["a","b"])
-   には flatten accumulator が付くが、ref テンプレ内の名前付き要素
-   (colorname / r,g,b) には付かない非対称。DR-044 の「repeat 複数バインドは
-   1 リストに平坦化」がテンプレ内要素まで及ぶべきか。及ぶ場合、rgb 枝が
-   2 反復したときの形 ({r:[..], g:[..]} の列単位配列?) まで定義が要る
-2. **ref 要素自身の露出**: hlcolors は値セルを持たない構造参照なのに
-   result にキーが出る。非露出 (キー自体なし) が自然に見えるが、
-   「反復系は 0 発火でも []」(DR-051 §2b) の適用範囲の明確化が要る
-
-### 現状の凌ぎ
-
-fixtures/repeat-parse/ref-or-template.json は effects (bindings 面) と
-outcome までの検証に絞り、result / interpretations の pin を保留
-(why に明記)。slice の元テスト (phase4/phase10) も bindings レベルまでしか
-pin していなかったので、蒸留の輪郭は失っていない。
-
-kawaz 裁定待ちの議論球。
+`hlcolors := color+` (definitions.templates の or [rgb seq | colorname]) を parse すると
+`["red","blue"]` の result = `{colorname: "blue", hlcolors: []}` になっていた。
+effects 面 (entity=colorname に set が積まれる) は fixtures/repeat-parse/ref-or-template.json
+で pin 済み — result 構築側で ref 名の row 配列へ写像する実装が必要 (row 境界の識別に
+Binding.scope/link が使えるかは実装検討事項)。
 
 ## 受け入れ条件
 
-- [ ] repeat 下のテンプレ内要素 flat 化の要否を裁定 (DR 起票 or 既存 DR-044 の適用範囲明確化)
-- [ ] 値セルを持たない ref 要素の result 露出/非露出を裁定
+- [ ] result 構築が ref テンプレ要素を「ref 名: 反復 row の配列」(単発は row 単体) へ写像する
+- [ ] テンプレ内要素名がトップレベル result に出ない
+- [ ] option 再発火の cell 上書き (`--x a b --x c` → 最後の発火の row 列) の輪郭も fixture 化
 - [ ] fixtures/repeat-parse/ref-or-template.json の result / interpretations pin 保留を解消
+      (string 枝 / rgb 枝 / 混合 / ambiguous の各形)
