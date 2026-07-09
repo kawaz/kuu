@@ -1,0 +1,46 @@
+{
+  "why": "last-wins-scalar.json の対照を repeat 型セルへ拡張 (templates/ref は DR-078 §1、row 形は DESIGN §2.4/§2.5 の露出規則から導出 — issue 2026-07-09-ref-template-result-shape で裁定): `--hlcolors color+` は option 自身が repeat を持つ (schema 上 repeat は node 一般属性、options にも装着可)。multiple を宣言していないので accumulator が無く、再発火は append せず値セルそのものを上書きする (append.json/last-wins-scalar.json と同じ『multiple の有無』軸)。repeat セルの値は T[] (T = or 枝の row 形、DESIGN §2.4/2.5) なので、上書きされるのは『repeat 1 発火分の row 配列全体』——colorname 枝の row は {colorname: string}。effects (bindings 面) は消費順の set を畳まずに全保持する (DR-045、last-wins の collapse は result 確定時のみ起きる、last-wins-scalar.json と同型)。scalar セルの last-wins (1 値 → 1 値の上書き) に対し、本 fixture は『反復セルでも同じ軸で上書きされる』ことを固定する — multiple がリスト累積の唯一の入口であり、repeat 自体は複数発火累積を提供しない (DR-034/043 の axis 分離)。",
+  "query": "parse",
+  "definition": {
+    "definitions": {
+      "templates": {
+        "color": {"or": [
+          {"seq": [{"type": "number", "name": "r"}, {"type": "number", "name": "g"}, {"type": "number", "name": "b"}]},
+          {"type": "string", "name": "colorname"}
+        ]}
+      }
+    },
+    "options": [
+      {"name": "hlcolors", "ref": "color", "repeat": {"min": 1}, "long": true}
+    ]
+  },
+  "cases": [
+    {
+      "id": "refire-overwrites-cell",
+      "why": "`--hlcolors red blue --hlcolors red`: 1 回目の発火が red,blue を colorname 枝で 2 反復消費し hlcolors セルに [{colorname:\"red\"},{colorname:\"blue\"}] を書く。2 回目の `--hlcolors` 発火は multiple の accumulator を持たないため、前回のセル内容を捨てて新しい repeat 列 (1 反復、red のみ) で丸ごと上書きする。効果列は 3 個の set を消費順で全保持 (colorname=red, colorname=blue, colorname=red) — 効果列自体は畳まれない、collapse は result 確定時にセル単位で起きる (last-wins-scalar.json と同じ機序)。result は最後の発火だけが残る {hlcolors: [{colorname:\"red\"}]}。",
+      "argv": ["--hlcolors", "red", "blue", "--hlcolors", "red"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "colorname", "op": "set", "operand": "red", "source": "cli"},
+          {"entity": "colorname", "op": "set", "operand": "blue", "source": "cli"},
+          {"entity": "colorname", "op": "set", "operand": "red", "source": "cli"}
+        ],
+        "result": {"hlcolors": [{"colorname": "red"}]}
+      }
+    },
+    {
+      "id": "single-fire-baseline",
+      "why": "1 回発火の baseline: `--hlcolors red blue` は上書きが起きないので repeat 2 反復分の row 配列がそのまま result になる。refire-overwrites-cell と対照して『2 回目の発火が 1 回目を消す』ことが上書きであり反復消費自体の性質でないことを固定する (last-wins-scalar.json の single-fire-scalar と同じ役割)。",
+      "argv": ["--hlcolors", "red", "blue"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "colorname", "op": "set", "operand": "red", "source": "cli"},
+          {"entity": "colorname", "op": "set", "operand": "blue", "source": "cli"}
+        ],
+        "result": {"hlcolors": [{"colorname": "red"}, {"colorname": "blue"}]}
+      }
+    }
+  ]
+}

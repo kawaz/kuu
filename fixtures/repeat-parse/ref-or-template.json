@@ -1,5 +1,5 @@
 {
-  "why": "definitions.templates + ref (DR-078 §1): hlcolors := color+ (color は or [3 数値 seq | 文字列] の共有消費文法 template)。repeat の対象要素は形を問わない (DR-043) — ref head でも or 構造でも同じ反復規則に乗る。純文字列の繰り返しは colorname 枝のみが成立する一義 parse、数値 3 個は rgb 枝 1 反復 vs colorname 枝 3 反復が構造的に異なる完全経路として両立し ambiguous (DR-038)。slice poc/phase4_wbtest.mbt:125-152 相当 (蒸留 1:1 audit 漏れ #1)。検証は effects (bindings 面) と outcome まで — ref テンプレ内要素の結果ビュー形 (repeat 下の flat 化・ref 要素自身の露出/非露出) は未確定の設計論点のため result / interpretations の pin は保留 (issue 2026-07-09-ref-template-result-shape 参照)。",
+  "why": "definitions.templates + ref (DR-078 §1): hlcolors := color+ (color は or [3 数値 seq | 文字列] の共有消費文法 template)。repeat の対象要素は形を問わない (DR-043) — ref head でも or 構造でも同じ反復規則に乗る。純文字列の繰り返しは colorname 枝のみが成立する一義 parse、数値 3 個は rgb 枝 1 反復 vs colorname 枝 3 反復が構造的に異なる完全経路として両立し ambiguous (DR-038)。slice poc/phase4_wbtest.mbt:125-152 相当 (蒸留 1:1 audit 漏れ #1)。result は hlcolors の値セルを T[] (T = or 枝の row 形) へ写像する: or の各枝は name 付き要素からなり、露出規則 (DESIGN §2.4) で最も浅い name 層が colorname 単体または r/g/b 3 兄弟になる — colorname 枝の row は {colorname: string}、rgb 枝の row は name 持ち子が並ぶので kv {r,g,b} (DESIGN §2.5)。テンプレ内要素名 (colorname/r/g/b) は row の中に留まり hlcolors の外側 (result トップレベル) には出ない。ambiguous な場合は完全経路ごとの result ビューを interpretations に列挙する (DR-053 §3)。",
   "query": "parse",
   "definition": {
     "definitions": {
@@ -17,27 +17,32 @@
   "cases": [
     {
       "id": "string-names-unique-split",
-      "why": "純文字列の繰り返しは colorname 枝のみ成立 (rgb 枝は非数値トークンで dead-end)、一義 parse で 2 バインドが消費順に立つ。",
+      "why": "純文字列の繰り返しは colorname 枝のみ成立 (rgb 枝は非数値トークンで dead-end)、一義 parse で 2 バインドが消費順に立つ。hlcolors は repeat 2 発火のリスト、各発火の row は colorname 枝の露出形 {colorname: string} (DESIGN §2.4 — colorname が最も浅い name 層)。colorname というテンプレ内要素名は row の中に留まり、result トップレベルには出ない (旧実装バグの反証点)。",
       "argv": ["red", "blue"],
       "expect": {
         "outcome": "success",
         "effects": [
           {"entity": "colorname", "op": "set", "operand": "red", "source": "cli"},
           {"entity": "colorname", "op": "set", "operand": "blue", "source": "cli"}
-        ]
+        ],
+        "result": {"hlcolors": [{"colorname": "red"}, {"colorname": "blue"}]}
       }
     },
     {
       "id": "rgb-vs-3-names-ambiguous",
-      "why": "1 回発火・rgb 枝 (3 トークン消費) vs 3 回発火・colorname 枝 (1 トークンずつ) が構造的に異なる完全経路として両立し ambiguous (DR-038 — or 分岐差は取り分選好では畳めない。取り分選好の非侵食性 = 蒸留 1:1 audit 漏れ #2 も本 case が pin)。",
+      "why": "1 回発火・rgb 枝 (3 トークン消費) vs 3 回発火・colorname 枝 (1 トークンずつ) が構造的に異なる完全経路として両立し ambiguous (DR-038 — or 分岐差は取り分選好では畳めない。取り分選好の非侵食性 = 蒸留 1:1 audit 漏れ #2 も本 case が pin)。2 経路それぞれの result ビューは or 枝の型で分岐する: rgb 経路は number 型の r/g/b 3 兄弟が並ぶので row は kv {r,g,b} (DESIGN §2.5)、値は number に変換された 255/0/0。colorname 経路は string 型 colorname が 3 回発火するので hlcolors は 3 要素の row 配列、各値は string のまま \"255\"/\"0\"/\"0\" (型変換されない)。interpretations は各完全経路の result ビューを列挙する (DR-053 §3、列挙順は非規範)。",
       "argv": ["255", "0", "0"],
       "expect": {
-        "outcome": "ambiguous"
+        "outcome": "ambiguous",
+        "interpretations": [
+          {"hlcolors": [{"r": 255, "g": 0, "b": 0}]},
+          {"hlcolors": [{"colorname": "255"}, {"colorname": "0"}, {"colorname": "0"}]}
+        ]
       }
     },
     {
       "id": "pure-strings-preference-irrelevant",
-      "why": "全トークンが非数値なので rgb 読みが存在せず、取り分選好の有無に関わらず split は一意 (選好は同一 closure の取り分次元専用で or 枝には効かない、DR-043)。slice poc/phase10_wbtest.mbt:90-108 相当。",
+      "why": "全トークンが非数値なので rgb 読みが存在せず、取り分選好の有無に関わらず split は一意 (選好は同一 closure の取り分次元専用で or 枝には効かない、DR-043)。slice poc/phase10_wbtest.mbt:90-108 相当。3 発火とも colorname 枝なので hlcolors は 3 要素の row 配列、各 row は {colorname: string} (DESIGN §2.4)。",
       "argv": ["red", "green", "blue"],
       "expect": {
         "outcome": "success",
@@ -45,7 +50,8 @@
           {"entity": "colorname", "op": "set", "operand": "red", "source": "cli"},
           {"entity": "colorname", "op": "set", "operand": "green", "source": "cli"},
           {"entity": "colorname", "op": "set", "operand": "blue", "source": "cli"}
-        ]
+        ],
+        "result": {"hlcolors": [{"colorname": "red"}, {"colorname": "green"}, {"colorname": "blue"}]}
       }
     }
   ]

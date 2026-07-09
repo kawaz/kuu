@@ -1,0 +1,45 @@
+{
+  "why": "ref-or-template.json の対照: repeat を持たない単発 ref は縮退形 = row 単体 (templates/ref は DR-078 §1、row 形は DESIGN §2.4/§2.5 — issue 2026-07-09-ref-template-result-shape で裁定)。hlcolor := color (repeat 無し) は 1 回しか発火できないので、result のセル型は T[] でなく T そのもの (row 単体) — repeat が『配列に包む』操作を担っており (DESIGN §6.1)、それを外すと row がそのまま値になる。row の形自体は ref-or-template.json と同じ露出規則 (DESIGN §2.4/2.5) に従う: colorname 枝は {colorname: string}、rgb 枝は名前付き子が並ぶので kv {r,g,b}。repeat 無しでは or 枝を跨いだ複数回発火の余地が無いため、数値 3 個の入力で colorname 枝 (1 トークンのみ消費) を選ぶと残り 2 トークンが未消費で経路不成立になり、rgb 枝 (3 トークン消費) のみが完全経路として残る — ref-or-template.json の rgb-vs-3-names-ambiguous (repeat ありなら両経路が完全消費で両立し ambiguous) との対照点。",
+  "query": "parse",
+  "definition": {
+    "definitions": {
+      "templates": {
+        "color": {"or": [
+          {"seq": [{"type": "number", "name": "r"}, {"type": "number", "name": "g"}, {"type": "number", "name": "b"}]},
+          {"type": "string", "name": "colorname"}
+        ]}
+      }
+    },
+    "positionals": [
+      {"name": "hlcolor", "ref": "color"}
+    ]
+  },
+  "cases": [
+    {
+      "id": "single-string-degenerate-row",
+      "why": "非数値トークン 1 個は colorname 枝のみ成立、1 回発火で経路完結 (repeat が無いのでこれ以上の消費対象も無い)。hlcolor の result は row 単体 {colorname:\"red\"} — [{colorname:\"red\"}] のような配列包装はされない (repeat 無し = T[] でなく T、DESIGN §6.1 の逆)。",
+      "argv": ["red"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "colorname", "op": "set", "operand": "red", "source": "cli"}
+        ],
+        "result": {"hlcolor": {"colorname": "red"}}
+      }
+    },
+    {
+      "id": "single-rgb-degenerate-row",
+      "why": "数値 3 個: colorname 枝は 1 トークン (\"1\") しか消費できず残り \"2\",\"3\" が未消費のまま経路不成立 (repeat が無いので 2 回目以降の発火で拾えない)。rgb 枝のみが 3 トークン全消費で完全経路になり ambiguous にならない — ref-or-template.json の rgb-vs-3-names-ambiguous (repeat ありで colorname 枝が 3 回発火でも全消費できる) との対照点。hlcolor の result は row 単体 kv {r,g,b} (number に変換済み)。",
+      "argv": ["1", "2", "3"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "r", "op": "set", "operand": 1, "source": "cli"},
+          {"entity": "g", "op": "set", "operand": 2, "source": "cli"},
+          {"entity": "b", "op": "set", "operand": 3, "source": "cli"}
+        ],
+        "result": {"hlcolor": {"r": 1, "g": 2, "b": 3}}
+      }
+    }
+  ]
+}
