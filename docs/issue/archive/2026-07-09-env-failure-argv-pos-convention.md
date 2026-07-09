@@ -1,6 +1,6 @@
 ---
 title: トークン非帰属の失敗 (env/config 由来) の argv_pos 規約が未明文化
-status: open
+status: resolved
 category: design
 created: 2026-07-09T16:08:55+09:00
 last_read:
@@ -9,10 +9,10 @@ wip_entered:
 blocked_entered:
 pending_entered:
 discarded_entered:
-resolved_entered:
+resolved_entered: 2026-07-09T16:13:02+09:00
 discard_reason:
 pending_reason:
-close_reason:
+close_reason: ["dr/CONFORMANCE.md §2 (commit e94bcb9a)","implemented","(b) discarded: 最小変更の (a) で fixture と正本が整合したため不採用、将来必要になれば conformance-tried-triggers-help-entry-fields の optional フィールド議論と合流"]
 blocked_by:
 origin: 自リポ TODO
 ---
