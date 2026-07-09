@@ -1,0 +1,24 @@
+{
+  "why": "positional 経路でも separator 分割された piece が型 parse (段4) を経由することの輪郭 (DR-034 pieceProcessor — option 経路の separator-typed.json と対)。separator-split.json は positional × string で値軸分割 (段2) のみを固定しており、positional × separator × number 型は本 fixture が初カバー。option/positional を同一 definition に同居させると、option だけを与える case で positional が missing_operand (CONFORMANCE §2 の構造的必須) になり輪郭が汚れるため、positional 経路は本ファイルに分離している。",
+  "query": "parse",
+  "definition": {
+    "positionals": [
+      {"name": "sizes", "type": "number", "multiple": {"accumulator": "append", "separator": ","}}
+    ]
+  },
+  "cases": [
+    {
+      "id": "positional-separator-number-success",
+      "why": "positional 経路でも option 経路 (separator-typed.json::option-separator-number-success) と同一の pieceProcessor を通る: `5,7` (1 トークン) を separator で分割後、各 piece が number parse を経由して 5/7 になる。effects の operand が数値であること = 型 parse 経由の直接証拠。",
+      "argv": ["5,7"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "sizes", "op": "set", "operand": 5, "source": "cli"},
+          {"entity": "sizes", "op": "set", "operand": 7, "source": "cli"}
+        ],
+        "result": {"sizes": [5, 7]}
+      }
+    }
+  ]
+}

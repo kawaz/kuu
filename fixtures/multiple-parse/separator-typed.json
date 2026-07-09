@@ -1,0 +1,33 @@
+{
+  "why": "separator 分割された piece が型 parse (段4) を経由することの輪郭 (DR-034 pieceProcessor: 各 piece に pre → parse → post を適用、型は separator の有無と直交)。separator-split.json は positional × string で separator の値軸分割 (段2) のみを固定しており、piece が string 以外の型へ parse されることは未カバー。filters-each.json は number 型を使うが filters(段5) の reject 輪郭が主目的で、type parse 自体の成功系はその副産物 (かつ現在 known_divergence の case を含むため、型 parse の輪郭を単独で固定する価値は本 fixture に独立してある)。本 fixture は option × separator × number で『各 piece が type parse を通って数値になる』ことと『1 piece の parse 失敗が全体を failure にする』ことを固定する。positional 経路の対は separator-typed-positional.json (option と同居させると option-only case で positional が missing_operand になるため分離)。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {"name": "ports", "type": "number", "long": true, "multiple": {"accumulator": "append", "separator": ","}}
+    ]
+  },
+  "cases": [
+    {
+      "id": "option-separator-number-success",
+      "why": "`--ports 5,7` は separator \",\" で [\"5\",\"7\"] の 2 piece に分割後、各 piece が number 型 parse を通って 5 / 7 の数値になる (separator-split.json の string 縮退と対比 — piece の型は separator の有無と無関係に type.parse が決める、DR-034)。effects の operand が数値 5/7 であること自体が『型 parse を経由した』ことの直接証拠 (string のままなら operand は \"5\"/\"7\" になるはず)。append accumulator (段6) が [5,7] に畳む。",
+      "argv": ["--ports", "5,7"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "ports", "op": "set", "operand": 5, "source": "cli"},
+          {"entity": "ports", "op": "set", "operand": 7, "source": "cli"}
+        ],
+        "result": {"ports": [5, 7]}
+      }
+    },
+    {
+      "id": "option-separator-piece-parse-rejected",
+      "why": "`--ports 5,abc` は separator で [\"5\",\"abc\"] に分割後、2 piece 目 \"abc\" が number 型 parse に失敗 (not_a_number、DR-066 reason 表) → 全体 failure。1 piece 目 (5) が有効でも部分成功はしない (filters-each.json::one-piece-rejects-whole-not-partial-accumulate と同型の『1 piece の不成立が全体を落とす』構造だが、本 case は filters(段5) の reject でなく type.parse(段4) の reject である点が異なる)。argv_pos=1 はトークン `5,abc` 自体の位置 (0-based: --ports=0, `5,abc`=1) — 2 piece とも同一トークン由来のため帰属先は同じ (CONFORMANCE §2 のピース帰属規約)。kind=parse / reason=not_a_number (kind=filter ではない — filters チェインでなく type.parse 段の失敗であることの区別)。",
+      "argv": ["--ports", "5,abc"],
+      "expect": {
+        "outcome": "failure",
+        "errors": [{"element": "ports", "argv_pos": 1, "kind": "parse", "reason": "not_a_number"}]
+      }
+    }
+  ]
+}
