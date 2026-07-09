@@ -1,11 +1,11 @@
 ---
 title: ref テンプレの result が row 配列に写像されない (テンプレ内要素名がトップ露出する実装バグ)
-status: open
+status: wip
 category: bug
 created: 2026-07-09T12:58:37+09:00
 last_read: 2026-07-09T17:03:45+09:00
 open_entered: 2026-07-09T12:58:37+09:00
-wip_entered:
+wip_entered: 2026-07-09T22:13:52+09:00
 blocked_entered:
 pending_entered:
 discarded_entered:
