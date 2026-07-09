@@ -1,0 +1,59 @@
+{
+  "why": "pre_filters は入口形 (long-space / eq-split / short-attach / short-next-token) に関わらず同じ pieceProcessor 管を通る (matcher の読み分岐が入口の違いを吸収して同一実体へ link 合流する構造は matcher-readings/entry-forms.json と同型、DR-041 §3 / DR-034)。本 fixture は pre_filters:[\"trim\"] を持つ要素へ前後空白付き値を 4 形の入口で渡し、いずれも trim 済みの同一値へ収束することを固定する。eq-split の `--name= x ` は 1 トークン内の `=` 直後 (先頭空白含む) が値、short-attach の `-n x ` は `-n` 直後 (先頭空白含む) が値。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {"name": "name", "type": "string", "long": true, "short": "n", "pre_filters": ["trim"]}
+    ]
+  },
+  "cases": [
+    {
+      "id": "long-space-trimmed",
+      "why": "long-space 形: `--name` が次トークン ` x ` を値スロットで借用 (DR-041 §3 外側借用)、pre_filters trim が \" x \" → \"x\" に整形してから string parse (恒等) → result name=\"x\"。",
+      "argv": ["--name", " x "],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "name", "op": "set", "operand": "x", "source": "cli"}
+        ],
+        "result": {"name": "x"}
+      }
+    },
+    {
+      "id": "eq-split-trimmed",
+      "why": "eq-split 形: eq_split matcher が単一トークン `--name= x ` を `--name` と ` x ` に内部分割 (DR-041 §3 内部断片分割)、pre_filters trim が ` x ` → \"x\" に整形 → 同じ name=\"x\"。long-space と同一セル・同一結果。",
+      "argv": ["--name= x "],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "name", "op": "set", "operand": "x", "source": "cli"}
+        ],
+        "result": {"name": "x"}
+      }
+    },
+    {
+      "id": "short-attach-trimmed",
+      "why": "short-attach 形: short_combine matcher が `-n x ` を `n` の値付着として読み ` x ` を値に (DR-041 §3 値付着)、pre_filters trim が ` x ` → \"x\" に整形 → 同じ name=\"x\"。",
+      "argv": ["-n x "],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "name", "op": "set", "operand": "x", "source": "cli"}
+        ],
+        "result": {"name": "x"}
+      }
+    },
+    {
+      "id": "short-next-token-trimmed",
+      "why": "short-next-token 形: `-n` が値を付着させず次トークン ` x ` を借用 (DR-041 §3 外側借用)、pre_filters trim が \" x \" → \"x\" に整形 → 同じ name=\"x\"。4 形全てで pre_filters が同一に効くことの最後の一致点。",
+      "argv": ["-n", " x "],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "name", "op": "set", "operand": "x", "source": "cli"}
+        ],
+        "result": {"name": "x"}
+      }
+    }
+  ]
+}

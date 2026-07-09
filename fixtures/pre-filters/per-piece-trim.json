@@ -1,0 +1,24 @@
+{
+  "why": "pre_filters の適用位置 = separator 分割後の各 piece 単位、type.parse の直前 (DR-034 §pieceProcessor / DR-062 §2)。「分割前の生文字列全体に 1 回適用」という誤読との判別が本 fixture の主目的: separator=\",\" + pre_filters:[\"trim\"] を持つ multiple positional に `\" a , b \"` (1 トークン) を渡すと、正しい経路 (per-piece) は separator 分割 [\" a \", \" b \"] の後で各 piece を trim して [\"a\",\"b\"]。もし誤って「分割前に 1 回 trim」だったら `\" a , b \".trim()` = `\"a , b\"` を split(\",\") した [\"a \", \" b\"] (要素内の余分な空白が残る) になり、本 fixture の期待値 [\"a\",\"b\"] と食い違う — 期待値の一致/不一致で経路を判別できる。",
+  "query": "parse",
+  "definition": {
+    "positionals": [
+      {"name": "xs", "type": "string", "multiple": {"accumulator": "append", "separator": ","}, "pre_filters": ["trim"]}
+    ]
+  },
+  "cases": [
+    {
+      "id": "per-piece-not-whole-string",
+      "why": "`\" a , b \"` を separator \",\" で分割すると [\" a \", \" b \"] の 2 piece。pre_filters trim は各 piece に適用されるので [\"a\",\"b\"]。全体 1 回 trim 説だと [\"a \", \" b\"] になり本 case の期待値と食い違う (上記 why 参照) — この差分が per-piece 適用の実証点。",
+      "argv": [" a , b "],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "xs", "op": "set", "operand": "a", "source": "cli"},
+          {"entity": "xs", "op": "set", "operand": "b", "source": "cli"}
+        ],
+        "result": {"xs": ["a", "b"]}
+      }
+    }
+  ]
+}
