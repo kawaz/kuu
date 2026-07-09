@@ -1,7 +1,7 @@
 ---
-title: ref テンプレ内要素の結果ビュー形が未確定 (repeat 下の flat 化 / ref 要素自身の露出)
+title: ref テンプレの result が row 配列に写像されない (テンプレ内要素名がトップ露出する実装バグ)
 status: open
-category: design
+category: bug
 created: 2026-07-09T12:58:37+09:00
 last_read:
 open_entered: 2026-07-09T12:58:37+09:00
@@ -17,7 +17,7 @@ blocked_by:
 origin: 自リポ TODO
 ---
 
-# ref テンプレ内要素の結果ビュー形が未確定 (repeat 下の flat 化 / ref 要素自身の露出)
+# ref テンプレの result が row 配列に写像されない (テンプレ内要素名がトップ露出する実装バグ)
 
 ## 2026-07-09 kawaz 裁定 — 論点立て自体が誤り、result 形は定義から導出される
 
