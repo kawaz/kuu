@@ -51,7 +51,14 @@ ref テンプレ入れ子の消費境界と multiple×ref の意味論に、fixt
 
 ## 受け入れ条件
 
-- [ ] 上記 1〜2 の消費境界 fixture 追加 (既存 repeat-parse / multiple-parse
+- [x] 上記 1〜2 の消費境界 fixture 追加 (既存 repeat-parse / multiple-parse
       の分類慣習に従う)
 - [ ] 3 の multiple×ref fixture 追加 (必要なら kawaz 裁定を仰ぐ)
 - [ ] kuu.mbt 側 pin bump + conformance green で解消確認
+
+## 2026-07-10 追記: 論点 1〜2 完了
+
+- 論点 1 (先食い×ref 入れ子): fixtures/repeat-parse/ref-interject.json (2 case) で pin
+- 論点 2 (min:0 unbounded の sibling trigger 境界): fixtures/repeat-parse/ref-repeat-sibling-trigger.json (3 case — 発火 2 反復 / 発火 0 反復 / 未発火) で pin。fixture 化の過程で「option ref+repeat の 0 反復・未発火が {} / absent になる」実装ギャップが露出し、kuu.mbt commit 5c8ddaa23cab37bf2cbadd902ac5b138d8297417 で修正 (一様配列機構への参加、DR-051 §2b)
+- spec commit: 939f37ef2f29e3ff408d997e3c93675d4b142fef (直前 2 commit 含む)
+- 残: 論点 3 (multiple×ref の意味論) のみ — issue multiple-ref-accum-gap (kuu.mbt) と対で kawaz 裁定待ち
