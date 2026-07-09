@@ -1,0 +1,46 @@
+{
+  "why": "option ref repeat の min:0 (unbounded) での sibling trigger 境界 (DR-041 §4 / DR-043、issue ref-nested-consumption-fixture-gap 論点2): last-wins-repeat-rows.json は同じ hlcolors (ref+repeat) 定義を option 化しているが repeat: {min: 1} で『0 回発火』の輪郭を持たない。本 fixture は repeat: {min: 0} (optional 糖衣の一般形、DR-043 の『optional: true は repeat: {min: 0, max: 1} の糖衣』の unbounded 版) に変え、hlcolors の直後に別 option --other が来た時、ref 先の colorname (string leaf) が --other を raw 消費せず (先食い、DR-041 §4)、sibling option の発火が優先されることを固定する。0 反復 (min:0 の境界) でも同じ規則が効くことを固定するのが本 fixture の主目的 — colorname 枝は string 型なので構文上は任意の文字列を受理できるが、`--other` は greedy 面の読めるトークンであるため素通し枝は生成されない。",
+  "query": "parse",
+  "definition": {
+    "definitions": {
+      "templates": {
+        "color": {"or": [
+          {"seq": [{"type": "number", "name": "r"}, {"type": "number", "name": "g"}, {"type": "number", "name": "b"}]},
+          {"type": "string", "name": "colorname"}
+        ]}
+      }
+    },
+    "options": [
+      {"name": "hlcolors", "ref": "color", "repeat": {"min": 0}, "long": true},
+      {"name": "other", "type": "string", "long": true}
+    ]
+  },
+  "cases": [
+    {
+      "id": "sibling-option-not-swallowed-after-repeats",
+      "why": "`--hlcolors red blue --other x`: hlcolors が colorname 枝を 2 回反復消費した ([red,blue]) 直後に --other が来る。反復継続の判定で colorname (string leaf) は --other を raw 消費できず (先食い、DR-041 §4)、hlcolors の unfold はここで停止し (min:0 なので 2 反復で停止しても合法)、--other が独立した option 発火として解決される。effects は消費順 colorname(red) → colorname(blue) → other(x)。result `{hlcolors:[{colorname:red},{colorname:blue}], other:x}`。",
+      "argv": ["--hlcolors", "red", "blue", "--other", "x"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "colorname", "op": "set", "operand": "red", "source": "cli"},
+          {"entity": "colorname", "op": "set", "operand": "blue", "source": "cli"},
+          {"entity": "other", "op": "set", "operand": "x", "source": "cli"}
+        ],
+        "result": {"hlcolors": [{"colorname": "red"}, {"colorname": "blue"}], "other": "x"}
+      }
+    },
+    {
+      "id": "sibling-option-immediately-after-zero-repeats",
+      "why": "`--hlcolors --other x`: --hlcolors 発火の直後、repeat (min:0) の 1 回目の unfold を試みる前に次のトークンが --other (sibling option のトリガ) である。colorname 枝は --other を raw 消費できず (先食い)、hlcolors の unfold は 0 回で止まる — min:0 なので 0 反復でも合法 (DR-043 の optional 糖衣と同じ閉包規則の下限)。--hlcolors 自体のトリガ発火はあったが、値を運ぶ colorname への set 効果は 1 度も生じないので effects は other の 1 個のみ。result `{hlcolors:[], other:x}` — hlcolors は repeat 宣言要素なので 0 回でも absent にならず `[]` (DR-044/051 の一様配列規約)。min:0 の境界と sibling trigger 境界が同時に成立することを固定する。",
+      "argv": ["--hlcolors", "--other", "x"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "other", "op": "set", "operand": "x", "source": "cli"}
+        ],
+        "result": {"hlcolors": [], "other": "x"}
+      }
+    }
+  ]
+}
