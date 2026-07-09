@@ -58,7 +58,7 @@
 
 - `errors`: 全保持の配列 (DR-053/066) — 別候補経路の Error に加え、可変長取り分 (DR-043) が全滅した場合の各取り分 dead-end の躓きも積む (DR-053 §2)。**message は仕様でない** (文言はレンダラ) ため fixture に書かず比較しない
 - `reason`: 機械可読な失敗理由の識別子 (DR-066)。**fixture では optional 検証** — 書けば検証、書かなければ kind まで。発生源の emit しうる reason は descriptor の `reasons` 宣言 (DR-061/066) に列挙され、「定義に登場する全パーツの reasons の和 vs fixture のカバー」の完備チェックに使える
-- `argv_pos` は 0-based。トークンが尽きて要求が満たせない失敗は `argv.length` (= 次に要求した位置) を指す
+- `argv_pos` は 0-based で、**失敗が帰属する argv トークンの位置**を指す。piece 単位の失敗 (pre_filters / type.parse / filters、DR-034 pieceProcessor) は piece が由来する値トークンの位置。**どのトークンにも帰属しない失敗は `argv.length`** を指す — トークンが尽きて要求が満たせない (= 次に要求した位置)、env / config 由来の値の失敗 (`argv: []` なら 0)、累積後の post_filters reject (特定トークンに帰属しない) がこれに当たる
 - `element` の**省略 = 特定要素に紐付かないスコープレベルの躓き** (残余トークン等)
 - `kind` の割当 (DR-065 §3):
   - `parse` — 型照合・経路構築の失敗。**構造的必須の不成立** (required 属性なしの positional がトークンを得られない、reason: `missing_operand`) と**残余トークン** (element 省略、argv_pos = 残余先頭、reason: `unexpected_token`) を含む。**value_parser の型照合失敗**は reason: `not_a_number` (number / float の構文不一致) / `not_an_integer` (int が非整数入力を弾く、DR-066 §3)

@@ -22,7 +22,7 @@
     },
     {
       "id": "env-untrimmed-parse-rejected",
-      "why": "BARE=\" 8080 \" は pre_filters を持たない bare 要素に供給され、空白付きのまま number parse に渡って not_a_number で reject (DR-074 §1 canonical 字句)。env-trimmed-then-parsed との対比で、env 値であっても pre_filters の有無が parse 結果を分けることを固定する。argv_pos=0 は argv.length (argv=[] のため 0): env 由来の失敗はどの argv トークンにも帰属しないので、CONFORMANCE §2 の「トークンが尽きて要求が満たせない失敗は argv.length を指す」規約をトークン非帰属の失敗へ準用した (明文化は spec issue 参照)。",
+      "why": "BARE=\" 8080 \" は pre_filters を持たない bare 要素に供給され、空白付きのまま number parse に渡って not_a_number で reject (DR-074 §1 canonical 字句)。env-trimmed-then-parsed との対比で、env 値であっても pre_filters の有無が parse 結果を分けることを固定する。argv_pos=0 は argv.length (argv=[] のため 0): env 由来の失敗はどの argv トークンにも帰属しないので、CONFORMANCE §2 の「どのトークンにも帰属しない失敗は argv.length を指す」規約 (env / config 由来の値の失敗を含む) に従う。",
       "argv": [],
       "env": {"BARE": " 8080 "},
       "expect": {
