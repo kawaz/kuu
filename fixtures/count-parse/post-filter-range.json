@@ -1,0 +1,25 @@
+{
+  "why": "count + post_filters 上限の輪郭 (DR-077 §1 / DR-040 / DR-009): count の値セル (number + default:0) に post_filters:[\"in_range:0:2\"] を宣言し、update(increment) の結果にも post_filters が通ることを固定する (DR-077 §1「post_filters は update の結果にも通す」)。DR-040「count の上限は post_filters (in_range 等) で書く」の具体実装 = count は専用の max フィールドを持たず、in_range フィルタを post に足すことで上限を表現する。`-vv` (2 発火 → fold 2 → in_range 通過) で成功する輪郭を本 fixture が担う。上限超過での reject 輪郭 (`-vvv` → 3 → in_range reject → failure kind=filter) は count 側の ledger fold + scalar post_filter の適用点に impl follow-up 論点があり (resolve.mbt::apply_entity_filters コメントの『extending post_filters to the accumulated array is a follow-up』)、count 3-fire の case は現状 raw 3 update event が集約されず post_filter が発動しない挙動 (実測 `ok{verbose=false×3}`)。impl 追いつき後に本 fixture へ over-range 失敗 case を追記し、audit 漏れ #7 = phase23:45 kind:filter の filter 実例 case を統合する予定。同時に kind:filter の実例輪郭は本 fixture の within-range 成功だけでは固定できないので、次バッチで scalar number + post_filter の failure fixture を別途書く予定。count-parse/basic.json は post_filters 未適用の基本 fold を扱い、本 fixture は post_filters が update 経路にも及ぶことを DR-077 §1 の実体化として扱う。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {"name": "verbose", "type": "count", "long": true, "short": "v", "post_filters": ["in_range:0:2"]}
+    ]
+  },
+  "cases": [
+    {
+      "id": "within-range-accepted",
+      "why": "上限内 (2) → post_filters 通過 → success (DR-077 §1 / DR-040): `-vv` は short cluster で 2 発火、cell fold で default 0 → 1 → 2、post_filters `in_range:0:2` が最終値 2 を通す (境界含む) → success。effects は 2 個の update event、result verbose=2、sources=cli。post_filters は完走後のセル評価なので途中 fold の 1 を通したか等の中間状態は影響しない (post = 最終値検証、DR-009 §7 段)。DR-077 §1 の『post_filters は update の結果にも通す』の scalar 側成功輪郭を担う。",
+      "argv": ["-vv"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "verbose", "op": "update", "transform": "increment", "source": "cli"},
+          {"entity": "verbose", "op": "update", "transform": "increment", "source": "cli"}
+        ],
+        "result": {"verbose": 2},
+        "sources": {"verbose": "cli"}
+      }
+    }
+  ]
+}
