@@ -86,7 +86,8 @@
 ## CLI 入口 / variant / filter
 
 - [DR-009](DR-009-filter-chain.md): filter chain 初期形 — reorganized by DR-034 (pieceProcessor + separator + accumulator + collector に再編成)、@base sentinel は superseded by DR-062
-- [DR-062](DR-062-filter-inheritance-interface.md): filters の継承インターフェース — @base sentinel 廃止 (発見不能な in-band 特殊値・孤立語彙)、string 短縮形 (差し替え) | object 詳細形 ({prepend, append})、ref 継承は後勝ち上書き、中間挿入は非対応 (type shadow で差し替え)
+- [DR-062](DR-062-filter-inheritance-interface.md): filters の継承インターフェース — @base sentinel 廃止 (発見不能な in-band 特殊値・孤立語彙)、string 短縮形 (差し替え) | object 詳細形 ({prepend, append})、ref 継承は後勝ち上書き、中間挿入は非対応 (type shadow で差し替え)、命名 (pre_filters) は superseded by DR-079
+- [DR-079](DR-079-filter-seat-lattice-and-artifact-anchored-names.md): filter 座席の完全格子と作用対象アンカー命名 — pre_filters/filters/post_filters → piece_filters/value_filters/cell_filters (pre/post 全廃、raw→piece→value→cell の artifact 進行)、raw_filters (分割前座席) は名前予約のみ、registry 名 filters は語彙プール専用に純化、互換 alias なし
 - [DR-011](DR-011-variant-dsl.md): variant の文字列 DSL とオブジェクト形式 — set の args なし形 (主入口) は updated by DR-071
 - [DR-071](DR-071-long-variant-list.md): long の責務分離 — variant リスト一級化 (各要素が入口 1 個、`:set` = 主入口) + `long: true` は [":set"] の糖衣、absent = false = [] = 入口なし (presence 罠の構造的消滅)、主入口なし variant のみが表現可能に、旧 `long: []` の意味変更 (破壊的、ドラフト期)
 - [DR-045](DR-045-effect-descriptors.md): 効果記述子 — 値セル操作は純データ (set/default/unset/empty、committed は効果が明示制御)、効果列の判定キー精密化
