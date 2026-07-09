@@ -132,19 +132,19 @@ exact であり、`value:` だけの literal は入力を検査しない (DESIGN
 ```
 入力:  {name: "verbose", type: "count", long: true, short: "v"}
 展開:  値セルは {name: "verbose", type: "number", default: 0} (実体だけノード)。
-       long は糖衣差し替え + 補完 (DR-077 §3、flag = DR-076 §2 と同じ機構): `long:true` → `[":update:inc"]`。
-       明示リストは非空なら `:update:inc` を補完 (冪等)。absent / false / [] = 入口なし (DR-071 §1 三態同義)。
-出力:  `:update:inc` は 0-token の update 効果 (DR-077 §1) — 発火時に link 先セルの old へ
-       transform `inc` (filters registry の T=>T、DR-077 §2) を適用して書き戻す:
-         {exact: "--verbose", link: "verbose", effect: {op: "update", transform: "inc"}}
-       short は variant を持たず (DR-071 §3)、非消費で同じ update(inc) 効果を持つ entry を
+       long は糖衣差し替え + 補完 (DR-077 §3、flag = DR-076 §2 と同じ機構): `long:true` → `[":update:increment"]`。
+       明示リストは非空なら `:update:increment` を補完 (冪等)。absent / false / [] = 入口なし (DR-071 §1 三態同義)。
+出力:  `:update:increment` は 0-token の update 効果 (DR-077 §1) — 発火時に link 先セルの old へ
+       transform `increment` (filters registry の T=>T、DR-077 §2) を適用して書き戻す:
+         {exact: "--verbose", link: "verbose", effect: {op: "update", transform: "increment"}}
+       short は variant を持たず (DR-071 §3)、非消費で同じ update(increment) 効果を持つ entry を
        short installer が植える (flag の固定 true 供給と同じく型が慣習挙動を担う):
-         {exact: "-v", link: "verbose", effect: {op: "update", transform: "inc"}}
+         {exact: "-v", link: "verbose", effect: {op: "update", transform: "increment"}}
 ```
 
 現在値依存の変換は効果 (発火側、DR-077) の仕事になり、multiple:{accumulator:"increment"} は count から
 退役 (multiple / accumulator は複数「値」の畳み = append / merge 等の本来の関心に純化、DR-036)。env / config
-から来る文字列は number として普通に parse → set される (`VERBOSITY=5` は 5 を set、inc ではない — parser は
+から来る文字列は number として普通に parse → set される (`VERBOSITY=5` は 5 を set、increment ではない — parser は
 値源非依存の字句層、DR-077 §3)。count の上限は post_filters (in_range 等) で書く (DR-040、update の結果にも
 post_filters が通る = DR-077 §1)。
 
