@@ -1,0 +1,37 @@
+{
+  "why": "DR-077 §3 の核 (parser は値源非依存の字句層、update は CLI 発火だけの関心): count 型に env 席を宣言した場合、env 由来の値は number として普通に parse → **set** される (increment ではない)。DR-077 の責務分離: parser は (string) => T の純粋な字句層 (DR-074/075) で値源非依存、update(increment) は CLI 発火の 0-token 効果 (DR-045 の 5 番目の op) で発火時 hook として起きる。この分離により env の `VERBOSITY=5` は 5 を set (更新でなく) — CLI で `-vvvvv` と 5 回打ったのと同じ結果値でも、経路の意味論と source は別 (env 席は 1 個の set、CLI は 5 個の update 効果連鎖)。「畳みの無い値源での old の定義」「bare 発火の sentinel 文字列」の追加規約を払わずに済むのが DR-077 の parser 非改変判断 (採用しなかった案「parser を (val, old) => T 一般化」参照)。ラダー (DR-031): cli > env > default。env 席は 1 個の 値を供給し、その値のソースは env。CLI 発火があれば CLI 側の update 効果連鎖が env 席を上書きする (次 case で対照)。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {"name": "verbose", "type": "count", "long": true, "short": "v", "env": "VERBOSITY"}
+    ]
+  },
+  "cases": [
+    {
+      "id": "env-only-set-not-increment",
+      "why": "env 由来値は set (DR-077 §3 の核): argv 空 + env `VERBOSITY=5` → env 席の lookup が文字列 '5' を返し、number parser が 5 に変換して verbose セルへ **set** (0-token 効果でなく通常の値供給)。effects は cli/link 由来のみなので env 由来 set は非掲載 (CONFORMANCE §2、env のラダー充填は完走後の値確定で argv 順の全順序を持たない)、result で 5 を、sources で env を検証する。もし parser が (val, old) => T に一般化されていたら env の '5' も increment 適用で default 0 + 5 = 5 になり結果値が偶然一致するが、経路の意味論は set。DR-077 の分離判断が env での挙動を「set 5」に留めることの証拠として、source=env と result=5 の組で機構を固定する。",
+      "argv": [],
+      "env": {"VERBOSITY": "5"},
+      "expect": {
+        "outcome": "success",
+        "effects": [],
+        "result": {"verbose": 5},
+        "sources": {"verbose": "env"}
+      }
+    },
+    {
+      "id": "cli-fire-overrides-env",
+      "why": "CLI 発火は env を上書き (DR-031 ラダー cli > env): argv `--verbose` (1 発火) + env `VERBOSITY=5` → CLI 席の update 効果が env 席の 5 を却下し、CLI 側の連鎖が有効。ここで DR-077 §1 の update は cell = f(old) を CLI 席内で適用するので、old = CLI ラダー内の default 0 (env は CLI に敗けているので old に参加しない) → increment → 1。effects は 1 個 (source=cli)、result 1、sources=cli。もし update が env の 5 を old に取ったら結果は 6 になるはずで、6 でなく 1 であることが「update の old は CLI 席のみで畳む (env はラダー上位に敗けて参照されない)」ことの確定。CLI が env を上書きする DR-031 のラダーが update 効果でも保たれる (set と同じ) ことを固定。",
+      "argv": ["--verbose"],
+      "env": {"VERBOSITY": "5"},
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "verbose", "op": "update", "transform": "increment", "source": "cli"}
+        ],
+        "result": {"verbose": 1},
+        "sources": {"verbose": "cli"}
+      }
+    }
+  ]
+}

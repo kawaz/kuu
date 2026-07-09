@@ -15,6 +15,7 @@
 - **committed = true** (set と同格のユーザ明示操作。unset / default だけが committed を特殊制御する現行構図は不変)
 - **post_filters は update の結果にも通す**: set 経路 (parser → filters → cell) と対称に old → transform → filters → cell。DR-040 の「count の上限は post_filters (in_range 等) で書く」がそのまま効く
 - ledger (DR-015) 上のイベントは (実体, update(transform), operand なし, source, 順序) で、他の効果と一様に畳まれる
+- **old は CLI 席内の畳みの現在値** (初回は default 起点)。値源ラダー (DR-031) は「席の独立解決 + 選択」であって合成ではないので、他席 (env / config) の値は old に参加しない — 例: `VERBOSITY=5` + CLI 1 発火は 6 ではなく 1 (CLI 席が 0→1 と畳まれ、ラダーで env に勝つ)
 
 ### 2. transform の実体は filters registry の名前参照 (新 registry は作らない)
 
