@@ -1,0 +1,39 @@
+{
+  "why": "filters(段5) が乗る対象は cell に書かれる実値のみ (set の operand / update の適用結果) — unset/default/empty は値を書かないので filter chain を通らない (DESIGN §8.3 / PIPELINE §2 段5、2026-07-09 裁定、kuu.mbt issue accum-filters-non-set-op-semantics)。本 fixture は accum (multiple append) セルに unset (--reset-ports) を発火させ、in_range:1:100 を持つ filters が reject を出さず success になることを固定する — filters-each.json (段5 reject の輪郭) が『値を書く set 発火の reject』を担うのに対し、本 fixture は『値を書かない cell 操作は reject 対象にすらならない』ことを担う。unset × accum の畳みの読みは以下の導出による: DR-045 は unset を『default 値へ戻す (committed=false)』と定義し、scalar/accum を区別しない汎用の cell 操作として書かれている。accum セルの default は DR-044 の一様配列規約により常に `[]` (0 回発火でも absent にならず `[]`、DR-051 §2)。したがって unset は累積列を `[]` へ戻す (『値は残るが committed フラグだけ外れる』という代替読みは、DR-045 の『default 値へ戻す』 が値そのものの書き換えを明記しているため採らない — 導出の詳細は報告に記載)。下位値源 (env 等) を持たない definition のため、unset 後の最終値は default 席の `[]` に確定し、後続の cli set があれば通常通り上書きされる (unset-ladder.json の『unset はラダーを開放し後段が上書き可』と同じ committed=false の効果)。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {"name": "ports", "type": "number", "long": [":set", "reset:unset"], "multiple": "append", "filters": ["in_range:1:100"]}
+    ]
+  },
+  "cases": [
+    {
+      "id": "unset-after-set-resets-to-empty-without-filter",
+      "why": "`--ports 5 --reset-ports`: set(5) が append accumulator に畳まれ [5] になった後、unset (--reset-ports) が default `[]` へ戻す (DR-045 + DR-044 一様配列の導出、上記 why 参照)。unset の発火は operand を持たない cell 操作なので in_range:1:100 を持つ filters (each 相) を一切通らない — もし実装が unset に filters を適用してしまうバグ (kuu.mbt issue accum-filters-non-set-op-semantics) を持てば、placeholder 値の型不一致等で failure になりうるが、正しい実装では filters がスキップされ success になる。effects は [set(5,cli), unset(cli)] の 2 個 (発火順)。result `{ports:[]}`、sources `{ports:default}` (unset 後の最終値は default 席由来、下位値源なし)。",
+      "argv": ["--ports", "5", "--reset-ports"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "ports", "op": "set", "operand": 5, "source": "cli"},
+          {"entity": "ports", "op": "unset", "source": "cli"}
+        ],
+        "result": {"ports": []},
+        "sources": {"ports": "default"}
+      }
+    },
+    {
+      "id": "unset-then-set-reaccumulates-with-filter-intact",
+      "why": "`--reset-ports --ports 7`: unset (先に発火、まだ何も累積していないので `[]` のまま・committed=false) の後に set(7) が発火し、通常通り in_range:1:100 を通過して append accumulator へ畳まれる → `[7]`。unset の発火自体は filter を通らないが、後続の set(7) には filters が正常に効く (=『unset が filters (each 相) の適用系列自体を壊す』ことがない) ことを固定する — unset-after-set-resets-to-empty-without-filter (set→unset) と発火順を入れ替えた対で、cell 操作 (unset) と値操作 (set) の混在順序に関わらず each 発火の filter 適用規約が一貫することを示す。effects は [unset(cli), set(7,cli)]、result `{ports:[7]}`、sources `{ports:cli}`。",
+      "argv": ["--reset-ports", "--ports", "7"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "ports", "op": "unset", "source": "cli"},
+          {"entity": "ports", "op": "set", "operand": 7, "source": "cli"}
+        ],
+        "result": {"ports": [7]},
+        "sources": {"ports": "cli"}
+      }
+    }
+  ]
+}
