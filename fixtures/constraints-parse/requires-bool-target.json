@@ -1,0 +1,85 @@
+{
+  "why": "DR-047 §5 明確化 (kawaz 裁定 2026-07-09): requires の目的語が bool 型 (flag) の場合、充足条件は「値の有無」でなく「解決後の値が true」(値源不問)。alias 同一トリガ 2 経路 (a に requires:[c]、c はフラグ) で、c 未指定なら a 経路が bool-target requires 違反で完全経路から除外され b 1 本 success (制約フィルタは全完全経路収集後の後段適用 = 遅延述語、eval 層は値源を知らない)。c を CLI/env どちらで与えても両経路生存で ambiguous:2。issue 2026-07-09-constraint-path-filtering-gap の根治確認 (蒸留 1:1 audit 漏れ #6 = slice phase25:171 の代替輪郭も兼ねる)。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {
+        "name": "a",
+        "type": "flag",
+        "requires": [
+          "c"
+        ]
+      },
+      {
+        "alias": "a",
+        "name": "v",
+        "long": [
+          ":set:true"
+        ]
+      },
+      {
+        "name": "b",
+        "type": "flag"
+      },
+      {
+        "alias": "b",
+        "name": "v",
+        "long": [
+          ":set:true"
+        ]
+      },
+      {
+        "name": "c",
+        "type": "flag",
+        "long": true,
+        "env": [
+          "C"
+        ]
+      }
+    ]
+  },
+  "cases": [
+    {
+      "id": "c-unset-a-excluded",
+      "why": "c 未指定 → c=false (暗黙 default) で a 経路の requires 不充足 → 除外、b 1 本で success。",
+      "argv": [
+        "--v"
+      ],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {
+            "entity": "b",
+            "op": "set",
+            "operand": true,
+            "source": "cli"
+          }
+        ]
+      }
+    },
+    {
+      "id": "c-cli-both-survive",
+      "why": "c を CLI で true に → a 経路も充足、両経路生存で ambiguous (対照: 2 経路の materialize 自体は制約と独立)。",
+      "argv": [
+        "--v",
+        "--c"
+      ],
+      "expect": {
+        "outcome": "ambiguous"
+      }
+    },
+    {
+      "id": "c-env-both-survive",
+      "why": "env C=true でも充足 (値源不問が本裁定の核 — committed 基準なら env は弾かれていた)。",
+      "argv": [
+        "--v"
+      ],
+      "env": {
+        "C": "true"
+      },
+      "expect": {
+        "outcome": "ambiguous"
+      }
+    }
+  ]
+}

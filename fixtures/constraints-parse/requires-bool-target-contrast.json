@@ -1,0 +1,47 @@
+{
+  "why": "対照: requires の目的語が非 bool (string、default 無し) なら DR-047 §5 明確化の対象外で従来の「値の有無」判定。env で値を与えても env は committed を立てず「値の有無」にも参加しない (KTop の CLI 面判定) ため requires は充足しない。bool target 限定の新挙動が非 bool target へ漏れ出していないことの固定。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {
+        "name": "a",
+        "type": "flag",
+        "long": true,
+        "requires": [
+          "c"
+        ]
+      },
+      {
+        "name": "c",
+        "type": "string",
+        "long": true,
+        "env": [
+          "C"
+        ]
+      }
+    ]
+  },
+  "cases": [
+    {
+      "id": "c-env-set-still-fails",
+      "why": "env C=x を与えても非 bool 目的語の判定は変わらず requires_violated (kind=constraint、位置は完了後 = final position)。",
+      "argv": [
+        "--a"
+      ],
+      "env": {
+        "C": "x"
+      },
+      "expect": {
+        "outcome": "failure",
+        "errors": [
+          {
+            "element": "a",
+            "argv_pos": 1,
+            "kind": "constraint",
+            "reason": "requires_violated"
+          }
+        ]
+      }
+    }
+  ]
+}

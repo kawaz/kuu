@@ -1,0 +1,66 @@
+{
+  "why": "単一経路 (alias なし) の bool-target requires 違反の最小輪郭: a (flag, requires:[c]) 単体で c 未指定なら c=false (暗黙 default) で不充足 → 後段フィルタが唯一の経路を落とし failure kind:constraint (KTop 発 Failure と同形のエラー、DR-047 §5 明確化)。c を CLI で与えれば success。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {
+        "name": "a",
+        "type": "flag",
+        "long": true,
+        "requires": [
+          "c"
+        ]
+      },
+      {
+        "name": "c",
+        "type": "flag",
+        "long": true
+      }
+    ]
+  },
+  "cases": [
+    {
+      "id": "c-unset-fails",
+      "why": "c=false (暗黙 default) は「true であること」を満たさない → requires_violated。",
+      "argv": [
+        "--a"
+      ],
+      "expect": {
+        "outcome": "failure",
+        "errors": [
+          {
+            "element": "a",
+            "argv_pos": 1,
+            "kind": "constraint",
+            "reason": "requires_violated"
+          }
+        ]
+      }
+    },
+    {
+      "id": "c-set-succeeds",
+      "why": "c を CLI 発火で true に → 充足、success。",
+      "argv": [
+        "--a",
+        "--c"
+      ],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {
+            "entity": "a",
+            "op": "set",
+            "operand": true,
+            "source": "cli"
+          },
+          {
+            "entity": "c",
+            "op": "set",
+            "operand": true,
+            "source": "cli"
+          }
+        ]
+      }
+    }
+  ]
+}

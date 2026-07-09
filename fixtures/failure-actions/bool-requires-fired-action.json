@@ -1,0 +1,48 @@
+{
+  "why": "DR-053 §2「fired_action と errors が 1 Failure に両立」の bool-target requires 版: help (type:help) が selected な経路が、後段フィルタ発の Success→Failure 変換を受けても fired_action が生き残ることの固定。failure-actions/help-basic.json (KTop 発 Failure) と同じ契約が DR-047 §5 の後段フィルタ発 Failure でも成立する。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {
+        "name": "help",
+        "type": "help",
+        "long": true
+      },
+      {
+        "name": "a",
+        "type": "flag",
+        "long": true,
+        "requires": [
+          "c"
+        ]
+      },
+      {
+        "name": "c",
+        "type": "flag",
+        "long": true
+      }
+    ]
+  },
+  "cases": [
+    {
+      "id": "help-selected-survives-bool-requires-failure",
+      "why": "--help --a: help は selected、a は c=false で requires 違反 → Failure だが fired_action=help が両立 (DR-048/DR-053 §2)。",
+      "argv": [
+        "--help",
+        "--a"
+      ],
+      "expect": {
+        "outcome": "failure",
+        "errors": [
+          {
+            "element": "a",
+            "argv_pos": 2,
+            "kind": "constraint",
+            "reason": "requires_violated"
+          }
+        ],
+        "fired_action": "help"
+      }
+    }
+  ]
+}
