@@ -605,11 +605,16 @@ filter は2箇所に乗る:
 
 両者は位置が違うので自然な順序で合成 (type post → 各 piece、multiple post → 累積後)。
 
-filter が乗る対象は **cell に書かれる実値だけ**: `set` の operand、および `update` の適用結果
-(update は old に transform を適用して書く set の変種 — DR-077、filter から見れば同じ「書かれる
-実値」)。cell 操作の効果 (`unset` / `default` / `empty`) は値を書かないので filter chain は
-通らない — リセット操作の発火が filter で reject される、という事態は起きない
-(2026-07-09 裁定、kuu.mbt issue accum-filters-non-set-op-semantics)。
+**`filters` (each 相、T→T) が乗る対象は cell に書かれる実値だけ**。CLI の `set` operand も、
+`update` の適用結果 (update は old に transform を適用して書く set の変種 — DR-077) も、
+env / config / inherit の席から供給される値 (席側で同じ pieceProcessor を通る — DR-049 /
+DR-050) も、いずれも「書かれる実値」として `filters` を通る。一方、**効果 op のうち cell 操作**
+(`unset` / `default` / `empty` の発火) は値を書かない — `filters` の適用対象が存在しないので
+通らず、リセット操作の発火が reject される、という事態は起きない (2026-07-09 裁定、kuu.mbt
+issue accum-filters-non-set-op-semantics)。なお `pre_filters` (String→String) は消費した
+raw string に乗るため、値トークンを消費しない cell 操作の発火にはそもそも走る場面が無く
+(帰結は同じ、理由が異なる)、`post_filters` は発火単位でなく累積後の最終値に乗るため
+本規定の対象外。
 
 ### 8.4 DSL 文法
 
