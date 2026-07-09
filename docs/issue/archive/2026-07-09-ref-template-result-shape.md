@@ -1,6 +1,6 @@
 ---
 title: ref テンプレの result が row 配列に写像されない (テンプレ内要素名がトップ露出する実装バグ)
-status: wip
+status: resolved
 category: bug
 created: 2026-07-09T12:58:37+09:00
 last_read: 2026-07-09T17:03:45+09:00
@@ -9,10 +9,10 @@ wip_entered: 2026-07-09T22:13:52+09:00
 blocked_entered:
 pending_entered:
 discarded_entered:
-resolved_entered:
+resolved_entered: 2026-07-09T23:22:47+09:00
 discard_reason:
 pending_reason:
-close_reason:
+close_reason: ["dr/DR-078","implemented","fixtures/multiple-parse/last-wins-repeat-rows.json","fixtures/repeat-parse/ref-or-template.json","done:conformance decoded=148 ran_cases=375 skipped=0 mismatches=0"]
 blocked_by:
 origin: 自リポ TODO
 ---
