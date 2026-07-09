@@ -1,0 +1,29 @@
+{
+  "why": "multiple の collector 属性 (DR-036): unwrap_single は「累積後の最終値が長さ 1 配列なら要素へ畳む」opt-in collector — multiple: {accumulator:\"append\", collector:\"unwrap_single\"} で宣言する (座席は multiple の属性、実体は filters registry から引く = DR-036)。0/1/2+ 発火の 3 ケースで unwrap_single の輪郭 (0/2+ は不変、1 のみ畳む) を固定する。slice poc/phase14_wbtest.mbt の同名テスト (positional optional 版) の option/multiple 版相当 (蒸留 1:1 audit 漏れ #3 = slice phase14:157 の解消)。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {"name": "tag", "type": "string", "long": true, "multiple": {"accumulator": "append", "collector": "unwrap_single"}}
+    ]
+  },
+  "cases": [
+    {
+      "id": "unfired-stays-empty-array",
+      "why": "0 回発火 → collector 適用後も [] のまま (DR-044 uniform array、unwrap_single は 0/2+ 要素配列を不変のまま通す)。",
+      "argv": [],
+      "expect": {"outcome": "success", "result": {"tag": []}}
+    },
+    {
+      "id": "single-fire-collapses-to-scalar",
+      "why": "1 回発火 → unwrap_single が長さ 1 配列を要素へ畳み、result は配列でなくスカラーになる (DR-034 縮退ケース)。",
+      "argv": ["--tag", "a"],
+      "expect": {"outcome": "success", "result": {"tag": "a"}}
+    },
+    {
+      "id": "multi-fire-stays-array",
+      "why": "2 回発火 → unwrap_single は 2+ 要素配列を不変のまま通す、result は配列のまま (DR-034 縮退ケースの境界)。",
+      "argv": ["--tag", "a", "--tag", "b"],
+      "expect": {"outcome": "success", "result": {"tag": ["a", "b"]}}
+    }
+  ]
+}
