@@ -6,6 +6,8 @@
 
 DR-007 で定義した `definitions` は当初フラットなマップ (`{color_template: {...}}`) だったが、本 DR で **registry と同じ区分の名前空間**を持つ構造に再定義する。
 
+> **更新: DR-078 により `templates` 区分を追加。templates は外部 registry を持たない唯一の区分 (実体がクロージャでない純構造なので、束縛すべき registry 実体が無い)。共有消費文法テンプレートの座席で、`ref` の解決先。**
+
 ```json
 {
   "definitions": {

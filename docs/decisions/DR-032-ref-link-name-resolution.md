@@ -13,6 +13,8 @@ link: Z   Z は【name】。値セルの実体を指す
 - `type` が指すのは型。
 - `ref` / `link` が指すのは name (ノード)。
 
+> **精密化 (DR-078 §3): name は参照の lookup キーであり、参照の実体は解決先の定義実体が持つ内部 id (DR-046 §4)。定義時に id へ束縛され、実行時に name の再解決はしない。definitions 側テンプレートの座席は definitions.templates (DR-078 §1)。**
+
 指す対象が違うので、解決順も別物 (並べて比較する必要すらない)。
 
 ## ref/link の name 解決スコープ

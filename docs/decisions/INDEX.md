@@ -54,6 +54,7 @@
 - [DR-075](DR-075-int-rounding-modes.md): int の値空間判定 (M2 確定) と int_round (小数入力の丸めモード) — int は整数「値」を受理 (`"3.0"`→3 / `"1e3"`→1000、fractional のみ int_round に従う、DR-074 §2 の読みを採用し DR-050 §4 の構文判定を supersede)、`kuu_int_parser` factory の config キー `int_round` は 10 種体系完備 (方向 4 `floor`/`ceil`/`trunc`/`away` × {非 half, half} + `half_even` + `error`)、canonical default `error`、命名は kuu 独自一貫系 (HALF_UP/HALF_DOWN 罠を回避し `away`/`trunc` で 0 起点向き・`ceil`/`floor` で無限起点向き)、String 源は binary64 非経由の厳密判定を必須要件化 (`parseFloat`→round は不適合、native-number 源は JSON 由来 binary64 で対象外)、`not_an_integer` は error モードのみ emit。CLI パーサ界に前例なし。構文判定維持 (選択肢 Q) / half_05up / pre_filter 退避のみ / HALF_UP 系命名を不採用
 - [DR-076](DR-076-bool-is-value-type-flag-is-sugar.md): bool は通常の値型 (variant 持ちでも eq-split 値形を受ける)、flag が特殊 — 特殊性は flag 側の展開 (long 綴り合成: long:true 糖衣差し替え + 非空リスト補完) で吸収。presence-only へ寄せる案・flag 廃止・node 語彙正規形を不採用
 - [DR-077](DR-077-update-effect-and-count-normal-form.md): 効果 op に update を追加 (old へ filters registry の T=>T transform を適用する 0-token 効果)、count = number + default:0 + long:true 糖衣 [":update:increment"] の綴り合成に正規化。multiple increment accumulator は count から退役
+- [DR-078](DR-078-definitions-templates-and-ref-identity.md): definitions に templates 区分を新設 (クロージャなしの共有消費文法 Node の座席、ref の解決先)。ref/link/alias の参照実体は name lookup で束縛される内部 id (DR-032 の精密化)。types 相乗り・頂上 templates 節を不採用
 - [DR-051](DR-051-absent-result-semantics.md): 結果の欠落表現 — 値の無い要素は absent (キーなし)、null は値空間に持たない (config null = 供給なし)、型導出は required/default/反復系 → T・それ以外 → T?
 
 ## multiple
