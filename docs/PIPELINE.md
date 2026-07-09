@@ -121,8 +121,8 @@ flowchart TD
 
 **update 経路 (old を変換、DR-077)**:
 1. 発火のみ (0-token)
-2. old `T` → transform `<filters>` → `T`
-3. post_filters を通してセルへ (上限 `in_range` が効く、DR-040)
+2. old `T` → transform (filters registry の T→T エントリ) → `T`
+3. 適用結果は set 経路と対称に `filters` (段 5、each 相) → `post_filters` (段 7) を通してセルへ (DR-077 §1 「old → transform → filters → cell」。count の上限 `in_range` が効くのは段 7、DR-040)
 4. **parser は関与しない** — env の `VERBOSITY=5` は set のまま (DR-077 §3 の値源非依存の核)
 
 ### 3.3 preset との関係
