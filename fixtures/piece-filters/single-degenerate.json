@@ -1,0 +1,23 @@
+{
+  "why": "multiple 無しの要素は長さ 1 の [piece] に縮退して同じ pieceProcessor 管を通る (DR-034 §『multiple 無しは縮退』)。piece_filters はこの縮退経路でも効くことを固定する: multiple を書かない long-space 要素に piece_filters:[\"trim\"] を付け、値付きトークンの前後空白が除去されて single scalar (配列でない) の result になることを確認する。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {"name": "name", "type": "string", "long": true, "piece_filters": ["trim"]}
+    ]
+  },
+  "cases": [
+    {
+      "id": "degenerate-single-piece-trimmed",
+      "why": "`--name \" x \"` は multiple 無しなので長さ 1 の [\" x \"] に縮退 (DR-034)、piece_filters trim がその唯一の piece に適用され \"x\" → parse (string 恒等) → unwrap_single 相当の scalar collector で result name=\"x\" (配列でなくスカラー)。",
+      "argv": ["--name", " x "],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "name", "op": "set", "operand": "x", "source": "cli"}
+        ],
+        "result": {"name": "x"}
+      }
+    }
+  ]
+}

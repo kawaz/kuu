@@ -145,8 +145,8 @@ exact であり、`value:` だけの literal は入力を検査しない (DESIGN
 現在値依存の変換は効果 (発火側、DR-077) の仕事になり、multiple:{accumulator:"increment"} は count から
 退役 (multiple / accumulator は複数「値」の畳み = append / merge 等の本来の関心に純化、DR-036)。env / config
 から来る文字列は number として普通に parse → set される (`VERBOSITY=5` は 5 を set、increment ではない — parser は
-値源非依存の字句層、DR-077 §3)。count の上限は post_filters (in_range 等) で書く (DR-040、update の結果にも
-post_filters が通る = DR-077 §1)。
+値源非依存の字句層、DR-077 §3)。count の上限は cell_filters (in_range 等) で書く (DR-040、update の結果にも
+cell_filters が通る = DR-077 §1)。
 
 **dd** = オプション終了マーカー (canonical 配置は options[]、DR-064):
 

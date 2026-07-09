@@ -1,0 +1,46 @@
+{
+  "why": "config の string 値も pieceProcessor (piece_filters → parse → cell_filters) を通る (DR-050 §4: 『string → CLI / env と完全に同一の全段 pipeline (piece_filters → parse → cell_filters、DR-034 / DR-049)』)。env-source.json は env 席の値にも piece_filters が効くことを固定しているが、config 席は provider が JSON 同型の階層オブジェクトを返す経路であり、CLI/env と同じ『生 string を pieceProcessor に渡す』実装になっているかは別に固定が要る (config の string 値は JSON パーサが既に string として切り出した値であり、CLI/env の『トークン文字列』と同じ扱いを受けるかどうかは実装が config_to_value を pieceProcessor 経由にせず素通しする余地がある)。port (number, piece_filters:trim) / name (string, piece_filters:non_empty) / bare (number, piece_filters 無し) の 3 要素で trim 通過・non_empty reject (kind=filter)・piece_filters 欠如時の parse reject (kind=parse) を並べ、config 値の型が config の JSON 上の型ではなく要素の type: であることの帰結 (DR-050 §4) も併せて示す。config 由来は完走後の値確定で effects に載らない (CONFORMANCE §2)、result / sources で検証する。config_file 要素自身はインフラで結果非掲載 (config/value-typing.json と同型)。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {"name": "config", "type": "config_file", "long": true, "default": "/app.toml"},
+      {"name": "port", "type": "number", "long": true, "config_key": ["port"], "piece_filters": ["trim"]},
+      {"name": "name", "type": "string", "long": true, "config_key": ["name"], "piece_filters": ["non_empty"]},
+      {"name": "bare", "type": "number", "long": true, "config_key": ["bare"]}
+    ]
+  },
+  "cases": [
+    {
+      "id": "config-trimmed-then-parsed",
+      "why": "config `{\"port\": \" 8080 \"}` は JSON string \" 8080 \" として供給され、piece_filters trim → \"8080\" → number parse 成功 (env-source.json の env-trimmed-then-parsed を config 版に写す)。result port=8080、sources port=config — DR-050 §4 の string→全段 pipeline 主張が config 経路でも成立することの実証。name/bare は未供給で absent (default なし)。",
+      "argv": [],
+      "config": {"port": " 8080 "},
+      "expect": {
+        "outcome": "success",
+        "effects": [],
+        "result": {"port": 8080},
+        "sources": {"port": "config"}
+      }
+    },
+    {
+      "id": "config-untrimmed-parse-rejected",
+      "why": "config `{\"bare\": \" 8080 \"}` は piece_filters を持たない bare 要素に供給され、空白付きのまま number parse に渡って not_a_number で reject (DR-074 §1 canonical 字句、env-source.json の env-untrimmed-parse-rejected と同型の対比)。argv=[] のため config 由来の失敗はどの argv トークンにも帰属せず、CONFORMANCE §2 の規約 (どのトークンにも帰属しない失敗は argv.length を指す) に従って argv_pos=0。config 値であっても piece_filters の有無が parse 結果を分けることを固定する。",
+      "argv": [],
+      "config": {"bare": " 8080 "},
+      "expect": {
+        "outcome": "failure",
+        "errors": [{"element": "bare", "argv_pos": 0, "kind": "parse", "reason": "not_a_number"}]
+      }
+    },
+    {
+      "id": "config-non-empty-rejected-before-parse",
+      "why": "config `{\"name\": \"\"}` は空文字列を持つ JSON string 値で、non_empty を持つ piece_filters が parse (string 型なので恒等) に届く前に reject する (piece-filters/reject.json の non-matching-rejected を config 版に写す)。string 型は parse (恒等) だけでは空文字を弾けないので、この failure は config 値にも piece_filters が parse より前に効いている実証点。argv=[] のため argv_pos=0、kind=filter/reason=filter_rejected (kind=parse の not_a_number と区別)。",
+      "argv": [],
+      "config": {"name": ""},
+      "expect": {
+        "outcome": "failure",
+        "errors": [{"element": "name", "argv_pos": 0, "kind": "filter", "reason": "filter_rejected"}]
+      }
+    }
+  ]
+}

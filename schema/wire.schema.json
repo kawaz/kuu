@@ -85,17 +85,17 @@
             { "type": "object" }
           ]
         },
-        "filters": {
+        "value_filters": {
           "$ref": "#/$defs/filterChain",
-          "description": "値の変換・検証チェイン (DESIGN §8)。二形: 差し替え配列 | {prepend?, append?} 継承合成形 (DR-062)。"
+          "description": "parse 済みの値 (T) の変換・検証チェイン (T→T、piece 単位、DESIGN §8)。二形: 差し替え配列 | {prepend?, append?} 継承合成形 (DR-062)。"
         },
-        "pre_filters": {
+        "piece_filters": {
           "$ref": "#/$defs/filterChain",
-          "description": "parse 前段の String→String チェイン (DR-062 の二形)。"
+          "description": "separator 分割後の piece に対する String→String チェイン (parse 直前、piece 単位、DR-062 の二形)。"
         },
-        "post_filters": {
+        "cell_filters": {
           "$ref": "#/$defs/filterChain",
-          "description": "parse 後段の T→T チェイン (DR-062 の二形)。"
+          "description": "累積後 (accumulator 後) の Acc→Acc チェイン (cell 単位、DR-062 の二形)。"
         },
         "env": {
           "type": "string",

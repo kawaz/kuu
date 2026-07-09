@@ -1,0 +1,33 @@
+{
+  "why": "piece_filters が type.parse の直前に効くことの実証 (DR-034 §pieceProcessor: pre → parse → post): number の canonical 字句 (DR-074 §1) は先頭符号・小数点・指数のみを規定し空白を構文として受理しない — `\" 42 \"` はそのまま parse すると not_a_number で reject される。piece_filters:[\"trim\"] を挟むと `\" 42 \"` → `\"42\"` に整形されてから parse され成功する。同一 argv 値・同じ number 型で piece_filters の有無だけを差分にした 2 要素 (rescued / bare) を並べ、trim が「parse を救済する」位置 (= parse の直前) にあることを固定する。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {"name": "rescued", "type": "number", "long": true, "piece_filters": ["trim"]},
+      {"name": "bare", "type": "number", "long": true}
+    ]
+  },
+  "cases": [
+    {
+      "id": "trimmed-then-parsed",
+      "why": "piece_filters:[\"trim\"] を持つ rescued は `\" 42 \"` を trim → `\"42\"` → number parse 成功、result rescued=42 (DR-074 §1 の canonical 字句は空白除去後の \"42\" に一致)。",
+      "argv": ["--rescued", " 42 "],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "rescued", "op": "set", "operand": 42, "source": "cli"}
+        ],
+        "result": {"rescued": 42}
+      }
+    },
+    {
+      "id": "untrimmed-parse-rejected",
+      "why": "piece_filters を持たない bare は `\" 42 \"` をそのまま number parse に渡し、canonical 字句 (DR-074 §1) が空白を受理しないため not_a_number で reject (DR-066 reason 表)。rescued (trimmed-then-parsed) との対比で piece_filters の有無が parse 結果を分ける輪郭を固定する。argv_pos=1 は値トークンの 0-based 位置 (kind=parse の既存実例 value-typing/int-round-modes.json::error-mode-fractional-rejected と同じ規約)。",
+      "argv": ["--bare", " 42 "],
+      "expect": {
+        "outcome": "failure",
+        "errors": [{"element": "bare", "argv_pos": 1, "kind": "parse", "reason": "not_a_number"}]
+      }
+    }
+  ]
+}

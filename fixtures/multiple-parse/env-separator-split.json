@@ -1,11 +1,11 @@
 {
-  "why": "env 値も CLI と同じ separator 分割を経る (DR-049 §2: 『env から来た値は string であり、要素の pieceProcessor を通る。multiple 要素なら separator 分割も効く (発火 1 回の 1 引数と同じ扱い)』)。separator-split.json/separator-typed.json は CLI 発火 1 回の 1 引数を分割する輪郭を固定しているが、env 席から供給される 1 個の raw string にも同じ分割規則が適用されることは別に固定が要る (env 経路は provider から string 1 個を受け取るのみで、CLI の『発火』構造を持たないため、分割規則が本当に同一パイプラインに乗っているかは実装が別処理を書きうる余地がある)。3 要素 (tags: string 分割の基本形 / ports: 型付き piece が分割後に number へ parse される形 / trimmed: 分割後の各 piece に pre_filters が効く形) を並べ、env × separator の輪郭を DR-049 §2 が要求する範囲で網羅する。env 由来は完走後の値確定で effects に載らない (CONFORMANCE §2)、result / sources で検証する。multiple 宣言要素は未発火でも DR-044 一様配列規約で `[]` になる (absent にならない) — 各 case で他 2 要素も `[]` として明示する。",
+  "why": "env 値も CLI と同じ separator 分割を経る (DR-049 §2: 『env から来た値は string であり、要素の pieceProcessor を通る。multiple 要素なら separator 分割も効く (発火 1 回の 1 引数と同じ扱い)』)。separator-split.json/separator-typed.json は CLI 発火 1 回の 1 引数を分割する輪郭を固定しているが、env 席から供給される 1 個の raw string にも同じ分割規則が適用されることは別に固定が要る (env 経路は provider から string 1 個を受け取るのみで、CLI の『発火』構造を持たないため、分割規則が本当に同一パイプラインに乗っているかは実装が別処理を書きうる余地がある)。3 要素 (tags: string 分割の基本形 / ports: 型付き piece が分割後に number へ parse される形 / trimmed: 分割後の各 piece に piece_filters が効く形) を並べ、env × separator の輪郭を DR-049 §2 が要求する範囲で網羅する。env 由来は完走後の値確定で effects に載らない (CONFORMANCE §2)、result / sources で検証する。multiple 宣言要素は未発火でも DR-044 一様配列規約で `[]` になる (absent にならない) — 各 case で他 2 要素も `[]` として明示する。",
   "query": "parse",
   "definition": {
     "options": [
       {"name": "tags", "type": "string", "long": true, "env": "TAGS", "multiple": {"accumulator": "append", "separator": ","}},
       {"name": "ports", "type": "number", "long": true, "env": "PORTS", "multiple": {"accumulator": "append", "separator": ","}},
-      {"name": "trimmed", "type": "string", "long": true, "env": "TRIMMED", "multiple": {"accumulator": "append", "separator": ","}, "pre_filters": ["trim"]}
+      {"name": "trimmed", "type": "string", "long": true, "env": "TRIMMED", "multiple": {"accumulator": "append", "separator": ","}, "piece_filters": ["trim"]}
     ]
   },
   "cases": [
@@ -35,7 +35,7 @@
     },
     {
       "id": "env-split-per-piece-trim",
-      "why": "TRIMMED=\" a , b \" は separator \",\" で [\" a \", \" b \"] に分割後、各 piece に pre_filters trim が効いて [\"a\",\"b\"] になる (per-piece-trim.json の per-piece 適用規約を env 値源に拡張)。DR-049 §2 の『pieceProcessor を通る』は pre_filters (段3) も含むので、env 由来の piece 列でも CLI と同一の trim 適用点を通ることを固定する。tags/ports は未供給で `[]`。",
+      "why": "TRIMMED=\" a , b \" は separator \",\" で [\" a \", \" b \"] に分割後、各 piece に piece_filters trim が効いて [\"a\",\"b\"] になる (per-piece-trim.json の per-piece 適用規約を env 値源に拡張)。DR-049 §2 の『pieceProcessor を通る』は piece_filters (段3) も含むので、env 由来の piece 列でも CLI と同一の trim 適用点を通ることを固定する。tags/ports は未供給で `[]`。",
       "argv": [],
       "env": {"TRIMMED": " a , b "},
       "expect": {

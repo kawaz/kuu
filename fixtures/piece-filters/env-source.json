@@ -1,0 +1,34 @@
+{
+  "why": "env 値も pieceProcessor (piece_filters → parse → cell_filters) を通る (DR-049 §2: 『env から来た値は string であり、要素の pieceProcessor を通る』)。env-ladder.json (値源ラダー骨格) の型を踏襲しつつ、本 fixture は piece_filters が env 経由の値にも効くことを固定する — env 由来は完走後の値確定で effects には載らず (CONFORMANCE §2)、result / sources で検証する。rescued (piece_filters あり) / bare (なし) を並べ、trim の有無で env 値の parse 結果が分かれる輪郭を parse-rescue.json の cli 版と対にする。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {"name": "rescued", "type": "number", "long": true, "env": "RESCUED", "piece_filters": ["trim"]},
+      {"name": "bare", "type": "number", "long": true, "env": "BARE"}
+    ]
+  },
+  "cases": [
+    {
+      "id": "env-trimmed-then-parsed",
+      "why": "RESCUED=\" 8080 \" は env 席から string \" 8080 \" として供給され、piece_filters trim → \"8080\" → number parse 成功。result rescued=8080、sources rescued=env (DR-049 §2 の CLI と同一パイプライン主張の実証)。",
+      "argv": [],
+      "env": {"RESCUED": " 8080 "},
+      "expect": {
+        "outcome": "success",
+        "effects": [],
+        "result": {"rescued": 8080},
+        "sources": {"rescued": "env"}
+      }
+    },
+    {
+      "id": "env-untrimmed-parse-rejected",
+      "why": "BARE=\" 8080 \" は piece_filters を持たない bare 要素に供給され、空白付きのまま number parse に渡って not_a_number で reject (DR-074 §1 canonical 字句)。env-trimmed-then-parsed との対比で、env 値であっても piece_filters の有無が parse 結果を分けることを固定する。argv_pos=0 は argv.length (argv=[] のため 0): env 由来の失敗はどの argv トークンにも帰属しないので、CONFORMANCE §2 の「どのトークンにも帰属しない失敗は argv.length を指す」規約 (env / config 由来の値の失敗を含む) に従う。",
+      "argv": [],
+      "env": {"BARE": " 8080 "},
+      "expect": {
+        "outcome": "failure",
+        "errors": [{"element": "bare", "argv_pos": 0, "kind": "parse", "reason": "not_a_number"}]
+      }
+    }
+  ]
+}
