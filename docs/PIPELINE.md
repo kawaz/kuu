@@ -85,7 +85,7 @@ flowchart TD
 | 2 | separator 分割 | `string → piece[]` | `--tag a,b,c` → `["a","b","c"]`。separator は multiple プリセットの属性 (DR-034 / DR-036)。multiple 無しは長さ 1 の `[piece]` に縮退 |
 | 3 | pre_filters | `string → string` (piece 単位) | 分割後の各 piece に適用: `trim`, `regex_match:^[a-z]+$` … (DR-034 pieceProcessor の pre 相、DR-062 で pre_filters に改名) |
 | 4 | type.parse | `(string) → T` (要素単位) | canonical 字句 (DR-074 / DR-075)。configurable factory の config キー (`int_round`, `number_allow_base_prefix`) はここに効く (DR-061 §4) |
-| 5 | filters | `T → T` (要素単位) | 検証 + 変換: `in_range:1:65535`, `non_empty` … args は全て string (引数パースと同じ手順、DR-009)。`filters` が乗る対象は cell に書かれる実値のみ — set operand / update 適用結果 / 値源席 (env・config・inherit) の供給値 (DR-049/050)。cell 操作 op (unset/default/empty) の発火は値を書かないので `filters` の適用対象が無い (DESIGN §8.3、`pre_filters`/`post_filters` は位相が異なる — 同節参照) |
+| 5 | filters | `T → T` (要素単位) | 検証 + 変換: `in_range:1:65535`, `non_empty` … args は全て string (引数パースと同じ手順、DR-009)。効果 op との関係: `filters` は cell に書かれる実値に乗る (set operand / update 適用結果)。cell 操作 op (unset/default/empty) の発火は値を書かないので適用対象が無い (DESIGN §8.3)。値源席由来の値の chain 通過は DR-049/050 が正本 |
 | 6 | accumulator | `(Acc, T) → Acc` | 複数「値」の畳み: `append`, `merge`。**count の increment はここから退役し効果側へ (DR-077 §3)** — accumulator は複数「値」の畳みに純化 |
 | 7 | post_filters | `Acc → Acc` | 累積後の最終値に: `sort`, `unique`, count の上限 `in_range` (DR-040)。**update の結果にもここが通る** (DR-077 §1) |
 
