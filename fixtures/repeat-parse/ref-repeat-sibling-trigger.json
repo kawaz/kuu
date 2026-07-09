@@ -41,6 +41,18 @@
         ],
         "result": {"hlcolors": [], "other": "x"}
       }
+    },
+    {
+      "id": "unfired-repeat-option-uniform-empty",
+      "why": "`--other x` (--hlcolors 未発火): hlcolors のトリガ自体が一度も発火しない場合でも、repeat 属性を持つ option は反復系 (DR-051 §2b: repeat / multiple / optional 糖衣は 0 回発火でも `[]` が出る、DESIGN §2.6) なので absent にならず一様形 `[]` になる。sibling-option-immediately-after-zero-repeats (--hlcolors 自体は発火し、その後の unfold が 0 回) との対比点: 『発火 0 反復』と『トリガ自体の未発火』は経路が違う (前者は --hlcolors の exact 衛星が発火してから unfold が即停止、後者は --hlcolors の exact 衛星自体が一度も発火しない) が、どちらも同じ一様形 `[]` に収束する — 反復系の absent 禁止規約がトリガ発火の有無に関わらず一貫することを固定する。effects は other の 1 個のみ (hlcolors 側は colorname への set 効果も、トリガ自体の効果も生じない)。",
+      "argv": ["--other", "x"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "other", "op": "set", "operand": "x", "source": "cli"}
+        ],
+        "result": {"hlcolors": [], "other": "x"}
+      }
     }
   ]
 }
