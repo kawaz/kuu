@@ -88,6 +88,7 @@
 - [DR-084](DR-084-multiple-ref-row-accumulation.md): multiple×ref — 累積単位は発火値 = row (append で [row...]、0 発火 [])、repeat×multiple は発火境界保存の T[][] (flatten 不採用、平坦形は multiple 単独で表現)、merge×ref は definition-error (invalid-range、マーカーの認識対象 piece 列が構造上不在)
 - [DR-085](DR-085-regex-match-host-dialect.md): regex_match — Validate filter (pattern 1 引数、unanchored=部分一致)、照合方言は host 実装準拠 (DR-040 の方言一致記述を相対化、fixture は方言安全パターン限定)、compile 失敗は definition-error (kind=invalid-argument 新設)、colon 含み pattern は DESIGN §8.4 既存オブジェクト形式 (短縮形の colon 全分割は不変、name 特例 / descriptor 分割制御は不採用)
 - [DR-086](DR-086-value-slot-consumption-priority.md): variant 枝競合の消費優先 — 値スロットが照合消費できる読みは引数なし枝に cut で優先 (後続 positional の充足可能性で再解釈しない)、required positional 同居は missing_operand / optional 同居は [] で success (ambiguous 化しない)
+- [DR-087](DR-087-lazy-default-resolution.md): default の遅延解決 — default = 全解決後に空の cell へ入る fallback (先詰めモデルの否定)、op=default / 席書き換えは placeholder 操作で実体化は依存順に最後 (config_path 解決 → config 席参照 → 祖先 → inherit)、解決後の消費者は常に全実体化済みの値を見る (再演不要・不可)
 
 ## CLI 入口 / variant / filter
 
