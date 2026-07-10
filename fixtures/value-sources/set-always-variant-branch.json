@@ -10,28 +10,28 @@
   "cases": [
     {
       "id": "bare-color-set-always-wins",
-      "why": "裸 `--color` (argv 末尾、後続トークンなし): `:set` 読みは値スロットが raw 消費すべき次トークンが存在しないため生成されない (背骨上に控えるトークンが無い = 読みゼロ、DR-041 §2)。消費対象トークンが無いので DR-086 §1 の cut は適用対象外 (cut は『照合消費できる』場合の規則、そもそも読みが無ければ cut するものが無い) — `:set:always` 読み (0引数) のみが残り、全消費で完全経路 1 本 → success。DR-081 §4 canonical 表の当該行そのもの (`--color # color=always source=cli committed=true`)、DR-086 の裸 `--color` 帰結不変の明記どおり。",
+      "why": "裸 `--color` (argv 末尾、後続トークンなし): `:set` 読みは値スロットが raw 消費すべき次トークンが存在しないため生成されない (背骨上に控えるトークンが無い = 読みゼロ、DR-041 §2)。消費対象トークンが無いので DR-086 §1 の cut は適用対象外 (cut は『照合消費できる』場合の規則、そもそも読みが無ければ cut するものが無い) — `:set:always` 読み (0引数) のみが残り、全消費で完全経路 1 本 → success。DR-081 §4 canonical 表の当該行そのもの (`--color # color=always source=cli committed=true`)、DR-086 の裸 `--color` 帰結不変の明記どおり。 未発火の verbose は flag プリセットの default:false 同梱 (DR-051 §2) により absent にならず、result に false / sources に default で必ず現れる。",
       "argv": ["--color"],
       "expect": {
         "outcome": "success",
         "effects": [
           {"entity": "color", "op": "set", "operand": "always", "source": "cli"}
         ],
-        "result": {"color": "always"},
-        "sources": {"color": "cli"}
+        "result": {"color": "always", "verbose": false},
+        "sources": {"color": "cli", "verbose": "default"}
       }
     },
     {
       "id": "explicit-value-set-wins",
-      "why": "`--color always` (positional 不在): `:set` 読みは \"always\" を raw 消費し values (or) の exact 枝 \"always\" に一致 = **照合消費できる** → DR-086 §1 の cut により `:set` 読みが直接採用される。`:set:always` が完全経路に至るかを検討する必要はない (cut は経路探索より手前で読みを一意化する、DR-086 §3)。参考として本 case は positional 等の消費先も無いため、仮に cut が無くても `:set:always` (0引数、\"always\" 残余) は完全経路に至れず結論は同じになる — cut の有無で帰結が分かれる場面は positional 同居時 (set-always-variant-cut-positional-required.json) で顕在化する。DR-081 §4 canonical 表 `--color always # color=always source=cli committed=true (:set)`。",
+      "why": "`--color always` (positional 不在): `:set` 読みは \"always\" を raw 消費し values (or) の exact 枝 \"always\" に一致 = **照合消費できる** → DR-086 §1 の cut により `:set` 読みが直接採用される。`:set:always` が完全経路に至るかを検討する必要はない (cut は経路探索より手前で読みを一意化する、DR-086 §3)。参考として本 case は positional 等の消費先も無いため、仮に cut が無くても `:set:always` (0引数、\"always\" 残余) は完全経路に至れず結論は同じになる — cut の有無で帰結が分かれる場面は positional 同居時 (set-always-variant-cut-positional-required.json) で顕在化する。DR-081 §4 canonical 表 `--color always # color=always source=cli committed=true (:set)`。 未発火の verbose は flag プリセットの default:false 同梱 (DR-051 §2) により absent にならず、result に false / sources に default で必ず現れる。",
       "argv": ["--color", "always"],
       "expect": {
         "outcome": "success",
         "effects": [
           {"entity": "color", "op": "set", "operand": "always", "source": "cli"}
         ],
-        "result": {"color": "always"},
-        "sources": {"color": "cli"}
+        "result": {"color": "always", "verbose": false},
+        "sources": {"color": "cli", "verbose": "default"}
       }
     },
     {

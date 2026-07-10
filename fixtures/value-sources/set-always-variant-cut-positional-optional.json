@@ -12,7 +12,7 @@
   "cases": [
     {
       "id": "optional-positional-empty-under-cut-no-ambiguity",
-      "why": "`--color always`: required 版 (set-always-variant-cut-positional-required.json) と同じ理由で `:set` が cut により \"always\" を消費する (DR-086 §1)。`extra` は optional (min:0) なので 0 反復でも成立し、反復系セルの縮退規則 (DR-044 一様配列 / DR-051 §2b) により `[]` を描く — absent にはならない。cut が variant 内の読みを一意化するため、『`:set:always` + positional が \"always\" を消費する』もう一方の完全経路と衝突しての ambiguous も起きない (DR-086 §2 第2 bullet: cut による一意化)。effects は color の set 1個のみ (extra は 0 反復で発火なし)。",
+      "why": "`--color always`: required 版 (set-always-variant-cut-positional-required.json) と同じ理由で `:set` が cut により \"always\" を消費する (DR-086 §1)。`extra` は optional (min:0) なので 0 反復でも成立し、反復系セルの縮退規則 (DR-044 一様配列 / DR-051 §2b) により `[]` を描く — absent にはならない。cut が variant 内の読みを一意化するため、『`:set:always` + positional が \"always\" を消費する』もう一方の完全経路と衝突しての ambiguous も起きない (DR-086 §2 第2 bullet: cut による一意化)。effects は color の set 1個のみ (extra は 0 反復で発火なし)。 0 反復の extra は result の [] と対で sources にも default 席として現れる (DR-051 §2)。",
       "argv": ["--color", "always"],
       "expect": {
         "outcome": "success",
@@ -20,7 +20,7 @@
           {"entity": "color", "op": "set", "operand": "always", "source": "cli"}
         ],
         "result": {"color": "always", "extra": []},
-        "sources": {"color": "cli"}
+        "sources": {"color": "cli", "extra": "default"}
       }
     }
   ]
