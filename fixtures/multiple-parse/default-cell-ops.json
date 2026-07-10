@@ -10,7 +10,7 @@
   "cases": [
     {
       "id": "default-with-no-declared-default-resets-to-empty",
-      "why": "`--ports 5 --restore-ports` (env 未設定): set(5) が append accumulator に畳まれ [5] になった後、default (--restore-ports) が発火。env 供給が無いので default 値は書き換わっておらず DR-051 §2 の一様形 `[]` のまま — op=default はこの (書き換えなしの) default 値を明示 set する。source は DR-081 の確定主体読みにより **cli** (default 値そのものと同じ値でも、確定させたのは cli 発火)。committed=true の効果自体は operand を運ばないので value_filters/cell_filters の適用対象となる piece が生じない (DESIGN §8.3、unset と同じ理由でここでは対象外)。effects は [set(5,cli), default(cli)] の 2 個。result `{ports:[]}`、sources `{ports:cli}`。",
+      "why": "`--ports 5 --restore-ports` (env 未設定): set(5) が append accumulator に畳まれ [5] になった後、default (--restore-ports) が発火。env 供給が無いので default 値は書き換わっておらず DR-051 §2 の一様形 `[]` のまま — op=default はこの (書き換えなしの) default 値を明示 set する。source は DR-081 の確定主体読みにより **cli** (default 値そのものと同じ値でも、確定させたのは cli 発火)。committed=true の効果自体は operand を運ばないので value_filters/cell_filters の適用対象となる piece が生じない (DESIGN §8.3、unset と同じ理由でここでは対象外)。effects は [set(5,cli), default(cli)] の 2 個。result `{ports:[]}`、sources `{ports:cli}`。未接触の同居 entity hosts も result に必ず現れる (DR-044/051 §2: accum セルは absent にならない) — 宣言 default のラダー供給が DR-083 §2 の chain (value_filters per piece → accumulator → cell_filters) を通り、unique が重複 localhost を畳んで `[localhost]`、sources は default_source (DR-081 §1、書き換えなしなので default)。",
       "argv": ["--ports", "5", "--restore-ports"],
       "expect": {
         "outcome": "success",
@@ -18,13 +18,13 @@
           {"entity": "ports", "op": "set", "operand": 5, "source": "cli"},
           {"entity": "ports", "op": "default", "source": "cli"}
         ],
-        "result": {"ports": []},
-        "sources": {"ports": "cli"}
+        "result": {"ports": [], "hosts": ["localhost"]},
+        "sources": {"ports": "cli", "hosts": "default"}
       }
     },
     {
       "id": "default-sets-env-rewritten-default",
-      "why": "`--restore-ports` のみ、env PORTS=\"10,20\": DR-081 の書き換えモデルにより、env 供給は『下位席として最終値を争う』のではなく node の default 値そのものを書き換える — PORTS=\"10,20\" は pieceProcessor (separator 分割 + number parse、DR-049 §2) を通って `[10,20]` になり、これが ports の (書き換え済み) default 値になる。op=default (--restore-ports) はその時点の default 値をそのまま明示 set するので、結果は宣言なしの `[]` ではなく **`[10,20]`**。source は確定主体読みにより cli (default 値の由来が env であっても、それを確定させたのはユーザの cli 発火 — DR-081 §2 の canonical 例 `APP_COLOR=none --default-color # color=none source=cli` と同型)。cli 未発火の set は effects に載らない (CONFORMANCE §2)。effects は default 1 個のみ。result `{ports:[10,20]}`、sources `{ports:cli}`。旧 fixture (DR-081 前) は『default は env を無視して固定 [] に確定する』と読んでいたが、これは DR-081 が明示的に覆した『由来席』読みの帰結だった。",
+      "why": "`--restore-ports` のみ、env PORTS=\"10,20\": DR-081 の書き換えモデルにより、env 供給は『下位席として最終値を争う』のではなく node の default 値そのものを書き換える — PORTS=\"10,20\" は pieceProcessor (separator 分割 + number parse、DR-049 §2) を通って `[10,20]` になり、これが ports の (書き換え済み) default 値になる。op=default (--restore-ports) はその時点の default 値をそのまま明示 set するので、結果は宣言なしの `[]` ではなく **`[10,20]`**。source は確定主体読みにより cli (default 値の由来が env であっても、それを確定させたのはユーザの cli 発火 — DR-081 §2 の canonical 例 `APP_COLOR=none --default-color # color=none source=cli` と同型)。cli 未発火の set は effects に載らない (CONFORMANCE §2)。effects は default 1 個のみ。result `{ports:[10,20]}`、sources `{ports:cli}`。未接触の hosts は case default-with-no-declared-default-resets-to-empty と同じ理由で `[localhost]` / sources=default で present。",
       "argv": ["--restore-ports"],
       "env": {"PORTS": "10,20"},
       "expect": {
@@ -32,13 +32,13 @@
         "effects": [
           {"entity": "ports", "op": "default", "source": "cli"}
         ],
-        "result": {"ports": [10, 20]},
-        "sources": {"ports": "cli"}
+        "result": {"ports": [10, 20], "hosts": ["localhost"]},
+        "sources": {"ports": "cli", "hosts": "default"}
       }
     },
     {
       "id": "default-restores-declared-array-through-value-and-cell-filters",
-      "why": "`--hosts web1 --restore-hosts`: set(web1) が append accumulator に畳まれ [\"web1\"] になった後、default (--restore-hosts) が発火し宣言 default 配列 `[\"localhost\",\"localhost\"]` を明示 set する (DR-083 §3)。DR-083 §2 により宣言 default 配列は『既に分割済みの piece 列』として供給される (separator は適用されない、2要素のまま) — 各 piece は type=string に一致するので T 域座席のみを通る (DESIGN §14.3): value_filters (each 相、non_empty — 両要素とも非空文字列で通過) → accumulator 畳み → cell_filters (累積後、unique — 重複 \"localhost\" が1件に畳まれる)。結果 `[\"localhost\"]`。source は DR-081 の確定主体読みにより cli (default 値の由来が宣言値であっても確定させたのは cli 発火)。effects は [set(web1,cli), default(cli)] の2個 (default op 自体は operand を運ばない cell 操作だが、書き戻された宣言 default 配列がラダー確定後に filter chain を通ることは default op の発火とは別の層、DESIGN §8.3)。",
+      "why": "`--hosts web1 --restore-hosts`: set(web1) が append accumulator に畳まれ [\"web1\"] になった後、default (--restore-hosts) が発火し宣言 default 配列 `[\"localhost\",\"localhost\"]` を明示 set する (DR-083 §3)。DR-083 §2 により宣言 default 配列は『既に分割済みの piece 列』として供給される (separator は適用されない、2要素のまま) — 各 piece は type=string に一致するので T 域座席のみを通る (DESIGN §14.3): value_filters (each 相、non_empty — 両要素とも非空文字列で通過) → accumulator 畳み → cell_filters (累積後、unique — 重複 \"localhost\" が1件に畳まれる)。結果 `[\"localhost\"]`。source は DR-081 の確定主体読みにより cli (default 値の由来が宣言値であっても確定させたのは cli 発火)。effects は [set(web1,cli), default(cli)] の2個 (default op 自体は operand を運ばない cell 操作だが、書き戻された宣言 default 配列がラダー確定後に filter chain を通ることは default op の発火とは別の層、DESIGN §8.3)。未接触の ports は env 供給なし・宣言 default なしなので DR-051 §2 の一様形 `[]` / sources=default で present (DR-044、absent にならない)。",
       "argv": ["--hosts", "web1", "--restore-hosts"],
       "expect": {
         "outcome": "success",
@@ -46,8 +46,8 @@
           {"entity": "hosts", "op": "set", "operand": "web1", "source": "cli"},
           {"entity": "hosts", "op": "default", "source": "cli"}
         ],
-        "result": {"hosts": ["localhost"]},
-        "sources": {"hosts": "cli"}
+        "result": {"hosts": ["localhost"], "ports": []},
+        "sources": {"hosts": "cli", "ports": "default"}
       }
     }
   ]
