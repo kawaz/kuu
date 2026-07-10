@@ -1,6 +1,6 @@
 ---
 title: フェーズ2-③ parse fixture 蒸留の 1:1 網羅性 audit (slice → fixture case)
-status: open
+status: resolved
 category: task
 created: 2026-07-08T21:58:01+09:00
 last_read:
@@ -9,10 +9,10 @@ wip_entered:
 blocked_entered:
 pending_entered:
 discarded_entered:
-resolved_entered:
+resolved_entered: 2026-07-10T18:55:44+09:00
 discard_reason:
 pending_reason:
-close_reason:
+close_reason: ["finding/2026-07-09-distill-1to1-coverage-audit","done:2026-07-10 差分監査で漏れ8件中7件がfixture追加で解消済みと確認、残1件(phase23:90)はissue conformance-tried-triggers-help-entry-fieldsが追跡継続"]
 blocked_by:
 origin: 自リポ TODO
 ---

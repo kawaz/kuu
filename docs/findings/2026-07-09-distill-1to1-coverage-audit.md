@@ -6,7 +6,7 @@
 
 - **総 slice test (領域 D1-D15 に列挙)**: 124 items (領域跨ぎのクロス掲載を含むと合計 130 items)
 - **蒸留済み (対応 fixture case が明確)**: **116 items**
-- **意図的非蒸留 (根拠明記)**: **2 items** (phase1:130 匿名副スコープ / phase21:59 INTERNAL)
+- **意図的非蒸留 (根拠明記)**: **3 items** (phase1:130 匿名副スコープ / phase21:59 INTERNAL / phase25:15 installer 順列一致)
 - **漏れ**: **8 items** (即対応可 6 件 + blocked 2 件)
 - **非対象セクション (§3 台帳)**: 9 項目、全て現行 DR / 予約中クエリと整合 (再確認結果、変更不要)
 
@@ -298,3 +298,16 @@
 - archive `2026-07-05-phase23-distill-ledger.md` (蒸留計画の実行台帳、本 audit の cross-check 元)
 - DR-065 (conformance fixture format) / DR-070 (lowering fixture format) / DR-053 (outcome union) / DR-066 (reason 語彙)
 - 監査中間報告: SendMessage msg_id ac5ab5f6 (Batch 1) / 1dbc6381 (Batch 2) / e59ab8f0 (Batch 3)
+
+## 2026-07-10 差分監査 (現況照合)
+
+- 漏れ 8 件のうち 7 件は 2026-07-09 午後〜07-10 の fixture 追加で解消済み (各 fixture の why に「蒸留 1:1 audit 漏れ #N」の自己参照あり):
+  - #1 phase4:114 / #2 phase10:64 → `fixtures/repeat-parse/ref-or-template.json::rgb-vs-3-names-ambiguous`
+  - #3 phase14:157 → `fixtures/multiple-parse/collector-unwrap-single.json`
+  - #6 phase25:171 → `fixtures/constraints-parse/requires-bool-target.json` (代替輪郭、DR-047 §5)
+  - #7 phase23:45 → `fixtures/value-typing/cell-filter-reject.json`
+  - (#4 phase7:47 / #5 phase7:56 は前回時点で解消済み)
+- 残る漏れは #8 phase23:90 のみ (CONFORMANCE §2 拡張待ち、issue `2026-07-09-conformance-tried-triggers-help-entry-fields` が追跡)
+- 集計更新: 対応済み 121 / 漏れ 1 / 意図的非蒸留 3 (総 124。過去集計の 114+8+3=125 の 1 件超過は D6 phase3:73/121 のクロス掲載由来の可能性、厳密再計算は未実施と明記)
+- 逆方向 (slice 非由来) case が +107 増 (計 170 ファイル / 419 case、DR-079〜084 追従の新規仕様由来: count-parse / definition-error / piece-filters / multiple-parse の merge・accum 系 / value-typing の cell-filter 系)。個別由来確認はスコープ外
+- definition-error フォーマットは DR-082 で確定済みのため、旧「`query:"definition_error"` 予約中」を根拠とした非対象 10 slice item (phase2:74/92, 3:148, 4:145, 14:177, 20:275, 24:8/28/45/59/77) の非対象判断は根拠が古い — 内容自体は未 fixture 化のまま、次回台帳更新時に再分類要否の確認を推奨
