@@ -1,0 +1,27 @@
+{
+  "why": "merge accumulator × ref は definition-error (DR-084 §3): merge accumulator のマーカー語彙 (DR-080 §2) は separator 分割された string piece 列が前提 (piece 全体一致で remove/splice/add/escape を判定、operand は要素 type で parse)。ref 要素の発火値は消費文法 (or 枝) の産物である row であり、piece 列という構造そのものを持たない — マーカーの認識対象が構造上存在しない。accum 宣言 (multiple) も ref 宣言も definition 時点で静的に既知の組み合わせなので、accum-update-invalid-range.json / option-ref-repeat-min-invalid-range.json と同根の invalid-range として定義時点で reject する (DR-082 §2 / DR-083 §5 の『静的に既知は定義時に倒す』筋)。採用しなかった案 (merge×ref をマーカー不活性の上書きとして許容) は宣言を恒久に無意味なまま静かに受理してしまうため不採用 (DR-084 『採用しなかった案』節)。",
+  "query": "definition_error",
+  "definition": {
+    "definitions": {
+      "templates": {
+        "color": {"or": [
+          {"seq": [{"type": "number", "name": "r"}, {"type": "number", "name": "g"}, {"type": "number", "name": "b"}]},
+          {"type": "string", "name": "colorname"}
+        ]}
+      }
+    },
+    "options": [
+      {"name": "hlcolors", "long": true, "ref": "color", "multiple": {"accumulator": "merge"}}
+    ]
+  },
+  "cases": [
+    {
+      "id": "merge-accumulator-on-ref-element-is-invalid-range",
+      "why": "`hlcolors` は ref (color テンプレ) + multiple:{accumulator:\"merge\"} を宣言している option。merge のマーカー語彙は piece 列 (separator 分割された string 片) を前提とするが、ref の発火値は row (or 枝の消費結果) であり piece 列を持たない — マーカー判定の対象が構造上不成立なので定義時点で invalid-range として reject される。argv は書かない (definition の静的検査であり実行しない、DR-082 §1)。",
+      "expect": {
+        "outcome": "definition-error",
+        "errors": [{"element": "hlcolors", "kind": "invalid-range"}]
+      }
+    }
+  ]
+}

@@ -85,6 +85,7 @@
 - [DR-031](DR-031-value-source-precedence.md): 値源の優先順位 (CLI/link > env > config > inherit > default、固定) — required の判定入力は updated by DR-047、source 確定ルール (境界条件) を拡張確定
 - [DR-081](DR-081-default-seat-rewrite-and-source.md): default 席書き換えモデル — env/config/inherit は default と default_source (観測用隠し属性) を書き換える、source = committed ? cli : default_source、op=default は「書き換え済み default」を明示 set で source=cli (DR-031 明文の再確認、fixture 実践の由来席読みを覆す)
 - [DR-083](DR-083-multiple-declared-default.md): multiple 要素の宣言 default — 尊重される (反復系の [] は宣言不在時の暗黙 default)、供給形は分割済み pieces (DR-050 config array 同型、separator 非適用、merge マーカー不活性)、op=default は書き換え済み default へ (DR-081 既定)、scalar への配列 default は definition-error (invalid-range)
+- [DR-084](DR-084-multiple-ref-row-accumulation.md): multiple×ref — 累積単位は発火値 = row (append で [row...]、0 発火 [])、repeat×multiple は発火境界保存の T[][] (flatten 不採用、平坦形は multiple 単独で表現)、merge×ref は definition-error (invalid-range、マーカーの認識対象 piece 列が構造上不在)
 
 ## CLI 入口 / variant / filter
 

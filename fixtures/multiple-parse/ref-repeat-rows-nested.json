@@ -1,0 +1,46 @@
+{
+  "why": "ref×repeat×multiple は発火境界を保存する T[][] (DR-084 §2): repeat 持ち ref 要素の発火値は『repeat 1発火分の row 配列』(T[]、last-wins-repeat-rows.json の上書き単位そのもの)。multiple の畳み単位は発火値なので (DR-084 §1)、append の結果は T[] を要素とする配列 = T[][] になる — 発火境界が外側の配列として残る。flatten は採らない (DR-034/043 の軸分離: repeat = 1発火内の構造反復、multiple = 発火間の累積、両者を fold で混ぜない)。ref-rows-append.json (repeat 無し = T[]、平坦な row リスト) との対比: 同じ or テンプレでも repeat の有無で multiple append の要素型が row 単体か row 配列かに分かれ、表現力が重複しない (§2 の採用しなかった案: flatten は multiple 単独の冗長表記になるため不採用)。",
+  "query": "parse",
+  "definition": {
+    "definitions": {
+      "templates": {
+        "color": {"or": [
+          {"seq": [{"type": "number", "name": "r"}, {"type": "number", "name": "g"}, {"type": "number", "name": "b"}]},
+          {"type": "string", "name": "colorname"}
+        ]}
+      }
+    },
+    "options": [
+      {"name": "hlcolors", "ref": "color", "repeat": {"min": 1}, "long": true, "multiple": "append"}
+    ]
+  },
+  "cases": [
+    {
+      "id": "two-fires-preserve-firing-boundary",
+      "why": "`--hlcolors red blue --hlcolors green`: 1回目の発火は repeat が colorname 枝を2反復消費し row 配列 [{colorname:red},{colorname:blue}] を作る、2回目の発火は1反復のみで [{colorname:green}]。last-wins-repeat-rows.json (multiple 無し) なら2回目が1回目を上書きするところ、multiple:\"append\" を持つ本 fixture では発火値である row 配列そのものを append accumulator が積む — 発火境界を潰さず外側配列の要素として保存する (T[][])。effects は3個の set が消費順のまま並ぶ、multiple の有無は effects を変えない (DR-045)。",
+      "argv": ["--hlcolors", "red", "blue", "--hlcolors", "green"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "colorname", "op": "set", "operand": "red", "source": "cli"},
+          {"entity": "colorname", "op": "set", "operand": "blue", "source": "cli"},
+          {"entity": "colorname", "op": "set", "operand": "green", "source": "cli"}
+        ],
+        "result": {"hlcolors": [[{"colorname": "red"}, {"colorname": "blue"}], [{"colorname": "green"}]]}
+      }
+    },
+    {
+      "id": "single-fire-nested-not-flattened",
+      "why": "`--hlcolors red blue` (1回発火のみ): append accumulator は1回発火でも要素1件のリストへ包む (append.json / ref-rows-append.json と同じ縮退規則)。ここでの要素は repeat 1発火分の row 配列そのものなので、result は [[{colorname:red},{colorname:blue}]] — 内側の2要素を平坦化した [{colorname:red},{colorname:blue}] にはならない。last-wins-repeat-rows.json の single-fire-baseline (multiple 無し、result が平坦な row 配列 [{colorname:red},{colorname:blue}]) との対比がこの case の軸: multiple の有無だけで外側にもう1層配列が被さる。",
+      "argv": ["--hlcolors", "red", "blue"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "colorname", "op": "set", "operand": "red", "source": "cli"},
+          {"entity": "colorname", "op": "set", "operand": "blue", "source": "cli"}
+        ],
+        "result": {"hlcolors": [[{"colorname": "red"}, {"colorname": "blue"}]]}
+      }
+    }
+  ]
+}
