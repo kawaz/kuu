@@ -1,0 +1,62 @@
+{
+  "why": "separator を宣言しない merge accumulator の縮退輪郭。DESIGN §6.2「separator: 指定なければ分割しない」+ DR-034 §6.3「multiple 無しは常に長さ1の [piece]」の合成により、multiple 自体は宣言されている (accumulator: merge) が separator を省略した場合も『発火1回 = piece 1個』の同じ長さ1縮退に落ちる — multiple 完全省略のケースと同じ pieceProcessor の管を通ることになる。separator の有無に関わらず piece 列である以上、マーカー語彙 (DR-080 §2、piece 全体一致で判定) は同一に適用される: 1個しかない piece がそのまま remove/splice/add/escape の判定対象になる。effects は merge-basic.json 等と同じ piece op 語彙 (add={op:'set'}, remove={op:'remove',operand}, splice={op:'splice'})。暗黙補完される先頭 @ は実 CLI 入力でないため effects 非掲載 (team-lead 裁定済み)。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {"name": "fields", "type": "string", "long": true, "multiple": {"accumulator": "merge"}}
+    ]
+  },
+  "cases": [
+    {
+      "id": "no-marker-refire-overwrites-single-piece",
+      "why": "`--fields a --fields b`: 1回目 piece=[\"a\"] (separator なしなのでトークン全体が1piece)、marker 無しで上書き→[a]。2回目 piece=[\"b\"]、marker 無しで再度上書き (1回目の結果は old として参照されない、merge-basic.json の second-no-marker-fire-overwrites-again の縮退版)。結果 `[\"b\"]`。",
+      "argv": ["--fields", "a", "--fields", "b"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "fields", "op": "set", "operand": "a", "source": "cli"},
+          {"entity": "fields", "op": "set", "operand": "b", "source": "cli"}
+        ],
+        "result": {"fields": ["b"]}
+      }
+    },
+    {
+      "id": "bare-remove-piece-implicit-at",
+      "why": "`--fields a --fields -a`: 1回目 piece=[\"a\"] で上書き→[a]。2回目 piece=[\"-a\"] のみ (1piece)。marker あり (remove) で明示 @ 無しなので暗黙先頭 @ (old=[a] を splice)、-a (後方 remove、a を全削除→[])。結果 `[]`。effects は暗黙 @ を除いた実入力2個 (add(a), remove(a)) — merge-basic.json の implicit-at-then-remove-only の縮退版 (separator ありなら1piece の remove だけだったが、ここでは元々1piece しかないので同型)。",
+      "argv": ["--fields", "a", "--fields", "-a"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "fields", "op": "set", "operand": "a", "source": "cli"},
+          {"entity": "fields", "op": "remove", "operand": "a", "source": "cli"}
+        ],
+        "result": {"fields": []}
+      }
+    },
+    {
+      "id": "bare-splice-piece-is-identity",
+      "why": "`--fields a --fields @`: 1回目 piece=[\"a\"] で上書き→[a]。2回目 piece=[\"@\"] のみ。marker あり (splice)。old=[a] をそのまま splice → 恒等。結果 `[\"a\"]` — merge-basic.json の bare-splice-is-identity の縮退版。effects は1回目 add(a) + 2回目 splice の2個。",
+      "argv": ["--fields", "a", "--fields", "@"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "fields", "op": "set", "operand": "a", "source": "cli"},
+          {"entity": "fields", "op": "splice", "source": "cli"}
+        ],
+        "result": {"fields": ["a"]}
+      }
+    },
+    {
+      "id": "escaped-piece-is-literal-single-fire",
+      "why": "`--fields +-a`: 1回発火のみ、piece=[\"+-a\"] 単独。先頭 `+` を1個剥がした literal `\"-a\"` に展開 (DR-080 §2 escape)。escape 済みなので marker 扱いされず add として上書き。結果 `[\"-a\"]` — merge-escape.json の escaped-markers-become-literals の1piece版。remove marker `-a` そのものをリテラル値として持てることを、separator なし (1piece のみ) の最小構成で固定する。",
+      "argv": ["--fields", "+-a"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "fields", "op": "set", "operand": "-a", "source": "cli"}
+        ],
+        "result": {"fields": ["-a"]}
+      }
+    }
+  ]
+}
