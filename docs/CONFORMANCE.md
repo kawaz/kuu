@@ -65,6 +65,8 @@
   - `filter` — filter chain の Error (DR-037)。reason は filter の descriptor 宣言 (例: in_range の `too_small` / `too_large`)
   - `constraint` — 遅延述語の違反 (DR-047)。reason: `required_violated` / `requires_violated` / `exclusive_group_violated` / `conflicts_with_violated` (`<属性名>_violated` で統一、DR-066 §3)
 - `fired_action`: 失敗時アクション (DR-048) が発火した場合のみ
+- **`help_entry` (optional, String)**: 定義に help 入口があれば、その綴り (例: `"--help"`) を failure に載せる (DR-053 §4)。DR-048 の誘導行 (`Try 'prog --help' for more information.` 型) の素材であり、文言生成はレンダラの関心。**fixture では optional 検証** — 書かれた時のみ比較。例: `"help_entry": "--help"`
+- **`tried_triggers` (optional, Array[String])**: 失敗位置で試行された exact 綴りのリストを failure に載せる (DR-053 §4)。Did you mean (F-016) の素材であり、近接マッチ計算は DX 層の関心 (AtomicAST にフックは持たない)。**fixture では optional 検証** — 書かれた時のみ比較 (§3 の集合比較、順序非規範)。空配列は「exact trigger が1個も無い」ことの明示検証。例: `"tried_triggers": ["--verbose", "--version"]`
 
 ### ambiguous
 
@@ -75,6 +77,7 @@
 
 - `interpretations`: 全解釈の列挙、各解釈は結果オブジェクト形のビュー (DR-053)。ビューは解釈の結果オブジェクトを直書きする (result 単独フィールドの省略形、DR-053 §3)
 - **`claimants` (optional、露出キー衝突の解釈区別、DR-073)**: 露出キー衝突 (DESIGN §15.5) による ambiguous では、値が退化して両解釈とも同一ビュー (例: 両者 flag で共に `{x:true}`) になりうるため、解釈ごとに claimants 面 (露出キー → その解釈で当該キーを占める実体 entity の name の写像) を添えて区別する。claimants を持つ解釈は `{"result": <ビュー>, "claimants": {"x": "a"}}` の組で書く (DR-053 §3 の canonical `{result:...}` 形 + `claimants` sibling)。claimants を持たない解釈は従来どおりビュー直書き。**順序非依存**: interpretations は集合比較 (§3) なので claimants をその解釈と同じ要素に束ね、(view, claimants) を 1 単位として突き合わせる — expect 直下の並行配列にすると集合の並べ替えで対応が切れるため採らない (DR-073)
+- **`help_entry` (optional, String)**: failure と同じ意味論 (DR-053 §4) — 定義に help 入口があれば、その綴りを ambiguous にも載せる (誘導行素材)。`tried_triggers` は DR-053 §4 が failure 専用に規定するため ambiguous には無い。**fixture では optional 検証** — 書かれた時のみ比較
 
 ## 3. 比較規約
 
@@ -84,6 +87,8 @@
 - interpretations は集合比較 (各解釈は構造等価、**列挙順は非規範**) — 完全経路間に優先がない (DR-038) ため順序は同一性成分でない (effects の順序規範性と対照的、errors と同じ集合扱い)。重複解釈の dedup 可否は「解釈の同一性」定義に従属し本書では定めない (DR-053 §3)。claimants を持つ解釈は `{result, claimants}` の組を 1 単位として構造等価で突き合わせる (DR-073) — claimants がその解釈と束ねられているため集合比較が順序に依存しない
 - errors は集合比較 (element, argv_pos, kind, reason の組。**reason は fixture 側に書かれている要素でのみ比較対象** (§2 の optional 検証)、message は常に無視)
 - warnings は集合比較 (element の組。**kind は fixture 側に書かれている要素でのみ比較対象** (§2 の optional 検証))
+- `help_entry` は構造等価 (**fixture 側に書かれている場合のみ比較する opt-in**、§2)
+- `tried_triggers` は集合比較 (**fixture 側に書かれている場合のみ比較する opt-in**、§2。順序非規範 — 近接マッチ計算が DX 層の関心である以上、綴りの列挙順に規範性はない)
 
 ## 4. ディレクトリ構成
 

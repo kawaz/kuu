@@ -1,0 +1,47 @@
+{
+  "why": "tried_triggers / help_entry の輪郭 (DR-053 §4、issue 2026-07-09-conformance-tried-triggers-help-entry-fields の受け入れ条件)。DR-053 §4 の規定は素材の列挙のみ — tried_triggers は『失敗位置で試行された exact 綴りのリスト』、help_entry は『定義に help 入口があればその綴り』であり、どちらも Did you mean / 誘導行の**素材**であって近接マッチ計算そのものは DX 層の関心 (AtomicAST にフックを持たない)。試行される exact 綴りは matcher がスコープ従属 (DR-041 §2『規則はスコープ従属』) に構成される以上、**失敗位置が属するスコープの綴りだけ**が候補になる — 祖先スコープの greedy はコマンド部分木の新しい背骨に届かない (DR-041 §4『背骨の範囲』) ため、子スコープでの失敗に親スコープの綴りは混入しない。root は option `verbose` を持ち、sub は commands ではなく help/quiet/port の3 option のみを持つ子スコープ (孫 subcommand・dd は本 fixture に含めない — tried_triggers への subcommand 名/dd 綴りの混在可否は issue 側で未裁定のため、混在が生じない構成に限定する)。commands 自体も exact トリガ衛星 (DR-018/041 §4) なので root スコープでの失敗には command 名 `sub` も候補として含まれることを対照 case で固定する。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {"name": "verbose", "type": "flag", "long": true}
+    ],
+    "commands": [
+      {
+        "type": "command",
+        "name": "sub",
+        "options": [
+          {"name": "help", "type": "help", "long": true},
+          {"name": "quiet", "type": "flag", "long": true},
+          {"name": "port", "type": "number", "long": true}
+        ]
+      }
+    ]
+  },
+  "cases": [
+    {
+      "id": "subcommand-scope-excludes-ancestor-spelling",
+      "why": "`sub --bogus`: `sub` が pos0 で入場しコマンド部分木の新しい背骨を開く (DR-041 §4)。続く `--bogus` は sub スコープの declared long (`--help`/`--quiet`/`--port`) のどれとも exact 不一致で残余トークンとなり、消費者不在のまま完全経路 0 本 → failure (element 省略 = スコープレベルの躓き、argv_pos=1、kind=parse / reason=unexpected_token、DR-065 §3、subcommand.json の child-flag-on-root-fails と対称形)。tried_triggers はこの失敗位置 (sub スコープの背骨) で matcher が実際に試行した exact 綴りの列挙 — sub が declare する3綴りのみが入り、**祖先 root の `--verbose` は入らない** (root の greedy は sub の新しい背骨に届かないため、そもそも候補にすら上がらない、DR-041 §4)。help_entry は sub スコープが持つ help 入口の綴り `--help`。tried_triggers/help_entry いずれも『試行された/存在する綴りの列挙』のみを固定し、\"--bogus\" と \"--quiet\" 等との近接度計算はしない (Did you mean の提示ロジックは DX 層、DR-053 §4)。",
+      "argv": ["sub", "--bogus"],
+      "expect": {
+        "outcome": "failure",
+        "errors": [
+          {"argv_pos": 1, "kind": "parse", "reason": "unexpected_token"}
+        ],
+        "tried_triggers": ["--help", "--quiet", "--port"],
+        "help_entry": "--help"
+      }
+    },
+    {
+      "id": "root-scope-tried-triggers-includes-command-name",
+      "why": "(対照) `--bogus` (root 直下、sub 未入場): pos0 で root スコープの declared 綴りのどれとも一致せず残余、完全経路 0 本 → failure (argv_pos=0、kind=parse / reason=unexpected_token)。tried_triggers は root スコープの背骨で試行された exact 綴り — option `--verbose` に加え、**command `sub` も greedy マーク付き exact トリガ衛星として同じ候補集合に入る** (DR-018/041 §4、commands と positionals の排他は専用規則でなく完全経路一意性 + 先食いの創発、DESIGN §4.2)。sub-scope の case (subcommand-scope-excludes-ancestor-spelling) と対で、tried_triggers が『失敗位置が属するスコープの綴りだけ』という軸 (親→子は含まれない/子スコープ独自の綴りのみ) を、逆方向 (root 自身の綴り + root が持つ command 名) から固定する。root は help 入口を持たないため help_entry は書かない (optional 検証、§2 — 不在の証明ではなく本 case では検証対象にしないだけ)。",
+      "argv": ["--bogus"],
+      "expect": {
+        "outcome": "failure",
+        "errors": [
+          {"argv_pos": 0, "kind": "parse", "reason": "unexpected_token"}
+        ],
+        "tried_triggers": ["--verbose", "sub"]
+      }
+    }
+  ]
+}
