@@ -64,6 +64,8 @@ type definition = {
 
 意味論は「参照先を土台に、ノード自身のフィールドで上書き」で一本化 (ref の継承がそのまま乗る)。number は上書きする構造が無いだけ、color は構造ごと継承。
 
+**values (or) を持つ node は type フィールドなしで enum 型を兼ねる**: `{name: "color", values: [...]}` は DESIGN §5.3 の or 展開により `{or: [{exact: ...}, ...]}` という構造テンプレを node 自身に直接持つ。これは definitions.types に enum 的テンプレを登録して `type: "color"` で参照するのと同じ構造 (上記の「型定義の中身 = 普通の node」がそのまま node 直書きに縮退したもの) であり、観測挙動は type 参照経由と同値。type フィールドの有無は「構造を definitions 越しに間接参照するか、node に直接書くか」という記法上の選択であって、意味論上の型カテゴリの違いではない。
+
 ## flag/count/command/help は糖衣プリセット (type 値ではない)
 
 DR-005 では flag/count/command/help を type の値として扱っていたが、今回の整理で「展開される糖衣プリセット」に寄せる。各々は独立した type ではなく、値プリミティブ + default + 挙動のプリセット:

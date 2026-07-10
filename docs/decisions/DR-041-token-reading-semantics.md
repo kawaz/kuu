@@ -41,6 +41,7 @@ matcher 間に優先順位はない (全 matcher の全読みが対等な枝)。
 - **背骨は多孔質、greedy 内部は一体** — どちらも独立の規則ではなく背骨規則の系: `cp a --verbose b` も repeat 反復間の `cp src... --verbose dst` も背骨上だから割り込め、`--color -v` が `color="-v"` になる (getopt 同型) のは値スロットに背骨がないから。トリガトークンが引数の束縛を宣言する、というのが greedy の意味論。
 - `prog -v src` (`-v` 定義済み、src は string positional) → 背骨上の `-v` は greedy 発火のみで `src="-v"` の読みは立たない。リテラル `-v` を positional に渡すには dd (`--`) を使う (greedy の値スロットへは raw 消費されるため escape 不要)。
 - 読みが生成した断片は再度読解しない (再帰読解なし)。cluster の走査は short の読み生成内で完結する。
+- **raw 消費と node 構造照合は別レイヤ**: 値スロットの raw 消費は matcher 段 (トークン境界の再解釈をしない、上記 `--color -v` → `color="-v"`) の話であり、区切られた後のトークンに対する node 構造照合 (or の各枝 exact 一致 / primitive の value_parser) は通常どおり効く。照合失敗は Reject (DR-037、§3.1 の「or 全枝の綴り不一致は Reject」) で経路が落ち、入力を全消費できる他枝の完全経路採用 (DR-038) に流れる。これは §5 の prefix ガード非採用と抵触しない — prefix ガードは「option 風に見える形」を理由に拒否する規則で、ここでの Reject は values/or の定義済み語彙との不一致という通常の構造照合の帰結に過ぎない。
 
 ### 5. prefix ガードは持たない (規則従属)
 

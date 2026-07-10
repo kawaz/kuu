@@ -410,6 +410,8 @@ values の中に配列があれば seq ブランチ:
 ]
 ```
 
+values (or 展開) は §7.1 (入口宣言 long/short) / §11.4 (値源ラダー default/env/config、DR-031) と直交する軸であり、同一 node に同居できる — long/short は入口の有無、値源ラダーは値の充填元、values/or は消費構造そのものを決めるという別レイヤの関心事であり、排他になる理由がない。
+
 ### 5.4 「あと勝ち」mutation (DR-015)
 
 値プレースホルダは型のゼロ値/null で初期化、CLI 入力順に mutation:

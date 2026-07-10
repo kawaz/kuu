@@ -1,0 +1,63 @@
+{
+  "why": "DR-081 §4 canonical 表の `--color` 行 (values 制約下の :set vs :set:always 枝競合、default-source-model.json では射程外に退避していた行) の fixture 化。`--color` トリガは2読みを持つ (DR-041 §3 の候補読みは枝): `:set` (値スロット、次トークンを raw 消費し values (or) と照合) と `:set:always` (0引数、literal color=always)。境界は既存規定から一意導出できる: values 不一致は or 全枝の綴り不一致で Reject (DR-028 §3.1、DR-041 §4 raw消費と node構造照合は別レイヤ) → その経路が脱落し、入力を全消費できる他枝が完全経路として残れば success (DR-038)、両枝とも残余トークンで完全経路 0 本なら failure。verbose は Reject の後続に定義済み別 option が続く枝を作るための添え物 (flag プリセット)。定義に type フィールドは無い — values (or 展開) がそのまま消費構造を決める (DESIGN §3.1『enum 的テンプレへの未定義値は or 全枝の綴り不一致』、DR-028 追記『values を持つ node は type フィールドなしで enum 型を兼ねる』)。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {"name": "color", "long": [":set", ":set:always", "default:default", "unset:unset"], "default": "auto", "values": ["always", "none", "auto"], "env": "APP_COLOR"},
+      {"name": "verbose", "long": true}
+    ]
+  },
+  "cases": [
+    {
+      "id": "bare-color-set-always-wins",
+      "why": "裸 `--color` (argv 末尾、後続トークンなし): `:set` 読みは値スロットが raw 消費すべき次トークンが存在しないため生成されない (背骨上に控えるトークンが無い = 読みゼロ、DR-041 §2)。`:set:always` 読み (0引数) のみが残り、全消費で完全経路 1 本 → success。DR-081 §4 canonical 表の当該行そのもの (`--color # color=always source=cli committed=true`)。",
+      "argv": ["--color"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "color", "op": "set", "operand": "always", "source": "cli"}
+        ],
+        "result": {"color": "always"},
+        "sources": {"color": "cli"}
+      }
+    },
+    {
+      "id": "explicit-value-set-wins",
+      "why": "`--color always` (positional 不在): `:set` 読みは \"always\" を raw 消費、values (or) の exact 枝 \"always\" に一致し受理 → 全消費で完全経路。`:set:always` 読みは \"--color\" のみ消費 (0引数) し \"always\" が残余トークンとなる — 消費先の positional/option が無いため全消費に至らず完全経路として成立しない。結果 `:set` 読みのみが生存し success (DR-081 §4 canonical 表 `--color always # color=always source=cli committed=true (:set)`)。",
+      "argv": ["--color", "always"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "color", "op": "set", "operand": "always", "source": "cli"}
+        ],
+        "result": {"color": "always"},
+        "sources": {"color": "cli"}
+      }
+    },
+    {
+      "id": "values-mismatch-before-option-set-always-wins",
+      "why": "`--color --verbose`: `:set` 読みは \"--verbose\" を raw 消費するが (先食み前提、DR-041 §4 の raw 消費は語形に関わらず起きる)、values (or) のどの枝とも exact 不一致なので Reject し経路脱落 (DR-028 §3.1 / DR-041 §4 追記)。`:set:always` 読み (0引数、color=always literal) の後に \"--verbose\" が独立トリガとして verbose を発火、2トークンとも消費されて完全経路 1 本 → success。values 制約の Reject が dead-end を生み、既存の完全経路一意性 (DR-038) だけで枝競合が解決することの固定。",
+      "argv": ["--color", "--verbose"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "color", "op": "set", "operand": "always", "source": "cli"},
+          {"entity": "verbose", "op": "set", "operand": true, "source": "cli"}
+        ],
+        "result": {"color": "always", "verbose": true},
+        "sources": {"color": "cli", "verbose": "cli"}
+      }
+    },
+    {
+      "id": "values-mismatch-no-sink-error",
+      "why": "`--color xxx` (positional 不在、\"xxx\" を消費できる定義済みトリガも無い): `:set` 読みは \"xxx\" を raw 消費するが values 不一致で Reject (前 case と同型)。`:set:always` 読みは \"--color\" のみ消費し \"xxx\" が残余 — 消費者不在のまま背骨終端に達し完全経路が成立しない (separator-split.json の `second-token-fails` / ancestor-spelling.json の `ancestor-spelling-not-extended` と同型: element 省略 = スコープレベルの躓き、argv_pos = 残余先頭、kind=parse / reason=unexpected_token、DR-065 §3)。両読みとも完全経路に至らず 0 本 → failure。Reject 経路 (values 不一致) はエラーを保持しない (DR-037) ため、表示されるのは残余トークンの unexpected_token のみ。",
+      "argv": ["--color", "xxx"],
+      "expect": {
+        "outcome": "failure",
+        "errors": [
+          {"argv_pos": 1, "kind": "parse", "reason": "unexpected_token"}
+        ]
+      }
+    }
+  ]
+}
