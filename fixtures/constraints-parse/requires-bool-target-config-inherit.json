@@ -1,0 +1,64 @@
+{
+  "why": "bool 目的語 requires の値源不問性 (DR-047 §5 明確化 2026-07-09) を config / inherit 経由まで拡張して pin する。requires-bool-target*.json は cli/env のみを扱っており、値源ラダー (DR-031 #3) の残り 2 席 (config / inherit) は未検証だった。判断本質: bool 型は preset の暗黙 default:false を常に持つ (DR-071) ため、requires の充足判定を素朴に『値の有無』でやると bool 目的語は常に『値がある』(= 少なくとも default:false という値がある) ことになり判定が vacuous に充足してしまう — これでは requires が意味を成さない。だから bool 目的語だけは判定基準を『解決後の値が true であること』に切り替える (DR-047 §5)。この判定は最終解決値だけを見るので **値源そのものは不問** — cli 明示 / env / config / inherit のどれで true になっても満たされる。本 fixture は config 席 (config-key 経由の供給) と inherit 席 (祖先スコープの解決値を子が引く、DESIGN §11.2) の両方で充足することを固定し、対極として config が false を供給する場合は従来どおり違反することを固定する。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {"name": "config", "type": "config_file", "long": true, "default": "/app.toml"},
+      {"name": "a", "type": "flag", "long": true, "requires": ["c"]},
+      {"name": "c", "type": "flag", "long": true, "config_key": ["c"]},
+      {"name": "c2", "type": "flag", "long": true}
+    ],
+    "commands": [
+      {
+        "type": "command",
+        "name": "sub",
+        "options": [
+          {"name": "a2", "type": "flag", "long": true, "requires": ["c2"]},
+          {"name": "c2", "type": "flag", "long": true, "inherit": true}
+        ]
+      }
+    ]
+  },
+  "cases": [
+    {
+      "id": "config-true-satisfies-requires",
+      "why": "`--a`、config `{c:true}`: c は CLI 未発火だが config_key 経由で config 席から true が解決値として供給される (DR-050 §4/§5、config は席宣言型で構造に関与せず resolve フェーズで効く)。requires の判定は『解決後の値が true』のみを見るので、値源が config でも充足する (DR-047 §5 の値源不問)。effects は cli 発火した a の set のみ (c は config 由来なので effects 非掲載、CONFORMANCE §2)。result は {a:true, c:true}、sources で c の由来 config を検証。",
+      "argv": ["--a"],
+      "config": {"c": true},
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "a", "op": "set", "operand": true, "source": "cli"}
+        ],
+        "result": {"a": true, "c": true},
+        "sources": {"c": "config"}
+      }
+    },
+    {
+      "id": "config-false-still-violates",
+      "why": "(対極) `--a`、config `{c:false}`: config が明示的に false を供給しても『解決後の値が true』を満たさないので requires 違反 (requires-bool-target-single-path.json の c-unset-fails と同じ error 語彙 — element=a、kind=constraint、reason=requires_violated、argv_pos=1=argv.length、遅延述語は完了後の final position で評価される)。値源が変わっても『false なら不充足』という判定基準自体は不変であることの固定。",
+      "argv": ["--a"],
+      "config": {"c": false},
+      "expect": {
+        "outcome": "failure",
+        "errors": [
+          {"element": "a", "argv_pos": 1, "kind": "constraint", "reason": "requires_violated"}
+        ]
+      }
+    },
+    {
+      "id": "inherit-true-satisfies-requires",
+      "why": "`--c2 sub --a2`: root で `--c2` が root 背骨上で発火し (sub トークンより前)、root の c2 が true・committed で確定。続く `sub` 入場後、子スコープ自前の c2 (inherit:true、自前 default は持たない — inherit と default は排他、DESIGN §11.2) は CLI/env/config を持たないので祖先 (root) の解決値 true を継承する。子の a2 (requires:[c2]) はこの継承値で『解決後の値が true』を満たし充足 — 値源が inherit でも DR-047 §5 の値源不問が成り立つ。effects は消費順で root c2 の cli set → 子 a2 の cli set。result は root c2=true に加え、sub ネスト内に a2=true・c2=true (継承値、DR-025 の結果スコープネスト)。sources で子側キーは `sub.c2` (inherit-ladder.json のネスト表記に合わせる) = inherit。",
+      "argv": ["--c2", "sub", "--a2"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "c2", "op": "set", "operand": true, "source": "cli"},
+          {"entity": "a2", "op": "set", "operand": true, "source": "cli"}
+        ],
+        "result": {"c2": true, "sub": {"a2": true, "c2": true}},
+        "sources": {"c2": "cli", "sub.c2": "inherit"}
+      }
+    }
+  ]
+}
