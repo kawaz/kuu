@@ -1,0 +1,34 @@
+{
+  "why": "DR-083 §4 のラダー供給 (未発火・uncommitted) 輪郭: source = default_source (DR-081 §1)。宣言 default のみなら sources=default (書き換えなし)、env が default を書き換えていればその席名 (sources=env)。DR-083 §2 の『宣言 default 配列は既に分割済みの piece 列、separator は適用されない』のに対し、**env が default を書き換える値は生文字列であり pieceProcessor (separator 分割 + parse) を通る** (DR-049 §2) という非対称を、同一 definition の2 case で対照する — 宣言側は JSON 配列としてすでに構造化済み、書き換え側は文字列として字句層をゼロから通る。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {"name": "hosts", "type": "string", "long": true, "default": ["localhost", "backup"], "multiple": {"accumulator": "append", "separator": ","}, "env": "APP_HOSTS"}
+    ]
+  },
+  "cases": [
+    {
+      "id": "unfired-uses-declared-default-array-as-is",
+      "why": "未発火、env 未設定: 宣言 default 配列 `[\"localhost\",\"backup\"]` がそのまま値になる — DR-083 §2 により piece 分割済みとして扱われ separator は適用されない (2要素のまま、\"localhost,backup\" のような単一文字列分割ではない)。source は default_source が書き換えられていないので `default`。effects 空 (CLI 未発火)。",
+      "argv": [],
+      "expect": {
+        "outcome": "success",
+        "effects": [],
+        "result": {"hosts": ["localhost", "backup"]},
+        "sources": {"hosts": "default"}
+      }
+    },
+    {
+      "id": "env-rewrites-declared-default-through-separator",
+      "why": "未発火、env APP_HOSTS=\"a,b,c\": DR-081 の書き換えモデルにより env 供給が default 値そのものを書き換える。env 値は生文字列 \"a,b,c\" であり、宣言 default 配列 (既に分割済み) とは異なり pieceProcessor (separator 分割、DR-049 §2) をゼロから通って `[\"a\",\"b\",\"c\"]` になる — この書き換え済み値が default になる。source は default_source=env。CLI 未発火なので effects 空 (env 由来の値確定は effects 非掲載、CONFORMANCE §2)。unfired-uses-declared-default-array-as-is との対比で『宣言 default は piece 列として供給・env 書き換えは文字列として字句層を通る』という非対称を固定する。",
+      "argv": [],
+      "env": {"APP_HOSTS": "a,b,c"},
+      "expect": {
+        "outcome": "success",
+        "effects": [],
+        "result": {"hosts": ["a", "b", "c"]},
+        "sources": {"hosts": "env"}
+      }
+    }
+  ]
+}

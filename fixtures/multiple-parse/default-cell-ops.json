@@ -1,9 +1,10 @@
 {
-  "why": "default op (DR-045: 明示の default 選択、committed=true) が accum セル (multiple append) に効く輪郭 — unset (filters-cell-ops.json) との対。DR-081 の default 席書き換えモデル: node は default 値と隠し属性 default_source を持ち、env/config/inherit の供給は『席が勝つ』のではなく『node の default と default_source を書き換える』。op=default はその時点の (書き換え済み) default を明示 set し、source は常に **cli** (値の内容が default 値と同じでも、確定させた主体はユーザの明示操作 — DR-031 の明文、DR-081 で『値の由来席』読みを覆した)。ports は宣言 default を持たないので、env 供給が無ければ書き換え前の DR-051 §2 一様形 `[]` (DR-044 一様配列規約) が default 値になる。env 供給がある場合は default 値そのものが書き換わる (下記 default-sets-env-rewritten-default 参照) — unset (committed=false でラダーを開放し env が『勝つ』) と default (committed=true で確定するが値は書き換え済み default に従属する) の非対称は『下位席が最終値を決めるか』ではなく『committed のロックの有無』の一点に純化される。multiple 要素への配列宣言 default (書き換えでなく definition 時の宣言値) の意味論は本 fixture の射程外 (issue multiple-declared-default-semantics に記録済み)。",
+  "why": "default op (DR-045: 明示の default 選択、committed=true) が accum セル (multiple append) に効く輪郭 — unset (filters-cell-ops.json) との対。DR-081 の default 席書き換えモデル: node は default 値と隠し属性 default_source を持ち、env/config/inherit の供給は『席が勝つ』のではなく『node の default と default_source を書き換える』。op=default はその時点の (書き換え済み) default を明示 set し、source は常に **cli** (値の内容が default 値と同じでも、確定させた主体はユーザの明示操作 — DR-031 の明文、DR-081 で『値の由来席』読みを覆した)。ports は宣言 default を持たないので、env 供給が無ければ書き換え前の DR-051 §2 一様形 `[]` (DR-044 一様配列規約) が default 値になる。env 供給がある場合は default 値そのものが書き換わる (下記 default-sets-env-rewritten-default 参照) — unset (committed=false でラダーを開放し env が『勝つ』) と default (committed=true で確定するが値は書き換え済み default に従属する) の非対称は『下位席が最終値を決めるか』ではなく『committed のロックの有無』の一点に純化される。hosts は multiple 要素への宣言 default 配列を持つ (DR-083、accum-fold サイクルで一度退避し issue multiple-declared-default-semantics として保留していた論点が DR-081 の書き換えモデル確定を土台に導出可能と判明し DR 化された)。DR-083 §2: 宣言 default 配列は DR-050 §4 の config array と同型に『既に分割済みの piece 列』として供給される (separator は適用されない) — 各 piece は型一致なら T 域座席のみ (value_filters per piece → accumulator 畳み → cell_filters、DESIGN §14.3 の型の帰結)。op=default (--restore-hosts) はこの宣言 default 配列を明示 set する (DR-083 §3、DR-081 §2 の既定の適用)。",
   "query": "parse",
   "definition": {
     "options": [
-      {"name": "ports", "type": "number", "long": [":set", "restore:default"], "env": "PORTS", "multiple": {"accumulator": "append", "separator": ","}}
+      {"name": "ports", "type": "number", "long": [":set", "restore:default"], "env": "PORTS", "multiple": {"accumulator": "append", "separator": ","}},
+      {"name": "hosts", "type": "string", "long": [":set", "restore:default"], "default": ["localhost", "localhost"], "value_filters": ["non_empty"], "cell_filters": ["unique"], "multiple": {"accumulator": "append"}}
     ]
   },
   "cases": [
@@ -33,6 +34,20 @@
         ],
         "result": {"ports": [10, 20]},
         "sources": {"ports": "cli"}
+      }
+    },
+    {
+      "id": "default-restores-declared-array-through-value-and-cell-filters",
+      "why": "`--hosts web1 --restore-hosts`: set(web1) が append accumulator に畳まれ [\"web1\"] になった後、default (--restore-hosts) が発火し宣言 default 配列 `[\"localhost\",\"localhost\"]` を明示 set する (DR-083 §3)。DR-083 §2 により宣言 default 配列は『既に分割済みの piece 列』として供給される (separator は適用されない、2要素のまま) — 各 piece は type=string に一致するので T 域座席のみを通る (DESIGN §14.3): value_filters (each 相、non_empty — 両要素とも非空文字列で通過) → accumulator 畳み → cell_filters (累積後、unique — 重複 \"localhost\" が1件に畳まれる)。結果 `[\"localhost\"]`。source は DR-081 の確定主体読みにより cli (default 値の由来が宣言値であっても確定させたのは cli 発火)。effects は [set(web1,cli), default(cli)] の2個 (default op 自体は operand を運ばない cell 操作だが、書き戻された宣言 default 配列がラダー確定後に filter chain を通ることは default op の発火とは別の層、DESIGN §8.3)。",
+      "argv": ["--hosts", "web1", "--restore-hosts"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "hosts", "op": "set", "operand": "web1", "source": "cli"},
+          {"entity": "hosts", "op": "default", "source": "cli"}
+        ],
+        "result": {"hosts": ["localhost"]},
+        "sources": {"hosts": "cli"}
       }
     }
   ]

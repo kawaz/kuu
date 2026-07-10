@@ -1,0 +1,19 @@
+{
+  "why": "definition_error format の実例化 (DR-082 §1)。非 multiple のスカラー要素に配列 default を宣言すると静的 definition-error になる (DR-083 §5)。要素の type (scalar) と default の構造 (配列) の不一致は定義時点で静的に既知 — DR-050 の config 構造不一致が実行時 Error なのは config が実行時供給だからだが、宣言 default は定義そのものの一部なので静的検査に倒す。kind=invalid-range は DR-082 §2 の『構文上は書けるが構成として不成立』系統 (accum×update / count×multiple / option ref repeat min>1 と同じ分類)。",
+  "query": "definition_error",
+  "definition": {
+    "options": [
+      {"name": "port", "type": "number", "long": true, "default": [8080, 9090]}
+    ]
+  },
+  "cases": [
+    {
+      "id": "scalar-element-with-array-default-is-invalid-range",
+      "why": "`port` は multiple 宣言を持たないスカラー要素 (number) だが、default に配列 `[8080,9090]` を宣言している。DR-083 §1 は multiple 要素での宣言 default 配列を尊重する規定であり、multiple 無し要素への配列 default は対象外 — 構造不一致として定義時点で invalid-range になる。argv は書かない (定義の静的検査であり実行しない)。",
+      "expect": {
+        "outcome": "definition-error",
+        "errors": [{"element": "port", "kind": "invalid-range"}]
+      }
+    }
+  ]
+}

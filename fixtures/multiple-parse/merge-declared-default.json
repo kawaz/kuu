@@ -1,0 +1,37 @@
+{
+  "why": "merge accumulator 要素への宣言 default 配列の輪郭 (DR-083 §2 + DR-080 §1)。宣言 default の piece には**マーカー語彙が適用されない** — DR-080 §1 がマーカー解釈を『CLI 発火 piece 列』に限定しているため、宣言 default に `-a` や `@` のような文字列を含めても全て literal として供給される (merge-first-firing.json の marker-vocabulary-inert-without-merge-accumulator が『accumulator 非merge では常に literal』を固定するのに対し、本 fixture は『merge accumulator でも default 供給経路では literal』という別軸の不活性を固定する)。初回 CLI 発火で明示 `@` を使うと、この宣言 default 配列 (literal のまま) が old として splice される — PATH 型ユースケースの完成形 (組み込み default リストへの merge)。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {"name": "fields", "type": "string", "long": true, "default": ["-a", "@", "b"], "multiple": {"accumulator": "merge", "separator": ","}}
+    ]
+  },
+  "cases": [
+    {
+      "id": "unfired-declared-default-markers-stay-literal",
+      "why": "未発火: 宣言 default 配列 `[\"-a\",\"@\",\"b\"]` がそのまま値になる。DR-080 §1 によりマーカー解釈は CLI 発火 piece にのみ適用されるので、default 供給経路の `-a` と `@` はマーカーとして解釈されず literal のまま — 3要素とも変化なく result に現れる。source は default_source が書き換えられていないので `default`。effects 空 (CLI 未発火)。",
+      "argv": [],
+      "expect": {
+        "outcome": "success",
+        "effects": [],
+        "result": {"fields": ["-a", "@", "b"]},
+        "sources": {"fields": "default"}
+      }
+    },
+    {
+      "id": "first-cli-firing-splices-literal-declared-default",
+      "why": "`--fields -x,@,y` (初回 CLI 発火): piece=[-x,@,y]。marker あり (remove, splice) なので merge モード。old = 初回発火の下位席勝者 = 宣言 default 配列 `[\"-a\",\"@\",\"b\"]` (unfired-declared-default-markers-stay-literal と同じ、マーカー不活性で literal のまま保持されている値)。評価: -x (前置remove、operand=\"x\" — old の中に \"x\" という要素は無いので削除対象なし)、@ (splice、old をそのまま展開 → [\"-a\",\"@\",\"b\"])、y (add → [\"-a\",\"@\",\"b\",\"y\"])。結果 `[\"-a\",\"@\",\"b\",\"y\"]` — CLI 発火の `@` が宣言 default (literal のまま保持された \"-a\"/\"@\" を含む) を old として splice する PATH 型ユースケースの完成形。effects は3個 (remove(x), splice, add(y))。source=cli。",
+      "argv": ["--fields", "-x,@,y"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "fields", "op": "remove", "operand": "x", "source": "cli"},
+          {"entity": "fields", "op": "splice", "source": "cli"},
+          {"entity": "fields", "op": "set", "operand": "y", "source": "cli"}
+        ],
+        "result": {"fields": ["-a", "@", "b", "y"]},
+        "sources": {"fields": "cli"}
+      }
+    }
+  ]
+}
