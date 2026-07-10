@@ -22,7 +22,7 @@
   "cases": [
     {
       "id": "config-true-satisfies-requires",
-      "why": "`--a`、config `{c:true}`: c は CLI 未発火だが config_key 経由で config 席から true が解決値として供給される (DR-050 §4/§5、config は席宣言型で構造に関与せず resolve フェーズで効く)。requires の判定は『解決後の値が true』のみを見るので、値源が config でも充足する (DR-047 §5 の値源不問)。effects は cli 発火した a の set のみ (c は config 由来なので effects 非掲載、CONFORMANCE §2)。result は {a:true, c:true}、sources で c の由来 config を検証。",
+      "why": "`--a`、config `{c:true}`: c は CLI 未発火だが config_key 経由で config 席から true が解決値として供給される (DR-050 §4/§5、config は席宣言型で構造に関与せず resolve フェーズで効く)。requires の判定は『解決後の値が true』のみを見るので、値源が config でも充足する (DR-047 §5 の値源不問)。effects は cli 発火した a の set のみ (c は config 由来なので effects 非掲載、CONFORMANCE §2)。result は {a:true, c:true} に加え、未接触の c2 も flag preset の default:false で必ず present (DR-051 §2)。sources で c の由来 config を検証。",
       "argv": ["--a"],
       "config": {"c": true},
       "expect": {
@@ -30,8 +30,8 @@
         "effects": [
           {"entity": "a", "op": "set", "operand": true, "source": "cli"}
         ],
-        "result": {"a": true, "c": true},
-        "sources": {"c": "config"}
+        "result": {"a": true, "c": true, "c2": false},
+        "sources": {"a": "cli", "c": "config", "c2": "default"}
       }
     },
     {
@@ -48,7 +48,7 @@
     },
     {
       "id": "inherit-true-satisfies-requires",
-      "why": "`--c2 sub --a2`: root で `--c2` が root 背骨上で発火し (sub トークンより前)、root の c2 が true・committed で確定。続く `sub` 入場後、子スコープ自前の c2 (inherit:true、自前 default は持たない — inherit と default は排他、DESIGN §11.2) は CLI/env/config を持たないので祖先 (root) の解決値 true を継承する。子の a2 (requires:[c2]) はこの継承値で『解決後の値が true』を満たし充足 — 値源が inherit でも DR-047 §5 の値源不問が成り立つ。effects は消費順で root c2 の cli set → 子 a2 の cli set。result は root c2=true に加え、sub ネスト内に a2=true・c2=true (継承値、DR-025 の結果スコープネスト)。sources で子側キーは `sub.c2` (inherit-ladder.json のネスト表記に合わせる) = inherit。",
+      "why": "`--c2 sub --a2`: root で `--c2` が root 背骨上で発火し (sub トークンより前)、root の c2 が true・committed で確定。続く `sub` 入場後、子スコープ自前の c2 (inherit:true、自前 default は持たない — inherit と default は排他、DESIGN §11.2) は CLI/env/config を持たないので祖先 (root) の解決値 true を継承する。子の a2 (requires:[c2]) はこの継承値で『解決後の値が true』を満たし充足 — 値源が inherit でも DR-047 §5 の値源不問が成り立つ。effects は消費順で root c2 の cli set → 子 a2 の cli set。result は root c2=true に加え、sub ネスト内に a2=true・c2=true (継承値、DR-025 の結果スコープネスト)。sources で子側キーは `sub.c2` (inherit-ladder.json のネスト表記に合わせる) = inherit。root の未接触 flag (a / c) も default:false で必ず present (DR-051 §2)。config_file 要素 (config) は配線宣言であって結果 entity ではないため result / sources に現れない。",
       "argv": ["--c2", "sub", "--a2"],
       "expect": {
         "outcome": "success",
@@ -56,8 +56,8 @@
           {"entity": "c2", "op": "set", "operand": true, "source": "cli"},
           {"entity": "a2", "op": "set", "operand": true, "source": "cli"}
         ],
-        "result": {"c2": true, "sub": {"a2": true, "c2": true}},
-        "sources": {"c2": "cli", "sub.c2": "inherit"}
+        "result": {"c2": true, "a": false, "c": false, "sub": {"a2": true, "c2": true}},
+        "sources": {"c2": "cli", "a": "default", "c": "default", "sub.a2": "cli", "sub.c2": "inherit"}
       }
     }
   ]
