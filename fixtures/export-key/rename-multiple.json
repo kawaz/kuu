@@ -1,0 +1,49 @@
+{
+  "why": "export_key (rename / null 透過) と multiple (accumulate) の組合せの輪郭 (DR-052 §1/§2)。export_key は結果キー軸の解決であって、値セルへの発火・accumulate の畳み込み機構には一切関与しない (rename.json / transparent-kv.json が固定した『パース不変・結果キーのみ変化』の原則は、値セルが scalar か multiple (accum) かで変わらない — multiple はセルの畳み方 (DR-034) を決めるだけの直交軸で、export_key はその畳み結果を最終的にどのキーへ写像するかを決めるだけ)。したがって rename.json (rename+scalar) と append.json (multiple+identity key) をそのまま合成すれば rename+multiple の帰結が導ける: fold 済みの配列がそのまま export_key の指すキーへ現れ、effects の entity は畳み込み前の値セル name (= 素の option name) のまま (rename.json の『effects と result でキーが食い違う』構図をそのまま踏襲)。tags (export_key:\"t\") は rename+multiple の主軸、labels (export_key:null) は同じ一般化 (DR-052 §2 の kv 透過はキーの有無に関する規則でありセル種別を問わない) を null 側に延長した対照軸。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {"name": "tags", "type": "string", "long": true, "multiple": "append", "export_key": "t"},
+      {"name": "labels", "type": "string", "long": true, "multiple": "append", "export_key": null}
+    ]
+  },
+  "cases": [
+    {
+      "id": "renamed-key-accumulates-array",
+      "why": "`--tags a --tags b`: tags セルは2発火を append accumulator で畳み [a,b] を作る (append.json と同じ fold 機構、export_key の有無は fold に無関係)。effects の entity は畳み込み前の値セル name `tags` のまま (2発火とも)。結果射影の段でのみ export_key `t` が name 由来キー `tags` を差し替え、result は {t:[\"a\",\"b\"]}。sources も同じ射影後キー `t` の下で由来を示す ({t:\"cli\"}) — rename.json が result で示した『射影はキーだけを変える』原則を sources 側にも一貫させる。",
+      "argv": ["--tags", "a", "--tags", "b"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "tags", "op": "set", "operand": "a", "source": "cli"},
+          {"entity": "tags", "op": "set", "operand": "b", "source": "cli"}
+        ],
+        "result": {"t": ["a", "b"]},
+        "sources": {"t": "cli"}
+      }
+    },
+    {
+      "id": "renamed-key-zero-fire-empty-array",
+      "why": "0 発火 (対極): accumulate セルは fire 0 回でも absent にならず一様配列 `[]` を描く (DR-044/051 §2、append.json の zero-fires-empty と同じ縮退規則)。この `[]` も export_key の射影を経てから結果に現れる — rename 済みキー `t` の下に `[]` が出ることが『rename は fold 済みの値 (0発火の空配列も含む) をそのまま写像するだけ』の固定点。labels は同様に未発火で absent (export_key null は『存在時のキー名』の指定であり存在自体を作らない、command-promote.json / rename.json の unfired-absent と同じ道理)。",
+      "argv": [],
+      "expect": {
+        "outcome": "success",
+        "effects": [],
+        "result": {"t": []}
+      }
+    },
+    {
+      "id": "null-export-key-multiple-transparent",
+      "why": "(推定拡張、既存 pin 実例なし — DR-052 §2 の一般化による導出): labels は export_key:null の multiple 要素。transparent-kv.json は scalar flag での kv 透過 (『結果キー軸を持たない要素は kv 文脈で値ごと現れない』DR-052 §2) を pin 済みだが、multiple×null の組合せそのものは既存 fixture に無い。DR-052 §2 の規定文言はセル種別 (scalar/accum) を条件にしていない一般規則であり、本 fixture 冒頭の rename+multiple 導出と同じ一般化 (『export_key は fold 機構に関与しない、fold 済みの値をどう射影するかだけを決める』) を null 側に延長すれば、fold 済み配列 `[x,y]` も kv 文脈で丸ごと現れないはずである。`--labels x --labels y`: labels セルは2発火を fold し内部的に [x,y] を持つが、export_key null により kv result からキーごと消える (effects には両発火が entity=labels で残る — 値の伝搬自体は止まらない、transparent-kv.json と同じ『発火はするが痕跡が結果に残らない』構図)。tags は本 case で未発火なので `t` キーも result に現れず、result は空 `{}`。",
+      "argv": ["--labels", "x", "--labels", "y"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "labels", "op": "set", "operand": "x", "source": "cli"},
+          {"entity": "labels", "op": "set", "operand": "y", "source": "cli"}
+        ],
+        "result": {}
+      }
+    }
+  ]
+}
