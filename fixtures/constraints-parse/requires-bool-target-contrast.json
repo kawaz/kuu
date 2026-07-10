@@ -23,8 +23,8 @@
   },
   "cases": [
     {
-      "id": "c-env-set-still-fails",
-      "why": "env C=x を与えても非 bool 目的語の判定は変わらず requires_violated (kind=constraint、位置は完了後 = final position)。",
+      "id": "c-env-set-satisfies-requires",
+      "why": "env C=x があれば非 bool 目的語も充足する: env 宣言は『env から遅延解決する default_fn』と同型でデフォルトの存在 (DR-088 §1)、経路は静的宣言により完全と判定され、最終判定は遅延解決後の実値 c=x の有無で充足 (DR-088 §3、値充足は値源不問)。c は env 由来なので effects 非掲載、result / sources には present。",
       "argv": [
         "--a"
       ],
@@ -32,15 +32,23 @@
         "C": "x"
       },
       "expect": {
-        "outcome": "failure",
-        "errors": [
+        "outcome": "success",
+        "effects": [
           {
-            "element": "a",
-            "argv_pos": 1,
-            "kind": "constraint",
-            "reason": "requires_violated"
+            "entity": "a",
+            "op": "set",
+            "operand": true,
+            "source": "cli"
           }
-        ]
+        ],
+        "result": {
+          "a": true,
+          "c": "x"
+        },
+        "sources": {
+          "a": "cli",
+          "c": "env"
+        }
       }
     }
   ]
