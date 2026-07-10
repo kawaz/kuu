@@ -19,7 +19,7 @@
           {"entity": "fields", "op": "set", "operand": "@", "source": "cli"},
           {"entity": "fields", "op": "set", "operand": "+", "source": "cli"}
         ],
-        "result": {"fields": ["-a", "@", "+"]}
+        "result": {"fields": ["-a", "@", "+"], "nums": []}
       }
     },
     {
@@ -34,7 +34,7 @@
           {"entity": "fields", "op": "set", "operand": "b", "source": "cli"},
           {"entity": "fields", "op": "remove", "operand": "", "source": "cli"}
         ],
-        "result": {"fields": ["a", "b"]}
+        "result": {"fields": ["a", "b"], "nums": []}
       }
     },
     {
@@ -55,7 +55,7 @@
         "effects": [
           {"entity": "fields", "op": "set", "operand": "+", "source": "cli"}
         ],
-        "result": {"fields": ["+"]}
+        "result": {"fields": ["+"], "nums": []}
       }
     }
   ]

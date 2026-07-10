@@ -22,8 +22,8 @@
           {"entity": "fields", "op": "set", "operand": "duration", "source": "cli"},
           {"entity": "fields", "op": "set", "operand": "ip", "source": "cli"}
         ],
-        "result": {"fields": ["ts", "method", "path", "duration", "ip"]},
-        "sources": {"fields": "cli"}
+        "result": {"fields": ["ts", "method", "path", "duration", "ip"], "tags": []},
+        "sources": {"fields": "cli", "tags": "default"}
       }
     },
     {
@@ -36,7 +36,7 @@
           {"entity": "tags", "op": "set", "operand": "-a", "source": "cli"},
           {"entity": "tags", "op": "set", "operand": "@", "source": "cli"}
         ],
-        "result": {"tags": ["-a", "@"]}
+        "result": {"fields": [], "tags": ["-a", "@"]}
       }
     }
   ]
