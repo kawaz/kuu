@@ -1,11 +1,11 @@
 ---
 title: multiple 要素への宣言 default (配列) の意味論が未規定
-status: open
+status: wip
 category: design
 created: 2026-07-10T03:55:38+09:00
 last_read:
 open_entered: 2026-07-10T03:55:38+09:00
-wip_entered:
+wip_entered: 2026-07-10T16:13:50+09:00
 blocked_entered:
 pending_entered:
 discarded_entered:
@@ -42,3 +42,7 @@ accum-fold-update-default-ops サイクルで一度 fixture 化しかけた (hos
 - [ ] 上記論点の kawaz 裁定 (DR 化または DESIGN 追記)
 - [ ] 裁定に基づく fixture 追加 (尊重する場合は default-cell-ops.json への case 復活を含む)
 - [ ] kuu.mbt 側の default 保持表現 (現 Entity.default_value: Value? はスカラーのみ) の追従
+
+## 2026-07-10 追記: DR-083 起草済み、追従サイクル進行中
+
+5 論点は DR-081 確定により導出可能となり DR-083 (multiple 要素の宣言 default) として裁定済み。fixture (hosts case 復活 / ラダー供給 / scalar×配列 definition-error / merge×宣言 default) と kuu.mbt (default_values 統一列) の追従サイクルが進行中で、完了時に close する。
