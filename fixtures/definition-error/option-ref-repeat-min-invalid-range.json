@@ -1,0 +1,27 @@
+{
+  "why": "definition_error format の実例化 (DR-082 §1)。option の ref+repeat lowering (`inst_long`) は単一の GreedyRepeat 背骨スロットを配線する — これは min<=1 (mandatory-head unroll 無し) では正しいが、min>1 の宣言だと追加の必須反復が同じ単一スロットへ静かに畳み込まれ、それらの反復では先食い抑制・取り分選好が失われたまま『成功したふり』の壊れた形で parse が通ってしまう (最終手段としての撤退でなく、定義時点で reject するのが正)。option ref+repeat の min>1 は siblings positional の min>max 検査と同型の invalid-range として定義時点で reject する (last-wins-repeat-rows.json / ref-repeat-sibling-trigger.json が固定する min<=1 の形は対極として reject されない — repeat の対象要素が ref であること自体は問題でなく、min>1 という反復回数の宣言だけが未対応)。",
+  "query": "definition_error",
+  "definition": {
+    "definitions": {
+      "templates": {
+        "color": {"or": [
+          {"seq": [{"type": "number", "name": "r"}, {"type": "number", "name": "g"}, {"type": "number", "name": "b"}]},
+          {"type": "string", "name": "colorname"}
+        ]}
+      }
+    },
+    "options": [
+      {"name": "hlcolors", "long": [":set"], "ref": "color", "repeat": {"min": 2}}
+    ]
+  },
+  "cases": [
+    {
+      "id": "option-ref-repeat-min-greater-than-1-is-invalid-range",
+      "why": "`hlcolors` は ref (color テンプレ) + repeat: {min: 2} を宣言している option。単一 GreedyRepeat 背骨スロットへの配線は min<=1 でのみ正しく、min>1 は追加の必須反復を先食い抑制・取り分選好を保てないまま同じスロットへ畳み込んでしまうため、定義時点で invalid-range として reject される。argv は書かない (定義の静的検査であり実行しない)。",
+      "expect": {
+        "outcome": "definition-error",
+        "errors": [{"element": "hlcolors", "kind": "invalid-range"}]
+      }
+    }
+  ]
+}
