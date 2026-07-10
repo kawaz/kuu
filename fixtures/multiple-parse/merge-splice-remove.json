@@ -1,5 +1,5 @@
 {
-  "why": "DR-080 §3/§4 の remove/splice 複合輪郭: remove は双方向に効く (a: それ以前に組み立てた作業リストから全削除 = 後置 remove、b: それ以後の `@` の splice 内容から全削除 = 前置 remove)。それ以後の add には効かない。本 fixture 群は old=[a,a,b,a,c] (直前発火で確定) を共通の起点にして、-a / @ / add の組合せ8通りを固定する。effects は各 piece op を L→R 順で載せる (add={op:'set'}, remove={op:'remove',operand}, splice={op:'splice'})。暗黙補完される先頭 @ は effects に載せない (merge-basic.json と同じ判断、team-lead 確認待ち)。",
+  "why": "DR-080 §3/§4 の remove/splice 複合輪郭: remove は双方向に効く (a: それ以前に組み立てた作業リストから全削除 = 後置 remove、b: それ以後の `@` の splice 内容から全削除 = 前置 remove)。それ以後の add には効かない。本 fixture 群は old=[a,a,b,a,c] (直前発火で確定) を共通の起点にして、-a / @ / add の組合せ8通りを固定する。effects は各 piece op を L→R 順で載せる (add={op:'set'}, remove={op:'remove',operand}, splice={op:'splice'})。暗黙補完される先頭 @ は effects に載せない (merge-basic.json と同じ裁定)。",
   "query": "parse",
   "definition": {
     "options": [

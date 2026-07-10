@@ -1,5 +1,5 @@
 {
-  "why": "DR-080 (merge accumulator) の基本輪郭: マーカーを含まない発火は cell 上書き (accumulator 無し要素の last-wins 再発火と同じ見え方、DR-080 §3)、`@` 単独は old の splice (恒等)、marker (remove/add 混在) が初回発火 (old = 下位席なし = `[]`、DR-051 §2b の一様形) でどう畳まれるかを固定する。effects の piece op 掲載は DR-080 の残論点を本 fixture 群で確定させたもの (issue list-merge-piece-op-vocabulary 参照) — add piece は {op:'set', operand:<parse済み値>}、remove piece は {op:'remove', operand:<parse済み値>}、splice piece は {op:'splice'} (operand なし)、並びは piece の L→R 順。**暗黙補完される先頭 @ は実際の CLI 入力ではないため effects に載せない** (DR-045 の効果は CLI 発火に対応する観測可能データ、という原則に従った判断 — team-lead 確認待ち)。",
+  "why": "DR-080 (merge accumulator) の基本輪郭: マーカーを含まない発火は cell 上書き (accumulator 無し要素の last-wins 再発火と同じ見え方、DR-080 §3)、`@` 単独は old の splice (恒等)、marker (remove/add 混在) が初回発火 (old = 下位席なし = `[]`、DR-051 §2b の一様形) でどう畳まれるかを固定する。effects の piece op 掲載は DR-080 の残論点を本 fixture 群で確定させたもの (issue list-merge-piece-op-vocabulary 参照) — add piece は {op:'set', operand:<parse済み値>}、remove piece は {op:'remove', operand:<parse済み値>}、splice piece は {op:'splice'} (operand なし)、並びは piece の L→R 順。**暗黙補完される先頭 @ は実際の CLI 入力ではないため effects に載せない** (DR-045 の効果は CLI 発火に対応する観測可能データ、という原則に従った裁定 2026-07-10)。",
   "query": "parse",
   "definition": {
     "options": [
