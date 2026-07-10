@@ -34,7 +34,7 @@
     },
     {
       "id": "null-export-key-multiple-transparent",
-      "why": "(推定拡張、既存 pin 実例なし — DR-052 §2 の一般化による導出): labels は export_key:null の multiple 要素。transparent-kv.json は scalar flag での kv 透過 (『結果キー軸を持たない要素は kv 文脈で値ごと現れない』DR-052 §2) を pin 済みだが、multiple×null の組合せそのものは既存 fixture に無い。DR-052 §2 の規定文言はセル種別 (scalar/accum) を条件にしていない一般規則であり、本 fixture 冒頭の rename+multiple 導出と同じ一般化 (『export_key は fold 機構に関与しない、fold 済みの値をどう射影するかだけを決める』) を null 側に延長すれば、fold 済み配列 `[x,y]` も kv 文脈で丸ごと現れないはずである。`--labels x --labels y`: labels セルは2発火を fold し内部的に [x,y] を持つが、export_key null により kv result からキーごと消える (effects には両発火が entity=labels で残る — 値の伝搬自体は止まらない、transparent-kv.json と同じ『発火はするが痕跡が結果に残らない』構図)。tags は本 case で未発火なので `t` キーも result に現れず、result は空 `{}`。",
+      "why": "(推定拡張、既存 pin 実例なし — DR-052 §2 の一般化による導出): labels は export_key:null の multiple 要素。transparent-kv.json は scalar flag での kv 透過 (『結果キー軸を持たない要素は kv 文脈で値ごと現れない』DR-052 §2) を pin 済みだが、multiple×null の組合せそのものは既存 fixture に無い。DR-052 §2 の規定文言はセル種別 (scalar/accum) を条件にしていない一般規則であり、本 fixture 冒頭の rename+multiple 導出と同じ一般化 (『export_key は fold 機構に関与しない、fold 済みの値をどう射影するかだけを決める』) を null 側に延長すれば、fold 済み配列 `[x,y]` も kv 文脈で丸ごと現れないはずである。`--labels x --labels y`: labels セルは2発火を fold し内部的に [x,y] を持つが、export_key null により kv result からキーごと消える (effects には両発火が entity=labels で残る — 値の伝搬自体は止まらない、transparent-kv.json と同じ『発火はするが痕跡が結果に残らない』構図)。tags は本 case で未発火だが、accum セルは 0 発火でも absent にならない (DR-051 §2 の一様配列は絶対規則で export_key rename と直交) — rename 済みキー `t` で `[]` が result に現れる。透過で消えるのは export_key:null の labels だけである。",
       "argv": ["--labels", "x", "--labels", "y"],
       "expect": {
         "outcome": "success",
@@ -42,7 +42,7 @@
           {"entity": "labels", "op": "set", "operand": "x", "source": "cli"},
           {"entity": "labels", "op": "set", "operand": "y", "source": "cli"}
         ],
-        "result": {}
+        "result": {"t": []}
       }
     }
   ]
