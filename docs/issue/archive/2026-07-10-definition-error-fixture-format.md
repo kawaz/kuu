@@ -1,6 +1,6 @@
 ---
 title: definition_error fixture format の確定 (DR-065 予約分の初実例化) + accum×update の kind 判定
-status: open
+status: resolved
 category: design
 created: 2026-07-10T03:58:36+09:00
 last_read:
@@ -9,10 +9,10 @@ wip_entered:
 blocked_entered:
 pending_entered:
 discarded_entered:
-resolved_entered:
+resolved_entered: 2026-07-10T11:13:11+09:00
 discard_reason:
 pending_reason:
-close_reason:
+close_reason: ["dr/DR-082","implemented","fixtures/definition-error/accum-update-invalid-range.json","fixtures/definition-error/count-multiple-invalid-range.json","fixtures/definition-error/option-ref-repeat-min-invalid-range.json","done:wbtest は昇格注記付きで unit 層 pin として残置"]
 blocked_by:
 origin: 自リポ TODO
 ---

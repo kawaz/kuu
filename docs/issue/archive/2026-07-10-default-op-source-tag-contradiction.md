@@ -1,6 +1,6 @@
 ---
 title: op=default の sources タグ — DR-031 明文 (cli) と fixture 実践 (default) の矛盾
-status: open
+status: resolved
 category: design
 created: 2026-07-10T04:45:37+09:00
 last_read:
@@ -9,10 +9,10 @@ wip_entered:
 blocked_entered:
 pending_entered:
 discarded_entered:
-resolved_entered:
+resolved_entered: 2026-07-10T11:13:11+09:00
 discard_reason:
 pending_reason:
-close_reason:
+close_reason: ["dr/DR-081","implemented","fixtures/value-sources/default-source-model.json","fixtures/value-sources/unset-ladder.json","fixtures/multiple-parse/default-cell-ops.json","done:conformance decoded=158 ran_cases=403 skipped=0 mismatches=0","doc-pending:CONFORMANCE.md sources 実文追記は今後の doc 整備で (DR-081 波及節に記載済み)"]
 blocked_by:
 origin: 自リポ TODO
 ---
