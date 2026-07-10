@@ -4,7 +4,7 @@
   "definition": {
     "options": [
       {"name": "color", "long": [":set", ":set:always", "default:default", "unset:unset"], "default": "auto", "values": ["always", "none", "auto"], "env": "APP_COLOR"},
-      {"name": "verbose", "long": true}
+      {"name": "verbose", "type": "flag", "long": true}
     ]
   },
   "cases": [
