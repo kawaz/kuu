@@ -1,0 +1,160 @@
+{
+  "why": "DR-080 §3/§4 の remove/splice 複合輪郭: remove は双方向に効く (a: それ以前に組み立てた作業リストから全削除 = 後置 remove、b: それ以後の `@` の splice 内容から全削除 = 前置 remove)。それ以後の add には効かない。本 fixture 群は old=[a,a,b,a,c] (直前発火で確定) を共通の起点にして、-a / @ / add の組合せ8通りを固定する。effects は各 piece op を L→R 順で載せる (add={op:'set'}, remove={op:'remove',operand}, splice={op:'splice'})。暗黙補完される先頭 @ は effects に載せない (merge-basic.json と同じ判断、team-lead 確認待ち)。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {"name": "fields", "type": "string", "long": true, "multiple": {"accumulator": "merge", "separator": ","}}
+    ]
+  },
+  "cases": [
+    {
+      "id": "implicit-at-then-remove-only",
+      "why": "`--fields a,a,b,a,c --fields -a`: 2回目 piece=[-a] のみ。暗黙先頭 @ (old=[a,a,b,a,c] を splice)、-a (後方 remove、作業リストから a を全削除→[b,c])。結果 `[b,c]`。DR-080 §4 例3 — remove のみの発火が『暗黙 @ + 後方 remove』であることを固定する基準ケース。",
+      "argv": ["--fields", "a,a,b,a,c", "--fields", "-a"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "fields", "op": "set", "operand": "a", "source": "cli"},
+          {"entity": "fields", "op": "set", "operand": "a", "source": "cli"},
+          {"entity": "fields", "op": "set", "operand": "b", "source": "cli"},
+          {"entity": "fields", "op": "set", "operand": "a", "source": "cli"},
+          {"entity": "fields", "op": "set", "operand": "c", "source": "cli"},
+          {"entity": "fields", "op": "remove", "operand": "a", "source": "cli"}
+        ],
+        "result": {"fields": ["b", "c"]}
+      }
+    },
+    {
+      "id": "explicit-remove-then-two-splices",
+      "why": "`--fields a,a,b,a,c --fields -a,@,@`: 2回目 piece=[-a,@,@]。-a (前置 remove、以後の両方の `@` の splice 内容から a を除去)、@ (splice、a を除いた old=[b,c])、@ (同じく splice→[b,c])。結果 `[b,c,b,c]`。implicit-at-then-remove-only (暗黙1piece) との対比で、明示 @ を2個並べると splice 内容が2回積まれることを固定する。DR-080 §4 例4。",
+      "argv": ["--fields", "a,a,b,a,c", "--fields", "-a,@,@"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "fields", "op": "set", "operand": "a", "source": "cli"},
+          {"entity": "fields", "op": "set", "operand": "a", "source": "cli"},
+          {"entity": "fields", "op": "set", "operand": "b", "source": "cli"},
+          {"entity": "fields", "op": "set", "operand": "a", "source": "cli"},
+          {"entity": "fields", "op": "set", "operand": "c", "source": "cli"},
+          {"entity": "fields", "op": "remove", "operand": "a", "source": "cli"},
+          {"entity": "fields", "op": "splice", "source": "cli"},
+          {"entity": "fields", "op": "splice", "source": "cli"}
+        ],
+        "result": {"fields": ["b", "c", "b", "c"]}
+      }
+    },
+    {
+      "id": "explicit-remove-then-explicit-splice",
+      "why": "`--fields a,a,b,a,c --fields -a,@`: 2回目 piece=[-a,@] (implicit-at-then-remove-only と同じ結果になる明示形)。-a (前置 remove)、@ (splice、[b,c])。結果 `[b,c]` — 暗黙補完1piece版と明示2piece版が同じ結果に収束することを対照する (effects の piece 数は異なる: 1個 vs 2個)。DR-080 §4 例6。",
+      "argv": ["--fields", "a,a,b,a,c", "--fields", "-a,@"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "fields", "op": "set", "operand": "a", "source": "cli"},
+          {"entity": "fields", "op": "set", "operand": "a", "source": "cli"},
+          {"entity": "fields", "op": "set", "operand": "b", "source": "cli"},
+          {"entity": "fields", "op": "set", "operand": "a", "source": "cli"},
+          {"entity": "fields", "op": "set", "operand": "c", "source": "cli"},
+          {"entity": "fields", "op": "remove", "operand": "a", "source": "cli"},
+          {"entity": "fields", "op": "splice", "source": "cli"}
+        ],
+        "result": {"fields": ["b", "c"]}
+      }
+    },
+    {
+      "id": "remove-splice-then-add-survives",
+      "why": "`--fields a,a,b,a,c --fields -a,@,a`: 2回目 piece=[-a,@,a]。-a (前置remove)、@ (splice→[b,c])、a (add、remove 後の add は生き残る→[b,c,a])。結果 `[b,c,a]`。DR-080 §4 例7 — remove の効果は『それ以後の add』には及ばないことの実証。",
+      "argv": ["--fields", "a,a,b,a,c", "--fields", "-a,@,a"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "fields", "op": "set", "operand": "a", "source": "cli"},
+          {"entity": "fields", "op": "set", "operand": "a", "source": "cli"},
+          {"entity": "fields", "op": "set", "operand": "b", "source": "cli"},
+          {"entity": "fields", "op": "set", "operand": "a", "source": "cli"},
+          {"entity": "fields", "op": "set", "operand": "c", "source": "cli"},
+          {"entity": "fields", "op": "remove", "operand": "a", "source": "cli"},
+          {"entity": "fields", "op": "splice", "source": "cli"},
+          {"entity": "fields", "op": "set", "operand": "a", "source": "cli"}
+        ],
+        "result": {"fields": ["b", "c", "a"]}
+      }
+    },
+    {
+      "id": "trailing-remove-strips-added-value",
+      "why": "`--fields a,a,b,a,c --fields -a,@,a,-a`: 2回目 piece=[-a,@,a,-a]。-a (前置remove)、@ (splice→[b,c])、a (add→[b,c,a])、-a (後置remove、これまでの作業リストから a を全削除→[b,c])。結果 `[b,c]` — remove-splice-then-add-survives (末尾に remove を追加しない版) との対で、後置 remove が add 済みの値も遡って削れることを固定する。DR-080 §4 例8。",
+      "argv": ["--fields", "a,a,b,a,c", "--fields", "-a,@,a,-a"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "fields", "op": "set", "operand": "a", "source": "cli"},
+          {"entity": "fields", "op": "set", "operand": "a", "source": "cli"},
+          {"entity": "fields", "op": "set", "operand": "b", "source": "cli"},
+          {"entity": "fields", "op": "set", "operand": "a", "source": "cli"},
+          {"entity": "fields", "op": "set", "operand": "c", "source": "cli"},
+          {"entity": "fields", "op": "remove", "operand": "a", "source": "cli"},
+          {"entity": "fields", "op": "splice", "source": "cli"},
+          {"entity": "fields", "op": "set", "operand": "a", "source": "cli"},
+          {"entity": "fields", "op": "remove", "operand": "a", "source": "cli"}
+        ],
+        "result": {"fields": ["b", "c"]}
+      }
+    },
+    {
+      "id": "implicit-at-with-remove-and-add",
+      "why": "`--fields a,a,b,a,c --fields -a,d`: 2回目 piece=[-a,d]。marker あり (remove) で明示 @ 無しなので暗黙先頭 @ (old=[a,a,b,a,c] を splice)。-a (後方remove→[b,c])、d (add→[b,c,d])。結果 `[b,c,d]` — 暗黙 @ + remove + add の組合せを固定する。DR-080 §4 例9。",
+      "argv": ["--fields", "a,a,b,a,c", "--fields", "-a,d"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "fields", "op": "set", "operand": "a", "source": "cli"},
+          {"entity": "fields", "op": "set", "operand": "a", "source": "cli"},
+          {"entity": "fields", "op": "set", "operand": "b", "source": "cli"},
+          {"entity": "fields", "op": "set", "operand": "a", "source": "cli"},
+          {"entity": "fields", "op": "set", "operand": "c", "source": "cli"},
+          {"entity": "fields", "op": "remove", "operand": "a", "source": "cli"},
+          {"entity": "fields", "op": "set", "operand": "d", "source": "cli"}
+        ],
+        "result": {"fields": ["b", "c", "d"]}
+      }
+    },
+    {
+      "id": "splice-remove-splice-retroactive",
+      "why": "`--fields a,a,b,a,c --fields @,-a,@`: 2回目 piece=[@,-a,@]。remove の双方向性 (DR-080 §3) により、先に出現した `@` の splice 内容にも -a が遡って効く — explicit-remove-then-two-splices (`-a,@,@`) と同値になることが DR-080 §4 例10 で明記されている。effects は実入力の piece 順そのまま (splice, remove, splice) を記録し、result は canonical 例の値 `[b,c,b,c]` を採用する (fold の内部実装が単純な左→右の逐次適用でなく、remove operand の集合を先に確定してから全体へ適用する2段階になっている可能性が高いが、observable な effects/result はどちらの実装でも同じ値になるはず)。",
+      "argv": ["--fields", "a,a,b,a,c", "--fields", "@,-a,@"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "fields", "op": "set", "operand": "a", "source": "cli"},
+          {"entity": "fields", "op": "set", "operand": "a", "source": "cli"},
+          {"entity": "fields", "op": "set", "operand": "b", "source": "cli"},
+          {"entity": "fields", "op": "set", "operand": "a", "source": "cli"},
+          {"entity": "fields", "op": "set", "operand": "c", "source": "cli"},
+          {"entity": "fields", "op": "splice", "source": "cli"},
+          {"entity": "fields", "op": "remove", "operand": "a", "source": "cli"},
+          {"entity": "fields", "op": "splice", "source": "cli"}
+        ],
+        "result": {"fields": ["b", "c", "b", "c"]}
+      }
+    },
+    {
+      "id": "splice-remove-add-retroactive",
+      "why": "`--fields a,a,b,a,c --fields @,-a,a`: 2回目 piece=[@,-a,a]。remove の双方向性により remove-splice-then-add-survives (`-a,@,a`) と同値の `[b,c,a]` になる (DR-080 §4 例11)。remove は先行する @ の splice 内容には遡及するが、後続の add には効かないことをここでも固定する。",
+      "argv": ["--fields", "a,a,b,a,c", "--fields", "@,-a,a"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "fields", "op": "set", "operand": "a", "source": "cli"},
+          {"entity": "fields", "op": "set", "operand": "a", "source": "cli"},
+          {"entity": "fields", "op": "set", "operand": "b", "source": "cli"},
+          {"entity": "fields", "op": "set", "operand": "a", "source": "cli"},
+          {"entity": "fields", "op": "set", "operand": "c", "source": "cli"},
+          {"entity": "fields", "op": "splice", "source": "cli"},
+          {"entity": "fields", "op": "remove", "operand": "a", "source": "cli"},
+          {"entity": "fields", "op": "set", "operand": "a", "source": "cli"}
+        ],
+        "result": {"fields": ["b", "c", "a"]}
+      }
+    }
+  ]
+}

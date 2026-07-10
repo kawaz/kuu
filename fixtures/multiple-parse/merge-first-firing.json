@@ -1,0 +1,43 @@
+{
+  "why": "DR-080 §3 の『初回発火の old = 値源ラダーの下位席の勝者』の実証 (由来にある canonical PATH 例そのもの) と、DR-080 §1 の適用範囲限定 (マーカー語彙は accumulator=merge を宣言した要素にのみ効く) の対照を1ファイルに収める。fields (merge + env) は env 供給リストへの部分編集を固定し、tags (append) はマーカー文字が literal のまま素通しされることを固定する — 両者を並べることで『merge を選んだ要素だけがマーカーを解釈する』という DR-080 §1 の宣言者スコープを実証する。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {"name": "fields", "type": "string", "long": true, "env": "APP_FIELDS", "multiple": {"accumulator": "merge", "separator": ","}},
+      {"name": "tags", "type": "string", "long": true, "multiple": {"accumulator": "append", "separator": ","}}
+    ]
+  },
+  "cases": [
+    {
+      "id": "first-firing-merges-against-env-supplied-old",
+      "why": "`--fields -ip,-ua,@,duration,ip`、env APP_FIELDS=\"ts,ip,method,path,ua\": 初回発火 (下位値源 env あり) なので old = env 値をseparator分割した [ts,ip,method,path,ua] (DR-049 §2 の env 値も pieceProcessor を通る規約 + DR-080 §3 の初回 old = 下位席勝者)。piece=[-ip,-ua,@,duration,ip]: -ip (前置remove、以後の @ splice から ip 除去)、-ua (前置remove、ua 除去)、@ (splice、ip/ua を除いた [ts,method,path])、duration (add→[ts,method,path,duration])、ip (add→[ts,method,path,duration,ip])。結果 `[ts,method,path,duration,ip]` — DR-080 由来の canonical PATH 例そのもの。env 由来の old 確定は effects に載らない (CONFORMANCE §2) ため、effects は CLI 発火の piece のみ (暗黙 @ は無い、明示 @ のみなので全 piece が実入力)。",
+      "argv": ["--fields", "-ip,-ua,@,duration,ip"],
+      "env": {"APP_FIELDS": "ts,ip,method,path,ua"},
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "fields", "op": "remove", "operand": "ip", "source": "cli"},
+          {"entity": "fields", "op": "remove", "operand": "ua", "source": "cli"},
+          {"entity": "fields", "op": "splice", "source": "cli"},
+          {"entity": "fields", "op": "set", "operand": "duration", "source": "cli"},
+          {"entity": "fields", "op": "set", "operand": "ip", "source": "cli"}
+        ],
+        "result": {"fields": ["ts", "method", "path", "duration", "ip"]},
+        "sources": {"fields": "cli"}
+      }
+    },
+    {
+      "id": "marker-vocabulary-inert-without-merge-accumulator",
+      "why": "`--tags -a,@`: tags は accumulator=append (merge ではない) を宣言しているため、DR-080 §1『マーカー語彙は accumulator=merge を宣言した要素の CLI 発火 piece 列にのみ適用される』により `-a` と `@` はどちらも literal として扱われる (マーカー解釈が一切効かない)。2 piece とも通常の add として append accumulator に畳まれる。結果 `[\"-a\",\"@\"]` — first-firing-merges-against-env-supplied-old (同じ文字列だが merge 宣言) との対で、マーカー解釈が accumulator の選択に完全に従属することを固定する。",
+      "argv": ["--tags", "-a,@"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "tags", "op": "set", "operand": "-a", "source": "cli"},
+          {"entity": "tags", "op": "set", "operand": "@", "source": "cli"}
+        ],
+        "result": {"tags": ["-a", "@"]}
+      }
+    }
+  ]
+}

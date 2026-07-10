@@ -1,0 +1,62 @@
+{
+  "why": "DR-080 §2 のマーカー語彙の縁の字句 (escape / remove(\"\") / literal 単独) を固定する。escape: 先頭 `+` を1個剥がした literal (`+-a`→`-a` / `+@`→`@` / `++`→`+`)。escape された piece はマーカーでなく通常の add として扱われる。`-` 単独は remove(\"\") — operand \"\" は要素 type で parse される (string 型は空文字要素の除去、number 型は not_a_number で reject、DR-080 §2)。`+` 単独は literal `\"+\"` (直後が `-`/`@`/`+` 以外の `+x` は literal のままという規則の境界例)。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {"name": "fields", "type": "string", "long": true, "multiple": {"accumulator": "merge", "separator": ","}},
+      {"name": "nums", "type": "number", "long": true, "multiple": {"accumulator": "merge", "separator": ","}}
+    ]
+  },
+  "cases": [
+    {
+      "id": "escaped-markers-become-literals",
+      "why": "`--fields +-a,+@,++`: piece=[\"+-a\",\"+@\",\"++\"]。各 piece は先頭 `+` を1個剥がした literal に展開される (`-a` / `@` / `+`)。escape 済みなので marker 扱いされず、3個とも add として cell 上書き。結果 `[\"-a\",\"@\",\"+\"]` — マーカー文字そのものをリテラル値として持てることを固定する (DR-080 §4 例14)。",
+      "argv": ["--fields", "+-a,+@,++"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "fields", "op": "set", "operand": "-a", "source": "cli"},
+          {"entity": "fields", "op": "set", "operand": "@", "source": "cli"},
+          {"entity": "fields", "op": "set", "operand": "+", "source": "cli"}
+        ],
+        "result": {"fields": ["-a", "@", "+"]}
+      }
+    },
+    {
+      "id": "bare-minus-removes-empty-string-element",
+      "why": "`--fields a,,b --fields -`: 1回目 piece=[\"a\",\"\",\"b\"] (separator 分割で空 piece が生じる、marker 無しなので上書き→[a,\"\",b])。2回目 piece=[\"-\"] のみ — `-` 単独は remove(\"\") (operand は空文字が string 型として parse される)。暗黙先頭 @ (old=[a,\"\",b] を splice)、remove(\"\") が空文字要素を全削除→[a,b]。string 型での remove(\"\") の意味論を固定する。",
+      "argv": ["--fields", "a,,b", "--fields", "-"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "fields", "op": "set", "operand": "a", "source": "cli"},
+          {"entity": "fields", "op": "set", "operand": "", "source": "cli"},
+          {"entity": "fields", "op": "set", "operand": "b", "source": "cli"},
+          {"entity": "fields", "op": "remove", "operand": "", "source": "cli"}
+        ],
+        "result": {"fields": ["a", "b"]}
+      }
+    },
+    {
+      "id": "bare-minus-on-number-element-fails-to-parse",
+      "why": "`--nums -`: piece=[\"-\"] のみ。remove(\"\") を狙う操作だが、operand \"\" は number 型で parse を試みられ (DR-080 §2「operand は要素 type で parse される」)、number の canonical 字句 (DR-074 §1) は空文字を受理しないので not_a_number で reject される — number リストでは remove(\"\") という操作自体が成立しない縁の字句を固定する。argv_pos は値トークンの 0-based 位置 (--nums=0, -=1)。",
+      "argv": ["--nums", "-"],
+      "expect": {
+        "outcome": "failure",
+        "errors": [{"element": "nums", "argv_pos": 1, "kind": "parse", "reason": "not_a_number"}]
+      }
+    },
+    {
+      "id": "bare-plus-is-literal",
+      "why": "`--fields +`: piece=[\"+\"] 単独。DR-080 §2「+ 単独は literal \"+\"」— escape の対象になる `-`/`@`/`+` のいずれの直後にも `+` が続かない (何も続かない) ため、単独の `+` はそのまま literal `\"+\"` になる。marker 無しなので add として cell 上書き。",
+      "argv": ["--fields", "+"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "fields", "op": "set", "operand": "+", "source": "cli"}
+        ],
+        "result": {"fields": ["+"]}
+      }
+    }
+  ]
+}
