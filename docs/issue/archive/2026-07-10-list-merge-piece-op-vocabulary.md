@@ -1,6 +1,6 @@
 ---
 title: リスト merge — piece レベル op 語彙 (add/remove/splice) とラダー合成
-status: open
+status: resolved
 category: design
 created: 2026-07-10T02:22:17+09:00
 last_read:
@@ -9,10 +9,10 @@ wip_entered:
 blocked_entered:
 pending_entered:
 discarded_entered:
-resolved_entered:
+resolved_entered: 2026-07-10T12:52:40+09:00
 discard_reason:
 pending_reason:
-close_reason:
+close_reason: ["dr/DR-080","dr/DR-081","implemented"]
 blocked_by:
 origin: 自リポ TODO
 ---
