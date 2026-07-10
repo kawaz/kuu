@@ -1,0 +1,51 @@
+{
+  "why": "export_key 未指定 (identity 露出) と export_key 明示 (mapped) の衝突検出 (DR-052 §1 / DESIGN §15.5)。export_key は3値軸 (未指定 / \"<名前>\" / null) であり、**未指定も『name 由来キーで露出』という解決値を持つ** (DR-052 §1 の表 — null だけが『結果キー軸なし』の特例、未指定は特例ではなく単なるデフォルト解決)。衝突検出の基準 (DESIGN §15.5) は『解決後の露出キー文字列が一致するかどうか』であり、その解決が identity 経由 (未指定→name) だったか mapped 経由 (export_key 明示) だったかを区別しない — 検査対象は解決値であって解決経路ではない。collision.json (mapped 同士の衝突) の対で、本 fixture は identity×mapped の組合せでも同じ検査が働くこと、および identity 同士で name が異なれば (解決キーも異なるので) 過剰検出しないことを固定する。option a は export_key 未指定 (identity 解決でキー \"a\")、option b は export_key: \"a\" (mapped で同じキー \"a\")。option p/q は両方 identity (export_key 未指定、名前が異なるのでキーも p/q で異なる) — a/b の衝突 case と独立な対照軸として同一 definition に同居させる。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {"name": "a", "type": "string", "long": true},
+      {"name": "b", "type": "string", "long": true, "export_key": "a"},
+      {"name": "p", "type": "string", "long": true},
+      {"name": "q", "type": "string", "long": true}
+    ]
+  },
+  "cases": [
+    {
+      "id": "identity-and-mapped-co-exposure-collision",
+      "why": "`--a v1 --b v2`: identity 解決の a (export_key 未指定→キー \"a\") と mapped の b (export_key:\"a\") が同一入力で両方キー \"a\" へ露出 → 実行時衝突で ambiguous (DESIGN §15.5)。値が \"v1\"/\"v2\" と異なるため2解釈のビューは既に区別できる (collision.json の flag 同士 (両者 true に退化) と異なり本 case は非退化) が、衝突の本質は provenance の曖昧さ (DR-073) であり値の相違で解消されるものではないため claimants は本 case でも同様に添える (collision.json の見せ方を踏襲): 解釈 A はキー a を option a が占有、解釈 B は option b が占有。ambiguous outcome に effects は載らない (ref-or-template.json / collision.json と同型)。",
+      "argv": ["--a", "v1", "--b", "v2"],
+      "expect": {
+        "outcome": "ambiguous",
+        "interpretations": [
+          {"result": {"a": "v1"}, "claimants": {"a": "a"}},
+          {"result": {"a": "v2"}, "claimants": {"a": "b"}}
+        ]
+      }
+    },
+    {
+      "id": "identity-alone-no-collision",
+      "why": "(対極1) `--a v1` のみ: identity 解決の a だけがキー \"a\" へ実際に露出し、衝突なし (検査は実際の共露出に対して、DESIGN §15.5)。b/p/q は未発火の string (default なし) で absent (DR-051、キー消失)。",
+      "argv": ["--a", "v1"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "a", "op": "set", "operand": "v1", "source": "cli"}
+        ],
+        "result": {"a": "v1"}
+      }
+    },
+    {
+      "id": "identity-vs-identity-different-names-no-collision",
+      "why": "(対極2) `--p vp --q vq`: p・q はともに export_key 未指定 (identity 解決) だが name が異なる (\"p\" と \"q\") ため解決後のキーも異なり衝突しない — success。identity 解決であっても『同じキーに解決される場合のみ』検査対象になり、identity 同士だからといって特別扱いされたり過剰検出されたりしないことの固定 (DESIGN §15.5 の検査基準は解決キー文字列の一致のみ、解決経路の種類は無関係)。a/b は未発火で absent。",
+      "argv": ["--p", "vp", "--q", "vq"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "p", "op": "set", "operand": "vp", "source": "cli"},
+          {"entity": "q", "op": "set", "operand": "vq", "source": "cli"}
+        ],
+        "result": {"p": "vp", "q": "vq"}
+      }
+    }
+  ]
+}
