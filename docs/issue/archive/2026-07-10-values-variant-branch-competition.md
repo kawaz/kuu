@@ -1,6 +1,6 @@
 ---
 title: values 制約と variant 枝競合 (:set vs :set:always) の意味論明文化
-status: open
+status: resolved
 category: design
 created: 2026-07-10T10:53:43+09:00
 last_read: 2026-07-10T18:45:19+09:00
@@ -9,10 +9,10 @@ wip_entered:
 blocked_entered:
 pending_entered:
 discarded_entered:
-resolved_entered:
+resolved_entered: 2026-07-10T20:28:30+09:00
 discard_reason:
 pending_reason:
-close_reason:
+close_reason: ["dr/DR-086","spec/f85d2331","spec/a3230016","spec/2bb72f27","implemented","done:論点1/2/4はDESIGN §5.3/DR-028/DR-041 §4への明文化追記3件で導出済みと判定 (spec f85d2331)。論点3とpositional同居の残論点はkawaz裁定「食える分は食う」によりDR-086でcut意味論を新設 (spec a3230016)、fixtureはset-always-variant-branch.json 4case + set-always-variant-cut-positional-{required,optional}.json 2caseでpin済み (spec 2bb72f27)。受け入れ条件3(kuu.mbt values decode確認)は未サポートを実機確認し、kuu.mbtリポのissue values-decode-supportを対で起票済み — decode実装とfixture green化はそちらが追跡"]
 blocked_by:
 origin: 自リポ TODO
 ---
