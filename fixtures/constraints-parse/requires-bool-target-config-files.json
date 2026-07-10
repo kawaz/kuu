@@ -1,0 +1,39 @@
+{
+  "why": "bool 目的語 requires の値源不問性 (DR-047 §5) を、パス動的な config_file 要素 (CfgFiles、path.json の config_files 表記) 経由まで拡張して pin する。requires-bool-target-config-inherit.json は config_obj 単一注入 (case トップの `config` フィールドで直接オブジェクトを渡す) の config 席のみ扱っており、config_file 要素のパス自身が cli/env/default ラダーで動的に決まる CfgFiles の組合せは別の観測点 — DR-087 §4 の実装形 (default 解決を遅延させ、依存順で実体化した後の cell を読む『resolve 済み bindings の読者』へ制約検査を再構成) により、config_files 経由でのみ true になる bool 目的語も requires 充足の対象に入るようになった (旧実装の config_obj 単一注入モデルでは、値がどのパスから来たかに関わらず制約検査の時点で対象の cell が読めていなかったため構造的に見えなかった組合せ)。判断本質は requires-bool-target-config-inherit.json と同じ (DR-047 §5: bool は preset の暗黙 default:false を常に持つため『値の有無』では vacuous 充足、だから『解決後の値が true』で判定、値源不問) だが、本 fixture はその値源が『パスが cli/env/default で動的に決まる config_file』であっても貫通することを固定する。config_file 要素 (config) は結果非掲載 (インフラ)、a は cli 発火、c は config 由来 (config_key 経由、値源不問の対象)。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {"name": "config", "type": "config_file", "long": true, "default": "/app.toml"},
+      {"name": "a", "type": "flag", "long": true, "requires": ["c"]},
+      {"name": "c", "type": "flag", "long": true, "config_key": ["c"]}
+    ]
+  },
+  "cases": [
+    {
+      "id": "config-files-path-supplies-true-satisfies-requires",
+      "why": "`--a`、config_files の該当パス (`--config` 未指定なので default パス `/app.toml` が解決、path.json の default-path-wins と同じラダー解決) が `{c:true}` を返す: c は config_key 経由でこのオブジェクトから true を得る。requires の判定は解決後の値のみを見るので、値がパス動的な config_file 経由でも充足する (DR-047 §5 の値源不問 + DR-087 §4 の resolve 先行読者化)。effects は cli 発火した a のみ (c は config 由来で非掲載、CONFORMANCE §2)。config 要素自体はインフラで result 非掲載。result は {a:true, c:true}、sources で c=config を検証。他に未発火の同居要素は無い (config_file 要素以外は a/c のみの最小定義)。",
+      "argv": ["--a"],
+      "config_files": {"/app.toml": {"c": true}},
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "a", "op": "set", "operand": true, "source": "cli"}
+        ],
+        "result": {"a": true, "c": true},
+        "sources": {"c": "config"}
+      }
+    },
+    {
+      "id": "config-files-path-supplies-false-still-violates",
+      "why": "(対極) `--a`、default パス `/app.toml` が `{c:false}` を返す: 『解決後の値が true』を満たさないので requires 違反。error 語彙は requires-bool-target-config-inherit.json の config-false-still-violates と同一 (element=a、kind=constraint、reason=requires_violated、argv_pos=1=argv.length)。値源が config_obj 単一注入か CfgFiles かに関わらず判定基準自体 (false なら不充足) は不変であることの固定。",
+      "argv": ["--a"],
+      "config_files": {"/app.toml": {"c": false}},
+      "expect": {
+        "outcome": "failure",
+        "errors": [
+          {"element": "a", "argv_pos": 1, "kind": "constraint", "reason": "requires_violated"}
+        ]
+      }
+    }
+  ]
+}
