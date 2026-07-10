@@ -93,6 +93,45 @@ commit: spec `2bb72f27` (invalid-argument fixture 群)、kuu.mbt `d7909136` (reg
 kuu.mbt: `d7909136` (regex) → `788b8374` (compile 検査) → `83d154ba` (values decode + cut)。
 全 CI green。
 
+## 深夜追補: FilterSpelling 再設計と conformance 語彙拡張
+
+### FilterSpelling 再設計完遂 (issue filter-spelling-inband-encoding-retyping close)
+
+上記の U+E000 in-band encode が抱えていた潜在穴 (タグ文字がユーザ入力パターン中のリテラルと
+衝突しうる余地) を、`Array[String]` → `FilterSpelling` (name+args) への再型付けで解消した。
+影響ファイル 8 本、U+E000 in-band encode を全削除。args 値中に U+E000 literal が生存する
+wbtest を追加し、穴が完全に閉じたことを pin した。観測挙動は不変で conformance 全 green。
+
+commit: kuu.mbt `7c80a55f`。
+
+### CONFORMANCE §2/§3 語彙拡張 (issue conformance-tried-triggers-help-entry-fields close)
+
+DR-053 §4 が予約していた `help_entry` (failure/ambiguous、構造等価比較) と `tried_triggers`
+(failure のみ、集合比較・順序非規範) を opt-in フィールドとして語彙化した。DR-053 §4 の後追い
+実装にあたる。
+
+設計分析は opus47 worker に委譲、裁定 5 点のうち 4 点 (ambiguous 経路への同時対応 / opt-in
+時の null 不要 / failure-actions 配置 / 命名) は既存正本から team-lead が導出裁定した。残る
+「dd 綴り `--` の混在可否」のみ kawaz 裁定バッチへ送った。
+
+commit: spec `dd445aa3`、kuu.mbt `bf5e5402`。
+
+### fixture が実バグを即検出
+
+新設 fixture `tried-triggers-scope.json` が、`find_help_entry` が root scope に固定されたまま
+だった (= 子スコープの help 入口を見逃す) バグを検出した。`tried_triggers_of` は commit
+`e43facd7` で既に直っていたが、help 側だけが非対称のまま取り残されていた。失敗位置のスコープを
+基準に修正した。ambiguous 経路は失敗位置そのものを持たないため root 全体のままとした
+(意図的な区別)。
+
+### 本日の消化まとめ
+
+issue: spec 5 close + kuu.mbt 5 close、新規起票 3 (`values-decode-support` は即日 close /
+`filter-spelling-inband-encoding-retyping` は即日 close / `typeless-option-default-semantics`
+は kawaz 裁定バッチへ)。
+
+conformance 基準: decoded=175 / ran_cases=455 / skipped=0 / mismatches=0。moon test 203 本。
+
 ## 関連
 
 - DR-086 (`docs/decisions/DR-086-values-consumption-priority-cut.md`、値スロット消費優先 cut)
