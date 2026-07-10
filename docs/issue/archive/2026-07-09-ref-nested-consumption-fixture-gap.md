@@ -1,6 +1,6 @@
 ---
 title: ref テンプレ入れ子の消費境界 + multiple×ref 意味論の fixture 未整備
-status: open
+status: resolved
 category: task
 created: 2026-07-09T23:05:45+09:00
 last_read:
@@ -9,10 +9,10 @@ wip_entered:
 blocked_entered:
 pending_entered:
 discarded_entered:
-resolved_entered:
+resolved_entered: 2026-07-10T19:06:16+09:00
 discard_reason:
 pending_reason:
-close_reason:
+close_reason: ["dr/DR-084","implemented"]
 blocked_by:
 origin: ref-template-result-shape サイクルの codex レビュー (2026-07-09)
 ---

@@ -86,6 +86,7 @@
 - [DR-081](DR-081-default-seat-rewrite-and-source.md): default 席書き換えモデル — env/config/inherit は default と default_source (観測用隠し属性) を書き換える、source = committed ? cli : default_source、op=default は「書き換え済み default」を明示 set で source=cli (DR-031 明文の再確認、fixture 実践の由来席読みを覆す)
 - [DR-083](DR-083-multiple-declared-default.md): multiple 要素の宣言 default — 尊重される (反復系の [] は宣言不在時の暗黙 default)、供給形は分割済み pieces (DR-050 config array 同型、separator 非適用、merge マーカー不活性)、op=default は書き換え済み default へ (DR-081 既定)、scalar への配列 default は definition-error (invalid-range)
 - [DR-084](DR-084-multiple-ref-row-accumulation.md): multiple×ref — 累積単位は発火値 = row (append で [row...]、0 発火 [])、repeat×multiple は発火境界保存の T[][] (flatten 不採用、平坦形は multiple 単独で表現)、merge×ref は definition-error (invalid-range、マーカーの認識対象 piece 列が構造上不在)
+- [DR-085](DR-085-regex-match-host-dialect.md): regex_match — Validate filter (pattern 1 引数、unanchored=部分一致)、照合方言は host 実装準拠 (DR-040 の方言一致記述を相対化、fixture は方言安全パターン限定)、colon 含み pattern は DESIGN §8.4 既存オブジェクト形式 (短縮形の colon 全分割は不変、name 特例 / descriptor 分割制御は不採用)
 
 ## CLI 入口 / variant / filter
 

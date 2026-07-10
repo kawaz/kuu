@@ -1,6 +1,6 @@
 ---
 title: multiple 要素への宣言 default (配列) の意味論が未規定
-status: wip
+status: resolved
 category: design
 created: 2026-07-10T03:55:38+09:00
 last_read:
@@ -9,10 +9,10 @@ wip_entered: 2026-07-10T16:13:50+09:00
 blocked_entered:
 pending_entered:
 discarded_entered:
-resolved_entered:
+resolved_entered: 2026-07-10T19:06:16+09:00
 discard_reason:
 pending_reason:
-close_reason:
+close_reason: ["dr/DR-083","implemented"]
 blocked_by:
 origin: 依頼元プロジェクト名
 ---
