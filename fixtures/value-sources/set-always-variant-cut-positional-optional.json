@@ -1,0 +1,27 @@
+{
+  "why": "DR-086 §2 (positional 同居時の帰結、optional 側): set-always-variant-cut-positional-required.json の対、`extra` positional を明示 optional (`repeat:{min:0,max:1}`、DESIGN §2.6 の optional 糖衣) にした場合の `--color always` の帰結を pin する。同じ理由 (shared definition を汚染しない) で独立ファイルに分離。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {"name": "color", "long": [":set", ":set:always", "default:default", "unset:unset"], "default": "auto", "values": ["always", "none", "auto"], "env": "APP_COLOR"}
+    ],
+    "positionals": [
+      {"name": "extra", "type": "string", "repeat": {"min": 0, "max": 1}}
+    ]
+  },
+  "cases": [
+    {
+      "id": "optional-positional-empty-under-cut-no-ambiguity",
+      "why": "`--color always`: required 版 (set-always-variant-cut-positional-required.json) と同じ理由で `:set` が cut により \"always\" を消費する (DR-086 §1)。`extra` は optional (min:0) なので 0 反復でも成立し、反復系セルの縮退規則 (DR-044 一様配列 / DR-051 §2b) により `[]` を描く — absent にはならない。cut が variant 内の読みを一意化するため、『`:set:always` + positional が \"always\" を消費する』もう一方の完全経路と衝突しての ambiguous も起きない (DR-086 §2 第2 bullet: cut による一意化)。effects は color の set 1個のみ (extra は 0 反復で発火なし)。",
+      "argv": ["--color", "always"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "color", "op": "set", "operand": "always", "source": "cli"}
+        ],
+        "result": {"color": "always", "extra": []},
+        "sources": {"color": "cli"}
+      }
+    }
+  ]
+}

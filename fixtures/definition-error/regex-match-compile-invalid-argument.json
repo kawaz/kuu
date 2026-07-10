@@ -1,0 +1,19 @@
+{
+  "why": "regex_match の pattern compile 失敗は definition-error (DR-085 §1 訂正、kind=invalid-argument 新設)。pattern の compile 可否自体は host の regex エンジン方言依存 (DR-085 §2) だが、`[` (未閉じ文字クラス) は regex 方言をほぼ問わず不正な構文であり (POSIX ERE/BRE・PCRE・ほとんどの言語標準ライブラリで共通に reject される)、DR-085 波及節が要求する『方言差の出ない共通パターンのみ』の条件を満たす — 特定 host 方言に依存しない共通の不正構文として fixture 化できる。invalid-argument は『単一引数値そのものが装置の受理範囲外』(DR-082 §3) — invalid-range (min>1 等、複数属性の組合せの値域外) とは層が異なる。argv は書かない (定義の静的検査であり実行しない、DR-082 §1)。",
+  "query": "definition_error",
+  "definition": {
+    "options": [
+      {"name": "code", "type": "string", "long": true, "piece_filters": ["regex_match:["]}
+    ]
+  },
+  "cases": [
+    {
+      "id": "unclosed-character-class-is-invalid-argument",
+      "why": "`code` の piece_filters に持つ pattern `[` は文字クラスの開始 `[` のみで閉じ `]` を欠く未完成構文。regex エンジンの compile 段で構文エラーとなり (方言を問わず共通に不正)、regex_match 装置の構築そのものが失敗する。これは values 照合の不一致 (実行時 Reject、DR-028 §3.1) とは別の失敗経路 — 装置の構築失敗は定義時点で静的に検出できる (DR-085 §1『pattern の compile 失敗と照合不一致は別の失敗』) ので definition-error として定義時点で reject する。kind=invalid-argument。",
+      "expect": {
+        "outcome": "definition-error",
+        "errors": [{"element": "code", "kind": "invalid-argument"}]
+      }
+    }
+  ]
+}

@@ -20,11 +20,15 @@
 
 - fixture 専用の簡略形は作らない (DR-065 §2 と同じ原則)。definition-error fixture に argv は不要 (定義の静的検査であり実行しない) — cases の `argv` は省略
 - **比較は element + kind の組の集合比較**。`message` / `hint` はレンダラ管轄の文言なので fixture に書かず比較もしない (parse fixture の errors が message を比較しないのと同流儀、CONFORMANCE §2)
-- kind の語彙は DR-054 §4 の列挙 (vocab-intersection / unknown-vocab / invalid-range / absent-ref / circular-ref / zero-progress / config-cycle) をそのまま使う
+- kind の語彙は DR-054 §4 の列挙 (vocab-intersection / unknown-vocab / invalid-range / absent-ref / circular-ref / zero-progress / config-cycle / invalid-argument、invalid-argument は DR-085 訂正で追加) をそのまま使う
 
 ### 2. 「未対応構成」系の kind は invalid-range
 
 accum (multiple 宣言) 要素への `:update:<T=>T transform>` variant 宣言、count×multiple、option ref repeat の min>1 など「構文上は書けるが構成として不成立」の静的 reject は **kind=invalid-range** に落とす。「宣言された構成が受理可能な値域の外」という値域系の読みで、kuu.mbt の DInvalidRange 実装前例 (min>max / min>1 / accum×update) とも一致する。unknown-vocab は「語彙自体が未知」(transform 名が registry に無い等) に取っておく。
+
+### 3. 装置引数の値不正は invalid-argument
+
+registry 装置 (filter/type の value_parser 等) に渡した引数の値そのものが不正で、装置側の構築 (compile 等) が失敗する場合は **kind=invalid-argument** (DR-085 訂正、regex_match の pattern compile 失敗が最初の実例)。invalid-range との違い: invalid-range は「複数属性の組合せが値域外」(構造の問題)、invalid-argument は「単一引数値そのものが装置の受理範囲外」(値の問題)。
 
 ## 波及
 
