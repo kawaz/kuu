@@ -34,12 +34,12 @@
     },
     {
       "id": "config-non-empty-rejected-before-parse",
-      "why": "config `{\"name\": \"\"}` は空文字列を持つ JSON string 値で、non_empty を持つ piece_filters が parse (string 型なので恒等) に届く前に reject する (piece-filters/reject.json の non-matching-rejected を config 版に写す)。string 型は parse (恒等) だけでは空文字を弾けないので、この failure は config 値にも piece_filters が parse より前に効いている実証点。argv=[] のため argv_pos=0、kind=filter/reason=filter_rejected (kind=parse の not_a_number と区別)。",
+      "why": "config `{\"name\": \"\"}` は空文字列を持つ JSON string 値で、non_empty を持つ piece_filters が parse (string 型なので恒等) に届く前に reject する (piece-filters/reject.json の non-matching-rejected を config 版に写す)。string 型は parse (恒等) だけでは空文字を弾けないので、この failure は config 値にも piece_filters が parse より前に効いている実証点。argv=[] のため argv_pos=0、kind=filter/reason=empty_value (non_empty の宣言 reason、DR-095。kind=parse の not_a_number と区別)。",
       "argv": [],
       "config": {"name": ""},
       "expect": {
         "outcome": "failure",
-        "errors": [{"element": "name", "argv_pos": 0, "kind": "filter", "reason": "filter_rejected"}]
+        "errors": [{"element": "name", "argv_pos": 0, "kind": "filter", "reason": "empty_value"}]
       }
     }
   ]

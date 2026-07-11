@@ -23,7 +23,7 @@
       "argv": ["--port", "99999"],
       "expect": {
         "outcome": "failure",
-        "errors": [{"element": "port", "argv_pos": 2, "kind": "filter", "reason": "filter_rejected"}]
+        "errors": [{"element": "port", "argv_pos": 2, "kind": "filter", "reason": "too_large"}]
       }
     }
   ]

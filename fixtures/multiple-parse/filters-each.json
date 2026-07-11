@@ -22,11 +22,11 @@
     },
     {
       "id": "one-piece-rejects-whole-not-partial-accumulate",
-      "why": "2 発火中 1 個 (500) が in_range:1:100 の上限超過で value_filters(each) reject → **全体 failure**。5 の accept 分だけを累積して [5] を result にする『不正 piece の静かな除外』は起きない — value_filters(each) は accumulator (段6) より前の関門であり、reject が出た時点でその要素全体が解けなかった枝として扱われる (DR-037)。本 definition には代替枝が無いため reject は即 failure に帰結する。argv_pos=3 は 500 の値トークン位置 (0-based: --ports=0, 5=1, --ports=2, 500=3、CONFORMANCE §2 の piece 帰属規約)。reason=filter_rejected / kind=filter。",
+      "why": "2 発火中 1 個 (500) が in_range:1:100 の上限超過で value_filters(each) reject → **全体 failure**。5 の accept 分だけを累積して [5] を result にする『不正 piece の静かな除外』は起きない — value_filters(each) は accumulator (段6) より前の関門であり、reject が出た時点でその要素全体が解けなかった枝として扱われる (DR-037)。本 definition には代替枝が無いため reject は即 failure に帰結する。argv_pos=3 は 500 の値トークン位置 (0-based: --ports=0, 5=1, --ports=2, 500=3、CONFORMANCE §2 の piece 帰属規約)。reason=too_large (in_range の上限側 reason、DR-095 の descriptor 宣言) / kind=filter。",
       "argv": ["--ports", "5", "--ports", "500"],
       "expect": {
         "outcome": "failure",
-        "errors": [{"element": "ports", "argv_pos": 3, "kind": "filter", "reason": "filter_rejected"}]
+        "errors": [{"element": "ports", "argv_pos": 3, "kind": "filter", "reason": "too_large"}]
       }
     },
     {
@@ -35,7 +35,7 @@
       "argv": ["--ports", "5,500"],
       "expect": {
         "outcome": "failure",
-        "errors": [{"element": "ports", "argv_pos": 1, "kind": "filter", "reason": "filter_rejected"}]
+        "errors": [{"element": "ports", "argv_pos": 1, "kind": "filter", "reason": "too_large"}]
       }
     }
   ]

@@ -23,11 +23,11 @@
     },
     {
       "id": "over-range-rejected",
-      "why": "上限超過 (3) → cell_filters reject → failure kind=filter (DR-077 §1 / DR-040 / DR-009 §7): `-vvv` は short cluster で 3 発火、cell fold で 0→1→2→3、cell_filters `in_range:0:2` が最終値 3 を拒否 → failure。errors は reason=filter_rejected 1 件のみ (parse 自体は成功、resolve 層の cell_filters 適用で reject される — DR-009 §7 の resolve-layer failure の実例)。within-range-accepted (2, 通過) と対で in_range の境界 (0..2 通過 / 3 以上 reject) を固定する。",
+      "why": "上限超過 (3) → cell_filters reject → failure kind=filter (DR-077 §1 / DR-040 / DR-009 §7): `-vvv` は short cluster で 3 発火、cell fold で 0→1→2→3、cell_filters `in_range:0:2` が最終値 3 を拒否 → failure。errors は reason=too_large (in_range の上限側、DR-095) 1 件のみ (parse 自体は成功、resolve 層の cell_filters 適用で reject される — DR-009 §7 の resolve-layer failure の実例)。within-range-accepted (2, 通過) と対で in_range の境界 (0..2 通過 / 3 以上 reject) を固定する。",
       "argv": ["-vvv"],
       "expect": {
         "outcome": "failure",
-        "errors": [{"element": "verbose", "argv_pos": 1, "kind": "filter", "reason": "filter_rejected"}]
+        "errors": [{"element": "verbose", "argv_pos": 1, "kind": "filter", "reason": "too_large"}]
       }
     }
   ]

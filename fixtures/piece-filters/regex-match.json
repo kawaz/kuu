@@ -1,5 +1,5 @@
 {
-  "why": "regex_match filter の輪郭 (DR-085 §1/§2/§3): Validate 系 piece_filters (DR-040 §filters 最小セットの『狭める』枠、reject.json の non_empty と同じ pipeline 位置)。unanchored = 部分一致 (対象 string のどこかに pattern が一致すれば通過、全体一致ではない) — 全体一致が要るなら pattern 側に `^...$` を書く (filter が暗黙アンカーを足さない)。方言は host 実装準拠 (DR-085 §2) なので、本 fixture は方言差の出ない共通パターン (literal / `^` `$` アンカー / `[a-z]` 級の基本文字クラス / メタ文字 escape) のみに限定する — lookahead・Unicode プロパティ等は書かない。reject 時の outcome/エラー語彙は reject.json (non_empty) と同一 (kind=filter, reason=filter_rejected, argv_pos=値トークンの0-based位置)。code/strict の2要素は同じ文字クラスに対する unanchored/anchored の対比、escaped はメタ文字 escape の対比、url は DR-085 §3 のオブジェクト形式 (colon を含む pattern) の対比。",
+  "why": "regex_match filter の輪郭 (DR-085 §1/§2/§3): Validate 系 piece_filters (DR-040 §filters 最小セットの『狭める』枠、reject.json の non_empty と同じ pipeline 位置)。unanchored = 部分一致 (対象 string のどこかに pattern が一致すれば通過、全体一致ではない) — 全体一致が要るなら pattern 側に `^...$` を書く (filter が暗黙アンカーを足さない)。方言は host 実装準拠 (DR-085 §2) なので、本 fixture は方言差の出ない共通パターン (literal / `^` `$` アンカー / `[a-z]` 級の基本文字クラス / メタ文字 escape) のみに限定する — lookahead・Unicode プロパティ等は書かない。reject 時の outcome/エラー語彙は reject.json (non_empty) と同じ位置規約 (kind=filter, argv_pos=値トークンの0-based位置)、reason は regex_match の宣言語彙 pattern_no_match (DR-095 — compile 失敗は definition-error 側で reason ではない、DR-085)。code/strict の2要素は同じ文字クラスに対する unanchored/anchored の対比、escaped はメタ文字 escape の対比、url は DR-085 §3 のオブジェクト形式 (colon を含む pattern) の対比。",
   "query": "parse",
   "definition": {
     "options": [
@@ -24,20 +24,20 @@
     },
     {
       "id": "unanchored-no-substring-match-rejected",
-      "why": "`--code 123`: \"123\" のどこにも `[a-z]+` に一致する部分文字列が無い (数字のみ) ので不一致 → piece_filters が parse に届く前に reject する (reject.json の non_empty と同じ pipeline 位置)。argv_pos=1 は値トークン \"123\" の 0-based 位置、kind=filter / reason=filter_rejected (reject.json と同一語彙)。",
+      "why": "`--code 123`: \"123\" のどこにも `[a-z]+` に一致する部分文字列が無い (数字のみ) ので不一致 → piece_filters が parse に届く前に reject する (reject.json の non_empty と同じ pipeline 位置)。argv_pos=1 は値トークン \"123\" の 0-based 位置、kind=filter / reason=pattern_no_match (DR-095 の宣言語彙)。",
       "argv": ["--code", "123"],
       "expect": {
         "outcome": "failure",
-        "errors": [{"element": "code", "argv_pos": 1, "kind": "filter", "reason": "filter_rejected"}]
+        "errors": [{"element": "code", "argv_pos": 1, "kind": "filter", "reason": "pattern_no_match"}]
       }
     },
     {
       "id": "anchored-no-match-on-same-input",
-      "why": "`--strict abc123`: unanchored-partial-match-accepted と同じ入力 \"abc123\" だが、pattern が `^[a-z]+$` (全体一致アンカー) を持つため \"abc\" のみの部分一致では通過しない — 文字列全体が `[a-z]+` である必要があるが末尾に \"123\" が残るため不一致 → reject。同一入力・同一文字クラスで anchor の有無だけが結果を反転させることの固定 (DR-085 §1 の核)。argv_pos=1、kind=filter / reason=filter_rejected。",
+      "why": "`--strict abc123`: unanchored-partial-match-accepted と同じ入力 \"abc123\" だが、pattern が `^[a-z]+$` (全体一致アンカー) を持つため \"abc\" のみの部分一致では通過しない — 文字列全体が `[a-z]+` である必要があるが末尾に \"123\" が残るため不一致 → reject。同一入力・同一文字クラスで anchor の有無だけが結果を反転させることの固定 (DR-085 §1 の核)。argv_pos=1、kind=filter / reason=pattern_no_match。",
       "argv": ["--strict", "abc123"],
       "expect": {
         "outcome": "failure",
-        "errors": [{"element": "strict", "argv_pos": 1, "kind": "filter", "reason": "filter_rejected"}]
+        "errors": [{"element": "strict", "argv_pos": 1, "kind": "filter", "reason": "pattern_no_match"}]
       }
     },
     {
@@ -66,11 +66,11 @@
     },
     {
       "id": "escaped-metachar-wildcard-not-matched-rejected",
-      "why": "`--escaped aXb`: escape 済み `\\.` はメタ文字『任意の1文字』としては働かないため、\".\" 以外の文字 \"X\" は一致しない → reject。escape が無ければ `.` は任意の1文字に一致し \"aXb\" も通過してしまうところ、escape によって literal 限定になっていることをこの不一致が裏から固定する (escaped-metachar-literal-match-accepted との対)。argv_pos=1、kind=filter / reason=filter_rejected。",
+      "why": "`--escaped aXb`: escape 済み `\\.` はメタ文字『任意の1文字』としては働かないため、\".\" 以外の文字 \"X\" は一致しない → reject。escape が無ければ `.` は任意の1文字に一致し \"aXb\" も通過してしまうところ、escape によって literal 限定になっていることをこの不一致が裏から固定する (escaped-metachar-literal-match-accepted との対)。argv_pos=1、kind=filter / reason=pattern_no_match。",
       "argv": ["--escaped", "aXb"],
       "expect": {
         "outcome": "failure",
-        "errors": [{"element": "escaped", "argv_pos": 1, "kind": "filter", "reason": "filter_rejected"}]
+        "errors": [{"element": "escaped", "argv_pos": 1, "kind": "filter", "reason": "pattern_no_match"}]
       }
     },
     {
@@ -87,11 +87,11 @@
     },
     {
       "id": "colon-pattern-object-form-rejected",
-      "why": "`--url ftp://example.com`: オブジェクト形式で保持された pattern `^https?://` は入力のどこにも一致しない (\"ftp://\" は \"https?://\" と一致しない) → reject。colon-pattern-object-form-accepted との対で、オブジェクト形式でも accept/reject の両輪が通常どおり機能することを固定する。argv_pos=1、kind=filter / reason=filter_rejected。",
+      "why": "`--url ftp://example.com`: オブジェクト形式で保持された pattern `^https?://` は入力のどこにも一致しない (\"ftp://\" は \"https?://\" と一致しない) → reject。colon-pattern-object-form-accepted との対で、オブジェクト形式でも accept/reject の両輪が通常どおり機能することを固定する。argv_pos=1、kind=filter / reason=pattern_no_match。",
       "argv": ["--url", "ftp://example.com"],
       "expect": {
         "outcome": "failure",
-        "errors": [{"element": "url", "argv_pos": 1, "kind": "filter", "reason": "filter_rejected"}]
+        "errors": [{"element": "url", "argv_pos": 1, "kind": "filter", "reason": "pattern_no_match"}]
       }
     }
   ]
