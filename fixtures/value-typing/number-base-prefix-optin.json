@@ -1,10 +1,10 @@
 {
-  "why": "number_allow_base_prefix opt-in で整数 hex と hex float を一括有効化 (DR-074 §2・§4 / DR-061 §3 configurable factory): definitions.types.number を `{name: kuu_number_parser, config: {number_allow_base_prefix: true}}` で shadow すると (DR-061 の {name, config} 参照形、wire に載る portable な差し替え)、canonical で Error だった `0xff` (整数 hex) も `0x1.8p3` (hex float) も success に転じる。二進指数 `p` は任意 (C strtod 流) なので p 無しの `0x1.8` も 1.5 として読める — 「16 進整数は書けるが hex float は書けない」ねじれを排すため p を必須にしない。number 型は整数・非整数どちらも受理 (int 型の値空間判定 0x1.8p0→Error はここでは扱わず report 送り、int factory の base_prefix 配線確定後に別 fixture)。number-base-prefix-rejected.json (default false → 両方 Error) と対の opt-in 断面。",
+  "why": "number_allow_base_prefix opt-in で整数 hex と hex float を一括有効化 (DR-074 §2・§4 / DR-061 §3 configurable factory): definitions.types.number を `{name: number_parser, config: {number_allow_base_prefix: true}}` で shadow すると (DR-061 の {name, config} 参照形、wire に載る portable な差し替え)、canonical で Error だった `0xff` (整数 hex) も `0x1.8p3` (hex float) も success に転じる。二進指数 `p` は任意 (C strtod 流) なので p 無しの `0x1.8` も 1.5 として読める — 「16 進整数は書けるが hex float は書けない」ねじれを排すため p を必須にしない。number 型は整数・非整数どちらも受理 (int 型の値空間判定 0x1.8p0→Error はここでは扱わず report 送り、int factory の base_prefix 配線確定後に別 fixture)。number-base-prefix-rejected.json (default false → 両方 Error) と対の opt-in 断面。",
   "query": "parse",
   "definition": {
     "definitions": {
       "types": {
-        "number": {"name": "kuu_number_parser", "config": {"number_allow_base_prefix": true}}
+        "number": {"name": "number_parser", "config": {"number_allow_base_prefix": true}}
       }
     },
     "positionals": [

@@ -1,19 +1,19 @@
 {
-  "why": "int_round opt-in の丸めモード輪郭 全 10 モード (DR-075 §2 / DR-061 configurable factory): definitions.types で kuu_int_parser を全 10 モード (方向 4: floor/ceil/trunc/away + tie 解決 4: half_floor/half_ceil/half_trunc/half_away + tie→偶数: half_even + 拒否: error) それぞれ異なる int_round config で shadow し (int_fl / int_ce / int_tr / int_aw / int_hf / int_hc / int_ht / int_ha / int_he / int_er、DR-028 type 参照糖衣 + DR-061 {name,config} 形)、同じ fractional 入力を全モードに横流しして判別する。判別ベクタは正負両側の tie (2.5 / -2.5 / 3.5 / -3.5) と非 tie (3.2 / -3.2) の 6 点で、DR-075 §「期待値表」+ 導出 (負数 tie は half_ceil/half_floor の分岐に必須、-3.5 と 3.5 で偶奇差、非 tie で方向系のみ分岐) から機械的に決まる。error モードは fractional で失敗するので argv に混ぜず isolated case で確認。命名は kuu 独自一貫系 (DR-075 §3 の HALF_UP/HALF_DOWN 罠回避 — `away` は 0 起点、`ceil`/`floor` は無限起点)。String 源の丸めは binary64 非経由の厳密判定が必須要件 (DR-075 §5、本ベクタは通常レンジなので host 差なく決まる)。float→int cast でなく parse 相の内部調整 (kuu に暗黙 cast は無い、DR-075 §6)。int-value-space.json は default (int_round=error) の受理輪郭 (整数値の受理 / 真に fractional で失敗) を担い、本 fixture は opt-in 丸めモードの判別を担う。",
+  "why": "int_round opt-in の丸めモード輪郭 全 10 モード (DR-075 §2 / DR-061 configurable factory): definitions.types で int_parser を全 10 モード (方向 4: floor/ceil/trunc/away + tie 解決 4: half_floor/half_ceil/half_trunc/half_away + tie→偶数: half_even + 拒否: error) それぞれ異なる int_round config で shadow し (int_fl / int_ce / int_tr / int_aw / int_hf / int_hc / int_ht / int_ha / int_he / int_er、DR-028 type 参照糖衣 + DR-061 {name,config} 形)、同じ fractional 入力を全モードに横流しして判別する。判別ベクタは正負両側の tie (2.5 / -2.5 / 3.5 / -3.5) と非 tie (3.2 / -3.2) の 6 点で、DR-075 §「期待値表」+ 導出 (負数 tie は half_ceil/half_floor の分岐に必須、-3.5 と 3.5 で偶奇差、非 tie で方向系のみ分岐) から機械的に決まる。error モードは fractional で失敗するので argv に混ぜず isolated case で確認。命名は kuu 独自一貫系 (DR-075 §3 の HALF_UP/HALF_DOWN 罠回避 — `away` は 0 起点、`ceil`/`floor` は無限起点)。String 源の丸めは binary64 非経由の厳密判定が必須要件 (DR-075 §5、本ベクタは通常レンジなので host 差なく決まる)。float→int cast でなく parse 相の内部調整 (kuu に暗黙 cast は無い、DR-075 §6)。int-value-space.json は default (int_round=error) の受理輪郭 (整数値の受理 / 真に fractional で失敗) を担い、本 fixture は opt-in 丸めモードの判別を担う。",
   "query": "parse",
   "definition": {
     "definitions": {
       "types": {
-        "int_fl": {"name": "kuu_int_parser", "config": {"int_round": "floor"}},
-        "int_ce": {"name": "kuu_int_parser", "config": {"int_round": "ceil"}},
-        "int_tr": {"name": "kuu_int_parser", "config": {"int_round": "trunc"}},
-        "int_aw": {"name": "kuu_int_parser", "config": {"int_round": "away"}},
-        "int_hf": {"name": "kuu_int_parser", "config": {"int_round": "half_floor"}},
-        "int_hc": {"name": "kuu_int_parser", "config": {"int_round": "half_ceil"}},
-        "int_ht": {"name": "kuu_int_parser", "config": {"int_round": "half_trunc"}},
-        "int_ha": {"name": "kuu_int_parser", "config": {"int_round": "half_away"}},
-        "int_he": {"name": "kuu_int_parser", "config": {"int_round": "half_even"}},
-        "int_er": {"name": "kuu_int_parser", "config": {"int_round": "error"}}
+        "int_fl": {"name": "int_parser", "config": {"int_round": "floor"}},
+        "int_ce": {"name": "int_parser", "config": {"int_round": "ceil"}},
+        "int_tr": {"name": "int_parser", "config": {"int_round": "trunc"}},
+        "int_aw": {"name": "int_parser", "config": {"int_round": "away"}},
+        "int_hf": {"name": "int_parser", "config": {"int_round": "half_floor"}},
+        "int_hc": {"name": "int_parser", "config": {"int_round": "half_ceil"}},
+        "int_ht": {"name": "int_parser", "config": {"int_round": "half_trunc"}},
+        "int_ha": {"name": "int_parser", "config": {"int_round": "half_away"}},
+        "int_he": {"name": "int_parser", "config": {"int_round": "half_even"}},
+        "int_er": {"name": "int_parser", "config": {"int_round": "error"}}
       }
     },
     "options": [
@@ -152,7 +152,7 @@
     },
     {
       "id": "error-mode-fractional-rejected",
-      "why": "int_round=error モードは fractional 値を拒否 (DR-075 §2 期待値表『error』行 + §4 canonical default の位置づけ): `--er 2.5` は int_er (kuu_int_parser + int_round=error) の parse 相内部調整で真に fractional な値と判定されて failure (element=er / argv_pos=1 / kind=parse / reason=not_an_integer)。`not_an_integer` は int_round=error のときのみ emit する reason (DR-075 §6: 丸めモードなら成功するので emit しない、これらの reason 分岐は int-value-space.json の fractional-value-rejected と対称、DR-066 §3)。他 9 モードは argv に混ぜていない (fractional で成功する各モードの結果は positive-tie-2p5 case が担当)。int_round=error は int-value-space.json の default 経路と同一挙動で本 fixture (opt-in) の 10 モード網羅の最後のピース。",
+      "why": "int_round=error モードは fractional 値を拒否 (DR-075 §2 期待値表『error』行 + §4 canonical default の位置づけ): `--er 2.5` は int_er (int_parser + int_round=error) の parse 相内部調整で真に fractional な値と判定されて failure (element=er / argv_pos=1 / kind=parse / reason=not_an_integer)。`not_an_integer` は int_round=error のときのみ emit する reason (DR-075 §6: 丸めモードなら成功するので emit しない、これらの reason 分岐は int-value-space.json の fractional-value-rejected と対称、DR-066 §3)。他 9 モードは argv に混ぜていない (fractional で成功する各モードの結果は positive-tie-2p5 case が担当)。int_round=error は int-value-space.json の default 経路と同一挙動で本 fixture (opt-in) の 10 モード網羅の最後のピース。",
       "argv": ["--er", "2.5"],
       "expect": {
         "outcome": "failure",

@@ -1,11 +1,11 @@
 {
-  "why": "int の値空間判定を hex 経由でも一様に適用する輪郭 (DR-075 §1 + DR-074 §2 の合成): int は number として parse した値が整数なら受理 (§1 M2 確定)。基数 prefix opt-in (`number_allow_base_prefix:true`) で hex 整数と hex float の両方を有効化した場合 (DR-074 §2)、int 型経由でも同じ値空間判定が適用される — `0xff` (整数 hex) は値 255 で整数 → 受理、`0x1.8p3` (hex float) は値 12 で整数 → 受理、`0x1.8p0` (hex float) は値 1.5 で非整数 → int_round に従う (default `error` で `not_an_integer`、丸めモードで丸めて成功)。number-base-prefix-optin.json は number 型の hex 輪郭を担うが、int 型経由の輪郭 (= 値空間判定が hex 値にも適用され、fractional 値は int_round に落ちる) は本 fixture が担う。DR-075 §2 の 10 モード + DR-074 §2 の base_prefix 統合 opt-in は `kuu_int_parser` factory の平坦 config キー 2 個 (`int_round` / `number_allow_base_prefix`) として直交合成できる (DR-061 §4)。int-round-modes.json は 10 進の丸めモード判別、本 fixture は基数 prefix opt-in 経由でも同じ規則が働くことの hex 断面固定。int-value-space.json は default (base_prefix false + int_round error) の受理輪郭を担う (10 進のみ) — 本 fixture は opt-in 経由で hex 側にも同型規則が及ぶことを固定。DR-075 §5 の binary64 非経由必須要件は 10 進 tie 判定に対する規定で、hex float は base-2 aligned のため binary64 で exact に表現可能 (mantissa 53 bit ~13 桁以内、本 fixture の 0x1.8 レベルは binary64 で厳密)。int の値域は実装定義 (DR-075 §後段)、参照実装は Int64 なので 0xff=255 は素通り。",
+  "why": "int の値空間判定を hex 経由でも一様に適用する輪郭 (DR-075 §1 + DR-074 §2 の合成): int は number として parse した値が整数なら受理 (§1 M2 確定)。基数 prefix opt-in (`number_allow_base_prefix:true`) で hex 整数と hex float の両方を有効化した場合 (DR-074 §2)、int 型経由でも同じ値空間判定が適用される — `0xff` (整数 hex) は値 255 で整数 → 受理、`0x1.8p3` (hex float) は値 12 で整数 → 受理、`0x1.8p0` (hex float) は値 1.5 で非整数 → int_round に従う (default `error` で `not_an_integer`、丸めモードで丸めて成功)。number-base-prefix-optin.json は number 型の hex 輪郭を担うが、int 型経由の輪郭 (= 値空間判定が hex 値にも適用され、fractional 値は int_round に落ちる) は本 fixture が担う。DR-075 §2 の 10 モード + DR-074 §2 の base_prefix 統合 opt-in は `int_parser` factory の平坦 config キー 2 個 (`int_round` / `number_allow_base_prefix`) として直交合成できる (DR-061 §4)。int-round-modes.json は 10 進の丸めモード判別、本 fixture は基数 prefix opt-in 経由でも同じ規則が働くことの hex 断面固定。int-value-space.json は default (base_prefix false + int_round error) の受理輪郭を担う (10 進のみ) — 本 fixture は opt-in 経由で hex 側にも同型規則が及ぶことを固定。DR-075 §5 の binary64 非経由必須要件は 10 進 tie 判定に対する規定で、hex float は base-2 aligned のため binary64 で exact に表現可能 (mantissa 53 bit ~13 桁以内、本 fixture の 0x1.8 レベルは binary64 で厳密)。int の値域は実装定義 (DR-075 §後段)、参照実装は Int64 なので 0xff=255 は素通り。",
   "query": "parse",
   "definition": {
     "definitions": {
       "types": {
-        "int_er": {"name": "kuu_int_parser", "config": {"int_round": "error", "number_allow_base_prefix": true}},
-        "int_fl": {"name": "kuu_int_parser", "config": {"int_round": "floor", "number_allow_base_prefix": true}}
+        "int_er": {"name": "int_parser", "config": {"int_round": "error", "number_allow_base_prefix": true}},
+        "int_fl": {"name": "int_parser", "config": {"int_round": "floor", "number_allow_base_prefix": true}}
       }
     },
     "options": [
