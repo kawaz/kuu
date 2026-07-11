@@ -76,7 +76,8 @@
 
 - [DR-012](DR-012-constraints-as-attributes.md): 制約は要素属性で表現 — 評価意味論は DR-047、語彙拡充は DR-055
 - [DR-055](DR-055-constraint-vocabulary.md): 制約語彙の拡充 — conflicts_with (名指しペア排他、対称)、値依存は値の枝への requires 合成 (新語彙ゼロ)、requires 語彙維持、constraint installer
-- [DR-047](DR-047-constraint-evaluation-layering.md): 制約評価のレイヤリング — 遅延述語は完全経路の成立条件 (経路フィルタ)、required は値充足 (default 込み)、exclusive_group / requires トリガは committed
+- [DR-047](DR-047-constraint-evaluation-layering.md): 制約評価のレイヤリング — 遅延述語は完全経路の成立条件 (経路フィルタ)、required は値充足 (default 込み)、exclusive_group / requires トリガは committed — 値空間なし要素の required / requires 目的語判定は refined by DR-093 (型委譲)
+- [DR-093](DR-093-required-type-directed-satisfaction.md): required / requires の充足は型委譲 — 値空間ありは値の有無 (DR-047 §5 不変)、値空間なし (`type: "none"`、dd 含む) は発火 (committed)。requires 目的語も同枠 (DR-089 §4 の definition-error を置換)、dd → greedy Seq 宣言語彙化 (DD2) は PoC 実測のうえ不採用のまま idea 降格
 
 ## 継承
 
@@ -91,7 +92,7 @@
 - [DR-086](DR-086-value-slot-consumption-priority.md): variant 枝競合の消費優先 — 値スロットが照合消費できる読みは引数なし枝に cut で優先 (後続 positional の充足可能性で再解釈しない)、required positional 同居は missing_operand / optional 同居は [] で success (ambiguous 化しない)
 - [DR-087](DR-087-lazy-default-resolution.md): default の遅延解決 — default = 全解決後に空の cell へ入る fallback (先詰めモデルの否定)、op=default / 席書き換えは placeholder 操作で実体化は依存順に最後 (config_path 解決 → config 席参照 → 祖先 → inherit)、解決後の消費者は常に全実体化済みの値を見る (再演不要・不可)
 - [DR-088](DR-088-declared-source-is-default-presence.md): 宣言された値源はデフォルトの存在 — env/config/inherit 宣言 = 遅延 default_fn と同型、経路探索の値充足述語は静的宣言ベース (committed ∨ 宣言あり、実行時値に非依存で決定的)、最終判定は遅延解決後の実値 (空なら unset のまま落ちる、再探索なし)
-- [DR-089](DR-089-type-none-value-space.md): type 省略 = none — type は値空間のみを規定し消費は構造の関心 (直交)、none = 値空間が空の node (消費 0 の純トリガも「食って捨てる」も構造で書ける)、結果非掲載で発火観測は ParserContext / explains 層、値充足席には立てない (definition-error)
+- [DR-089](DR-089-type-none-value-space.md): type 省略 = none — type は値空間のみを規定し消費は構造の関心 (直交)、none = 値空間が空の node (消費 0 の純トリガも「食って捨てる」も構造で書ける)、結果非掲載で発火観測は ParserContext / explains 層、値充足席には立てない (definition-error) — required / requires 目的語については superseded by DR-093 (発火=committed で充足)
 - [DR-090](DR-090-dd-pattern-trigger-self-keep.md): dd の一般化 — トリガ形 (exact | match 正規表現、host 方言準拠) × 自己の扱い (drop | keep = 消費 0 で自身含め positional 域へ) の 2 軸。優先規則は新設せず pattern 設計 (xargs 型は `^[^-]` = 最初の非ハイフン operand) で競合自体を回避、option 面の終端は severed の効果が与える
 - [DR-091](DR-091-bare-key-value-operand-stages.md): bare key=value operand の段階表現 — §1 素通し (multiple string + regex_match、既存語彙)、§2 kv_map accumulator (Map へ畳む・last-wins)、§3 固定キー型付きは long_prefix:"" + require_equal_separator 新設 (eq 必須が空 prefix を成立させる条件、単独の空 prefix は未定義動作のまま)
 

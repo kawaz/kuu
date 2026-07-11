@@ -38,6 +38,8 @@ DR-037 の「解けた枝 = filter Error 含めて全段が通った」の「全
 
 > **明確化 (kawaz 裁定 2026-07-09): requires の目的語が bool 型 (flag preset 含む) の場合、充足条件は「値の有無」ではなく「解決後の値が true であること」(値源不問 — cli / env / config / inherit / default のどれ経由でも true なら充足、false なら不充足)。** 根拠: bool は preset の暗黙 default:false (LOWERING §A.5) を常に持つため、「値の有無 (default 込み)」判定だと bool 目的語の requires が一度も指定されなくても vacuous に充足し、制約が黙って no-op になる (kuu.mbt 2026-07-09 実測、installer_wbtest の A/B pin)。committed 基準にしなかったのは env / config 経由の true (例: `YES=true` が `--force requires --yes` を満たす) を弾かないため。「requires x = x が真」という bool の真理値としての自然な読みとも一致する。非 bool 型は従来どおり「値の有無 (default 込み)」。実装への含意: bool 目的語の判定は値源ラダー解決後の値に依存する。制約は遅延述語なので、判定は**全完全経路の収集後に、値源ラダーが解ける後段 (resolve 層、post_filters と同じ側) で経路フィルタとして適用**する — eval 層 (経路探索) に値源を持ち込まない。ambiguous 解消への参加 (§「制約が ambiguous の解消に参加する」) は「後段フィルタで経路数が 1 に減ればその経路で確定、0 なら failure (全違反が errors に載る)」として同じ意味論のまま成立する (kawaz 整理 2026-07-09)。
 
+> **精密化 (DR-093, kawaz 裁定 2026-07-11): required / requires の判定入力は型 (値空間) への委譲として一様定式化される。** 上表の「required = 最終状態の値の有無」「requires 目的語 = 値の有無 (bool は解決後値が true)」は**値空間を持つ要素**が前提。値空間が空の要素 (`type: "none"`、dd 含む、DR-089) は required / requires 目的語のいずれでも「発火したこと (committed)」で充足する。bool 目的語の判定 (直上の明確化) は「bool 型の充足定義」として同じ型委譲の枠に位置づけ直される。判定入力に committed を使う点は本 DR の線 (selected を診断メタに留める) と整合し、変更しない。
+
 ### 6. 受け入れる帰結
 
 1. **制約が ambiguous の解消に参加する**: 構造の異なる複数の完全経路のうち制約を満たすものが 1 本だけなら、ambiguous ではなくその経路で静かに確定する (例: `-n1.0f` の 2 読み (DR-038) で分割読み側の `-f` が requires 未充足なら、値付着読み `n="1.0f"` で成功)。DR-043 の取り分選好が ambiguous 検出を保存する (選好は取り分次元に閉じる) のと異なり、遅延述語は経路の成立自体を変える
