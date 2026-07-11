@@ -1,0 +1,34 @@
+{
+  "why": "素の positional + env のみの宣言 (default 属性なし) の充足輪郭 (DR-088 §1/§2/§3)。positional-default-presence.json (同名軸、default 属性版) の対 — DR-088 §1 の『宣言された値源』は default 属性に限らず env/config/inherit のどれでもよい (§1『default 属性 ∨ default_fn ∨ env 宣言 ∨ config 席 ∨ inherit 宣言のいずれかがあるか』)。よって env 宣言だけの positional もトークン省略時に missing_operand へ倒れず経路は完全になる。ただし env が実際に値を供給しない場合 (未設定) は §3 の帰結が効く: 経路は完全のまま、しかし遅延解決の最終フェーズで実値が無い (default 属性も無い) ため node は unset のまま — DR-051 §1 の一般規則 (値源ラダーを回しても値が無い非反復要素はキーごと消える) がそのまま適用され、result にキーが現れない。DR-088 §4 の canonical 例 (`a(requires:[c])+c(env:C)`、C 未設定で requires 違反 failure) と異なり、本 fixture の `timeout` には他要素からの requires 依存が無いため、単体では違反する述語も無く **outcome は success のまま、timeout キーだけが absent になる** — DR-088 §3 は『述語がその経路で落ちる』ケースを説明しているが、述語が無ければ落ちる先も無く、単に §1 の absent 一般則に帰着する (§2 の absent 除外3族 — default持ち/repeat/required — のいずれにも該当しないため §1 の一般規則の適用対象)。2 定義 (default 版/env 版) を同一 definition の兄弟 positional にすると、いずれも『トークン消費が構造的に必須でない』宣言のため単一トークン供給時にどちらが消費するか経路が割れかねない (team-lead 指摘のとおり) — 相互作用を避けるため別ファイルに分離した。",
+  "query": "parse",
+  "definition": {
+    "positionals": [
+      {"name": "timeout", "type": "int", "env": "TIMEOUT"}
+    ]
+  },
+  "cases": [
+    {
+      "id": "env-supplies-without-token",
+      "why": "トークン供給なし、env TIMEOUT=30: env 宣言により経路は完全 (DR-088 §1/§2)、遅延解決で env 値 30 が実体化され success。sources で由来 env を検証。effects 空 (env 由来は effects 非掲載、CONFORMANCE §2)。",
+      "argv": [],
+      "env": {"TIMEOUT": "30"},
+      "expect": {
+        "outcome": "success",
+        "effects": [],
+        "result": {"timeout": 30},
+        "sources": {"timeout": "env"}
+      }
+    },
+    {
+      "id": "env-unset-no-token-stays-unset-absent",
+      "why": "(対極) トークン供給なし、env 未設定: 経路は同じく完全 (§2 の静的宣言判定は env の実値を見ない) だが、遅延解決の最終フェーズで env が値を供給せず default 属性も無いため timeout は unset のまま (DR-088 §3)。timeout 単体には requires 等の述語が掛かっていないので違反判定に落ちる先が無く、outcome は success のまま — ただし timeout は値源ラダーを回しても値が無い非反復要素 (§2 の absent 除外3族 = default持ち/repeat/required のいずれにも非該当) なので DR-051 §1 の一般規則により結果からキーごと消える (absent)。missing_operand の failure にはならない (それは required positional 専用の帰結、absent/required-positional.json)。",
+      "argv": [],
+      "env": {},
+      "expect": {
+        "outcome": "success",
+        "effects": [],
+        "result": {}
+      }
+    }
+  ]
+}

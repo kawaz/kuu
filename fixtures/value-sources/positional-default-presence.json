@@ -1,0 +1,35 @@
+{
+  "why": "素の positional (repeat/optional 無し) + 宣言された値源 (default) の充足輪郭 (DR-088 §1/§2、issue corpus-optional-scalar-positional / 2026-07-11-dr-088-positional-default-verification の追従)。absent/required-positional.json は default を持たない素の positional の対照 pin (トークン無し → missing_operand の failure、DR-051 §2c) だが、本 fixture は同じく repeat/optional 宣言の無い素の positional に **`default` だけを足す**と挙動が反転することを固定する: DR-088 §1『宣言された値源 = デフォルトの存在』により、経路探索段の充足判定は静的宣言 (default 属性の有無) だけを見る (§2) — トークンを消費しなくても『デフォルトがある』ので背骨のその消費点は未充足のまま完全経路に含まれてよい。結果、トークン省略時も missing_operand に倒れず、遅延解決 (DR-087) で default 10 が実体化されて success になる。トークンが供給されれば通常どおり cli が勝つ (default はあくまで最終フォールバック、DESIGN §11.4)。",
+  "query": "parse",
+  "definition": {
+    "positionals": [
+      {"name": "seconds", "type": "int", "default": 10}
+    ]
+  },
+  "cases": [
+    {
+      "id": "no-token-default-fills-path-complete",
+      "why": "トークン供給なし: absent/required-positional.json の missing-required (default 無し → failure/missing_operand) との対 — `seconds` は default:10 を持つため、経路探索段では『デフォルト有り』(DR-088 §1) として完全経路に数えられ、missing_operand にならない。遅延解決の最終フェーズ (DR-087) で default 10 が実体化されて success。effects 空 (default は cli/link 由来でないので効果列に載らない、CONFORMANCE §2)。sources で由来 default を検証。",
+      "argv": [],
+      "expect": {
+        "outcome": "success",
+        "effects": [],
+        "result": {"seconds": 10},
+        "sources": {"seconds": "default"}
+      }
+    },
+    {
+      "id": "token-supplied-overrides-default",
+      "why": "(対極) `5`: トークンが供給されれば通常どおり cli 値が default を上書きする (値源ラダー cli > default、DESIGN §11.4)。default 属性の有無は経路探索段の充足判定を変えるだけで、値が供給された時の優先順位そのものは変えない。",
+      "argv": ["5"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "seconds", "op": "set", "operand": 5, "source": "cli"}
+        ],
+        "result": {"seconds": 5},
+        "sources": {"seconds": "cli"}
+      }
+    }
+  ]
+}
