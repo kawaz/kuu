@@ -1,6 +1,6 @@
 ---
 title: dd 相当マーカーを「発火必須」にできない (values セルを持たないため required の判定対象にならない)
-status: open
+status: resolved
 category: design
 created: 2026-07-07T23:24:02+09:00
 last_read:
@@ -9,10 +9,10 @@ wip_entered:
 blocked_entered:
 pending_entered:
 discarded_entered:
-resolved_entered:
+resolved_entered: 2026-07-12T00:51:17+09:00
 discard_reason:
 pending_reason:
-close_reason:
+close_reason: ["dr/DR-093","DD3 バッチ (kawaz 裁定 2026-07-11): required の充足は型委譲 — none 要素 (dd 含む) は発火 (committed) で充足","DD3-Q1 判定入力は committed / DD3-Q2 requires 目的語も型委譲に含める / DD3-Q3 opt-in 書き換え (DD2) は idea 降格","spec commit a1d60f3d","kuu.mbt 実装と corpus/real-cli/die.json の failure pin 更新は未実施、後続 issue 2026-07-12-dr-093-required-type-dispatch-implementation で追跡"]
 blocked_by:
 origin: kuu 自リポ TODO
 ---
