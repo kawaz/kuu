@@ -1,0 +1,49 @@
+{
+  "why": "type 省略 = none (DR-089 §1/§2/§3): type が規定するのは値空間だけで、消費は構造 (トリガ/repeat/値スロット) が別に決める直交な2軸 (DESIGN §5.2)。`type` を省略した node は第一級の `type:\"none\"` の糖衣 (§2 — `long:true = [\":set\"]` と同じ『省略 = default の構造等価』流儀) であり、値空間が空 = 発火しても値を運ばない。値の無さはフィールドの不在 (DR-051 §1/§4) なので、シンプルモードの結果オブジェクトにキーは現れない — 発火の有無自体を知りたい消費者は ParserContext / explains 層 (DR-016 の 2 層分離のメタ層) を見る必要があり、本 fixture が扱う簡易 result/effects 面には一切痕跡が残らない。DR-064 (dd) が『消費するが値を運ばない』先行例であり (DR-089 の関連節が明記)、dd/export-key-inert.json / dd/basic.json は dd 自身の発火が effects 配列に一切エントリを持たないことを既に pin 済み — none も同じ扱いになる (kuu.mbt 内部で発火時に committed フラグを立てる placeholder 操作が走るとしても、それは ParserContext 内部の話であり、cli/link 由来のパース時効果のみを載せる effects 配列 (CONFORMANCE §2) には現れない。既存語彙に『operand を持たない set』op の実例が無いことも確認済み — 発明せず『effects エントリ自体が無い』という dd と同型の扱いを採用)。sep は type 省略の暗黙 none、sep2 は明示 `type:\"none\"` — 両者が同一挙動であることを case 3 で対照する。keep は通常 flag の相方で、全 case で present であることを確認する (DR-051 §2)。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {"name": "sep", "long": true},
+      {"name": "sep2", "type": "none", "long": true},
+      {"name": "keep", "type": "flag", "long": true}
+    ]
+  },
+  "cases": [
+    {
+      "id": "omitted-type-fires-no-trace",
+      "why": "`--sep --keep`: sep (type 省略=none) が発火するが値空間を持たないため result/effects に一切現れない — dd の export-key-inert.json と同型 (発火はするが痕跡なし)。keep は通常 flag として cli 発火し result に present。effects は keep の set 1 個のみ (sep の発火は effects エントリを持たない)。",
+      "argv": ["--sep", "--keep"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "keep", "op": "set", "operand": true, "source": "cli"}
+        ],
+        "result": {"keep": true}
+      }
+    },
+    {
+      "id": "omitted-type-unfired-same-as-fired",
+      "why": "(対極) `--keep` のみ (sep 未発火): none は値空間ごと無いため、flag のような『未発火なら preset default false』も出ない (DR-051 §2 は値空間を持つ要素の規則、none には適用対象が無い) — sep は発火有無に関わらず絶対に result/effects/sources に現れない。この case の expect (effects/result) は前 case (sep 発火あり) と **バイト同一** — argv に `--sep` が含まれるかどうかが唯一の違いなのに観測面 (result/effects) には一切差が出ないこと自体が『none は簡易面に痕跡を残さない』の最も直接的な証拠になる。",
+      "argv": ["--keep"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "keep", "op": "set", "operand": true, "source": "cli"}
+        ],
+        "result": {"keep": true}
+      }
+    },
+    {
+      "id": "explicit-type-none-equivalent",
+      "why": "`--sep2 --keep`: 明示 `type:\"none\"` の sep2 を発火させても、type 省略の sep と同じ expect (keep のみの result/effects) になる — 『省略 = none の糖衣』(DR-089 §2) が観測面で同値であることの固定。",
+      "argv": ["--sep2", "--keep"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "keep", "op": "set", "operand": true, "source": "cli"}
+        ],
+        "result": {"keep": true}
+      }
+    }
+  ]
+}

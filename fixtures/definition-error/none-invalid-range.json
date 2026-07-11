@@ -1,0 +1,24 @@
+{
+  "why": "none 要素の関わる definition-error 2 種を 1 定義に同居させ、DR-054 §4 の『errors は全列挙』(1個直すたびに再実行させない) を1 case で実演する (DR-089 §4)。(a) `a` は none 要素 `c` を requires の目的語にしている — 値充足を要求される席には値空間の無い要素は立てず、静的に既知 (定義時点で c の type=none と a の requires:[\"c\"] の両方が確定している) なので definition-error (DR-083 §5 の『静的に既知は定義時に倒す』筋)。element は requires 宣言を書いた a (option-ref-repeat-min-invalid-range.json / accum-update-invalid-range.json と同様、offending 属性を書いた要素自身を element にする慣習)。(b) `x` は none (type 省略) でありながら env 宣言を持つ — 値源 (env) は値空間へ供給するものであり、値空間が空の要素に値源を宣言するのは構成として不成立、element は宣言を持つ x 自身。両者とも DR-082 §2 の『構文上は書けるが構成として不成立』枠で kind=invalid-range。argv は書かない (定義の静的検査であり実行しない、DR-082 §1)。",
+  "query": "definition_error",
+  "definition": {
+    "options": [
+      {"name": "a", "type": "flag", "long": true, "requires": ["c"]},
+      {"name": "c", "long": true},
+      {"name": "x", "long": true, "env": "X"}
+    ]
+  },
+  "cases": [
+    {
+      "id": "none-requires-target-and-env-declaration-are-invalid-range",
+      "why": "2つの独立した不成立構成が同一定義に同居する: (1) `a` の `requires:[\"c\"]` は none 要素 `c` (値空間なし) を目的語にしており、値充足を要求する席に立てられない構成 — element=a、kind=invalid-range。(2) `x` は type 省略 (none) でありながら `env:\"X\"` を宣言しており、値空間の無い要素に値源を供給しようとする構成 — element=x、kind=invalid-range。DR-054 §4 の errors 全列挙により、この1つの definition から2つの独立したエラーが同時に返る (element+kind の集合比較、CONFORMANCE §3)。",
+      "expect": {
+        "outcome": "definition-error",
+        "errors": [
+          {"element": "a", "kind": "invalid-range"},
+          {"element": "x", "kind": "invalid-range"}
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,35 @@
+{
+  "why": "none 要素の committed 系制約への参加 (DR-089 §4): none は値空間を持たないため結果/effects には現れない (none-value-space.json) が、**committed 基準の制約 (conflicts_with / exclusive_group、requires のトリガ側) には通常どおり参加する** — 値の有無と committed フラグは別の観測軸であり、none は『値は無いが発火した (committed=true になった)』という状態を持てる。conflicts.json (flag 同士) の対称衝突判定パターンをそのまま none×flag に適用し、値空間の有無が制約評価に影響しないことを固定する。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {"name": "sep", "long": true, "conflicts_with": ["bar"]},
+      {"name": "bar", "type": "flag", "long": true}
+    ]
+  },
+  "cases": [
+    {
+      "id": "none-trigger-participates-in-conflict",
+      "why": "`--sep --bar`: sep (none) は値を運ばないが発火により committed=true になり、bar も committed=true → 両者 committed で conflicts_with 違反 (DESIGN §9.4 / DR-055、conflicts.json の conflict-fires と同型)。element は宣言元 sep、argv_pos=2 (=argv.length、遅延述語は全消費後に評価)。none が値を持たないことと committed 判定に参加できることは別軸である証拠 — もし none が委縮させられて committed も立たないなら、この case は success (述語不成立) になっていたはず。",
+      "argv": ["--sep", "--bar"],
+      "expect": {
+        "outcome": "failure",
+        "errors": [
+          {"element": "sep", "argv_pos": 2, "kind": "constraint", "reason": "conflicts_with_violated"}
+        ]
+      }
+    },
+    {
+      "id": "none-unfired-no-conflict",
+      "why": "(対極) `--bar` のみ: sep 未発火なので committed=false、conflicts_with 述語は不成立 → success。bar は cli 発火で result に present、sep は (発火有無に関わらず) result/effects に一切現れない (none-value-space.json と同型)。",
+      "argv": ["--bar"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "bar", "op": "set", "operand": true, "source": "cli"}
+        ],
+        "result": {"bar": true}
+      }
+    }
+  ]
+}
