@@ -38,10 +38,22 @@
  "result": {"a": true}}
 ```
 
-- **`effects` が判定の正本** (主 oracle、LOWERING §C.5)。要素は `{entity, op, operand?, source}`。**配列順 = 適用順** (効果列の順序は同一性成分、DR-038/045)
+- **`effects` が判定の正本** (主 oracle、LOWERING §C.5)。要素は `{entity, op, operand?, source, transform?, args?}`。**配列順 = 適用順** (効果列の順序は同一性成分、DR-038/045)
   - `entity`: 実体 (値セル) の name / id
-  - `op`: `set` / `default` / `unset` / `empty` (DR-045。通常の値バインドは set)
-  - `operand`: op が要求する場合のみ。JSON 表現は canonical 規約 (数値は最短形 `1.0` → `1`、DR-050 §4)
+  - `op`: DR-045 §4 の 4 op (`set` / `default` / `unset` / `empty`) + DR-077 §1 の `update` (5 番目、old→transform の書き戻し) + DR-080 §2 の merge accumulator piece op のうち集合演算系 2 種 (`remove` / `splice`。add piece は通常の set として現れる、DR-080 §4)。計 7 op:
+
+    | op | 意味 | operand | 実例 (fixture::case) |
+    |---|---|---|---|
+    | `set` | 通常の値バインド | 値 | `fixtures/multiple-parse/merge-basic.json::no-marker-overwrites-cell` |
+    | `default` | 明示 default 選択、committed=true (DR-045) | なし | `fixtures/multiple-parse/default-cell-ops.json::default-with-no-declared-default-resets-to-empty` |
+    | `unset` | default 値へ戻す、committed=false でラダー開放 (DR-045) | なし | `fixtures/multiple-parse/filters-cell-ops.json::unset-after-set-resets-to-empty-without-filter` |
+    | `empty` | コレクションを決定論的に空にする、committed=true (DR-045) | なし | `fixtures/multiple-parse/filters-cell-ops.json::empty-after-set-resets-to-empty-with-cli-source` |
+    | `update` | old へ transform を適用して書き戻す `cell = f(old)` (DR-077 §1) | なし (`transform`/`args` フィールドで変換を指定) | `fixtures/count-parse/basic.json::long-single-fire-one` |
+    | `remove` | merge accumulator: operand と等価な要素を全削除 (DR-080 §2) | 除去対象の値 | `fixtures/multiple-parse/merge-splice-remove.json::implicit-at-then-remove-only` |
+    | `splice` | merge accumulator: old をその位置に展開 (DR-080 §2) | なし | `fixtures/multiple-parse/merge-basic.json::bare-splice-is-identity` |
+  - `operand`: op が要求する場合のみ (set の値 / remove の除去対象)。JSON 表現は canonical 規約 (数値は最短形 `1.0` → `1`、DR-050 §4)
+  - `transform`: `op: "update"` 限定 (DR-077 §1/§2)。filters registry の Transform シグネチャを持つエントリ名 (ns 付き識別子、DR-094)。組み込みは `increment`
+  - `args`: `op: "update"` の transform に渡す追加引数 (optional、DR-077 §2「args 付き transform は filters の既存 colon 規約のネスト」)。0-arg transform (`increment` 等) では省略
   - `source`: 値源タグ (DR-031)。parse fixture では `cli` のみ登場する (下記)
 - **effects に載るのは cli / link 由来のパース時効果のみ** — 値源ラダー充填 (env / config / inherit / default) は完走後の値確定であり argv 順の全順序を持たないため、effects には載せない (例: 未発火 flag の `false` は result に現れ、effects には現れない)。ラダー充填の**値**は `result` で、**由来**は `sources` フィールドで検証する (effects への source 拡張は「充填同士の順序が非規範で全順序規約を汚す」ため不採用 — DR-065)
 - **`result` は最終結果オブジェクト** (ラダー充填込みの確定値、DR-051 の absent 規則適用後)。runner は effects / result の両方を検証する

@@ -15,9 +15,7 @@
         "name": "c",
         "type": "string",
         "long": true,
-        "env": [
-          "C"
-        ]
+        "env": "C"
       }
     ]
   },

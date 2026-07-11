@@ -32,9 +32,7 @@
         "name": "c",
         "type": "flag",
         "long": true,
-        "env": [
-          "C"
-        ]
+        "env": "C"
       }
     ]
   },

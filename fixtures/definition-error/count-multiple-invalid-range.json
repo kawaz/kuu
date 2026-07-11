@@ -3,7 +3,7 @@
   "query": "definition_error",
   "definition": {
     "options": [
-      {"name": "n", "type": "count", "short": "n", "multiple": true}
+      {"name": "n", "type": "count", "short": "n", "multiple": "append"}
     ]
   },
   "cases": [

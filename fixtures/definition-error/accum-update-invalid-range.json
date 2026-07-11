@@ -3,7 +3,7 @@
   "query": "definition_error",
   "definition": {
     "options": [
-      {"name": "tags", "type": "string", "long": [":set", "bump:update:increment"], "multiple": true}
+      {"name": "tags", "type": "string", "long": [":set", "bump:update:increment"], "multiple": "append"}
     ]
   },
   "cases": [

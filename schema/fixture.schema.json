@@ -232,7 +232,7 @@
 
     "effect": {
       "type": "object",
-      "description": "1 効果記述子 (DR-045 §4 op + DR-077 §1 update + DR-080 §2 merge accumulator piece op)。**CONFORMANCE.md §2 の op 表 (set/default/unset/empty の 4 種) は DR-077/DR-080 の後に追従しておらず本 Schema の方が実態 (fixtures/ 実測) に合わせて広い** — update (DR-077 §1) と remove/splice (DR-080 §4「effects oracle での piece op の見せ方は fixture 設計時に確定」) は CONFORMANCE.md に未反映のギャップとして DR-095 起票時に発見 (別途 CONFORMANCE.md 側の追記が望ましいが本 Schema 実体化タスクの射程外)。",
+      "description": "1 効果記述子 (DR-045 §4 op + DR-077 §1 update + DR-080 §2 merge accumulator piece op)。op 語彙は CONFORMANCE.md §2 の op 表と往復一致 (7 op + transform/args)。",
       "properties": {
         "entity": { "type": "string", "description": "実体 (値セル) の name / id。" },
         "op": {
