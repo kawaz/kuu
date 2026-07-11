@@ -1,11 +1,11 @@
 ---
 title: inf / 非整数 number の JSON serialize 規約
-status: open
+status: wip
 category: design
 created: 2026-07-08T21:57:03+09:00
 last_read:
 open_entered: 2026-07-08T21:57:03+09:00
-wip_entered:
+wip_entered: 2026-07-11T13:55:50+09:00
 blocked_entered:
 pending_entered:
 discarded_entered:
@@ -31,6 +31,15 @@ fixtures/value-typing/number-inf-nan.json は inf 受理 case で「成功輪郭
 
 ## 受け入れ条件
 
-- [ ] inf の JSON serialize 表現を裁定する (候補: 文字列表現 "inf" / "-inf"、tagged object。JSON5 的拡張は不採用 — protobuf3/Go 互換の DR-071 と同じ wire 制約意識)
+- [x] inf の JSON serialize 表現を裁定する (候補: 文字列表現 "inf" / "-inf"、tagged object。JSON5 的拡張は不採用 — protobuf3/Go 互換の DR-071 と同じ wire 制約意識)
+  - DR-092 起票済み。kawaz 裁定 INF-Q1a/Q2a/Q3c/Q4a/Q5a/Q6a 反映 (commit b5a3279f)
 - [ ] result オブジェクトの言語バインディング側表現 (各言語の inf) との対応を一言明記する
+  - DR-092 内で反映済み (裁定に含まれる)
 - [ ] fixtures/value-typing/number-inf-nan.json の inf case を値まで pin する形に更新する
+
+## TODO (進捗)
+
+- [x] DR-092 起票 (kawaz 裁定 INF-Q1a/Q2a/Q3c/Q4a/Q5a/Q6a 反映、commit b5a3279f)
+- [ ] kuu.mbt の serialize 実装
+- [ ] fixtures/value-typing/number-inf-nan.json の受理 4 case へ result pin 追加
+- [ ] pin bump
