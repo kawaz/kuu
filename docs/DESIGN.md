@@ -525,12 +525,15 @@ separator も §6.2 のパイプライン内にのみ存在する部品であり
     "env_prefix": "MYAPP",
     "auto_env": false,
     "allow_equal_separator": true,
-    "short_combine": true
+    "short_combine": true,
+    "require_equal_separator": false
   }
 }
 ```
 
 子要素は親の config を継承、上書き可能。
+
+`require_equal_separator` (bool、既定 `false`、DR-091 §3): `true` なら long は eq 分割形 (`key=value`) のみを受理し、別引数での値供給 (`key value`) を拒否する。`long_prefix: ""` (空 prefix) は `require_equal_separator: true` との併用時のみ合法 — eq 必須により「`=` を含むトークンだけが long 候補」になり、素の operand が long 経路と衝突しないことが空 prefix を破綻させない条件 (単独の `long_prefix: ""` は未定義動作のまま)。
 
 ### 7.3 variant DSL (DR-011)
 

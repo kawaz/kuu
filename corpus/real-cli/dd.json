@@ -1,8 +1,8 @@
 {
-  "why": "dd コマンド (macOS 実機、`dd if=X of=Y bs=N count=N`) のプローブ = key=value 独自形式が matcher で表現できるか。注意: fixtures/dd/ は `--` (dashdash) マーカーの fixture で本ファイルとは別物 — こちらは dd コマンドの全 operand が `key=value` 代入という独自文法。プローブ対象 = config.long_prefix を空文字 \"\" に、allow_equal_separator を true にして『空 prefix long + = 分割』で bare key=value operand を表現できるか (= long option の eq-split matcher を prefix なしで流用する試み)。この手法が spec 上正しく動くかは未確定 (実装で要検証) — 期待値は『意図する結果』を書き、機構の成否は issue で追う。値 suffix (bs=1m の m、count は数値) は string/int で受けアプリ解釈。",
+  "why": "dd コマンド (macOS 実機、`dd if=X of=Y bs=N count=N`) のプローブ = key=value 独自形式が matcher で表現できるか。注意: fixtures/dd/ は `--` (dashdash) マーカーの fixture で本ファイルとは別物 — こちらは dd コマンドの全 operand が `key=value` 代入という独自文法。**DR-091 §3 の正規形**: `long_prefix: \"\"` (空 prefix) + `require_equal_separator: true` (definition 直下 scope config) で bare key=value operand を表現する。旧版は `allow_equal_separator: true` (eq 分割を単に許可するだけ、空間区切り形も併存) を使う hack で『spec 上正しく動くかは未確定』と留保していたが、DR-091 §3 が `require_equal_separator` を正式導入し、eq 分割のみを受理する (空間区切り形の読みを生成しない) ことで空 prefix long が破綻せずに定義できることを明文化した — 本改訂で留保を解消する。値 suffix (bs=1m の m、count は数値) は string/int で受けアプリ解釈。",
   "query": "parse",
   "definition": {
-    "config": {"long_prefix": "", "allow_equal_separator": true},
+    "config": {"long_prefix": "", "require_equal_separator": true},
     "options": [
       {"name": "input", "type": "string", "long": ["if"]},
       {"name": "output", "type": "string", "long": ["of"]},
@@ -13,7 +13,7 @@
   "cases": [
     {
       "id": "full-key-value-operands",
-      "why": "`dd if=/dev/zero of=/dev/null bs=1m count=10` (実機はブロックコピー)。4 operand すべて key=value。空 prefix long + eq-split で if→input, of→output, bs→block_size (string \"1m\"), count→int 10 にバインド。全 operand が = 代入というのが getopt と根本的に違う点。順不同 (dd も operand 順自由)。",
+      "why": "`dd if=/dev/zero of=/dev/null bs=1m count=10` (実機はブロックコピー)。4 operand すべて key=value。空 prefix long + eq 必須 matcher で if→input, of→output, bs→block_size (string \"1m\"), count→int 10 にバインド。全 operand が = 代入というのが getopt と根本的に違う点。順不同 (dd も operand 順自由)。",
       "argv": ["if=/dev/zero", "of=/dev/null", "bs=1m", "count=10"],
       "expect": {
         "outcome": "success",
@@ -49,6 +49,15 @@
           {"entity": "count", "op": "set", "operand": 5, "source": "cli"}
         ],
         "result": {"count": 5}
+      }
+    },
+    {
+      "id": "space-form-rejected",
+      "why": "(新規、DR-091 §3 の require_equal_separator が解決する軸) `if /dev/zero` (実機の dd もこの空間区切り形は受理しない — dd 独自文法は常に key=value): require_equal_separator により空間区切り形の読みが一切生成されないため \"if\" は if の候補読みを持たず、positional も無いので消費者不在。旧版 (allow_equal_separator のみ) はこの拒否が保証されていなかった (空間区切り形も許容してしまう可能性を残していた) — require_equal_separator への切替でこの未定義動作が解消されたことを固定する。argv_pos=0、kind=parse / reason=unexpected_token。",
+      "argv": ["if", "/dev/zero"],
+      "expect": {
+        "outcome": "failure",
+        "errors": [{"argv_pos": 0, "kind": "parse", "reason": "unexpected_token"}]
       }
     }
   ]

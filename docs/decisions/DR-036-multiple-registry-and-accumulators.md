@@ -58,6 +58,10 @@ accumulators registry: {
     accumulator: (piece, processor, prevs) → T[],               // [T,[T,…]] → T[]
     default_collector: "identity",
   },
+  "kv_map": {                                                   // piece "k=v" → Map、last-wins (DR-091 §2)
+    accumulator: (piece, processor, prevs) → Map<K,V>,          // 最初の "=" で分割、= なし piece は reject
+    default_collector: "identity",
+  },
 }
 ```
 
