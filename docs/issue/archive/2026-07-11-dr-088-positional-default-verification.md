@@ -1,6 +1,6 @@
 ---
 title: DR-088 を実装完了する: kuu.mbt の positional 充足経路 (default 供給) を検証する
-status: open
+status: resolved
 category: task
 created: 2026-07-11T10:06:56+09:00
 last_read: 2026-07-11T10:20:58+09:00
@@ -9,10 +9,10 @@ wip_entered:
 blocked_entered:
 pending_entered:
 discarded_entered:
-resolved_entered:
+resolved_entered: 2026-07-11T10:28:04+09:00
 discard_reason:
 pending_reason:
-close_reason:
+close_reason: ["dr/DR-088","implemented"]
 blocked_by:
 origin: 自リポ TODO
 ---
