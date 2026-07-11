@@ -16,20 +16,20 @@ severed 化の効果本体 (発火以降 greedy 面 off = 全トークンが raw
 ### 2. wire 形
 
 ```json
-{"type": "dd"}                                  // 従来: exact "--"、self は drop (既定)
-{"type": "dd", "match": "^-", "self": "keep"}   // xargs 型: option 風の未知トークンで発火、
-                                                //   そのトークン自身から positional 域
+{"type": "dd"}                                    // 従来: exact "--"、self は drop (既定)
+{"type": "dd", "match": "^[^-]", "self": "keep"}  // xargs 型: 最初の非ハイフン operand (utility 名)
+                                                  //   で発火、そのトークン自身から positional 域
 ```
 
 - `match`: 正規表現。照合方言は host 実装準拠 (DR-085 §2 と同じ宣言)。トリガが構文解釈を左右するが、実用パターン (`^-` 等) に方言差は出ない — 複雑な条件が必要になる見込みは薄い (kawaz 裁定)。`match` があるとき name はトリガ綴りに使われず、要素の同一性・表示軸のみに効く (DR-046)
 - `self`: `"drop"` (既定 — マーカーを消費して捨てる、従来 dd) | `"keep"` (消費 0 で Accept し、判定基準となったトークン自身を含めて以降を positional 域へ流す)
 
-### 3. pattern dd は「最後の受け皿」— 既知の読みに常に負ける
+### 3. 優先規則は新設しない — pattern の設計で競合自体を避ける
 
-pattern トリガの dd は、**当該トークンを他のいかなる読み (option 発火・値スロット消費・positional 席の消費・exact dd) も採用しない場合にのみ**発火する。つまり「unknown token でエラーになるはずだった経路を正規に受け止める」劣後の衛星であり、既知読みとの競合を ambiguous にしない (DR-086 の cut と同系の、経路空間に投入される読みを絞る局所選好)。
+pattern dd のトリガ競合の扱いは exact dd と同一で、**新しい優先規則は持たない**。xargs 型で使う pattern は `^[^-]` (非ハイフン) — option トリガ (ハイフン風の綴り) とは形が交わらず、option の値部分は値スロットが raw 消費して背骨に現れない (DR-041 §4) ため、既知の読みとの競合は構造的に発生しない。
 
-- 例 (xargs): `xargs -n 1 rm -f a` — `-n` は xargs 自身の option として発火 (pattern dd は負ける)、`1` はその値スロットへ、`rm` は utility positional が消費、`-f` はどの読みも取れない → pattern dd (`^-`) が発火し `-f a` が positional 域へ
-- exact dd (`--`) は従来どおり通常の greedy 衛星として振る舞う (本節の劣後は pattern トリガのみの規則)
+- 例 (xargs、`xargs -n 1 rm -f a`): `-n` はハイフンなので pattern 非マッチ (xargs の option として発火)、`1` は値スロットが raw 消費、`rm` が最初の非ハイフン operand として pattern dd に一致 → 発火 (self: keep)、`rm` 自身を含め以降が positional 域 + **severed**。以降の `-f` は severed により raw — 既知 option の綴り (`-n` 等) が rm の後に現れても再発火しない (実 xargs と同じ)
+- 「option 面がどこで終わるか」は劣後規則でなく **severed の効果**が与える — トリガはその開始点を宣言するだけ
 
 ### 4. env との合成
 
