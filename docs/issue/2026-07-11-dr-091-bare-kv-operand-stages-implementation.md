@@ -1,11 +1,11 @@
 ---
 title: DR-091 を実装完了する: kv_map accumulator と require_equal_separator の実装 + corpus 書き直し
-status: open
+status: wip
 category: task
 created: 2026-07-11T10:17:34+09:00
 last_read: 2026-07-11T11:02:43+09:00
 open_entered: 2026-07-11T10:17:34+09:00
-wip_entered:
+wip_entered: 2026-07-11T11:03:52+09:00
 blocked_entered:
 pending_entered:
 discarded_entered:
