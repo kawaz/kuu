@@ -1,6 +1,6 @@
 ---
 title: kuu_ prefix factory 名のリネーム (kuu_number_parser 等 → builtin/ 正規名、DR-094 §9 案 A)
-status: open
+status: resolved
 category: task
 created: 2026-07-12T01:05:30+09:00
 last_read:
@@ -9,10 +9,10 @@ wip_entered:
 blocked_entered:
 pending_entered:
 discarded_entered:
-resolved_entered:
+resolved_entered: 2026-07-12T05:05:18+09:00
 discard_reason:
 pending_reason:
-close_reason:
+close_reason: ["dr/DR-094","implemented","done:kuu.mbt dec_types を bare/builtin ns の2形受理に対応 (f249f3f3)","done:移行alias撤去+旧名不受理をwbtestで固定 (0d880744)","done:spec fixtures 17箇所 (int-hex-value-space×3/int-round-modes×12/number-base-prefix-optin×2) + DESIGN L250/L292 を新名へ (37aa3b3d)","done:pin bump済み (1c7c1954, CI success), conformance 194/503/0/0, moon test 306本","done:副産物issue起票済み(kuu.mbt): 2026-07-12-bool-parser-factory-unimplemented"]
 blocked_by:
 origin: 自リポ TODO
 ---
