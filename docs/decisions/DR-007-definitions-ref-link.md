@@ -38,17 +38,28 @@
 | | ref | link |
 |---|---|---|
 | 引き継ぐもの | 構造定義全て (型/children/filters/...) | 値の書き込み先のみ |
-| 用途 | テンプレート再利用、alias、deprecated 別名 | 別経路での値供給 |
+| 用途 | 消費文法テンプレートの共有 (definitions.templates、DR-078 §1) | 別経路での値供給 |
 | 比喩 | プロトタイプ継承 | 参照渡し |
 
-ref で構造を継承、必要なら差分フィールドだけ上書き:
+ref は definitions.templates に置いた共有消費文法を複数要素から参照し、構造を継承する (DR-078 §1/§3 — ref の参照実体は定義実体の内部 id):
 ```json
 {
-  "ref": "run",
-  "name": "exec",
-  "deprecated": true
+  "definitions": {
+    "templates": {
+      "color": {"or": [
+        {"seq": [{"type": "number", "name": "r"}, {"type": "number", "name": "g"}, {"type": "number", "name": "b"}]},
+        {"type": "string", "name": "colorname"}
+      ]}
+    }
+  },
+  "options": [
+    {"name": "fgcolor", "ref": "color", "long": true},
+    {"name": "bgcolor", "ref": "color", "long": true}
+  ]
 }
 ```
+
+別入口 (別名) + deprecated (「旧綴りは残しつつ警告する」用途) は ref の管掌ではなく **DR-057 の alias が担う** (`{"alias": "port", "short": "o", "deprecated": true}` — canonical 実体への入口追加。ref による ElemDef 全体継承でこの用途を代替する読み方は DR-057 制定時点で alias に完全に譲られている)。
 
 link は「値の流入先のワイヤー」:
 ```json
@@ -74,6 +85,8 @@ kawaz の整理:
 - DR-029 (固定パス DSL による link 拡張)
 - DR-032 (ref/link/type の関係再整理)
 - DR-035 (definitions の区分付き名前空間化)
+- DR-057 (alias — 別入口 + deprecated 別名は ref でなく alias の管掌)
+- DR-078 (definitions.templates 新設、ref の参照実体は内部 id という精密化)
 
 ## Superseded (歴史)
 
