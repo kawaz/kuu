@@ -1,6 +1,6 @@
 ---
 title: §7.2 config キーの導出裁定 2 件の明文化と輪郭 fixture (short_combine 管掌範囲 / require_equal_separator×allow_equal_separator の definition-error)
-status: open
+status: resolved
 category: task
 created: 2026-07-11T13:46:19+09:00
 last_read:
@@ -9,10 +9,10 @@ wip_entered:
 blocked_entered:
 pending_entered:
 discarded_entered:
-resolved_entered:
+resolved_entered: 2026-07-12T04:22:53+09:00
 discard_reason:
 pending_reason:
-close_reason:
+close_reason: ["kawaz裁定(2026-07-12): short_combine:false=クラスタ束ね読みのみ禁止(単独発火・値付着は無傷、gcc -O2/-Wall型が動機。存在意義の再検討で一時削除案も出たが付着あり+クラスタなし型の価値で維持確定)","kawaz裁定(2026-07-12): require_equal_separator:true+allow_equal_separator:false=definition-error","docs/DESIGN.md §7.2 明文化 (spec commit ea60b7e0)","fixtures/matcher-readings/short-combine-off.json 5 case","fixtures/definition-error/config-eq-separator-conflict.json (spec commit f2d92ac5) — kuu.mbtの判定をdecode層からdefinition-error経路へ移設してpin可能化","kuu.mbt commit 34c9d136","kuu.mbt pin bump 7341c2a8","implemented"]
 blocked_by:
 origin: 自リポ TODO
 ---
