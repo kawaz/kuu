@@ -1,0 +1,295 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "kuu conformance fixture",
+  "description": "docs/CONFORMANCE.md §1-3 の写像 (JSON Schema ドラフト、DR-068 §3 によりドラフト期は $id を与えない)。fixture ファイル 1 個の形を規定する。query タグで分岐する 4 形 (DR-065 §1 / DR-070 / DR-082): parse (本書 §2)・lower (DR-070)・definition_error (DR-082)・complete (予約、構造未定義のため本 Schema は additionalProperties で緩く受ける)。why フィールドの必須性・reason/sources 等の optional 検証フィールドは各 case レベルで表現し、比較規約自体 (構造等価・集合比較等、CONFORMANCE §3) は Schema の表現力の外 (runner の関心)。",
+  "$ref": "#/$defs/fixture",
+
+  "$defs": {
+    "fixture": {
+      "type": "object",
+      "description": "1 fixture ファイル = 1 定義 + query に応じた残りの形 (CONFORMANCE §1)。",
+      "properties": {
+        "why": {
+          "type": "string",
+          "minLength": 1,
+          "description": "このファイルが固定する仕様輪郭。DR 根拠を文中に書く (CONFORMANCE §1、file レベルで必須)。"
+        },
+        "query": {
+          "type": "string",
+          "enum": ["parse", "lower", "definition_error", "complete"],
+          "description": "fixture の種別 (CONFORMANCE §1)。parse = 本 Schema §parseCase、lower = DR-070 (installers 列挙 + lowered 断面)、definition_error = DR-082 (静的検査、argv なし)、complete は予約 (構造未確定)。"
+        },
+        "definition": {
+          "$ref": "wire.schema.json#/$defs/node",
+          "description": "wire form (DR-063: 純構文正規化済み + installer 語彙 inert + type 参照はそのまま、CONFORMANCE §1)。schema/wire.schema.json の node 定義を参照。"
+        },
+        "installers": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "`query: \"lower\"` 専用 (DR-070 §1): 適用する installer 名の集合 (JSON 配列の順序は非規範)。省略 = 登録済み全 installer。"
+        },
+        "cases": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/case" },
+          "description": "`query: \"parse\"` / `\"definition_error\"` で使う case 列 (CONFORMANCE §1、DR-072)。`query: \"lower\"` は cases を持たない (単一トップレベル expect、DR-070 §1)。"
+        },
+        "expect": {
+          "description": "`query: \"lower\"` 専用のトップレベル expect (DR-070 §2: lowered 断面、DR-063 §3 の面構造 `{greedy, positionals, entities, templates, matcher, ...}`)。面構造の詳細な語彙は DR-063 §3 が正本 — 本 Schema は構文層のみを緩く object として受ける (wire.schema.json 同様、語彙層の検査は runner の関心)。",
+          "type": "object"
+        }
+      },
+      "required": ["why", "query", "definition"],
+      "allOf": [
+        {
+          "if": { "properties": { "query": { "const": "parse" } } },
+          "then": { "required": ["cases"] }
+        },
+        {
+          "if": { "properties": { "query": { "const": "definition_error" } } },
+          "then": { "required": ["cases"] }
+        },
+        {
+          "if": { "properties": { "query": { "const": "lower" } } },
+          "then": { "required": ["expect"] }
+        }
+      ],
+      "additionalProperties": true
+    },
+
+    "case": {
+      "type": "object",
+      "description": "1 fixture 内の 1 検証ケース (CONFORMANCE §1)。query=parse は argv 必須・expect は outcome union (§parseExpect)。query=definition_error は argv 省略・expect は definitionErrorExpect (DR-082 §1「argv は不要」)。",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+          "description": "case の安定 slug (DR-072)。kebab-case、fixture 内 unique、意図を表す 2〜4 語 (通し番号禁止)。参照表記は `rel::slug`。"
+        },
+        "why": {
+          "type": "string",
+          "minLength": 1,
+          "description": "なぜこの入力で、なぜこの期待か (CONFORMANCE §1、case レベルで必須)。"
+        },
+        "argv": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "前処理済みトークン列 (CONFORMANCE §1)。`query: \"parse\"` は必須、`query: \"definition_error\"` は定義の静的検査のみで実行しないため省略 (DR-082 §1)。"
+        },
+        "env": {
+          "type": "object",
+          "additionalProperties": { "type": "string" },
+          "description": "値源系 fixture の環境変数供給: key → 値 (CONFORMANCE §1)。runner が env_provider (DR-049) に注入する。"
+        },
+        "config": {
+          "description": "config_provider (DR-050) が返す階層オブジェクト、または `null` (DR-050 の provider 契約 `(path) → 階層オブジェクト | null`、CONFORMANCE §1)。`null` は「該当パスに設定ファイルが存在しない」の表現 (実例: fixtures/value-sources/config/path.json の `config: null` = default 由来パスの読込失敗を黙認するケース) — CONFORMANCE §1 の「階層オブジェクト」という記述は object のみを想起させるが DR-050 の契約通り null も正当値。",
+          "type": ["object", "null"]
+        },
+        "config_files": {
+          "type": "object",
+          "description": "パス → オブジェクトのマップ (CONFORMANCE §1)。パス別供給。",
+          "additionalProperties": { "type": "object" }
+        },
+        "expect": {
+          "oneOf": [
+            { "$ref": "#/$defs/parseExpect" },
+            { "$ref": "#/$defs/definitionErrorExpect" }
+          ],
+          "description": "outcome union (CONFORMANCE §2) または definition-error 形 (DR-082 §1)。"
+        }
+      },
+      "required": ["id", "why", "expect"],
+      "additionalProperties": true
+    },
+
+    "parseExpect": {
+      "description": "`query: \"parse\"` の expect — DR-053 outcome union の 3 形 (CONFORMANCE §2)。",
+      "oneOf": [
+        { "$ref": "#/$defs/successOutcome" },
+        { "$ref": "#/$defs/failureOutcome" },
+        { "$ref": "#/$defs/ambiguousOutcome" }
+      ]
+    },
+
+    "successOutcome": {
+      "type": "object",
+      "properties": {
+        "outcome": { "const": "success" },
+        "effects": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/effect" },
+          "description": "cli/link 由来のパース時効果 (判定の正本、CONFORMANCE §2)。配列順 = 適用順 (順序込み完全一致、§3)。CONFORMANCE §3「フィールド省略 = default 値と等価」(DR-063 §4 の構造等価規約は fixture expect 構造にも適用される、実例: fixtures/multiple-parse/collector-unwrap-single.json) — 省略時は `[]` と等価なので required にしない。"
+        },
+        "result": {
+          "type": "object",
+          "description": "最終結果オブジェクト (ラダー充填込みの確定値、DR-051 の absent 規則適用後)。構造等価で比較 (§3)。CONFORMANCE §3 のフィールド省略規約により省略ケースが実在する (実例: fixtures/constraints-parse/requires-bool-target.json) — required にしない。"
+        },
+        "sources": {
+          "type": "object",
+          "additionalProperties": { "type": "string", "enum": ["cli", "env", "config", "inherit", "default"] },
+          "description": "entity (scope-path 修飾キー) → 値源タグ (optional、CONFORMANCE §2)。値源系 fixture で使用。"
+        },
+        "warnings": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "element": { "type": "string" },
+              "kind": { "type": "string" }
+            },
+            "required": ["element"]
+          },
+          "description": "起動された deprecated 入口の構造化警告 (optional、DR-058 §2)。element の集合比較、kind は fixture 側に書かれた要素でのみ比較 (§3)。"
+        }
+      },
+      "required": ["outcome"],
+      "additionalProperties": true
+    },
+
+    "failureOutcome": {
+      "type": "object",
+      "properties": {
+        "outcome": { "const": "failure" },
+        "errors": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/runtimeError" },
+          "description": "全保持の配列 (DR-053/066)。集合比較 (§3)。"
+        },
+        "fired_action": {
+          "type": "string",
+          "description": "失敗時アクション (DR-048) が発火した場合のみ。"
+        },
+        "help_entry": {
+          "type": "string",
+          "description": "定義に help 入口があればその綴り (optional、DR-053 §4)。fixture 側に書かれた場合のみ比較。"
+        },
+        "tried_triggers": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "失敗位置で試行された exact 綴りのリスト (optional、DR-053 §4)。集合比較 (順序非規範)。"
+        }
+      },
+      "required": ["outcome", "errors"],
+      "additionalProperties": true
+    },
+
+    "runtimeError": {
+      "type": "object",
+      "description": "実行時エラー 1 件 (DR-053/066)。`{element, argv_pos, kind, reason, message, path?}`。",
+      "properties": {
+        "element": {
+          "type": "string",
+          "description": "省略 = 特定要素に紐付かないスコープレベルの躓き (残余トークン等、CONFORMANCE §2)。"
+        },
+        "argv_pos": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "0-based、失敗が帰属する argv トークンの位置。どのトークンにも帰属しない失敗は argv.length (CONFORMANCE §2)。"
+        },
+        "kind": {
+          "type": "string",
+          "enum": ["parse", "filter", "constraint"],
+          "description": "kind の割当 (DR-065 §3、CONFORMANCE §2)。"
+        },
+        "reason": {
+          "type": "string",
+          "pattern": "^([a-z][a-z0-9_]*/)?[a-z][a-z0-9_]*$",
+          "description": "機械可読な失敗理由の識別子 (DR-066、ns 付き識別子 DR-094)。fixture では optional 検証 — 書けば比較、書かなければ kind までの検証 (CONFORMANCE §2/§3)。"
+        },
+        "message": {
+          "type": "string",
+          "description": "人間向け文言 (レンダラの関心)。仕様でないため常に比較対象外 (CONFORMANCE §2)。"
+        },
+        "path": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "祖先パス列 (root-first、DR-066 §4)。optional 検証 (reason と同じ)。"
+        }
+      },
+      "required": ["argv_pos", "kind"],
+      "additionalProperties": true
+    },
+
+    "ambiguousOutcome": {
+      "type": "object",
+      "properties": {
+        "outcome": { "const": "ambiguous" },
+        "interpretations": {
+          "type": "array",
+          "items": {
+            "description": "全解釈の 1 要素。結果オブジェクト形のビュー直書き、または claimants 付き `{result, claimants}` の組 (DR-073)。",
+            "type": "object"
+          },
+          "description": "全解釈の列挙 (集合比較、列挙順は非規範、CONFORMANCE §2/§3)。実例上 outcome のみで interpretations を省略する簡略形も存在する (fixtures/constraints-parse/requires-bool-target.json — 「ambiguous になること」だけを固定し解釈の中身は検証しない意図、CONFORMANCE §3 のフィールド省略規約の拡張運用) — required にしない。"
+        },
+        "help_entry": {
+          "type": "string",
+          "description": "failure と同じ意味論 (optional、DR-053 §4)。"
+        }
+      },
+      "required": ["outcome"],
+      "additionalProperties": true
+    },
+
+    "effect": {
+      "type": "object",
+      "description": "1 効果記述子 (DR-045 §4 op + DR-077 §1 update + DR-080 §2 merge accumulator piece op)。**CONFORMANCE.md §2 の op 表 (set/default/unset/empty の 4 種) は DR-077/DR-080 の後に追従しておらず本 Schema の方が実態 (fixtures/ 実測) に合わせて広い** — update (DR-077 §1) と remove/splice (DR-080 §4「effects oracle での piece op の見せ方は fixture 設計時に確定」) は CONFORMANCE.md に未反映のギャップとして DR-095 起票時に発見 (別途 CONFORMANCE.md 側の追記が望ましいが本 Schema 実体化タスクの射程外)。",
+      "properties": {
+        "entity": { "type": "string", "description": "実体 (値セル) の name / id。" },
+        "op": {
+          "type": "string",
+          "enum": ["set", "default", "unset", "empty", "update", "remove", "splice"],
+          "description": "DR-045 §4 の 4 op (set/default/unset/empty) + DR-077 §1 の update (5 番目、old→transform の書き戻し) + DR-080 §2 の merge accumulator piece op のうち集合演算系 2 種 (remove = 全削除、splice = old 展開。add piece は通常の set として現れる、DR-080 §4)。"
+        },
+        "operand": { "description": "op が要求する場合のみ (set の値 / remove の除去対象)。JSON 表現は canonical 規約 (数値は最短形、DR-050 §4)。" },
+        "transform": {
+          "type": "string",
+          "description": "`op: \"update\"` 限定 (DR-077 §1/§2)。filters registry の Transform シグネチャを持つエントリ名 (ns 付き識別子、DR-094)。組み込みは `increment`。"
+        },
+        "args": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "`op: \"update\"` の transform に渡す追加引数 (optional、DR-077 §2「args 付き transform は filters の既存 colon 規約のネスト」)。0-arg transform (increment 等) では省略。"
+        },
+        "source": { "type": "string", "const": "cli", "description": "parse fixture では cli のみ登場 (CONFORMANCE §2)。" }
+      },
+      "required": ["entity", "op", "source"],
+      "additionalProperties": true
+    },
+
+    "definitionErrorExpect": {
+      "type": "object",
+      "description": "`query: \"definition_error\"` の expect (DR-082 §1)。DR-054 §4 の parse_definition() 返値をそのまま転用。",
+      "properties": {
+        "outcome": { "const": "definition-error" },
+        "errors": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "element": { "type": "string" },
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "vocab-intersection",
+                  "unknown-vocab",
+                  "invalid-range",
+                  "absent-ref",
+                  "circular-ref",
+                  "zero-progress",
+                  "config-cycle",
+                  "invalid-argument"
+                ],
+                "description": "DR-054 §4 の kind 列挙 (DR-085 訂正で invalid-argument 追加)。"
+              }
+            },
+            "required": ["kind"],
+            "additionalProperties": true
+          },
+          "description": "element + kind の組の集合比較。message/hint は比較しない (DR-082 §1)。"
+        }
+      },
+      "required": ["outcome", "errors"],
+      "additionalProperties": true
+    }
+  }
+}

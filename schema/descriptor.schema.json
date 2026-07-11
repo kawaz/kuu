@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "kuu registry descriptor (installer / configurable factory / filter self-description)",
+  "description": "registry 住人 (installer / configurable factory / filter) の自己記述形の JSON Schema ドラフト (DR-061 §1 の 4 宣言軸: owns / observes / config キー / reasons、DR-066 §2 が reasons を追加。DESIGN §13.1「installer / registry 住人は自身を説明する descriptor を持つ」)。DR-068 (ドラフト期は $id を与えない) に基づき draft 扱い。owns/observes は installer (DR-042 の特殊語彙展開装置) 固有の宣言軸であり、filter / configurable factory の descriptor では通常出現しない (両者は特殊語彙を持たず、自身の name が registry 上の唯一の所有語彙であるため — 本 Schema はこの非対称を optional で表現し必須にしない)。個々の builtin descriptor の実体は schema/builtin-descriptors.json (DR-095)。",
+  "$ref": "#/$defs/descriptor",
+
+  "$defs": {
+    "descriptor": {
+      "type": "object",
+      "description": "1 registry 住人分の自己記述。installer / configurable factory (types 等) / filter のいずれも同型で表現する — DESIGN §13.1 の「installer / registry 住人」という一般化に対応。",
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^([a-z][a-z0-9_]*/)?[a-z][a-z0-9_]*$",
+          "description": "registry 識別子 (DR-094)。ns 付き (`<ns>/<name>`、ns 省略 = builtin ns の糖衣、DR-094 §3)。installer descriptor では installer 自身の名前 (例 `long`, `short`, `env`)、configurable factory では factory 名 (例 `builtin/number_parser`)、filter では filter 名 (例 `builtin/in_range`)。"
+        },
+        "description": {
+          "type": "string",
+          "description": "descriptor 自身についての人間向け説明 + 根拠 DR (DR-061「descriptor は validator でなく typo 検出 + lint/diagnose 素材 + ドキュメント」の位置づけ)。仕様上の強制力は持たない注記フィールド。"
+        },
+        "kind": {
+          "type": "string",
+          "enum": ["installer", "factory", "filter"],
+          "description": "descriptor が説明する registry 住人の種別。installer = DR-042 の特殊語彙展開装置 (owns/observes を持つ)。factory = DR-061 §3 の configurable factory (types/accumulators/completers 等の名前+config 参照先)。filter = DESIGN §8 の filters registry 住人 (owns/observes は通常空)。"
+        },
+        "signature": {
+          "type": "string",
+          "enum": ["Validate", "Transform"],
+          "description": "filter descriptor 限定 (DESIGN §8.1 / kuu.mbt FilterDescriptor)。Validate = 入力を変えず成功か reject のみ (non_empty/in_range 等)、Transform = 入力から新しい値を計算し失敗しない (trim/increment 等)。reasons が空か非空かの機械的判定根拠 (DR-095 §3)。installer/factory descriptor には無関係 (出現しない)。"
+        },
+        "owns": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "所有語彙 (installer descriptor の宣言軸、DR-061 §1)。lowering 責務を持つ wire 上の語彙集合。排他 (DR-042 不変則③) — 誰も所有しない語彙は DR-054 の unknown-vocab Error。installer 以外の descriptor では省略可 (factory/filter は自身の name のみが実質的な所有語彙であり、name フィールドと重複するため明示しない)。"
+        },
+        "observes": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "観測語彙 (installer descriptor の宣言軸、DR-061 §1)。あれば副次成果物 (表示・補完等) に影響するが効果列には影響しない語彙 (DR-056 の advisory read の機械可読化)。宣言は lint/diagnose の素材であり実行時強制はしない。installer 以外は通常省略。"
+        },
+        "config": {
+          "type": "object",
+          "description": "installer/factory が読む config キーの宣言 (DR-061 §1/§4)。キー名の列挙が必須 (未知キー検出 = typo 検出)、値は各キーの型ヒント (任意、書けば lint が読む、強制検証はしない — DR-061 §4「型注釈は任意」)。キーごとに `{type, default, description}` 形の緩い記述を推奨するが構造は強制しない。filter descriptor には通常出現しない (filter の呼び出し引数は DSL の `args` であり descriptor 宣言の config キーとは別物 — DR-061 §5 の「相」線引き、args は呼び出しごとの値、config はデプロイ時の方言設定)。",
+          "additionalProperties": true
+        },
+        "reasons": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^([a-z][a-z0-9_]*/)?[a-z][a-z0-9_]*$"
+          },
+          "description": "emit しうる reason 識別子の列挙 (DR-066 §2、descriptor の 4 つ目の宣言軸)。reason は ns 付き識別子 (DR-094 §1/§5)、bare は builtin ns の糖衣。空配列は「この descriptor は失敗しない (Transform filter 等)」の明示 (DR-095 §3)。reason は排他所有ではないグローバル語彙 — 複数 descriptor が同じ reason (`too_small` 等) を共有 emit してよい (DR-066 §採用しなかった案「reason の排他所有」を却下、DR-094 §7 で ns 導入後も不変と再確認)。"
+        }
+      },
+      "required": ["name", "reasons"],
+      "additionalProperties": true
+    }
+  }
+}

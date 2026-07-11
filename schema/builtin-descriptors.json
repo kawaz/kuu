@@ -1,0 +1,90 @@
+{
+  "$comment": "kuu builtin registry 住人の宣言集合 — 各エントリは schema/descriptor.schema.json に適合する。正本は docs/decisions/DR-095-builtin-descriptor-reasons.md (§3 filters / §4 factories)。DR-095 §射程外の通り、installer 発生源 (missing_operand 等) と constraint 系 reason (required_violated 等) は本ファイルの対象外 — 前者はエンジン構造の発生源で installer descriptor 側の宣言軸が未実体化、後者は constraint installer (DR-047/055) 側で別途宣言が必要 (いずれも本 issue の射程外)。",
+  "$schema-ref": "descriptor.schema.json",
+
+  "filters": {
+    "trim": {
+      "name": "trim",
+      "kind": "filter",
+      "signature": "Transform",
+      "reasons": [],
+      "description": "文字列前後の ASCII 空白除去 (DESIGN §8.1 piece_filters 例)。Transform (常に成功、DR-095 §3) — 非 string 入力は素通し (kuu.mbt filter_trim の defensive 実装、value_filters/piece_filters は string→string 契約前提なので通常到達しない)。"
+    },
+    "non_empty": {
+      "name": "non_empty",
+      "kind": "filter",
+      "signature": "Validate",
+      "reasons": ["empty_value"],
+      "description": "空文字列を拒否する Validate (DESIGN §8.1、DR-040 §filters 最小セット)。failure mode は空文字列の 1 種のみ。reason 名は docs/issue/2026-07-08-schema-materialization-and-reason-descriptors.md SCH-Q3-b の提示をそのまま採用 (DR-066 §3 v1 表には対応語彙が無いため本 DR-095 で builtin ns に新設)。"
+    },
+    "in_range": {
+      "name": "in_range",
+      "kind": "filter",
+      "signature": "Validate",
+      "config": {
+        "min": { "type": "number", "description": "DSL 第1引数 (下限、含む)。値そのものは呼び出しごとの args であり descriptor config ではない — 本欄は DSL 引数の意味を記す注記。" },
+        "max": { "type": "number", "description": "DSL 第2引数 (上限、含む)。" }
+      },
+      "reasons": ["too_small", "too_large"],
+      "description": "数値の範囲検証 (DESIGN §8.4 例、value_filters/cell_filters 両方で使われる — count の上限もここ、DR-040)。min 未満 = too_small、max 超過 = too_large。両 reason は DR-066 §2 本文・docs/PIPELINE.md・docs/CONFORMANCE.md §2 に既出 (本 DR-095 で descriptor 宣言として実体化)。"
+    },
+    "regex_match": {
+      "name": "regex_match",
+      "kind": "filter",
+      "signature": "Validate",
+      "config": {
+        "pattern": { "type": "string", "description": "DSL 唯一引数。host 方言準拠 (DR-085 §2)、compile 可否は定義時に静的判定される。" }
+      },
+      "reasons": ["pattern_no_match"],
+      "description": "pattern に対する部分一致検証 (DR-085 §1、unanchored = 部分一致、全体一致は pattern 側の ^$ で表現)。**compile 失敗は本 descriptor の reasons に含めない** — DR-085 §1 / DR-082 §3 により kind=invalid-argument の definition-error に属し、実行時 reason 体系とは別軸 (DR-095 §3 の regex_match 行、DR-083 §5「静的に既知は定義時に倒す」)。実行時に残る failure mode は有効な pattern への不一致のみ。"
+    },
+    "increment": {
+      "name": "increment",
+      "kind": "filter",
+      "signature": "Transform",
+      "reasons": [],
+      "description": "count 要素の update transform (DR-077 §2/§3、0-arg、old+1)。Transform (常に成功) — 数値入力のみ受ける前提 (count 要素の value_filters/update transform として使われる、型不一致は filter-definition bug でありランタイム reason 体系の対象外)。"
+    },
+    "unique": {
+      "name": "unique",
+      "kind": "filter",
+      "signature": "Transform",
+      "reasons": [],
+      "description": "累積後の配列 (Acc→Acc、cell_filters 相) から重複要素を除去 (kuu.mbt array_filter_unique、先勝ち順序保持)。Transform 相当 (拒否を持たない純関数、kuu.mbt ArrayFilterDescriptor.run に Result 型が無いことが実装的裏付け)。"
+    }
+  },
+
+  "types": {
+    "builtin/number_parser": {
+      "name": "builtin/number_parser",
+      "kind": "factory",
+      "config": {
+        "number_thousand_sep": { "type": "array", "items": "string", "default": ["_"], "description": "桁区切り文字集合 (DR-074 §1/§4)。canonical は underscore のみ、カンマは opt-in。" },
+        "number_allow_base_prefix": { "type": "boolean", "default": false, "description": "0x/0o/0b 整数 + hex float の統合 opt-in (DR-074 §2)。" },
+        "number_leading_zero": { "type": "string", "enum": ["decimal", "octal"], "default": "decimal", "description": "先頭 0 の解釈 (DR-074 §4)。canonical は decimal、octal は移植ロック用 opt-in。" }
+      },
+      "reasons": ["not_a_number"],
+      "description": "number/float 共通の value_parser (DR-074 §1、DR-094 §9 案 A の新名 — 旧名 kuu_number_parser)。構文不一致は全て not_a_number に帰着 (inf/nan 規定違反・hex float 未 opt-in 等も含む、DR-074 §1/§2/§7)。DR-066 §3 v1 表所収。"
+    },
+    "builtin/int_parser": {
+      "name": "builtin/int_parser",
+      "kind": "factory",
+      "config": {
+        "int_round": { "type": "string", "enum": ["floor", "ceil", "trunc", "away", "half_floor", "half_ceil", "half_trunc", "half_away", "half_even", "error"], "default": "error", "description": "非整数値の丸めモード 10 種 (DR-075 §2)。canonical default は error。" }
+      },
+      "reasons": ["not_a_number", "not_an_integer", "int_out_of_range"],
+      "description": "int の値空間判定 value_parser (DR-075 §1、DR-094 §9 案 A の新名 — 旧名 kuu_int_parser)。not_a_number = number として全く読めない入力。not_an_integer = 非整数値かつ int_round=error のときのみ emit (丸めモードでは丸めて成功するため emit しない、DR-075 §6 が reasons 宣言として明文)。int_out_of_range = 整数値だが host 実装の値域を超える (DR-075「int の値域は実装定義」節)。"
+    },
+    "builtin/bool_parser": {
+      "name": "builtin/bool_parser",
+      "kind": "factory",
+      "config": {
+        "true_values": { "type": "array", "items": "string", "default": ["true", "1"], "description": "true と解釈する文字列集合 (DR-074 §3/§4)。" },
+        "false_values": { "type": "array", "items": "string", "default": ["false", "0", ""], "description": "false と解釈する文字列集合。空文字列を含む (env の FLAG= 対応)。" },
+        "case_insensitive": { "type": "boolean", "default": true, "description": "大小無視で照合するか (DR-074 §3)。false で JSON/TOML 準拠の大小厳密方言。" }
+      },
+      "reasons": ["not_a_bool"],
+      "description": "bool の value_parser (DR-074 §3、DR-094 §9 案 A の新名 — 旧名 kuu_bool_parser)。canonical 語彙外の入力 (例 \"yes\") は not_a_bool (DR-066 §3 v1 表、kawaz 裁定 2026-07-08 で追加、SCH-Q5 で自明と確認)。"
+    }
+  }
+}

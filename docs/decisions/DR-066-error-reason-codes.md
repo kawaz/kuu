@@ -41,7 +41,7 @@ descriptor (DR-061) に **`reasons`** (emit しうる reason 識別子の列挙)
 
 constraint 系は **`<属性名>_violated`** で機械的に統一する (属性への遡及が名前だけで自明、L10n キーとしても一様)。
 
-value_parser 系 (`not_a_number` / `not_an_integer`) の reason 語彙は本 v1 表で確定する。各 reason を canonical factory の descriptor `reasons` 宣言へ写像する作業 (DR-040 の canonical 語彙を config キーとともに descriptor へ実体化する Schema 実体化) は DR-068 のライフサイクルに従い後続フェーズで行う。filter 系 reason は各 filter の descriptor 宣言 (例: in_range が `too_small` / `too_large`)。
+value_parser 系 (`not_a_number` / `not_an_integer`) の reason 語彙は本 v1 表で確定する。各 reason を canonical factory の descriptor `reasons` 宣言へ写像する作業 (DR-040 の canonical 語彙を config キーとともに descriptor へ実体化する Schema 実体化) は DR-068 のライフサイクルに従い後続フェーズで行う。filter 系 reason は各 filter の descriptor 宣言 (例: in_range が `too_small` / `too_large`)。canonical factory / 組み込み filter の reasons 宣言集合は DR-095 で実体化済み (`schema/builtin-descriptors.json`)。
 
 ### 4. path/provenance フィールドの追加 (2026-07-08 改訂)
 
