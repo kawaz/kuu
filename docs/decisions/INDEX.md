@@ -91,6 +91,7 @@
 - [DR-087](DR-087-lazy-default-resolution.md): default の遅延解決 — default = 全解決後に空の cell へ入る fallback (先詰めモデルの否定)、op=default / 席書き換えは placeholder 操作で実体化は依存順に最後 (config_path 解決 → config 席参照 → 祖先 → inherit)、解決後の消費者は常に全実体化済みの値を見る (再演不要・不可)
 - [DR-088](DR-088-declared-source-is-default-presence.md): 宣言された値源はデフォルトの存在 — env/config/inherit 宣言 = 遅延 default_fn と同型、経路探索の値充足述語は静的宣言ベース (committed ∨ 宣言あり、実行時値に非依存で決定的)、最終判定は遅延解決後の実値 (空なら unset のまま落ちる、再探索なし)
 - [DR-089](DR-089-type-none-value-space.md): type 省略 = none — type は値空間のみを規定し消費は構造の関心 (直交)、none = 値空間が空の node (消費 0 の純トリガも「食って捨てる」も構造で書ける)、結果非掲載で発火観測は ParserContext / explains 層、値充足席には立てない (definition-error)
+- [DR-090](DR-090-dd-pattern-trigger-self-keep.md): dd の一般化 — トリガ形 (exact | match 正規表現、host 方言準拠) × 自己の扱い (drop | keep = 消費 0 で自身含め positional 域へ) の 2 軸。pattern dd は既知の読みに常に負ける「最後の受け皿」(xargs/ssh/docker の末尾 raw pass-through)
 
 ## CLI 入口 / variant / filter
 
