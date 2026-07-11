@@ -1,6 +1,6 @@
 ---
 title: inf / 非整数 number の JSON serialize 規約
-status: wip
+status: resolved
 category: design
 created: 2026-07-08T21:57:03+09:00
 last_read:
@@ -9,10 +9,10 @@ wip_entered: 2026-07-11T13:55:50+09:00
 blocked_entered:
 pending_entered:
 discarded_entered:
-resolved_entered:
+resolved_entered: 2026-07-11T14:18:02+09:00
 discard_reason:
 pending_reason:
-close_reason:
+close_reason: ["dr/DR-092","implemented","done:回帰テスト7本追加・fixtures/value-typing/number-inf-nan.jsonの受理4caseにeffects/result pin追加(spec 080ac663)・kuu.mbt pin bump(62c2882)CI success確認済み"]
 blocked_by:
 origin: 自リポ TODO
 ---
@@ -33,13 +33,13 @@ fixtures/value-typing/number-inf-nan.json は inf 受理 case で「成功輪郭
 
 - [x] inf の JSON serialize 表現を裁定する (候補: 文字列表現 "inf" / "-inf"、tagged object。JSON5 的拡張は不採用 — protobuf3/Go 互換の DR-071 と同じ wire 制約意識)
   - DR-092 起票済み。kawaz 裁定 INF-Q1a/Q2a/Q3c/Q4a/Q5a/Q6a 反映 (commit b5a3279f)
-- [ ] result オブジェクトの言語バインディング側表現 (各言語の inf) との対応を一言明記する
+- [x] result オブジェクトの言語バインディング側表現 (各言語の inf) との対応を一言明記する
   - DR-092 内で反映済み (裁定に含まれる)
-- [ ] fixtures/value-typing/number-inf-nan.json の inf case を値まで pin する形に更新する
+- [x] fixtures/value-typing/number-inf-nan.json の inf case を値まで pin する形に更新する
 
 ## TODO (進捗)
 
 - [x] DR-092 起票 (kawaz 裁定 INF-Q1a/Q2a/Q3c/Q4a/Q5a/Q6a 反映、commit b5a3279f)
-- [ ] kuu.mbt の serialize 実装
-- [ ] fixtures/value-typing/number-inf-nan.json の受理 4 case へ result pin 追加
-- [ ] pin bump
+- [x] kuu.mbt の serialize 実装 — MoonBit stdlib の Ryu が既に規約準拠、production 変更なし。回帰テスト 7 本追加
+- [x] fixtures/value-typing/number-inf-nan.json の受理 4 case へ result pin 追加 (spec commit 080ac663)
+- [x] pin bump (kuu.mbt commit 62c2882、CI success 確認済み)
