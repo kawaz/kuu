@@ -625,7 +625,7 @@ transform を適用して書く set の変種、DR-077) — が対象で、**cel
 
 ### 8.4 DSL 文法
 
-variant と同じ `<name>:<arg>:...` 形式:
+variant と同じ `<name>:<arg>:...` 形式。`<name>` は registry 識別子 (ns 付き、bare は `builtin` ns の糖衣、§13.1 / DR-094):
 
 ```
 "trim"                   引数なし
@@ -878,6 +878,8 @@ name を持つノードが結果スコープ = lexical スコープを作る。c
 | `installers` | 特殊語彙の展開装置 (糖衣展開 + 実行時能力の植え付け、DR-042) | `long`, `short`, `env`, `type:"dd"`, `commands[]`, `global`, `inherit`, `repeat`, `multiple`, `config_key`, `requires` / `exclusive_group` / `conflicts_with`, `alias` 等の特殊語彙 |
 
 installer / registry 住人は自身を説明する **descriptor** を持つ (DR-061): installer は所有語彙 (`owns`、排他 = DR-042 不変則③)・観測語彙 (`observes`、表示・補完等の副次成果物にのみ影響)・自身が読む config キー・emit しうる失敗理由 (`reasons`、DR-066) を宣言する。宣言された所有集合の和が、直列化された定義上の語彙の正当性判定 (誰も所有しない語彙 = DR-054 の unknown-vocab Error) と completeness 検査の判定入力になる。observes は lint / diagnose の素材であり実行時強制はしない。
+
+**registry 識別子の namespace (DR-094)**: filter 名・configurable factory 名・type 参照名・reason 語彙のすべてに namespace (ns) を通す。`builtin` ns は spec が管掌する closed set (組み込み語彙)、拡張 ns (ホスト DX パッケージ・ユーザ拡張が名乗る任意の ns、例 `contrib_python`) は open set。**bare 名は `builtin` ns の糖衣** (`trim` = `builtin/trim`、`in_range` = `builtin/in_range`) — 既存記述は全て無傷のまま再解釈される。区切り文字は `/` (`:` は filter/variant DSL の引数区切りと、`.` は link 固定パス DSL のフィールドアクセス (§10.2) と衝突するため不採用)。definitions 領域のローカル識別子 (§13.3 の `definitions.X` 側キー) は ns の対象外 — ns が扱うのは registry 側の共有語彙プールの衝突のみ。
 
 ### 13.2 フィールド名で registry が暗黙決定
 
