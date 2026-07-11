@@ -1,0 +1,56 @@
+{
+  "why": "dd の pattern トリガ + self:keep (DR-090 §1/§2/§3) の xargs 型輪郭。従来 dd (exact トリガ、self:drop=既定、マーカー消費1・捨てる) は dd/basic.json が pin 済み — 本 fixture はその 2 軸拡張 (トリガ形 exact→pattern、マーカー自身の扱い drop→keep) の canonical 用途 (xargs 型: 最初の非ハイフン operand で発火、自身を含めて以降を raw positional 域へ) を固定する。`match` は正規表現・host 方言準拠 (DR-085 §2 と同じ宣言) だが、文字クラス内の `-` は escape 必須 (`[^\\-]`、DR-090 §2 — 未 escape の `[^-]` は host で compile 不能と実測済み、definition-error 側で pin)。severed 化の効果 (発火以降 greedy 面 off = 全トークン raw、DR-064) は不変であり、新しい優先規則は要らない (DR-090 §3): pattern `^[^\\-]` はハイフン始まりの option トリガと形が交わらないため、既知の読みとの競合が構造的に起きない — 『option 面がどこで終わるか』は劣後規則でなくトリガの宣言 + severed の効果だけで決まる。dd 自身の発火は消費 0 (self:keep) で値を運ばないため effects エントリを持たない (DR-089/DR-064 — dd/basic.json / dd/export-key-inert.json が既に固定した『dd は値効果を持たない』の pin をそのまま踏襲)。マーカー自身のトークンは self:keep により捨てられず rest (raw positional) の要素として現れる。要素名は `utility_marker` (DR-090 §2: match があるとき name はトリガ綴りに使われず、識別・表示軸のみに効く — 実 xargs の役割に即した名前を choose できる)。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {"name": "n", "type": "int", "long": true, "short": "n"},
+      {"name": "utility_marker", "type": "dd", "match": "^[^\\-]", "self": "keep"}
+    ],
+    "positionals": [
+      {"name": "rest", "type": "string", "repeat": {"min": 0}}
+    ]
+  },
+  "cases": [
+    {
+      "id": "known-option-before-dd-then-severed-raw",
+      "why": "`-n 1 rm -f a` (xargs -n 1 rm -f a 相当): `-n` はハイフンなので pattern 非マッチ、通常の option として発火し値スロットが \"1\" を raw 消費 (n=1)。続く \"rm\" は非ハイフンで pattern `^[^\\-]` に一致 → dd 発火、self:keep なので \"rm\" 自身は消費 0 のまま rest (raw positional) の最初の要素になる。発火以降は severed (greedy 面 off) — 続く \"-f\" は option の綴りと一致していても再発火せず raw 消費、\"a\" も raw。rest=[\"rm\",\"-f\",\"a\"]。effects は n の set (dd は値効果なし) に続き、rest への raw 消費 3 個 (repeat セルの各周回が個別 set、DR-045 効果列は消費順)。",
+      "argv": ["-n", "1", "rm", "-f", "a"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "n", "op": "set", "operand": 1, "source": "cli"},
+          {"entity": "rest", "op": "set", "operand": "rm", "source": "cli"},
+          {"entity": "rest", "op": "set", "operand": "-f", "source": "cli"},
+          {"entity": "rest", "op": "set", "operand": "a", "source": "cli"}
+        ],
+        "result": {"n": 1, "rest": ["rm", "-f", "a"]}
+      }
+    },
+    {
+      "id": "trailing-token-triggers-dd-before-any-option",
+      "why": "`rm -n 2` (xargs rm -n 2 相当 — 先頭から utility): 先頭トークン \"rm\" は非ハイフンで即座に pattern dd に一致 → 発火 (n の option は一度も読まれない、trigger 判定が先に消費点で成立するため)。self:keep で \"rm\" 自身が rest の最初の要素になり、以降は severed。続く \"-n\" は **既知の option 綴りだが severed 後は raw** — これが実 xargs の挙動 (`-n` が utility に渡る引数であって xargs 自身のオプションではない) と一致する本命の軸。rest=[\"rm\",\"-n\",\"2\"]。n は一度も option として発火しないので未発火・default 無しで absent (result にキーなし、DR-051)。",
+      "argv": ["rm", "-n", "2"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "rest", "op": "set", "operand": "rm", "source": "cli"},
+          {"entity": "rest", "op": "set", "operand": "-n", "source": "cli"},
+          {"entity": "rest", "op": "set", "operand": "2", "source": "cli"}
+        ],
+        "result": {"rest": ["rm", "-n", "2"]}
+      }
+    },
+    {
+      "id": "no-trailing-operand-option-reads-normally",
+      "why": "(対極) `-n 2` のみ、非ハイフントークンが後続しない: dd の発火対象トークンが存在しないため pattern dd は一度も発火せず、`-n` は通常どおり option として値 \"2\" を raw 消費する (severed 化が一切起きていない状態、DR-090 §3 の『option 面がどこで終わるかはトリガの宣言 + severed の効果』の裏付け — トリガが発火しなければ severed も起きず全区間が通常解釈のまま)。rest は 0 発火の一様配列 `[]` (DR-044/051 §2)。",
+      "argv": ["-n", "2"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "n", "op": "set", "operand": 2, "source": "cli"}
+        ],
+        "result": {"n": 2, "rest": []}
+      }
+    }
+  ]
+}

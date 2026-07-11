@@ -1,5 +1,5 @@
 {
-  "why": "docker (3 サブコマンド run/ps/build に絞る) のプローブ: サブコマンドごとの option 集合 + 反復値オプション (run の -p/-e) + 連結 short (-it) + 必須 positional (image / context)。プローブ対象 = サブコマンド内での multiple:append と cluster short の組合せ。既知の表現ギャップ (issue 候補): `docker run image cmd args...` の image 以降はコンテナ内コマンドとして raw pass-through され docker 自身の option 解析対象外だが、kuu では option が背骨上で順不同なので image 後の `-la` 等も docker option として拾おうとする — この『positional 以降 raw pass-through』(getopt の `--` に似るが位置トリガ) は dd/sever の変種で、素直な variadic positional では表せない。ここでは option 風でない command 引数のみ扱う。",
+  "why": "docker (3 サブコマンド run/ps/build に絞る) のプローブ: サブコマンドごとの option 集合 + 反復値オプション (run の -p/-e) + 連結 short (-it) + run の image 以降 raw pass-through を **DR-090 (dd の pattern トリガ + self:keep)** で表現する。severed の効果は『greedy 面 off』だけで、**positional 席の構造消費 (型・順序・必須) はそのまま生きる** (dd/basic.json の従来 dd `--` 後の positional 消費が先行 pin)。よって旧版どおり `image` (暗黙必須 scalar positional) と `cmd` (repeat min:0) を型レベルで分離したまま保つ — dd (pattern, self:keep) が image トークンで発火し (消費0、自身をストリームに残す)、severed 化した後は `image` 席がそのトークンを通常どおり型消費し、残りを `cmd` が消費する (DR-041 §4 の『command 部分木は新しい背骨を宣言』により、severed は run スコープ内で完結し ps/build には影響しない)。実機: `docker run ubuntu -p 9000:9000` は `-p`/`9000:9000` をコンテナ内コマンドの引数として渡し docker 自身の -p (publish) には再解釈されない。ps/build は実機に image 以降 pass-through の概念が無いため dd を持たず、旧来どおり型付き positional のまま (build の context の required:true はそのまま有効 — pass-through の有無でモデリングが変わらないことの対比)。issue corpus-implicit-trailing-passthrough の解消。",
   "query": "parse",
   "definition": {
     "config": {"short_combine": true},
@@ -13,11 +13,12 @@
           {"name": "tty", "type": "flag", "short": "t", "long": true},
           {"name": "publish", "type": "string", "short": "p", "long": true, "multiple": "append"},
           {"name": "env", "type": "string", "short": "e", "long": true, "multiple": "append"},
-          {"name": "container_name", "type": "string", "long": ["name"]}
+          {"name": "container_name", "type": "string", "long": ["name"]},
+          {"name": "image_marker", "type": "dd", "match": "^[^\\-]", "self": "keep"}
         ],
         "positionals": [
           {"name": "image", "type": "string", "required": true},
-          {"name": "command", "type": "string", "repeat": {"min": 0}}
+          {"name": "cmd", "type": "string", "repeat": {"min": 0}}
         ]
       },
       {
@@ -44,7 +45,7 @@
   "cases": [
     {
       "id": "run-detach-publish",
-      "why": "`docker run -d -p 8080:80 nginx` (実機はバックグラウンドでポート公開起動)。run 入場、-d flag、-p が \"8080:80\" (multiple → `[\"8080:80\"]`)、image=\"nginx\"、command 0 個 `[]`。env は未発火 `[]`。サブコマンド内の flag + 反復値 + 必須 positional。",
+      "why": "`docker run -d -p 8080:80 nginx` (実機はバックグラウンドでポート公開起動)。run 入場、-d flag、-p が \"8080:80\" (multiple append)。続く \"nginx\" (非ハイフン) が dd に一致して発火・severed (消費0、自身はストリームに残る)。severed 後、image 席が \"nginx\" を通常どおり型消費 (structural、dd/basic.json 先行 pin と同型)。cmd は後続トークンが無いので 0 発火 `[]`。env は未発火 `[]`。",
       "argv": ["run", "-d", "-p", "8080:80", "nginx"],
       "expect": {
         "outcome": "success",
@@ -53,27 +54,28 @@
           {"entity": "publish", "op": "set", "operand": "8080:80", "source": "cli"},
           {"entity": "image", "op": "set", "operand": "nginx", "source": "cli"}
         ],
-        "result": {"run": {"detach": true, "interactive": false, "tty": false, "publish": ["8080:80"], "env": [], "image": "nginx", "command": []}}
+        "result": {"run": {"detach": true, "interactive": false, "tty": false, "publish": ["8080:80"], "env": [], "image": "nginx", "cmd": []}}
       }
     },
     {
-      "id": "run-it-cluster-with-command",
-      "why": "`docker run -it ubuntu bash` (実機は対話端末で bash 起動)。short_combine で -it → -i/-t。image=\"ubuntu\"、command=[\"bash\"] (option 風でない引数)。cluster short + image + command positional の分離。",
-      "argv": ["run", "-it", "ubuntu", "bash"],
+      "id": "run-it-known-option-spelling-after-image-passes-through",
+      "why": "`docker run -it ubuntu -p 9000:9000` (実機はコンテナ内で `-p 9000:9000` というコマンド/引数を実行しようとする — docker 自身の -p (publish) には再解釈されない)。short_combine で -it → -i/-t が発火。続く \"ubuntu\" が非ハイフンで dd に一致 → 発火・severed (以降 publish option は一度も読まれない)。image 席が \"ubuntu\" を通常どおり型消費 (severed 後も structural 必須性は不変)。続く \"-p\"/\"9000:9000\" は **docker の既知 option 綴りだが severed 後は raw** — cmd (repeat) が消費し、publish は未発火のまま append セルの一様配列 `[]` (DR-044/051 §2)。cmd=[\"-p\",\"9000:9000\"]。DR-090 が解決する本命の軸。",
+      "argv": ["run", "-it", "ubuntu", "-p", "9000:9000"],
       "expect": {
         "outcome": "success",
         "effects": [
           {"entity": "interactive", "op": "set", "operand": true, "source": "cli"},
           {"entity": "tty", "op": "set", "operand": true, "source": "cli"},
           {"entity": "image", "op": "set", "operand": "ubuntu", "source": "cli"},
-          {"entity": "command", "op": "set", "operand": "bash", "source": "cli"}
+          {"entity": "cmd", "op": "set", "operand": "-p", "source": "cli"},
+          {"entity": "cmd", "op": "set", "operand": "9000:9000", "source": "cli"}
         ],
-        "result": {"run": {"detach": false, "interactive": true, "tty": true, "publish": [], "env": [], "image": "ubuntu", "command": ["bash"]}}
+        "result": {"run": {"detach": false, "interactive": true, "tty": true, "publish": [], "env": [], "image": "ubuntu", "cmd": ["-p", "9000:9000"]}}
       }
     },
     {
       "id": "ps-all",
-      "why": "`docker ps -a` (実機は停止中含む全コンテナ)。ps 入場、-a flag。positional なしの単純サブコマンド。quiet false。",
+      "why": "`docker ps -a` (実機は停止中含む全コンテナ)。ps 入場、-a flag。ps には pass-through 概念が無いため dd を持たない — positional なしの単純サブコマンド。quiet false。",
       "argv": ["ps", "-a"],
       "expect": {
         "outcome": "success",
@@ -85,7 +87,7 @@
     },
     {
       "id": "build-tag-context",
-      "why": "`docker build -t myimg:latest .` (実機は . を myimg:latest でビルド)。build 入場、-t が \"myimg:latest\"、context=\".\" 必須 positional。tag と context の分離。file は absent。",
+      "why": "`docker build -t myimg:latest .` (実機は . を myimg:latest でビルド)。build にも pass-through 概念が無いため dd を持たず、context は旧来どおり型付き必須 positional のまま。tag と context の分離。file は absent。",
       "argv": ["build", "-t", "myimg:latest", "."],
       "expect": {
         "outcome": "success",

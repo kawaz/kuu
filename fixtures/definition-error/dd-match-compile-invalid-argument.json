@@ -1,0 +1,19 @@
+{
+  "why": "dd の `match` pattern compile 失敗は definition-error (DR-090 §2 + DR-085 §1 の kind=invalid-argument、DR-082 §3)。DR-090 §2 は『文字クラス内の `-` は escape 必須 (`[^\\-]`)、未 escape の `[^-]` を compile 不能とする host がある (MoonBit core Regex で実測)』と明記しており、canonical の書き方は escape 側に倒す (escape 形は全方言で受理される)。未 escape の `[^-]` は実測で不能な host の存在が確認済みの共通の不正構文であり、regex-match-compile-invalid-argument.json (DR-085) と同根 — regex を引数に取る registry 装置 (filter の regex_match、dd installer の match) はいずれも同じ invalid-argument kind の対象になる (DR-082 §3『装置引数の値そのものが不正で装置側の構築が失敗する場合』)。argv は書かない (定義の静的検査であり実行しない、DR-082 §1)。",
+  "query": "definition_error",
+  "definition": {
+    "options": [
+      {"name": "utility_marker", "type": "dd", "match": "[^-]", "self": "keep"}
+    ]
+  },
+  "cases": [
+    {
+      "id": "unescaped-hyphen-in-character-class-is-invalid-argument",
+      "why": "`match: \"[^-]\"` は文字クラス内の `-` を escape していない未完成/host依存な構文。DR-090 §2 が明記する『escape 必須、未 escape は compile 不能な host が実在する』共通の不正構文であり、dd installer の match 装置の構築そのものが失敗する。regex_match filter の compile 失敗 (fixtures/definition-error/regex-match-compile-invalid-argument.json) と同じ kind=invalid-argument。",
+      "expect": {
+        "outcome": "definition-error",
+        "errors": [{"element": "utility_marker", "kind": "invalid-argument"}]
+      }
+    }
+  ]
+}

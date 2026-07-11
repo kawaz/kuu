@@ -1,58 +1,72 @@
 {
-  "why": "xargs (macOS 実機 `xargs [-0] [-n number] [-I replstr] [-P maxprocs] [utility [args]]`) のプローブ: 値オプション複数 + utility 以降の command pass-through。プローブ対象 = 先頭のオプション群を解析した後、utility とその引数を raw 列として受ける形。既知の表現ギャップ (env/ssh/docker と共通): utility 以降は xargs の option 解析対象外 (実行対象コマンドの引数、`-x` 等が来ても xargs option でない) だが kuu は背骨上で option 風トークンを拾おうとする。ここでは option 風でない command のみ扱い、pass-through 境界の限界は記録にとどめる。",
+  "why": "xargs (macOS 実機 `xargs [-0] [-n number] [-I replstr] [-P maxprocs] [utility [args]]`) のプローブ: 値オプション複数 + utility 以降の command pass-through を **DR-090 (dd の pattern トリガ + self:keep)** で表現する。severed の効果は『greedy 面 off (以降のトークンがトリガとして再発火しない)』だけであり、**positional 席の構造消費 (型・順序・必須) はそのまま生きる** (dd/basic.json の従来 dd `--` 後の positional 消費が先行 pin — residual-after-sever case は severed 後も positional x が raw 消費を続けることを固定済み)。よって utility 名を独立した scalar positional (`utility`、暗黙必須) として型付きに残し、その後続を `args` (repeat min:0) が受ける — 両者とも dd 発火後の raw ストリームから通常どおり構造消費するだけで、単一配列へ融合する必要は無い。utility (最初の非ハイフントークン) が pattern dd `^[^\\-]` (host 方言準拠、DR-085 §2、文字クラス内 `-` は escape 必須、DR-090 §2) に一致して発火し、self:keep (消費0) でトークン自身をストリームに残したまま severed 化 (DR-064) — 残されたトークンを `utility` 席がそのまま型消費する。旧版はここに『option 風でない command のみ扱う』限定を課していたが、本改訂で xargs 実機の核心 (utility 以降は xargs 自身の option 解析対象外 — utility に渡す `-P` 等の既知綴りの引数も xargs には拾われない) を known-spelling-passthrough case で正面から表現できるようになった (issue corpus-implicit-trailing-passthrough の解消、DR-090 波及節)。",
   "query": "parse",
   "definition": {
     "options": [
       {"name": "null_delim", "type": "flag", "short": "0"},
       {"name": "max_args", "type": "int", "short": "n"},
       {"name": "replace", "type": "string", "short": "I"},
-      {"name": "max_procs", "type": "int", "short": "P"}
+      {"name": "max_procs", "type": "int", "short": "P"},
+      {"name": "utility_marker", "type": "dd", "match": "^[^\\-]", "self": "keep"}
     ],
     "positionals": [
-      {"name": "command", "type": "string", "repeat": {"min": 0}}
+      {"name": "utility", "type": "string", "required": true},
+      {"name": "args", "type": "string", "repeat": {"min": 0}}
     ]
   },
   "cases": [
     {
       "id": "max-args-command",
-      "why": "`xargs -n 1 echo` (実機は入力を 1 個ずつ echo に渡す)。-n が int 1、command=[\"echo\"]。null_delim false、replace/max_procs absent。値オプション + utility positional。",
+      "why": "`xargs -n 1 echo` (実機は入力を 1 個ずつ echo に渡す)。-n はハイフンなので dd 非マッチ、通常 option として値スロットが \"1\" を raw 消費 (n=1)。続く \"echo\" は非ハイフンで pattern dd に一致 → 発火・self:keep (消費0) で \"echo\" 自身はストリームに残る。severed 化した後、\"echo\" は utility 席が通常どおり型消費 (structural、DR-088 §1 の『素の positional は暗黙必須』と同型)。args は後続トークンが無いので 0 発火 `[]`。",
       "argv": ["-n", "1", "echo"],
       "expect": {
         "outcome": "success",
         "effects": [
           {"entity": "max_args", "op": "set", "operand": 1, "source": "cli"},
-          {"entity": "command", "op": "set", "operand": "echo", "source": "cli"}
+          {"entity": "utility", "op": "set", "operand": "echo", "source": "cli"}
         ],
-        "result": {"null_delim": false, "max_args": 1, "command": ["echo"]}
+        "result": {"null_delim": false, "max_args": 1, "utility": "echo", "args": []}
       }
     },
     {
-      "id": "null-delim-parallel",
-      "why": "`xargs -0 -P 4 rm` (実機は NUL 区切り入力を 4 並列で rm)。-0 flag、-P が int 4、command=[\"rm\"]。flag + 2 値オプション + utility。",
-      "argv": ["-0", "-P", "4", "rm"],
+      "id": "known-option-spelling-after-utility-passes-through",
+      "why": "`xargs -0 rm -P 4` (実機は NUL 区切り入力で rm を実行、rm の引数として `-P 4` を渡す — xargs 自身の -P (max_procs) ではない)。-0 flag が発火、続く \"rm\" (非ハイフン) が dd に一致して発火・severed。utility 席が \"rm\" を型消費 (severed 後も positional 構造は不変、dd/basic.json の先行 pin)。以降の \"-P\"/\"4\" は **xargs の既知 option 綴りだが severed 後は raw** — args (repeat) が消費し、max_procs は一度も option として発火しないため absent。args=[\"-P\",\"4\"]。DR-090 が解決する本命の軸。",
+      "argv": ["-0", "rm", "-P", "4"],
       "expect": {
         "outcome": "success",
         "effects": [
           {"entity": "null_delim", "op": "set", "operand": true, "source": "cli"},
-          {"entity": "max_procs", "op": "set", "operand": 4, "source": "cli"},
-          {"entity": "command", "op": "set", "operand": "rm", "source": "cli"}
+          {"entity": "utility", "op": "set", "operand": "rm", "source": "cli"},
+          {"entity": "args", "op": "set", "operand": "-P", "source": "cli"},
+          {"entity": "args", "op": "set", "operand": "4", "source": "cli"}
         ],
-        "result": {"null_delim": true, "max_procs": 4, "command": ["rm"]}
+        "result": {"null_delim": true, "utility": "rm", "args": ["-P", "4"]}
       }
     },
     {
       "id": "replace-placeholder",
-      "why": "`xargs -I {} mv {} dest/` (実機は入力を {} に置換して mv)。-I が \"{}\" をバインド、command=[mv,{},dest/]。{} や dest/ は option 風でないので command に落ちる。置換文字列オプションと後続 raw command の共存。",
+      "why": "`xargs -I {} mv {} dest/` (実機は入力を {} に置換して mv)。-I が \"{}\" を raw 消費してバインド (値スロットはハイフン風にも \"{}\" 風にも無条件に反応、DR-041 §4)。続く \"mv\" が dd に一致して発火・severed、utility 席が \"mv\" を型消費。以降 \"{}\"/\"dest/\" は raw で args (repeat) に積まれる。args=[\"{}\",\"dest/\"]。",
       "argv": ["-I", "{}", "mv", "{}", "dest/"],
       "expect": {
         "outcome": "success",
         "effects": [
           {"entity": "replace", "op": "set", "operand": "{}", "source": "cli"},
-          {"entity": "command", "op": "set", "operand": "mv", "source": "cli"},
-          {"entity": "command", "op": "set", "operand": "{}", "source": "cli"},
-          {"entity": "command", "op": "set", "operand": "dest/", "source": "cli"}
+          {"entity": "utility", "op": "set", "operand": "mv", "source": "cli"},
+          {"entity": "args", "op": "set", "operand": "{}", "source": "cli"},
+          {"entity": "args", "op": "set", "operand": "dest/", "source": "cli"}
         ],
-        "result": {"null_delim": false, "replace": "{}", "command": ["mv", "{}", "dest/"]}
+        "result": {"null_delim": false, "replace": "{}", "utility": "mv", "args": ["{}", "dest/"]}
+      }
+    },
+    {
+      "id": "no-utility-token-missing-operand",
+      "why": "(対極) `xargs -n 1`: 非ハイフントークンが一切現れないため dd は一度も発火せず severed も起きない。utility 席は暗黙必須 (plain positional、absent/required-positional.json の帰結) だがトークンが尽きているため missing_operand の failure に倒れる — dd 未発火時は severed 化されないぶん、utility の必須性が通常どおり効くことの対照固定 (known-option-spelling-after-utility-passes-through 等『dd 発火後は必須性が生きたまま raw 消費される』ケースとの対比軸)。argv_pos=2=argv.length。",
+      "argv": ["-n", "1"],
+      "expect": {
+        "outcome": "failure",
+        "errors": [
+          {"element": "utility", "argv_pos": 2, "kind": "parse", "reason": "missing_operand"}
+        ]
       }
     }
   ]

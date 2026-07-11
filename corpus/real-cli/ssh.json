@@ -1,5 +1,5 @@
 {
-  "why": "ssh (macOS 実機) のプローブ: -o key=value 形式の反復オプション + host positional + command pass-through。プローブ対象 = -o の値が \"Key=Value\" という `=` を含む文字列だが、これは kuu 側で分割せず opaque string として受ける (=split は long option の matcher 語彙であって -o の値には効かない) ことの確認。-o は multiple:append で複数指定を積む。既知の表現ギャップ (env/xargs と共通): `ssh host command args...` の command 以降は remote 実行コマンドで ssh の option 解析対象外だが、kuu では option 風トークンを拾おうとする — ここでは option 風でない command のみ扱う。",
+  "why": "ssh (macOS 実機) のプローブ: -o key=value 形式の反復オプション + destination 以降の command pass-through を **DR-090 (dd の pattern トリガ + self:keep)** で表現する。severed の効果は『greedy 面 off』だけで、**positional 席の構造消費 (型・順序・必須) はそのまま生きる** (dd/basic.json の従来 dd `--` 後の positional 消費が先行 pin)。よって旧版どおり `destination` (暗黙必須 scalar positional) と `command` (repeat min:0) を型レベルで分離したまま保つ — dd (pattern, self:keep) が destination トークンで発火し (消費0、自身をストリームに残す)、severed 化した後は `destination` 席がそのトークンを通常どおり型消費し、残りを `command` が消費する。`ssh host -x` の `-x` は ssh 自身のオプションに再解釈されず remote へ渡る literal command 引数になる (実機観測) — xargs の『utility 以降は既知 option 綴りでも raw』と同型の挙動。旧記述の『option 風でない command のみ扱う』限定を破り、既知 option 綴り (`-p` 等) が destination 後に来ても raw で command に落ちることを固定する (issue corpus-implicit-trailing-passthrough の解消)。",
   "query": "parse",
   "definition": {
     "options": [
@@ -7,65 +7,67 @@
       {"name": "identity", "type": "string", "short": "i"},
       {"name": "option", "type": "string", "short": "o", "multiple": "append"},
       {"name": "forward_local", "type": "string", "short": "L", "multiple": "append"},
-      {"name": "verbose", "type": "flag", "short": "v"}
+      {"name": "verbose", "type": "flag", "short": "v"},
+      {"name": "target_marker", "type": "dd", "match": "^[^\\-]", "self": "keep"}
     ],
     "positionals": [
-      {"name": "host", "type": "string", "required": true},
+      {"name": "destination", "type": "string", "required": true},
       {"name": "command", "type": "string", "repeat": {"min": 0}}
     ]
   },
   "cases": [
     {
-      "id": "port-and-host",
-      "why": "`ssh -p 2222 user@host` (実機は 2222 番で接続)。-p が int 2222、host=\"user@host\" (user@ 込みで 1 トークン、@ 分割はアプリの関心)。option/forward は `[]`、verbose false。",
+      "id": "port-and-destination",
+      "why": "`ssh -p 2222 user@host` (実機は 2222 番で接続)。-p が int 2222 を raw 消費。続く \"user@host\" (非ハイフン) が pattern dd に一致して発火・severed (消費0、自身はストリームに残る)。severed 後、destination 席が \"user@host\" を通常どおり型消費 (structural、dd/basic.json 先行 pin と同型)。command は後続トークンが無いので 0 発火 `[]`。",
       "argv": ["-p", "2222", "user@host"],
       "expect": {
         "outcome": "success",
         "effects": [
           {"entity": "port", "op": "set", "operand": 2222, "source": "cli"},
-          {"entity": "host", "op": "set", "operand": "user@host", "source": "cli"}
+          {"entity": "destination", "op": "set", "operand": "user@host", "source": "cli"}
         ],
-        "result": {"option": [], "forward_local": [], "verbose": false, "port": 2222, "host": "user@host"}
+        "result": {"option": [], "forward_local": [], "verbose": false, "port": 2222, "destination": "user@host", "command": []}
       }
     },
     {
       "id": "option-key-value-opaque",
-      "why": "`ssh -o StrictHostKeyChecking=no host` (実機は当該オプションで接続)。-o の値 \"StrictHostKeyChecking=no\" は `=` を含むが kuu は分割せず 1 個の string として append (`[\"StrictHostKeyChecking=no\"]`)。=split が long matcher 専用で option 値には効かないことのプローブの核。",
+      "why": "`ssh -o StrictHostKeyChecking=no host` (実機は当該オプションで接続)。-o の値 \"StrictHostKeyChecking=no\" は `=` を含むが kuu は分割せず 1 個の string として append (=split は long matcher 専用で option 値には効かない)。続く \"host\" が dd に一致して発火・severed、destination 席が型消費し destination=\"host\"、command=[]。",
       "argv": ["-o", "StrictHostKeyChecking=no", "host"],
       "expect": {
         "outcome": "success",
         "effects": [
           {"entity": "option", "op": "set", "operand": "StrictHostKeyChecking=no", "source": "cli"},
-          {"entity": "host", "op": "set", "operand": "host", "source": "cli"}
+          {"entity": "destination", "op": "set", "operand": "host", "source": "cli"}
         ],
-        "result": {"option": ["StrictHostKeyChecking=no"], "forward_local": [], "verbose": false, "host": "host"}
+        "result": {"option": ["StrictHostKeyChecking=no"], "forward_local": [], "verbose": false, "destination": "host", "command": []}
       }
     },
     {
       "id": "multiple-options",
-      "why": "`ssh -o User=admin -o Port=22 host` (実機は 2 オプション適用)。-o 2 度発火 → append で 2 要素。反復 key=value オプションを固定。",
+      "why": "`ssh -o User=admin -o Port=22 host` (実機は 2 オプション適用)。-o 2 度発火 → append で 2 要素。続く \"host\" が dd に一致・severed し destination 席が型消費、command=[]。反復 key=value オプション + pass-through 開始点の共存。",
       "argv": ["-o", "User=admin", "-o", "Port=22", "host"],
       "expect": {
         "outcome": "success",
         "effects": [
           {"entity": "option", "op": "set", "operand": "User=admin", "source": "cli"},
           {"entity": "option", "op": "set", "operand": "Port=22", "source": "cli"},
-          {"entity": "host", "op": "set", "operand": "host", "source": "cli"}
+          {"entity": "destination", "op": "set", "operand": "host", "source": "cli"}
         ],
-        "result": {"option": ["User=admin", "Port=22"], "forward_local": [], "verbose": false, "host": "host"}
+        "result": {"option": ["User=admin", "Port=22"], "forward_local": [], "verbose": false, "destination": "host", "command": []}
       }
     },
     {
-      "id": "host-with-command",
-      "why": "`ssh host uptime` (実機は remote で uptime 実行)。host=\"host\"、command=[\"uptime\"] (option 風でない引数)。host positional + 後続 command variadic の分離。",
-      "argv": ["host", "uptime"],
+      "id": "known-option-spelling-after-destination-passes-through",
+      "why": "`ssh host -p 2222` (実機は host 上でリテラル `-p`/`2222` というコマンドを実行しようとする — ssh 自身の -p (port) には決して再解釈されない)。先頭 \"host\" が非ハイフンで即座に dd に一致 → 発火・severed (port option は一度も読まれない)。destination 席が \"host\" を通常どおり型消費 (severed 後も structural 必須性は不変)。続く \"-p\"/\"2222\" は **ssh の既知 option 綴りだが severed 後は raw** — command (repeat) が消費し、port は未発火・default 無しで absent。command=[\"-p\",\"2222\"]。DR-090 が解決する本命の軸。",
+      "argv": ["host", "-p", "2222"],
       "expect": {
         "outcome": "success",
         "effects": [
-          {"entity": "host", "op": "set", "operand": "host", "source": "cli"},
-          {"entity": "command", "op": "set", "operand": "uptime", "source": "cli"}
+          {"entity": "destination", "op": "set", "operand": "host", "source": "cli"},
+          {"entity": "command", "op": "set", "operand": "-p", "source": "cli"},
+          {"entity": "command", "op": "set", "operand": "2222", "source": "cli"}
         ],
-        "result": {"option": [], "forward_local": [], "verbose": false, "host": "host", "command": ["uptime"]}
+        "result": {"option": [], "forward_local": [], "verbose": false, "destination": "host", "command": ["-p", "2222"]}
       }
     }
   ]
