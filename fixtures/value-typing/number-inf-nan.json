@@ -1,5 +1,5 @@
 {
-  "why": "inf は float 型のみ・nan は両型 Error (DR-074 §1): float の受理域 = number + inf。`t`(float) は inf を case-insensitive で受理 (inf/infinity/Inf を kuu 固定)、`n`(number) は inf を Error。nan は科学計算 CLI でも値用途がないため両型 Error (opt-in も置かない)。inf の operand JSON 表現は spec 未確定 (JSON に inf リテラルが無い、value-typing.json の 1.0→\"1\" 表記未確定と同型の serialize 依存) のため、accept 側は成功輪郭 (outcome + source) のみ固定し operand/result は据え置く (report 送り)。reject 側は not_a_number で完全に固定。bool の value_parser 失敗 reason が DR-066 v1 に無いのと違い、inf/nan の Error は number/float value_parser なので not_a_number に落ちる。",
+  "why": "inf は float 型のみ・nan は両型 Error (DR-074 §1): float の受理域 = number + inf。`t`(float) は inf を case-insensitive で受理 (inf/infinity/Inf を kuu 固定)、`n`(number) は inf を Error。nan は科学計算 CLI でも値用途がないため両型 Error (opt-in も置かない)。inf の JSON 値位置表現は文字列 sentinel \"Infinity\" / \"-Infinity\" (DR-092 §1/§2: protobuf3 canonical JSON 同型、先頭 + を付けず、入力綴りは canonical へ正規化)。effects/result の値位置に一律適用 (DR-092 §3) なので accept 側は effects/result まで固定。reject 側は not_a_number で完全に固定。bool の value_parser 失敗 reason が DR-066 v1 に無いのと違い、inf/nan の Error は number/float value_parser なので not_a_number に落ちる。",
   "query": "parse",
   "definition": {
     "options": [
@@ -10,20 +10,24 @@
   "cases": [
     {
       "id": "inf-on-float-accepted",
-      "why": "float は inf を受理 (DR-074 §1): `--t inf` は float 型なので成功。operand の JSON 表現が未確定のため成功輪郭 (outcome success + source cli) のみ固定 (report: inf の result/operand serialize 規約)。inf は閾値 CLI (--threshold=inf) の実需があるので float で受ける。",
+      "why": "float は inf を受理 (DR-074 §1): `--t inf` は float 型なので成功。値位置の JSON 表現は文字列 sentinel \"Infinity\" (DR-092 §1/§2、入力 `inf` は canonical へ正規化)。inf は閾値 CLI (--threshold=inf) の実需があるので float で受ける。",
       "argv": ["--t", "inf"],
       "expect": {
         "outcome": "success",
-        "sources": {"t": "cli"}
+        "sources": {"t": "cli"},
+        "effects": [{"entity": "t", "op": "set", "operand": "Infinity", "source": "cli"}],
+        "result": {"t": "Infinity"}
       }
     },
     {
       "id": "inf-case-insensitive-on-float",
-      "why": "inf は case-insensitive で kuu が語彙固定 (DR-074 §1): `--t Infinity` も float で受理。survey で Java parseDouble=大小厳密 / JS=Infinity 完全一致のみ / strtod=大小無視と割れる語彙を kuu が確定 2 語 {inf, infinity} + ci (Inf/INF/Infinity は case variant) + 先頭符号 [+-] 合成に固定し host 差を吸収 (DR-074 §7)。operand 表現は case 1 同様据え置き。",
+      "why": "inf は case-insensitive で kuu が語彙固定 (DR-074 §1): `--t Infinity` も float で受理。survey で Java parseDouble=大小厳密 / JS=Infinity 完全一致のみ / strtod=大小無視と割れる語彙を kuu が確定 2 語 {inf, infinity} + ci (Inf/INF/Infinity は case variant) + 先頭符号 [+-] 合成に固定し host 差を吸収 (DR-074 §7)。入力綴り `Infinity` も serialize は canonical \"Infinity\" (DR-092 §2、入力 case 保存は不採用)。",
       "argv": ["--t", "Infinity"],
       "expect": {
         "outcome": "success",
-        "sources": {"t": "cli"}
+        "sources": {"t": "cli"},
+        "effects": [{"entity": "t", "op": "set", "operand": "Infinity", "source": "cli"}],
+        "result": {"t": "Infinity"}
       }
     },
     {
@@ -55,20 +59,24 @@
     },
     {
       "id": "inf-signed-negative-on-float",
-      "why": "先頭符号付き inf を float で受理 (DR-074 §7): `--t -inf` は成功。§1 の先頭符号規則 `[+-]` が inf にも適用され、`-inf` / `+inf` / `-Infinity` / `+Infinity` の 4 態 (符号 × 2 語彙、case-insensitive) を canonical に閉じる。IEEE754 の -∞ を CLI 閾値 (--threshold=-inf) で表す実需に対応。operand の JSON 表現は inf 系と同様に spec 未確定のため成功輪郭 (outcome + source) のみ固定 (case inf-on-float-accepted と同じ扱い、report 送り)。",
+      "why": "先頭符号付き inf を float で受理 (DR-074 §7): `--t -inf` は成功。§1 の先頭符号規則 `[+-]` が inf にも適用され、`-inf` / `+inf` / `-Infinity` / `+Infinity` の 4 態 (符号 × 2 語彙、case-insensitive) を canonical に閉じる。IEEE754 の -∞ を CLI 閾値 (--threshold=-inf) で表す実需に対応。値位置は canonical \"-Infinity\" (DR-092 §2、負の無限大のみ符号を明示)。",
       "argv": ["--t", "-inf"],
       "expect": {
         "outcome": "success",
-        "sources": {"t": "cli"}
+        "sources": {"t": "cli"},
+        "effects": [{"entity": "t", "op": "set", "operand": "-Infinity", "source": "cli"}],
+        "result": {"t": "-Infinity"}
       }
     },
     {
       "id": "inf-signed-positive-infinity-on-float",
-      "why": "先頭符号 `+` × 大文字始まり `Infinity` の合成を float で受理 (DR-074 §7): `--t +Infinity` は成功。先頭符号の任意性 (省略 / `+` / `-`) と inf 語彙の case-insensitive 性 ({inf, infinity} + case variant) が独立軸として合成できることの固定。case inf-signed-negative-on-float と同じく operand 表現は据え置き。",
+      "why": "先頭符号 `+` × 大文字始まり `Infinity` の合成を float で受理 (DR-074 §7): `--t +Infinity` は成功。先頭符号の任意性 (省略 / `+` / `-`) と inf 語彙の case-insensitive 性 ({inf, infinity} + case variant) が独立軸として合成できることの固定。serialize は先頭 `+` を付けず canonical \"Infinity\" (DR-092 §2、正の無限大は符号なし — 入力側の `+` 受理は DR-074 §7 の受理域規定)。",
       "argv": ["--t", "+Infinity"],
       "expect": {
         "outcome": "success",
-        "sources": {"t": "cli"}
+        "sources": {"t": "cli"},
+        "effects": [{"entity": "t", "op": "set", "operand": "Infinity", "source": "cli"}],
+        "result": {"t": "Infinity"}
       }
     }
   ]
