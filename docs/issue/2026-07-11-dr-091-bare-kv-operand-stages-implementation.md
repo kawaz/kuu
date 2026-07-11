@@ -3,7 +3,7 @@ title: DR-091 を実装完了する: kv_map accumulator と require_equal_separa
 status: open
 category: task
 created: 2026-07-11T10:17:34+09:00
-last_read:
+last_read: 2026-07-11T11:02:43+09:00
 open_entered: 2026-07-11T10:17:34+09:00
 wip_entered:
 blocked_entered:
