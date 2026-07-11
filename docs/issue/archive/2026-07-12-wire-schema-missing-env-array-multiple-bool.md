@@ -1,6 +1,6 @@
 ---
 title: wire.schema.json の未対応構文 2 件 (env の配列形 / multiple: true)
-status: open
+status: resolved
 category: task
 created: 2026-07-12T01:30:16+09:00
 last_read:
@@ -9,10 +9,10 @@ wip_entered:
 blocked_entered:
 pending_entered:
 discarded_entered:
-resolved_entered:
+resolved_entered: 2026-07-12T04:36:56+09:00
 discard_reason:
 pending_reason:
-close_reason:
+close_reason: ["implemented:調査の結果 schema の実装漏れではなく fixture 4 箇所が spec 正本にない構文を使っていた (env 配列形は規定ゼロの表記揺れ、multiple:true は DR-008 で明示不採用済みの形)。schema は変更せず fixture 側を canonical 形へ修正 (env:\"C\" / multiple:\"append\"、commit b1f8301b)、wire schema バリデート 194/194 pass を実測"]
 blocked_by:
 origin: 自リポ TODO
 ---
@@ -33,7 +33,7 @@ spec 正本 (DESIGN §12 の env 多重宣言 / multiple の bool 糖衣) を確
 
 ## 受け入れ条件
 
-- [ ] fixtures 全 188 件が schema バリデート pass
+- [x] fixtures 全 194 件が schema バリデート pass
 
 ## 関連
 
