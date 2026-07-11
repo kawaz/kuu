@@ -17,7 +17,7 @@
 
 ### 2. kv_map accumulator (語彙追加)
 
-accumulators registry に `kv_map` を追加する: piece `k=v` を最初の `=` で分割し、Map (結果は kv オブジェクト) に畳む。再発火・重複キーは last-wins (DR-015 のあと勝ちと同じ規約)。separator との関係・merge との異同は fixture 設計時に確定する (DR-036 の registry 区分は不変、DR-080 merge と並ぶ語彙の 1 住人)。
+accumulators registry に `kv_map` を追加する: piece `k=v` を最初の `=` で分割し、Map (結果は kv オブジェクト) に畳む。再発火・重複キーは last-wins (DR-015 のあと勝ちと同じ規約)。`=` を含まない piece は宣言された piece 文法を満たさないので **reject** (piece の型 parse 失敗と同じエラー系 — 空値への強制や黙殺はしない)。separator との関係・merge との異同は fixture 設計時に確定する (DR-036 の registry 区分は不変、DR-080 merge と並ぶ語彙の 1 住人)。
 
 ### 3. eq 必須の空 prefix long (固定キー + 型付き)
 
