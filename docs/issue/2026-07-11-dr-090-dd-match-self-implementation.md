@@ -1,11 +1,11 @@
 ---
 title: DR-090 を実装完了する: dd installer の match/self 属性対応と corpus 書き直し
-status: open
+status: wip
 category: task
 created: 2026-07-11T10:17:34+09:00
 last_read: 2026-07-11T14:37:00+09:00
 open_entered: 2026-07-11T10:17:34+09:00
-wip_entered:
+wip_entered: 2026-07-11T10:30:53+09:00
 blocked_entered:
 pending_entered:
 discarded_entered:
