@@ -3,7 +3,7 @@ title: DR-088 を実装完了する: kuu.mbt の positional 充足経路 (defaul
 status: open
 category: task
 created: 2026-07-11T10:06:56+09:00
-last_read:
+last_read: 2026-07-11T10:10:40+09:00
 open_entered: 2026-07-11T10:06:56+09:00
 wip_entered:
 blocked_entered:
