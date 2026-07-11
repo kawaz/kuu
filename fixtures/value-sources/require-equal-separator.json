@@ -4,8 +4,8 @@
   "definition": {
     "config": {"long_prefix": "", "require_equal_separator": true},
     "options": [
-      {"name": "if", "type": "file", "long": true},
-      {"name": "of", "type": "file", "long": true}
+      {"name": "if", "type": "string", "long": true},
+      {"name": "of", "type": "string", "long": true}
     ]
   },
   "cases": [
