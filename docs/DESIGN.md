@@ -532,9 +532,13 @@ separator も §6.2 のパイプライン内にのみ存在する部品であり
 }
 ```
 
-子要素は親の config を継承、上書き可能。
+子要素は親の config を継承、上書き可能。子要素は command scope に限らない — 個々の `options` / `positionals` 要素自身も `config` オブジェクトを持て、その要素だけスコープの値を上書きできる (要素単位 override、DR-049 §4 の `env_prefix: ""` 例と同機構)。
 
 `require_equal_separator` (bool、既定 `false`、DR-091 §3): `true` なら long は eq 分割形 (`key=value`) のみを受理し、別引数での値供給 (`key value`) を拒否する。`long_prefix: ""` (空 prefix) は `require_equal_separator: true` との併用時のみ合法 — eq 必須により「`=` を含むトークンだけが long 候補」になり、素の operand が long 経路と衝突しないことが空 prefix を破綻させない条件 (単独の `long_prefix: ""` は未定義動作のまま)。
+
+`short_combine` (bool、既定 `true`): 複数 short オプションを 1 トークンに束ねるクラスタ読み (`-ab` = `-a -b`) を枝として列挙するか。`false` はクラスタ読みのみを禁止し、単独発火と値の直接付着 (`-p80`) には影響しない — 値付着の制限は別の方言パラメータ (`allow_equal_separator` の short 側に相当する概念、DR-041) の管掌であり、`short_combine` はあくまで複数 entry が同一トークンを分け合う行為だけを指す (DR-014「-abc の結合許可」)。gcc の `-O2` / `-Wall` 型 (値付着はするがクラスタリングはしない) を表す方言パラメータ。
+
+`require_equal_separator: true` と `allow_equal_separator: false` の併用は、その scope の全 long option から space-form (`require_equal_separator` が抑止) と eq-form (`allow_equal_separator` が抑止) の両方の入口を同時に奪い、到達不能な宣言になる静的矛盾なので definition-error (DR-083 §5「定義時に静的に既知の不整合は definition-error」の筋)。
 
 ### 7.3 variant DSL (DR-011)
 

@@ -1,0 +1,71 @@
+{
+  "why": "short_combine:false の管掌範囲は複数 short オプションを 1 トークンへ束ねるクラスタ読み (`-ab` = `-a -b`) の禁止のみで、単独発火と値付着 (`-p80`) には無傷 (DR-014「-abc の結合許可」+ DR-041 line 77「値付着制限は short_combine と独立な別方言パラメータ」の例示、DESIGN §7.2 scope config `short_combine`、issue scope-config-object-gap 解釈A team-lead 裁定 2026-07-11)。動機の実例は gcc/clang の `-O2`/`-Wall` 型 (短縮値付着はするがクラスタリングはしない) — kawaz 追認 2026-07-12 (docs/issue/2026-07-11-config-derived-rulings-short-combine-eqsep.md 裁定 1)。kuu.mbt 実装は `Matcher::ShortCombine` の `combine` パラメータで表現され (node.mbt)、`walk_short` (matcher.mbt) は複数 entry の同時結合に至る 2 継続点 (flag/bool/count/none の次文字読み継続、値付着の残余文字への継続) だけを combine:false でゲートする — 単独文字での termination (`-a`) と値付着がトークン残余を全消費して終わる場合 (`-p80`) はゲート対象外でそのまま完走する。加えて config は要素単位でも上書き可能 (DESIGN §7.2「子要素は親の config を継承、上書き可能」、DR-049 §4 の env_prefix:\"\" 例と同機構) — スコープ既定 short_combine:false の下で c/d だけ要素 config で short_combine:true に戻すと、installer の `short_group` pair-key 化 (short_prefix, short_combine の組) により c/d は combine:true 専用の別 ShortCombine matcher に分離され、その matcher 内でのみクラスタ読みが復活する。",
+  "query": "parse",
+  "definition": {
+    "config": {"short_combine": false},
+    "options": [
+      {"name": "a", "type": "flag", "short": "a"},
+      {"name": "b", "type": "flag", "short": "b"},
+      {"name": "p", "type": "string", "short": "p"},
+      {"name": "c", "type": "flag", "short": "c", "config": {"short_combine": true}},
+      {"name": "d", "type": "flag", "short": "d", "config": {"short_combine": true}}
+    ]
+  },
+  "cases": [
+    {
+      "id": "cluster-withheld",
+      "why": "複数 short flag の同時クラスタ結合が短所 combine:false で禁じられる本体ケース: `-ab` は a を読んだ後 `combine || 残り文字なし` の継続条件を満たさない (a の後にまだ b が残っている) ため、この読み筋はそこで打ち切られ完成しない。他に開始点はなく (`walk_short` は body 先頭からの 1 本のみ)、a/b いずれの ShortCombine matcher (scope 既定 combine:false 側) もこのトークンに完全経路を作れない。定義に positional 等の受け皿もないため、`-ab` はどの matcher にも読まれず残余トークンとして unexpected_token で failure に落ちる (DR-041 §5「prefix ガードなし — 素通しで matcher が候補を作らない場合、読みゼロのまま positional へフォールスルーし、それも無ければ unexpected_token」、value-sources/require-equal-separator.json の対称パターンと同型)。",
+      "argv": ["-ab"],
+      "expect": {
+        "outcome": "failure",
+        "errors": [{"argv_pos": 0, "kind": "parse", "reason": "unexpected_token"}]
+      }
+    },
+    {
+      "id": "lone-flag-fires",
+      "why": "単独文字発火は combine:false の影響を受けない対極ケース: `-a` は body 長 1 で a を読んだ時点で即座に body 末尾に達する (結合すべき第 2 entry が最初から存在しない) ため、combine の値に関わらず完走して Accept する。DR-014「-abc の結合許可」が指す『結合』はあくまで複数 entry が同一トークンを分け合う行為であり、単一 entry の発火可否そのものは short_combine の管掌外という解釈Aの直接固定。b/c/d は不発火で flag 既定の false が result に残る。",
+      "argv": ["-a"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "a", "op": "set", "operand": true, "source": "cli"}
+        ],
+        "result": {"a": true, "b": false, "c": false, "d": false}
+      }
+    },
+    {
+      "id": "value-attach-full-tail",
+      "why": "値付着も combine:false の影響を受けない対極ケース (DR-041 line 77「値付着制限は short_combine と独立な別方言パラメータ」の直接固定): `-p80` は p (string 値属性) がトークン残余 `80` を丸ごと in-token attach で消費し、消費後は body 末尾 (結合すべき次 entry が残らない) に達するため combine:false でも完走する。gcc の `-O2` 型 (値付着はするがクラスタはしない) の最小実演。p 以外は不発火。",
+      "argv": ["-p80"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "p", "op": "set", "operand": "80", "source": "cli"}
+        ],
+        "result": {"a": false, "b": false, "c": false, "d": false, "p": "80"}
+      }
+    },
+    {
+      "id": "element-override-cluster-fires",
+      "why": "要素単位 config override でスコープ既定を局所的に打ち消せることの固定: c/d は自身の `config: {short_combine: true}` によりスコープ既定 (false) を上書きし、combine:true 専用の ShortCombine matcher (short_prefix, short_combine の組が同じ entry だけを束ねる pair-key 化) に属する。この matcher 内では通常の複数 entry クラスタ読みが復活するため `-cd` は c=true, d=true の 1 完全経路で success する — scope config は『子要素が上書き可能』(DESIGN §7.2) という一般則がこの管掌範囲の細部にも及ぶことの実演。",
+      "argv": ["-cd"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "c", "op": "set", "operand": true, "source": "cli"},
+          {"entity": "d", "op": "set", "operand": true, "source": "cli"}
+        ],
+        "result": {"a": false, "b": false, "c": true, "d": true}
+      }
+    },
+    {
+      "id": "element-override-does-not-mix-with-scope-default",
+      "why": "対極: override された要素と既定側の要素は同じ matcher に同居しないため、1 トークン内で混在クラスタを組むことはできない (`short_group` が (short_prefix, short_combine) の組ごとに別 matcher へ分離するので、a/b (combine:false) と c/d (combine:true) は最初から別々の候補生成元)。`-ac` は a 側 matcher (entries={a,b}) では 2 文字目 `c` が未知文字で読みが伸ばせず、c 側 matcher (entries={c,d}) では先頭文字 `a` がそもそも未知文字で読みが始まらない — 両 matcher とも完全経路 0 本で cluster-withheld と同じ unexpected_token failure に落ちる。要素単位 override は『この要素同士は結合してよい」という許可を作るだけで、既定側との橋渡しは生まれないことの固定。",
+      "argv": ["-ac"],
+      "expect": {
+        "outcome": "failure",
+        "errors": [{"argv_pos": 0, "kind": "parse", "reason": "unexpected_token"}]
+      }
+    }
+  ]
+}
