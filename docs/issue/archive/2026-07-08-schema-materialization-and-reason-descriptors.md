@@ -1,6 +1,6 @@
 ---
 title: Schema 実体化 + reason descriptor 全列挙 (DR-068 lifecycle 管掌)
-status: open
+status: resolved
 category: task
 created: 2026-07-08T21:53:42+09:00
 last_read:
@@ -9,10 +9,10 @@ wip_entered:
 blocked_entered:
 pending_entered:
 discarded_entered:
-resolved_entered:
+resolved_entered: 2026-07-12T01:34:22+09:00
 discard_reason:
 pending_reason:
-close_reason:
+close_reason: ["dr/DR-094","dr/DR-095","implemented","done:Schema実体化 (schema/descriptor.schema.json, schema/fixture.schema.json, schema/builtin-descriptors.json 新規, schema/wire.schema.json 更新, fixtures 188件実機バリデート, commit fe81b50c系)","issue/2026-07-12-kuu-prefix-factory-rename","issue/2026-07-12-conformance-effect-op-vocab-drift","issue/2026-07-12-wire-schema-missing-env-array-multiple-bool","issue/kuu.mbt/2026-07-12-filter-reason-granularity-dr095","deferred:datetime parser reasons (字句仕様未確定, DR-095射程外)"]
 blocked_by:
 origin: 自リポ TODO
 ---
