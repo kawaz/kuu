@@ -33,7 +33,7 @@ pattern dd のトリガ競合の扱いは exact dd と同一で、**新しい優
 
 ### 4. env との合成
 
-env (`FOO=bar cmd -x`) のような前置代入 + command 形は、代入 operand の表現 (別 DR: key=value) と本 DR の合成で書ける。本 DR 単体の管掌は「どこから先が丸ごと raw か」の宣言のみ。
+env (`FOO=bar cmd -x`) のような前置代入 + command 形は、代入 operand の表現 (DR-091) と本 DR の合成で書ける。合成時の dd pattern は `^[^\-][^=]*$` (非ハイフン開始かつ `=` を含まない全体一致) — 代入トークン (`FOO=bar`) を pattern から外すことで、先食い (DR-041 §4 の greedy 面優先は positional の構造化有無を問わない) と衝突せずに assigns 席が代入を食える。§3 の「pattern の設計で競合自体を避ける」の実例である。本 DR 単体の管掌は「どこから先が丸ごと raw か」の宣言のみ。
 
 ## 採用しなかった案
 
