@@ -1,0 +1,33 @@
+{
+  "why": "requires の目的語が none 型 (type 省略) の輪郭 (DR-093 §3): `A requires B` で B が値空間なし要素 (発火事実だけを持つマーカー) の場合、充足は『B が発火した (committed)』で判定される — DR-089 §4 が旧規定していた『値充足を要求される席には none が立てない → definition-error』を DR-093 §3 が置換した具体例 (definition-error にならず素直に受理・評価される)。verbose が requires のトリガ (committed 判定、DR-045)、sep (type 省略=none、DR-089 §2 糖衣) が目的語。sep は none なので発火しても result/effects に一切痕跡を残さない (fixtures/value-typing/none-value-space.json と同型)。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {"name": "verbose", "type": "flag", "long": true, "requires": ["sep"]},
+      {"name": "sep", "long": true}
+    ]
+  },
+  "cases": [
+    {
+      "id": "none-target-fired-satisfies",
+      "why": "`--verbose --sep`: verbose (トリガ) committed、sep (目的語、none) も発火 (committed) して充足 → success。sep は発火しても none のため result/effects に一切現れず、result には verbose のみ present。requires の目的語が none 型でも decode/評価が通ること自体が、旧 DR-089 §4 の definition-error が DR-093 §3 で置換された証跡 (かつては本 definition 自体が定義時エラーだった)。",
+      "argv": ["--verbose", "--sep"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "verbose", "op": "set", "operand": true, "source": "cli"}
+        ],
+        "result": {"verbose": true}
+      }
+    },
+    {
+      "id": "none-target-not-fired-violated",
+      "why": "`--verbose` のみ (sep 未発火): verbose committed のトリガが requires を立てるが、目的語 sep が未発火 (not committed) で不充足 → failure。kind:constraint、argv_pos=1=argv.length (制約は全消費後に評価、DR-047 §4)。element=verbose (requires の宣言元=トリガ側、fixtures/constraints-parse/requires.json の requires-violated と同型)。reason=requires_violated (DR-066)。",
+      "argv": ["--verbose"],
+      "expect": {
+        "outcome": "failure",
+        "errors": [{"element": "verbose", "argv_pos": 1, "kind": "constraint", "reason": "requires_violated"}]
+      }
+    }
+  ]
+}

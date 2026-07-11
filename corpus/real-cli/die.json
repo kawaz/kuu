@@ -1,5 +1,5 @@
 {
-  "why": "kawaz/die (Zig 製、echo 級に見えて深い) のプローブ: `die [opts] -- ARGS...` の dd (--) 経由 variadic string positional + long-only value option (--sep) + enum-like or/exact 糖衣 (--trim each/all/none) + short-only flag (-n) + meta flag (--help/--version、dd 前後で解釈反転) の組合せ。dd 単体輪郭は fixtures/dd/basic.json で既に固定済みなので、本ファイルは実在ツールの正典的な使い方 (=dd 越しの ARGS 収集) をなぞる合成プローブ。2 点の表現ギャップを発見 (issue 起票済み): (1) `--` の**必須化**が表現できない — dd は値セルを持たない (fixtures/dd/export-key-inert.json で export_key すら inert と確認済み) ため `required: true` の判定対象 (値の有無) にならず、『-- が発火しないと ARGS 席に到達できない』という die の実仕様 (`die foo` は構文エラー) を素直な定義では強制できない。args positional は -- の有無に関わらず背骨上で通常消費されるため、kuu の定義は `die foo` を誤って success (args=[\"foo\"]) にしてしまう (case bare-arg-without-dd-diverges で固定、issue: docs/issue/2026-07-07-dd-required-marker-fire-constraint.md)。(2) stdin の TTY 分岐 (bare-TTY → help fallback / non-TTY → stdin forward) は argv 由来ではない ambient probe であり、DR-049 の値源ラダー (env/config/inherit/default) のいずれにも該当しない — 本 definition では一切モデル化していない (env/config で代替もできない、値源として存在しない。issue: docs/issue/2026-07-07-tty-value-as-injected-source.md)。--trim の実際のトリム処理 (ASCII whitespace 除去) は kuu のパース関心外 (enum 選択のみパースし、除去自体はアプリ側ロジック) なので args の値は生文字列のまま。",
+  "why": "kawaz/die (Zig 製、echo 級に見えて深い) のプローブ: `die [opts] -- ARGS...` の dd (--) 経由 variadic string positional + long-only value option (--sep) + enum-like or/exact 糖衣 (--trim each/all/none) + short-only flag (-n) + meta flag (--help/--version、dd 前後で解釈反転) の組合せ。dd 単体輪郭は fixtures/dd/basic.json で既に固定済みなので、本ファイルは実在ツールの正典的な使い方 (=dd 越しの ARGS 収集) をなぞる合成プローブ。args positional に `requires: [\"--\"]` を付けて die の実構文 (`die foo` は構文エラー、`die --help` は -- 無しで成功) を表現する (DR-093 §3/§5) — args がトークンを食って committed になったとき (requires のトリガ、DR-045) だけ目的語 `--` (値空間なし dd) の発火 (committed) を要求する型委譲 (DR-093 §3、DR-089 §4 の definition-error を置換)。fixtures/constraints-parse/requires-dd-target.json が同型の骨格を独立に固定済みで、本ファイルはその実在ツール版。残る表現ギャップは 1 点のみ (issue 起票済み): stdin の TTY 分岐 (bare-TTY → help fallback / non-TTY → stdin forward) は argv 由来ではない ambient probe であり、DR-049 の値源ラダー (env/config/inherit/default) のいずれにも該当しない — 本 definition では一切モデル化していない (env/config で代替もできない、値源として存在しない。issue: docs/issue/2026-07-07-tty-value-as-injected-source.md)。--trim の実際のトリム処理 (ASCII whitespace 除去) は kuu のパース関心外 (enum 選択のみパースし、除去自体はアプリ側ロジック) なので args の値は生文字列のまま。",
   "query": "parse",
   "definition": {
     "options": [
@@ -15,7 +15,7 @@
       {"name": "--", "type": "dd"}
     ],
     "positionals": [
-      {"name": "args", "type": "string", "repeat": {"min": 0}}
+      {"name": "args", "type": "string", "repeat": {"min": 0}, "requires": ["--"]}
     ]
   },
   "cases": [
@@ -108,15 +108,15 @@
       }
     },
     {
-      "id": "bare-arg-without-dd-diverges",
-      "why": "**表現ギャップの固定 (gap (1))**: `die msg` (-- 無し) は実機では構文エラー (die は `--` を必須とする、DESIGN.md Invariants \"`--` is required\")。しかし本 definition では args positional が -- の発火有無に関わらず背骨上で通常消費されるため (fixtures/dd/basic.json の no-dd-flag-fires と同型の創発)、\"msg\" は args=[\"msg\"] として素直に success してしまう — kuu の naive な翻訳が実機の失敗を再現できない具体例。dd に `required: true` を付けても、dd は値セルを持たないため判定対象 (値の有無、DESIGN §9.1) が存在せず意味を持たない (fixtures/dd/export-key-inert.json で export_key が inert と確認済みと同型の限界)。本 case は「kuu がどう出力するか」を固定するものであり「die の正しい挙動」ではない — 乖離自体が issue の証跡 (docs/issue/2026-07-07-dd-required-marker-fire-constraint.md)。",
+      "id": "bare-arg-without-dd-fails",
+      "why": "`die msg` (-- 無し) は実機では構文エラー (die は `--` を必須とする、DESIGN.md Invariants \"`--` is required\")。args positional の requires:[\"--\"] (DR-093 §3/§5) により、\"msg\" を raw 消費して committed になった args がトリガを立てるが、目的語 `--` が未発火 (not committed) で不充足 → 完全経路が不成立で failure。errors は取り分次元の dead-end 全保持 (DR-053 §2): args が 0 個消費する取り分では \"msg\" が残留して unexpected_token (argv_pos=0)、1 個消費する取り分では requires_violated (element=args、argv_pos=1=argv.length、制約は全消費後に評価) — 2 件が並ぶ (fixtures/constraints-parse/requires-dd-target.json の bare-operand-without-dd-violated と同型)。DR-093 以前は本 case が (誤って) success を返す表現ギャップだったが、型委譲による none 目的語の充足定義 (DR-089 §4 の definition-error を置換) で実機の構文エラーと一致するようになった。",
       "argv": ["msg"],
       "expect": {
-        "outcome": "success",
-        "effects": [
-          {"entity": "args", "op": "set", "operand": "msg", "source": "cli"}
-        ],
-        "result": {"sep": " ", "trim": "each", "n": false, "help": false, "version": false, "args": ["msg"]}
+        "outcome": "failure",
+        "errors": [
+          {"argv_pos": 0, "kind": "parse", "reason": "unexpected_token"},
+          {"element": "args", "argv_pos": 1, "kind": "constraint", "reason": "requires_violated"}
+        ]
       }
     }
   ]

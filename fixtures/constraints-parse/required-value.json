@@ -1,0 +1,33 @@
+{
+  "why": "required の輪郭 (通常型、DR-093 §1『値空間を持つ要素』): 充足判定は最終状態の値の有無 (default 込み、DR-047 §5)。key は default を持たないため required の明示強制がそのまま働き未供給で failure、mode は default:\"fast\" を持つため required でも常に充足する (DR-047 §5『required + default は常に充足』、DR-093 §1 が同じ枠を『値空間を持つ要素』として型委譲一様形に位置づけ直す先の通常型輪郭)。DR-089 の none/dd 分岐 (fixtures/dd/required-fire.json 参照) との対比元になる基準ケース。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {"name": "key", "type": "string", "long": true, "required": true},
+      {"name": "mode", "type": "string", "long": true, "required": true, "default": "fast"}
+    ]
+  },
+  "cases": [
+    {
+      "id": "required-missing",
+      "why": "key (default なし) が argv 空で値を持たない → 完全経路が不成立で failure。kind:constraint (遅延述語違反、DR-047 §2)。argv_pos=0=argv.length (制約は全消費後に評価、DR-047 §4 空 argv の特別扱いは無い)。element=key (required は自分の話、DESIGN §9.3)。reason=required_violated (DR-066)。同一 case で mode (required:true, default:\"fast\") のエラーが errors に無いこと自体が、default 込みの値充足で required が自明成立する (DR-047 §5) ことの negative pin。",
+      "argv": [],
+      "expect": {
+        "outcome": "failure",
+        "errors": [{"element": "key", "argv_pos": 0, "kind": "constraint", "reason": "required_violated"}]
+      }
+    },
+    {
+      "id": "required-supplied",
+      "why": "key を CLI で明示供給すると required 充足で success。mode は CLI 未供給のままだが default \"fast\" で required が充足するので値は default のまま変わらない。effects は key の cli set のみ (default 由来の mode は effects に載らない、CONFORMANCE §2)。result は key/mode 両方 present。",
+      "argv": ["--key", "k"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "key", "op": "set", "operand": "k", "source": "cli"}
+        ],
+        "result": {"key": "k", "mode": "fast"}
+      }
+    }
+  ]
+}
