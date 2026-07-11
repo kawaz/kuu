@@ -1,6 +1,6 @@
 ---
 title: DR-093 を実装完了する: required/requires 型委譲充足の kuu.mbt 実装 + die.json 更新
-status: open
+status: resolved
 category: task
 created: 2026-07-12T00:51:17+09:00
 last_read:
@@ -9,10 +9,10 @@ wip_entered:
 blocked_entered:
 pending_entered:
 discarded_entered:
-resolved_entered:
+resolved_entered: 2026-07-12T02:04:33+09:00
 discard_reason:
 pending_reason:
-close_reason:
+close_reason: ["dr/DR-093","implemented","kuu.mbt: CRequired新設 / none・ddはcommittedで充足 / requires目的語のnone分岐 / DdSat・DdMatchSatのcommitted観測binding配線 / positionalのrequires decode対応 (commits c1bc32f9, a80ad572)","spec: DR-093 §5精密化 (dieの忠実表現はargs requires dd), 輪郭fixture4本 (constraints-parse/required-value, requires-none-target, requires-dd-target, dd/required-fire), none-invalid-rangeをnegative pin化, corpus/real-cli/die.jsonをfailure pin化 (spec ddc8ed69)","pin bump: kuu.mbt 3538a0f, CI success確認済み","conformance: 188/487 -> 192/497 (skipped=0 mismatches=0), moon test 294本"]
 blocked_by:
 origin: 自リポ TODO (issue dd-required-marker-fire-constraint の close 時自動起票)
 ---
