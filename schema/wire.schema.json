@@ -181,7 +181,7 @@
             "long_prefix": { "type": "string" },
             "long_eq_sep": { "type": "string", "enum": ["require", "allow", "deny"] },
             "short_prefix": { "type": "string" },
-            "short_attached_value": { "type": "string", "enum": ["require", "allow", "deny"] },
+            "short_attached_value": { "type": "string", "enum": ["require", "allow", "deny", "last_only"] },
             "short_combine": { "type": "boolean" },
             "env_prefix": { "type": "string" },
             "auto_env": { "type": "boolean" }
