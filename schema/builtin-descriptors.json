@@ -84,7 +84,7 @@
         "bool_case_insensitive": { "type": "boolean", "default": true, "description": "大小無視で照合するか (DR-074 §3)。false で JSON/TOML 準拠の大小厳密方言。キー名は DR-100 で bool_ prefix 化。" }
       },
       "reasons": ["not_a_bool"],
-      "description": "bool の value_parser (DR-074 §3、DR-094 §9 案 A の新名 — 旧名 kuu_bool_parser)。config キーは DR-100 で bool_ prefix 化 (旧: true_values/false_values/case_insensitive)。canonical 語彙外の入力 (例 \"yes\") は not_a_bool (DR-066 §3 v1 表、kawaz 裁定 2026-07-08 で追加、SCH-Q5 で自明と確認)。"
+      "description": "bool の value_parser (DR-074 §3、DR-094 §9 案 A)。config キーは factory 名 prefix 正準 (DR-100)。canonical 語彙外の入力 (例 \"yes\") は not_a_bool (DR-066 §3 v1 表、kawaz 裁定 2026-07-08 で追加、SCH-Q5 で自明と確認)。"
     },
     "builtin/tty": {
       "name": "builtin/tty",

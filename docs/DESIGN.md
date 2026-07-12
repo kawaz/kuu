@@ -860,7 +860,7 @@ name を持つノードが結果スコープ = lexical スコープを作る。c
 - 値の優先度: §11.4 を参照
 - **env_provider** は registry の単一スロット。シグネチャは `(key: string) → string | null` — null = 未設定、空文字列は「設定されている」。受け取る key は prefix 連結済みの最終名 (導出は installer 側に閉じる、DR-049)
 - env 値は string として pieceProcessor (piece_filters → parse → value_filters) を通る。multiple 要素なら separator 分割も効く (CLI 入力と同じ手順、DR-049)
-- **env_auto** (DR-100、旧 `auto_env`): `config.env_auto: true` で、`env:` 未指定の値セル持ち要素に env 席を自動宣言する。env 名は `UPPER(env_prefix)_UPPER(スコープパス)_UPPER(name)` のフル修飾 (例: serve 配下の port → `MYAPP_SERVE_PORT`)。明示 `env:` が優先 (DR-049)
+- **env_auto** (DR-100): `config.env_auto: true` で、`env:` 未指定の値セル持ち要素に env 席を自動宣言する。env 名は `UPPER(env_prefix)_UPPER(スコープパス)_UPPER(name)` のフル修飾 (例: serve 配下の port → `MYAPP_SERVE_PORT`)。明示 `env:` が優先 (DR-049)
 - 複数環境のプロファイル切替 (dev / prod / test) は本仕様の関心外。実体ノード (§4.5) と config ファイル側の構成で表現する
 
 ---
