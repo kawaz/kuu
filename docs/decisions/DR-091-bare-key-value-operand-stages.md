@@ -54,4 +54,4 @@ eq 必須を伴わない空 prefix は素 operand と long 候補の区別を失
 
 ### require_equal_separator の命名 (DR-096 で更新)
 
-> **更新: DR-096 により config キー名が `require_equal_separator` (bool) から `long_eq_sep` (3 値 enum、`"require"` が本 DR §3 の意味論に対応) へ変更。eq 必須が空 prefix long を成立させる条件という §3 の判断そのものは引き続き有効。**
+> **更新: DR-096 により config キー名が `require_equal_separator` (bool) から `long_eq_sep` (3 値 enum、`"require"` が本 DR §3 の意味論に対応) へ変更。さらに DR-096 §3.3 が §3 の「空 prefix long は eq 必須併用時のみ合法」という合法条件を撤廃した — 空 prefix は無条件に合法で、operand 衝突時は Ambiguous (DR-053) に落ちる。eq 必須が衝突を排除する機構の説明としては引き続き正しい (合法性の条件ではなく解決手段の一つになった)。**
