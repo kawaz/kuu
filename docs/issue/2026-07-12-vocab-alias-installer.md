@@ -40,3 +40,8 @@ factory config キーの prefix 混在 (`number_`/`int_` 付き vs bool の bare
 - [ ] installer の config 形状 (`Map<alias, canonical>`) と decode/lowering 時の展開タイミングの設計が固まる
 - [ ] DR-042 不変則③ (所有語彙の排他) による alias-既存語彙衝突の definition-error 化を裏取りする
 - [ ] extension ns (DR-094) 配下での実装可否・要否を判断する (= spec 本体変更が不要という前提の裏取り)
+
+## 設計ノート (kawaz、2026-07-12 追記)
+
+- vocab_alias は適用順に依存し冪等にできない — alias 展開は綴りの書き換えなので、他の installer が語彙を読む (所有検査・席宣言) より前に必ず適用される必要がある。
+- ただし installer は定義側で配列として宣言する構造なので、特別な機構は不要 — 「配列順 = 適用順」であり、vocab_alias を配列の先頭に置くのは定義作者の責任で済む。先頭に置かなかった場合は未展開 alias が通常の unknown-vocab エラー (DR-054) として自然に表面化する。
