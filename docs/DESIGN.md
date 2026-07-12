@@ -842,10 +842,11 @@ name を持つノードが結果スコープ = lexical スコープを作る。c
 2. 環境変数            (DR-049)
 3. config ファイル     (DR-050、§14.3)
 4. inherit (祖先 scope)
-5. default / value    (最終フォールバック)
+5. tty                (DR-098、§12b)
+6. default / value    (最終フォールバック)
 ```
 
-順序は固定 (設定可能にしない、暗黙の罠を避ける)。
+順序は固定 (設定可能にしない、暗黙の罠を避ける)。tty は「明示 (CLI/env/config) > 継承 (inherit) > 観測 (tty) > 宣言既定 (default)」という序列の一員 — 実行時に判明する端末状態はユーザの明示・設定より弱いが、単なる静的な宣言既定よりは強い (DR-098 §5)。
 
 ---
 
@@ -864,11 +865,26 @@ name を持つノードが結果スコープ = lexical スコープを作る。c
 
 ---
 
+## 12b. tty 判定値 (DR-098)
+
+```json
+{"name": "stdin_tty", "type": "bool", "tty": "stdin"}
+```
+
+- `tty` の値語彙は `"stdin" | "stdout" | "stderr"` の 3 値 enum。要素の値空間 (bool) の席に、該当ストリームの tty 判定値を注入する
+- 値の優先度: §11.4 を参照 (`default` の直前、`inherit` の後)
+- **tty_provider** は registry の単一スロット。シグネチャは `(stream: "stdin"|"stdout"|"stderr") → bool | null` — null = 提供なし。env_provider (§12) / config_provider (§14.3) と同列 (DR-098)
+- 供給値は既に native bool (string でない) なので、値要素の pieceProcessor のうち `piece_filters` / `parse` (String→T の相) は型の帰結でスキップされ、`value_filters` / `cell_filters` (T→T の相) のみ通過する (DR-050 §4 の config scalar と同じ原理)
+- **`tty:` を bool 以外の要素・値なし要素 (`type: "none"`、dd 含む)・`flag`/`count` プリセットに付けるのは definition-error** (kind=`invalid-range`) — 素の bool 値プリミティブ (プリセットなし) にのみ許可する (DR-098 §4)
+- 評価器の純粋性は不変: パーサ自身が `isatty()` を呼ぶことはなく、ambient probe の実行は provider 実装 (ホスト言語 DX) の責務に閉じる (DR-098 §2)
+
+---
+
 ## 13. 外部レジストリ
 
 ### 13.1 レジストリ区分 (DR-010 + DR-036)
 
-現役の区分は以下の6つ。フィールド名で registry が暗黙決定される (§13.2)。
+現役の区分は以下の7つ。フィールド名で registry が暗黙決定される (§13.2)。
 
 | レジストリ | 役割 | 引かれるフィールド |
 |---|---|---|
@@ -878,8 +894,9 @@ name を持つノードが結果スコープ = lexical スコープを作る。c
 | `multiple` | accumulator+collector+separator の糖衣プリセット | `multiple` (文字列指定時) |
 | `env_provider` | 環境変数解決 | `env` (env installer の lookup が利用) |
 | `config_provider` | config ファイル読込 (パス → JSON 同型の階層オブジェクト。フォーマット・探索・マージは provider の関心、DR-050) | `config_key`, `type: "config_file"` (config installer の lookup が利用) |
+| `tty_provider` | tty 判定値解決 (stream → bool \| null、ambient probe は provider 実装に閉じる、DR-098) | `tty` (tty installer の lookup が利用) |
 | `completers` | 補完候補の供給名 (標準 files/dirs 等は生成器が shell 機能へマップ、DR-060) | `completer` |
-| `installers` | 特殊語彙の展開装置 (糖衣展開 + 実行時能力の植え付け、DR-042) | `long`, `short`, `env`, `type:"dd"`, `commands[]`, `global`, `inherit`, `repeat`, `multiple`, `config_key`, `requires` / `exclusive_group` / `conflicts_with`, `alias` 等の特殊語彙 |
+| `installers` | 特殊語彙の展開装置 (糖衣展開 + 実行時能力の植え付け、DR-042) | `long`, `short`, `env`, `tty`, `type:"dd"`, `commands[]`, `global`, `inherit`, `repeat`, `multiple`, `config_key`, `requires` / `exclusive_group` / `conflicts_with`, `alias` 等の特殊語彙 |
 
 installer / registry 住人は自身を説明する **descriptor** を持つ (DR-061): installer は所有語彙 (`owns`、排他 = DR-042 不変則③)・観測語彙 (`observes`、表示・補完等の副次成果物にのみ影響)・自身が読む config キー・emit しうる失敗理由 (`reasons`、DR-066) を宣言する。宣言された所有集合の和が、直列化された定義上の語彙の正当性判定 (誰も所有しない語彙 = DR-054 の unknown-vocab Error) と completeness 検査の判定入力になる。observes は lint / diagnose の素材であり実行時強制はしない。
 
@@ -956,7 +973,7 @@ installer が宣言語彙に関わる形は 2 種類ある (DR-056): **所有** 
 - **サブコマンドツリーの動的拡張**: サブコマンドは定義に書かれた静的閉包の or のみ。`git foo` → git-foo バイナリ委譲のような plugin pattern・wildcard・catch-all は持たない。
 - **post-parse validator**: cross-field 検証 (「--start は --end より前」等の任意ロジック) の AtomicAST フックは持たない。宣言的制約 (§9 の 4 種) はコアの遅延述語、それを超える検証はアプリが ParserContext を受け取って行う。
 - **sensitive / secret**: AST は機微情報の概念を持たない。値のマスキングは実装層 (logger / diagnose 実装) の責務。
-- **TTY / カラー / interactive**: AtomicAST は端末状態を知らない。出力レンダリングは実装側の責務。
+- **カラー / interactive / 出力レンダリング / 端末制御**: AtomicAST は端末を操作しない。レンダリングは実装側の責務。**tty 判定値そのもの**は §12b/DR-098 で注入値源 (tty_provider) として射程内化 — ただし ambient probe (isatty 呼び出し) は依然として評価器の外 (provider 実装の責務) であり、評価器が端末状態を能動的に知ることはない。
 
 これらは UsefulAST 上で各言語 DX がクロージャを保持する経路では既に実装可能だが、JSON シリアライズ可能な AtomicAST に対応する正規形は持たない。
 
@@ -1223,6 +1240,7 @@ complete(atomic, {before, word, word_suffix?, after?}) → 候補構造
 | **失敗時アクション** | 完全経路 0 本の失敗時、候補経路で selected なら保持 Error に代えて発火する表示動作 (help 等)。early-exit は存在しない (DR-048) |
 | **config_provider** | config ファイル読込の registry 単一スロット。(path) → JSON 同型の階層オブジェクト \| null。フォーマットは provider の関心 (DR-050) |
 | **config_key** | config 階層への明示対応 (link の固定パス DSL、ルート絶対)。未指定なら name スコープ階層との同型対応 (DR-050) |
+| **tty_provider** | tty 判定値解決の registry 単一スロット。(stream: "stdin"\|"stdout"\|"stderr") → bool \| null。ambient probe (isatty 呼び出し) は provider 実装に閉じ評価器の純粋性を崩さない (DR-098) |
 | **absent** | 値の無い要素は結果オブジェクトにキー自体が出ない (in-band null 不使用)。反復系・default 持ち・required は absent にならない (DR-051) |
 | **export_key** | 結果キー軸の明示指定 (未指定 = name 由来)。null / "" = 結果キー軸なし → nameless 同化の透過。値の伝搬は止まらない (DR-052) |
 | **alias** | canonical 実体への別入口 (参照ファミリー: ref = 構造継承 / link = 値同期 / alias = 別入口)。結果キーは canonical のみ (DR-057) |

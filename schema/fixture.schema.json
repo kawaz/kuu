@@ -80,6 +80,11 @@
           "additionalProperties": { "type": "string" },
           "description": "値源系 fixture の環境変数供給: key → 値 (CONFORMANCE §1)。runner が env_provider (DR-049) に注入する。"
         },
+        "tty": {
+          "type": "object",
+          "additionalProperties": { "type": "boolean" },
+          "description": "値源系 fixture の tty 判定値供給: stream ('stdin'/'stdout'/'stderr') → bool (DR-098)。runner が tty_provider に注入する。省略キーは provider が null (提供なし) を返したものとして扱う。"
+        },
         "config": {
           "description": "config_provider (DR-050) が返す階層オブジェクト、または `null` (DR-050 の provider 契約 `(path) → 階層オブジェクト | null`、CONFORMANCE §1)。`null` は「該当パスに設定ファイルが存在しない」の表現 (実例: fixtures/value-sources/config/path.json の `config: null` = default 由来パスの読込失敗を黙認するケース) — CONFORMANCE §1 の「階層オブジェクト」という記述は object のみを想起させるが DR-050 の契約通り null も正当値。",
           "type": ["object", "null"]
@@ -125,7 +130,7 @@
         },
         "sources": {
           "type": "object",
-          "additionalProperties": { "type": "string", "enum": ["cli", "env", "config", "inherit", "default"] },
+          "additionalProperties": { "type": "string", "enum": ["cli", "env", "config", "inherit", "tty", "default"] },
           "description": "entity (scope-path 修飾キー) → 値源タグ (optional、CONFORMANCE §2)。値源系 fixture で使用。"
         },
         "warnings": {

@@ -100,6 +100,11 @@
           "type": "string",
           "description": "環境変数名 (env installer の所有語彙、DESIGN §12 / DR-049)。env_prefix があれば連結される。"
         },
+        "tty": {
+          "type": "string",
+          "enum": ["stdin", "stdout", "stderr"],
+          "description": "tty 判定値の注入先ストリーム (tty installer の所有語彙、DESIGN §12b / DR-098)。値は tty_provider の bool | null 応答をそのまま bool 値要素の席へ供給する (供給値は native bool、String→T の相をスキップ)。bool 以外の要素・値なし要素 (type: \"none\")・flag/count プリセットへの付与は definition-error (kind=invalid-range)。"
+        },
         "inherit": {
           "type": "boolean",
           "description": "祖先 scope chain からの default 取得 (inherit installer、DESIGN §11.2)。default と排他。"
