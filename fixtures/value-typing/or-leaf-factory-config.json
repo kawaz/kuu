@@ -1,0 +1,89 @@
+{
+  "why": "or 枝 leaf に configurable factory 型 (definitions.types で作った方言型) を置いても config が carry されることの輪郭 (DESIGN §13.3 の解決順『全区分一様』+ DR-028 の type 参照糖衣 + DR-035 の definitions→registry 解決順 — type: X 参照は node が or 枝の葉であろうと通常の option/positional であろうと同じ解決規則に従う。参照位置による config 脱落を許す規定は無い)。yn_bool (bool_parser + bool_true_values/bool_false_values 追加、DR-100 の bool_ prefix / DR-074 §3 の canonical) と hex_num (number_parser + number_allow_base_prefix:true、DR-074 §2) を or 枝の葉 type に使い、方言 config が効いて初めて成立する枝と、方言なしでは成立する対照枝 (int, canonical) を並べる。判別入力は『方言 config がある場合のみ成立する』トークン (\"yes\"/\"no\"/\"0x10\") を選び、canonical 側の int 枝は必ず死ぬ (not_a_bool 系のトークンは number 構文でもない、\"0x10\" は基数 prefix opt-in なしでは not_a_number、DR-074 §1 の canonical) — or 両枝が同時成立する入力は避ける (DR-038 の完全経路一意性、意図的 ambiguous を作らない)。ctrl option (or を介さない通常参照) は同じ yn_bool を対照させ、位置に依らず同じ結果になることを pin する (bool-dialect-config.json の輪郭を or 経路でも再現)。fallback ケース (\"5\") は yn_bool 枝が canonical 語彙にも方言語彙にも無い入力で確実に死に (not_a_bool)、int 枝だけが生き残ることで or 構造が真に 2 枝とも生きていること (死んだふりでない) を証拠付ける。effects の entity は勝った枝自身の leaf name (or leaf の露出規則、variable-arity-ambiguous.json と同型 — 親 option 自身の name は or/positionals を持つ node では export に使われない)。",
+  "query": "parse",
+  "definition": {
+    "definitions": {
+      "types": {
+        "yn_bool": {
+          "name": "bool_parser",
+          "config": {
+            "bool_true_values": ["true", "1", "yes"],
+            "bool_false_values": ["false", "0", "", "no"]
+          }
+        },
+        "hex_num": {"name": "number_parser", "config": {"number_allow_base_prefix": true}}
+      }
+    },
+    "options": [
+      {
+        "name": "switch",
+        "long": true,
+        "or": [
+          {"type": "yn_bool", "name": "switch_bool"},
+          {"type": "int", "name": "switch_n"}
+        ]
+      },
+      {
+        "name": "addr",
+        "long": true,
+        "or": [
+          {"type": "hex_num", "name": "addr_hex"},
+          {"type": "int", "name": "addr_i"}
+        ]
+      },
+      {"name": "ctrl", "type": "yn_bool", "long": true}
+    ]
+  },
+  "cases": [
+    {
+      "id": "bool-dialect-or-leaf-carries-true",
+      "why": "`--switch yes`: yn_bool 枝が方言 config (bool_true_values に \"yes\") を carry していれば成立し switch_bool=true。int 枝は \"yes\" が number 構文でないため必ず死ぬ (not_a_number) — 完全経路 1 本で success (DR-038)。config が carry されず canonical bool (true/1 のみ) にフォールバックしていれば yn_bool 枝も \"yes\" を弾き both 枝死亡で failure に転じる (carry gap の症状、本 fixture が pin する対象)。",
+      "argv": ["--switch", "yes"],
+      "expect": {
+        "outcome": "success",
+        "effects": [{"entity": "switch_bool", "op": "set", "operand": true, "source": "cli"}],
+        "result": {"switch_bool": true}
+      }
+    },
+    {
+      "id": "bool-dialect-or-leaf-carries-false",
+      "why": "`--switch no`: bool_false_values に \"no\" を足した方言が or 枝内でも効くことの対 (true 側との対称、DR-074 §3 の false 語彙拡張)。int 枝は \"no\" で必ず死ぬ。",
+      "argv": ["--switch", "no"],
+      "expect": {
+        "outcome": "success",
+        "effects": [{"entity": "switch_bool", "op": "set", "operand": false, "source": "cli"}],
+        "result": {"switch_bool": false}
+      }
+    },
+    {
+      "id": "bool-dialect-or-leaf-fallback-to-int-branch",
+      "why": "`--switch 5`: \"5\" は yn_bool の方言語彙 (canonical + yes/no) のどれにも含まれないため yn_bool 枝は確実に死に (not_a_bool)、int 枝のみ生存 → switch_n=5。この対照ケースが or 構造が『2 枝とも生きている』ことを証明する — yn_bool 枝が常に成立不能なら carries-true/false ケースは int 枝の値が偶然 bool っぽく見えているだけの偽陽性になりうるが、本ケースで int 枝も独立に機能することを固定する。",
+      "argv": ["--switch", "5"],
+      "expect": {
+        "outcome": "success",
+        "effects": [{"entity": "switch_n", "op": "set", "operand": 5, "source": "cli"}],
+        "result": {"switch_n": 5}
+      }
+    },
+    {
+      "id": "base-prefix-or-leaf-carries",
+      "why": "`--addr 0x10`: hex_num 枝が number_allow_base_prefix:true を carry していれば \"0x10\" を 16 進として受理し addr_hex=16 (DR-074 §2)。int 枝 (canonical、opt-in なし) は \"0x10\" を not_a_number で確実に拒否 (number-base-prefix-rejected.json::hex-int-rejected と同型の canonical 拒否)。config が carry されず hex_num が canonical number にフォールバックしていれば hex_num 枝も \"0x10\" を拒否し both 枝死亡で failure に転じる。",
+      "argv": ["--addr", "0x10"],
+      "expect": {
+        "outcome": "success",
+        "effects": [{"entity": "addr_hex", "op": "set", "operand": 16, "source": "cli"}],
+        "result": {"addr_hex": 16}
+      }
+    },
+    {
+      "id": "bool-dialect-direct-option-baseline",
+      "why": "対照 (or を介さない通常参照、DESIGN §13.3 の位置非依存の baseline): `--ctrl yes` は yn_bool を素の option type として直接参照する経路で、bool-dialect-config.json と同型に成立する (この経路は carry gap の対象外、DR-061 の configurable factory 解決は or の有無に関わらず同じ)。carries-true ケースと同じ入力 \"yes\" が同じ結果 true になることで『参照位置 (or 枝 vs 通常参照) によらず同一の型解決になるべき』という spec の主張 (DESIGN §13.3 全区分一様) を対で pin する。",
+      "argv": ["--ctrl", "yes"],
+      "expect": {
+        "outcome": "success",
+        "effects": [{"entity": "ctrl", "op": "set", "operand": true, "source": "cli"}],
+        "result": {"ctrl": true}
+      }
+    }
+  ]
+}
