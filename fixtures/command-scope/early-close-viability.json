@@ -1,0 +1,125 @@
+{
+  "why": "早閉じ抑制の述語「読める」の精密化 (DR-097): 背骨を持つスコープは「自分の背骨で読めるトークンが次に控えている間は完了できない」(DR-041 §4) が、この「読める」は読み自身の成立 (値スロット消費の確保 + 値空間照合、parse 相) を指し、トリガ一致ではない。スコープ退出側は先食い側 (long-empty-prefix-typed.json) と失敗の質が異なり、どのスコープがトークンを読むか = どのコマンドの引数になるか自体が変わるため、3 値それぞれを専用に固定する: 成立する読みが控えている間はスコープを閉じられない (対照 baseline) / 成立する読みが無ければスコープを閉じて親の背骨に返す (精密化の本体) / 制約未充足は読みの成立に参加しないため退出判定に影響せず可視 failure のまま (parse 相で閉じる線引きの対極 pin)。親には寛容な string positional rest を置き、build が手放したトークンの受け皿にする。",
+  "query": "parse",
+  "definition": {
+    "positionals": [
+      {
+        "name": "rest",
+        "type": "string",
+        "repeat": {
+          "min": 0
+        }
+      }
+    ],
+    "commands": [
+      {
+        "type": "command",
+        "name": "build",
+        "options": [
+          {
+            "name": "port",
+            "type": "number",
+            "long": true
+          },
+          {
+            "name": "out",
+            "type": "string",
+            "long": true,
+            "requires": [
+              "verbose"
+            ]
+          },
+          {
+            "name": "verbose",
+            "type": "flag",
+            "long": true
+          }
+        ]
+      }
+    ]
+  },
+  "cases": [
+    {
+      "id": "viable-reading-holds-scope-open",
+      "why": "`build --port 8080` (対照 baseline): build 内の --port は次トークン 8080 を number として値消費でき読みが成立する — 早閉じ抑制により build はこれを読める間閉じられず、port を自分で消費する (読める最内スコープが勝つ、DR-041 §4)。精密化前後で挙動不変の側。rest は 0 発火の反復系なので []。",
+      "argv": [
+        "build",
+        "--port",
+        "8080"
+      ],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {
+            "entity": "port",
+            "op": "set",
+            "operand": 8080,
+            "source": "cli"
+          }
+        ],
+        "result": {
+          "rest": [],
+          "build": {
+            "port": 8080,
+            "verbose": false
+          }
+        }
+      }
+    },
+    {
+      "id": "nonviable-reading-releases-scope",
+      "why": "`build --port xyz` (精密化の本体): build 内の --port トリガは一致するが、値 xyz が number 照合に失敗し読みが成立しない — 成立する読みが控えていないので早閉じ抑制は build を引き留めず、build スコープは閉じて親の背骨が再開する。親に --port の greedy は無いので読みゼロ → 素通しで rest が `--port` `xyz` を raw 消費し success (held Error の not_a_number は素通し側の完全経路が通るため捨てられる、DR-037)。旧述語 (トリガ一致) なら build が閉じられず not_a_number の failure になっていた側。build は選ばれたスコープなので子が全部 absent でも kv を持つ (verbose は flag default 同梱、DR-052)。",
+      "argv": [
+        "build",
+        "--port",
+        "xyz"
+      ],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {
+            "entity": "rest",
+            "op": "set",
+            "operand": "--port",
+            "source": "cli"
+          },
+          {
+            "entity": "rest",
+            "op": "set",
+            "operand": "xyz",
+            "source": "cli"
+          }
+        ],
+        "result": {
+          "rest": [
+            "--port",
+            "xyz"
+          ],
+          "build": {
+            "verbose": false
+          }
+        }
+      }
+    },
+    {
+      "id": "constraint-not-consulted-on-exit",
+      "why": "`build --out X` (parse 相で閉じる線引きの対極 pin): --out の読み自身は成立する (値 X は string 照合を通る) ため早閉じ抑制は維持され、out が発火する。requires: verbose の未充足は遅延述語 (§15.9) であり読みの成立には参加しない — build が --out を手放して親の rest に丸呑みさせる無言の再解釈は起きず、従来どおり requires_violated の可視 failure になる。制約の充足は値源不問 (DR-093) なので、これを退出判定に入れると env の有無でどのコマンドが引数を得るか自体が変わる層逆転が起きる — その排除の pin (DR-097 不変な既存挙動)。",
+      "argv": [
+        "build",
+        "--out",
+        "X"
+      ],
+      "expect": {
+        "outcome": "failure",
+        "errors": [
+          {
+            "element": "out",
+            "argv_pos": 3,
+            "kind": "constraint",
+            "reason": "requires_violated"
+          }
+        ]
+      }
+    }
+  ]
+}

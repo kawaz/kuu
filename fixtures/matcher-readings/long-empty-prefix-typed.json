@@ -1,57 +1,121 @@
 {
-  "why": "先食い述語「読める」の精密化 (DR-097、kawaz 裁定 2026-07-12): DR-041 §4 の先食いは『トリガ一致』ではなく『その greedy 読みを経由する完全経路が存在すること (= 読みの成立)』を指す。値照合まで含めて 1 本も完全経路に届かない消費点は読みゼロと同じ扱いになり、素通し枝 (positional raw 消費) が生きる — 生きた素通しから完全経路が立てば採用され、greedy 側の held Error (DR-037) は他ルートが通るぶん捨てられる。long-empty-prefix.json / long-empty-prefix-operand-collision.json (DR-096) の bare long トリガはトリガとしては常に一致するため、値照合の成否 (type: number) が先食いの成立可否を左右する境界例として好適。本 fixture は 3 通りの成立パターン (両不成立 / 先行 2 語で成立し末尾が不成立 / 先行が不成立で次語が成立) を対で固定する。",
+  "why": "先食い述語「読める」の精密化 (DR-097、kawaz 裁定 2026-07-12): DR-041 §4 の先食いは『トリガ一致』ではなく『読み自身の成立 (その entry の値スロット消費の確保 + 値空間照合、parse 相 — 下流の帰結は見ない)』を指す。成立する読みが 1 本も無い消費点は読みゼロと同じ扱いになり、素通し枝 (positional raw 消費) が生きる — 生きた素通しから完全経路が立てば採用され、greedy 側の held Error (DR-037) は他ルートが通るぶん捨てられる。long-empty-prefix.json / long-empty-prefix-operand-collision.json (DR-096) の bare long トリガはトリガとしては常に一致するため、値照合の成否 (type: number) が先食いの成立可否を左右する境界例として好適。本 fixture は 3 通りの成立パターン (両不成立 / 先行 2 語で成立し末尾が不成立 / 先行が不成立で次語が成立) を対で固定する。",
   "query": "parse",
   "definition": {
-    "config": {"long_prefix": ""},
+    "config": {
+      "long_prefix": ""
+    },
     "options": [
-      {"name": "height", "type": "number", "long": true}
+      {
+        "name": "height",
+        "type": "number",
+        "long": true
+      }
     ],
     "positionals": [
       {
         "name": "rest",
         "type": "string",
-        "repeat": {"min": 0}
+        "repeat": {
+          "min": 0
+        }
       }
     ]
   },
   "cases": [
     {
       "id": "unparsable-both-fall-through",
-      "why": "`height height` — 両トークンとも height の読みが完全経路に届かない (DR-097): token0 の height トリガは token1 \"height\" を値として number 照合するが失敗 (not_a_number) — この読みは held Error のみで完全経路を持たないため読みゼロと同じ扱いになり、token0 は素通しで rest へ。token1 の height トリガも値になる token2 が存在せず (missing_operand) 同様に完全経路を持たないため素通し。両トークンとも rest に落ちて success — 旧述語 (トリガ一致=読める) なら先食いが両方の素通し枝を封じ、唯一残る解釈まで潰して failure になっていたはずの境界 (DR-097 採用しなかった案「トリガ一致のままの現状維持」参照)。",
-      "argv": ["height", "height"],
+      "why": "`height height` — 両トークンとも height の読みが成立しない (DR-097): token0 の height トリガは token1 \"height\" を値として number 照合するが失敗 (not_a_number) — この読みは成立しないため読みゼロと同じ扱いになり (held Error は保持されるが、素通し側の完全経路が通るため捨てられる — DR-037)、token0 は素通しで rest へ。token1 の height トリガも値になる token2 が存在せず (missing_operand) 同様に成立しないため素通し。両トークンとも rest に落ちて success — 旧述語 (トリガ一致=読める) なら先食いが両方の素通し枝を封じ、唯一残る解釈まで潰して failure になっていたはずの境界 (DR-097 採用しなかった案「トリガ一致のままの現状維持」参照)。",
+      "argv": [
+        "height",
+        "height"
+      ],
       "expect": {
         "outcome": "success",
         "effects": [
-          {"entity": "rest", "op": "set", "operand": "height", "source": "cli"},
-          {"entity": "rest", "op": "set", "operand": "height", "source": "cli"}
+          {
+            "entity": "rest",
+            "op": "set",
+            "operand": "height",
+            "source": "cli"
+          },
+          {
+            "entity": "rest",
+            "op": "set",
+            "operand": "height",
+            "source": "cli"
+          }
         ],
-        "result": {"rest": ["height", "height"]}
+        "result": {
+          "rest": [
+            "height",
+            "height"
+          ]
+        }
       }
     },
     {
       "id": "trailing-lookalike-falls-through",
-      "why": "`height 168.5 height` — 先頭 2 トークンは height の読みが完全経路に届く (先食い維持): token0 の height トリガが token1 \"168.5\" を number として値消費し、残る token2 \"height\" が rest に落ちる経路が全消費で完結する。この読みが成立するため token0 位置の素通し枝は生成されない (DR-097 は先食いを弱めない側 — 成立するなら従来どおり抑制)。末尾の token2 は height トリガとして再発火しようとしても値になる token3 が無く (missing_operand) 完全経路を持たない → 読みゼロ扱いで素通し。single success。",
-      "argv": ["height", "168.5", "height"],
+      "why": "`height 168.5 height` — 先頭 2 トークンは height の読みが成立する (先食い維持): token0 の height トリガが token1 \"168.5\" を number として値消費し、残る token2 \"height\" が rest に落ちる経路が全消費で完結する。この読みが成立するため token0 位置の素通し枝は生成されない (DR-097 は先食いを弱めない側 — 成立するなら従来どおり抑制)。末尾の token2 は height トリガとして再発火しようとしても値になる token3 が無く (missing_operand) 成立しない → 読みゼロ扱いで素通し。single success。",
+      "argv": [
+        "height",
+        "168.5",
+        "height"
+      ],
       "expect": {
         "outcome": "success",
         "effects": [
-          {"entity": "height", "op": "set", "operand": 168.5, "source": "cli"},
-          {"entity": "rest", "op": "set", "operand": "height", "source": "cli"}
+          {
+            "entity": "height",
+            "op": "set",
+            "operand": 168.5,
+            "source": "cli"
+          },
+          {
+            "entity": "rest",
+            "op": "set",
+            "operand": "height",
+            "source": "cli"
+          }
         ],
-        "result": {"height": 168.5, "rest": ["height"]}
+        "result": {
+          "height": 168.5,
+          "rest": [
+            "height"
+          ]
+        }
       }
     },
     {
       "id": "lookalike-then-value-splits",
-      "why": "`height height 168.5` — 先頭 token0 は height の読みが不成立 (値 \"height\" が number 照合失敗、held Error のみで完全経路なし) → 読みゼロ扱いで素通し、rest が token0 を消費。続く token1 の height トリガは token2 \"168.5\" を number として値消費でき、この読みは全消費で完結する経路を持つため成立 (先食い維持) — token1 位置の素通し枝 (rest が \"height\" \"168.5\" の両方を丸呑みする経路) は生成されない。結果、rest=[\"height\"] (token0 分のみ) + height=168.5 (token1-2) の単一経路に収束する — trailing-lookalike-falls-through と対称の「不成立→成立」の順序を固定する。",
-      "argv": ["height", "height", "168.5"],
+      "why": "`height height 168.5` — 先頭 token0 は height の読みが不成立 (値 \"height\" が number 照合失敗) → 読みゼロ扱いで素通し、rest が token0 を消費。続く token1 の height トリガは token2 \"168.5\" を number として値消費できるため成立 (先食い維持) — token1 位置の素通し枝 (rest が \"height\" \"168.5\" の両方を丸呑みする経路) は生成されない。結果、rest=[\"height\"] (token0 分のみ) + height=168.5 (token1-2) の単一経路に収束する — trailing-lookalike-falls-through と対称の「不成立→成立」の順序を固定する。",
+      "argv": [
+        "height",
+        "height",
+        "168.5"
+      ],
       "expect": {
         "outcome": "success",
         "effects": [
-          {"entity": "rest", "op": "set", "operand": "height", "source": "cli"},
-          {"entity": "height", "op": "set", "operand": 168.5, "source": "cli"}
+          {
+            "entity": "rest",
+            "op": "set",
+            "operand": "height",
+            "source": "cli"
+          },
+          {
+            "entity": "height",
+            "op": "set",
+            "operand": 168.5,
+            "source": "cli"
+          }
         ],
-        "result": {"height": 168.5, "rest": ["height"]}
+        "result": {
+          "height": 168.5,
+          "rest": [
+            "height"
+          ]
+        }
       }
     }
   ]
