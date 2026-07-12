@@ -1,5 +1,5 @@
 {
-  "why": "DR-096 §1 (long_eq_sep:\"require\"、旧 DR-091 §3 の require_equal_separator 相当): scope config `long_prefix: \"\"` (definition 直下、要素レベルは decoder が reject する — wire 注意) は `long_eq_sep: \"require\"` との併用時のみ合法。eq 必須により『`=` を含むトークンだけが long 候補』になり、素の operand (`=` を含まないトークン) が long 経路と衝突しない — これが空 prefix を破綻させない条件 (DR-096 §1、意味論は DR-091 §3 から不変)。if/of は dd コマンドの固定キー (`if=(type:file)` 級) の最小実演。long_eq_sep:\"require\" は空間分割形 (`key value`) の読みそのものを生成しない (matcher が eq-split 専用になる) ため、`if` 単独トークンは if の候補読みを一切持たず、他に消費者がいなければ残余トークンとして unexpected_token に落ちる — 経路探索から素直に導出できる帰結 (新しい優先規則は不要)。",
+  "why": "DR-096 §1 (long_eq_sep:\"require\"、DR-091 §3 が確定した eq 必須の空 prefix long): scope config `long_prefix: \"\"` (definition 直下、要素レベルは decoder が reject する — wire 注意) は `long_eq_sep: \"require\"` との併用時のみ合法。eq 必須により『`=` を含むトークンだけが long 候補』になり、素の operand (`=` を含まないトークン) が long 経路と衝突しない — これが空 prefix を破綻させない条件。if/of は dd コマンドの固定キー (`if=(type:file)` 級) の最小実演。long_eq_sep:\"require\" は空間分割形 (`key value`) の読みそのものを生成しない (matcher が eq-split 専用になる) ため、`if` 単独トークンは if の候補読みを一切持たず、他に消費者がいなければ残余トークンとして unexpected_token に落ちる — 経路探索から素直に導出できる帰結 (新しい優先規則は不要)。",
   "query": "parse",
   "definition": {
     "config": {"long_prefix": "", "long_eq_sep": "require"},
