@@ -1,0 +1,29 @@
+{
+  "why": "tty preset 型 (`builtin/tty`、DR-099 §3) の必須 config `tty_stream` が未指定な構成の静的検査輪郭。DR-098 の wire 属性モデルが必要としていた definition-error 3 分類 (非 bool 型・値なし要素・flag/count プリセットへの付与) は preset 型モデルへの転換で構文的に発生しなくなった (`type:` は単一選択のため、tty と他の型/プリセットを同一要素に同時に書くこと自体ができない、DR-099 §1) — 代わりに残る唯一の definition-error は factory 自身の config 検証 (`tty_stream` 必須違反、DR-061 §4「config 値の検証は factory 自身の責務」) のみ。bare `type: \"tty\"` (builtin ns の糖衣、DR-094 §3) と明示 `type: \"builtin/tty\"` の両方が同じ理由で不成立になること (ns の有無で挙動が変わらないこと、DR-094 §3 の bare=builtin 糖衣の帰結) を対で固定し、definitions.types 経由で `tty_stream` を供給した正当な宣言 (`valid`) が同一定義に同居してもエラーにならないことを errors の集合比較 (DR-054 §4 / CONFORMANCE §3) で対比する。argv は書かない (定義の静的検査であり実行しない、DR-082 §1)。",
+  "query": "definition_error",
+  "definition": {
+    "definitions": {
+      "types": {
+        "stdout_tty": {"name": "builtin/tty", "config": {"tty_stream": "stdout"}}
+      }
+    },
+    "options": [
+      {"name": "bare", "type": "tty", "long": true},
+      {"name": "explicit_ns", "type": "builtin/tty", "long": true},
+      {"name": "valid", "type": "stdout_tty", "long": true}
+    ]
+  },
+  "cases": [
+    {
+      "id": "bare-and-explicit-ns-require-stream",
+      "why": "`bare` (`type: \"tty\"`、builtin ns の糖衣) と `explicit_ns` (`type: \"builtin/tty\"`、同じ factory への明示参照) はどちらも config で `tty_stream` を指定していない — factory の必須 config が未充足であり定義時点で静的に既知の構成不成立 (DR-082 §2「構文上は書けるが構成として不成立」、DR-098 §4 が旧モデルで採っていた kind=invalid-range の分類を継承)。`valid` は definitions.types 経由で `tty_stream: \"stdout\"` を供給した正当な宣言で唯一エラーにならない — errors の全列挙 + 集合比較 (CONFORMANCE §3) により『bare と explicit_ns の 2 件だけが返り valid は含まれない』ことが同時に固定される。",
+      "expect": {
+        "outcome": "definition-error",
+        "errors": [
+          {"element": "bare", "kind": "invalid-range"},
+          {"element": "explicit_ns", "kind": "invalid-range"}
+        ]
+      }
+    }
+  ]
+}
