@@ -121,3 +121,7 @@ die.json の 3 分岐 (bare-TTY → help fallback / non-TTY → stdin forward / 
 - DR-093 (required/requires の型委譲 — none 要素の充足定義。§4 の definition-error 判断とは独立: 本 DR が禁じるのは「tty 値源を none 席に宣言すること」であり、none 要素の required/requires 充足判定 (DR-093 の管轄) には触れない)
 - DESIGN §13.9 (AtomicAST 未予約 / 責務外の周辺概念 — 本 DR が TTY 行を改訂)
 - issue `docs/issue/2026-07-07-tty-value-as-injected-source.md` (経緯)
+
+## Superseded (歴史)
+
+> **更新: DR-099 (tty は型である) により、本 DR の §3 (wire 属性 `tty` による要素への席宣言)・§4 (definition-error 3 分類: 非 bool 型・値なし要素・flag/count プリセットへの付与)・§5 (値源ラダーへの tty 席挿入) が撤回された。tty は要素に付与する属性ではなく `type: "tty"` (builtin/tty) という値型選択そのものへ再モデル化され、値源ラダーは DR-031 の元の 5 段 (DESIGN §11.4) に復元、definition-error の 3 分類は「`type:` が単一選択である」という構文的制約により発生しなくなった (tty と他の型を同一要素に同時に書くこと自体ができない)。本 DR の現役部分: §1 (tty_provider の存在、ただしシグネチャは DR-099 §4 により `(stream) → bool | null` から `(stream) → {terminal, cygwin} | null` へ改訂)・§2 (評価器の純粋性は不変)・§7 (DESIGN §13.9 の TTY 行改訂は DR-099 でも維持、文言自体は無傷)。§6 (source タグ `tty`) は「ラダー独立席の発生条件」としては撤回されるが、タグ語彙 `tty` 自体 (観測由来 vs 宣言 default 由来の診断区別) は DR-099 §2 で維持される。**
