@@ -1,0 +1,106 @@
+{
+  "why": "short_attached_value (DR-096 §2) の輪郭: 値持ち short の付着形 (`-O2`) と space 分割形 (`-O 2`) の入口をダイヤルする新設 config。scope 既定は \"allow\" (両形受理、DR-041 §4 の値スロット一般規則そのまま) のまま、gcc の `-O`/`-W` 型 (attach-only) と対称の `-r` (space-only、実例に乏しいが対称性を pin するための仮想キー) を要素単位 config override (DESIGN §7.2「子要素が上書き可能」、DR-049 §4 の env_prefix:\"\" と同機構) で表現する。値スロット読みは 1 文字以上の残り文字列を要求 (kuu.mbt matcher.mbt walk_short の in-token 値走査が vstart+1 から始まる = 空文字列付着の読みはそもそも生成されない、0 文字の付着は意味を持たないという自然な帰結) — これにより require 設定での `-q` 単独トークン (残り文字ゼロ) は付着読みも持たず、space 形読みも require により生成されないため、そのトークンへの完全経路がゼロになり DR-041 §5 (prefix ガード非採用) により素通しで positional に落ちる。a/b は値スロットを持たない flag で short_attached_value の管掌外 (DR-096 §3.2 inert) の対照。",
+  "query": "parse",
+  "definition": {
+    "config": {"short_combine": true, "short_attached_value": "allow"},
+    "options": [
+      {"name": "a", "type": "flag", "short": "a"},
+      {"name": "b", "type": "flag", "short": "b"},
+      {"name": "attach_only", "type": "string", "short": "q", "config": {"short_attached_value": "require"}},
+      {"name": "space_only", "type": "string", "short": "r", "config": {"short_attached_value": "deny"}}
+    ],
+    "positionals": [
+      {"name": "sources", "type": "string", "repeat": {"min": 0}}
+    ]
+  },
+  "cases": [
+    {
+      "id": "attach-required-accepts-attach",
+      "why": "`-q80` (attach_only の scope 既定上書き、gcc `-O2` 型の最小実演): short_attached_value:\"require\" は付着形を受理する — DR-096 §2 の許可範囲。q への値付着 \"80\" が確定する。",
+      "argv": ["-q80"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "attach_only", "op": "set", "operand": "80", "source": "cli"}
+        ],
+        "result": {"a": false, "b": false, "sources": [], "attach_only": "80"}
+      }
+    },
+    {
+      "id": "attach-required-rejects-space-falls-to-positional",
+      "why": "`-q 80` (対極): short_attached_value:\"require\" は space 分割形の読みを生成しない。`-q` 単独トークンは残り文字ゼロで付着読み (1 文字以上要求) も持たず、space 形読みも消えているため完全経路ゼロ — DR-041 §5 (prefix ガード非採用) により未定義扱いと同じ経路をたどり、寛容な string positional `sources` へ raw 消費される。後続の `80` も同様に q の消費先を失い別の positional トークンとして落ちる。attach_only は発火せず default のまま。",
+      "argv": ["-q", "80"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "sources", "op": "set", "operand": "-q", "source": "cli"},
+          {"entity": "sources", "op": "set", "operand": "80", "source": "cli"}
+        ],
+        "result": {"a": false, "b": false, "sources": ["-q", "80"]}
+      }
+    },
+    {
+      "id": "space-denied-accepts-space",
+      "why": "`-r 80` (space_only、attach を禁じた対称キー): short_attached_value:\"deny\" は付着読みだけを禁じ space 分割形は生きたまま — DR-041 §4 の値スロット一般規則の space 形経路 (grep.json `-A 3` case と同型) がそのまま適用される。",
+      "argv": ["-r", "80"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "space_only", "op": "set", "operand": "80", "source": "cli"}
+        ],
+        "result": {"a": false, "b": false, "sources": [], "space_only": "80"}
+      }
+    },
+    {
+      "id": "attach-denied-falls-to-positional",
+      "why": "`-r80` (対極): short_attached_value:\"deny\" は付着読みの枝を生成しない。`-r80` という 1 トークンに一致する定義済み entry の読みが無くなり (space 形は次トークンを要求する読みなので同一トークン内では成立しない)、DR-041 §5 により未定義相当として寛容な string positional に raw 消費される。space_only は発火せず default のまま。",
+      "argv": ["-r80"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "sources", "op": "set", "operand": "-r80", "source": "cli"}
+        ],
+        "result": {"a": false, "b": false, "sources": ["-r80"]}
+      }
+    },
+    {
+      "id": "cluster-tail-attach-require-fires",
+      "why": "`-abq80` (DR-096 §3.1 の直接固定 — require 側): a/b が短フラグとしてクラスタの先頭 2 文字を消費し、クラスタ末尾の q が \"80\" を付着で取る。short_attached_value:\"require\" はクラスタ末尾付着を禁じない — 付着という機構自体の許可であり単独発火時に限らない (DR-096 §3.1「require ではクラスタ末尾付着は生きる」)。",
+      "argv": ["-abq80"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "a", "op": "set", "operand": true, "source": "cli"},
+          {"entity": "b", "op": "set", "operand": true, "source": "cli"},
+          {"entity": "attach_only", "op": "set", "operand": "80", "source": "cli"}
+        ],
+        "result": {"a": true, "b": true, "sources": [], "attach_only": "80"}
+      }
+    },
+    {
+      "id": "cluster-tail-attach-deny-blocked",
+      "why": "`-abr80` (DR-096 §3.1 の直接固定 — deny 側、対極): クラスタ末尾で r への付着を試みる読みが short_attached_value:\"deny\" により生成されない。walk_short は 1 トークンを完全消費する読みだけを Accept とするため、a/b を読んだ後 \"r80\" 部分で継続できる読みが 1 本も無く、このトークン全体の完全経路がゼロになる — a/b の部分的な発火だけが生き残ることはない (DR-096 §3.1「deny ではクラスタ末尾付着の枝も立たない」、付着という機構自体の禁止がクラスタ発火全体を巻き込む)。トークン全体が未消費のまま素通しで positional に落ち、a/b/space_only は全て default のまま。",
+      "argv": ["-abr80"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "sources", "op": "set", "operand": "-abr80", "source": "cli"}
+        ],
+        "result": {"a": false, "b": false, "sources": ["-abr80"]}
+      }
+    },
+    {
+      "id": "unrelated-flag-cluster-unaffected",
+      "why": "`-ab` (対照): a/b は値スロットを持たない flag で short_attached_value の管掌対象外 (DR-096 §3.2、値なし要素へは inert)。q/r への要素単位 override とは無関係に、scope 既定 short_combine:true のクラスタ読みがそのまま生きていることを固定する。",
+      "argv": ["-ab"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "a", "op": "set", "operand": true, "source": "cli"},
+          {"entity": "b", "op": "set", "operand": true, "source": "cli"}
+        ],
+        "result": {"a": true, "b": true, "sources": []}
+      }
+    }
+  ]
+}
