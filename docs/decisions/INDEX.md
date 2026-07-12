@@ -97,6 +97,7 @@
 - [DR-090](DR-090-dd-pattern-trigger-self-keep.md): dd の一般化 — トリガ形 (exact | match 正規表現、host 方言準拠) × 自己の扱い (drop | keep = 消費 0 で自身含め positional 域へ) の 2 軸。優先規則は新設せず pattern 設計 (xargs 型は `^[^-]` = 最初の非ハイフン operand) で競合自体を回避、option 面の終端は severed の効果が与える
 - [DR-091](DR-091-bare-key-value-operand-stages.md): bare key=value operand の段階表現 — §1 素通し (multiple string + regex_match、既存語彙)、§2 kv_map accumulator (Map へ畳む・last-wins)、§3 固定キー型付きは long_prefix:"" + require_equal_separator 新設【DR-096 で キーは long_eq_sep へ置換、§3 の空 prefix 合法条件は撤廃 (先食いが衝突を解決)】
 - [DR-096](DR-096-scope-config-axis-reorganization.md): option 表面 config の軸別再編 — `long_eq_sep` (3 値 `require`/`allow`/`deny`) / `short_attached_value` (4 値 +`last_only`) の enum 化。旧 `allow_equal_separator`+`require_equal_separator` の 2 bool を `long_eq_sep` に統合 (illegal states unrepresentable、矛盾 definition-error 規定と fixture を削除)、`short_attached_value` 新設で gcc/clang 型 per-option attach-only と GNU getopt 型 last_only (付着は丸取りのみ) を表現、`long_prefix:""` の合法条件 (DR-091 §3) を撤廃 (先食いが operand 衝突を解決)、ダイヤルに位置条件なし、`short_combine` は不変
+- [DR-100](DR-100-config-key-prefix-normalization.md): config 語彙の整理 — `auto_env` を `env_auto` へ改名 (DR-096 の軸 prefix 先頭規律を env 軸にも適用)、factory config キーの canonical は「factory 名 prefix あり」と規約化し `builtin/bool_parser` の `true_values`/`false_values`/`case_insensitive` を `bool_true_values`/`bool_false_values`/`bool_case_insensitive` へ追随リネーム (`number_parser`/`int_parser` は既に準拠で不変)。bare 統一案は不採用 (綴りの好みは vocab_alias installer 構想がユーザランドで吸収、正準は動かさない)、dd の `match`/`self` への `dd_` prefix 付与も見送り
 
 ## CLI 入口 / variant / filter
 
@@ -131,7 +132,7 @@
 - [DR-035](DR-035-definitions-registry-symmetry.md): definitions は registry と同じ区分の名前空間、解決順の一様化 (DR-007 を再編成)
 - [DR-036](DR-036-multiple-registry-and-accumulators.md): multiple registry 追加、accumulators の属性セット拡張、collectors は filters で代替 (DR-008/010 を更新)
 - [DR-042](DR-042-installer-architecture.md): installer アーキテクチャ — 特殊語彙 (long/short/env/dd) は registry 装置の所有語彙、5 不変則で順序非依存合成、値源はラダー席宣言
-- [DR-049](DR-049-env-lookup-contract.md): env lookup の契約 — env_provider は単一スロット `(key) → string | null` (null=未設定、prefix 連結済み key)、env 値は pieceProcessor 通過、auto_env はフル修飾導出で明示 env: 優先
+- [DR-049](DR-049-env-lookup-contract.md): env lookup の契約 — env_provider は単一スロット `(key) → string | null` (null=未設定、prefix 連結済み key)、env 値は pieceProcessor 通過、auto_env (DR-100 で `env_auto` へ改名) はフル修飾導出で明示 env: 優先
 - [DR-050](DR-050-config-file-value-source.md): config ファイル値源 — type: config_file の配線宣言、config_provider は `(path) → 階層オブジェクト | null` (フォーマットは provider の関心)、config_key は同型対応デフォルト + link パス DSL の明示上書き、値の型は要素の type、config は構造に影響しない
 - [DR-056](DR-056-vocabulary-ownership-vs-reference.md): 宣言語彙への関わり方 — 所有 (lowering 責務、排他) と参照 (advisory read、自由)。参照の成果は観測挙動に影響してはならない — 機械可読化は DR-061 (descriptor)
 - [DR-061](DR-061-registry-descriptor-and-configurable-factory.md): registry 装置の自己記述 — installer descriptor (owns / observes / config キー所有)、wire 追加語彙の正当性 = 所有集合の和、configurable factory ({name, config} 参照、canonical = default config)、config はキー平坦・値自由 JSON、factory config と filter の線引きは「相」
