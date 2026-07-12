@@ -89,8 +89,8 @@ fixtures (`long-empty-prefix-operand-collision.json` の先食い解決への書
 
 セッション終盤、stop 時の codex gate が追随漏れを 2 件検出した:
 
-- `docs/decisions/INDEX.md` の DR-096 概要行が旧 3 値のまま残っていた (last_only 追加後の
-  4 値化に追随していなかった)
+- `docs/decisions/INDEX.md` の DR-091 概要行が撤廃前の旧規定 (「eq 必須が空 prefix を成立させる
+  条件、単独の空 prefix は未定義動作のまま」) を現役の記述として残していた
 - `schema/wire.schema.json` の `short_attached_value` enum が `"require"/"allow"/"deny"` の
   3 値のままで `"last_only"` が抜けていた
 
