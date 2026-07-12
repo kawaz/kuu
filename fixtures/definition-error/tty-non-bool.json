@@ -1,0 +1,28 @@
+{
+  "why": "tty 席 (DR-098 §4、DESIGN §12b) に関わる静的検査の輪郭: tty_provider の供給値は native bool (§4) なので、`tty:` を宣言できるのは素の bool 値プリミティブのみ。それ以外への宣言は定義時点で静的に既知の構造不一致であり kind=invalid-range に落ちる (DR-082 §2 の『構文上は書けるが構成として不成立』系統、DR-083 §5「静的既知は定義時に倒す」の筋)。4 つの不成立要素 (level=number、marker=none、verbose=flag、count_opt=count) と 1 つの正当要素 (plain=素の bool) を同一 definition に同居させ、errors の全列挙 + 集合比較 (DR-054 §4 / CONFORMANCE §3) により『4 件のエラーだけが返り plain はエラーでない』ことを対で固定する。argv は書かない (定義の静的検査であり実行しない、DR-082 §1)。",
+  "query": "definition_error",
+  "definition": {
+    "options": [
+      {"name": "level", "type": "number", "long": true, "tty": "stdout"},
+      {"name": "marker", "type": "none", "long": true, "tty": "stdout"},
+      {"name": "verbose", "type": "flag", "long": true, "tty": "stdout"},
+      {"name": "count_opt", "type": "count", "long": true, "tty": "stdout"},
+      {"name": "plain", "type": "bool", "long": true, "tty": "stdout"}
+    ]
+  },
+  "cases": [
+    {
+      "id": "tty-requires-plain-bool",
+      "why": "4 件の不成立を対で固定する: (1) `level` は number — tty 供給値 (bool) と値空間の型が一致せず invalid-range。(2) `marker` は none (値空間なし、DR-089 §2) — tty は値空間への供給なので値空間なし要素への宣言は DR-089 §4 の env と同型の不成立 (fixtures/definition-error/none-invalid-range.json の env 版と対称)。(3) `verbose` は flag プリセット — type は bool だが『起動即 true』の固有書き込み経路を持ち、tty 席の値供給と競合する意味論なので不可 (DR-098 §4)。(4) `count_opt` は count プリセット — 同じく『起動ごとに increment』の固有書き込み経路を持ち不可。(5) `plain` は素の bool 値プリミティブ (プリセットなし) で唯一の正当宣言 — errors 集合に plain が現れないことで対比が成立する (CONFORMANCE §3 の集合比較、DR-054 §4 の全列挙)。",
+      "expect": {
+        "outcome": "definition-error",
+        "errors": [
+          {"element": "level", "kind": "invalid-range"},
+          {"element": "marker", "kind": "invalid-range"},
+          {"element": "verbose", "kind": "invalid-range"},
+          {"element": "count_opt", "kind": "invalid-range"}
+        ]
+      }
+    }
+  ]
+}

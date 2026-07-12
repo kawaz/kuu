@@ -1,0 +1,73 @@
+{
+  "why": "値源ラダー tty 席の骨格 (DR-098、DESIGN §12b): tty は席宣言型 installer で、構造 (matcher/経路探索) を一切生まず、値源ラダーの tty 席 (default の直前・inherit の後) に tty_provider の lookup を宣言するだけ (DR-042 不変則④と同型、env installer の同型節と対)。tty_provider は `(stream) → bool | null` の registry 単一スロットで、供給値は既に native bool (string でなく) なので pieceProcessor の String→T の相 (piece_filters/parse) は型の帰結でスキップされる (DR-050 §4 の config scalar と同じ原理、DR-098 §4)。runner はケース `tty` フィールドで provider の応答を注入する (env-ladder.json の `env` フィールドと同型、CONFORMANCE §1)。tty 由来値は argv 順の全順序を持たない完走後の値確定なので effects には載らず (CONFORMANCE §2)、result + sources 側で検証する。definition の use_color は cli/env/tty/default の 4 値源が同居する要素で、優先順位 (§11.4: cli > env > config > inherit > tty > default) のうち config/inherit を除いた 4 段の相互比較を本 fixture で固定する。default は true、tty 供給値は case ごとに true/false を使い分けて『同じ値でも source が違う』『違う値で優先関係が見える』の両方を示す (default-source-model.json の書き分け流儀に倣う)。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {"name": "use_color", "type": "bool", "long": true, "env": "CLICOLOR_FORCE", "tty": "stdout", "default": true}
+    ]
+  },
+  "cases": [
+    {
+      "id": "tty-fires-alone",
+      "why": "cli/env 無し、tty_provider が stdout=true を供給: 他の席が空なので tty 席が値を確定する。値は宣言 default (true) と同じだが、由来は tty (default ではない) — no-tty-injection-falls-to-default (次 case) との対比で『値が同じでも source が違う』ことを固定する。effects 空 (tty は完走後確定)。",
+      "argv": [],
+      "tty": {"stdout": true},
+      "expect": {
+        "outcome": "success",
+        "effects": [],
+        "result": {"use_color": true},
+        "sources": {"use_color": "tty"}
+      }
+    },
+    {
+      "id": "no-tty-injection-falls-to-default",
+      "why": "cli/env 無し、tty_provider が stdout について何も供給しない (提供なし = null、`tty` フィールド自体を省略、CONFORMANCE §1 の runner 契約)。tty 席が空なのでラダー最下席の default (true) にフォールバック。tty-fires-alone (前 case) と値は同じ true だが、source が tty から default に変わる。",
+      "argv": [],
+      "expect": {
+        "outcome": "success",
+        "effects": [],
+        "result": {"use_color": true},
+        "sources": {"use_color": "default"}
+      }
+    },
+    {
+      "id": "cli-over-tty",
+      "why": "cli 明示 `--use-color false` があり、tty_provider は stdout=true を供給 (cli と逆の値)。ラダー最上席の cli が勝つ — tty 供給値 (true) は無視され use_color=false になる。effects に cli set が載り、result/sources は cli 由来。",
+      "argv": ["--use-color", "false"],
+      "tty": {"stdout": true},
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "use_color", "op": "set", "operand": false, "source": "cli"}
+        ],
+        "result": {"use_color": false},
+        "sources": {"use_color": "cli"}
+      }
+    },
+    {
+      "id": "env-over-tty",
+      "why": "cli 無し、env CLICOLOR_FORCE=false、tty_provider は stdout=true を供給 (env と逆の値)。env が tty より上位のラダー席なので env が勝つ — 実世界の CLICOLOR_FORCE (env が tty 自動検出を上書きする慣行) そのものの構図 (DR-098 §5 の根拠)。tty 供給値は無視され use_color=false。文字列 \"false\" は bool 要素の値パイプラインで false にパースされる (env の pieceProcessor 通過、DR-049)。effects は空 (env 由来は完走後確定)。",
+      "argv": [],
+      "env": {"CLICOLOR_FORCE": "false"},
+      "tty": {"stdout": true},
+      "expect": {
+        "outcome": "success",
+        "effects": [],
+        "result": {"use_color": false},
+        "sources": {"use_color": "env"}
+      }
+    },
+    {
+      "id": "tty-over-default",
+      "why": "cli/env 無し、tty_provider が stdout=false を供給 (宣言 default true と逆の値)。tty がラダーで default より上位なので tty が勝つ — 宣言 default (true) は無視され use_color=false になる。tty-fires-alone (値が default と同じ true で source の違いのみを示した case) との対で、本 case は値そのものが default と異なることで優先関係を明示する。",
+      "argv": [],
+      "tty": {"stdout": false},
+      "expect": {
+        "outcome": "success",
+        "effects": [],
+        "result": {"use_color": false},
+        "sources": {"use_color": "tty"}
+      }
+    }
+  ]
+}
