@@ -203,7 +203,7 @@ installer は特殊語彙 (属性名・type 値) の所有者であり、parse_d
 **規則**: long installer は `long` を回収する。値は二形 (DR-071): **`long: true` は `[":set"]` の糖衣**で、正規形は
 variant DSL の配列 — **各要素が入口を 1 個生む**。`:set` (prefix 空) が主入口で、greedy 面に「exact 綴り + 値スロット」
 の衛星を足す。値スロットは `ref` で実体の構造を継承し `link` で実体の値セルへ同期する。`--key=value` 用に eq-split
-再解釈 matcher を足す (config `long_prefix` / `allow_equal_separator` がパラメータ)。**absent = `false` = `[]` =
+再解釈 matcher を足す (config `long_prefix` / `long_eq_sep` がパラメータ)。**absent = `false` = `[]` =
 入口なし** (全て同義 — presence を absent/空の区別に載せない)。CLI 綴りは name の kebab 変換 (DR-022)。
 
 variant DSL (`long: [":set", "no:set:false"]`) は long 属性内の語彙なので long installer の内部で展開される。別入口として

@@ -522,23 +522,23 @@ separator も §6.2 のパイプライン内にのみ存在する部品であり
   "name": "mycli",
   "config": {
     "long_prefix": "--",
+    "long_eq_sep": "allow",
     "short_prefix": "-",
-    "env_prefix": "MYAPP",
-    "auto_env": false,
-    "allow_equal_separator": true,
+    "short_attached_value": "allow",
     "short_combine": true,
-    "require_equal_separator": false
+    "env_prefix": "MYAPP",
+    "auto_env": false
   }
 }
 ```
 
 子要素は親の config を継承、上書き可能。子要素は command scope に限らない — 個々の `options` / `positionals` 要素自身も `config` オブジェクトを持て、その要素だけスコープの値を上書きできる (要素単位 override、DR-049 §4 の `env_prefix: ""` 例と同機構)。
 
-`require_equal_separator` (bool、既定 `false`、DR-091 §3): `true` なら long は eq 分割形 (`key=value`) のみを受理し、別引数での値供給 (`key value`) を拒否する。`long_prefix: ""` (空 prefix) は `require_equal_separator: true` との併用時のみ合法 — eq 必須により「`=` を含むトークンだけが long 候補」になり、素の operand が long 経路と衝突しないことが空 prefix を破綻させない条件 (単独の `long_prefix: ""` は未定義動作のまま)。
+`long_eq_sep` (`"require"｜"allow"｜"deny"`、既定 `"allow"`、DR-096 §1): long の eq 分割形 (`key=value`) と space 分割形 (`key value`) の入口をダイヤルする。`"require"` は eq 分割形のみを受理し別引数での値供給を拒否 (DR-091 §3)、`"allow"` は両方を受理、`"deny"` は eq 分割 matcher を生成せず space 分割形のみを受理する。`long_prefix: ""` (空 prefix) は `long_eq_sep: "require"` との併用時のみ合法 — eq 必須により「`=` を含むトークンだけが long 候補」になり、素の operand が long 経路と衝突しないことが空 prefix を破綻させない条件 (単独の `long_prefix: ""` は未定義動作のまま)。3 値 enum のため「eq 必須かつ eq 禁止」のような矛盾する組合せはそもそも構文的に表現できない (illegal states unrepresentable、DR-096 §1)。
 
-`short_combine` (bool、既定 `true`): 複数 short オプションを 1 トークンに束ねるクラスタ読み (`-ab` = `-a -b`) を枝として列挙するか。`false` はクラスタ読みのみを禁止し、単独発火と値の直接付着 (`-p80`) には影響しない — 値付着の制限は別の方言パラメータ (`allow_equal_separator` の short 側に相当する概念、DR-041) の管掌であり、`short_combine` はあくまで複数 entry が同一トークンを分け合う行為だけを指す (DR-014「-abc の結合許可」)。gcc の `-O2` / `-Wall` 型 (値付着はするがクラスタリングはしない) を表す方言パラメータ。
+`short_attached_value` (`"require"｜"allow"｜"deny"`、既定 `"allow"`、DR-096 §2): 値持ち short の付着形 (`-O2`) と space 分割形 (`-O 2`) の入口をダイヤルする。`"require"` は付着形のみを受理し space 分割形の読み枝が立たない (gcc/clang の `-O` / `-W` 型)、`"allow"` は両方を受理 (DR-041 §4 の値スロット一般規則)、`"deny"` は付着読みの枝を生成せず space 分割形のみを受理する。値スロットを持たない要素 (flag/count) にはダイヤルが届いても inert (DR-096 §3.2)。gcc/clang は per-option でこのダイヤルが分かれる (`-O2`/`-Wall` は attach-only、`-I`/`-l` は両対応) ため、scope 既定とは別に要素単位 config override (DR-049 §4 と同機構) で個々のオプションに指定する。
 
-`require_equal_separator: true` と `allow_equal_separator: false` の併用は、その scope の全 long option から space-form (`require_equal_separator` が抑止) と eq-form (`allow_equal_separator` が抑止) の両方の入口を同時に奪い、到達不能な宣言になる静的矛盾なので definition-error (DR-083 §5「定義時に静的に既知の不整合は definition-error」の筋)。
+`short_combine` (bool、既定 `true`): 複数 short オプションを 1 トークンに束ねるクラスタ読み (`-ab` = `-a -b`) を枝として列挙するか。`false` はクラスタ読みのみを禁止し、単独発火と値の直接付着 (`-p80`) には影響しない — 値付着の制限は独立した方言パラメータ `short_attached_value` (DR-096 §2) の管掌であり、`short_combine` はあくまで複数 entry が同一トークンを分け合う行為だけを指す (DR-014「-abc の結合許可」)。gcc の `-O2` / `-Wall` 型 (値付着はするがクラスタリングはしない) を表す方言パラメータ。`short_attached_value: "deny"` の scope では、クラスタ読みの末尾付着 (`-abp80` の `p` への `"80"` 付着) の枝も立たない — 付着という機構自体をダイヤルしているため、単独発火時に限る規定ではない (`"require"` ではクラスタ末尾付着は生きる、DR-096 §3.1)。
 
 ### 7.3 variant DSL (DR-011)
 

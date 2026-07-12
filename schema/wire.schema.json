@@ -179,12 +179,12 @@
           "description": "installer/factory の config パラメータ (DR-061 §4)。キーは installer/factory 所有、値は任意 JSON。キー名の列挙は各 descriptor の責務 (schema/builtin-descriptors.json、DR-061 §4「未知キー検出 = typo 検出」) であり、本 Schema はキー名を強制しない。properties は DESIGN §7.2 の installer 標準 config キー (long_prefix 等) を型ヒントとして例示するのみ — factory config (number_thousand_sep 等、DR-074 §4) を含め additionalProperties は開いたまま。",
           "properties": {
             "long_prefix": { "type": "string" },
+            "long_eq_sep": { "type": "string", "enum": ["require", "allow", "deny"] },
             "short_prefix": { "type": "string" },
-            "env_prefix": { "type": "string" },
-            "auto_env": { "type": "boolean" },
-            "allow_equal_separator": { "type": "boolean" },
+            "short_attached_value": { "type": "string", "enum": ["require", "allow", "deny"] },
             "short_combine": { "type": "boolean" },
-            "require_equal_separator": { "type": "boolean" }
+            "env_prefix": { "type": "string" },
+            "auto_env": { "type": "boolean" }
           },
           "additionalProperties": true
         }
