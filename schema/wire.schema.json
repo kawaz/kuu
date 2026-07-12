@@ -197,7 +197,7 @@
             "short_attached_value": { "type": "string", "enum": ["require", "allow", "deny", "last_only"] },
             "short_combine": { "type": "boolean" },
             "env_prefix": { "type": "string" },
-            "auto_env": { "type": "boolean" }
+            "env_auto": { "type": "boolean" }
           },
           "additionalProperties": true
         }
