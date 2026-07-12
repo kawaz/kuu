@@ -1,0 +1,98 @@
+{
+  "why": "gcc/clang 型文法のプローブ = 『short オプションへの値の直接付着 (-O2, -I/usr/include, -lm 型) はあるが、short クラスタ結合 (-abc → -a -b -c) は無い』という DESIGN §7.2 の `short_combine:false` 方言パラメータの表現力検証。macOS 実機では `/usr/bin/gcc` は Apple clang のエイリアス (`gcc --version` → `Apple clang version ...`、2026-07-12 実機確認)、clang の driver は GNU gcc 互換のオプション体系 (-O/-I/-l/-W/-o/-c/-g) を踏襲するため、これらのオプション形については gcc/clang いずれの観測でも同じ結論になる。short_combine を false にした scope では『単独発火』と『値の直接付着』は生き残り (DESIGN §7.2 L539)、『複数 entry が同一トークンを分け合うクラスタ読み』だけが枝から消える — これを -O2 系の付着 case と、-c/-g 2 flag のクラスタ非発生 case の両方で固定する。表現できなかった/揺れた箇所 (実機検証済み): `-O 2` / `-W all` のような空白区切り (space-form) 値供給は実機で exit 1 (`clang: error: no such file or directory: '2'/'all'`) になり拒否されるが、`-I /usr/include` / `-l m` は exit 0 で受理される (2026-07-12 `gcc -### ` 相当の実行確認) — つまり実世界の gcc/clang は short オプションごとに『付着専用 (attach-only)』か『付着 or 空白区切り両方可』かが個別に決まっている。kuu の現行 spec (DR-041 の値スロット一般規則、grep.json の `-A 3` case と同型) は値を持つ short オプション全てに空白区切り形の読みを一様に許すため、この per-option な attach-only 制約を表現する config ダイヤルが無い (DR-041 は『short の値付着は末尾のみ』等を installer のパラメータとして吸収する方言概念に言及するのみで、DESIGN.md には具体的なキー名の定義が無い)。この差異は本ファイルでは case 化せず (= kuu spec 上は `-O 2` も成功扱いになってしまい実機と食い違うため、誤った期待値を固定しないよう明示的に除外)、報告として上げる。",
+  "query": "parse",
+  "definition": {
+    "config": {"short_combine": false},
+    "options": [
+      {"name": "compile_only", "type": "flag", "short": "c"},
+      {"name": "debug", "type": "flag", "short": "g"},
+      {"name": "optimize", "type": "string", "short": "O"},
+      {"name": "output", "type": "string", "short": "o"},
+      {"name": "include", "type": "string", "short": "I", "multiple": "append"},
+      {"name": "library", "type": "string", "short": "l", "multiple": "append"},
+      {"name": "warning", "type": "string", "short": "W", "multiple": "append"}
+    ],
+    "positionals": [
+      {"name": "sources", "type": "string", "repeat": {"min": 0}}
+    ]
+  },
+  "cases": [
+    {
+      "id": "optimize-attach",
+      "why": "`gcc -O2 file.c` (実機は最適化レベル2でコンパイル)。`-O` の直後に区切りなしで値 `2` が付着する古典的 gcc/clang 記法。short_combine:false でも『単独発火 + 値の直接付着』は生きている (DESIGN §7.2 L539) ことを固定。optimize=\"2\" (数値を意味論として持つが clang は -Os/-Ofast/-Og のような英字値も受理するため type は string)。",
+      "argv": ["-O2"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "optimize", "op": "set", "operand": "2", "source": "cli"}
+        ],
+        "result": {"compile_only": false, "debug": false, "include": [], "library": [], "warning": [], "sources": [], "optimize": "2"}
+      }
+    },
+    {
+      "id": "output-space-separated",
+      "why": "`gcc -o out.o prog.c` (実機は prog.c を out.o にコンパイル)。`-o` は値が同一トークンに付着しない場合、次トークンを raw 消費する空白区切り形も受理する (short 値スロットの一般規則、grep.json の `-A 3` case と同型、DR-041 §4)。output=\"out.o\"、sources=[\"prog.c\"] の分離を固定。",
+      "argv": ["-o", "out.o", "prog.c"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "output", "op": "set", "operand": "out.o", "source": "cli"},
+          {"entity": "sources", "op": "set", "operand": "prog.c", "source": "cli"}
+        ],
+        "result": {"compile_only": false, "debug": false, "include": [], "library": [], "warning": [], "sources": ["prog.c"], "output": "out.o"}
+      }
+    },
+    {
+      "id": "include-multiple-attach",
+      "why": "`gcc -I/usr/include -I/opt/local/include foo.c` (実機は複数 include 検索パスを指定順で追加)。両方とも `-I` に直接付着したパス。multiple:append で出現順の配列に畳まれることを固定 (dd.json 型の付着とは別に、multiple append + attach の組合せをプローブ)。",
+      "argv": ["-I/usr/include", "-I/opt/local/include"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "include", "op": "set", "operand": "/usr/include", "source": "cli"},
+          {"entity": "include", "op": "set", "operand": "/opt/local/include", "source": "cli"}
+        ],
+        "result": {"compile_only": false, "debug": false, "library": [], "warning": [], "sources": [], "include": ["/usr/include", "/opt/local/include"]}
+      }
+    },
+    {
+      "id": "library-multiple-attach",
+      "why": "`gcc -lm -lpthread prog.o` (実機は libm と libpthread をリンク)。`-l` への直接付着で library=[\"m\",\"pthread\"]。`-lm` が `-l` + `-m` にクラスタ分解されないこと (= 値スロットを持つ short は付着値を greedy に食うため、クラスタ枝の有無以前に l 自身が \"m\" を値として確定させる) を暗に固定する — 明示的な非クラスタ確認は no-cluster-flags case 側で行う。",
+      "argv": ["-lm", "-lpthread", "prog.o"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "library", "op": "set", "operand": "m", "source": "cli"},
+          {"entity": "library", "op": "set", "operand": "pthread", "source": "cli"},
+          {"entity": "sources", "op": "set", "operand": "prog.o", "source": "cli"}
+        ],
+        "result": {"compile_only": false, "debug": false, "include": [], "warning": [], "sources": ["prog.o"], "library": ["m", "pthread"]}
+      }
+    },
+    {
+      "id": "warning-family-attach",
+      "why": "`gcc -Wall -Wextra foo.c` (実機は警告クラス all と extra を有効化)。`-Wall`/`-Wextra`/`-Werror`/`-Wno-unused` 等は clang/gcc で無数に存在し閉じた集合ではない (--help=warnings 相当の一覧は数百項目、実機 `clang --help` でも Wxxx 系は列挙しきれない) — find.json の `-name` のような『固定綴りの long_prefix primary』では表現できない開いた語彙。よって -W を short + 付着 string (multiple:append) としてモデル化した: -I/-l と同じ『識別子付着 + 複数蓄積』の形が gcc の -W 系の実態に最も忠実 (対照的に find.json は primary が有限集合なので long_prefix 選択が適切、という使い分けの判断)。warning=[\"all\",\"extra\"]。",
+      "argv": ["-Wall", "-Wextra"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "warning", "op": "set", "operand": "all", "source": "cli"},
+          {"entity": "warning", "op": "set", "operand": "extra", "source": "cli"}
+        ],
+        "result": {"compile_only": false, "debug": false, "include": [], "library": [], "sources": [], "warning": ["all", "extra"]}
+      }
+    },
+    {
+      "id": "no-cluster-flags",
+      "why": "`-cg` という 1 トークン (実機の gcc/clang はこの綴りを認識せず不明オプション扱い、あるいは無視して単一ファイル名相当に落ちる実装依存の挙動を示すことがあるが、ここでは kuu 側の short_combine:false の意味論を固定するのが目的で実機の受理可否そのものは検証対象外)。c/g はどちらも値を持たない flag。short_combine:true (既定) なら `-cg` は -c -g のクラスタ読みが枝として立ち compile_only=debug=true になるはずだが、short_combine:false の scope ではそのクラスタ読みの枝が消え、`-cg` という綴りに一致する exact entry も無いため、DR-041 §5 (prefix ガード非採用、値 primitive は形だけで拒否しない) によりトークンは未消費のまま素通しし、寛容な string positional `sources` に raw 文字列として吸収される。compile_only=false, debug=false, sources=[\"-cg\"] という『クラスタが起きなかった』ことを直接観測できる形で固定する。",
+      "argv": ["-cg"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "sources", "op": "set", "operand": "-cg", "source": "cli"}
+        ],
+        "result": {"compile_only": false, "debug": false, "include": [], "library": [], "warning": [], "sources": ["-cg"]}
+      }
+    }
+  ]
+}
