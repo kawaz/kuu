@@ -95,6 +95,7 @@
 - [DR-089](DR-089-type-none-value-space.md): type 省略 = none — type は値空間のみを規定し消費は構造の関心 (直交)、none = 値空間が空の node (消費 0 の純トリガも「食って捨てる」も構造で書ける)、結果非掲載で発火観測は ParserContext / explains 層、値充足席には立てない (definition-error) — required / requires 目的語については superseded by DR-093 (発火=committed で充足)
 - [DR-090](DR-090-dd-pattern-trigger-self-keep.md): dd の一般化 — トリガ形 (exact | match 正規表現、host 方言準拠) × 自己の扱い (drop | keep = 消費 0 で自身含め positional 域へ) の 2 軸。優先規則は新設せず pattern 設計 (xargs 型は `^[^-]` = 最初の非ハイフン operand) で競合自体を回避、option 面の終端は severed の効果が与える
 - [DR-091](DR-091-bare-key-value-operand-stages.md): bare key=value operand の段階表現 — §1 素通し (multiple string + regex_match、既存語彙)、§2 kv_map accumulator (Map へ畳む・last-wins)、§3 固定キー型付きは long_prefix:"" + require_equal_separator 新設 (eq 必須が空 prefix を成立させる条件、単独の空 prefix は未定義動作のまま)
+- [DR-096](DR-096-scope-config-axis-reorganization.md): option 表面 config の軸別再編 — `long_eq_sep` / `short_attached_value` の 3 値 enum (`require`/`allow`/`deny`) 化。旧 `allow_equal_separator`+`require_equal_separator` の 2 bool を `long_eq_sep` に統合 (illegal states unrepresentable、矛盾 definition-error 規定と fixture を削除)、`short_attached_value` を新設し gcc/clang 型の per-option attach-only (`-O2` のみ許可・`-O 2` 拒否) を要素単位 config override (DR-049 §4) で表現、`short_combine` は不変
 
 ## CLI 入口 / variant / filter
 

@@ -47,3 +47,11 @@ eq 必須を伴わない空 prefix は素 operand と long 候補の区別を失
 
 - DR-080 (merge — accumulator 語彙の先行例) / DR-036 (accumulators registry) / DR-085 (regex_match) / DR-090 (pattern dd — env 合成の相方) / DR-015 (last-wins)
 - issue corpus-bare-key-value-operand (経緯)
+
+## Superseded (歴史)
+
+> 以下の記述は後続 DR で覆された。現役仕様の理解には不要、判断経緯としてのみ残す。
+
+### require_equal_separator の命名 (DR-096 で更新)
+
+> **更新: DR-096 により config キー名が `require_equal_separator` (bool) から `long_eq_sep` (3 値 enum、`"require"` が本 DR §3 の意味論に対応) へ変更。eq 必須が空 prefix long を成立させる条件という §3 の判断そのものは引き続き有効。**

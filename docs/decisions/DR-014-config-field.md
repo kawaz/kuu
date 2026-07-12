@@ -116,3 +116,7 @@ kawaz:
 
 本 DR は「config を AST 内に集約し、子で継承・上書き可能」までを規定。
 config ファイル (外部 settings 由来) の値がどう適用されるかは当初未規定だった。
+
+### allow_equal_separator / short_combine の軸別再編 (DR-096 で更新)
+
+> **更新: DR-096 により `allow_equal_separator` (+ DR-091 の `require_equal_separator`) が `long_eq_sep` (3 値 enum) へ統合、`short_attached_value` (新設) が `short_combine` の兄弟キーとして追加された。本 DR の「config フィールドへの階層継承集約」という構造判断は引き続き有効、個別キーの現行表記は DESIGN §7.2 を参照。**
