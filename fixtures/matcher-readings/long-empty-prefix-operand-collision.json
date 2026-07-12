@@ -1,5 +1,5 @@
 {
-  "why": "`long_prefix: \"\"` × 寛容な positional の共存 (DR-096 §3.3 の対側): 旧 DR-091 §3 の合法条件が恐れた「素の operand が long 経路と衝突する」ケースの帰結を固定する。衝突は破綻でも未定義動作でも Ambiguous でもなく、DR-041 の先食い規定が決定的に解決する — 背骨上の消費点で greedy エントリ (トリガ) が読めるトークンは positional 素通し枝を生成しない (素通しはトリガ不一致 = 読みゼロの時のみ、`prog -v src` で src=\"-v\" の読みが立たないのと同じ規則)。だから空 prefix の先回り禁止は不要、が撤廃根拠。リテラルを positional に渡す正規手段は dd (`--`)。衝突を綴りごと避けたいアプリは long_eq_sep:\"require\" (eq 必須なら `=` を含むトークンだけが long 候補) を選べる (long-empty-prefix.json が衝突なし側の対)。",
+  "why": "`long_prefix: \"\"` × 寛容な positional の共存 (DR-096 §3.3 の対側): 旧 DR-091 §3 の合法条件が恐れた「素の operand が long 経路と衝突する」ケースの帰結を固定する。衝突は破綻でも未定義動作でも Ambiguous でもなく、DR-041 の先食い規定が決定的に解決する — 背骨上の消費点で greedy エントリ (トリガ) の読みが成立するトークンは positional 素通し枝を生成しない (`prog -v src` で src=\"-v\" の読みが立たないのと同じ規則)。「読みが成立する」の精密な定義 (トリガ一致ではなく、その読みを経由する完全経路の存在) は DR-097 — 本 fixture の height は type:string で値照合が常に成功するため新旧いずれの述語でも結末は同じ (述語差が顕在化する型不一致の境界例は matcher-readings/long-empty-prefix-typed.json)。だから空 prefix の先回り禁止は不要、が撤廃根拠。リテラルを positional に渡す正規手段は dd (`--`)。衝突を綴りごと避けたいアプリは long_eq_sep:\"require\" (eq 必須なら `=` を含むトークンだけが long 候補) を選べる (long-empty-prefix.json が衝突なし側の対)。",
   "query": "parse",
   "definition": {
     "config": {
