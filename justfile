@@ -20,6 +20,10 @@ list:
 ensure-clean:
     bump-semver vcs is clean
 
+# docs/REFERENCE.md が schema (wire.schema.json / builtin-descriptors.json) の語彙を過不足なく網羅しているか検査
+lint-reference:
+    ./scripts/lint-reference.sh
+
 # fail if the current bookmark / branch is not the default
 [private]
 check-on-default-branch:
