@@ -82,8 +82,16 @@
         },
         "tty": {
           "type": "object",
-          "additionalProperties": { "type": "boolean" },
-          "description": "値源系 fixture の tty 判定値供給: stream ('stdin'/'stdout'/'stderr') → bool (DR-098)。runner が tty_provider に注入する。省略キーは provider が null (提供なし) を返したものとして扱う。"
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "terminal": { "type": "boolean" },
+              "cygwin": { "type": "boolean" }
+            },
+            "required": ["terminal", "cygwin"],
+            "additionalProperties": false
+          },
+          "description": "値源系 fixture の tty 判定値供給: stream ('stdin'/'stdout'/'stderr') → `{terminal, cygwin}` の生観測 2 値 (DR-099。DR-098 の bool 単一値から改訂)。runner が tty_provider に注入する。省略キーは provider が null (提供なし) を返したものとして扱う。builtin/tty preset 型の暗黙 default が `terminal || (tty_cygwin && cygwin)` で fold する。"
         },
         "config": {
           "description": "config_provider (DR-050) が返す階層オブジェクト、または `null` (DR-050 の provider 契約 `(path) → 階層オブジェクト | null`、CONFORMANCE §1)。`null` は「該当パスに設定ファイルが存在しない」の表現 (実例: fixtures/value-sources/config/path.json の `config: null` = default 由来パスの読込失敗を黙認するケース) — CONFORMANCE §1 の「階層オブジェクト」という記述は object のみを想起させるが DR-050 の契約通り null も正当値。",

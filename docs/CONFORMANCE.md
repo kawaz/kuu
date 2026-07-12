@@ -26,7 +26,7 @@
 | `cases[].argv` | ✓ | 前処理済みトークン列 (`Array[String]`、DESIGN §0.1) |
 | `cases[].env` | | 値源系 fixture の環境変数供給: key → 値のマップ。runner が env_provider (DR-049) に注入する |
 | `cases[].config` | | config_provider (DR-050) が返す階層オブジェクト。`cases[].config_files` (パス → オブジェクトのマップ) でパス別供給も可 |
-| `cases[].tty` | | 値源系 fixture の tty 判定値供給: stream (`stdin`/`stdout`/`stderr`) → bool のマップ。runner が tty_provider (DR-098) に注入する。省略キーは provider が null (提供なし) を返したものとして扱う |
+| `cases[].tty` | | 値源系 fixture の tty 判定値供給: stream (`stdin`/`stdout`/`stderr`) → `{terminal, cygwin}` の生観測 2 値のマップ (DR-099。DR-098 の bool 単一値から改訂)。runner が tty_provider に注入する。省略キーは provider が null (提供なし) を返したものとして扱う。`builtin/tty` preset 型の暗黙 default が `terminal || (tty_cygwin && cygwin)` で fold する |
 | `cases[].expect` | ✓ | §2 の outcome union |
 
 ## 2. expect — DR-053 の outcome union

@@ -263,12 +263,13 @@ exact 照合は **codepoint 単位・正規化なし** (NFC は方言)。path / 
 
 bytes / binary 型は組み込みに持たない。必要なら拡張 type (registry 登録) で提供する。
 
-**糖衣プリセット**: `flag` / `count` / `count_or_set` / `command` / `help` / `dd` 等
+**糖衣プリセット**: `flag` / `count` / `count_or_set` / `command` / `help` / `dd` / `tty` 等
 - `flag` = bool + default:false + 起動で true
 - `count` = number + default:0 + increment accumulator (値は取らない — `--verbose=3` は読みが立たず素通し)
 - `count_or_set` = count + optional 値スロット (repeat {min:0,max:1})。`-v` は increment、`-v 3` / `--verbose=3` は set。set / increment の別は取り分選好 (DR-043) が確定する。標準層 (DR-040)
 - `command` = name でスコープを作り、name の完全一致でトリガ
 - `help` = 起動時アクション
+- `tty` (= `builtin/tty`、DR-099) = bool + 暗黙 default = tty 観測の fold。configurable factory config は `tty_stream` (`"stdin"｜"stdout"｜"stderr"`、必須 — 未指定は definition-error) / `tty_cygwin` (bool、既定 true)。long/short/env 席の宣言可否・multiple・filters・required 充足は素の bool と完全に同一 — preset が同梱するのは暗黙 default のみ (詳細は §12b)
 
 これらは独立の type ではなく、属性プリセットへの名前。version は専用 type ではなく単なる flag。
 
@@ -842,11 +843,10 @@ name を持つノードが結果スコープ = lexical スコープを作る。c
 2. 環境変数            (DR-049)
 3. config ファイル     (DR-050、§14.3)
 4. inherit (祖先 scope)
-5. tty                (DR-098、§12b)
-6. default / value    (最終フォールバック)
+5. default / value    (最終フォールバック)
 ```
 
-順序は固定 (設定可能にしない、暗黙の罠を避ける)。tty は「明示 (CLI/env/config) > 継承 (inherit) > 観測 (tty) > 宣言既定 (default)」という序列の一員 — 実行時に判明する端末状態はユーザの明示・設定より弱いが、単なる静的な宣言既定よりは強い (DR-098 §5)。
+順序は固定 (設定可能にしない、暗黙の罠を避ける)。`default` 席で何を返すかは型ごとの解決規則に委ねられる — 通常の型は宣言 `default` の静的値をそのまま返すが、`tty` preset 型はここで tty 観測の fold を優先し宣言 default へフォールバックする独自規則を持つ (DR-099、§12b)。ラダー自体はこの型依存を意識しない 5 段固定のままであり、tty のための専用席は持たない。
 
 ---
 
@@ -865,18 +865,30 @@ name を持つノードが結果スコープ = lexical スコープを作る。c
 
 ---
 
-## 12b. tty 判定値 (DR-098)
+## 12b. tty 判定値 (DR-099)
+
+`tty` は §3.3 の糖衣プリセット (`builtin/tty`) — bool を値空間の土台にする preset 型として `type:` フィールドで選択する。`tty_stream` が必須の config キーなので、bare `type: "tty"` は definition-error になり、通常は definitions.types 経由でストリームを指定した局所名を作って参照する:
 
 ```json
-{"name": "stdin_tty", "type": "bool", "tty": "stdin"}
+{
+  "definitions": {
+    "types": {
+      "stdout_tty": {"name": "builtin/tty", "config": {"tty_stream": "stdout"}}
+    }
+  },
+  "options": [
+    {"name": "use_color", "type": "stdout_tty", "long": true, "env": "CLICOLOR_FORCE", "default": true}
+  ]
+}
 ```
 
-- `tty` の値語彙は `"stdin" | "stdout" | "stderr"` の 3 値 enum。要素の値空間 (bool) の席に、該当ストリームの tty 判定値を注入する
-- 値の優先度: §11.4 を参照 (`default` の直前、`inherit` の後)
-- **tty_provider** は registry の単一スロット。シグネチャは `(stream: "stdin"|"stdout"|"stderr") → bool | null` — null = 提供なし。env_provider (§12) / config_provider (§14.3) と同列 (DR-098)
-- 供給値は既に native bool (string でない) なので、値要素の pieceProcessor のうち `piece_filters` / `parse` (String→T の相) は型の帰結でスキップされ、`value_filters` / `cell_filters` (T→T の相) のみ通過する (DR-050 §4 の config scalar と同じ原理)
-- **`tty:` を bool 以外の要素・値なし要素 (`type: "none"`、dd 含む)・`flag`/`count` プリセットに付けるのは definition-error** (kind=`invalid-range`) — 素の bool 値プリミティブ (プリセットなし) にのみ許可する (DR-098 §4)
-- 評価器の純粋性は不変: パーサ自身が `isatty()` を呼ぶことはなく、ambient probe の実行は provider 実装 (ホスト言語 DX) の責務に閉じる (DR-098 §2)
+- **preset が同梱するのは「暗黙 default = tty 観測の fold」だけ**。long/short/env 席の宣言可否・multiple・filters・required 充足 (値空間あり判定) は素の bool と完全に同一に振る舞う — bool 以外の型や値なし要素・flag/count プリセットに「tty を付与する」という操作自体が存在しない (`type:` は単一選択のため、DR-098 が必要とした definition-error 3 分類は構文的に発生しない)
+- **configurable factory config**: `tty_stream` (`"stdin"｜"stdout"｜"stderr"`、必須 — 未指定は definition-error kind=`invalid-range`) / `tty_cygwin` (bool、既定 true — cygwin pty を terminal 扱いに含めるダイヤル)
+- **`default` 席の解決規則** (§11.4 のラダーは 5 段固定のまま、この席の中身が型依存): `resolved_default = fold(観測) ?? 宣言 default ?? absent`。`fold(観測) = terminal || (tty_cygwin && cygwin)`。観測が得られる限り宣言 default より優先する (「明示 (CLI/env/config) > 継承 (inherit) > 観測 (tty) > 宣言既定 (default)」という序列は DR-098 §5 のまま維持、実装位置が独立ラダー席から型の解決規則へ移っただけ)
+- **source タグ**: 最終値が fold 由来なら `source: "tty"`、宣言 default へフォールバックしたなら `source: "default"` (観測由来 vs 宣言 default 由来の診断区別、`effects` には現れない — 完走後の値確定)
+- **tty_provider** は registry の単一スロット。シグネチャは `(stream: "stdin"|"stdout"|"stderr") → {terminal: bool, cygwin: bool} | null` — null = 提供なし。env_provider (§12) / config_provider (§14.3) と同列 (DR-099。DR-098 の `bool | null` から改訂 — fold の方言 `tty_cygwin` を spec 側の純データ計算として保つため)
+- 供給値 (`terminal`/`cygwin`) は native bool (string でない) なので、fold で計算した値の pieceProcessor 通過は `piece_filters` / `parse` (String→T の相) が型の帰結でスキップされ、`value_filters` / `cell_filters` (T→T の相) のみ通過する (DR-050 §4 の config scalar と同じ原理)
+- 評価器の純粋性は不変: パーサ自身が `isatty()` を呼ぶことはなく、ambient probe の実行は provider 実装 (ホスト言語 DX) の責務に閉じる (DR-098 §2、DR-099 でも不変)
 
 ---
 
@@ -894,9 +906,9 @@ name を持つノードが結果スコープ = lexical スコープを作る。c
 | `multiple` | accumulator+collector+separator の糖衣プリセット | `multiple` (文字列指定時) |
 | `env_provider` | 環境変数解決 | `env` (env installer の lookup が利用) |
 | `config_provider` | config ファイル読込 (パス → JSON 同型の階層オブジェクト。フォーマット・探索・マージは provider の関心、DR-050) | `config_key`, `type: "config_file"` (config installer の lookup が利用) |
-| `tty_provider` | tty 判定値解決 (stream → bool \| null、ambient probe は provider 実装に閉じる、DR-098) | `tty` (tty installer の lookup が利用) |
+| `tty_provider` | tty 判定値解決 (stream → `{terminal, cygwin}` \| null、ambient probe は provider 実装に閉じる、DR-099) | `builtin/tty` factory の config `tty_stream` (`types` registry 経由、`tty` installer は持たない) |
 | `completers` | 補完候補の供給名 (標準 files/dirs 等は生成器が shell 機能へマップ、DR-060) | `completer` |
-| `installers` | 特殊語彙の展開装置 (糖衣展開 + 実行時能力の植え付け、DR-042) | `long`, `short`, `env`, `tty`, `type:"dd"`, `commands[]`, `global`, `inherit`, `repeat`, `multiple`, `config_key`, `requires` / `exclusive_group` / `conflicts_with`, `alias` 等の特殊語彙 |
+| `installers` | 特殊語彙の展開装置 (糖衣展開 + 実行時能力の植え付け、DR-042) | `long`, `short`, `env`, `type:"dd"`, `commands[]`, `global`, `inherit`, `repeat`, `multiple`, `config_key`, `requires` / `exclusive_group` / `conflicts_with`, `alias` 等の特殊語彙 |
 
 installer / registry 住人は自身を説明する **descriptor** を持つ (DR-061): installer は所有語彙 (`owns`、排他 = DR-042 不変則③)・観測語彙 (`observes`、表示・補完等の副次成果物にのみ影響)・自身が読む config キー・emit しうる失敗理由 (`reasons`、DR-066) を宣言する。宣言された所有集合の和が、直列化された定義上の語彙の正当性判定 (誰も所有しない語彙 = DR-054 の unknown-vocab Error) と completeness 検査の判定入力になる。observes は lint / diagnose の素材であり実行時強制はしない。
 
@@ -1240,7 +1252,7 @@ complete(atomic, {before, word, word_suffix?, after?}) → 候補構造
 | **失敗時アクション** | 完全経路 0 本の失敗時、候補経路で selected なら保持 Error に代えて発火する表示動作 (help 等)。early-exit は存在しない (DR-048) |
 | **config_provider** | config ファイル読込の registry 単一スロット。(path) → JSON 同型の階層オブジェクト \| null。フォーマットは provider の関心 (DR-050) |
 | **config_key** | config 階層への明示対応 (link の固定パス DSL、ルート絶対)。未指定なら name スコープ階層との同型対応 (DR-050) |
-| **tty_provider** | tty 判定値解決の registry 単一スロット。(stream: "stdin"\|"stdout"\|"stderr") → bool \| null。ambient probe (isatty 呼び出し) は provider 実装に閉じ評価器の純粋性を崩さない (DR-098) |
+| **tty_provider** | tty 判定値解決の registry 単一スロット。(stream: "stdin"\|"stdout"\|"stderr") → `{terminal: bool, cygwin: bool}` \| null。`builtin/tty` preset 型 (`type:` 経由) の暗黙 default が fold (`terminal \|\| (tty_cygwin && cygwin)`) して消費する。ambient probe (isatty 呼び出し) は provider 実装に閉じ評価器の純粋性を崩さない (DR-099、DR-098 から signature 改訂) |
 | **absent** | 値の無い要素は結果オブジェクトにキー自体が出ない (in-band null 不使用)。反復系・default 持ち・required は absent にならない (DR-051) |
 | **export_key** | 結果キー軸の明示指定 (未指定 = name 由来)。null / "" = 結果キー軸なし → nameless 同化の透過。値の伝搬は止まらない (DR-052) |
 | **alias** | canonical 実体への別入口 (参照ファミリー: ref = 構造継承 / link = 値同期 / alias = 別入口)。結果キーは canonical のみ (DR-057) |
