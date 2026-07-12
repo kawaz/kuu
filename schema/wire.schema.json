@@ -169,6 +169,19 @@
           "items": { "type": "string" },
           "description": "排他グループ名 (constraint installer 所有、DESIGN §9.2)。"
         },
+        "deprecated": {
+          "type": "boolean",
+          "description": "非推奨マーカー — 受理は不変、起動時に構造化警告を積む (DR-058 §2)。alias 要素にも乗る (DR-057 §4)。"
+        },
+        "match": {
+          "type": "string",
+          "description": "dd 専用の regex トリガ (DR-090 §2)。type:\"dd\" の要素のみが読む。"
+        },
+        "self": {
+          "type": "string",
+          "enum": ["drop", "keep"],
+          "description": "dd 専用のマーカー自己保持 (DR-090 §2)。\"drop\" 既定 (消費 1・捨てる) | \"keep\" (消費 0 で自身も positional 域へ)。"
+        },
         "conflicts_with": {
           "type": "array",
           "items": { "type": "string" },
