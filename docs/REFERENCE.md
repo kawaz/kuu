@@ -423,7 +423,7 @@ DR-095 射程外)、それ以外の type は本表が唯一のカタログにな
 | `builtin/number_parser` | factory | number/float 共通の value_parser。構文不一致は全て `not_a_number` |
 | `builtin/int_parser` | factory | int の値空間判定 value_parser (number として読み、値が整数かで判定) |
 | `builtin/bool_parser` | factory | bool の value_parser |
-| `builtin/tty` | factory | bool を値空間の土台にする preset 型 (§2.2「global」の対の記述参照) |
+| `builtin/tty` | factory | bool を値空間の土台にする preset 型 — 暗黙 default = tty 観測の fold (§3.1 の tty 行・DR-099) |
 <!-- kuu-lint:end -->
 
 定義側での参照形は `{"name": "<factory名>", "config": {...}}` (canonical default = factory の
@@ -652,7 +652,7 @@ constraint 系は `<属性名>_violated` で機械的に統一されている。
 | 最初の非ハイフン operand (utility/destination/image 名) 以降を丸ごと子コマンドへ委譲 (xargs/ssh/docker) | `xargs.json`, `ssh.json`, `docker.json` | pattern dd + `self:"keep"` (`{"type":"dd","match":"^[^\\-]","self":"keep"}`、DR-090) — severed 化は greedy 面のみ off、utility/destination/image 自体は positional 側で型付き必須消費を継続 |
 | 前置 `KEY=VALUE` 代入列 + 後続コマンド委譲 (`env FOO=bar cmd`) | `env.json` | pattern dd の合成形 `^[^\-][^=]*$` (代入トークンを pattern から除外) + `piece_filters: [{"name":"regex_match","args":["^[A-Za-z_][A-Za-z0-9_]*="]}]` (DR-090 §4, DR-091) |
 | 固定綴りの primary が有限集合の long_prefix 選択型 (`find -name` 等) | `find.json` | `long` + `values` (or 糖衣)。ただし find の論理演算子・括弧による述語ツリー・`-exec ... \;` 終端子は表現力の限界として `find.json` の `why` に明記 (kuu の平坦な近似が届かない領域) |
-| bare な名前一致トリガ (`height 168.5` 型、prefix なし long) | `fixtures/matcher-readings/long-empty-prefix*.json` | `config: {"long_prefix": ""}` (無条件合法、DR-096 §3.3)。素の operand との衝突は先食い (DR-041) が option 優先で決定的に解決 |
+| bare な名前一致トリガ (`height 168.5` 型、prefix なし long) | `fixtures/matcher-readings/long-empty-prefix*.json` | `config: {"long_prefix": ""}` (無条件合法、DR-096 §3.3)。素の operand との衝突は、**読みが成立する限り**先食い (DR-041) が option 優先で決定的に解決。読みが成立しない (値照合失敗・operand 枯渇) トークンは素通しで positional に落ちる (DR-097 — `long-empty-prefix-typed.json` の `height height` 型がその境界例) |
 
 正本: `corpus/real-cli/README.md` (位置づけ = 非正本・conformance 実食対象外)、各ファイルの `why`
 フィールド (DR 根拠を文中に持つ)
