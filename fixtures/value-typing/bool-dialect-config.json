@@ -1,0 +1,52 @@
+{
+  "why": "bool_parser configurable factory の方言 config 輪郭 (DR-074 §3/§4 / DR-061 §3): definitions.types.bool を `{name: bool_parser, config: {...}}` で shadow すると、canonical 語彙 (true_values [\"true\",\"1\"] / false_values [\"false\",\"0\",\"\"] / case_insensitive true — DR-074 §3 の確定 default) を純データ config で差し替えられる。number_allow_base_prefix (number-base-prefix-optin.json) と同じ {name, config} 参照形で、方言構成が wire に載り portable。ここでは yes/no opt-in (true_values/false_values への追加 — DR-074 §3 が「yes/no は opt-in」と明記した canonical 外語彙の代表) を固定する (case_insensitive:false の輪郭は同じ config 機構の別キーで、本 fixture の射程外)。失敗 reason は not_a_bool (DR-066 v1 表 / DR-095 の bool_parser 宣言 reasons)。factory 名は bare 形 bool_parser = builtin/bool_parser の糖衣 (DR-094 §3)。",
+  "query": "parse",
+  "definition": {
+    "definitions": {
+      "types": {
+        "bool": {
+          "name": "bool_parser",
+          "config": {
+            "true_values": ["true", "1", "yes"],
+            "false_values": ["false", "0", "", "no"],
+            "case_insensitive": true
+          }
+        }
+      }
+    },
+    "options": [
+      {"name": "flag", "type": "bool", "long": true}
+    ]
+  },
+  "cases": [
+    {
+      "id": "optin-yes-accepted-as-true",
+      "why": "true_values に \"yes\" を足した方言では `--flag yes` が true (DR-074 §3: canonical は yes を含まない確定 2 語 {true,1}、yes/no は opt-in — その opt-in の実演)。case_insensitive true (default) なので綴りは ci 照合。",
+      "argv": ["--flag", "yes"],
+      "expect": {
+        "outcome": "success",
+        "effects": [{"entity": "flag", "op": "set", "operand": true, "source": "cli"}],
+        "result": {"flag": true}
+      }
+    },
+    {
+      "id": "optin-no-accepted-as-false",
+      "why": "false_values に \"no\" を足した方言では `--flag no` が false。true 側 (optin-yes) と対で、opt-in が true/false の両 values リストに独立に効くことを固定。",
+      "argv": ["--flag", "no"],
+      "expect": {
+        "outcome": "success",
+        "effects": [{"entity": "flag", "op": "set", "operand": false, "source": "cli"}],
+        "result": {"flag": false}
+      }
+    },
+    {
+      "id": "vocabulary-outside-still-rejected",
+      "why": "方言 config で語彙を広げても、リスト外の入力 (`maybe`) は従来どおり not_a_bool で failure (DR-074 §3: 受理は確定リスト照合、開いた解釈をしない)。argv_pos=1 は値トークンの 0-based 位置。",
+      "argv": ["--flag", "maybe"],
+      "expect": {
+        "outcome": "failure",
+        "errors": [{"element": "flag", "argv_pos": 1, "kind": "parse", "reason": "not_a_bool"}]
+      }
+    }
+  ]
+}
