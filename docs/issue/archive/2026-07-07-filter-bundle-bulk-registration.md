@@ -1,6 +1,6 @@
 ---
 title: filter を bundle で一括登録する口 (idea、優先度低)
-status: open
+status: discarded
 category: design
 created: 2026-07-07T23:22:52+09:00
 last_read:
@@ -8,11 +8,11 @@ open_entered: 2026-07-07T23:22:52+09:00
 wip_entered:
 blocked_entered:
 pending_entered:
-discarded_entered:
+discarded_entered: 2026-07-12T17:52:19+09:00
 resolved_entered:
-discard_reason:
+discard_reason: ["kawaz 裁定 2026-07-12: 不要と判断。具体ユースケース未収集のまま idea 起票されていたが、採用見送りで確定"]
 pending_reason:
-close_reason:
+close_reason: ["discarded"]
 blocked_by:
 origin: 自リポ TODO
 ---
