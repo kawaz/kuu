@@ -1,6 +1,6 @@
 ---
 title: short オプションの per-option attach-only 制約 (space-form 拒否) が表現できない
-status: open
+status: resolved
 category: idea
 created: 2026-07-12T12:57:00+09:00
 last_read:
@@ -9,10 +9,10 @@ wip_entered:
 blocked_entered:
 pending_entered:
 discarded_entered:
-resolved_entered:
+resolved_entered: 2026-07-12T13:49:04+09:00
 discard_reason:
 pending_reason:
-close_reason:
+close_reason: ["dr/DR-096","implemented: short_attached_value (3値 enum: require/allow/deny) として採択・実体化。scope config の軸別再編 (long_eq_sep / short_attached_value) の一部として、gcc/clang の per-option attach-only 制約を要素単位 config override で表現可能にした。corpus/real-cli/gcc.json の optimize/warning 要素に override 追加、fixtures/matcher-readings/short-attached-value.json で輪郭を pin。"]
 blocked_by:
 origin: 自リポ TODO
 ---
