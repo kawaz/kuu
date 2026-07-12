@@ -1,5 +1,5 @@
 {
-  "why": "kawaz/die (Zig 製、echo 級に見えて深い) のプローブ: `die [opts] -- ARGS...` の dd (--) 経由 variadic string positional + long-only value option (--sep) + enum-like or/exact 糖衣 (--trim each/all/none) + short-only flag (-n) + meta flag (--help/--version、dd 前後で解釈反転) の組合せ。dd 単体輪郭は fixtures/dd/basic.json で既に固定済みなので、本ファイルは実在ツールの正典的な使い方 (=dd 越しの ARGS 収集) をなぞる合成プローブ。args positional に `requires: [\"--\"]` を付けて die の実構文 (`die foo` は構文エラー、`die --help` は -- 無しで成功) を表現する (DR-093 §3/§5) — args がトークンを食って committed になったとき (requires のトリガ、DR-045) だけ目的語 `--` (値空間なし dd) の発火 (committed) を要求する型委譲 (DR-093 §3、DR-089 §4 の definition-error を置換)。fixtures/constraints-parse/requires-dd-target.json が同型の骨格を独立に固定済みで、本ファイルはその実在ツール版。残る表現ギャップは 1 点のみ (issue 起票済み): stdin の TTY 分岐 (bare-TTY → help fallback / non-TTY → stdin forward) は argv 由来ではない ambient probe であり、DR-049 の値源ラダー (env/config/inherit/default) のいずれにも該当しない — 本 definition では一切モデル化していない (env/config で代替もできない、値源として存在しない。issue: docs/issue/2026-07-07-tty-value-as-injected-source.md)。--trim の実際のトリム処理 (ASCII whitespace 除去) は kuu のパース関心外 (enum 選択のみパースし、除去自体はアプリ側ロジック) なので args の値は生文字列のまま。",
+  "why": "kawaz/die (Zig 製、echo 級に見えて深い) のプローブ: `die [opts] -- ARGS...` の dd (--) 経由 variadic string positional + long-only value option (--sep) + enum-like or/exact 糖衣 (--trim each/all/none) + short-only flag (-n) + meta flag (--help/--version、dd 前後で解釈反転) の組合せ。dd 単体輪郭は fixtures/dd/basic.json で既に固定済みなので、本ファイルは実在ツールの正典的な使い方 (=dd 越しの ARGS 収集) をなぞる合成プローブ。args positional に `requires: [\"--\"]` を付けて die の実構文 (`die foo` は構文エラー、`die --help` は -- 無しで成功) を表現する (DR-093 §3/§5) — args がトークンを食って committed になったとき (requires のトリガ、DR-045) だけ目的語 `--` (値空間なし dd) の発火 (committed) を要求する型委譲 (DR-093 §3、DR-089 §4 の definition-error を置換)。fixtures/constraints-parse/requires-dd-target.json が同型の骨格を独立に固定済みで、本ファイルはその実在ツール版。stdin の TTY 分岐 (bare-TTY → help fallback / non-TTY → stdin forward) は argv 由来ではない ambient probe だったが、DR-098 で tty_provider (env_provider/config_provider と同列の registry 単一スロット、`(stream) → bool | null`) による注入値源としてモデル化された — definition の `stdin_tty` 要素 (`tty: \"stdin\"`) がこれを表現する (§11.4 のラダーで env/config の後・default の直前に座る、issue docs/issue/2026-07-07-tty-value-as-injected-source.md は本 DR で解消)。kuu が届けるのは `stdin_tty` という bool 値までで、help fallback / stdin forward という分岐の実行そのものは引き続きアプリ側の関心 (DESIGN §13.9)。--trim の実際のトリム処理 (ASCII whitespace 除去) は kuu のパース関心外 (enum 選択のみパースし、除去自体はアプリ側ロジック) なので args の値は生文字列のまま。",
   "query": "parse",
   "definition": {
     "options": [
@@ -12,7 +12,8 @@
       {"name": "n", "type": "flag", "short": "n"},
       {"name": "help", "type": "flag", "long": true},
       {"name": "version", "type": "flag", "long": true},
-      {"name": "--", "type": "dd"}
+      {"name": "--", "type": "dd"},
+      {"name": "stdin_tty", "type": "bool", "tty": "stdin"}
     ],
     "positionals": [
       {"name": "args", "type": "string", "repeat": {"min": 0}, "requires": ["--"]}
@@ -117,6 +118,28 @@
           {"argv_pos": 0, "kind": "parse", "reason": "unexpected_token"},
           {"element": "args", "argv_pos": 1, "kind": "constraint", "reason": "requires_violated"}
         ]
+      }
+    },
+    {
+      "id": "bare-non-tty-stdin-forwards",
+      "why": "`die` (引数・-- なし)、stdin が非 TTY (パイプ等): 実機は stdin forward 分岐に入る (stdin から読んだ内容をそのまま処理)。args positional は requires:[\"--\"] を持つが 0 個消費では committed にならずトリガ不発火なので、requires 制約は評価されず bare 単独 (空 argv) で成功する (help-alone-no-dd 等と同じ『トリガ不発火で制約非参加』の帰結)。stdin_tty=false は tty_provider (DR-098) からの注入 — kuu が届けるのはこの bool 値までで、実際の stdin 読み込み分岐の実行はアプリ側の関心 (DESIGN §13.9)。",
+      "argv": [],
+      "tty": {"stdin": false},
+      "expect": {
+        "outcome": "success",
+        "effects": [],
+        "result": {"sep": " ", "trim": "each", "n": false, "help": false, "version": false, "args": [], "stdin_tty": false}
+      }
+    },
+    {
+      "id": "bare-tty-stdin-shows-help",
+      "why": "`die` (引数・-- なし)、stdin が TTY (端末に直結): 実機は help fallback 分岐に入る。stdin_tty=true は tty_provider (DR-098) からの注入。bare-non-tty-stdin-forwards (前 case) との対で、同じ argv (空) でも tty_provider の応答だけで stdin_tty の値が変わることを示す — help 表示への分岐実行自体は引き続きアプリ側の関心 (DESIGN §13.9)、kuu が保証するのは stdin_tty=true という値の到達のみ。",
+      "argv": [],
+      "tty": {"stdin": true},
+      "expect": {
+        "outcome": "success",
+        "effects": [],
+        "result": {"sep": " ", "trim": "each", "n": false, "help": false, "version": false, "args": [], "stdin_tty": true}
       }
     }
   ]
