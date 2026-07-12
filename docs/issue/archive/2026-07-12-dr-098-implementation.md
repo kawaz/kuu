@@ -1,6 +1,6 @@
 ---
 title: DR-098 を実装完了する
-status: open
+status: resolved
 category: task
 created: 2026-07-12T18:29:54+09:00
 last_read:
@@ -9,10 +9,10 @@ wip_entered:
 blocked_entered:
 pending_entered:
 discarded_entered:
-resolved_entered:
+resolved_entered: 2026-07-12T19:10:45+09:00
 discard_reason:
 pending_reason:
-close_reason:
+close_reason: ["dr/DR-098","implemented: kuu.mbt commit a396d21b (tty_provider + ladder 5位 + definition-error + expected_skips 台帳空復帰)","implemented: conformance decoded=201/ran_cases=536/skipped=0/mismatches=0, CI green 確認済み (2026-07-12)","implemented: codex 事後レビュー Critical/Major なし","note: 直後に kawaz 裁定で型化リワーク (DR-099 予定, wire属性 tty: を type:\"tty\" に置換) が決定 — 本issueの実装は DR-099 で部分的に置き換わる予定"]
 blocked_by:
 origin: 自リポ TODO
 ---
