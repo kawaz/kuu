@@ -1,26 +1,72 @@
 {
-  "why": "`long_prefix: \"\"` × 寛容な positional の共存 (DR-096 §3.3 の対側): 旧 DR-091 §3 の合法条件が恐れた「素の operand が long 経路と衝突する」ケースの帰結を固定する。衝突は破綻でも未定義動作でもなく、読み列挙 (DR-041) が生んだ複数の完全経路が Ambiguous として全解釈列挙される (DR-053) — 定義済みの帰結を持つからこそ先回り禁止が不要、という撤廃根拠そのものの pin。衝突を嫌うアプリは long_eq_sep:\"require\" (eq 必須なら `=` を含むトークンだけが long 候補) や positional を持たない定義で自分の事情に合わせて排除できる (long-empty-prefix.json が衝突なし側の対)。",
+  "why": "`long_prefix: \"\"` × 寛容な positional の共存 (DR-096 §3.3 の対側): 旧 DR-091 §3 の合法条件が恐れた「素の operand が long 経路と衝突する」ケースの帰結を固定する。衝突は破綻でも未定義動作でも Ambiguous でもなく、DR-041 の先食い規定が決定的に解決する — 背骨上の消費点で greedy エントリ (トリガ) が読めるトークンは positional 素通し枝を生成しない (素通しはトリガ不一致 = 読みゼロの時のみ、`prog -v src` で src=\"-v\" の読みが立たないのと同じ規則)。だから空 prefix の先回り禁止は不要、が撤廃根拠。リテラルを positional に渡す正規手段は dd (`--`)。衝突を綴りごと避けたいアプリは long_eq_sep:\"require\" (eq 必須なら `=` を含むトークンだけが long 候補) を選べる (long-empty-prefix.json が衝突なし側の対)。",
   "query": "parse",
   "definition": {
-    "config": {"long_prefix": ""},
+    "config": {
+      "long_prefix": ""
+    },
     "options": [
-      {"name": "height", "type": "string", "long": true}
+      {
+        "name": "height",
+        "type": "string",
+        "long": true
+      }
     ],
     "positionals": [
-      {"name": "rest", "type": "string", "repeat": {"min": 0}}
+      {
+        "name": "rest",
+        "type": "string",
+        "repeat": {
+          "min": 0
+        }
+      }
     ]
   },
   "cases": [
     {
-      "id": "operand-collision-ambiguous",
-      "why": "`height 168.5` — トークン `height` に 2 つの読みが立つ: (1) bare long トリガとして発火し次トークンを値消費 (height=\"168.5\"、rest=[])、(2) 寛容な string positional rest が raw 消費し、続く `168.5` も rest へ (height 未発火 = absent)。両読みとも完全経路に到達するため outcome は ambiguous、全解釈が列挙される (DR-053)。どちらを選ぶかはアプリの定義設計の関心で、パーサは黙って片方に倒さない。",
-      "argv": ["height", "168.5"],
+      "id": "operand-collision-forestalled",
+      "why": "`height 168.5` — トークン `height` は bare long トリガとして読めるため、先食い (DR-041) により positional rest が raw で食う素通し枝は生成されない。option 読み (height が次トークンを space 形で値消費) だけが立ち、一意に success。rest は 0 回発火の反復系なので `[]` (DESIGN §6.1)。",
+      "argv": [
+        "height",
+        "168.5"
+      ],
       "expect": {
-        "outcome": "ambiguous",
-        "interpretations": [
-          {"height": "168.5", "rest": []},
-          {"rest": ["height", "168.5"]}
-        ]
+        "outcome": "success",
+        "effects": [
+          {
+            "entity": "height",
+            "op": "set",
+            "operand": "168.5",
+            "source": "cli"
+          }
+        ],
+        "result": {
+          "height": "168.5",
+          "rest": []
+        }
+      }
+    },
+    {
+      "id": "value-slot-eats-option-lookalike",
+      "why": "`height weight` — height の値スロットは次トークンを raw 消費する (値スロットに背骨がない、DR-041 の `--color -v` → color=\"-v\" と同型)。`weight` という綴りが仮に option 名風でも、値スロット内では再解釈されず height=\"weight\"。先食いは「トリガ位置 (背骨上)」の規則であり、値スロット内には及ばない — 2 つの規則の境界を対で固定する。",
+      "argv": [
+        "height",
+        "weight"
+      ],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {
+            "entity": "height",
+            "op": "set",
+            "operand": "weight",
+            "source": "cli"
+          }
+        ],
+        "result": {
+          "height": "weight",
+          "rest": []
+        }
       }
     }
   ]
