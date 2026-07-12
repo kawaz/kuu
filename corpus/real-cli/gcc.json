@@ -1,16 +1,16 @@
 {
-  "why": "gcc/clang 型文法のプローブ = 『short オプションへの値の直接付着 (-O2, -I/usr/include, -lm 型) はあるが、short クラスタ結合 (-abc → -a -b -c) は無い』という DESIGN §7.2 の `short_combine:false` 方言パラメータの表現力検証。macOS 実機では `/usr/bin/gcc` は Apple clang のエイリアス (`gcc --version` → `Apple clang version ...`、2026-07-12 実機確認)、clang の driver は GNU gcc 互換のオプション体系 (-O/-I/-l/-W/-o/-c/-g) を踏襲するため、これらのオプション形については gcc/clang いずれの観測でも同じ結論になる。short_combine を false にした scope では『単独発火』と『値の直接付着』は生き残り (DESIGN §7.2 L539)、『複数 entry が同一トークンを分け合うクラスタ読み』だけが枝から消える — これを -O2 系の付着 case と、-c/-g 2 flag のクラスタ非発生 case の両方で固定する。表現できなかった/揺れた箇所 (実機検証済み): `-O 2` / `-W all` のような空白区切り (space-form) 値供給は実機で exit 1 (`clang: error: no such file or directory: '2'/'all'`) になり拒否されるが、`-I /usr/include` / `-l m` は exit 0 で受理される (2026-07-12 `gcc -### ` 相当の実行確認) — つまり実世界の gcc/clang は short オプションごとに『付着専用 (attach-only)』か『付着 or 空白区切り両方可』かが個別に決まっている。kuu の現行 spec (DR-041 の値スロット一般規則、grep.json の `-A 3` case と同型) は値を持つ short オプション全てに空白区切り形の読みを一様に許すため、この per-option な attach-only 制約を表現する config ダイヤルが無い (DR-041 は『short の値付着は末尾のみ』等を installer のパラメータとして吸収する方言概念に言及するのみで、DESIGN.md には具体的なキー名の定義が無い)。この差異は本ファイルでは case 化せず (= kuu spec 上は `-O 2` も成功扱いになってしまい実機と食い違うため、誤った期待値を固定しないよう明示的に除外)、報告として上げる。",
+  "why": "gcc/clang 型文法のプローブ = 『short オプションへの値の直接付着 (-O2, -I/usr/include, -lm 型) はあるが、short クラスタ結合 (-abc → -a -b -c) は無い』という DESIGN §7.2 の `short_combine:false` 方言パラメータの表現力検証。macOS 実機では `/usr/bin/gcc` は Apple clang のエイリアス (`gcc --version` → `Apple clang version ...`、2026-07-12 実機確認)、clang の driver は GNU gcc 互換のオプション体系 (-O/-I/-l/-W/-o/-c/-g) を踏襲するため、これらのオプション形については gcc/clang いずれの観測でも同じ結論になる。short_combine を false にした scope では『単独発火』と『値の直接付着』は生き残り (DESIGN §7.2)、『複数 entry が同一トークンを分け合うクラスタ読み』だけが枝から消える — これを -O2 系の付着 case と、-c/-g 2 flag のクラスタ非発生 case の両方で固定する。実機検証で判明した per-option 差 (DR-096 §2 で実体化): `-O 2` / `-W all` のような空白区切り (space-form) 値供給は実機で exit 1 (`clang: error: no such file or directory: '2'/'all'`) になり拒否されるが、`-I /usr/include` / `-l m` は exit 0 で受理される (2026-07-12 `gcc -### ` 相当の実行確認) — 実世界の gcc/clang は short オプションごとに『付着専用 (attach-only)』か『付着 or 空白区切り両方可』かが個別に決まっている。DR-096 の `short_attached_value` (3 値 enum、既定 \"allow\") で表現する: `optimize` / `warning` 要素だけ要素単位 config override `{\"short_attached_value\": \"require\"}` (DR-049 §4 と同機構) を付け、attach-only を scope 既定から局所的に上書きする。`include` / `library` は scope 既定 \"allow\" のまま (両形受理) で実機の attach 受理を満たす。",
   "query": "parse",
   "definition": {
     "config": {"short_combine": false},
     "options": [
       {"name": "compile_only", "type": "flag", "short": "c"},
       {"name": "debug", "type": "flag", "short": "g"},
-      {"name": "optimize", "type": "string", "short": "O"},
+      {"name": "optimize", "type": "string", "short": "O", "config": {"short_attached_value": "require"}},
       {"name": "output", "type": "string", "short": "o"},
       {"name": "include", "type": "string", "short": "I", "multiple": "append"},
       {"name": "library", "type": "string", "short": "l", "multiple": "append"},
-      {"name": "warning", "type": "string", "short": "W", "multiple": "append"}
+      {"name": "warning", "type": "string", "short": "W", "multiple": "append", "config": {"short_attached_value": "require"}}
     ],
     "positionals": [
       {"name": "sources", "type": "string", "repeat": {"min": 0}}
@@ -92,6 +92,19 @@
           {"entity": "sources", "op": "set", "operand": "-cg", "source": "cli"}
         ],
         "result": {"compile_only": false, "debug": false, "include": [], "library": [], "warning": [], "sources": ["-cg"]}
+      }
+    },
+    {
+      "id": "optimize-space-form-diverges-from-real-gcc",
+      "why": "`-O 2` (実機 clang は space-form 値供給を `no such file or directory: '2'` で exit 1 拒否、2026-07-12 実機確認)。kuu spec 上は `optimize` に `short_attached_value: \"require\"` (本 fixture の要素単位 override) が付いているため space 形の読みが生成されず、`-O` 単独トークン (残り文字ゼロ) は付着読み (1 文字以上要求) も持てず完全経路ゼロになる — DR-041 §5 (prefix ガード非採用) により未消費のまま寛容な string positional `sources` に raw 落ちし、後続の `2` も別の positional トークンとして落ちる。**実機との挙動差**: 実機は exit 1 (拒否) だが kuu spec は success (`sources: [\"-O\", \"2\"]`) — kuu の positional 経路は『option 風に見える形』だけを理由に拒否しない設計 (DR-041 §5) であり、classic CLI 互換の unknown-option エラーは方言 opt-in の対象 (同 §、issue `2026-07-12-short-opt-attach-only-space-form` が報告した表現ギャップの最終形、`short_attached_value:\"require\"` により value 供給の拒否自体は表現できたが、それが unexpected_token ではなく寛容 positional への吸収になる点は kuu の一般設計方針であり本 DR の射程外)。",
+      "argv": ["-O", "2"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "sources", "op": "set", "operand": "-O", "source": "cli"},
+          {"entity": "sources", "op": "set", "operand": "2", "source": "cli"}
+        ],
+        "result": {"compile_only": false, "debug": false, "include": [], "library": [], "warning": [], "sources": ["-O", "2"]}
       }
     }
   ]

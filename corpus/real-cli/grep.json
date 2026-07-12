@@ -1,8 +1,8 @@
 {
-  "why": "grep (BSD, macOS 実機) のプローブ: 多数の bool short flag + 値付き文脈オプション (-A/-B/-C num) + long 値オプションの `=` 連結 (--context=num) + 必須 pattern positional + 可変長 files。プローブ対象 = (1) `=` 連結 long 値 (allow_equal_separator による eq-split matcher、§15.8)、(2) 連結 short (`-rn`)、(3) short と long の別綴りが同一セルを指す (-C と --context)。既知の表現ギャップ (別 probe): 実機 grep は `-e pattern` 複数指定 (multiple) を許し、その場合 pattern positional は不要になる (pattern の必須性が -e 有無で反転) — この mode 従属と『1 個目非オプションは pattern か file か』の曖昧 (uniq issue と同類) を避けるため、ここでは pattern 必須の canonical form のみ定義する。",
+  "why": "grep (BSD, macOS 実機) のプローブ: 多数の bool short flag + 値付き文脈オプション (-A/-B/-C num) + long 値オプションの `=` 連結 (--context=num) + 必須 pattern positional + 可変長 files。プローブ対象 = (1) `=` 連結 long 値 (long_eq_sep:\"allow\" による eq-split matcher、§15.8)、(2) 連結 short (`-rn`)、(3) short と long の別綴りが同一セルを指す (-C と --context)。既知の表現ギャップ (別 probe): 実機 grep は `-e pattern` 複数指定 (multiple) を許し、その場合 pattern positional は不要になる (pattern の必須性が -e 有無で反転) — この mode 従属と『1 個目非オプションは pattern か file か』の曖昧 (uniq issue と同類) を避けるため、ここでは pattern 必須の canonical form のみ定義する。",
   "query": "parse",
   "definition": {
-    "config": {"short_combine": true, "allow_equal_separator": true},
+    "config": {"short_combine": true, "long_eq_sep": "allow"},
     "options": [
       {"name": "ignore_case", "type": "flag", "short": "i"},
       {"name": "invert", "type": "flag", "short": "v"},
@@ -65,7 +65,7 @@
     },
     {
       "id": "long-context-equal-sep",
-      "why": "`grep --context=2 foo f.txt` (実機はマッチ前後 2 行)。`=` 連結 long 値 → allow_equal_separator の eq-split matcher が `--context=2` を [--context, 2] の読みに分解 (§15.8)。context セルは -C と同一 (long:[\"context\"] で別綴り追加)。effects: context set 2 → pattern → files。eq-split matcher のプローブの核。",
+      "why": "`grep --context=2 foo f.txt` (実機はマッチ前後 2 行)。`=` 連結 long 値 → long_eq_sep:\"allow\" の eq-split matcher が `--context=2` を [--context, 2] の読みに分解 (§15.8)。context セルは -C と同一 (long:[\"context\"] で別綴り追加)。effects: context set 2 → pattern → files。eq-split matcher のプローブの核。",
       "argv": ["--context=2", "foo", "f.txt"],
       "expect": {
         "outcome": "success",
