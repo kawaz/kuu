@@ -1,0 +1,19 @@
+{
+  "why": "filter 名 (piece_filters に指定される string 域 filter registry String→String のエントリ名) が filters registry の descriptor `owns` 集合 (DR-061 / DR-094) に登録されていない場合は definition-error (kind=unknown-vocab、DR-101)。value_filters と piece_filters は DESIGN §8.3 で同族属性として扱われる (pieceProcessor 内の 2 座席 = 分割 piece の string 域 / parse 後 T 域) — 判定入力 (綴り + owns 集合) が同一なので value-filters-unknown-vocab.json と対称に unknown-vocab で reject する。3 属性を 1 属性だけに絞る非対称は DR-034 の 3 属性統合と相容れない (DR-101 §3 の 3 属性一括適用)。argv は書かない (DR-082 §1、definition の静的検査であり実行しない)。",
+  "query": "definition_error",
+  "definition": {
+    "options": [
+      {"name": "code", "type": "string", "long": true, "piece_filters": ["nonexistent_filter"]}
+    ]
+  },
+  "cases": [
+    {
+      "id": "unknown-vocab-in-piece-filters",
+      "why": "`code` の piece_filters に持つ `nonexistent_filter` は bare 綴りで `builtin/nonexistent_filter` として解決を試みるが、builtin filters registry の owns 集合に載らないため装置選択の段で失敗する (DR-101 §1)。value_filters と piece_filters は座席 (T 域 / string 域) が異なるだけで判定形は同一 — filters registry の owns 集合への所属という単一の判定軸で unknown-vocab に落ちる。",
+      "expect": {
+        "outcome": "definition-error",
+        "errors": [{"element": "code", "kind": "unknown-vocab"}]
+      }
+    }
+  ]
+}
