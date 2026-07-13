@@ -1,0 +1,40 @@
+{
+  "why": "value-enum 形 (exact 枝、§5.3 の values/or 正規形) の or + required:true が正常動作することを固定する対照 fixture。`fixtures/constraints-parse/required-structural-or-branch.json` (structural 形、type 付き枝) が値供給時にも required missing になるバグを pin するのに対し、本 fixture は同じ required + or の組合せで exact 枝 (名前を持たない匿名の照合消費要素、DESIGN §5.2/§5.3) なら値供給時に正しく成立することを実機で確認し pin する — 両者の非対称性がバグの輪郭そのもの (kuu.mbt issue `docs/issue/2026-07-13-structural-or-type-branch-required-missing.md` の観察『value-enum 形は正常動作する』の裏取り)。format は or 自体が name を持ち、枝 (exact \"json\"/\"yaml\") は name を持たない匿名照合要素なので、DESIGN §2.4 の露出規則 (最も浅い name 層で止める) により format 自身が結果キーになり値は選ばれた枝の literal (DR-025 の --color パターン A 型: or に name、子に name 無し → `color:[n,n,n]|string` と同型)。required の充足は DR-093 §1 (値空間を持つ要素 = 最終状態の値の有無) — 経路が確定して format に literal 値が入れば充足する。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {
+        "name": "format",
+        "long": true,
+        "required": true,
+        "or": [
+          {"exact": "json"},
+          {"exact": "yaml"}
+        ]
+      }
+    ]
+  },
+  "cases": [
+    {
+      "id": "enum-branch-supplied",
+      "why": "`--format json`: json 枝が発火し format=\"json\" で完全経路 1 本 (DESIGN §15.1)。値が確定しているので required 充足で success。実機確認 (2026-07-13、KUU_FIXTURES 経由 kuu.mbt): 期待通り success / result `{format:\"json\"}` で一致 (mismatch なし) — structural 形 (required-structural-or-branch.json の int-branch-supplied) と同じ『or + required、値供給』の構図でありながら、こちらは正しく成立することの直接対照。",
+      "argv": ["--format", "json"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "format", "op": "set", "operand": "json", "source": "cli"}
+        ],
+        "result": {"format": "json"}
+      }
+    },
+    {
+      "id": "enum-missing-baseline",
+      "why": "argv 空: format 未発火で required 未充足、failure は自然 (required-structural-or-branch.json の missing-baseline と対称のベースライン、値供給の有無で outcome が正しく分岐することの確認)。element=format (or 自身の name、値の枝は匿名なので宣言元は or 親)。",
+      "argv": [],
+      "expect": {
+        "outcome": "failure",
+        "errors": [{"element": "format", "argv_pos": 0, "kind": "constraint", "reason": "required_violated"}]
+      }
+    }
+  ]
+}
