@@ -1,0 +1,77 @@
+{
+  "why": "curl (curl 8.20.0 / aarch64-apple-darwin25.3.0 / Release-Date: 2026-04-29、実機観測 2026-07-13) の required 実戦を kuu の required 語彙 (DR-093 型委譲) で pin する corpus。curl は required 属性を明示的に持たないが、値スロットの充足評価によって 3 系統の実機観測差分 = (1) `curl` 単独 (URL 欠落) → `curl: try 'curl --help' for more information` (rc=2、help 誘導のみ)、(2) `curl -o file.txt` (option 値供給 + URL 欠落) → `curl: (2) no URL specified` を明示的に emit (rc=2)、(3) `curl -o` / `curl -H` / `curl --header` (option value 欠落) → `curl: option X: requires parameter` の統一メッセージ (rc=2) — が観測される。この 3 系統は全て kuu の kind=parse / reason=missing_operand (CONFORMANCE §2 の value_parser 型照合失敗と同族の値スロット未充足) で表現される。プローブ対象 = (1) positional URL の required:true が URL 欠落を missing_operand で reject できるか、(2) option の argument 欠落 (string 型 option への値供給なし) が同じく missing_operand で reject されるか、(3) curl 実機の「option の値スロットは URL より先に充足評価される」順序性 (`curl -o file.txt` で option 値供給後に URL 欠落が観測される、逆順ではない) が argv 消費順で自然に再現されるか、(4) URL 供給時の success 対照 (required の充足を pin)。curl 実機の error message の細部 (help 誘導 vs `(2) no URL specified`) は curl 内部の 2 段判定 (先に argv 全消費 → URL 席残置検出) の表面差だが、kuu 側は両方 missing_operand の同族失敗として扱う (実装内部の 2 段は message レンダラの関心、kind/reason は同一)。DR-093 型委譲は type:string (値空間あり) の URL に対して「値の有無」判定 (DR-047 §5 不変) を適用する筋 — 値空間なし (type:none / dd) の req 判定は本 corpus 射程外 (別 fixture で pin 済)。既存 curl.json (structural 主眼、URL は repeat:{min:0} の optional、success 5 case) とは分離し、本 corpus は required 主眼で failure/success 混在の対称対で構成する。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {"name": "output", "type": "string", "short": "o", "long": true},
+      {"name": "header", "type": "string", "short": "H", "long": true, "multiple": "append"},
+      {"name": "fail", "type": "flag", "short": "f", "long": true}
+    ],
+    "positionals": [
+      {"name": "url", "type": "string", "required": true}
+    ]
+  },
+  "cases": [
+    {
+      "id": "url-missing-help-hint",
+      "why": "`curl` (引数一切なし、実機観測: `curl: try 'curl --help' for more information` rc=2、help 誘導のみで `(2) no URL specified` は出ない)。argv 空で URL 席が未充足のまま argv 尽きたケース。kuu の required:true positional は「値の有無」判定 (DR-093、type:string の値空間あり) で missing_operand を積む。argv_pos=0 は argv.length=0 の位置 (CONFORMANCE §2 の「どのトークンにも帰属しない失敗は argv.length」規約、次に要求した席の位置)。element=url は required 席の name。実機の 2 段判定 (先に argv 全消費 → URL 席残置検出) は curl の message レンダラの関心で、kuu 側は最初から「値要求 → 供給なし」の単一判定として扱う (kind/reason は同族)。",
+      "argv": [],
+      "expect": {
+        "outcome": "failure",
+        "errors": [{"element": "url", "argv_pos": 0, "kind": "parse", "reason": "missing_operand"}]
+      }
+    },
+    {
+      "id": "url-missing-with-option-value",
+      "why": "`curl -o file.txt` (実機観測: `curl: (2) no URL specified` rc=2、URL 欠落を明示的にエラーコード付きで emit)。option -o が argv[0] を消費し、値 file.txt が argv[1] を消費 → URL 席が argv 尽きた後で未充足 → missing_operand。argv_pos=2 は argv.length=2 の位置 (次に要求した席、CONFORMANCE §2 の argv.length 規約)。実機の error message は `url-missing-help-hint` と異なる (curl 内部の 2 段判定によるレンダリング差) が、kuu 側は同じ kind=parse / reason=missing_operand で扱う — 判定入力 (URL 席 required + argv 尽きた) が同じで、message 差は curl 側の関心。output=file.txt の効果は failure 前提 (URL 席未充足で全体失敗) では期待値に載せない (CONFORMANCE §2 の failure 系は errors のみ検証、effects/result は success 系のフィールド)。",
+      "argv": ["-o", "file.txt"],
+      "expect": {
+        "outcome": "failure",
+        "errors": [{"element": "url", "argv_pos": 2, "kind": "parse", "reason": "missing_operand"}]
+      }
+    },
+    {
+      "id": "option-value-missing-short",
+      "why": "`curl -o` (実機観測: `curl: option -o: requires parameter` rc=2)。short option -o は string 型で argument (value) が必要だが、argv[0] の -o を消費した時点で argv 尽きた → option の値スロット未充足で missing_operand。argv_pos=1 は argv.length=1 の位置 (次に要求した席 = -o の値、CONFORMANCE §2 の argv.length 規約)。element=output は option name (DR-046 の 3 名前軸のうち内部参照 name)。curl 実機は URL 席の充足判定より先に option の値スロット判定を行う (argv 順消費) — kuu の argv 順消費と一致する自然な挙動。実機 error message の細部 (`option -o: requires parameter`) は curl 側のレンダリング、kuu 側は kind/reason で表現。",
+      "argv": ["-o"],
+      "expect": {
+        "outcome": "failure",
+        "errors": [{"element": "output", "argv_pos": 1, "kind": "parse", "reason": "missing_operand"}]
+      }
+    },
+    {
+      "id": "option-value-missing-long",
+      "why": "`curl --header` (実機観測: `curl: option --header: requires parameter` rc=2)。long option --header は string 型で argument 必須。option-value-missing-short の long 入口版 (short/long の同一実体を短側/長側から書ける DR-046 の帰結) で、値スロット未充足の判定入力は入口綴りに関わらず同族 (DR-057 の同一実体 name lookup、entity=header は canonical 実体の name)。argv_pos=1 は argv.length=1 の位置。実機の統一 error message (`option X: requires parameter`) が short/long 共通なのは curl 側の実装レイヤの共通経路の帰結、kuu 側も同 kind/reason で扱う。",
+      "argv": ["--header"],
+      "expect": {
+        "outcome": "failure",
+        "errors": [{"element": "header", "argv_pos": 1, "kind": "parse", "reason": "missing_operand"}]
+      }
+    },
+    {
+      "id": "url-required-success",
+      "why": "`curl https://example.com` (実機は GET 実行、rc=0)。URL 席が充足 → success。required の充足 pin 対照 (url-missing-help-hint との対で、required 属性が値の有無だけで判定していることを確認)。他 option 未発火 → header は multiple:append で `[]` (未発火時の canonical 空配列)、fail は flag で false (未発火時の canonical false)、output は未発火で absent (DR-051、値無い要素は結果に出ない — `output` キーは result に含まれない)。effects は url の 1 set のみ。",
+      "argv": ["https://example.com"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "url", "op": "set", "operand": "https://example.com", "source": "cli"}
+        ],
+        "result": {"header": [], "fail": false, "url": "https://example.com"}
+      }
+    },
+    {
+      "id": "url-with-option-success",
+      "why": "`curl -o out.html https://x` (実機は out.html に保存 rc=0)。option value と URL が両方供給 → success。option-value-missing-short との対で、-o の値スロット (out.html) が argv[1] を消費 → URL 席が argv[2] を消費 → 両方充足。effects の順序は消費順 output → url (argv 順)、result は 2 席分。header/fail の未発火は url-required-success と同じ扱い ([] / false)。",
+      "argv": ["-o", "out.html", "https://x"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "output", "op": "set", "operand": "out.html", "source": "cli"},
+          {"entity": "url", "op": "set", "operand": "https://x", "source": "cli"}
+        ],
+        "result": {"output": "out.html", "header": [], "fail": false, "url": "https://x"}
+      }
+    }
+  ]
+}
