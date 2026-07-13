@@ -1,11 +1,11 @@
 ---
 title: complete クエリの fixture がゼロ件 — 補完挙動のカバレッジが kuu.mbt の wbtest のみ
-status: open
+status: wip
 category: task
 created: 2026-07-12T18:40:35+09:00
 last_read:
 open_entered: 2026-07-12T18:40:35+09:00
-wip_entered:
+wip_entered: 2026-07-13T14:57:45+09:00
 blocked_entered:
 pending_entered:
 discarded_entered:
