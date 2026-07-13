@@ -1,0 +1,61 @@
+# 裁定待ち一覧 (kawaz 確認用)
+
+> 運用: 統括 Claude が kawaz の裁定が必要な確認事項を提示するとき、チャット提示と同一タイミングで本ファイルを更新する。
+> 裁定が下りたら該当セクションを削除し、裁定内容は本来の記録先 (DR / issue / journal / close_reason) に反映する。
+> 本ファイルは常に「現在待ちの質問」だけを持つ (経緯・履歴は git log と各記録先が担う)。
+> チャットでは「VF-Q 待ち」のようにラベルだけで参照する。回答はラベル + 選択肢記号 (例「VF-b で」) だけで通じる。
+> 参照パスは本リポ (spec) 相対。kuu.mbt 側は「kuu.mbt の <path>」と表記する。
+
+## VF-Q: value_filters / piece_filters に ARRAY 専用綴りを書いた時の kind
+
+`value_filters: ["unique"]` のように scalar 席に ARRAY registry (Acc→Acc) にのみ載る綴りを書いた場合の definition-error kind。cell_filters 非 accum 位置の invalid-range 対称化 (DR-102 §1) は決定済みで、争点はこの 2 属性のみ。
+
+- **VF-a**: unknown-vocab のまま (DR-102 §2 の現文面。論拠 = DR-079 §1 の座席格子上、この 2 席は ARRAY registry と比較される場面が構造上ない)
+- **VF-b** (統括推し): invalid-range に対称化 (論拠 = DR-082 §2 の「unknown-vocab は語彙自体が未知に取っておく」— `unique` は filter 語彙の別層に実在するので「未知」ではない)
+
+参照: docs/decisions/DR-102-non-accum-array-only-filter-invalid-range.md §2 / DR-101-unknown-filter-definition-error.md §3 / DR-082-definition-error-fixture-format.md §2 / DR-079-filter-seat-lattice-and-artifact-anchored-names.md §1
+
+効き方: これが決まると DR-102 サイクルが決着し、ロックステップ push (spec → pin bump → kuu.mbt) → journal まで進む。VF-b の場合は §2 書き換え + fixture 2 件 + 実装拡張 (worker 待機済み、小 diff)。
+
+## VF-Q2: land 済み DR-101 §3 への注記 1 文追加の可否
+
+DR-102 波及節が「DR-101 §3 末尾に『本節の判定順は非 accum 位置にも対称適用される (DR-102)』の 1 文注記」を提案している。DR 本文不変規則の例外は Superseded 節の前例のみなので、注記型の追記を許すかは kawaz 判断。不許可でも INDEX と DR-102 から逆引き可能。
+
+- **VF-Q2-a**: 注記を許す (Superseded 節と同型の構造的ポインタ扱い)
+- **VF-Q2-b**: 不許可 (DR-101 は無編集、逆引きは INDEX に任せる)
+
+参照: docs/decisions/DR-102-non-accum-array-only-filter-invalid-range.md 波及節
+
+## ALO-Q: at-least-one の新語彙
+
+tar 型 (独立トリガを持つ flag 群の「最低 1 つ必須」) の表現。kawaz スケッチ ({required:true, or:[{ref}...]}) は検証の結果不成立 (kuu の or は共有トリガ後の値文法分岐専用)。
+
+- **ALO-a** (統括推し): definition/scope 側に groups 座席新設 — `"groups": {"mode": {"required": true}}`
+- **ALO-b**: exclusive_group の object 詳細形
+- **ALO-c**: 見送り
+
+参照: docs/issue/2026-07-12-exclusive-group-at-least-one-required.md / docs/journal/2026-07-13-post-dr100-fixes-and-alo-recon.md
+
+## BR-Q: kuu.mbt 旧リモート枝の削除 (不可逆、Yes/No)
+
+kuu.mbt の origin に残る kuu-v0 / ast-spec / slice / claude/review-* / dependabot 枝を削除してよいか。一覧の実物確認は `git ls-remote --heads origin` (kuu.mbt 側)。
+
+参照: docs/findings/2026-07-13-v1-readiness-audit.md の V1-R01 行 (ast-spec 枝の残存観測)
+
+## COMP-Q1〜Q5: complete fixture 系統の設計
+
+正本: **docs/findings/2026-07-13-complete-fixture-recon.md §5** (各 Q の詳細)。関連 issue: docs/issue/2026-07-12-complete-query-fixture-coverage-gap.md
+
+- **COMP-Q1** 入力フィールド名: `before`/`after` 新設 (統括推し) / `argv` 再利用 — 背景は同 findings §2.2
+- **COMP-Q2** `candidates[].meta` の検証: 既存の「省略 = default と等価」規約維持 + 非 default を明示する pin fixture (統括推し) / complete 専用に必須化
+- **COMP-Q3** completer 名の設計乖離: DESIGN は候補に「型情報 / completer 名」を明記、実装 `Cand` (kuu.mbt の src/core/node.mbt:601-609) に completer 名フィールドが無い。(a) v1 は返さない設計 / (b) 実装漏れ — **推し無し、kawaz の意図確認が必要**
+- **COMP-Q4** `path` の扱い: wire に含めず検証対象外と明記 (統括推し — dedup 規則が path を候補同一性から除外) / 含めるが比較無視 / fixture 化しない
+- **COMP-Q5** 「7 op 表と無関係」明示文: 書かない (統括推し — complete 節冒頭を包含側で書けば自然に排除される) / 再発防止に明示
+
+## V1-Q1〜Q3: v1.0.0 発行条件まわり
+
+正本: **docs/findings/2026-07-13-v1-readiness-audit.md §4** (各 Q の詳細)。
+
+- **V1-Q1** (最優先): DR-068「fixture 全 pass」の範囲 — (a) parse-core のみ / (b) 4 プロファイル全部。統括推し = 「バンドル現存 fixture の参照実装 green」(現在 210/210 で充足) と整理し、プロファイルは第三者実装の準拠宣言単位と切り分ける小 DR で閉じる。参照: docs/decisions/DR-068-json-schema-lifecycle.md / DR-069-conformance-profiles.md / docs/issue/archive/2026-07-08-schema-materialization-and-reason-descriptors.md (SCH-Q4 の過去 3 案)
+- **V1-Q2**: lowering 単独 golden 欠落 6 種 (command/global/constraint/alias/inheritable/config) は意図的省略か拡充漏れか。参照: docs/decisions/DR-070-lower-fixture-format.md / fixtures/lowering/
+- **V1-Q3**: complete フォーマット確定 DR の起票時期 (V1-Q1 と COMP-Q の裁定に従属)
