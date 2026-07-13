@@ -107,6 +107,7 @@
 - [DR-011](DR-011-variant-dsl.md): variant の文字列 DSL とオブジェクト形式 — set の args なし形 (主入口) は updated by DR-071
 - [DR-071](DR-071-long-variant-list.md): long の責務分離 — variant リスト一級化 (各要素が入口 1 個、`:set` = 主入口) + `long: true` は [":set"] の糖衣、absent = false = [] = 入口なし (presence 罠の構造的消滅)、主入口なし variant のみが表現可能に、旧 `long: []` の意味変更 (破壊的、ドラフト期)
 - [DR-045](DR-045-effect-descriptors.md): 効果記述子 — 値セル操作は純データ (set/default/unset/empty、committed は効果が明示制御)、効果列の判定キー精密化
+- [DR-101](DR-101-unknown-filter-definition-error.md): filter 名の未登録は definition-error (kind=unknown-vocab) — value_filters / piece_filters / cell_filters (非 accum 位置) の 3 属性で filter 名が filters registry の descriptor `owns` 集合に載らない場合は `parse_definition` が静的 reject (runtime reason `unknown_filter` は wire から消滅、DR-042 の filter/installer 同格 + DR-054 §1 の「lowering が構成できない = Error」の filter 側適用)、専用 kind は新設せず DR-054 §4 の既存 8 kind の `unknown-vocab` に吸収 (DR-082 §2 の受け皿規定を直接適用、long update transform 名検査 DR-077 §2 と同族)、accum 位置の cell_filters (ARRAY registry) は対象外で invalid-range が担う層違い判定は不変、filter 装置内の invalid-argument (DR-085 の regex_match compile 失敗) とは別層
 
 ## help / 補完 / 表示メタデータ
 
