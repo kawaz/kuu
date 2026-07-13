@@ -1,5 +1,5 @@
 {
-  "why": "positional group (named group positional、`{\"name\":..,\"positionals\":[...]}` の入れ子 — export-key/transparent-seq.json と同じ wire 形、schema/wire.schema.json の node.positionals は任意ノードに再帰的に許される) の内側 leaf に configurable factory 型を置いても config が carry されることの輪郭 (DESIGN §13.3 全区分一様 + DR-028/DR-035 の type 参照解決順)。yn_bool (bool_parser + bool_true_values/bool_false_values 拡張、DR-100/DR-074 §3) を group の内側 leaf (`gflag`) と、group を介さない通常 positional (`ctrl`) の双方に同じ型で置き、同じ入力トークンに対して同じ結果になることを pin する — 型シャドウは『型の差し替え』であり、参照される node が group の内側かどうかで解決が変わる規定は無い。group は repeat:{min:1,max:1} で厳密 1 回発火を強制 (DR-044: repeat/multiple を宣言した要素は max の値に依らず配列になる — 1 回でも [{...}] の配列)。ctrl は group の**前**に置く (group の**後**に通常 positional を続けると、型シャドウ carry とは無関係な別の未消費バグ — group が repeat:{min:1,max:1} でも後続 positional 用のトークンを残さない — に当たることを個別 probe で確認済み、carry gap の検証を汚染しないための配置)。group 内側 leaf が方言 config を失って canonical bool にフォールバックしていれば \"yes\"/\"no\" は canonical 語彙 (true/1, false/0/\"\") の外なので not_a_bool で group 自体が完全経路 0 本の failure に転じる — group と ctrl の結果が乖離すれば carry gap の直接証拠になる。",
+  "why": "positional group (named group positional、`{\"name\":..,\"positionals\":[...]}` の入れ子 — export-key/transparent-seq.json と同じ wire 形、schema/wire.schema.json の node.positionals は任意ノードに再帰的に許される) の内側 leaf に configurable factory 型を置いても config が carry されることの輪郭 (DESIGN §13.3 全区分一様 + DR-028/DR-035 の type 参照解決順)。yn_bool (bool_parser + bool_true_values/bool_false_values 拡張、DR-100/DR-074 §3) を group の内側 leaf (`gflag`) と、group を介さない通常 positional (`ctrl`) の双方に同じ型で置き、同じ入力トークンに対して同じ結果になることを pin する — 型シャドウは『型の差し替え』であり、参照される node が group の内側かどうかで解決が変わる規定は無い。group は repeat:{min:1,max:1} で厳密 1 回発火を強制 (DR-044: repeat/multiple を宣言した要素は max の値に依らず配列になる — 1 回でも [{...}] の配列)。ctrl は group の**前**に置く (group の**後**に通常 positional を続けると、型シャドウ carry とは無関係な別の未消費バグ — group が repeat:{min:1,max:1} でも後続 positional 用のトークンを残さない — に当たることを個別 probe で確認済み、carry gap の検証を汚染しないための配置)。group 内側 leaf が方言 config を失って canonical bool にフォールバックしていれば \"yes\"/\"no\" は canonical 語彙 (true/1, false/0/\"\") の外なので not_a_bool で group 自体が完全経路 0 本の failure に転じる — group と ctrl の結果が乖離すれば carry gap の直接証拠になる。**別根の孤立バグの pin (or-leaf-factory-config.json と同根)**: gflag/ctrl は本 fixture の両 case で実際に発火し値も正しく group 内 (`grp:[{gflag:...}]`) に現れるが、それとは別に gflag が **top-level にも `gflag:false` として重複出現**しうる — これは carry gap ではなく『plain bool は暗黙 default を持たない』(LOWERING §A.5 の default:false は flag preset 固有の展開、DR-099 §2 の `?? absent` 終端、fixtures/value-sources/tty-ladder.json の既存 pin、DESIGN §9.3 精密化) という一般規則への違反であり、加えて DESIGN §2.6 の『結果キーを持つスコープ生成要素』nesting モデル (group 内側の要素は group の row の中にのみ現れるべきで、無関係な top-level キーへ漏れ出してはならない) にも反する。expect はこの漏れが起きない spec 正の形 (grp の中にのみ gflag が現れる) を pin する。",
   "query": "parse",
   "definition": {
     "definitions": {
@@ -27,7 +27,7 @@
   "cases": [
     {
       "id": "group-inner-leaf-carries-true",
-      "why": "argv `yes yes`: ctrl (通常 positional、宣言順で先) と grp (group 内側 leaf gflag、宣言順で後) の両方が同じ yn_bool 方言で \"yes\" を true と読む。config が group 内側で carry されていれば ctrl=true / grp=[{gflag:true}] の両方が成立し一致する。group が repeat:{min:1,max:1} なので grp は必ず 1 要素の配列 (DR-044)。消費順は宣言順 (ctrl が先、grp/gflag が後、DR-018) なので effects は ctrl→gflag の順。",
+      "why": "argv `yes yes`: ctrl (通常 positional、宣言順で先) と grp (group 内側 leaf gflag、宣言順で後) の両方が同じ yn_bool 方言で \"yes\" を true と読む。config が group 内側で carry されていれば ctrl=true / grp=[{gflag:true}] の両方が成立し一致する。group が repeat:{min:1,max:1} なので grp は必ず 1 要素の配列 (DR-044)。消費順は宣言順 (ctrl が先、grp/gflag が後、DR-018) なので effects は ctrl→gflag の順。result は {ctrl, grp} の 2 キーのみ — gflag は group の row (`grp[0].gflag`) の中にのみ現れ、DESIGN §2.6 の nesting モデル通り top-level に独立キーとして漏れ出さない。もし top-level に `gflag` (または未参照の他要素) が false で追加出現するなら、それは group の carry とは無関係な『plain bool への暗黙 default:false 誤注入』(or-leaf-factory-config.json の fallback/baseline ケースと同根、DESIGN §9.3 精密化) の症状。",
       "argv": ["yes", "yes"],
       "expect": {
         "outcome": "success",
@@ -40,7 +40,7 @@
     },
     {
       "id": "group-inner-leaf-carries-false",
-      "why": "argv `no no`: true 側 (carries-true) との対称で bool_false_values の \"no\" 拡張が group 内側でも carry されることを固定する。ctrl=false / grp=[{gflag:false}] が一致すれば group 内側の carry は正しい。",
+      "why": "argv `no no`: true 側 (carries-true) との対称で bool_false_values の \"no\" 拡張が group 内側でも carry されることを固定する。ctrl=false / grp=[{gflag:false}] が一致すれば group 内側の carry は正しい。本 case は gflag の実発火値そのものが false なので、carries-true で説明した『top-level への暗黙 default:false 誤注入』症状 (値によらず常に false を注入) と、正しい発火結果 (たまたま false) との区別がつきにくい — carries-true と対で走らせることで『top-level の重複キーが発火値に追従しない (常に false)』ことを識別できる設計。",
       "argv": ["no", "no"],
       "expect": {
         "outcome": "success",

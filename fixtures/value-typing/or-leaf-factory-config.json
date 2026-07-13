@@ -57,7 +57,7 @@
     },
     {
       "id": "bool-dialect-or-leaf-fallback-to-int-branch",
-      "why": "`--switch 5`: \"5\" は yn_bool の方言語彙 (canonical + yes/no) のどれにも含まれないため yn_bool 枝は確実に死に (not_a_bool)、int 枝のみ生存 → switch_n=5。この対照ケースが or 構造が『2 枝とも生きている』ことを証明する — yn_bool 枝が常に成立不能なら carries-true/false ケースは int 枝の値が偶然 bool っぽく見えているだけの偽陽性になりうるが、本ケースで int 枝も独立に機能することを固定する。",
+      "why": "`--switch 5`: \"5\" は yn_bool の方言語彙 (canonical + yes/no) のどれにも含まれないため yn_bool 枝は確実に死に (not_a_bool)、int 枝のみ生存 → switch_n=5。この対照ケースが or 構造が『2 枝とも生きている』ことを証明する — yn_bool 枝が常に成立不能なら carries-true/false ケースは int 枝の値が偶然 bool っぽく見えているだけの偽陽性になりうるが、本ケースで int 枝も独立に機能することを固定する。result に switch_bool (敗れた枝) も ctrl (この argv では一度も参照されない別 option) も現れないのは 2 つの独立した absent 理由が重なった帰結: switch_bool は『or 枝が不成立なら absent』(DR-051 §1、carry gap とは無関係の一般規則、held-errors-same-depth.json 等と同型)。ctrl は『未発火の plain bool は暗黙 default を持たないので absent』(LOWERING §A.5 — default:false は flag preset 固有の展開であり bool 単体には無い。DR-099 §2 の `resolved_default = fold(観測) ?? 宣言 default ?? absent` 終端、および fixtures/value-sources/tty-ladder.json の cygwin_dial_on/off 未発火ケースが同じ教義を preset 型の側から裏づける、DESIGN §9.3 精密化)。yn_bool が bool_config 付き TypeShadow を経由するために ctrl/switch_bool が false として result に漏れ出すのであれば、それは carry gap とは別根の実装バグ (plain bool への暗黙 default:false 誤注入、本来 flag preset にのみ許される) の症状であり、本 fixture はそれも合わせて pin する。",
       "argv": ["--switch", "5"],
       "expect": {
         "outcome": "success",
@@ -77,7 +77,7 @@
     },
     {
       "id": "bool-dialect-direct-option-baseline",
-      "why": "対照 (or を介さない通常参照、DESIGN §13.3 の位置非依存の baseline): `--ctrl yes` は yn_bool を素の option type として直接参照する経路で、bool-dialect-config.json と同型に成立する (この経路は carry gap の対象外、DR-061 の configurable factory 解決は or の有無に関わらず同じ)。carries-true ケースと同じ入力 \"yes\" が同じ結果 true になることで『参照位置 (or 枝 vs 通常参照) によらず同一の型解決になるべき』という spec の主張 (DESIGN §13.3 全区分一様) を対で pin する。",
+      "why": "対照 (or を介さない通常参照、DESIGN §13.3 の位置非依存の baseline): `--ctrl yes` は yn_bool を素の option type として直接参照する経路で、bool-dialect-config.json と同型に成立する (この経路は carry gap の対象外、DR-061 の configurable factory 解決は or の有無に関わらず同じ)。carries-true ケースと同じ入力 \"yes\" が同じ結果 true になることで『参照位置 (or 枝 vs 通常参照) によらず同一の型解決になるべき』という spec の主張 (DESIGN §13.3 全区分一様) を対で pin する。result に switch_bool (この argv では一度も参照されない別 option の or 枝) が現れないのは『未発火の plain bool は暗黙 default を持たないので absent』という一般規則 (LOWERING §A.5 の default:false は flag preset 固有の展開、DR-099 §2 の `?? absent` 終端、fixtures/value-sources/tty-ladder.json の既存 pin、DESIGN §9.3 精密化) の帰結 — switch と addr の or 定義自体は本 case の入力に一切関与しないため、switch_bool が false 等の値で漏れ出すならそれは plain bool への暗黙 default:false 誤注入という carry gap とは別根の実装バグの症状。",
       "argv": ["--ctrl", "yes"],
       "expect": {
         "outcome": "success",
