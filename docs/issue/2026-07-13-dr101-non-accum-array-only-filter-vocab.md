@@ -1,11 +1,11 @@
 ---
 title: DR-101 §3 判定マトリクス — 非 accum × ARRAY-only 綴りの座席が未定 (unknown-vocab で reject するが対称論理では invalid-range が本来の座席)
-status: idea
+status: wip
 category: design
 created: 2026-07-13T12:47:53+09:00
 last_read:
 open_entered:
-wip_entered:
+wip_entered: 2026-07-13T14:56:49+09:00
 blocked_entered:
 pending_entered:
 discarded_entered:
