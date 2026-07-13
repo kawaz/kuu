@@ -1,0 +1,40 @@
+{
+  "why": "positional group (`{\"name\":..,\"positionals\":[...]}` の入れ子、export-key/transparent-seq.json と同じ wire 形) の直後に通常 positional が続く輪郭を pin する (kuu.mbt issue `docs/issue/2026-07-13-positional-group-trailing-missing-operand.md`、型シャドウ調査と無関係の最小構成で発見)。grp は repeat:{min:1,max:1} で厳密 1 回発火 (DR-044: repeat/multiple を宣言した要素は max の値に依らず配列、1 回でも `[{...}]`)。spec 導出: grp が 1 row 消費して閉じた後、背骨は宣言順で次の positional (ctrl) へ進むべき (DESIGN §6.1 の repeat installer が ref 再帰へ lowering する構造 — unfold は現在の背骨に留まる、DR-041 §4 — ので、閉包の完了は背骨を空にせず次要素へ引き渡す)。DESIGN §15.1 の契約 (入力を全消費する完全解決経路がちょうど1本) からも、argv 2 トークンに対し grp が 1 トークン・ctrl が 1 トークンで全消費する経路が唯一の完全経路になるはずで success が導かれる。取り分選好 (DR-043) は同一列に複数 repeat 閉包が並ぶ場合の話で、grp (repeat) と ctrl (非 repeat scalar) の間には取り分の自由度は無く、grp が max:1 で必ず 1 個に確定するため経路は一意。value-typing/positional-group-factory-config.json は本バグの回避策として ctrl 相当の positional を **group の前** に置く配置 (why にその旨明記) を採用しており、本 fixture はその回避策を外した「group が先」の配置そのものを pin する — 修正後は当該 fixture の回避配置解除の判断材料にもなる。",
+  "query": "parse",
+  "definition": {
+    "positionals": [
+      {
+        "name": "grp",
+        "repeat": {"min": 1, "max": 1},
+        "positionals": [
+          {"name": "gflag", "type": "string"}
+        ]
+      },
+      {"name": "ctrl", "type": "string"}
+    ]
+  },
+  "cases": [
+    {
+      "id": "group-then-scalar-consumed",
+      "why": "argv `a b`: grp (repeat:{min:1,max:1}) が \"a\" を 1 row 消費して閉じ (`grp:[{gflag:\"a\"}]`)、背骨が宣言順 (DR-018) で次の ctrl に進み \"b\" を消費 (`ctrl:\"b\"`) — 全2トークン消費の完全経路がちょうど1本 (DESIGN §15.1) で success。実機確認 (2026-07-13、KUU_FIXTURES 経由 kuu.mbt 実行): 実際は `fail:missing operand for ctrl` — grp 消費後に背骨が ctrl へ進まず、grp が全体を占有したまま ctrl 用のトークンが残っていても割り当てられない (issue 記載のバグそのもの)。本 case は success を期待値として pin し、実装修正の受け入れ条件とする。",
+      "argv": ["a", "b"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "gflag", "op": "set", "operand": "a", "source": "cli"},
+          {"entity": "ctrl", "op": "set", "operand": "b", "source": "cli"}
+        ],
+        "result": {"grp": [{"gflag": "a"}], "ctrl": "b"}
+      }
+    },
+    {
+      "id": "single-token-both-unsatisfiable",
+      "why": "argv `a` (1 トークンのみ): grp と ctrl の両方を満たすには最低2トークン要るため、バグの有無に関わらず構造的に失敗するはずの対照ケース。grp は貪欲に \"a\" を消費して min:1 を満たすため grp 自体は充足するが (grp の repeat 未達エラーではない)、ctrl に割り当てるトークンが残らず missing_operand — group-then-scalar-consumed が success になるべきところを bug で failure になるのに対し、本 case は bug の有無に関わらず一貫して failure であるべき (実装修正後もこの case の outcome は変わらないはずのベースライン)。実機確認 (2026-07-13): `fail:missing operand for ctrl` で期待通り一致 (mismatch なし)。element=ctrl (constraint 側でなく token 側の不足、DR-041 の先食い規則で grp が先に確定した後の残余トークン不足)、argv_pos=argv.length=1。",
+      "argv": ["a"],
+      "expect": {
+        "outcome": "failure",
+        "errors": [{"element": "ctrl", "argv_pos": 1, "kind": "parse", "reason": "missing_operand"}]
+      }
+    }
+  ]
+}
