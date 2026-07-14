@@ -23,11 +23,17 @@
 
 **hint はこの単純化と直交する**: `final_filters` に ARRAY-only 綴り (`unique`) を書いた場合、kind は単純な `unknown-vocab` だが、DR-054 §4 の `hint` フィールド (message と同様レンダラ管轄) を使って「`unique` は `accum_filters` にのみ存在する綴りです」という誘導情報を提示できる。hint の生成要否・実装は kuu.mbt 側の裁量 — kind の選択にも fixture の `expect.errors` 比較 (element+kind の集合比較、DR-082 §1) にも影響しない。
 
+> **明確化 (統括検証 2026-07-14、codex レビュー M-5 の反映): 「1 属性 1 registry」は綴りの登録有無だけでなく、factory 固有の静的検査 (`regex_match` の pattern compile 検査等) にも及ぶ — 検査はその属性が要求する registry が当該綴りを所有する場合にのみ走る。** ARRAY filter registry (`accum_filters` 用) は `regex_match` を所有しないため、`accum_filters` に `regex_match` という綴りを書いても、単純な unknown-vocab (綴りが ARRAY registry の owns 集合に無い) としてのみ判定され、scalar filter registry 側の pattern compile 検査 (DR-085 §1) は走らない。この限定を欠くと「未登録の綴りでも他 registry の同名 descriptor に基づく副次検査を行う」という例外を暗黙に認めることになり、「自 registry のみを見る」という §2 本文の単純化そのものと矛盾する。
+
 ### 3. 排他制約: definition-error kind=invalid-range (正規ゲートは parse_definition)
 
 非 accum 要素に `accum_filters` を書く、または accum 要素に `final_filters` を書くケース (§1 の accum 要素定義 = `is_accum_elem`、multiple/repeat/separator のいずれか) は、その要素にそもそも存在しない属性を書いた構造不一致であり、`fixtures/definition-error/scalar-array-default-invalid-range.json` (非 accum 要素への配列 default 宣言、DR-083 §5、同じ `is_accum_elem` 判定を使う先例) と同型の **kind=invalid-range** で reject する。新 kind は不要 — 「要素の宣言形と合わない属性/値」は definition-error の確立パターン (DR-082 §2 の「構文上は書けるが構成として不成立」系統)。
 
 正規のゲートは `parse_definition` (definition-error、fixture で pin 可能)。`schema/wire.schema.json` の `if/then` (accum 要素該当性で許容 properties を分岐) は補助として併用してよいが必須ではない — schema を経由しない conformance 実装では排他制約が効かなくなるため、spec としての正規契約は definition-error 側に置く。
+
+> **明確化 (統括検証 2026-07-14、codex レビュー M-6 の反映): wrong-seat 判定 (本節) は構造ゲート先行 — 判定が成立したら、その属性の中身 (綴りの登録有無・factory 固有検査) は一切解釈しない。** 要素の宣言形と合わない属性 (非 accum 要素の `accum_filters`、accum 要素の `final_filters`) は、その属性にどんな綴りが書かれていても常に invalid-range のみを報告する — 綴りが unknown-vocab 相当 (§2 の owns 集合に無い) であっても、wrong-seat 判定が先行し unknown-vocab との二重報告は発生しない。definition_error の fixture 契約 (`expect.errors` は definition の全エラーの完全一致集合、DR-054 §4) における観測可能な wire 契約としてこれを固定する。
+>
+> **明確化 (統括検証 2026-07-14、codex レビュー M-9 の反映): `type:"none"` 要素 (値空間なし、DR-089) への `final_filters` 宣言も同じ invalid-range に属する。** `final_filters` は T→T (§1) で値空間の型 T への変換/検証を前提とするが、none には値空間そのものが無く T が存在しないため構成不能 — DR-089 §4 (値充足を要求される席には値空間が無いため立てない、静的に既知なので definition-error) と同型の帰結。accum 席の `accum_filters` (Acc→Acc) も同じく T ドメインへの依存があるため、none 要素が accum 適格 (multiple/repeat/separator のいずれか) を持つ場合の `accum_filters` 宣言も同型で invalid-range。`value_filters`/`piece_filters` (§1 座席 C/B) へ同じ理が及ぶかは、値スロットの構造 (DR-089 §1 の「食って捨てる」パターン) とトークン受理層の関係が本 DR の射程では未整理であり、本明確化の対象外とする。
 
 ### 4. argv_pos 帰属: `final_filters`/`accum_filters` ともに `argv.length`
 
