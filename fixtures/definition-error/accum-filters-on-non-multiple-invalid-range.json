@@ -1,0 +1,19 @@
+{
+  "why": "accum_filters (multiple 宣言のある値要素専用、ARRAY filter registry Acc→Acc) を multiple 宣言のないスカラー要素に書くのは、その要素にそもそも存在しない属性を宣言した構造不一致であり definition-error kind=invalid-range で reject する (DR-102 §1/§3) — `fixtures/definition-error/scalar-array-default-invalid-range.json` (非 multiple 要素への配列 default 宣言、DR-083 §5) と同型の判定パターン。正規のゲートは parse_definition (SPL-Q5、schema の if/then は補助に留める)。argv は書かない (DR-082 §1、definition の静的検査であり実行しない)。",
+  "query": "definition_error",
+  "definition": {
+    "options": [
+      {"name": "port", "type": "number", "long": true, "accum_filters": ["unique"]}
+    ]
+  },
+  "cases": [
+    {
+      "id": "accum-filters-on-non-multiple-element-is-invalid-range",
+      "why": "`port` は multiple 宣言を持たないスカラー要素 (number) だが、multiple 専用の `accum_filters` を宣言している。accum_filters が要求する ARRAY filter registry (Acc→Acc) は multiple 宣言のある要素にしか意味を持たず、DR-102 §1 の対応表に反する構造不一致として定義時点で invalid-range になる。対の `final-filters-on-multiple-invalid-range.json` (multiple 要素への final_filters 宣言) と合わせて排他制約の両方向を固定する。",
+      "expect": {
+        "outcome": "definition-error",
+        "errors": [{"element": "port", "kind": "invalid-range"}]
+      }
+    }
+  ]
+}
