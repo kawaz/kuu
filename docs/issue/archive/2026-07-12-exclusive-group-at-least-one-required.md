@@ -1,6 +1,6 @@
 ---
 title: exclusive_group に「少なくとも1つ必須」の表現が無い — tar のモード必須が書けない
-status: wip
+status: resolved
 category: design
 created: 2026-07-12T18:39:04+09:00
 last_read:
@@ -9,10 +9,10 @@ wip_entered: 2026-07-14T10:13:19+09:00
 blocked_entered:
 pending_entered:
 discarded_entered:
-resolved_entered:
+resolved_entered: 2026-07-14T13:42:25+09:00
 discard_reason:
 pending_reason:
-close_reason:
+close_reason: ["dr/DR-103","implemented"]
 blocked_by:
 origin: 自リポ TODO
 ---
