@@ -13,7 +13,7 @@
 裁定済み: **ACC-Q3 = Result 化** (kawaz 2026-07-14。線引き =「filter 席 = fallible / 構造装置 = total」、実装サイクルは complete DR の後)。ACC-Q1/Q2 は kawaz の再検討 (extend は言語非依存文脈で別義リスク / push も単独では迷い / 一般論では flat=spread・concat、そのまま=wrap・nest が低誤解) を受けて更新:
 
 裁定済み (2026-07-14): **ACC-Q1d = Yes** — `append` 維持 + `flatten` ダイヤル (既定 false、true で発火値が配列ならその要素を積む = 1 段)、既存 flatten accumulator は append+flatten:true に統合して廃止。「accumulator が実質 2 つのレイヤを扱っていたのを flatten 明記で整理」(kawaz)。実行サイクル着手済み。
-- **ACC-Q4**: Result 化の実効化に必要な**最初の検証系 array filter** — 現 ARRAY registry は unique (transform) のみで reject を出す住人がゼロのため、Result 化しても fixture で pin できない。**a (統括推し): `length_range:min:max`** (配列長の範囲検査、kawaz の挙げた「配列長検査」の直接表現) を Result 化と同サイクルで追加 / b: 別候補 / c: 住人なしで Result 化だけ先行 (pin は後日)
+- 裁定済み (2026-07-14): **ACC-Q4 = OK** — `length_range:min:max` を Result 化と同サイクルで追加。**merge と flatten の整理** (kawaz 確認): flatten ダイヤルは append 専用 — merge の入力は常に scalar piece (merge × ref は DR-084 §3 が definition-error で封じ済みで、配列発火値が構造的に到達しない) ため選択肢自体が発生しない。他 accumulator への flatten 宣言は invalid-range (宣言形不一致の確立パターン) として DR-105 で pin
 
 副次 (裁定不要、次バッチで対応): unwrap_single / from_entries の descriptor が builtin-descriptors.json に未収載 (total なので reasons:[] を補うだけ)。
 
