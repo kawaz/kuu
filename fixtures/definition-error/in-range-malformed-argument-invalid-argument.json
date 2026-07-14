@@ -1,0 +1,19 @@
+{
+  "why": "in_range の DSL 引数 (min/max) の宣言妥当性は definition-time に検査する (DR-105 §5 明確化 note の遡及適用、統括検証 2026-07-14) — length_range と同型: 非数値・引数個数不一致は kind=invalid-argument (DR-082 §3 の regex_match compile 失敗と同型、DR-083 §5『静的に既知は定義時に倒す』の一様適用)。実行時の値域不一致 (too_small/too_large) とは別の失敗経路。",
+  "query": "definition_error",
+  "definition": {
+    "options": [
+      {"name": "port", "type": "number", "long": true, "value_filters": ["in_range:abc:100"]}
+    ]
+  },
+  "cases": [
+    {
+      "id": "non-numeric-min-is-invalid-argument",
+      "why": "`port` の value_filters に持つ `in_range:abc:100` は min 引数 `abc` が非数値。DSL 呼び出しの装置構築 (min/max の解決) がそもそも失敗するため、実行時の値域不一致 (too_small/too_large) とは別の失敗経路 — 装置引数そのものの値が不正で定義時点で静的に検出できる (DR-082 §3、DR-105 §5 明確化 note の遡及適用)。args は書かない (定義の静的検査であり実行しない、DR-082 §1)。",
+      "expect": {
+        "outcome": "definition-error",
+        "errors": [{"element": "port", "kind": "invalid-argument"}]
+      }
+    }
+  ]
+}

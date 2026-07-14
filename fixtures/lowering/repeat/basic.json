@@ -1,5 +1,5 @@
 {
-  "why": "repeat installer の最小断面: `cp src... dst` 形 — 可変長 positional src (string, min 1) + 単一 positional dst (string) を repeat のみで lowering する。LOWERING §B.8 の主規則 — repeat installer は `repeat` を回収し、ref を使った再帰リスト構造 (cons `[T, T[]]`) へ lowering する。min:1 は必須段 unroll が 0 段なので背骨には再帰尾部への参照 1 個が載るだけ (>=1 porous)。template のキーは `#` 予約名前空間の内部名 (ここでは src#cons、綴りは非規範で緩比較が吸収 — DR-063 §3) を使う: lowering 産物の匿名構造であってユーザの name ではなく、プレーン名だと head の `{ref: src}` (entities の実体参照) と template 自己参照が曖昧になるため。cons は `{seq: [head, {ref: src#cons, optional: true}]}` で、head `{ref: src, link: src}` は entities の src 実体の構造継承 + 値同期 (正規形、DR-063 §3)、尾部は template 自身への再帰。`optional: true` は `repeat: {min:0, max:1}` の糖衣 (DR-043)。平坦化 (`[T,[T,…]]` → `T[]`) は組み込み accumulator `flatten` (accumulators registry、DR-036) を src の値セルへ同時インストールする。dst は repeat を持たないので scalar セル (accumulator なし)。断面は DR-063 §3 の 5 面構造 (空面省略)、比較は緩比較 (LOWERING §C.5 / DR-070 §2)。slice PoC (installers=[RepeatInst] 単独) の canon_scope + registry 実測が写像元 oracle。",
+  "why": "repeat installer の最小断面: `cp src... dst` 形 — 可変長 positional src (string, min 1) + 単一 positional dst (string) を repeat のみで lowering する。LOWERING §B.8 の主規則 — repeat installer は `repeat` を回収し、ref を使った再帰リスト構造 (cons `[T, T[]]`) へ lowering する。min:1 は必須段 unroll が 0 段なので背骨には再帰尾部への参照 1 個が載るだけ (>=1 porous)。template のキーは `#` 予約名前空間の内部名 (ここでは src#cons、綴りは非規範で緩比較が吸収 — DR-063 §3) を使う: lowering 産物の匿名構造であってユーザの name ではなく、プレーン名だと head の `{ref: src}` (entities の実体参照) と template 自己参照が曖昧になるため。cons は `{seq: [head, {ref: src#cons, optional: true}]}` で、head `{ref: src, link: src}` は entities の src 実体の構造継承 + 値同期 (正規形、DR-063 §3)、尾部は template 自身への再帰。`optional: true` は `repeat: {min:0, max:1}` の糖衣 (DR-043)。平坦化 (`[T,[T,…]]` → `T[]`) は `append` accumulator の `flatten: true` ダイヤル (DR-105、旧独立エントリ `flatten` を統合) を src の値セルへ同時インストールする。dst は repeat を持たないので scalar セル (accumulator なし)。断面は DR-063 §3 の 5 面構造 (空面省略)、比較は緩比較 (LOWERING §C.5 / DR-070 §2)。slice PoC (installers=[RepeatInst] 単独) の canon_scope + registry 実測が写像元 oracle。",
   "query": "lower",
   "definition": {
     "positionals": [
@@ -32,7 +32,8 @@
     "entities": {
       "src": {
         "type": "string",
-        "accumulator": "flatten"
+        "accumulator": "append",
+        "flatten": true
       },
       "dst": {
         "type": "string"

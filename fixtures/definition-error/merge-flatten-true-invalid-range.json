@@ -1,0 +1,19 @@
+{
+  "why": "`flatten` は `append` 専用ダイヤル — 他 accumulator への宣言は definition-error kind=invalid-range (DR-105 §2)。`merge` の入力は常に scalar piece (separator 分割された string 片) であり「発火値が配列か」という分岐自体が発生しえないため、`flatten` を `merge` に許す選択肢は最初から意味を持たない (DR-105 §2「merge との整理」)。本 fixture は `flatten:true` の具体例で `merge` accumulator への構造不一致を固定する — `merge-flatten-false-invalid-range.json` (flatten:false でも同じく invalid-range) との対で、`flatten` キーの宣言自体 (値を問わない、DR-105 §2 明確化 note) が構造不一致であることを両側から pin する。accum 宣言 (multiple) の flatten dial も definition 時点で静的に既知の組み合わせなので、`merge-ref-invalid-range.json` (DR-084 §3) と同根の invalid-range として定義時点で reject する。",
+  "query": "definition_error",
+  "definition": {
+    "options": [
+      {"name": "fields", "type": "string", "long": true, "multiple": {"accumulator": "merge", "separator": ",", "flatten": true}}
+    ]
+  },
+  "cases": [
+    {
+      "id": "flatten-true-on-merge-is-invalid-range",
+      "why": "`fields` は `multiple:{accumulator:\"merge\", flatten:true}` を宣言している option。`flatten` は `append` 専用ダイヤル (DR-105 §2) であり、`merge` にとって「発火値が配列か」の分岐自体が構造上不成立 — 宣言時点で invalid-range として reject される。args は書かない (定義の静的検査であり実行しない、DR-082 §1)。",
+      "expect": {
+        "outcome": "definition-error",
+        "errors": [{"element": "fields", "kind": "invalid-range"}]
+      }
+    }
+  ]
+}

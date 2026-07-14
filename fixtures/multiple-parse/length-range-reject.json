@@ -1,0 +1,42 @@
+{
+  "why": "ARRAY filter registry 初の runtime reject 実例 (DR-105 §4/§5): length_range は accum_filters (Acc→Acc、DR-102 §1) に住む Validate 系 filter で、累積後の配列全体の長さを検証する。DR-102 §4 の reject 位置帰属規定 (`argv.length`、確定した最終値・累積配列全体への一括検証であり特定トークンに帰属しない) が、reject 可能な accum_filters 住人の不在によりこれまで理論上の規定に留まっていた点を、本 fixture が初めて実測で pin する (DR-105 §4 明確化 note)。element は owner 要素 (累積セルそのもの)、args_pos は args.length。count-parse/final-filter-range.json (scalar final_filters の reject 実例、in_range) との対で、ARRAY filter registry 側の同型パターンを固定する。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {"name": "tags", "type": "string", "long": true, "multiple": {"accumulator": "append"}, "accum_filters": ["length_range:2:3"]}
+    ]
+  },
+  "cases": [
+    {
+      "id": "within-range-accumulates",
+      "why": "2 発火 (min=2 ちょうど) → length_range:2:3 通過 → success。effects は 2 個の set (DR-045 効果列 = 適用順)、result {tags:[a,b]}。length_range の境界内成功の基準ケース (in_range の within-range-accepted と対称、DR-095 の reason 語彙規約)。",
+      "args": ["--tags", "a", "--tags", "b"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "tags", "op": "set", "operand": "a", "source": "cli"},
+          {"entity": "tags", "op": "set", "operand": "b", "source": "cli"}
+        ],
+        "result": {"tags": ["a", "b"]}
+      }
+    },
+    {
+      "id": "under-min-length-rejected",
+      "why": "1 発火のみ (min=2 未達) → 累積後の配列 [a] の長さが length_range:2:3 の下限を割り込み reject → failure。reason=too_short (length_range の下限側 reason、DR-105 §5 の in_range too_small との対称命名)。args_pos=1=args.length (accum_filters の reject は特定トークンに帰属しない一括検証、DR-102 §4、DR-105 §4 で初めて実効化)。element=tags (owner 要素、累積セルそのもの)。",
+      "args": ["--tags", "a"],
+      "expect": {
+        "outcome": "failure",
+        "errors": [{"element": "tags", "args_pos": 1, "kind": "filter", "reason": "too_short"}]
+      }
+    },
+    {
+      "id": "over-max-length-rejected",
+      "why": "4 発火 (max=3 超過) → 累積後の配列 [a,b,c,d] の長さが length_range:2:3 の上限を超え reject → failure。reason=too_long (length_range の上限側 reason)。args_pos=8=args.length (0-based、8 トークン全消費後の一括検証)。under-min-length-rejected との対で length_range の両境界 (下限/上限) を固定する。",
+      "args": ["--tags", "a", "--tags", "b", "--tags", "c", "--tags", "d"],
+      "expect": {
+        "outcome": "failure",
+        "errors": [{"element": "tags", "args_pos": 8, "kind": "filter", "reason": "too_long"}]
+      }
+    }
+  ]
+}

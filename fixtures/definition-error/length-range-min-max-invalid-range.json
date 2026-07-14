@@ -1,0 +1,19 @@
+{
+  "why": "length_range の min > max は kind=invalid-range (DR-105 §5 明確化 note、統括検証 2026-07-14) — 引数の値そのものは数値として妥当だが、min/max の組合せが値域として構成不能 (DR-082 §2『構文上は書けるが構成として不成立』系統)。malformed な引数値そのもの (非数値等、kind=invalid-argument) とは層が異なる。",
+  "query": "definition_error",
+  "definition": {
+    "options": [
+      {"name": "tags", "type": "string", "long": true, "multiple": {"accumulator": "append"}, "accum_filters": ["length_range:5:1"]}
+    ]
+  },
+  "cases": [
+    {
+      "id": "min-greater-than-max-is-invalid-range",
+      "why": "`tags` の accum_filters に持つ `length_range:5:1` は min(5) > max(1) で値域として構成不能。両引数とも数値として妥当なので invalid-argument ではなく invalid-range — 定義時点で静的に検出できる組合せの不成立 (DR-082 §2、DR-105 §5 明確化 note)。args は書かない (定義の静的検査であり実行しない、DR-082 §1)。",
+      "expect": {
+        "outcome": "definition-error",
+        "errors": [{"element": "tags", "kind": "invalid-range"}]
+      }
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "why": "`flatten` キーの宣言自体 (値が true/false いずれでも) が `append` 以外の accumulator では invalid-range (DR-105 §2 明確化 note、統括検証 2026-07-14)。`false` は既定値と同値だから許可・正規化する、という読みは採らない — 存在ベースの構造不一致判定 (DR-102 §3 の wrong-seat 判定と同型: 要素の宣言形と合わない属性は、その属性にどんな値が書かれていても常に invalid-range) をそのまま適用する。`merge-flatten-true-invalid-range.json` (flatten:true) との対で、value に関わらず reject されることを両側から pin する。",
+  "query": "definition_error",
+  "definition": {
+    "options": [
+      {"name": "fields", "type": "string", "long": true, "multiple": {"accumulator": "merge", "separator": ",", "flatten": false}}
+    ]
+  },
+  "cases": [
+    {
+      "id": "flatten-false-on-merge-is-invalid-range",
+      "why": "`fields` は `multiple:{accumulator:\"merge\", flatten:false}` を宣言している option。`flatten:false` は既定値と同値の値だが、`flatten` キーの存在自体が `merge` にとって構造不一致 (DR-105 §2 明確化 note) — value を問わず宣言時点で invalid-range として reject される。args は書かない (定義の静的検査であり実行しない、DR-082 §1)。",
+      "expect": {
+        "outcome": "definition-error",
+        "errors": [{"element": "fields", "kind": "invalid-range"}]
+      }
+    }
+  ]
+}

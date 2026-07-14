@@ -1,0 +1,19 @@
+{
+  "why": "DR-105 §3 により accumulators registry の独立エントリ `flatten` (DR-036) は削除された。削除後に旧名 `\"accumulator\":\"flatten\"` を書いた場合は、accumulators registry の owns 集合に存在しない語彙として kind=unknown-vocab に落ちる (DR-105 §3 明確化 note、統括検証 2026-07-14) — DR-061/DR-063 が確立した一般原則 (登録済み registry descriptor の owns 集合の和のみが正当、誰も所有しない語彙は unknown-vocab) の直接適用であり、accumulators registry も DR-036 が multiple registry の一区分として追加した registry である以上この一般原則の対象外ではない。現役の同等表現は `{\"accumulator\":\"append\", \"flatten\":true}` (DR-105 §1)。",
+  "query": "definition_error",
+  "definition": {
+    "options": [
+      {"name": "tags", "type": "string", "long": true, "multiple": {"accumulator": "flatten"}}
+    ]
+  },
+  "cases": [
+    {
+      "id": "legacy-flatten-accumulator-name-is-unknown-vocab",
+      "why": "`tags` は `multiple:{accumulator:\"flatten\"}` で廃止済みの旧登録名を直接宣言している (DR-036 の独立エントリ、DR-105 で削除)。accumulators registry の owns 集合にこの語彙はもう存在しないため、`invalid-range` (構造上書けるが構成として不成立) ではなく一意に `unknown-vocab` (語彙自体が registry に無い) として definition-error になる。args は書かない (定義の静的検査であり実行しない、DR-082 §1)。",
+      "expect": {
+        "outcome": "definition-error",
+        "errors": [{"element": "src", "kind": "unknown-vocab"}]
+      }
+    }
+  ]
+}

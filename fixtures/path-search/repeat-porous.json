@@ -27,7 +27,7 @@
     },
     {
       "id": "interject-after-repeats",
-      "why": "反復の途中 (a と b の間ではなく b の後) に割り込む変形: src が 2 回発火し (a, b)、その後 --verbose、末尾 dst=c。repeat の unfold が現背骨上に留まる (porous) ため反復は Many と同型に振る舞う。src の 2 発火は効果列に 2 エントリとして消費順で現れ、結果では flatten されて ['a','b'] になる (DR-043 repeat の flatten accumulator / DR-036)。",
+      "why": "反復の途中 (a と b の間ではなく b の後) に割り込む変形: src が 2 回発火し (a, b)、その後 --verbose、末尾 dst=c。repeat の unfold が現背骨上に留まる (porous) ため反復は Many と同型に振る舞う。src の 2 発火は効果列に 2 エントリとして消費順で現れ、結果では flatten されて ['a','b'] になる (DR-043 repeat の append+flatten:true accumulator、DR-105 で旧 flatten accumulator から統合)。",
       "args": ["a", "b", "--verbose", "c"],
       "expect": {
         "outcome": "success",

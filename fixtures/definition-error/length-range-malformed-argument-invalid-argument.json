@@ -1,0 +1,19 @@
+{
+  "why": "length_range の DSL 引数 (min/max) の宣言妥当性は definition-time に検査する (DR-105 §5 明確化 note、統括検証 2026-07-14)。非数値・引数個数不一致は kind=invalid-argument — DR-082 §3 の regex_match compile 失敗と同型の『装置引数の値そのものが不正で装置の構築が失敗する』パターン、DR-083 §5『静的に既知は定義時に倒す』の一様適用。この裁定は scalar 版 in_range にも遡及する (`in-range-malformed-argument-invalid-argument.json` 参照)。",
+  "query": "definition_error",
+  "definition": {
+    "options": [
+      {"name": "tags", "type": "string", "long": true, "multiple": {"accumulator": "append"}, "accum_filters": ["length_range:abc:5"]}
+    ]
+  },
+  "cases": [
+    {
+      "id": "non-numeric-min-is-invalid-argument",
+      "why": "`tags` の accum_filters に持つ `length_range:abc:5` は min 引数 `abc` が非数値。DSL 呼び出しの装置構築 (min/max の解決) がそもそも失敗するため、実行時の length 不一致 (too_short/too_long) とは別の失敗経路 — 装置引数そのものの値が不正で定義時点で静的に検出できる (DR-082 §3、DR-105 §5 明確化 note)。args は書かない (定義の静的検査であり実行しない、DR-082 §1)。",
+      "expect": {
+        "outcome": "definition-error",
+        "errors": [{"element": "tags", "kind": "invalid-argument"}]
+      }
+    }
+  ]
+}
