@@ -1,5 +1,5 @@
 {
-  "why": "`flatten` キーの宣言自体 (値が true/false いずれでも) が `append` 以外の accumulator では invalid-range (DR-105 §2 明確化 note、統括検証 2026-07-14)。`false` は既定値と同値だから許可・正規化する、という読みは採らない — 存在ベースの構造不一致判定 (DR-102 §3 の wrong-seat 判定と同型: 要素の宣言形と合わない属性は、その属性にどんな値が書かれていても常に invalid-range) をそのまま適用する。`merge-flatten-true-invalid-range.json` (flatten:true) との対で、value に関わらず reject されることを両側から pin する。",
+  "why": "`flatten` キーの宣言自体 (値が true/false いずれでも) が `append` 以外の accumulator では invalid-range (DR-105 §2 明確化 note、統括検証 2026-07-14)。`false` は既定値と同値だから許可・正規化する、という読みは採らない — 存在ベースの構造不一致判定 (DR-102 §3 の wrong-seat 判定と同型: 要素の宣言形と合わない属性は、その属性にどんな値が書かれていても常に invalid-range) をそのまま適用する。`merge-flatten-true-invalid-range.json` (flatten:true) との対で、value に関わらず reject されることを両側から pin する。`multiple-parse/merge-basic.json` (`{\"accumulator\": \"merge\", \"separator\": \",\"}`、`flatten` キー自体を宣言しない) が `flatten` 省略の合法な対照 — 省略は合法 (通常の merge 輪郭が普通に成立する) だが、明示宣言はキーの存在自体が構造不一致になる非対称を、本 fixture の対と合わせて 3 者で固定する (codex レビュー #3 B-C1 の反映)。",
   "query": "definition_error",
   "definition": {
     "options": [

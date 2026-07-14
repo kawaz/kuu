@@ -1,0 +1,19 @@
+{
+  "why": "`in_range` の DSL 引数はちょうど 2 個 (min, max) — 個数不一致は definition-time に kind=invalid-argument で検出する (DR-105 §5 明確化 note (a) の共通規則)。`in-range-malformed-argument-invalid-argument.json` は非数値の malformed 引数を固定しており、本 fixture はもう片方の判定軸 (引数個数そのものの不一致) を固定する。",
+  "query": "definition_error",
+  "definition": {
+    "options": [
+      {"name": "port", "type": "number", "long": true, "final_filters": ["in_range:5"]}
+    ]
+  },
+  "cases": [
+    {
+      "id": "single-argument-is-invalid-argument",
+      "why": "`port` の final_filters に持つ `in_range:5` は引数が 1 個しかない (min のみ、max 欠落)。`in_range` はちょうど 2 個の引数を要求するため、装置の構築自体が定義時点で失敗する — invalid-argument (DR-082 §3、DR-105 §5 明確化 note (a))。args は書かない (定義の静的検査であり実行しない、DR-082 §1)。",
+      "expect": {
+        "outcome": "definition-error",
+        "errors": [{"element": "port", "kind": "invalid-argument"}]
+      }
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "why": "scalar `in_range` の min > max は kind=invalid-range (`length_range` と共通の規則、DR-105 §5 明確化 note (a))。両引数とも数値として妥当だが、min/max の組合せが値域として構成不能 (DR-082 §2『構文上は書けるが構成として不成立』系統) — `length-range-min-max-invalid-range.json` (ARRAY filter registry 側の同型パターン) との対で、scalar filter registry 側の min>max 判定を固定する。",
+  "query": "definition_error",
+  "definition": {
+    "options": [
+      {"name": "port", "type": "number", "long": true, "final_filters": ["in_range:5:1"]}
+    ]
+  },
+  "cases": [
+    {
+      "id": "min-greater-than-max-is-invalid-range",
+      "why": "`port` の final_filters に持つ `in_range:5:1` は min(5) > max(1) で値域として構成不能。両引数とも数値として妥当なので invalid-argument ではなく invalid-range — 定義時点で静的に検出できる組合せの不成立 (DR-082 §2、DR-105 §5 明確化 note (a))。args は書かない (定義の静的検査であり実行しない、DR-082 §1)。",
+      "expect": {
+        "outcome": "definition-error",
+        "errors": [{"element": "port", "kind": "invalid-range"}]
+      }
+    }
+  ]
+}

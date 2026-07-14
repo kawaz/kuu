@@ -1,0 +1,19 @@
+{
+  "why": "綴りの合法性判定は各 seat が要求する registry の owns 集合のみで決まり、descriptor の `kind`/`domain` metadata は lookup に影響しない (DR-102 §2 の帰結、DR-106 §4 明確化 note (b))。`kind:\"collector\"` の住人 (`unwrap_single`) を `accum_filters` (ARRAY filter registry) に書いても、特別な wrong-role エラーにはならず単純な unknown-vocab に落ちる — ARRAY filter registry の owns 集合は `unique`/`length_range` のみで `unwrap_single` を含まないため (実装確認: `kuu.mbt` の `array_filters_registry()`)。",
+  "query": "definition_error",
+  "definition": {
+    "options": [
+      {"name": "tags", "type": "string", "long": true, "multiple": {"accumulator": "append"}, "accum_filters": ["unwrap_single"]}
+    ]
+  },
+  "cases": [
+    {
+      "id": "collector-spelling-in-accum-filters-is-unknown-vocab",
+      "why": "`tags` の accum_filters に持つ `unwrap_single` は collector 相の綴り (multiple.collector が読む語彙、DR-036/DR-106) であり、ARRAY filter registry (`accum_filters` が要求する registry) の owns 集合には登録されていない。`kind:\"collector\"` という role metadata は lookup に影響しないため、wrong-role 専用の kind は無く単純な unknown-vocab として reject される (DR-106 §4 明確化 note (b))。args は書かない (定義の静的検査であり実行しない、DR-082 §1)。",
+      "expect": {
+        "outcome": "definition-error",
+        "errors": [{"element": "tags", "kind": "unknown-vocab"}]
+      }
+    }
+  ]
+}

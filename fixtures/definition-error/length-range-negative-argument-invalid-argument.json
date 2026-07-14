@@ -1,0 +1,19 @@
+{
+  "why": "`length_range` の bound は非負整数限定 (`in_range` とは異なる個別規則、DR-105 §5 明確化 note (a))。負数は「数値としては妥当だが配列長という値域には属さない」引数値そのものの不正であり、definition-time に kind=invalid-argument で検出する — `length-range-non-integer-argument-invalid-argument.json` (小数) との対で非負整数制約の両側 (整数性・非負性) を固定する。実装追随課題 (issue: kuu.mbt 側は現状 in_range と同じ『数値として parse できるか』のみを検査しており、非負整数限定の追加検査は未実装 — spec が先行し実装が追随する順序、DR-105 §5 明確化 note の既定パターン)。",
+  "query": "definition_error",
+  "definition": {
+    "options": [
+      {"name": "tags", "type": "string", "long": true, "multiple": {"accumulator": "append"}, "accum_filters": ["length_range:-1:5"]}
+    ]
+  },
+  "cases": [
+    {
+      "id": "negative-min-is-invalid-argument",
+      "why": "`tags` の accum_filters に持つ `length_range:-1:5` は min 引数 `-1` が数値として妥当だが負数 — 配列長は非負整数の値域であり、負数は値域に属さない不正な引数値 (invalid-argument、DR-082 §3、DR-105 §5 明確化 note (a) の個別規則)。min>max (invalid-range、値の組合せの不成立) とは層が異なる — 個々の引数値そのものが値域外。args は書かない (定義の静的検査であり実行しない、DR-082 §1)。",
+      "expect": {
+        "outcome": "definition-error",
+        "errors": [{"element": "tags", "kind": "invalid-argument"}]
+      }
+    }
+  ]
+}
