@@ -41,6 +41,14 @@ DR-102 §3 は「正規のゲートは `parse_definition`、`schema/wire.schema.
 
 `filters.unwrap_single`/`filters.from_entries` という namespace 上の命名 (DR-036 の「filters で代替」方針) はそのまま維持する — namespace を分離すると DR-036 の「新規 registry を立てない」判断を覆すことになり、本 DR の射程 (機械可読性の追加) を超える。`kind:"collector"` フィールドが役割を区別する責務を担う。
 
+> **明確化 (統括検証 2026-07-14、codex レビュー #3 の反映)**:
+>
+> **(a) `domain` と registry 登録の一致義務**: descriptor の `domain` は、実際に登録される registry lane (scalar filter registry / ARRAY filter registry) と一致しなければならない。不一致 (例: ARRAY filter registry に登録された住人の descriptor に `domain:"scalar"` と誤記する) は registry 構成エラーであり、descriptor の `domain` は informative な機械可読ヒント (§3) であっても、実 registry 登録との虚偽を許容する免罪符ではない (codex レビュー #3 A-M2 前半の反映)。
+>
+> **(b) 綴りの合法性判定は自 registry の owns 集合のみ**: 各 seat (`piece_filters`/`value_filters`/`final_filters`/`accum_filters`) が受理する綴りの合法性は、その seat が要求する registry の owns 集合のみで決まる (DR-102 §2 の「1 属性 1 registry」の帰結) — descriptor の `kind`/`domain` メタデータは lookup 自体に影響しない (メタデータは lookup 後の説明であって lookup の入力ではない)。したがって `kind:"collector"` の住人の綴り (`unwrap_single` 等) を `accum_filters` に書いても、特別な wrong-role エラーにはならず、`accum_filters` が要求する ARRAY filter registry にその綴りが存在しないという単純な `unknown-vocab` に落ちる (実装確認: `kuu.mbt` の ARRAY filter registry は `unique`/`length_range` のみを持ち、`unwrap_single`/`from_entries` を含まない)。
+>
+> **(c) `signature` は挙動クラスの複合軸**: `signature` (Validate/Transform) は「入力を保持するか (fallibility)」の単独軸ではなく、実質的に「入力保持 × 失敗可否」という挙動クラスの複合を表す簡易な二分法である (codex レビュー #3 A-M4 の反映)。この粗さは現行の builtin filter 住人の表現には十分だが、「変換しつつ reject しうる filter」のような第 3 の挙動クラスを表現できない限界を持つ。軸の分離 (`effect: preserve|transform` と `fallibility: total|reject` への分割等) は issue `descriptor-schema-declaration-axis-separation` で追跡する — 本 DR の射程 (`kind`/`domain` の新設) には含めない。
+
 ## 採用しなかった案
 
 ### `collectors` を独立 namespace に分離する

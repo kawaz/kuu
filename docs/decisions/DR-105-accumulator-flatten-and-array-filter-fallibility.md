@@ -50,6 +50,16 @@ accumulators registry の独立エントリ `flatten` (DR-036 の属性セット
 
 > **明確化 (統括検証 2026-07-14、codex レビュー #2 の反映): `length_range` (および同型の `in_range`) の DSL 引数の宣言妥当性は definition-time に検査する。** 非数値・引数個数不一致は kind=invalid-argument (DR-082 §3 の `regex_match` compile 失敗と同型、DR-083 §5「静的に既知は定義時に倒す」の一様適用)、`min > max` は kind=invalid-range (`min > max` の既存 invalid-range 前例と同型)。境界は inclusive、`min`/`max` は非負整数。**この裁定は `in_range` にも遡及する** — 参照実装の malformed arg 処理が現状 definition-time 検査を持たず runtime reject (`filter_rejected`) に留まっている場合は実装側の追随課題として残り、本 DR の definition-time 検査の裁定が正 (spec が先行し実装が追随する順序)。
 
+> **明確化 (統括検証 2026-07-14、codex レビュー #3 の反映)**:
+>
+> **(a) `in_range` への遡及の訂正**: 直上の明確化 note が「`length_range` (および同型の `in_range`) … `min`/`max` は非負整数」と書いた部分は、非負整数制約を `in_range` にまで広げてしまった誤りだった (codex レビュー #3 B-M1/A-M5)。「非負整数」は `length_range` 固有の規則 (配列長という値域の性質から来る) であり、`in_range` の bound は対象型の canonical number として負数・小数を許す (`in_range:-1.5:2.5` は合法な宣言)。正しい分離は次のとおり — **共通規則** (両 filter に一様): DSL 引数はちょうど 2 個 / definition-time 検査 / 各引数を bound 型として parse できなければ kind=invalid-argument / `min > max` は kind=invalid-range / 境界は inclusive。**個別規則**: `length_range` の bound は非負整数限定 (負数・小数・非整数は invalid-argument)、`in_range` の bound は対象型の canonical number (負数・小数に制約なし)。
+>
+> **(b) `flatten` の三状態**: 宣言の有無自体が意味を持つ属性 (`flatten`) は、validation 完了まで `absent` | `false` | `true` の三状態として扱う。DR-063 §4 の「フィールド省略 = default 値と等価」という構造等価規約は、**その要素形にそもそも存在する属性の値比較**に適用される規約であり、属性の宣言自体が構造不一致 (wrong-seat) になる判定 (DR-102 §3 の wrong-seat 判定、本 DR §2 の `flatten` × 非 `append` 判定) には適用されない — 両者は別の判定軸 (値の等価性 vs 属性の適格性) であり衝突しない。`schema/wire.schema.json` の `flatten` の `default:false` は「`append` を選択した場合の意味論上の既定値」を示す型ヒントであり、decode 時にキーを補完する意味ではない (codex レビュー #3 B-C1/A-C4 の反映)。
+>
+> **(c) fixture 実施状況の更新**: 下記「波及」節の「本サイクルでは fixture 変更は保留」は 2026-07-14 に実施済み — lowering fixture 2 本の書き換え (`fixtures/lowering/repeat/basic.json` / `fixtures/lowering/baseline/converged.json`) と definition-error/reject fixture の新設が完了している (codex レビュー #3 A-m5 の反映)。
+>
+> **(d) `accum_filters` と `kv_map`**: `accum_filters` は `kv_map` accumulator の要素でも、Map 形成前の累積 piece 配列 (Acc=T[]) に効く。参照実装 (`kuu.mbt` `src/core/resolve.mbt` の `apply_entity_filters`) は `apply_accum_filter_chain` を CLI 発火の piece 値配列 (`vals`、各 binding の値をそのまま集めた `Array[Value]`) に対して resolve 時に適用しており、`kv_map` の object 化 (`build_result` の `ACCUMULATE` 分岐が行う `RObj` への畳み込み) はこれより後段の別ステップである。したがって `accum_filters` (Acc→Acc、DR-102 §1) が見る Acc は常に累積 piece の配列であり、accumulator が最終的に何の形 (配列のままか Map に畳むか) へ収束するかとは独立 — `kv_map` の object 化は DR-083 §2 が確立した「collector は accumulator 後置」の順序の帰結で、`accum_filters` (accumulator 直後) より後段の collect 段に属する (codex レビュー #3 A-C5 の反映)。
+
 ## 採用しなかった案
 
 ### accumulator 語彙の改名 (`push`/`push_one`/`push_each` 等)

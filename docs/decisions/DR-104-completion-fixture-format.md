@@ -66,6 +66,8 @@ DR-060 §2 のシグネチャ `{before, word, word_suffix?, after?}` を、`args
 
 DR-060 §1 の「和集合」は経路の和集合ではなくスペリングの和集合であり (§3 の dedup 規則がこれを裏付ける)、複数候補間に順序を課さない。`CONFORMANCE.md` §3 の `interpretations` (集合比較) と同じ扱いを `candidates` にも適用する。
 
+> **明確化 (統括検証 2026-07-14、codex レビュー #3 の反映): `candidates` 比較の正確な規範は「producer は §3 の 6 フィールド identity で重複する候補を出力してはならない + 比較は順序非依存・多重度保持 (multiset) の一対一対応」であり、素朴な集合 (set) 比較ではない。** 「スペリングの和集合」という表現は、`path` (祖先 scope 経路) を候補同一性の成分から除外する趣旨 (§3 の「union over SPELLINGS, not over the scopes」引用、path を無視する論拠) であって、「spelling が一致すれば他のフィールドを無視して 1 件に畳む」という spelling 単独の dedup 基準ではない — 同一 spelling でも `term` (`fixtures/complete/eq-split-cont.json`) や `origin` (DR-041 §4 の重複トリガ) が異なる候補は畳まれず併存する。producer (実装) 側が §3 の 6 フィールド完全一致で重複を出力しなければ、multiset 比較と (重複のない) set 比較は結果として一致するため、旧文言は誤りではなく説明が不十分だった (codex レビュー #3 A-m2/B-M6 の反映、CONFORMANCE §3 の multiset 比較規定と同一の規範)。
+
 ### 5. 制約 (遅延述語) は before-only 補完の候補生存に不参加。`args_after` 供給時は完全経路判定が働く
 
 **`args_before` のみの補完 (行末補完、最も一般的な形) では、`required`/`required_group`/`requires`/`exclusive_group`/`conflicts_with` の全ての遅延述語は候補生成・dead end 判定に一切参加しない。** 相区分は「dead end 判定 = parse 相、制約評価 = resolve 相」に固定する (v1 の線)。`docs/findings/2026-07-14-completion-constraint-and-identity.md` の決定 (kawaz 方向出し、2026-07-14) をそのまま反映する。
