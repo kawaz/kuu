@@ -19,6 +19,8 @@ DR-060 §2 のシグネチャ `{before, word, word_suffix?, after?}` を、`args
 
 **`word_before`/`word_after` は v1 では未実装のまま予約する** — 参照実装 (`kuu.mbt` `src/core/outcome.mbt:303-308`) の `complete()` シグネチャは `(root, before, defs?, after?)` のみで word 系パラメータを持たない (DR-060 §2 の「v1 未使用可」と整合する未実装状態)。fixture では書かない。
 
+> **明確化 (統括検証 2026-07-14、codex レビュー #2 の反映): 上記は「改名のみ」ではなく、DR-060 §2 原文が `word` に課していた必須性を v1 で明示的に supersede する意味論変更である。** DR-060 §2 原文で「v1 未使用可」の注記が付いていたのは `word_suffix` (現 `word_after`) のみで、`word` (現 `word_before`) には付いておらず必須フィールドだった。本 DR は (a) 参照実装が word/word_suffix いずれも当初から未実装だった事実、(b) DR-060 §3 が「絞り込みポリシー (prefix 絞り含む) は候補メタを見た生成器側の選択であり、kuu は固定しない」と規定しており prefix filtering はもともと core が word の値を消費する契約を持たなかったこと、の 2 点により `word` 必須契約を v1 で supersede する。`args_before` はカーソル前で確定した完全トークンのみを含み、進行中の部分単語は含めない — 単語内カーソル時の core の候補集合は単語頭カーソル時と同一であり、絞り込みは生成器が word (将来実装) を使って行う。
+
 ### 2. `candidates` の wire 表現
 
 ```json
@@ -40,11 +42,25 @@ DR-060 §2 のシグネチャ `{before, word, word_suffix?, after?}` を、`args
 
 `Cand.path` (祖先 scope 経路、DR-066 §4 由来) は **wire に含めない**。§3 の候補同一性判定から明示的に除外されている値であり (dedup 規則がまさに「path の違いを無視する」ことを目的とする)、含めても比較に使えない中途半端なフィールドになる。DR-073 の `claimants` のような「実体を区別する精密化」路線は本 DR では採らない — `origin` (由来要素名の文字列) までを候補同一性の粒度とする (§3)。
 
+> **明確化 (統括検証 2026-07-14、codex レビュー #2 の反映):**
+>
+> (a) 上記 §2 冒頭の exact 候補例、および CONFORMANCE.md §4 の公式例が `origin` を欠くのは誤記。表の「必須」が正 — 実 fixture (`fixtures/complete/*.json` 全 10 本) は例外なく exact 候補にも `origin` を書いている。
+>
+> (b) `ty` 行の「等」は誤り。値位置候補に出る型は解決済み primitive の `"string"`/`"number"`/`"int"`/`"float"`/`"bool"` の 5 種のみ (flag/count/none は値スロットを取らないため値位置候補として出現しない)。custom type の `ty` 表現は未確定のまま残る (実装追随時に確定)。
+>
+> (c) `origin` は alias 経由でも canonical 要素名を指す (DR-057 §26「効果は canonical の実体セルへ、結果キーは canonical のみ」の帰結、`fixtures/complete/meta.json` で pin 済み)。ref/link 越し・lowering 生成要素の origin 決定則は未定義のまま残る (別 issue で追跡)。
+>
+> (d) `completer` は参照実装の追随まで fixture に書かない — word_before/word_after と同じ「参照実装が追随するまで fixture では書かない」注記を明示する (書くなら実装追随と同一サイクルで着手する)。
+>
+> (e) `term` のスペース可否は表示 hint ではなく制約 — `cont` の後に空白を挿入すると継続 (`--key=` 等) の解釈が破綻する。
+
 ### 3. 候補の同一性 = wire 表現の構造等価 (dedup 規則)
 
 **2 つの候補が同一とみなされるのは、`spelling`/`is_value`/`ty`/`origin`/`term`/`meta` の 6 フィールドが完全一致する場合に限る。** 参照実装 (`kuu.mbt` `outcome.mbt:316-343` の `complete()` 内 dedup ループ) が既に pin している規則をそのまま spec へ格上げする — 実装コメントの論拠 (`outcome.mbt:322-326`)「DR-060 §1 の "union of what's readable" is a union over SPELLINGS, not over the scopes that offer them」を正とする。異なる祖先 scope 経由で供給された同一綴りの候補は 1 件に畳まれる。
 
 候補同一性の空白は DR-060/DR-066/DR-073 のいずれにも規定が存在しなかった (`docs/findings/2026-07-14-completion-constraint-and-identity.md` 調査項目 1 が確定させた事実)。`origin` (要素名の文字列) までを同一性の粒度とし、link/ref 越しの実体 id までの精密化 (DR-073 の「実体 entity」水準) は本 DR では採らない — `origin` の文字列一致で十分という実装の既定路線を追認する。
+
+> **明確化 (統括検証 2026-07-14、codex レビュー #2 の反映): 候補同一性の規範は上記太字文の「6 フィールド record 完全一致」のみであり、実装コメントが引用する「union over SPELLINGS」は spelling 単独の dedup 基準ではない。** 「union over SPELLINGS, not over the scopes that offer them」という論拠は、**path (祖先 scope 経路) を同一性の成分から除外する**論拠として引用されているのであって、「spelling が同じなら他のフィールドを無視して畳む」という意味ではない。同じ綴り (spelling) でも `origin` が異なる候補 (DR-041 §4 が合法とする「同一スコープ内で異なる origin の要素が同じトリガ綴りを持つ」重複トリガのシナリオ) は、6 フィールド規則により dedup されず 2 件のまま併存する。`completer` は同一性の成分ではない (6 フィールドに含まれない) — 6 フィールドが完全一致すれば `completer` だけが異なる候補は同一候補として扱われる。この場合にどちらの `completer` を残すかの merge 規則は、`completer` の実装追随時 (§2(d) 参照) に確定する。
 
 ### 4. `candidates` は集合比較
 
@@ -59,6 +75,12 @@ DR-060 §1 の「和集合」は経路の和集合ではなくスペリングの
 - 指定述語 (`exclusive_group`/`conflicts_with`) 限定で「committed 集合は単調だから `args_before` 段階でも一部の違反が証明可能」という単調性論による部分拡張も検討されたが不採用 (対象/非対象述語の非対称ルールを生成器実装者が覚える負担、`unset` による committed 取消しで単調性が破れる留保つきの実装複雑化、上記説明チャネル論点が上回るため。詳細は「採用しなかった案」参照)
 
 **`args_after` が供給された場合は、after 整合フィルタが完全経路判定 (遅延述語込み) を行う。** 各 exact 候補 (`term: "word_end"`) について `args_before + [候補] + args_after` を組み立ててフル `parse()` を実行し、`Success`/`Ambiguous` なら残し `Failure` なら除外する (DR-060 §2、参照実装 `outcome.mbt:347-366`)。`parse()` は遅延述語評価を含むため、`args_after` 経由の判定は間接的に制約込みになる。**これは before-only の不参加と矛盾する非対称ではなく、DR-047 の教義 (遅延述語は完全経路の成立条件) の一様適用が生む 2 つの自然な帰結である** — `args_before` のみでは経路が未完結 (評価対象なし)、`args_before + 候補 + args_after` は完結した完全経路 (評価対象が存在する) という違いに過ぎない。値位置候補・`term: "cont"` の候補は after 整合フィルタの対象外 (ユーザ入力を発明できないため無条件で通る、DR-060 §2)。
+
+> **明確化 (統括検証 2026-07-14、codex レビュー #2 の反映):**
+>
+> (a) after 整合フィルタの対象は「exact かつ `term: "word_end"` の候補」に限る。上記段落見出し「`args_after` 供給時は完全経路判定が働く」は候補種別を限定しない一般命題に読めるが、実際に完全経路判定されるのは exact/word_end 候補のみであり、値位置候補・`term: "cont"` の候補は (直前の文が既に述べる通り) 対象外で無条件生存する。
+>
+> (b) `args_after` の省略と明示的な空配列 `[]` の供給は同値 (length ベース判定、参照実装 `outcome.mbt:344` の `if after.length() == 0 { return cands }` と一致)。presence (フィールドの有無) ではなく length で判定する。
 
 ## 採用しなかった案
 

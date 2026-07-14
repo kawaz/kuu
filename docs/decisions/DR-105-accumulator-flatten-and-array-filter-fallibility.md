@@ -14,15 +14,21 @@
 - **kawaz の言語化 (由来)**: 「flatten を明記することで accumulator が実質 2 つのレイヤを扱ってるところを宣言的に整理できる」— 旧 `flatten` accumulator は「累積 + 1 段展開」という 2 つの関心を 1 つの accumulator 名に同居させていた構造的欠陥を持っていた (DR-102 の `cell_filters` 属性分割が解消した「1 属性に 2 つの型/関心が同居する」問題と同型の欠陥)。`append` (累積) + `flatten` (展開の有無) の直交する 2 フィールドに分解することで、どの累積装置に展開ダイヤルを乗せるかが宣言的に見える
 - 適用対象は **repeat の cons unfold** (DR-043 §「repeat installer」、`[T,[T,…]]` → `T[]`) が主用途だが、ダイヤル自体は「発火値が配列で 1 段展開したい」という一般の宣言意図を表す — repeat 固有の語彙ではなく `append` 全体の汎用ダイヤルとして位置づける
 
+> **明確化 (統括検証 2026-07-14、codex レビュー #2 の反映): flatten:true かつ発火値が非配列の場合は、既定 (flatten:false) と同じく発火値を丸ごと 1 要素として積む。** 「発火値」は DR-034/DR-084 §1 が確立した用語 (multiple の畳み単位、pieceProcessor 出力 = post value_filters・pre accumulation。ref 要素の発火値は row) であり、flatten の配列判定は raw piece でも `accum_filters` 適用後でもなくこの発火値に対して行う (`accum_filters` は DR-102 §1/§4 により累積「後」の配列全体にのみ効くため flatten 判定より後段)。
+
 ### 2. `flatten` は `append` 専用 — 他 accumulator への宣言は definition-error
 
 `flatten: true` を `append` 以外の accumulator (`merge` / `override` / `increment` / `kv_map`) に宣言することは、その accumulator にそもそも存在しない属性 (宣言形と合わない config) を書いた構造不一致であり、**kind=invalid-range** で reject する — 「構文上は書けるが構成として不成立」の確立パターン (DR-082 §2) の具体例: 非 accum 要素への配列 default 宣言 (`scalar-array-default-invalid-range.json`、DR-083 §5)、非 accum/accum 要素への `final_filters`/`accum_filters` の排他宣言 (DR-102 §3)、`merge` accumulator × `ref` (DR-084 §3、ref の発火値は piece 列を持たない row でありマーカー認識対象が構造上存在しない) と同型。
 
 **merge との整理 (kawaz 確認、2026-07-14)**: `flatten` ダイヤルは `append` 専用と決める根拠は `merge` の入力形にある — `merge` の入力は常に scalar piece であり (`merge` × `ref` は DR-084 §3 が definition-error で既に封じ済みで、配列発火値が `merge` に到達する経路が構造的に存在しない)、`merge` にとって「発火値が配列か」という分岐自体が発生しえない。したがって `flatten` を `merge` にも許すという選択肢は最初から意味を持たず、`append` 限定は妥協ではなく `merge`/`append` の入力形の違いがそのまま帰結する自然な線引きになる。
 
+> **明確化 (統括検証 2026-07-14、codex レビュー #2 の反映): `flatten` キーの宣言自体 (値が `true`/`false` いずれでも) が `append` 以外の accumulator では invalid-range。** 上記見出し「他 accumulator への宣言は definition-error」は value 非依存 (存在ベース) の規定であり、本文が示す `flatten: true` の具体例は value ベースの反例ではなく代表例に過ぎない — DR-102 §3 が確立した「要素の宣言形と合わない属性は、その属性にどんな値が書かれていても常に invalid-range のみを報告する」という存在ベースの先例 (本節が「同型」と明記する規定) をそのまま適用する。`{"accumulator":"merge","flatten":false}` も `flatten` キーの存在自体が構造不一致であり invalid-range になる (false は既定値と同値だから許容、という読みは採らない)。
+
 ### 3. `flatten` accumulator (DR-036) は `append` + `flatten:true` に統合し廃止
 
 accumulators registry の独立エントリ `flatten` (DR-036 の属性セット `{accumulator: (piece, processor, prevs) → T[], default_collector: "identity"}`、DR-043 が repeat installer の平坦化用に登録) は本 DR により**削除**する。同じ意味論は `{"accumulator": "append", "flatten": true}` で表現する — repeat installer (DR-043 §「repeat installer」) の lowering は、平坦化 accumulator を単独名で src の値セルへインストールする代わりに、`append` + `flatten:true` の組をインストールする形に追従する。
+
+> **明確化 (統括検証 2026-07-14、codex レビュー #2 の反映): 削除後に旧名 `"accumulator":"flatten"` を書いた場合は、accumulators registry の owns 集合に存在しない語彙として kind=unknown-vocab に落ちる。** これは新規裁定ではなく、DR-061/DR-063 が確立した一般原則 (登録済み registry descriptor の owns 集合の和のみが正当な語彙、誰も所有しない語彙は unknown-vocab) の直接適用 — accumulators registry は DR-036 が multiple registry の一区分として追加した registry であり、この一般原則の対象外ではない。「構文上は書けるが構成として不成立」(invalid-range、DR-082 §2) の判定は語彙自体が registry に存在することを前提とするため、旧名 `flatten` のように語彙自体が消滅したケースには適用されない。
 
 ### 4. ARRAY filter registry (`accum_filters`) の fallibility 確立
 
@@ -41,6 +47,8 @@ accumulators registry の独立エントリ `flatten` (DR-036 の属性セット
 - 累積後の配列長を検証する Validate (ARRAY filter registry、DR-102 §1 の accum_filters 席)。`min` 未満 = reason `too_short`、`max` 超過 = reason `too_long` (scalar filter registry の `in_range` が持つ `too_small`/`too_large` と対の命名、DR-066 の reason 語彙規約)
 - kawaz が挙げた「配列長検査」の直接表現。Result 化 (§4) を fixture で実際に pin できる、ARRAY filter registry 最初の実例になる
 - DSL 呼び出し形は scalar 版 `in_range:min:max` と同型 (コロン区切り DSL、DR-009)
+
+> **明確化 (統括検証 2026-07-14、codex レビュー #2 の反映): `length_range` (および同型の `in_range`) の DSL 引数の宣言妥当性は definition-time に検査する。** 非数値・引数個数不一致は kind=invalid-argument (DR-082 §3 の `regex_match` compile 失敗と同型、DR-083 §5「静的に既知は定義時に倒す」の一様適用)、`min > max` は kind=invalid-range (`min > max` の既存 invalid-range 前例と同型)。境界は inclusive、`min`/`max` は非負整数。**この裁定は `in_range` にも遡及する** — 参照実装の malformed arg 処理が現状 definition-time 検査を持たず runtime reject (`filter_rejected`) に留まっている場合は実装側の追随課題として残り、本 DR の definition-time 検査の裁定が正 (spec が先行し実装が追随する順序)。
 
 ## 採用しなかった案
 
