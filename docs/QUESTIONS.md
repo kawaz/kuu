@@ -10,9 +10,10 @@
 
 調査結果 (fallibility 全数 + 言語横断動詞マトリクス): 詳細はセッション scratchpad の accum-fallibility-vocab-recon.md (findings 記録予定)。勢力図 = **filter 席は fallible 優勢 / 構造畳み装置 (accumulator/collector) は total が全員** (DR-082 の「構造的妥当性は definition-error へ、runtime は total」パターンの体系適用)。T[][] は ref×repeat×append で既に可能 (DR-084 §2 pin 済み) だが scalar 側は separator が piece に潰すため不可。
 
-- **ACC-Q1**: 現 accumulator `append` (発火値を 1 個積む) の改名 — **a (統括推し): `push`** (JS/Rust/Ruby/MoonBit で「1 個積む」が割れない。**MoonBit 自身の Array::append は「展開結合」で kuu の append と正反対** — 実装言語との直接衝突を解消) / b: `add` 等
-- **ACC-Q2**: 展開結合 accumulator の新設 — **a (統括推し): `extend` 新設** (Python/Rust/MoonBit で「展開」が割れない。`flatten` は DR-036 で repeat の cons 平坦化に既予約のため不可) / b: 見送り
-- **ACC-Q3** (旧 CR-Q1): accum_filters の Result 化 — **a (統括推し): Result を生やす** (線引き =「filter 席 = fallible / 構造装置 = total」。accum_filters は filter 席なのに total なのが例外側で、Result 化が体系を揃える。kv_map の手前ゲートは accumulator の話なので非対称にならない。配列全体の検証は matcher ゲートでも静的でも書けず fallible accum_filters が唯一の座席) / b: transform 専用の正式契約化
+裁定済み: **ACC-Q3 = Result 化** (kawaz 2026-07-14。線引き =「filter 席 = fallible / 構造装置 = total」、実装サイクルは complete DR の後)。ACC-Q1/Q2 は kawaz の再検討 (extend は言語非依存文脈で別義リスク / push も単独では迷い / 一般論では flat=spread・concat、そのまま=wrap・nest が低誤解) を受けて更新:
+
+- **ACC-Q1b**: accumulator 語彙の最終形 — **a (統括推し): `push` (現 append 改名) + `spread` (展開結合、新設)**。spread は「展開して積む」が語に内在し深さ曖昧性も文字列連想もない ◎。そのまま側は kuu の accumulator が「発火値の型を問わず 1 要素として積む」(scalar 発火も row 発火も同じ装置) ため、入れ子状態を表す wrap/nest は scalar 発火で実態と食い違い不適合 — 動作語 push が残り、spread との**対比で「spread でない方 = 1 要素」**と曖昧性が構造的に消える / b: `push` + `concat` / c: その他
+- **ACC-Q4**: Result 化の実効化に必要な**最初の検証系 array filter** — 現 ARRAY registry は unique (transform) のみで reject を出す住人がゼロのため、Result 化しても fixture で pin できない。**a (統括推し): `length_range:min:max`** (配列長の範囲検査、kawaz の挙げた「配列長検査」の直接表現) を Result 化と同サイクルで追加 / b: 別候補 / c: 住人なしで Result 化だけ先行 (pin は後日)
 
 副次 (裁定不要、次バッチで対応): unwrap_single / from_entries の descriptor が builtin-descriptors.json に未収載 (total なので reasons:[] を補うだけ)。
 
