@@ -1,6 +1,6 @@
 ---
 title: DR-105 の fixture・実装追随 (flatten ダイヤル / ARRAY filter Result 化 / length_range)
-status: wip
+status: resolved
 category: task
 created: 2026-07-14T17:30:09+09:00
 last_read: 2026-07-14T18:51:16+09:00
@@ -9,10 +9,10 @@ wip_entered: 2026-07-14T18:54:17+09:00
 blocked_entered:
 pending_entered:
 discarded_entered:
-resolved_entered:
+resolved_entered: 2026-07-14T20:16:14+09:00
 discard_reason:
 pending_reason:
-close_reason:
+close_reason: ["dr/DR-105","implemented","done:spec lowering2本をappend+flatten:trueへ書換+definition-error5本(merge×flatten true/false, legacy flatten unknown-vocab, length_range/in_range malformed)+length-range-reject新設(commit ac8f3227); kuu.mbt flatten decode/展開・旧flatten accumulator廃止・ArrayFilterDescriptor Result化・length_range・invalid-range gate・unknown accumulator・DSL引数definition-time検査(commit 23018b11); conformance decoded=256/ran_cases=632/skipped=0/mismatches=0, moon test 324/324; ロックステップpush済み(spec 57ea0bc6→pin bump→kuu.mbt 0fe02498), CI run 29327970515 green; mismatchレビューでfixture期待値ミス2件(要素名typo/args_pos off-by-one)を検出・修正"]
 blocked_by:
 origin: 自リポ TODO (次セッション最優先キュー)
 ---
