@@ -20,15 +20,14 @@ landed テキストは両読みが可能な内部緊張を持つ:
 
 参照: docs/decisions/DR-093-required-requires-type-delegation*.md §1 / DR-047-*.md §5 (明確化 2026-07-09) / fixtures/constraints-parse/requires-bool-target.json (目的語側の truth-dispatch pin)
 
-## COMP-Q1〜Q5: complete fixture 系統の設計
+## COMP-Q1b: complete fixture の入力フィールド名の最終形 (小)
 
-正本: **docs/findings/2026-07-13-complete-fixture-recon.md §5** (各 Q の詳細)。関連 issue: docs/issue/2026-07-12-complete-query-fixture-coverage-gap.md
+COMP-Q1〜Q5 は裁定済み (2026-07-14): Q1 = before/after 系で承認 / Q2 = `candidates[].meta` は必須 (候補同一性の成分ゆえ判定に必要) / Q3 = completer 名フィールドを wire に持たせ、fixture は「書けば検証」の opt-in / Q5 = 「7 op 表と無関係」の明示文を書いてよい。Q4 は kawaz の逆質問 (候補 dedup の path 無視は spec pin か / 制約の中間結果で候補が変わるべきでは) — 統括が調査中、提案を持って戻る。
 
-- **COMP-Q1** 入力フィールド名: `before`/`after` 新設 (統括推し) / `argv` 再利用 — 背景は同 findings §2.2
-- **COMP-Q2** `candidates[].meta` の検証: 既存の「省略 = default と等価」規約維持 + 非 default を明示する pin fixture (統括推し) / complete 専用に必須化
-- **COMP-Q3** completer 名の設計乖離: DESIGN は候補に「型情報 / completer 名」を明記、実装 `Cand` (kuu.mbt の src/core/node.mbt:601-609) に completer 名フィールドが無い。(a) v1 は返さない設計 / (b) 実装漏れ — **推し無し、kawaz の意図確認が必要**
-- **COMP-Q4** `path` の扱い: wire に含めず検証対象外と明記 (統括推し — dedup 規則が path を候補同一性から除外) / 含めるが比較無視 / fixture 化しない
-- **COMP-Q5** 「7 op 表と無関係」明示文: 書かない (統括推し — complete 節冒頭を包含側で書けば自然に排除される) / 再発防止に明示
+残る小裁定: Q1 承認時の kawaz 不満 (「before/after の対象が何か分かりにくい — 前後の引数？word 中の前後？」) は実際に曖昧性の証左なので:
+
+- **COMP-Q1b-a** (統括推し): `argv_before` / `argv_after` — parse fixture の `argv` と語彙が繋がり「引数トークン列の前後」であることが自己説明的。word 内前後 (将来の word/word_suffix 拡張) との衝突も構造的に回避
+- **COMP-Q1b-b**: `before` / `after` のまま (DESIGN §15.13 のシグネチャ語彙と一致)
 
 ## V1-Q1〜Q3: v1.0.0 発行条件まわり
 
