@@ -8,7 +8,8 @@ kuu の core は特定言語のバイナリではなく、**仕様 + API 契約 
 
 | パス | 内容 |
 |---|---|
-| [ROADMAP.md](ROADMAP.md) | 全体構成方針と実装フェーズ |
+| [docs/VISION.md](docs/VISION.md) | kuu 全体構想 (レイヤ構造・kuu-cli・外周構想) — 何を目指すか |
+| [ROADMAP.md](ROADMAP.md) | 全体構成方針と実装フェーズ — どの順で作るか |
 | [docs/DESIGN.md](docs/DESIGN.md) | 現役仕様の単一ソース (AST・パース意味論・API 契約) |
 | [docs/LOWERING.md](docs/LOWERING.md) | 糖衣展開 (lowering) のカノニカルカタログ |
 | [docs/decisions/](docs/decisions/INDEX.md) | Design Records — 全設計判断の意図と不採用理由の記録 |
