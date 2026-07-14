@@ -1,0 +1,53 @@
+{
+  "why": "required_group (DR-103) の member 充足判定が structural or (type 付き枝) を持つ要素で required 単項と同じ型委譲になるかを pin する (codex レビュー M-2: `required` は候補 cell 群 (`CRequired(String, Array[String])`) を見て判定するのに対し、`required_group` の実装は宣言要素名 (`e.name`) のみを見ている疑いがあり、宣言要素名と実際の値の着地 cell が一致しない structural or では誤判定が起きる可能性がある)。level は or 親ノードで、num (int 枝) / flag (bool 枝) のいずれかが発火して初めて値が確定する — DR-025 の露出規則 (or 直下に type 付き枝が来る node は自身の name が export に使われず、選ばれた枝の leaf name が直接トップレベルに現れる) により、level という名前のセル自体は結果に存在しない。DR-103 §1/§7 は『member 充足は required 単項と完全に同一の型委譲』と規定しており、`fixtures/constraints-parse/required-structural-or-branch.json` (required:true 単項の同型ケース、値供給時は success) がこの型委譲の正解を既に固定している。required_group もこれと同じ判定 (num/flag いずれかの値確定で level 側の充足とみなす) をすべきであり、`e.name`=\"level\" という存在しないセルへの参照で判定すると誤って未充足になる。other は plain bool (`type:\"bool\"` + `long:[\":set:true\"]`、暗黙 default なし) にして group の充足が level 側の判定のみに依存するようにする — もし other が flag preset なら暗黙 default:false で常に vacuous 充足してしまい (DR-103 §7)、level 側の判定が正しいかどうかに関わらず group 全体が success になり、本 fixture の検証意図 (M-2 の顕在化) が壊れる。期待値は spec (DR-103 §1/§7 の型委譲原則) から導出したものであり、現行実装 (M-2 のバグ) では mismatch になるのが正 — ロックステップで統括が扱う。argv/args は書く (parse クエリ、definition-error ではない)。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {
+        "name": "level",
+        "long": true,
+        "required_group": ["g"],
+        "or": [
+          {"type": "int", "name": "num"},
+          {"type": "bool", "name": "flag"}
+        ]
+      },
+      {"name": "other", "type": "bool", "long": [":set:true"], "required_group": ["g"]}
+    ]
+  },
+  "cases": [
+    {
+      "id": "int-branch-satisfies-group",
+      "why": "`--level 5`: num 枝 (int) が \"5\" を受理して発火、flag 枝 (bool) は not_a_bool で死ぬ — 完全経路ちょうど1本、num という値確定した candidate cell が存在する。required 単項なら (`required-structural-or-branch.json::int-branch-supplied` と同型に) この時点で充足するので、required_group も同じ型委譲でグループ g が充足すべき — other (plain bool) は未発火・default なしで absent = 未充足だが、level 側 (num=5 経由) の充足だけで group は成立し required_group_violated は起きない。現行実装は `e.name`=\"level\" (存在しないセル) を見て未充足と誤判定する疑いがあり (codex M-2)、その場合は mismatch になる。",
+      "args": ["--level", "5"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "num", "op": "set", "operand": 5, "source": "cli"}
+        ],
+        "result": {"num": 5, "other": false}
+      }
+    },
+    {
+      "id": "bool-branch-satisfies-group",
+      "why": "`--level true`: flag 枝 (bool) が \"true\" を受理して発火、num 枝 (int) は not_a_number で死ぬ — int-branch-satisfies-group と対称、or 構造のどちらの枝でも group 充足に寄与することを固定する (型固有の偶然でなく or 親要素の充足判定そのものを検証するため)。",
+      "args": ["--level", "true"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "flag", "op": "set", "operand": true, "source": "cli"}
+        ],
+        "result": {"flag": true, "other": false}
+      }
+    },
+    {
+      "id": "neither-fires-group-violated",
+      "why": "args 空: level (or 親) はどちらの枝も committed でなく、other (plain bool) も未発火 — group g の member がいずれも値未充足のため required_group_violated (element=\"g\")。int-branch-satisfies-group / bool-branch-satisfies-group が success になるべきところ現行実装が誤って failure にするバグ (M-2) との対照ベースライン — この対照ケース自体は正しい実装でもバグの実装でも同じ failure になるはずで、M-2 の有無を切り分けない (levelを経由しない otherの純粋な未充足確認)。",
+      "args": [],
+      "expect": {
+        "outcome": "failure",
+        "errors": [{"element": "g", "args_pos": 0, "kind": "constraint", "reason": "required_group_violated"}]
+      }
+    }
+  ]
+}
