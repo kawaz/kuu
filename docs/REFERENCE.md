@@ -558,7 +558,7 @@ xargs 型。最初の非ハイフン operand (utility 名) で発火、そのト
 ## 6. builtin filter カタログ
 
 <!-- kuu-lint:vocab filters -->
-| filter | role | domain | effect | fallibility | reasons | 意味論 |
+| filter | role | domain | output_mode | fallibility | reasons | 意味論 |
 |---|---|---|---|---|---|---|
 | `trim` | filter | scalar | transform | total | (空) | 文字列前後の ASCII 空白除去。非 string 入力は素通し |
 | `non_empty` | filter | scalar | preserve | reject | `empty_value` | 空文字列を拒否 |
@@ -572,17 +572,17 @@ xargs 型。最初の非ハイフン operand (utility 名) で発火、そのト
 <!-- kuu-lint:end -->
 
 `domain` (`role:"filter"`/`role:"collector"` の carrier 軸、DR-106 由来・DR-107 で collector にも
-適用拡張) は `effect`/`fallibility` (旧 `signature`) と直交する — `in_range` (scalar) と
+適用拡張) は `output_mode`/`fallibility` (旧 `signature`) と直交する — `in_range` (scalar) と
 `length_range` (array) は同じ `preserve`/`reject` だが入力の型 (`T` か `T[]` か) が異なる。
 `role:"collector"` (`unwrap_single`/`from_entries`) は `filters.*` namespace を共有するが filter
 chain の colon-DSL args とは呼び出し規約が異なる (`invocation.encoding: object_args`、DR-106)。
-`domain`/`effect`/`fallibility` はいずれも collector では常に `array`/`transform`/`total` に
+`domain`/`output_mode`/`fallibility` はいずれも collector では常に `array`/`transform`/`total` に
 const 固定される (DR-105 §4「構造畳み装置は total」の Schema 強制、DR-107 §7)。
 
-`effect`/`fallibility` (旧 `signature` の分解、DR-107 §4) が reasons の有無を機械的に決める:
+`output_mode`/`fallibility` (旧 `signature` の分解、DR-107 §4) が reasons の有無を機械的に決める:
 **`fallibility:total` (常に成功) は `reasons: []`**、**`fallibility:reject` (拒否しうる) のみ
 非空の reasons を持つ** (DR-095 §3 の原則を継承)。「変換しつつ reject しうる」第 3 象限
-(`effect:transform` + `fallibility:reject`) は builtin corpus には実例が無いが descriptor
+(`output_mode:transform` + `fallibility:reject`) は builtin corpus には実例が無いが descriptor
 体系としては表現可能 (DR-107 §4、`app/valid_json` 仮想例)。
 
 ### filter/collector の invocation 引数

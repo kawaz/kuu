@@ -1,5 +1,5 @@
 {
-  "$comment": "kuu builtin registry 住人の宣言集合 — 各エントリは schema/descriptor.schema.json に適合する。正本は docs/decisions/DR-095-builtin-descriptor-reasons.md (§3 filters / §4 factories) + DR-107-descriptor-orthogonal-axes.md (role/construction/io_type/effect/fallibility/invocation の直交軸)。DR-095 §射程外の通り、installer 発生源 (missing_operand 等) と constraint 系 reason (required_violated 等) は本ファイルの対象外 — 前者はエンジン構造の発生源で installer descriptor 側の宣言軸が未実体化、後者は constraint installer (DR-047/055) 側で別途宣言が必要 (いずれも本 issue の射程外)。トップレベル区分名 (filters/types/providers) は DESIGN §13.1 の registry 区分名 (呼ばれるフィールド名の単位) を踏襲し、descriptor の `role` (DR-107) とは独立 — `types` registry 住人は `role:\"type_parser\"` を持つ (registry 区分名と role は別軸)。",
+  "$comment": "kuu builtin registry 住人の宣言集合 — 各エントリは schema/descriptor.schema.json に適合する。正本は docs/decisions/DR-095-builtin-descriptor-reasons.md (§3 filters / §4 factories) + DR-107-descriptor-orthogonal-axes.md (role/construction/io_type/output_mode/fallibility/invocation の直交軸)。DR-095 §射程外の通り、installer 発生源 (missing_operand 等) と constraint 系 reason (required_violated 等) は本ファイルの対象外 — 前者はエンジン構造の発生源で installer descriptor 側の宣言軸が未実体化、後者は constraint installer (DR-047/055) 側で別途宣言が必要 (いずれも本 issue の射程外)。トップレベル区分名 (filters/types/providers) は DESIGN §13.1 の registry 区分名 (呼ばれるフィールド名の単位) を踏襲し、descriptor の `role` (DR-107) とは独立 — `types` registry 住人は `role:\"type_parser\"` を持つ (registry 区分名と role は別軸)。",
   "$schema-ref": "descriptor.schema.json",
 
   "filters": {
@@ -9,7 +9,7 @@
       "construction": "static",
       "domain": "scalar",
       "io_type": { "input": "string", "output": "string" },
-      "effect": "transform",
+      "output_mode": "transform",
       "fallibility": "total",
       "invocation": { "encoding": "colon_args", "parameters": [] },
       "reasons": [],
@@ -21,7 +21,7 @@
       "construction": "static",
       "domain": "scalar",
       "io_type": { "input": "string", "output": "string" },
-      "effect": "preserve",
+      "output_mode": "preserve",
       "fallibility": "reject",
       "invocation": { "encoding": "colon_args", "parameters": [] },
       "reasons": ["empty_value"],
@@ -33,7 +33,7 @@
       "construction": "static",
       "domain": "scalar",
       "io_type": { "input": "number", "output": "number" },
-      "effect": "preserve",
+      "output_mode": "preserve",
       "fallibility": "reject",
       "invocation": {
         "encoding": "colon_args",
@@ -51,7 +51,7 @@
       "construction": "static",
       "domain": "scalar",
       "io_type": { "input": "string", "output": "string" },
-      "effect": "preserve",
+      "output_mode": "preserve",
       "fallibility": "reject",
       "invocation": {
         "encoding": "colon_args",
@@ -68,7 +68,7 @@
       "construction": "static",
       "domain": "scalar",
       "io_type": { "input": "number", "output": "number" },
-      "effect": "transform",
+      "output_mode": "transform",
       "fallibility": "total",
       "invocation": { "encoding": "colon_args", "parameters": [] },
       "reasons": [],
@@ -80,7 +80,7 @@
       "construction": "static",
       "domain": "array",
       "io_type": { "input": { "array": "value" }, "output": { "array": "value" } },
-      "effect": "transform",
+      "output_mode": "transform",
       "fallibility": "total",
       "invocation": { "encoding": "colon_args", "parameters": [] },
       "reasons": [],
@@ -92,7 +92,7 @@
       "construction": "static",
       "domain": "array",
       "io_type": { "input": { "array": "value" }, "output": { "array": "value" } },
-      "effect": "preserve",
+      "output_mode": "preserve",
       "fallibility": "reject",
       "invocation": {
         "encoding": "colon_args",
@@ -110,11 +110,11 @@
       "construction": "static",
       "domain": "array",
       "io_type": { "input": { "array": "value" }, "output": "value" },
-      "effect": "transform",
+      "output_mode": "transform",
       "fallibility": "total",
       "invocation": { "encoding": "object_args", "parameters": [] },
       "reasons": [],
-      "description": "累積結果 (T[]→U、collector 相、DR-036) — 長さ 1 配列を要素へ再帰的に畳む (0 個・2 個以上の配列は不変のまま通す、DR-034 縮退ケース)。multiple プリセット `override` の default_collector。domain:array/effect:transform/fallibility:total はいずれも collector 役割の const 固定 (DR-107 §7、DR-105 §4「構造畳み装置は total」)。呼び出し規約は filter chain の colon-DSL args とは異なる (multiple.collector の宣言から導出、DR-106、codex レビュー #2 M-21 の反映)。"
+      "description": "累積結果 (T[]→U、collector 相、DR-036) — 長さ 1 配列を要素へ再帰的に畳む (0 個・2 個以上の配列は不変のまま通す、DR-034 縮退ケース)。multiple プリセット `override` の default_collector。domain:array/output_mode:transform/fallibility:total はいずれも collector 役割の const 固定 (DR-107 §7、DR-105 §4「構造畳み装置は total」)。呼び出し規約は filter chain の colon-DSL args とは異なる (multiple.collector の宣言から導出、DR-106、codex レビュー #2 M-21 の反映)。"
     },
     "from_entries": {
       "name": "from_entries",
@@ -122,7 +122,7 @@
       "construction": "static",
       "domain": "array",
       "io_type": { "input": { "array": "value" }, "output": { "map": "value" } },
-      "effect": "transform",
+      "output_mode": "transform",
       "fallibility": "total",
       "invocation": {
         "encoding": "object_args",
@@ -131,7 +131,7 @@
         ]
       },
       "reasons": [],
-      "description": "累積結果 (T[]→U、collector 相、DR-036/DR-044) — entries 配列形・指名 2 フィールド形・key 昇格形の 3 用法を一本で覆い Map へ変換する。multiple プリセット `map` の collector (旧 to_map + key_from を置換)。domain:array/effect:transform/fallibility:total はいずれも collector 役割の const 固定 (DR-107 §7)。呼び出し規約は filter chain の colon-DSL args とは異なる (multiple.collector の object 形から導出する FromEntries spec を引数に取る、DR-106、codex レビュー #2 M-21 の反映)。"
+      "description": "累積結果 (T[]→U、collector 相、DR-036/DR-044) — entries 配列形・指名 2 フィールド形・key 昇格形の 3 用法を一本で覆い Map へ変換する。multiple プリセット `map` の collector (旧 to_map + key_from を置換)。domain:array/output_mode:transform/fallibility:total はいずれも collector 役割の const 固定 (DR-107 §7)。呼び出し規約は filter chain の colon-DSL args とは異なる (multiple.collector の object 形から導出する FromEntries spec を引数に取る、DR-106、codex レビュー #2 M-21 の反映)。"
     }
   },
 
@@ -141,7 +141,7 @@
       "role": "type_parser",
       "construction": "factory",
       "io_type": { "input": "string", "output": "number" },
-      "effect": "transform",
+      "output_mode": "transform",
       "fallibility": "reject",
       "invocation": { "encoding": "none", "parameters": [] },
       "config": {
@@ -157,7 +157,7 @@
       "role": "type_parser",
       "construction": "factory",
       "io_type": { "input": "string", "output": "number" },
-      "effect": "transform",
+      "output_mode": "transform",
       "fallibility": "reject",
       "invocation": { "encoding": "none", "parameters": [] },
       "config": {
@@ -171,7 +171,7 @@
       "role": "type_parser",
       "construction": "factory",
       "io_type": { "input": "string", "output": "bool" },
-      "effect": "transform",
+      "output_mode": "transform",
       "fallibility": "reject",
       "invocation": { "encoding": "none", "parameters": [] },
       "config": {
@@ -187,7 +187,7 @@
       "role": "type_parser",
       "construction": "factory",
       "io_type": { "input": "string", "output": "bool" },
-      "effect": "transform",
+      "output_mode": "transform",
       "fallibility": "reject",
       "invocation": { "encoding": "none", "parameters": [] },
       "config": {

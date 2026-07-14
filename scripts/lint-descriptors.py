@@ -3,7 +3,7 @@
 
 schema/descriptor.schema.json は単一 descriptor と envelope (filters/types/
 providers の 3 区分マップ) の両方を検証できるが、JSON Schema の表現範囲外の
-semantic 制約 (map key と descriptor.name の一致、effect:"preserve" の
+semantic 制約 (map key と descriptor.name の一致、output_mode:"preserve" の
 io_type.input == io_type.output 不変量) は本スクリプトが machine-check する
 (codex レビュー #4 A-M11/B-Maj6 が指摘した「envelope 自体を検証する形が無い」
 の是正、DR-107 §4 が「semantic lint の検査対象」と位置づけた preserve 不変量
@@ -71,28 +71,28 @@ def main() -> int:
     else:
         print(f"[OK]   key/name consistency ({len(seen_names)} 件)")
 
-    # 3. effect:"preserve" ⇒ io_type.input == io_type.output (DR-107 §4 が
+    # 3. output_mode:"preserve" ⇒ io_type.input == io_type.output (DR-107 §4 が
     #    Schema では表現しないと明記、semantic lint の検査対象)
     preserve_mismatches = []
     for section in ("filters", "types", "providers"):
         for key, desc in data.get(section, {}).items():
-            if desc.get("effect") != "preserve":
+            if desc.get("output_mode") != "preserve":
                 continue
             io_type = desc.get("io_type")
             if not io_type:
                 continue
             if io_type.get("input") != io_type.get("output"):
                 preserve_mismatches.append(
-                    f"{section}.{key}: effect=preserve だが "
+                    f"{section}.{key}: output_mode=preserve だが "
                     f"io_type.input={io_type.get('input')!r} != "
                     f"io_type.output={io_type.get('output')!r}"
                 )
     if preserve_mismatches:
         ok = False
         for m in preserve_mismatches:
-            fail(f"effect:preserve invariant: {m}")
+            fail(f"output_mode:preserve invariant: {m}")
     else:
-        print("[OK]   effect:preserve ⇒ io_type.input == io_type.output")
+        print("[OK]   output_mode:preserve ⇒ io_type.input == io_type.output")
 
     print()
     if not ok:

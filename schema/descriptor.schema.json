@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "kuu registry descriptor (installer / filter / collector / type_parser / accumulator / completer / provider self-description)",
-  "description": "registry 住人の自己記述形の JSON Schema ドラフト (DR-061 §1 の宣言軸原型、DR-066 §2 が reasons 追加、DR-106 が kind/domain 軸を追加、DR-107 が kind→role rename + construction/io_type/effect/fallibility/invocation の直交軸化を実施)。DESIGN §13.1「installer / registry 住人は自身を説明する descriptor を持つ」。DR-068 (ドラフト期は $id を与えない) に基づき draft 扱い。role 別に必須・禁止フィールドが分岐する (下記 allOf の role 条件分岐 — `oneOf` ではなく `allOf`+`if`/`then`、role 間の排他性は `role` フィールド自体の `const` 一致で保証されるため `if`/`then` で十分、codex レビュー #4 B-Min3)。分岐を Schema で強制することが本 Schema の目的そのもの (codex レビュー #3 A-C1 の反映、DR-107 §7 が role 別マトリクスとして拡張、codex レビュー #4 で強制力の実装漏れを是正)。個々の builtin descriptor の実体は schema/builtin-descriptors.json (DR-095、DR-107 で provider 3 種を追加、DR-107 codex レビュー #4 で envelope schema による集合検証を追加)。",
+  "description": "registry 住人の自己記述形の JSON Schema ドラフト (DR-061 §1 の宣言軸原型、DR-066 §2 が reasons 追加、DR-106 が kind/domain 軸を追加、DR-107 が kind→role rename + construction/io_type/output_mode/fallibility/invocation の直交軸化を実施)。DESIGN §13.1「installer / registry 住人は自身を説明する descriptor を持つ」。DR-068 (ドラフト期は $id を与えない) に基づき draft 扱い。role 別に必須・禁止フィールドが分岐する (下記 allOf の role 条件分岐 — `oneOf` ではなく `allOf`+`if`/`then`、role 間の排他性は `role` フィールド自体の `const` 一致で保証されるため `if`/`then` で十分、codex レビュー #4 B-Min3)。分岐を Schema で強制することが本 Schema の目的そのもの (codex レビュー #3 A-C1 の反映、DR-107 §7 が role 別マトリクスとして拡張、codex レビュー #4 で強制力の実装漏れを是正)。個々の builtin descriptor の実体は schema/builtin-descriptors.json (DR-095、DR-107 で provider 3 種を追加、DR-107 codex レビュー #4 で envelope schema による集合検証を追加)。",
   "$ref": "#/$defs/descriptor",
 
   "$defs": {
@@ -132,7 +132,7 @@
           "required": ["input", "output"],
           "additionalProperties": false
         },
-        "effect": {
+        "output_mode": {
           "type": "string",
           "enum": ["preserve", "transform"],
           "description": "入力を変えずに検証するか (preserve)、新しい値を計算するか (transform) (DR-107 §4、旧 `signature` の分解)。`fallibility` と直交する独立軸 — 「変換しつつ reject しうる」第 3 象限を表現できる (旧 signature の限界を解消)。`preserve` は `io_type.input == io_type.output` を伴う (DR-107 §4) — JSON Schema の再帰型等価判定の限界により Schema 上での強制はせず、semantic lint の検査対象と位置づける (codex レビュー #4 A-M6(2))。"
@@ -203,10 +203,10 @@
           "then": { "properties": { "reasons": { "minItems": 1 } } }
         },
         {
-          "description": "role:\"filter\" — domain/io_type/effect/fallibility/invocation が必須 (DR-107 §7)。owns/observes は installer 固有のため禁止。invocation.encoding は colon_args 固定 (DR-009 の colon-DSL)。construction:factory では config 必須、construction:static では config 禁止 (DR-107 §2、codex レビュー #4 B-C2)。domain は io_type.input の array ラップ有無と一致しなければならない (codex レビュー #4 A-M2/B-C4)。",
+          "description": "role:\"filter\" — domain/io_type/output_mode/fallibility/invocation が必須 (DR-107 §7)。owns/observes は installer 固有のため禁止。invocation.encoding は colon_args 固定 (DR-009 の colon-DSL)。construction:factory では config 必須、construction:static では config 禁止 (DR-107 §2、codex レビュー #4 B-C2)。domain は io_type.input の array ラップ有無と一致しなければならない (codex レビュー #4 A-M2/B-C4)。",
           "if": { "properties": { "role": { "const": "filter" } } },
           "then": {
-            "required": ["domain", "io_type", "effect", "fallibility", "invocation"],
+            "required": ["domain", "io_type", "output_mode", "fallibility", "invocation"],
             "properties": {
               "invocation": {
                 "type": "object",
@@ -233,13 +233,13 @@
           }
         },
         {
-          "description": "role:\"collector\" — domain/io_type/effect/fallibility/invocation が必須。DR-105 §4 の勢力図 (構造畳み装置は total) を Schema で強制: domain=array・effect=transform・fallibility=total を const 固定、io_type.input も常に array ラップ。invocation.encoding は object_args 固定 (multiple.collector 由来、DR-036/DR-044)。construction は static 固定 (collector は構築時パラメータを持たない静的な累積結果変換であり configurable factory の対象外、config が常に禁止であることの帰結、codex レビュー #4 A-M1/B-C2 — 旧版は construction:factory も許容してしまっていた)。config は常に禁止。",
+          "description": "role:\"collector\" — domain/io_type/output_mode/fallibility/invocation が必須。DR-105 §4 の勢力図 (構造畳み装置は total) を Schema で強制: domain=array・output_mode=transform・fallibility=total を const 固定、io_type.input も常に array ラップ。invocation.encoding は object_args 固定 (multiple.collector 由来、DR-036/DR-044)。construction は static 固定 (collector は構築時パラメータを持たない静的な累積結果変換であり configurable factory の対象外、config が常に禁止であることの帰結、codex レビュー #4 A-M1/B-C2 — 旧版は construction:factory も許容してしまっていた)。config は常に禁止。",
           "if": { "properties": { "role": { "const": "collector" } } },
           "then": {
-            "required": ["domain", "io_type", "effect", "fallibility", "invocation"],
+            "required": ["domain", "io_type", "output_mode", "fallibility", "invocation"],
             "properties": {
               "domain": { "const": "array" },
-              "effect": { "const": "transform" },
+              "output_mode": { "const": "transform" },
               "fallibility": { "const": "total" },
               "construction": { "const": "static" },
               "io_type": { "properties": { "input": { "type": "object", "required": ["array"] } } },
@@ -258,12 +258,12 @@
           }
         },
         {
-          "description": "role:\"type_parser\" — io_type/effect/fallibility/invocation が必須 (DR-107 §7、旧 kind:\"factory\" のうち型構築住人)。domain は filter/collector 固有のため無関係 (禁止)。effect は transform 固定 (parse 相は String→T の変換)、io_type.input は string 固定 (parse 相の入力は常に wire 上の文字列、codex レビュー #4 B-C4)。fallibility は自由 (total/reject いずれもありうる — 構文不一致で reject する住人と常に成功する住人が両方存在、builtin/number_parser vs 現状 builtin corpus 全件が reject)。invocation.encoding は none 固定 (type: \"int\" のような名前参照のみ、DSL args を取らない)。construction:factory では config 必須、construction:static では config 禁止 (codex レビュー #4 B-C2 — 旧版は construction を問わず config 無条件必須だった)。",
+          "description": "role:\"type_parser\" — io_type/output_mode/fallibility/invocation が必須 (DR-107 §7、旧 kind:\"factory\" のうち型構築住人)。domain は filter/collector 固有のため無関係 (禁止)。output_mode は transform 固定 (parse 相は String→T の変換)、io_type.input は string 固定 (parse 相の入力は常に wire 上の文字列、codex レビュー #4 B-C4)。fallibility は自由 (total/reject いずれもありうる — 構文不一致で reject する住人と常に成功する住人が両方存在、builtin/number_parser vs 現状 builtin corpus 全件が reject)。invocation.encoding は none 固定 (type: \"int\" のような名前参照のみ、DSL args を取らない)。construction:factory では config 必須、construction:static では config 禁止 (codex レビュー #4 B-C2 — 旧版は construction を問わず config 無条件必須だった)。",
           "if": { "properties": { "role": { "const": "type_parser" } } },
           "then": {
-            "required": ["io_type", "effect", "fallibility", "invocation"],
+            "required": ["io_type", "output_mode", "fallibility", "invocation"],
             "properties": {
-              "effect": { "const": "transform" },
+              "output_mode": { "const": "transform" },
               "io_type": { "properties": { "input": { "const": "string" } } },
               "invocation": {
                 "type": "object",
@@ -281,7 +281,7 @@
           }
         },
         {
-          "description": "role:\"provider\" — io_type/invocation が必須、construction は static 固定 (registry の単一スロット、DESIGN §12/§12b/§14.3)。name は固定 3 スロット名の閉じた enum (DR-107 §6、codex レビュー #4 B-Maj7)。effect/fallibility/domain/owns/observes/config は無関係 (禁止) — provider の null 返却は io_type.output の union (例 [\"string\",\"null\"]) で表現し、fallibility 軸 (filter の reject/reason 機構) とは意味論が異なる (DR-107 §6)。reasons は常に空 (null 返却は reasons の対象外)。invocation.encoding は none 固定 (評価器内部のランタイム参照、wire 上の DSL args を持たない)。",
+          "description": "role:\"provider\" — io_type/invocation が必須、construction は static 固定 (registry の単一スロット、DESIGN §12/§12b/§14.3)。name は固定 3 スロット名の閉じた enum (DR-107 §6、codex レビュー #4 B-Maj7)。output_mode/fallibility/domain/owns/observes/config は無関係 (禁止) — provider の null 返却は io_type.output の union (例 [\"string\",\"null\"]) で表現し、fallibility 軸 (filter の reject/reason 機構) とは意味論が異なる (DR-107 §6)。reasons は常に空 (null 返却は reasons の対象外)。invocation.encoding は none 固定 (評価器内部のランタイム参照、wire 上の DSL args を持たない)。",
           "if": { "properties": { "role": { "const": "provider" } } },
           "then": {
             "required": ["io_type", "invocation"],
@@ -297,7 +297,7 @@
             "not": {
               "anyOf": [
                 { "required": ["domain"] },
-                { "required": ["effect"] },
+                { "required": ["output_mode"] },
                 { "required": ["fallibility"] },
                 { "required": ["owns"] },
                 { "required": ["observes"] },
@@ -307,14 +307,14 @@
           }
         },
         {
-          "description": "role:\"installer\" — domain/io_type/effect/fallibility/invocation は filter/collector/type_parser/provider 固有の宣言軸であり installer には無関係 (DR-061 §1 の owns/observes/config 軸のまま不変)。",
+          "description": "role:\"installer\" — domain/io_type/output_mode/fallibility/invocation は filter/collector/type_parser/provider 固有の宣言軸であり installer には無関係 (DR-061 §1 の owns/observes/config 軸のまま不変)。",
           "if": { "properties": { "role": { "const": "installer" } } },
           "then": {
             "not": {
               "anyOf": [
                 { "required": ["domain"] },
                 { "required": ["io_type"] },
-                { "required": ["effect"] },
+                { "required": ["output_mode"] },
                 { "required": ["fallibility"] },
                 { "required": ["invocation"] }
               ]
