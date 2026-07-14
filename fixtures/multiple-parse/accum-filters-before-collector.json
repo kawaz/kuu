@@ -1,0 +1,37 @@
+{
+  "why": "accum_filters (DR-102 §1、Acc→Acc、累積後の配列全体への変換) と collector (DR-036、T[]→U、最終形への変換) の適用順を pin する。型の整合性から順序は一意に導出できる: accum_filters は配列→配列 (Acc→Acc) の変換であり、collector が先に T[]→U (配列以外の形、例えば scalar や Set) へ変換してしまうと、その後段の accum_filters が適用できる配列がもはや存在しない — 累積直後・まだ配列の形をしているうちに accum_filters が適用され、その結果を collector が最終形へ畳む、という順序 (accumulator → accum_filters → collector) が唯一の適合形になる。この順序は observable — `unique` (重複除去、DR-095 §3) と `unwrap_single` (長さ 1 配列を要素へ畳む、DR-034 縮退ケース) を組み合わせ、2 回の同値発火が accum_filters 先行なら重複除去後に長さ 1 になり unwrap_single でスカラーへ畳まれる (collector 先行だと長さ 2 のまま unwrap_single を素通りし、その後 unique で長さ 1 配列のまま止まる — 最終形が配列かスカラーかで経路の違いが直接観測できる)。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {"name": "tag", "type": "string", "long": true, "multiple": {"accumulator": "append", "collector": "unwrap_single"}, "accum_filters": ["unique"]}
+    ]
+  },
+  "cases": [
+    {
+      "id": "duplicate-fires-collapse-to-scalar-via-accum-filters-then-collector",
+      "why": "`--tag a --tag a`: append accumulator が [\"a\",\"a\"] に累積した後、accum_filters (`unique`) が先に適用され重複除去で [\"a\"] (長さ 1) になり、その後 collector (`unwrap_single`) が長さ 1 配列を要素へ畳んで結果はスカラー \"a\" になる。もし collector が先に適用されていたら、[\"a\",\"a\"] は長さ 2 のまま unwrap_single を素通り (不変) し、その後 unique が重複除去して長さ 1 の**配列** [\"a\"] のまま止まる — 期待値がスカラー \"a\" であること自体が accum_filters → collector の順序 (accum_filters 先行) の証拠になる。",
+      "args": ["--tag", "a", "--tag", "a"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "tag", "op": "set", "operand": "a", "source": "cli"},
+          {"entity": "tag", "op": "set", "operand": "a", "source": "cli"}
+        ],
+        "result": {"tag": "a"}
+      }
+    },
+    {
+      "id": "distinct-fires-stay-array-through-accum-filters-then-collector",
+      "why": "`--tag a --tag b`: append accumulator が [\"a\",\"b\"] に累積、accum_filters (`unique`) は重複が無いため不変 (長さ 2 のまま)、collector (`unwrap_single`) は長さ 2 配列を不変のまま通す (DR-034 縮退ケースの境界)。順序に関わらず結果は配列のままになる対照ケース — duplicate-fires-collapse-to-scalar-via-accum-filters-then-collector (順序が observable になるケース) との対比で、順序の効果が『重複がある場合にのみ』現れることを示す。",
+      "args": ["--tag", "a", "--tag", "b"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "tag", "op": "set", "operand": "a", "source": "cli"},
+          {"entity": "tag", "op": "set", "operand": "b", "source": "cli"}
+        ],
+        "result": {"tag": ["a", "b"]}
+      }
+    }
+  ]
+}
