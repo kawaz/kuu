@@ -1,13 +1,13 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "kuu registry descriptor (installer / configurable factory / filter self-description)",
-  "description": "registry 住人 (installer / configurable factory / filter) の自己記述形の JSON Schema ドラフト (DR-061 §1 の 4 宣言軸: owns / observes / config キー / reasons、DR-066 §2 が reasons を追加。DESIGN §13.1「installer / registry 住人は自身を説明する descriptor を持つ」)。DR-068 (ドラフト期は $id を与えない) に基づき draft 扱い。owns/observes は installer (DR-042 の特殊語彙展開装置) 固有の宣言軸であり、filter / configurable factory の descriptor では通常出現しない (両者は特殊語彙を持たず、自身の name が registry 上の唯一の所有語彙であるため — 本 Schema はこの非対称を optional で表現し必須にしない)。個々の builtin descriptor の実体は schema/builtin-descriptors.json (DR-095)。",
+  "title": "kuu registry descriptor (installer / configurable factory / filter / collector self-description)",
+  "description": "registry 住人 (installer / configurable factory / filter / collector) の自己記述形の JSON Schema ドラフト (DR-061 §1 の 4 宣言軸: owns / observes / config キー / reasons、DR-066 §2 が reasons を追加、DR-106 が kind:\"collector\" と domain 軸を追加)。DESIGN §13.1「installer / registry 住人は自身を説明する descriptor を持つ」)。DR-068 (ドラフト期は $id を与えない) に基づき draft 扱い。owns/observes は installer (DR-042 の特殊語彙展開装置) 固有の宣言軸であり、filter / configurable factory / collector の descriptor では通常出現しない (いずれも特殊語彙を持たず、自身の name が registry 上の唯一の所有語彙であるため — 本 Schema はこの非対称を `kind` 別の oneOf 分岐で強制する、codex レビュー #3 A-C1 の反映)。個々の builtin descriptor の実体は schema/builtin-descriptors.json (DR-095)。",
   "$ref": "#/$defs/descriptor",
 
   "$defs": {
     "descriptor": {
       "type": "object",
-      "description": "1 registry 住人分の自己記述。installer / configurable factory (types 等) / filter のいずれも同型で表現する — DESIGN §13.1 の「installer / registry 住人」という一般化に対応。",
+      "description": "1 registry 住人分の自己記述。installer / configurable factory (types 等) / filter / collector のいずれも同型で表現する — DESIGN §13.1 の「installer / registry 住人」という一般化に対応。`kind` の値に応じて `domain`/`signature`/`owns`/`observes` の必須性・禁止性が分岐する (下記 allOf、codex レビュー #3 A-C1 の反映: 分岐を Schema で強制することが本 Schema の目的そのものであり、`kind` を省略した descriptor や `kind` と矛盾するフィールド構成の descriptor は invalid とする)。",
       "properties": {
         "name": {
           "type": "string",
@@ -57,7 +57,45 @@
           "description": "emit しうる reason 識別子の列挙 (DR-066 §2、descriptor の 4 つ目の宣言軸)。reason は ns 付き識別子 (DR-094 §1/§5)、bare は builtin ns の糖衣。空配列は「この descriptor は失敗しない (Transform filter 等)」の明示 (DR-095 §3)。reason は排他所有ではないグローバル語彙 — 複数 descriptor が同じ reason (`too_small` 等) を共有 emit してよい (DR-066 §採用しなかった案「reason の排他所有」を却下、DR-094 §7 で ns 導入後も不変と再確認)。"
         }
       },
-      "required": ["name", "reasons"],
+      "required": ["name", "kind", "reasons"],
+      "allOf": [
+        {
+          "description": "kind:\"filter\" — domain/signature は carrier/fallibility の宣言軸として必須 (DR-106 §2)。owns/observes は installer 固有の宣言軸であり filter には無関係 (codex レビュー #3 A-C1 の反映、DR-061 §1 の非対称を Schema で強制)。",
+          "if": { "properties": { "kind": { "const": "filter" } } },
+          "then": {
+            "required": ["domain", "signature"],
+            "not": { "anyOf": [{ "required": ["owns"] }, { "required": ["observes"] }] }
+          }
+        },
+        {
+          "description": "kind:\"collector\" — domain/signature はいずれも filter 固有の宣言軸であり collector には無関係 (DR-106 §2/§4)。owns/observes も installer 固有のため無関係 (codex レビュー #3 A-C1/M-1 の反映)。",
+          "if": { "properties": { "kind": { "const": "collector" } } },
+          "then": {
+            "not": {
+              "anyOf": [
+                { "required": ["domain"] },
+                { "required": ["signature"] },
+                { "required": ["owns"] },
+                { "required": ["observes"] }
+              ]
+            }
+          }
+        },
+        {
+          "description": "kind:\"installer\" — domain/signature は filter 固有の宣言軸であり installer には無関係 (owns/observes は installer 固有の軸のため引き続き optional のまま、codex レビュー #3 A-C1 の反映)。",
+          "if": { "properties": { "kind": { "const": "installer" } } },
+          "then": {
+            "not": { "anyOf": [{ "required": ["domain"] }, { "required": ["signature"] }] }
+          }
+        },
+        {
+          "description": "kind:\"factory\" — domain/signature は filter 固有の宣言軸であり configurable factory には無関係 (codex レビュー #3 A-C1 の反映)。",
+          "if": { "properties": { "kind": { "const": "factory" } } },
+          "then": {
+            "not": { "anyOf": [{ "required": ["domain"] }, { "required": ["signature"] }] }
+          }
+        }
+      ],
       "additionalProperties": true
     }
   }

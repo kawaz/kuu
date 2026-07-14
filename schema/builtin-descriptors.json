@@ -73,16 +73,14 @@
     "unwrap_single": {
       "name": "unwrap_single",
       "kind": "collector",
-      "signature": "Transform",
       "reasons": [],
-      "description": "累積結果 (T[]→U、collector 相、DR-036) — 長さ 1 配列を要素へ再帰的に畳む (0 個・2 個以上の配列は不変のまま通す、DR-034 縮退ケース)。multiple プリセット `override` の default_collector。Transform 相当 (拒否を持たない純関数)。呼び出し規約は filter chain の colon-DSL args とは異なる (multiple.collector の宣言から導出、DR-106、codex レビュー #2 M-21 の反映)。"
+      "description": "累積結果 (T[]→U、collector 相、DR-036) — 長さ 1 配列を要素へ再帰的に畳む (0 個・2 個以上の配列は不変のまま通す、DR-034 縮退ケース)。multiple プリセット `override` の default_collector。拒否を持たない純関数 (`reasons:[]` がその宣言)。**`signature` は持たない** — `signature` (Validate/Transform) は filter 固有の宣言軸であり collector には無関係 (DR-106 §2、codex レビュー #3 A-C1 の反映: descriptor.schema.json の kind 別 oneOf 分岐がこれを Schema レベルで強制する)。呼び出し規約は filter chain の colon-DSL args とは異なる (multiple.collector の宣言から導出、DR-106、codex レビュー #2 M-21 の反映)。"
     },
     "from_entries": {
       "name": "from_entries",
       "kind": "collector",
-      "signature": "Transform",
       "reasons": [],
-      "description": "累積結果 (T[]→U、collector 相、DR-036/DR-044) — entries 配列形・指名 2 フィールド形・key 昇格形の 3 用法を一本で覆い Map へ変換する。multiple プリセット `map` の collector (旧 to_map + key_from を置換)。Transform 相当 (拒否を持たない純関数)。呼び出し規約は filter chain の colon-DSL args とは異なる (multiple.collector の object 形から導出する FromEntries spec を引数に取る、DR-106、codex レビュー #2 M-21 の反映)。"
+      "description": "累積結果 (T[]→U、collector 相、DR-036/DR-044) — entries 配列形・指名 2 フィールド形・key 昇格形の 3 用法を一本で覆い Map へ変換する。multiple プリセット `map` の collector (旧 to_map + key_from を置換)。拒否を持たない純関数 (`reasons:[]` がその宣言)。**`signature` は持たない** — `signature` (Validate/Transform) は filter 固有の宣言軸であり collector には無関係 (DR-106 §2、codex レビュー #3 A-C1 の反映)。呼び出し規約は filter chain の colon-DSL args とは異なる (multiple.collector の object 形から導出する FromEntries spec を引数に取る、DR-106、codex レビュー #2 M-21 の反映)。"
     }
   },
 

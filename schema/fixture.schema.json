@@ -31,7 +31,7 @@
         "cases": {
           "type": "array",
           "items": { "$ref": "#/$defs/case" },
-          "description": "`query: \"parse\"` / `\"definition_error\"` / `\"complete\"` で使う case 列 (CONFORMANCE §1、DR-072)。`query: \"lower\"` は cases を持たない (単一トップレベル expect、DR-070 §1)。"
+          "description": "`query: \"parse\"` / `\"definition_error\"` / `\"complete\"` で使う case 列 (CONFORMANCE §1、DR-072)。`query: \"lower\"` は cases を持たない (単一トップレベル expect、DR-070 §1)。ここでの `$ref` は 3 種の case 形に共通する緩い形 — `query` 別の厳密な形 (必須/禁止フィールド) は下記 allOf の `then` 節が `parseCase`/`definitionErrorCase`/`completeCase` で追加拘束する (codex レビュー #3 B-M2 の反映)。"
         },
         "expect": {
           "description": "`query: \"lower\"` 専用のトップレベル expect (DR-070 §2: lowered 断面、DR-063 §3 の面構造 `{greedy, positionals, entities, templates, matcher, ...}`)。面構造の詳細な語彙は DR-063 §3 が正本 — 本 Schema は構文層のみを緩く object として受ける (wire.schema.json 同様、語彙層の検査は runner の関心)。",
@@ -41,20 +41,32 @@
       "required": ["why", "query", "definition"],
       "allOf": [
         {
+          "description": "query=\"parse\": cases は最低 1 件、各 case は parseCase 形 (args 必須、expect は parseExpect 固定、args_before/args_after/word_before/word_after 禁止、codex レビュー #3 B-M2 の反映)。",
           "if": { "properties": { "query": { "const": "parse" } } },
-          "then": { "required": ["cases"] }
+          "then": {
+            "required": ["cases"],
+            "properties": { "cases": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/parseCase" } } }
+          }
         },
         {
+          "description": "query=\"definition_error\": cases は最低 1 件、各 case は definitionErrorCase 形 (args 等の実行入力を一切禁止、expect は definitionErrorExpect 固定、DR-082 §1、codex レビュー #3 B-M2 の反映)。",
           "if": { "properties": { "query": { "const": "definition_error" } } },
-          "then": { "required": ["cases"] }
+          "then": {
+            "required": ["cases"],
+            "properties": { "cases": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/definitionErrorCase" } } }
+          }
         },
         {
           "if": { "properties": { "query": { "const": "lower" } } },
           "then": { "required": ["expect"] }
         },
         {
+          "description": "query=\"complete\": cases は最低 1 件、各 case は completeCase 形 (args_before 必須、args_after のみ optional、expect は completeExpect 固定、args/word_before/word_after 禁止、CONFORMANCE §4/DR-104、codex レビュー #3 B-M2 の反映)。",
           "if": { "properties": { "query": { "const": "complete" } } },
-          "then": { "required": ["cases"] }
+          "then": {
+            "required": ["cases"],
+            "properties": { "cases": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/completeCase" } } }
+          }
         }
       ],
       "additionalProperties": true
@@ -127,6 +139,49 @@
       },
       "required": ["id", "why", "expect"],
       "additionalProperties": true
+    },
+
+    "parseCase": {
+      "description": "`query: \"parse\"` 専用の厳密な case 形 (CONFORMANCE §1、codex レビュー #3 B-M2 の反映)。args は必須、expect は parseExpect 固定。complete 専用フィールド (args_before/args_after) と将来予約 (word_before/word_after) は禁止 — additionalProperties:false でスキーマレベルに固定する。",
+      "type": "object",
+      "properties": {
+        "id": { "$ref": "#/$defs/case/properties/id" },
+        "why": { "$ref": "#/$defs/case/properties/why" },
+        "args": { "$ref": "#/$defs/case/properties/args" },
+        "env": { "$ref": "#/$defs/case/properties/env" },
+        "tty": { "$ref": "#/$defs/case/properties/tty" },
+        "config": { "$ref": "#/$defs/case/properties/config" },
+        "config_files": { "$ref": "#/$defs/case/properties/config_files" },
+        "expect": { "$ref": "#/$defs/parseExpect" }
+      },
+      "required": ["id", "why", "args", "expect"],
+      "additionalProperties": false
+    },
+
+    "definitionErrorCase": {
+      "description": "`query: \"definition_error\"` 専用の厳密な case 形 (DR-082 §1、codex レビュー #3 B-M2 の反映)。定義の静的検査のみで実行しないため args・値源供給フィールド (env/tty/config/config_files) はいずれも禁止。expect は definitionErrorExpect 固定。",
+      "type": "object",
+      "properties": {
+        "id": { "$ref": "#/$defs/case/properties/id" },
+        "why": { "$ref": "#/$defs/case/properties/why" },
+        "expect": { "$ref": "#/$defs/definitionErrorExpect" }
+      },
+      "required": ["id", "why", "expect"],
+      "additionalProperties": false
+    },
+
+    "completeCase": {
+      "description": "`query: \"complete\"` 専用の厳密な case 形 (DR-104、CONFORMANCE §4、codex レビュー #3 B-M2 の反映)。args_before は必須、args_after のみ optional。`query:\"parse\"` の args、および v1 未実装のまま予約されている word_before/word_after (DR-104 §1) は禁止 — CONFORMANCE §4 が定める runner の明示 reject をスキーマレベルでも固定する。",
+      "type": "object",
+      "properties": {
+        "id": { "$ref": "#/$defs/case/properties/id" },
+        "why": { "$ref": "#/$defs/case/properties/why" },
+        "args_before": { "$ref": "#/$defs/case/properties/args_before" },
+        "args_after": { "$ref": "#/$defs/case/properties/args_after" },
+        "expect": { "$ref": "#/$defs/completeExpect" }
+      },
+      "required": ["id", "why", "args_before", "expect"],
+      "additionalProperties": false
     },
 
     "parseExpect": {
@@ -328,7 +383,7 @@
         "candidates": {
           "type": "array",
           "items": { "$ref": "#/$defs/candidate" },
-          "description": "生存 partial 経路の次消費点で読めるものの和集合 (DR-060 §1)。集合比較、順序非規範 (DR-104 §4、CONFORMANCE §3)。"
+          "description": "生存 partial 経路の次消費点で読めるものの和集合 (DR-060 §1)。順序非依存の multiset 比較 — producer は §3 の 6 フィールド identity で重複する候補を出力してはならず、その前提の上で比較は順序非依存・多重度保持の一対一対応で行う (DR-104 §4 明確化 note、CONFORMANCE §3、codex レビュー #3 A-m2/B-M6 の反映)。"
         }
       },
       "required": ["outcome", "candidates"],
