@@ -876,7 +876,7 @@ name を持つノードが結果スコープ = lexical スコープを作る。c
 
 - env_prefix が設定されていれば自動連結 (`MYAPP_PORT`)。prefix を付けたくない完全指定は要素の `config` で `env_prefix: ""` を上書きする (DR-049)
 - 値の優先度: §11.4 を参照
-- **env_provider** は registry の単一スロット。シグネチャは `(key: string) → string | null` — null = 未設定、空文字列は「設定されている」。受け取る key は prefix 連結済みの最終名 (導出は installer 側に閉じる、DR-049)
+- **env_provider** は registry の単一スロット。シグネチャは `(key: string) → string | null` — null = 未設定、空文字列は「設定されている」。受け取る key は prefix 連結済みの最終名 (導出は installer 側に閉じる、DR-049)。このシグネチャの機械可読宣言 (`role:"provider"` descriptor) の正本は `schema/builtin-descriptors.json` の `env_provider` (DR-107 §6)
 - env 値は string として pieceProcessor (piece_filters → parse → value_filters) を通る。multiple 要素なら separator 分割も効く (CLI 入力と同じ手順、DR-049)
 - **env_auto** (DR-100): `config.env_auto: true` で、`env:` 未指定の値セル持ち要素に env 席を自動宣言する。env 名は `UPPER(env_prefix)_UPPER(スコープパス)_UPPER(name)` のフル修飾 (例: serve 配下の port → `MYAPP_SERVE_PORT`)。明示 `env:` が優先 (DR-049)
 - 複数環境のプロファイル切替 (dev / prod / test) は本仕様の関心外。実体ノード (§4.5) と config ファイル側の構成で表現する
@@ -904,7 +904,7 @@ name を持つノードが結果スコープ = lexical スコープを作る。c
 - **configurable factory config**: `tty_stream` (`"stdin"｜"stdout"｜"stderr"`、必須 — 未指定は definition-error kind=`invalid-range`) / `tty_cygwin` (bool、既定 true — cygwin pty を terminal 扱いに含めるダイヤル)
 - **`default` 席の解決規則** (§11.4 のラダーは 5 段固定のまま、この席の中身が型依存): `resolved_default = fold(観測) ?? 宣言 default ?? absent`。`fold(観測) = terminal || (tty_cygwin && cygwin)`。観測が得られる限り宣言 default より優先する (「明示 (CLI/env/config) > 継承 (inherit) > 観測 (tty) > 宣言既定 (default)」という序列は DR-098 §5 のまま維持、実装位置が独立ラダー席から型の解決規則へ移っただけ)
 - **source タグ**: 最終値が fold 由来なら `source: "tty"`、宣言 default へフォールバックしたなら `source: "default"` (観測由来 vs 宣言 default 由来の診断区別、`effects` には現れない — 完走後の値確定)
-- **tty_provider** は registry の単一スロット。シグネチャは `(stream: "stdin"|"stdout"|"stderr") → {terminal: bool, cygwin: bool} | null` — null = 提供なし。env_provider (§12) / config_provider (§14.3) と同列 (DR-099。DR-098 の `bool | null` から改訂 — fold の方言 `tty_cygwin` を spec 側の純データ計算として保つため)
+- **tty_provider** は registry の単一スロット。シグネチャは `(stream: "stdin"|"stdout"|"stderr") → {terminal: bool, cygwin: bool} | null` — null = 提供なし。env_provider (§12) / config_provider (§14.3) と同列 (DR-099。DR-098 の `bool | null` から改訂 — fold の方言 `tty_cygwin` を spec 側の純データ計算として保つため)。このシグネチャの機械可読宣言 (`role:"provider"` descriptor) の正本は `schema/builtin-descriptors.json` の `tty_provider` (DR-107 §6、入出力の enum/struct 精密化は io_type の型体系の外なので description に注記)
 - 供給値 (`terminal`/`cygwin`) は native bool (string でない) なので、fold で計算した値の pieceProcessor 通過は `piece_filters` / `parse` (String→T の相) が型の帰結でスキップされ、`value_filters` / `final_filters` (T→T の相) のみ通過する (DR-050 §4 の config scalar と同じ原理)
 - 評価器の純粋性は不変: パーサ自身が `isatty()` を呼ぶことはなく、ambient probe の実行は provider 実装 (ホスト言語 DX) の責務に閉じる (DR-098 §2、DR-099 でも不変)
 
@@ -1040,7 +1040,7 @@ installer が宣言語彙に関わる形は 2 種類ある (DR-056): **所有** 
 ```
 
 - config ファイルのパスを取る要素の配線宣言。パス要素は普通の要素で、パス自体が値源ラダー (CLI > env > default) で解決される
-- 読み込んだ階層オブジェクトが値源ラダーの config 席 (§11.4 の 3) に供給される。**対応付けはデフォルトで同型対応** (name スコープ階層 ↔ config 階層)、明示 `config_key` (link の固定パス DSL、ルートからの絶対パス) で上書き
+- 読み込んだ階層オブジェクトが値源ラダーの config 席 (§11.4 の 3) に供給される。**対応付けはデフォルトで同型対応** (name スコープ階層 ↔ config 階層)、明示 `config_key` (link の固定パス DSL、ルートからの絶対パス) で上書き。読込元は **config_provider** (registry の単一スロット、シグネチャ `(path: string) → object | null`、§13.1)。このシグネチャの機械可読宣言 (`role:"provider"` descriptor) の正本は `schema/builtin-descriptors.json` の `config_provider` (DR-107 §6)
 - **config 値の期待型は要素の type**: string は CLI/env と同一の全段 pipeline (number/bool 要素へは parse 試行)、scalar (number/bool) は型一致なら T 域の座席のみ (value_filters / 確定後の final_filters・accum_filters — multiple 有無で対応する属性が決まる、DR-102。string 域の piece_filters / parse は型の帰結でスキップ)・**string 要素へは JSON 文字列化で受理** (寛容の双方向対称、数値は最短表現 `1.0` → `"1"`)、bool↔number の意味変換と構造不一致 (array/object ↔ scalar) は Error、array は分割済み pieces、object は同型再帰 (DR-050 §4)
 - 依存順序: 経路確定 → config_file 値確定 → provider 読込 → config 席有効化 → 最終値確定 → 遅延述語。**config は構造 (matcher / 経路探索) に影響しない**。config_file 要素自身は config 席を持てない (循環禁止)
 - committed なパス (CLI/env 明示) の読込失敗は Error、default 由来のパス不在は黙認

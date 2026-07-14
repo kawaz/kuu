@@ -85,9 +85,10 @@ jq -r '.filters | keys[]' "$descriptors" \
 jq -r '.types | keys[]' "$descriptors" \
   | check_bidirectional "builtin type factories (§3)" "type-factories"
 
-# 5. filter の config キー (in_range: min/max, regex_match: pattern)
-jq -r '.filters[] | (.config // {}) | keys[]' "$descriptors" \
-  | check_bidirectional "filter config keys (§6)" "filter-config-keys"
+# 5. filter の invocation 引数名 (in_range: min/max, regex_match: pattern, DR-107 で
+#    descriptor.config から invocation.parameters へ移動 — DSL 引数の呼び出しごとの意味論宣言)
+jq -r '.filters[] | (.invocation.parameters // []) | .[].name' "$descriptors" \
+  | check_bidirectional "filter invocation parameters (§6)" "filter-config-keys"
 
 # 6. type factory の config キー (number_parser/int_parser/bool_parser/tty)
 jq -r '.types[] | (.config // {}) | keys[]' "$descriptors" \

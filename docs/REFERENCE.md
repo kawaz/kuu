@@ -558,40 +558,49 @@ xargs 型。最初の非ハイフン operand (utility 名) で発火、そのト
 ## 6. builtin filter カタログ
 
 <!-- kuu-lint:vocab filters -->
-| filter | kind | domain | signature | reasons | 意味論 |
-|---|---|---|---|---|---|
-| `trim` | filter | scalar | Transform | (空) | 文字列前後の ASCII 空白除去。非 string 入力は素通し |
-| `non_empty` | filter | scalar | Validate | `empty_value` | 空文字列を拒否 |
-| `in_range` | filter | scalar | Validate | `too_small`, `too_large` | 数値の範囲検証 (value_filters/final_filters 両方で使用可) |
-| `regex_match` | filter | scalar | Validate | `pattern_no_match` | pattern への部分一致検証 (unanchored、全体一致は `^$` で表現)。compile 失敗は definition-error (実行時 reason ではない) |
-| `increment` | filter | scalar | Transform | (空) | count 要素の update transform (0-arg、`old+1`) |
-| `unique` | filter | array | Transform | (空) | 累積後の配列 (`Acc→Acc`、accum_filters 相) から重複要素を除去 (先勝ち順序保持) |
-| `length_range` | filter | array | Validate | `too_short`, `too_long` | 累積後の配列長の範囲検証 (`Acc→Acc`、accum_filters 相、DR-105) |
-| `unwrap_single` | collector | (無関係) | Transform | (空) | 累積結果 (`T[]→U`、collector 相) — 長さ 1 配列を要素へ再帰的に畳む、0/2+ 個は不変 (`multiple` プリセット `override` の default_collector) |
-| `from_entries` | collector | (無関係) | Transform | (空) | 累積結果 (`T[]→U`、collector 相) — entries 配列形/指名 2 フィールド形/key 昇格形を Map へ変換 (`multiple` プリセット `map` の collector) |
+| filter | role | domain | effect | fallibility | reasons | 意味論 |
+|---|---|---|---|---|---|---|
+| `trim` | filter | scalar | transform | total | (空) | 文字列前後の ASCII 空白除去。非 string 入力は素通し |
+| `non_empty` | filter | scalar | preserve | reject | `empty_value` | 空文字列を拒否 |
+| `in_range` | filter | scalar | preserve | reject | `too_small`, `too_large` | 数値の範囲検証 (value_filters/final_filters 両方で使用可) |
+| `regex_match` | filter | scalar | preserve | reject | `pattern_no_match` | pattern への部分一致検証 (unanchored、全体一致は `^$` で表現)。compile 失敗は definition-error (実行時 reason ではない) |
+| `increment` | filter | scalar | transform | total | (空) | count 要素の update transform (0-arg、`old+1`) |
+| `unique` | filter | array | transform | total | (空) | 累積後の配列 (`Acc→Acc`、accum_filters 相) から重複要素を除去 (先勝ち順序保持) |
+| `length_range` | filter | array | preserve | reject | `too_short`, `too_long` | 累積後の配列長の範囲検証 (`Acc→Acc`、accum_filters 相、DR-105) |
+| `unwrap_single` | collector | array | transform | total | (空) | 累積結果 (`T[]→U`、collector 相) — 長さ 1 配列を要素へ再帰的に畳む、0/2+ 個は不変 (`multiple` プリセット `override` の default_collector) |
+| `from_entries` | collector | array | transform | total | (空) | 累積結果 (`T[]→U`、collector 相) — entries 配列形/指名 2 フィールド形/key 昇格形を Map へ変換 (`multiple` プリセット `map` の collector) |
 <!-- kuu-lint:end -->
 
-`domain` (`kind:"filter"` 限定の carrier 軸、DR-106) は `signature` (fallibility 軸) と直交する
-— `in_range` (scalar) と `length_range` (array) は同じ `Validate` だが入力の型 (`T` か `T[]` か)
-が異なる。`kind:"collector"` (`unwrap_single`/`from_entries`) は `filters.*` namespace を共有する
-が filter chain の colon-DSL args とは呼び出し規約が異なるため `domain` は無関係 (DR-106)。
+`domain` (`role:"filter"`/`role:"collector"` の carrier 軸、DR-106 由来・DR-107 で collector にも
+適用拡張) は `effect`/`fallibility` (旧 `signature`) と直交する — `in_range` (scalar) と
+`length_range` (array) は同じ `preserve`/`reject` だが入力の型 (`T` か `T[]` か) が異なる。
+`role:"collector"` (`unwrap_single`/`from_entries`) は `filters.*` namespace を共有するが filter
+chain の colon-DSL args とは呼び出し規約が異なる (`invocation.encoding: object_args`、DR-106)。
+`domain`/`effect`/`fallibility` はいずれも collector では常に `array`/`transform`/`total` に
+const 固定される (DR-105 §4「構造畳み装置は total」の Schema 強制、DR-107 §7)。
 
-`signature` が reasons の有無を機械的に決める: **Transform (常に成功) は `reasons: []`**、
-**Validate (拒否しうる) のみ非空の reasons を持つ** (DR-095 §3)。
+`effect`/`fallibility` (旧 `signature` の分解、DR-107 §4) が reasons の有無を機械的に決める:
+**`fallibility:total` (常に成功) は `reasons: []`**、**`fallibility:reject` (拒否しうる) のみ
+非空の reasons を持つ** (DR-095 §3 の原則を継承)。「変換しつつ reject しうる」第 3 象限
+(`effect:transform` + `fallibility:reject`) は builtin corpus には実例が無いが descriptor
+体系としては表現可能 (DR-107 §4、`app/valid_json` 仮想例)。
 
-### filter の config キー
+### filter/collector の invocation 引数
 
 <!-- kuu-lint:vocab filter-config-keys -->
-| キー | filter | 意味論 |
+| 引数 | filter/collector | 意味論 |
 |---|---|---|
-| `min` | `in_range` | DSL 第 1 引数、下限 (含む) |
-| `max` | `in_range` | DSL 第 2 引数、上限 (含む) |
-| `pattern` | `regex_match` | DSL 唯一引数、host 方言準拠の正規表現 |
+| `min` | `in_range` | DSL 第 1 引数、下限 (含む)。対象型の canonical number、負数・小数に制約なし |
+| `max` | `in_range` | DSL 第 2 引数、上限 (含む)。対象型の canonical number |
+| `pattern` | `regex_match` | DSL 唯一引数、host 方言準拠の正規表現。compile 失敗は definition-error (実行時 reason ではない) |
+| `min` | `length_range` | DSL 第 1 引数、下限 (含む)。非負整数限定 (DR-105 §5(a)) |
+| `max` | `length_range` | DSL 第 2 引数、上限 (含む)。非負整数限定 |
+| `key` | `from_entries` | object 形引数、key 昇格用のフィールド名 (3 用法のうち 1 用法の代表引数、DR-044) |
 <!-- kuu-lint:end -->
 
-これらは filter *呼び出し* の DSL 引数 (`"in_range:1:65535"` の `1`/`65535`) の意味論注記であり、
-descriptor の config キー宣言そのものではない (呼び出しごとの `args` と、factory のデプロイ時
-config は別の相、DR-061 §5)。
+これらは descriptor の `invocation.parameters` 宣言 (DR-107 §5) — filter chain の colon-DSL
+引数 (`"in_range:1:65535"` の `1`/`65535`) と collector の object 形引数の意味論注記であり、
+construction=factory の `config` キー宣言 (デプロイ時の方言設定) とは別の相 (DR-061 §5)。
 
 最小例: `{"value_filters": ["in_range:1:65535"]}` / `{"piece_filters": [{"name": "regex_match",
 "args": ["^[A-Za-z_][A-Za-z0-9_]*="]}]}`
