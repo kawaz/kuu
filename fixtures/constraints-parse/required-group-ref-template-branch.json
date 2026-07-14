@@ -1,5 +1,5 @@
 {
-  "why": "required_group (DR-103) の member 充足判定が ref (構造継承、DR-007) 経由で導入された structural or でも required 単項と同じ型委譲になるかを pin する (codex レビュー M-2 の続き: `ref` は構造をそのままコピーする機構であり、参照先テンプレートが or のような複合構造を持つ場合、ref 元の宣言要素名 (source 名) ではなく展開後の枝の leaf name (target cell) に値が着地する — `required-group-structural-or-branch.json` の直書き or と同じ『宣言名 ≠ 着地 cell』の状況が ref 経由でも起きるため、実装が or 展開と ref 展開を別のコード経路で扱っている場合は同じ M-2 の誤判定が独立に再現しうる)。level は definitions.templates の level_tmpl (num/flag の or) を ref 継承した要素で、DR-007 の『ref は構造定義全て (型/children/filters/...) を引き継ぐ』規定により、直書き or と同一の展開結果 (num/flag の枝、DR-025 の露出規則で level という名前のセル自体は結果に存在しない) になるはず。other は plain bool (暗黙 default なし) にして group 充足が level 側の ref 展開判定のみに依存するようにする (structural-or 版と同じ理由、DR-103 §7 の vacuous 混入回避)。期待値は spec (DR-007 の ref=構造継承、DR-103 §1/§7 の型委譲原則) から導出したものであり、現行実装で M-2 が ref 経由でも再現するなら mismatch になるのが正 — ロックステップで統括が扱う。",
+  "why": "required_group (DR-103) の member 充足判定が ref (構造継承、DR-007) 経由で導入された structural or でも required 単項と同じ型委譲になるかを pin する (codex レビュー M-2 の続き: `ref` は構造をそのままコピーする機構であり、参照先テンプレートが or のような複合構造を持つ場合、ref 元の宣言要素名 (source 名) ではなく展開後の枝の leaf name (target cell) に値が着地する — `required-group-structural-or-branch.json` の直書き or と同じ『宣言名 ≠ 着地 cell』の状況が ref 経由でも起きるため、実装が or 展開と ref 展開を別のコード経路で扱っている場合は同じ M-2 の誤判定が独立に再現しうる)。level は definitions.templates の level_tmpl (num/flag の or) を ref 継承した要素。**ref 経由の要素は直書き or と異なり、露出時に必ず要素名 (level) の Scoped ネストが残る** (`fixtures/repeat-parse/ref-template-no-repeat-degenerate.json` が確立済みの green pin — `{\"hlcolor\": {\"colonname\": \"red\"}}` 形、DESIGN §2.4/§2.5 の露出規則。DR-007 の『ref は構造定義全てを引き継ぐ』はセル構造の継承を規定するもので、露出 (result の形) までは規定していない — 直書き or (DR-025、宣言名が export に使われず枝の leaf name が直接トップレベルに出る) とは別の規則が働く)。したがって level=num=5 なら result は `{level: {num: 5}}` になるのが正しい露出で、直書き or 版のようなトップレベル `{num: 5}` にはならない。other は plain bool (暗黙 default なし、未発火なら absent) にして group 充足が level 側の ref 展開判定のみに依存するようにする (structural-or 版と同じ理由、DR-103 §7 の vacuous 混入回避)。期待値は spec (DR-007 の ref=構造継承 + 確立済み露出規則、DR-103 §1/§7 の型委譲原則) から導出したものであり、現行実装で M-2 が ref 経由でも再現するなら mismatch になるのが正 — ロックステップで統括が扱う。",
   "query": "parse",
   "definition": {
     "definitions": {
@@ -18,26 +18,26 @@
   "cases": [
     {
       "id": "ref-int-branch-satisfies-group",
-      "why": "`--level 5`: level が ref 継承した level_tmpl の or 構造のうち num 枝 (int) が \"5\" を受理して発火、flag 枝は not_a_bool で死ぬ — 直書き or 版 (`required-group-structural-or-branch.json::int-branch-satisfies-group`) と同一の展開結果になるはずで (DR-007 の ref=構造継承)、num という値確定した candidate cell の存在により group g は充足する。other (plain bool) は未発火・default なしで absent = 未充足だが、level 側 (ref 展開 num=5 経由) の充足だけで group は成立し required_group_violated は起きない。実装が ref 展開後の内部構造でなく ref 宣言要素名 (\"level\") を見て判定しているなら誤って未充足になり mismatch (M-2 の ref 版)。",
+      "why": "`--level 5`: level が ref 継承した level_tmpl の or 構造のうち num 枝 (int) が \"5\" を受理して発火、flag 枝は not_a_bool で死ぬ。num という値確定した candidate cell の存在により group g は充足する。露出は ref 経由の Scoped ネスト規則 (`ref-template-no-repeat-degenerate.json` 確立済み pin と同型) により `{level: {num: 5}}` — 直書き or 版のようなトップレベル `{num: 5}` にはならない (DR-025 の宣言名非露出規則は直書き or 固有で、ref 経由には適用されない)。other (plain bool) は未発火・default なしで absent = 未充足だが、level 側 (ref 展開 num=5 経由) の充足だけで group は成立し required_group_violated は起きない。実装が ref 展開後の内部構造でなく ref 宣言要素名 (\"level\") を見て判定しているなら誤って未充足になり mismatch (M-2 の ref 版)。",
       "args": ["--level", "5"],
       "expect": {
         "outcome": "success",
         "effects": [
           {"entity": "num", "op": "set", "operand": 5, "source": "cli"}
         ],
-        "result": {"num": 5, "other": false}
+        "result": {"level": {"num": 5}}
       }
     },
     {
       "id": "ref-bool-branch-satisfies-group",
-      "why": "`--level true`: flag 枝 (bool) が \"true\" を受理して発火、num 枝は not_a_number で死ぬ — ref-int-branch-satisfies-group と対称、ref 展開後のどちらの枝でも group 充足に寄与することを固定する。",
+      "why": "`--level true`: flag 枝 (bool) が \"true\" を受理して発火、num 枝は not_a_number で死ぬ — ref-int-branch-satisfies-group と対称、ref 展開後のどちらの枝でも group 充足に寄与することを固定する。露出は同じ Scoped ネスト規則で `{level: {flag: true}}`。",
       "args": ["--level", "true"],
       "expect": {
         "outcome": "success",
         "effects": [
           {"entity": "flag", "op": "set", "operand": true, "source": "cli"}
         ],
-        "result": {"flag": true, "other": false}
+        "result": {"level": {"flag": true}}
       }
     },
     {

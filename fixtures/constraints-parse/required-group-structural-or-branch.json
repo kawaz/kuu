@@ -25,7 +25,7 @@
         "effects": [
           {"entity": "num", "op": "set", "operand": 5, "source": "cli"}
         ],
-        "result": {"num": 5, "other": false}
+        "result": {"num": 5}
       }
     },
     {
@@ -37,7 +37,7 @@
         "effects": [
           {"entity": "flag", "op": "set", "operand": true, "source": "cli"}
         ],
-        "result": {"flag": true, "other": false}
+        "result": {"flag": true}
       }
     },
     {

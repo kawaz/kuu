@@ -1,0 +1,52 @@
+{
+  "why": "required (単項、DR-093) の充足判定が ref (構造継承、DR-007) 経由で導入された structural or でも正しく機能するかを pin する (codex レビュー M-2 の関連調査: `CRequired` は候補 cell 群 (`CRequired(String, Array[String])`) を見て判定する設計だが、ref 経由で or 構造を継承した要素では、ref 宣言要素名 (level) 自体が Scoped ノード (値を持たない入れ物) になり、候補セル (num/flag) はその内側にネストされる — CRequired が ref 展開後もこの候補セル群を正しく追跡できるかは未検証で、`required-group-ref-template-branch.json` の修正で判明した Scoped 露出規則 (ref 経由は必ず要素名のネストが残る、`ref-template-no-repeat-degenerate.json` 確立済み pin と同型) を required 単項側でも独立に確認する必要がある)。`fixtures/constraints-parse/required-structural-or-branch.json` (直書き or + required:true、値供給時 success) の ref 版であり、露出形式のみが Scoped ネスト (`{level: {num: 5}}`) に変わる — 充足判定自体 (num/flag いずれかの値確定で required 充足) は直書き版と同じであるべき。期待値は spec (DR-093 の型委譲充足、DR-007 の ref=構造継承、確立済み露出規則) から導出したものであり、CRequired に Scoped 透過バグが潜在するなら mismatch になるのが正 — ロックステップで統括が扱う。",
+  "query": "parse",
+  "definition": {
+    "definitions": {
+      "templates": {
+        "level_tmpl": {"or": [
+          {"type": "int", "name": "num"},
+          {"type": "bool", "name": "flag"}
+        ]}
+      }
+    },
+    "options": [
+      {"name": "level", "ref": "level_tmpl", "long": true, "required": true}
+    ]
+  },
+  "cases": [
+    {
+      "id": "ref-int-branch-supplied",
+      "why": "`--level 5`: level が ref 継承した level_tmpl の or 構造のうち num 枝 (int) が \"5\" を受理して発火、flag 枝は not_a_bool で死ぬ — 完全経路ちょうど1本、num という値確定した candidate cell が存在するので required は充足する (`required-structural-or-branch.json::int-branch-supplied` と同じ充足判定)。露出は ref 経由の Scoped ネスト規則により `{level: {num: 5}}` (直書き or 版のようなトップレベル `{num: 5}` にはならない、DR-025 の宣言名非露出規則は直書き or 固有)。",
+      "args": ["--level", "5"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "num", "op": "set", "operand": 5, "source": "cli"}
+        ],
+        "result": {"level": {"num": 5}}
+      }
+    },
+    {
+      "id": "ref-bool-branch-supplied",
+      "why": "`--level true`: flag 枝 (bool) が \"true\" を受理して発火、num 枝は not_a_number で死ぬ — ref-int-branch-supplied と対称、ref 展開後のどちらの枝でも required 充足に寄与することを固定する。露出は同じ Scoped ネスト規則で `{level: {flag: true}}`。",
+      "args": ["--level", "true"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "flag", "op": "set", "operand": true, "source": "cli"}
+        ],
+        "result": {"level": {"flag": true}}
+      }
+    },
+    {
+      "id": "ref-missing-baseline",
+      "why": "args 空: level (ref 経由の or 親) はどちらの枝も committed でなく値供給が無い — required 未充足で failure。element は ref 宣言要素名 level (or 親の name、`required-structural-or-branch.json::missing-baseline` と同型のベースライン)。",
+      "args": [],
+      "expect": {
+        "outcome": "failure",
+        "errors": [{"element": "level", "args_pos": 0, "kind": "constraint", "reason": "required_violated"}]
+      }
+    }
+  ]
+}
