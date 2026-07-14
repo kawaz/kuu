@@ -3,7 +3,7 @@ title: fixture 基底フィールド argv → args / argv_pos → args_pos の�
 status: wip
 category: task
 created: 2026-07-14T11:47:18+09:00
-last_read:
+last_read: 2026-07-14T12:17:58+09:00
 open_entered: 2026-07-14T11:47:18+09:00
 wip_entered: 2026-07-14T12:16:02+09:00
 blocked_entered:
