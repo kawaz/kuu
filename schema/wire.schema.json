@@ -78,10 +78,19 @@
         },
 
         "multiple": {
-          "description": "複数値経路のスイッチ (DR-034)。二形: プリセット名 (string) | {accumulator, collector?, separator?} の詳細形 (object)。",
+          "description": "複数値経路のスイッチ (DR-034)。二形: プリセット名 (string) | {accumulator, collector?, separator?, flatten?} の詳細形 (object)。",
           "oneOf": [
             { "type": "string" },
-            { "type": "object" }
+            {
+              "type": "object",
+              "properties": {
+                "accumulator": { "type": "string", "description": "accumulators registry の参照 (DR-036)。" },
+                "collector": { "type": "string", "description": "filters registry の参照、累積後の T[]→U 変換 (DR-036)。省略時は accumulator の default_collector。" },
+                "separator": { "type": "string", "description": "1 トークンを piece 列へ分割する区切り文字列 (DR-034)。" },
+                "flatten": { "type": "boolean", "default": false, "description": "`accumulator: \"append\"` 専用ダイヤル (DR-105)。true で発火値が配列なら要素を 1 段展開して積む。他 accumulator への宣言は definition-error kind=invalid-range (DR-105 §2)。" }
+              },
+              "description": "型ヒントとして例示するのみ、未知キーは開いたまま (語彙層の検証は parse_definition の関心、本 Schema の対象外)。"
+            }
           ]
         },
         "value_filters": {

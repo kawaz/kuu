@@ -51,6 +51,31 @@
       "signature": "Transform",
       "reasons": [],
       "description": "累積後の配列 (Acc→Acc、accum_filters 相、DR-102) から重複要素を除去 (kuu.mbt array_filter_unique、先勝ち順序保持)。Transform 相当 (拒否を持たない純関数、kuu.mbt ArrayFilterDescriptor.run に Result 型が無いことが実装的裏付け)。"
+    },
+    "length_range": {
+      "name": "length_range",
+      "kind": "filter",
+      "signature": "Validate",
+      "config": {
+        "min": { "type": "number", "description": "DSL 第1引数 (下限、含む)。値そのものは呼び出しごとの args であり descriptor config ではない — 本欄は DSL 引数の意味を記す注記。" },
+        "max": { "type": "number", "description": "DSL 第2引数 (上限、含む)。" }
+      },
+      "reasons": ["too_short", "too_long"],
+      "description": "累積後の配列長の範囲検証 (Acc→Acc、accum_filters 相、DR-102)。ARRAY filter registry 最初の Validate 系住人 (DR-105 §4/§5 — ARRAY filter registry の fallibility 確立)。min 未満 = too_short、max 超過 = too_long (scalar filter registry の in_range が持つ too_small/too_large と対の命名、DR-066 の reason 語彙規約)。DSL 呼び出し形は scalar 版 in_range と同型 (コロン区切り DSL)。"
+    },
+    "unwrap_single": {
+      "name": "unwrap_single",
+      "kind": "filter",
+      "signature": "Transform",
+      "reasons": [],
+      "description": "累積結果 (T[]→U、collector 相、DR-036) — 長さ 1 配列を要素へ再帰的に畳む (0 個・2 個以上の配列は不変のまま通す、DR-034 縮退ケース)。multiple プリセット `override` の default_collector。Transform 相当 (拒否を持たない純関数)。"
+    },
+    "from_entries": {
+      "name": "from_entries",
+      "kind": "filter",
+      "signature": "Transform",
+      "reasons": [],
+      "description": "累積結果 (T[]→U、collector 相、DR-036/DR-044) — entries 配列形・指名 2 フィールド形・key 昇格形の 3 用法を一本で覆い Map へ変換する。multiple プリセット `map` の collector (旧 to_map + key_from を置換)。Transform 相当 (拒否を持たない純関数)。"
     }
   },
 
