@@ -1,104 +1,165 @@
 {
-  "$comment": "kuu builtin registry 住人の宣言集合 — 各エントリは schema/descriptor.schema.json に適合する。正本は docs/decisions/DR-095-builtin-descriptor-reasons.md (§3 filters / §4 factories)。DR-095 §射程外の通り、installer 発生源 (missing_operand 等) と constraint 系 reason (required_violated 等) は本ファイルの対象外 — 前者はエンジン構造の発生源で installer descriptor 側の宣言軸が未実体化、後者は constraint installer (DR-047/055) 側で別途宣言が必要 (いずれも本 issue の射程外)。",
+  "$comment": "kuu builtin registry 住人の宣言集合 — 各エントリは schema/descriptor.schema.json に適合する。正本は docs/decisions/DR-095-builtin-descriptor-reasons.md (§3 filters / §4 factories) + DR-107-descriptor-orthogonal-axes.md (role/construction/io_type/effect/fallibility/invocation の直交軸)。DR-095 §射程外の通り、installer 発生源 (missing_operand 等) と constraint 系 reason (required_violated 等) は本ファイルの対象外 — 前者はエンジン構造の発生源で installer descriptor 側の宣言軸が未実体化、後者は constraint installer (DR-047/055) 側で別途宣言が必要 (いずれも本 issue の射程外)。トップレベル区分名 (filters/types/providers) は DESIGN §13.1 の registry 区分名 (呼ばれるフィールド名の単位) を踏襲し、descriptor の `role` (DR-107) とは独立 — `types` registry 住人は `role:\"type_parser\"` を持つ (registry 区分名と role は別軸)。",
   "$schema-ref": "descriptor.schema.json",
 
   "filters": {
     "trim": {
       "name": "trim",
-      "kind": "filter",
+      "role": "filter",
+      "construction": "static",
       "domain": "scalar",
-      "signature": "Transform",
+      "io_type": { "input": "string", "output": "string" },
+      "effect": "transform",
+      "fallibility": "total",
+      "invocation": { "encoding": "colon_args", "parameters": [] },
       "reasons": [],
-      "description": "文字列前後の ASCII 空白除去 (DESIGN §8.1 piece_filters 例)。Transform (常に成功、DR-095 §3) — 非 string 入力は素通し (kuu.mbt filter_trim の defensive 実装、value_filters/piece_filters は string→string 契約前提なので通常到達しない)。"
+      "description": "文字列前後の ASCII 空白除去 (DESIGN §8.1 piece_filters 例)。fallibility:total (常に成功、DR-095 §3) — 非 string 入力は素通し (kuu.mbt filter_trim の defensive 実装、value_filters/piece_filters は string→string 契約前提なので通常到達しない)。"
     },
     "non_empty": {
       "name": "non_empty",
-      "kind": "filter",
+      "role": "filter",
+      "construction": "static",
       "domain": "scalar",
-      "signature": "Validate",
+      "io_type": { "input": "string", "output": "string" },
+      "effect": "preserve",
+      "fallibility": "reject",
+      "invocation": { "encoding": "colon_args", "parameters": [] },
       "reasons": ["empty_value"],
-      "description": "空文字列を拒否する Validate (DESIGN §8.1、DR-040 §filters 最小セット)。failure mode は空文字列の 1 種のみ。reason 名は docs/issue/2026-07-08-schema-materialization-and-reason-descriptors.md SCH-Q3-b の提示をそのまま採用 (DR-066 §3 v1 表には対応語彙が無いため本 DR-095 で builtin ns に新設)。"
+      "description": "空文字列を拒否する preserve+reject filter (DESIGN §8.1、DR-040 §filters 最小セット)。failure mode は空文字列の 1 種のみ。reason 名は docs/issue/2026-07-08-schema-materialization-and-reason-descriptors.md SCH-Q3-b の提示をそのまま採用 (DR-066 §3 v1 表には対応語彙が無いため DR-095 で builtin ns に新設)。"
     },
     "in_range": {
       "name": "in_range",
-      "kind": "filter",
+      "role": "filter",
+      "construction": "static",
       "domain": "scalar",
-      "signature": "Validate",
-      "config": {
-        "min": { "type": "number", "description": "DSL 第1引数 (下限、含む)。値そのものは呼び出しごとの args であり descriptor config ではない — 本欄は DSL 引数の意味を記す注記。" },
-        "max": { "type": "number", "description": "DSL 第2引数 (上限、含む)。" }
+      "io_type": { "input": "number", "output": "number" },
+      "effect": "preserve",
+      "fallibility": "reject",
+      "invocation": {
+        "encoding": "colon_args",
+        "parameters": [
+          { "name": "min", "type": "number", "required": true, "constraint": "対象型の canonical number、負数・小数に制約なし (DR-105 §5(a))" },
+          { "name": "max", "type": "number", "required": true, "constraint": "min <= max は definition-time 検査 (kind=invalid-range)、対象型の canonical number、境界は inclusive (DR-105 §5(a))" }
+        ]
       },
       "reasons": ["too_small", "too_large"],
-      "description": "数値の範囲検証 (DESIGN §8.4 例、value_filters/final_filters 両方で使われる — count の上限もここ、DR-040/DR-102)。min 未満 = too_small、max 超過 = too_large。両 reason は DR-066 §2 本文・docs/PIPELINE.md・docs/CONFORMANCE.md §2 に既出 (本 DR-095 で descriptor 宣言として実体化)。"
+      "description": "数値の範囲検証 (DESIGN §8.4 例、value_filters/final_filters 両方で使われる — count の上限もここ、DR-040/DR-102)。min 未満 = too_small、max 超過 = too_large。両 reason は DR-066 §2 本文・docs/PIPELINE.md・docs/CONFORMANCE.md §2 に既出 (DR-095 で descriptor 宣言として実体化)。DSL 引数の definition-time 検査規則は DR-105 §5(a) が確立 (ちょうど 2 個・型不一致は invalid-argument・min>max は invalid-range・境界 inclusive)。"
     },
     "regex_match": {
       "name": "regex_match",
-      "kind": "filter",
+      "role": "filter",
+      "construction": "static",
       "domain": "scalar",
-      "signature": "Validate",
-      "config": {
-        "pattern": { "type": "string", "description": "DSL 唯一引数。host 方言準拠 (DR-085 §2)、compile 可否は定義時に静的判定される。" }
+      "io_type": { "input": "string", "output": "string" },
+      "effect": "preserve",
+      "fallibility": "reject",
+      "invocation": {
+        "encoding": "colon_args",
+        "parameters": [
+          { "name": "pattern", "type": "string", "required": true, "constraint": "host 方言準拠の正規表現 (DR-085 §2)。compile 可否は definition-time に静的判定 — compile 失敗は kind=invalid-argument (DR-085 §1 / DR-082 §3)、実行時 reason 体系には含まれない。" }
+        ]
       },
       "reasons": ["pattern_no_match"],
       "description": "pattern に対する部分一致検証 (DR-085 §1、unanchored = 部分一致、全体一致は pattern 側の ^$ で表現)。**compile 失敗は本 descriptor の reasons に含めない** — DR-085 §1 / DR-082 §3 により kind=invalid-argument の definition-error に属し、実行時 reason 体系とは別軸 (DR-095 §3 の regex_match 行、DR-083 §5「静的に既知は定義時に倒す」)。実行時に残る failure mode は有効な pattern への不一致のみ。"
     },
     "increment": {
       "name": "increment",
-      "kind": "filter",
+      "role": "filter",
+      "construction": "static",
       "domain": "scalar",
-      "signature": "Transform",
+      "io_type": { "input": "number", "output": "number" },
+      "effect": "transform",
+      "fallibility": "total",
+      "invocation": { "encoding": "colon_args", "parameters": [] },
       "reasons": [],
-      "description": "count 要素の update transform (DR-077 §2/§3、0-arg、old+1)。Transform (常に成功) — 数値入力のみ受ける前提 (count 要素の value_filters/update transform として使われる、型不一致は filter-definition bug でありランタイム reason 体系の対象外)。"
+      "description": "count 要素の update transform (DR-077 §2/§3、0-arg、old+1)。fallibility:total (常に成功) — 数値入力のみ受ける前提 (count 要素の value_filters/update transform として使われる、型不一致は filter-definition bug でありランタイム reason 体系の対象外)。"
     },
     "unique": {
       "name": "unique",
-      "kind": "filter",
+      "role": "filter",
+      "construction": "static",
       "domain": "array",
-      "signature": "Transform",
+      "io_type": { "input": { "array": "value" }, "output": { "array": "value" } },
+      "effect": "transform",
+      "fallibility": "total",
+      "invocation": { "encoding": "colon_args", "parameters": [] },
       "reasons": [],
-      "description": "累積後の配列 (Acc→Acc、accum_filters 相、DR-102) から重複要素を除去 (kuu.mbt array_filter_unique、先勝ち順序保持)。Transform 相当 (拒否を持たない純関数、kuu.mbt ArrayFilterDescriptor.run に Result 型が無いことが実装的裏付け)。"
+      "description": "累積後の配列 (Acc→Acc、accum_filters 相、DR-102) から重複要素を除去 (kuu.mbt array_filter_unique、先勝ち順序保持)。fallibility:total 相当 (拒否を持たない純関数、kuu.mbt ArrayFilterDescriptor.run に Result 型が無いことが実装的裏付け)。"
     },
     "length_range": {
       "name": "length_range",
-      "kind": "filter",
+      "role": "filter",
+      "construction": "static",
       "domain": "array",
-      "signature": "Validate",
-      "config": {
-        "min": { "type": "number", "description": "DSL 第1引数 (下限、含む)。値そのものは呼び出しごとの args であり descriptor config ではない — 本欄は DSL 引数の意味を記す注記。" },
-        "max": { "type": "number", "description": "DSL 第2引数 (上限、含む)。" }
+      "io_type": { "input": { "array": "value" }, "output": { "array": "value" } },
+      "effect": "preserve",
+      "fallibility": "reject",
+      "invocation": {
+        "encoding": "colon_args",
+        "parameters": [
+          { "name": "min", "type": "number", "required": true, "constraint": "非負整数限定 (負数・小数・非整数は kind=invalid-argument、DR-105 §5(a) の length_range 個別規則)" },
+          { "name": "max", "type": "number", "required": true, "constraint": "非負整数限定、min <= max は definition-time 検査 (kind=invalid-range)、境界は inclusive (DR-105 §5(a))" }
+        ]
       },
       "reasons": ["too_short", "too_long"],
-      "description": "累積後の配列長の範囲検証 (Acc→Acc、accum_filters 相、DR-102)。ARRAY filter registry 最初の Validate 系住人 (DR-105 §4/§5 — ARRAY filter registry の fallibility 確立)。min 未満 = too_short、max 超過 = too_long (scalar filter registry の in_range が持つ too_small/too_large と対の命名、DR-066 の reason 語彙規約)。DSL 呼び出し形は scalar 版 in_range と同型 (コロン区切り DSL)。"
+      "description": "累積後の配列長の範囲検証 (Acc→Acc、accum_filters 相、DR-102)。ARRAY filter registry 最初の Validate 系住人 (DR-105 §4/§5 — ARRAY filter registry の fallibility 確立)。min 未満 = too_short、max 超過 = too_long (scalar filter registry の in_range が持つ too_small/too_large と対の命名、DR-066 の reason 語彙規約)。DSL 呼び出し形は scalar 版 in_range と同型 (コロン区切り DSL) だが bound は非負整数限定 (DR-105 §5(a) の in_range との個別規則差)。"
     },
     "unwrap_single": {
       "name": "unwrap_single",
-      "kind": "collector",
+      "role": "collector",
+      "construction": "static",
+      "domain": "array",
+      "io_type": { "input": { "array": "value" }, "output": "value" },
+      "effect": "transform",
+      "fallibility": "total",
+      "invocation": { "encoding": "object_args", "parameters": [] },
       "reasons": [],
-      "description": "累積結果 (T[]→U、collector 相、DR-036) — 長さ 1 配列を要素へ再帰的に畳む (0 個・2 個以上の配列は不変のまま通す、DR-034 縮退ケース)。multiple プリセット `override` の default_collector。拒否を持たない純関数 (`reasons:[]` がその宣言)。**`signature` は持たない** — `signature` (Validate/Transform) は filter 固有の宣言軸であり collector には無関係 (DR-106 §2、codex レビュー #3 A-C1 の反映: descriptor.schema.json の kind 別 oneOf 分岐がこれを Schema レベルで強制する)。呼び出し規約は filter chain の colon-DSL args とは異なる (multiple.collector の宣言から導出、DR-106、codex レビュー #2 M-21 の反映)。"
+      "description": "累積結果 (T[]→U、collector 相、DR-036) — 長さ 1 配列を要素へ再帰的に畳む (0 個・2 個以上の配列は不変のまま通す、DR-034 縮退ケース)。multiple プリセット `override` の default_collector。domain:array/effect:transform/fallibility:total はいずれも collector 役割の const 固定 (DR-107 §7、DR-105 §4「構造畳み装置は total」)。呼び出し規約は filter chain の colon-DSL args とは異なる (multiple.collector の宣言から導出、DR-106、codex レビュー #2 M-21 の反映)。"
     },
     "from_entries": {
       "name": "from_entries",
-      "kind": "collector",
+      "role": "collector",
+      "construction": "static",
+      "domain": "array",
+      "io_type": { "input": { "array": "value" }, "output": { "map": "value" } },
+      "effect": "transform",
+      "fallibility": "total",
+      "invocation": {
+        "encoding": "object_args",
+        "parameters": [
+          { "name": "key", "type": "string", "required": false, "description": "key 昇格用のフィールド名 (entries 配列形・指名 2 フィールド形・key 昇格形の 3 用法のうち 1 用法の代表引数、DR-044)。3 用法の完全な形は multiple.collector の object 形宣言から導出する FromEntries spec に依存し、本フィールドは簡略化した宣言 (完全な conformance 検証への昇格は issue descriptor-conformance-promotion-revisit の射程)。" }
+        ]
+      },
       "reasons": [],
-      "description": "累積結果 (T[]→U、collector 相、DR-036/DR-044) — entries 配列形・指名 2 フィールド形・key 昇格形の 3 用法を一本で覆い Map へ変換する。multiple プリセット `map` の collector (旧 to_map + key_from を置換)。拒否を持たない純関数 (`reasons:[]` がその宣言)。**`signature` は持たない** — `signature` (Validate/Transform) は filter 固有の宣言軸であり collector には無関係 (DR-106 §2、codex レビュー #3 A-C1 の反映)。呼び出し規約は filter chain の colon-DSL args とは異なる (multiple.collector の object 形から導出する FromEntries spec を引数に取る、DR-106、codex レビュー #2 M-21 の反映)。"
+      "description": "累積結果 (T[]→U、collector 相、DR-036/DR-044) — entries 配列形・指名 2 フィールド形・key 昇格形の 3 用法を一本で覆い Map へ変換する。multiple プリセット `map` の collector (旧 to_map + key_from を置換)。domain:array/effect:transform/fallibility:total はいずれも collector 役割の const 固定 (DR-107 §7)。呼び出し規約は filter chain の colon-DSL args とは異なる (multiple.collector の object 形から導出する FromEntries spec を引数に取る、DR-106、codex レビュー #2 M-21 の反映)。"
     }
   },
 
   "types": {
     "builtin/number_parser": {
       "name": "builtin/number_parser",
-      "kind": "factory",
+      "role": "type_parser",
+      "construction": "factory",
+      "io_type": { "input": "string", "output": "number" },
+      "effect": "transform",
+      "fallibility": "reject",
+      "invocation": { "encoding": "none", "parameters": [] },
       "config": {
         "number_thousand_sep": { "type": "array", "items": "string", "default": ["_"], "description": "桁区切り文字集合 (DR-074 §1/§4)。canonical は underscore のみ、カンマは opt-in。" },
         "number_allow_base_prefix": { "type": "boolean", "default": false, "description": "0x/0o/0b 整数 + hex float の統合 opt-in (DR-074 §2)。" },
         "number_leading_zero": { "type": "string", "enum": ["decimal", "octal"], "default": "decimal", "description": "先頭 0 の解釈 (DR-074 §4)。canonical は decimal、octal は移植ロック用 opt-in。" }
       },
       "reasons": ["not_a_number"],
-      "description": "number/float 共通の value_parser (DR-074 §1、DR-094 §9 案 A の新名 — 旧名 kuu_number_parser)。構文不一致は全て not_a_number に帰着 (inf/nan 規定違反・hex float 未 opt-in 等も含む、DR-074 §1/§2/§7)。DR-066 §3 v1 表所収。"
+      "description": "number/float 共通の value_parser (DR-074 §1、DR-094 §9 案 A の新名 — 旧名 kuu_number_parser)。parse 相 (String→number) は構文不一致で reject しうる (fallibility:reject) — 構文不一致は全て not_a_number に帰着 (inf/nan 規定違反・hex float 未 opt-in 等も含む、DR-074 §1/§2/§7)。DR-066 §3 v1 表所収。"
     },
     "builtin/int_parser": {
       "name": "builtin/int_parser",
-      "kind": "factory",
+      "role": "type_parser",
+      "construction": "factory",
+      "io_type": { "input": "string", "output": "number" },
+      "effect": "transform",
+      "fallibility": "reject",
+      "invocation": { "encoding": "none", "parameters": [] },
       "config": {
         "int_round": { "type": "string", "enum": ["floor", "ceil", "trunc", "away", "half_floor", "half_ceil", "half_trunc", "half_away", "half_even", "error"], "default": "error", "description": "非整数値の丸めモード 10 種 (DR-075 §2)。canonical default は error。" }
       },
@@ -107,7 +168,12 @@
     },
     "builtin/bool_parser": {
       "name": "builtin/bool_parser",
-      "kind": "factory",
+      "role": "type_parser",
+      "construction": "factory",
+      "io_type": { "input": "string", "output": "bool" },
+      "effect": "transform",
+      "fallibility": "reject",
+      "invocation": { "encoding": "none", "parameters": [] },
       "config": {
         "bool_true_values": { "type": "array", "items": "string", "default": ["true", "1"], "description": "true と解釈する文字列集合 (DR-074 §3/§4、キー名は DR-100 で bool_ prefix 化)。" },
         "bool_false_values": { "type": "array", "items": "string", "default": ["false", "0", ""], "description": "false と解釈する文字列集合。空文字列を含む (env の FLAG= 対応)。キー名は DR-100 で bool_ prefix 化。" },
@@ -118,13 +184,48 @@
     },
     "builtin/tty": {
       "name": "builtin/tty",
-      "kind": "factory",
+      "role": "type_parser",
+      "construction": "factory",
+      "io_type": { "input": "string", "output": "bool" },
+      "effect": "transform",
+      "fallibility": "total",
+      "invocation": { "encoding": "none", "parameters": [] },
       "config": {
         "tty_stream": { "type": "string", "enum": ["stdin", "stdout", "stderr"], "required": true, "description": "tty_provider へ渡すストリーム識別子 (DR-099 §3)。必須 — 未指定 (bare `type: \"tty\"` を含む) は definition-error kind=invalid-range。要素名からの推測はしない (kawaz 裁定 TTY-Q2=(c))。" },
         "tty_cygwin": { "type": "boolean", "default": true, "description": "Cygwin/MSYS pty を terminal 扱いに含めるダイヤル (DR-099 §3)。fold = `terminal || (tty_cygwin && cygwin)`。既定 true は kawaz/die DR-0008 の Cygwin pty=TTY 裁定に整合。" }
       },
       "reasons": [],
-      "description": "bool を値空間の土台にする preset 型 (DR-099 §1、DR-076 の flag/count と同族の糖衣プリセット)。parse 相 (String→T) は builtin/bool_parser と同一で reasons も同じ経路 (bool_parser 側に帰属、本 descriptor は追加しない)。本 factory 固有の失敗は definition-error (tty_stream 必須違反) のみで実行時 reason は持たない — 値の由来 (`terminal || (tty_cygwin && cygwin)` の fold、tty_provider が null なら宣言 default) は値源ラダー §11.4 の `default` 席の型依存解決規則であり、filter/constraint の failure mode ではない。"
+      "description": "bool を値空間の土台にする preset 型 (DR-099 §1、DR-076 の flag/count と同族の糖衣プリセット)。parse 相 (String→bool) は builtin/bool_parser と同一で reasons も同じ経路 (bool_parser 側に帰属、本 descriptor は追加しない) — fallibility:total は本 descriptor 自身が emit する実行時 reason が無いことの宣言 (tty_stream 必須違反は definition-error であり実行時 reason 体系の対象外)。値の由来 (`terminal || (tty_cygwin && cygwin)` の fold、tty_provider が null なら宣言 default) は値源ラダー §11.4 の `default` 席の型依存解決規則であり、filter/constraint の failure mode ではない。"
+    }
+  },
+
+  "providers": {
+    "env_provider": {
+      "name": "env_provider",
+      "role": "provider",
+      "construction": "static",
+      "io_type": { "input": "string", "output": ["string", "null"] },
+      "invocation": { "encoding": "none", "parameters": [] },
+      "reasons": [],
+      "description": "環境変数解決 (DESIGN §12)。散文シグネチャ `(key: string) → string | null` の機械可読化 (DR-107 §6)。key は prefix 連結済みの最終名 (導出は installer 側に閉じる、DR-049)。null=未設定、空文字列は「設定されている」。registry の単一スロット。"
+    },
+    "config_provider": {
+      "name": "config_provider",
+      "role": "provider",
+      "construction": "static",
+      "io_type": { "input": "string", "output": [{ "map": "value" }, "null"] },
+      "invocation": { "encoding": "none", "parameters": [] },
+      "reasons": [],
+      "description": "config ファイル読込 (DESIGN §14.3、DR-050)。散文シグネチャ `(path: string) → object | null` の機械可読化 (DR-107 §6) — パス → JSON 同型の階層オブジェクト、フォーマット・探索・マージは provider の関心。output は map<string,value> で近似 (階層オブジェクトのフィールド構成は動的、固定 struct ではない)。null=読込なし (committed パスの読込失敗は Error、default 由来パスの不在は黙認、実装側の別関心)。registry の単一スロット。"
+    },
+    "tty_provider": {
+      "name": "tty_provider",
+      "role": "provider",
+      "construction": "static",
+      "io_type": { "input": "string", "output": [{ "map": "value" }, "null"] },
+      "invocation": { "encoding": "none", "parameters": [] },
+      "reasons": [],
+      "description": "tty 判定値解決 (DESIGN §12b、DR-099)。散文シグネチャ `(stream: \"stdin\"|\"stdout\"|\"stderr\") → {terminal: bool, cygwin: bool} | null` の機械可読化 (DR-107 §6) — input は本来 3 値 enum だが io_type の値語彙にリテラル enum 制約が無いため string で近似 (許容値は本 description で明記)。output の固定フィールド struct ({terminal, cygwin}) も map<string,value> で近似 (io_type はフィールド単位の型精密化を持たない、DR-107 §3)。null=提供なし。ambient probe (isatty 呼び出し) は provider 実装の責務に閉じ、評価器はこの純データ返却のみを見る (DR-098 §2、DR-099 でも不変)。registry の単一スロット。"
     }
   }
 }
