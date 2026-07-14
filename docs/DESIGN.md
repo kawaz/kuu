@@ -612,13 +612,13 @@ filter は2箇所に乗る:
   - piece_filters: `FilterChain[String, String]` (trim 等)
   - parse: `String → T` (types registry の value_parser、暗黙)
   - value_filters: `FilterChain[T, T]` (in_range 等、各 piece に効く)
-- **確定した最終セル値 / 累積結果に対する変換** (DR-102): multiple 宣言の有無で対象が分かれる
-  - `final_filters`: `FilterChain[T, T]` (multiple 宣言のない値要素、確定した最終値に一様に効く)
-  - `accum_filters` (collector 相当): `FilterChain[T[], T[]]` (multiple 宣言のある値要素、累積後の配列に効く)
+- **確定した最終セル値 / 累積結果に対する変換** (DR-102): accum 要素 (`multiple`/`repeat`/`separator` のいずれかを宣言、DR-102 §1 の `is_accum_elem` 判定) かどうかで対象が分かれる
+  - `final_filters`: `FilterChain[T, T]` (非 accum 要素、確定した最終値に一様に効く)
+  - `accum_filters` (collector 相当): `FilterChain[T[], T[]]` (accum 要素、累積後の配列に効く)
 
 両者は位置が違うので自然な順序で合成 (parse 後 → 各 piece の value_filters、確定後 → final_filters/accum_filters)。
 
-**filter 名の未登録は definition-error** (kind=`unknown-vocab`、DR-101): `value_filters` / `piece_filters` / `final_filters` / `accum_filters` の 4 属性に指定された filter 名 (§8.4 DSL の `<name>`、DR-094 の ns 付き識別子 / bare は `builtin` ns の糖衣) が filters registry の descriptor `owns` 集合 (DR-061 / DR-094) に載らない場合、`parse_definition` が静的に reject する (runtime reason `unknown_filter` は持たない)。1 属性 1 registry の対応 (`final_filters` は scalar filter registry T→T、`accum_filters` は ARRAY filter registry Acc→Acc) なので判定は自 registry の owns 集合のみで完結し、層違いの 2 段判定は無い (DR-102 §2)。multiple 宣言のない要素への `accum_filters`、multiple 宣言のある要素への `final_filters` はいずれも definition-error kind=`invalid-range` (DR-102 §3)。filter 装置内の失敗 (例: `regex_match` の pattern compile 失敗) は kind=`invalid-argument` (DR-085) で別層。
+**filter 名の未登録は definition-error** (kind=`unknown-vocab`、DR-101): `value_filters` / `piece_filters` / `final_filters` / `accum_filters` の 4 属性に指定された filter 名 (§8.4 DSL の `<name>`、DR-094 の ns 付き識別子 / bare は `builtin` ns の糖衣) が filters registry の descriptor `owns` 集合 (DR-061 / DR-094) に載らない場合、`parse_definition` が静的に reject する (runtime reason `unknown_filter` は持たない)。1 属性 1 registry の対応 (`final_filters` は scalar filter registry T→T、`accum_filters` は ARRAY filter registry Acc→Acc) なので判定は自 registry の owns 集合のみで完結し、層違いの 2 段判定は無い (DR-102 §2)。非 accum 要素への `accum_filters`、accum 要素への `final_filters` はいずれも definition-error kind=`invalid-range` (DR-102 §3)。filter 装置内の失敗 (例: `regex_match` の pattern compile 失敗) は kind=`invalid-argument` (DR-085) で別層。
 
 **効果 op と `value_filters` (each 相、T→T) の関係**: `value_filters` は cell に書かれる実値に乗る。
 効果 op のうち実値を運ぶ / 生むもの — `set` の operand と `update` の適用結果 (update は old に

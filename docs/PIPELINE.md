@@ -52,7 +52,7 @@ flowchart TD
 
 > **由来 DR**: DR-009 (3 段 / 7 stage) / DR-034 (pieceProcessor = pre → parse → post、separator は multiple 内属性) / DR-036 (multiple registry と collectors 統合) / DR-062 (継承二形) / DR-074 (number/bool canonical 字句) / DR-075 (int 値空間判定 + int_round) / DR-061 (configurable factory) / DR-079 (作用対象アンカー命名: piece_filters / value_filters) / DR-102 (段 7 の属性分割: final_filters / accum_filters)
 
-1 個の生文字列が型付き最終値になるまでの 7 段。各 filter は**純粋関数** (コンテキストなし、失敗は reason 付き reject)。段 3〜5 は piece 単位 (DR-034 の pieceProcessor)。multiple 無しの要素は separator なしの長さ 1 縮退として同じ管を通る (DR-034 §6.3 相当)。段 7 は multiple 有無で対象属性・型が分かれる (DR-102)。
+1 個の生文字列が型付き最終値になるまでの 7 段。各 filter は**純粋関数** (コンテキストなし、失敗は reason 付き reject)。段 3〜5 は piece 単位 (DR-034 の pieceProcessor)。multiple 無しの要素は separator なしの長さ 1 縮退として同じ管を通る (DR-034 §6.3 相当)。段 7 は accum 要素該当性 (`multiple`/`repeat`/`separator` のいずれか、`is_accum_elem` 判定、DR-102 §1) で対象属性・型が分かれる。
 
 ```mermaid
 flowchart TD
@@ -62,8 +62,8 @@ flowchart TD
   S4["4. type.parse / value_parser (types registry)<br/>(string) → T (piece 単位)"]
   S5["5. value_filters ('each' は暗黙、filters registry)<br/>T → T (piece 単位)"]
   S6["6. accumulator (multiple.on_repeat、accumulators registry)<br/>(Acc, T) → Acc"]
-  S7a["7a. final_filters (filters registry、multiple 無し)<br/>T → T"]
-  S7b["7b. accum_filters (filters registry、multiple 有り)<br/>Acc → Acc"]
+  S7a["7a. final_filters (filters registry、非 accum 要素)<br/>T → T"]
+  S7b["7b. accum_filters (filters registry、accum 要素)<br/>Acc → Acc"]
   R3[/"reject: filter 固有 reason (kind=filter、descriptor 宣言)"/]
   R4[/"reject: not_a_number / not_an_integer / not_a_bool / int_out_of_range (kind=parse)"/]
   R5[/"reject: too_small / too_large ... (kind=filter、descriptor 宣言)"/]
@@ -89,8 +89,8 @@ flowchart TD
 | 4 | type.parse | `(string) → T` (要素単位) | canonical 字句 (DR-074 / DR-075)。configurable factory の config キー (`int_round`, `number_allow_base_prefix`) はここに効く (DR-061 §4) |
 | 5 | value_filters | `T → T` (要素単位) | 検証 + 変換: `in_range:1:65535`, `non_empty` … args は全て string (引数パースと同じ手順、DR-009)。効果 op との関係: `value_filters` は cell に書かれる実値に乗る (set operand / update 適用結果)。cell 操作 op (unset/default/empty) の発火は値を書かないので適用対象が無い (DESIGN §8.3)。値源席由来の値の chain 通過は DR-049/050 が正本 |
 | 6 | accumulator | `(Acc, T) → Acc` | 複数「値」の畳み: `append`, `merge`。**count の increment はここから退役し効果側へ (DR-077 §3)** — accumulator は複数「値」の畳みに純化 |
-| 7a | final_filters (multiple 無し) | `T → T` | 確定した最終値に: count の上限 `in_range` (DR-040)。**update の結果にもここが通る** (DR-077 §1)。1 属性 1 registry (scalar filter registry、DR-102) |
-| 7b | accum_filters (multiple 有り) | `Acc → Acc` | 累積後の配列に: `sort`, `unique` 等。1 属性 1 registry (ARRAY filter registry、DR-102)。multiple 無し要素への宣言・multiple 有り要素への `final_filters` 宣言はいずれも definition-error kind=invalid-range (DR-102 §3) |
+| 7a | final_filters (非 accum 要素) | `T → T` | 確定した最終値に: count の上限 `in_range` (DR-040)。**update の結果にもここが通る** (DR-077 §1)。1 属性 1 registry (scalar filter registry、DR-102) |
+| 7b | accum_filters (accum 要素) | `Acc → Acc` | 累積後の配列に: `sort`, `unique` 等。1 属性 1 registry (ARRAY filter registry、DR-102)。非 accum 要素への `accum_filters` 宣言・accum 要素への `final_filters` 宣言はいずれも definition-error kind=invalid-range (DR-102 §3、accum 要素の定義は `multiple`/`repeat`/`separator` のいずれか) |
 
 ### 失敗の出口 (reason コード、DR-066)
 
@@ -125,7 +125,7 @@ flowchart TD
 **update 経路 (old を変換、DR-077)**:
 1. 発火のみ (0-token)
 2. old `T` → transform (filters registry の T→T エントリ) → `T`
-3. 適用結果は set 経路と対称に `value_filters` (段 5、each 相) → `final_filters` (段 7a、multiple 無し要素の場合) を通してセルへ (DR-077 §1 「old → transform → value_filters → cell」。count の上限 `in_range` が効くのは段 7a、DR-040/DR-102)
+3. 適用結果は set 経路と対称に `value_filters` (段 5、each 相) → `final_filters` (段 7a、非 accum 要素の場合) を通してセルへ (DR-077 §1 「old → transform → value_filters → cell」。count の上限 `in_range` が効くのは段 7a、DR-040/DR-102)
 4. **parser は関与しない** — env の `VERBOSITY=5` は set のまま (DR-077 §3 の値源非依存の核)
 
 ### 3.3 preset との関係

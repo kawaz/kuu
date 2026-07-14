@@ -10,8 +10,10 @@
 |---|---|---|---|
 | `piece_filters` (不変) | `String → String` | scalar filter registry | 値要素 (座席 B、DR-079) |
 | `value_filters` (不変) | `T → T` (each 相) | scalar filter registry | 値要素 (座席 C、DR-079) |
-| `final_filters` (新設) | `T → T` (最終値) | scalar filter registry | **multiple 宣言のない**値要素のみ |
-| `accum_filters` (新設) | `T[] → T[]` (累積配列) | ARRAY filter registry | **multiple 宣言のある**値要素のみ |
+| `final_filters` (新設) | `T → T` (最終値) | scalar filter registry | **非 accum 要素**のみ |
+| `accum_filters` (新設) | `T[] → T[]` (累積配列) | ARRAY filter registry | **accum 要素**のみ |
+
+**accum 要素の定義**: `multiple` / `repeat` / `separator` のいずれかの宣言を持つ要素 (`is_accum_elem` 判定、DR-083 §5 の `collect_scalar_array_default` — 非 accum 要素への配列 default 宣言の構造不一致検査 — と同じ導出基準)。これら 3 属性のいずれかがあれば accumulator (段6) が意味を持つ複数値経路になるため、Acc→Acc の `accum_filters` が対象になる。いずれも無ければ非 accum 要素で、T→T の `final_filters` が対象になる。「multiple 宣言の有無」は代表例による簡略表現であり、正確な適格性は `is_accum_elem` (3 属性いずれか) で判定する — 以下、本 DR 内の「accum 要素」「非 accum 要素」はこの定義を指す。
 
 `final_filters` は旧 `cell_filters` の非 accum 用法 (count 型の update fold 最終値、scalar set 経路の最終値) を引き継ぐ「最終値ガード」— `value_filters` が「実値を運ぶ効果 (set の operand、update の適用結果) の piece 直後」にのみ効くのに対し、`final_filters` は効果の種類 (set/update/default/unset) を問わず確定した最終セル値に一様に届く (§4 の argv_pos 実証差がこの違いを observable な形で示す)。`accum_filters` は旧 `cell_filters` の accum 用法 (累積配列全体への変換、`unique` 等) をそのまま引き継ぐ。
 
@@ -23,19 +25,19 @@
 
 ### 3. 排他制約: definition-error kind=invalid-range (正規ゲートは parse_definition)
 
-multiple 宣言のない要素に `accum_filters` を書く、または multiple 宣言のある要素に `final_filters` を書くケースは、その要素にそもそも存在しない属性を書いた構造不一致であり、`fixtures/definition-error/scalar-array-default-invalid-range.json` (非 multiple 要素への配列 default 宣言、DR-083 §5) と同型の **kind=invalid-range** で reject する。新 kind は不要 — 「要素の宣言形と合わない属性/値」は definition-error の確立パターン (DR-082 §2 の「構文上は書けるが構成として不成立」系統)。
+非 accum 要素に `accum_filters` を書く、または accum 要素に `final_filters` を書くケース (§1 の accum 要素定義 = `is_accum_elem`、multiple/repeat/separator のいずれか) は、その要素にそもそも存在しない属性を書いた構造不一致であり、`fixtures/definition-error/scalar-array-default-invalid-range.json` (非 accum 要素への配列 default 宣言、DR-083 §5、同じ `is_accum_elem` 判定を使う先例) と同型の **kind=invalid-range** で reject する。新 kind は不要 — 「要素の宣言形と合わない属性/値」は definition-error の確立パターン (DR-082 §2 の「構文上は書けるが構成として不成立」系統)。
 
-正規のゲートは `parse_definition` (definition-error、fixture で pin 可能)。`schema/wire.schema.json` の `if/then` (multiple 有無で許容 properties を分岐) は補助として併用してよいが必須ではない — schema を経由しない conformance 実装では排他制約が効かなくなるため、spec としての正規契約は definition-error 側に置く。
+正規のゲートは `parse_definition` (definition-error、fixture で pin 可能)。`schema/wire.schema.json` の `if/then` (accum 要素該当性で許容 properties を分岐) は補助として併用してよいが必須ではない — schema を経由しない conformance 実装では排他制約が効かなくなるため、spec としての正規契約は definition-error 側に置く。
 
 ### 4. argv_pos 帰属: `final_filters`/`accum_filters` ともに `argv.length`
 
 実測 (`value-typing/cell-filter-reject.json` [現 `final-filter-reject.json`] の `out-of-range-rejected` case、`argv_pos=2`=`argv.length`、`count-parse/cell-filter-range.json` [現 `final-filter-range.json`] の `over-range-rejected` case、`argv_pos=1`=`argv.length`、いずれも piece の実位置とは不一致) により、旧 `cell_filters` の reject は非 accum・accum を問わず一貫して `argv.length` (特定トークンに帰属しない) に帰属することが確認されている。分割後もこの帰属規則は両属性で維持する — `value_filters` (piece 実位置に帰属) との違いは「どの piece が原因かを名指ししない、確定した最終値/累積配列全体への一括検証」という意味論の observable な現れであり、この差異こそが両者を独立属性として残す実証的な根拠 (SPL-Q6 = a の決め手)。CONFORMANCE.md §3 の記述を「累積後の」という accum 限定の文言から「`final_filters`/`accum_filters` 両席の reject は argv.length」に補正する。
 
-### 5. 非 multiple 要素の宣言 default 値の pieceProcessor 通過 (DR-050 §4 / DR-083 §2 の対称性から導出)
+### 5. 非 accum 要素の宣言 default 値の pieceProcessor 通過 (DR-050 §4 / DR-083 §2 の対称性から導出)
 
-DR-083 §2 は multiple 要素の宣言 default 配列を「DR-050 §4 の config array と同型」— 各 piece は型一致なら T 域座席のみ (`value_filters` per piece → accumulator 畳み → `accum_filters`)、JSON string の piece は string 域 (`piece_filters` → parse) も通る、と規定する。DR-050 §4 自体は「config 値の型は要素の type が決める」という一般規則 (string → CLI/env と同一の全段 pipeline、非 string で型一致 → post_filters のみ、型一致ゆえ pre_filters/parse はスキップされる型の帰結) であり、multiple 要素の宣言 default だけでなく **非 multiple 要素の宣言 default にも同じ型依存規則がそのまま適用される** — 宣言 default は「値源」の一種であり、config 供給値と同じく「JSON 表現の型」に応じて pieceProcessor を通る/通らないかが決まる (これは値源の種別 (config か宣言 default か) ではなく値の型が決める規則であり、DR-050 §4 の対象を絞る理由がない)。
+DR-083 §2 は multiple 要素の宣言 default 配列を「DR-050 §4 の config array と同型」— 各 piece は型一致なら T 域座席のみ (`value_filters` per piece → accumulator 畳み → `accum_filters`)、JSON string の piece は string 域 (`piece_filters` → parse) も通る、と規定する。DR-050 §4 自体は「config 値の型は要素の type が決める」という一般規則 (string → CLI/env と同一の全段 pipeline、非 string で型一致 → post_filters のみ、型一致ゆえ pre_filters/parse はスキップされる型の帰結) であり、accum 要素の宣言 default だけでなく **非 accum 要素 (§1 の定義、`is_accum_elem` に該当しない要素) の宣言 default にも同じ型依存規則がそのまま適用される** — 宣言 default は「値源」の一種であり、config 供給値と同じく「JSON 表現の型」に応じて pieceProcessor を通る/通らないかが決まる (これは値源の種別 (config か宣言 default か) ではなく値の型が決める規則であり、DR-050 §4 の対象を絞る理由がない)。
 
-したがって: 非 multiple 要素の宣言 default 値が JSON string なら `piece_filters` → parse → `value_filters` の全段を通り、宣言 default 値が要素の type と型一致 (number/bool) なら型の帰結で `piece_filters`/parse はスキップされ `value_filters` のみを通る。この値が `op=default` の発火 (DR-081 §2、書き換え済み default の明示 set) でセルに書き込まれる際、`final_filters` (最終値ガード) が一様に適用される — `count-parse/final-filter-range.json` (旧 `cell-filter-range.json`) が update fold の最終値に対して固定した意味論と同型。
+したがって: 非 accum 要素の宣言 default 値が JSON string なら `piece_filters` → parse → `value_filters` の全段を通り、宣言 default 値が要素の type と型一致 (number/bool) なら型の帰結で `piece_filters`/parse はスキップされ `value_filters` のみを通る。この値が `op=default` の発火 (DR-081 §2、書き換え済み default の明示 set) でセルに書き込まれる際、`final_filters` (最終値ガード) が一様に適用される — `count-parse/final-filter-range.json` (旧 `cell-filter-range.json`) が update fold の最終値に対して固定した意味論と同型。
 
 ## 波及
 
