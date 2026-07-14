@@ -6,6 +6,15 @@
 > チャットでは「VF-Q 待ち」のようにラベルだけで参照する。回答はラベル + 選択肢記号 (例「VF-b で」) だけで通じる。
 > 参照パスは本リポ (spec) 相対。kuu.mbt 側は「kuu.mbt の <path>」と表記する。
 
+## CR-Q1: accum_filters の reject 能力 (codex レビュー C-1)
+
+DR-102 §4 と CONFORMANCE は accum_filters の reject 時 args 位置帰属を規定しているが、ARRAY filter registry の実態は「拒否を持たない純関数」(builtin-descriptors の unique 記述、ArrayFilterDescriptor に Result 経路なし) で **reject を発生させられない** — 旧 cell_filters 時代から継承した規定と実態の乖離が分割で顕在化した。
+
+- **CR-Q1-a**: ArrayFilterDescriptor を fallible 化 (Result 経路を通し、配列長検査のような検証系 array filter を書けるようにする。規定が実効化し fixture で pin 可能になる)
+- **CR-Q1-b** (統括推し): ARRAY registry は **transform 専用を正式契約に昇格** (現実態の明文化)。DR-102 §4 の accum 側 reject 規定は「将来 fallible な array filter が導入された場合の帰属規則」として条件付き化 (または削除)。fallible 化は検証系 array filter の実需が出た時に非破壊で追加できる — 今の fallible 化は将来の仮定的要件への先回り
+
+参照: docs/issue/2026-07-14-codex-review-dr102-dr103-postland.md (レビュー指摘全体) / docs/decisions/DR-102-filter-attribute-split.md §4 / schema/builtin-descriptors.json の unique
+
 ## V1-Q1〜Q3: v1.0.0 発行条件まわり
 
 正本: **docs/findings/2026-07-13-v1-readiness-audit.md §4** (各 Q の詳細)。
