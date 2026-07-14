@@ -134,15 +134,90 @@ spec `57ea0bc6` → pin bump → kuu.mbt `0fe02498` の順で通し、CI run `29
 トリアージ元 issue `codex-review-dr104-dr105-triage` と `2026-07-14-dr-105-fixture-impl-followup`
 はいずれも本サイクルで close (archive 移動) 済み。
 
+## 続報: codex レビュー #3 (同日夜)
+
+DR-106 新設を含む反映が一段落した同日夜、節目ごとの codex レビュー運用に沿って
+DR-104/DR-105/DR-106 と conformance 一式 (CONFORMANCE.md / schema / fixtures/complete)
+を対象に codex レビュー #3 を受けた。
+
+### 実施環境のハマり所 3 連発
+
+このレビューは cliproxyapi が不安定だったため、通常の `/model` 切替経由ではなく
+`ANTHROPIC_BASE_URL=... claude -p` で nested claude を直接叩く経路で実施した。この経路で
+3 つの障害に連続して遭遇し、都度解決した:
+
+1. **"Prompt is too long"**: nested claude が起動時に CLAUDE.md / rules 等の文脈を読み込んで
+   プロンプトが肥大化していたのが原因。`--bare` オプションで文脈読み込みを止めて解消
+2. **`--bare` にすると "Not logged in"**: `--bare` は通常の OAuth ログイン状態も読み飛ばすため
+   認証エラーになる。プロキシは 127.0.0.1 バインドのローカル信頼構成のため、
+   `ANTHROPIC_AUTH_TOKEN=local` という実質ダミーの値で認証チェックを通過させて解消
+   (`cliproxyapi-codex-usage` 運用と同じ「ローカル信頼、api-keys 実質不要」前提)
+3. **51KB のレビュー対象 bundle がリクエストサイズ上限を超過**: 二分探索で 32KB は通ることを
+   確認した上で、bundle を 2 分割して個別に投入し解消
+
+### トリアージ結果: 成立 ≈17 / 却下 (DR 本文直接編集要求) / issue 化 3
+
+判定正本は `docs/findings/2026-07-14-codex-review3-dr106-conformance.md`。レビューは
+DR notes 対象 (レビュー A) と CONFORMANCE/schema/fixtures 対象 (レビュー B) の 2 通に分かれ、
+統括が全指摘をトリアージ表にまとめて判定した。却下に回ったのは「DR 本文を直接編集せよ」という
+要求群 (A-M7 / A-m1 / A-m4 / B-m4 等) — 本リポの規約は「DR 本文は push 後不変、訂正は追記 note
+のみ」であり、この規約と衝突する要求は指摘の当否によらず却下とした。issue 化 3 件は
+`descriptor-schema-declaration-axis-separation` (新設)・`from-entries-nonconforming-input-wire-form`
+(新設)・匿名 origin の扱い (既存 issue `lowering-generated-element-origin-rule` へ統合)。
+
+### 白眉 3 件
+
+1. **vacuous fixture が判別力ゼロだった件** (B-M3): 本サイクル前半で新設した
+   `constraint-required-group-vacuous-flag.json` を codex が精読し、唯一の exact 候補
+   `--verbose` が `required_group` の唯一の member 自身であることを指摘した。after-filter の
+   検査経路は「候補自身を採用した経路」(`args_before + [候補] + args_after`) であり、
+   group の唯一 member が候補自身なら誤って非 vacuous に実装しても `--verbose` は自分自身の
+   発火で充足してしまい green のままになる — fixture 名と実際の検証内容が一致していなかった。
+   「何を保証するテストか」を詰め切らずに書いた fixture が、まさに保証したかった性質
+   (vacuous 実装と非 vacuous 実装を判別する力) を持っていなかった実例。group と無関係な
+   `--quiet` を追加し、その経路で vacuous/非 vacuous が分岐するよう構成し直した
+2. **`flatten` 存在ベース reject が DR-063 §4「省略=default」と正面衝突していた件** (B-C1/A-C4):
+   `{"accumulator":"merge"}` (省略、default:false と構造等価) と
+   `{"accumulator":"merge","flatten":false}` (存在ベースでは definition-error) が、
+   同じ論理値を表しているのに一方は valid・他方は invalid になるという矛盾を codex が指摘。
+   `flatten` を `absent`/`false`/`true` の三状態として明示的に保持する契約 (append 選択後の
+   意味 default であって decode 時の補完値ではない、と schema コメントで明確化) を採用して
+   決着させた
+3. **`length_range` の非負整数規定が `in_range` にまで誤って遡及していた件** (B-M1): DR-105 §5
+   明確化 note の書き方 (「`length_range` および同型の `in_range`」という言い回し) が原因で、
+   本来 `length_range` (配列長、非負整数が自然) 限定のはずの制約が、scalar の `in_range`
+   (`in_range:-1.5:2.5` のような負数・小数を正当に扱える範囲検査) にまで遡及適用される記述に
+   なっていた。これは**これまでの mismatch レビューと構図が逆**だった点が特筆に値する —
+   従来は「fixture 側の理論導出ミスを実装検証で検出する」パターンだったが、今回は
+   **spec 本文 (DR-105 §5 note) の書き方の誤りを、fixture 化する過程で検出**した初めての例。
+   `in_range` の負数境界 fixture を新設したところ実装は問題なく green (実装は元々正しかった
+   ことの確認)、一方 `length_range` の非負整数制約 fixture 2 本は kuu.mbt 側に対応する
+   definition-time 検査が無くいずれも mismatch — spec 先行・実装追随という通常の順序が
+   ここでも成立し、実装側の追随課題として残った
+
+### 確定値とロックステップ push #2
+
+conformance 最終値: decoded=263/ran_cases=644/skipped=0/mismatches=0、moon test 327/327
+(上記 `length_range` 非負整数 fixture 2 本の mismatch は kuu.mbt 側の追随実装で解消済み)。
+ロックステップ push #2 は spec `9e8debe9` → kuu.mbt `d6261de1` の順で通した。push 時、
+`just push` の fmt-check による失敗が前回に続き**2 連発**した (kuu.mbt 側の worker 委譲実装が
+push 前に `moon fmt` を通していなかった) — worker 委譲プロンプトの完了チェックリストに
+「push 前に moon fmt 必須」を明記する運用改善が必要な水準に達している。
+
 ## 数値・関連
 
 - `docs/findings/2026-07-14-codex-review2-triage-verdicts.md` (判定正本、29 指摘の各論・根拠・
   反映方針)
 - `docs/findings/2026-07-14-codex-review-dr104-dr105.md` (codex レビュー #2 全文)
+- `docs/findings/2026-07-14-codex-review3-dr106-conformance.md` (codex レビュー #3 判定正本 +
+  レビュー原文 A/B)
 - DR-104 (`docs/decisions/DR-104-completion-fixture-format.md`, C-1 訂正反映)
-- DR-105 (`docs/decisions/DR-105-accumulator-flatten-and-array-filter-fallibility.md`, 実装反映)
-- DR-106 (`docs/decisions/DR-106-descriptor-role-and-carrier-axes.md`, 新設)
+- DR-105 (`docs/decisions/DR-105-accumulator-flatten-and-array-filter-fallibility.md`, 実装反映 +
+  レビュー #3 note (a)〜(d))
+- DR-106 (`docs/decisions/DR-106-descriptor-role-and-carrier-axes.md`, 新設 + レビュー #3 note)
 - DR-102 §3 (wrong-seat 存在ベース判定、M-16 の先例)
 - `docs/journal/2026-07-14-dr104-complete-cycle.md` (DR-104 契約確定 + mismatch レビュー第 1 弾)
 - `docs/journal/2026-07-14-acc-rulings-and-worker-rotation.md` (DR-105 設計経緯 + worker fresh
   spawn 運用の導入)
+- issue `descriptor-schema-declaration-axis-separation` / `from-entries-nonconforming-input-wire-form`
+  (codex レビュー #3 由来の新規起票)
