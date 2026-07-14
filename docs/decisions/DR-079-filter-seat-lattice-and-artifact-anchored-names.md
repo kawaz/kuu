@@ -67,6 +67,8 @@ accumulator 直後という位置は明確だが、multiple 無し要素 (accumu
 
 - **DR-062**: 命名 (`pre_filters`) は本 DR で superseded。継承インターフェースの規定は不変
 - **DR-009 / DR-034 / DR-040 / DR-049 / DR-050 / DR-077**: 本文は判断記録として不変、INDEX に注記。現行規範 (DESIGN / PIPELINE / CONFORMANCE / LOWERING / schema) と fixtures は全面追従
+- **issue design-6-2-piece-post-label-collision は本リネームで解消**: 相ラベルと wire 名の衝突が語彙レベルで消滅。schema の `cell_filters` description に「累積後 (accumulator 後) の Acc → Acc」を明記して DR-050 の読み分け問題も閉じる
+- **piece の op 付き artifact 化** (issue list-merge-piece-op-vocabulary): merge 導入時に B/C は「payload にのみ効き op を素通しする」規定を merge 側 DR で追加する
 
 ## Superseded (歴史)
 
@@ -75,8 +77,6 @@ accumulator 直後という位置は明確だが、multiple 無し要素 (accumu
 ### 座席格子 D 行 (`cell_filters`) の分割 (DR-102 で更新)
 
 > **更新: `cell_filters` が multiple 宣言の有無で T→T/Acc→Acc という異なる型の語彙を 1 属性に内包していたことが構造的欠陥と判明し、D 行は D1 (`final_filters`、確定値 T→T、非 multiple 専用) / D2 (`accum_filters`、累積配列 Acc→Acc、multiple 専用) に分割された。§2 の artifact アンカー命名原則、§「採用しなかった案」の `accum_filters` 不採用理由 (「multiple 無し要素で名前が浮く」) は、本分割により該当ケースが構造的に無くなったため解消。他 3 座席 (A/B/C) の格子・命名原則は不変。**
-- **issue design-6-2-piece-post-label-collision は本リネームで解消**: 相ラベルと wire 名の衝突が語彙レベルで消滅。schema の `cell_filters` description に「累積後 (accumulator 後) の Acc → Acc」を明記して DR-050 の読み分け問題も閉じる
-- **piece の op 付き artifact 化** (issue list-merge-piece-op-vocabulary): merge 導入時に B/C は「payload にのみ効き op を素通しする」規定を merge 側 DR で追加する
 
 ## 関連
 

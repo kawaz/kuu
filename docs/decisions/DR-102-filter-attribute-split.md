@@ -29,27 +29,27 @@ multiple 宣言のない要素に `accum_filters` を書く、または multiple
 
 ### 4. argv_pos 帰属: `final_filters`/`accum_filters` ともに `argv.length`
 
-実測 (`value-typing/cell-filter-reject.json::out-of-range-rejected` の `argv_pos=2`=`argv.length`、`count-parse/cell-filter-range.json::over-range-rejected` の `argv_pos=1`=`argv.length`、いずれも piece の実位置とは不一致) により、旧 `cell_filters` の reject は非 accum・accum を問わず一貫して `argv.length` (特定トークンに帰属しない) に帰属することが確認されている。分割後もこの帰属規則は両属性で維持する — `value_filters` (piece 実位置に帰属) との違いは「どの piece が原因かを名指ししない、確定した最終値/累積配列全体への一括検証」という意味論の observable な現れであり、この差異こそが両者を独立属性として残す実証的な根拠 (SPL-Q6 = a の決め手)。CONFORMANCE.md §3 の記述を「累積後の」という accum 限定の文言から「`final_filters`/`accum_filters` 両席の reject は argv.length」に補正する。
+実測 (`value-typing/cell-filter-reject.json` [現 `final-filter-reject.json`] の `out-of-range-rejected` case、`argv_pos=2`=`argv.length`、`count-parse/cell-filter-range.json` [現 `final-filter-range.json`] の `over-range-rejected` case、`argv_pos=1`=`argv.length`、いずれも piece の実位置とは不一致) により、旧 `cell_filters` の reject は非 accum・accum を問わず一貫して `argv.length` (特定トークンに帰属しない) に帰属することが確認されている。分割後もこの帰属規則は両属性で維持する — `value_filters` (piece 実位置に帰属) との違いは「どの piece が原因かを名指ししない、確定した最終値/累積配列全体への一括検証」という意味論の observable な現れであり、この差異こそが両者を独立属性として残す実証的な根拠 (SPL-Q6 = a の決め手)。CONFORMANCE.md §3 の記述を「累積後の」という accum 限定の文言から「`final_filters`/`accum_filters` 両席の reject は argv.length」に補正する。
 
 ### 5. 非 multiple 要素の宣言 default 値の pieceProcessor 通過 (DR-050 §4 / DR-083 §2 の対称性から導出)
 
 DR-083 §2 は multiple 要素の宣言 default 配列を「DR-050 §4 の config array と同型」— 各 piece は型一致なら T 域座席のみ (`value_filters` per piece → accumulator 畳み → `accum_filters`)、JSON string の piece は string 域 (`piece_filters` → parse) も通る、と規定する。DR-050 §4 自体は「config 値の型は要素の type が決める」という一般規則 (string → CLI/env と同一の全段 pipeline、非 string で型一致 → post_filters のみ、型一致ゆえ pre_filters/parse はスキップされる型の帰結) であり、multiple 要素の宣言 default だけでなく **非 multiple 要素の宣言 default にも同じ型依存規則がそのまま適用される** — 宣言 default は「値源」の一種であり、config 供給値と同じく「JSON 表現の型」に応じて pieceProcessor を通る/通らないかが決まる (これは値源の種別 (config か宣言 default か) ではなく値の型が決める規則であり、DR-050 §4 の対象を絞る理由がない)。
 
-したがって: 非 multiple 要素の宣言 default 値が JSON string なら `piece_filters` → parse → `value_filters` の全段を通り、宣言 default 値が要素の type と型一致 (number/bool) なら型の帰結で `piece_filters`/parse はスキップされ `value_filters` のみを通る。この値が `op=default` の発火 (DR-081 §2、書き換え済み default の明示 set) でセルに書き込まれる際、`final_filters` (最終値ガード) が一様に適用される — `count-parse/cell-filter-range.json` が update fold の最終値に対して固定した意味論と同型。
+したがって: 非 multiple 要素の宣言 default 値が JSON string なら `piece_filters` → parse → `value_filters` の全段を通り、宣言 default 値が要素の type と型一致 (number/bool) なら型の帰結で `piece_filters`/parse はスキップされ `value_filters` のみを通る。この値が `op=default` の発火 (DR-081 §2、書き換え済み default の明示 set) でセルに書き込まれる際、`final_filters` (最終値ガード) が一様に適用される — `count-parse/final-filter-range.json` (旧 `cell-filter-range.json`) が update fold の最終値に対して固定した意味論と同型。
 
 ## 波及
 
-- **DR-079**: 座席格子表 (§1) の D 行 (`cell_filters`、「累積後のセル値、Acc→Acc、cell 単位」) を D1 (`final_filters`、確定値、T→T、非 multiple 専用) / D2 (`accum_filters`、累積配列、Acc→Acc、multiple 専用) に分割する Superseded 節を追記 (提案文言は下記)。§2 (アンカー命名の決定文言)・§「採用しなかった案」の `accum_filters` 不採用理由 (「multiple 無し要素で名前が浮く」) は、非 accum 側を別属性に分離する本 DR により構造的に解消される
-- **DR-101 §3**: 「非 accum 位置の cell_filters は scalar registry、accum 位置は ARRAY registry」という位置依存の判定マトリクス全体が前提 (1 属性が両方の位置で意味を持つこと) から崩れるため、§3 全体を Superseded 節で置換 (提案文言は下記)。§1 (filter 名未登録は unknown-vocab の原則) と §2 (専用 kind を新設しない) は属性分割後も一般原則として妥当なため不変
+- **DR-079**: 座席格子表 (§1) の D 行 (`cell_filters`、「累積後のセル値、Acc→Acc、cell 単位」) を D1 (`final_filters`、確定値、T→T、非 multiple 専用) / D2 (`accum_filters`、累積配列、Acc→Acc、multiple 専用) に分割する Superseded 節を追記済み (全文は下記)。§2 (アンカー命名の決定文言)・§「採用しなかった案」の `accum_filters` 不採用理由 (「multiple 無し要素で名前が浮く」) は、非 accum 側を別属性に分離する本 DR により構造的に解消される
+- **DR-101 §3**: 「非 accum 位置の cell_filters は scalar registry、accum 位置は ARRAY registry」という位置依存の判定マトリクス全体が前提 (1 属性が両方の位置で意味を持つこと) から崩れるため、§3 全体を Superseded 節で置換済み (全文は下記)。§1 (filter 名未登録は unknown-vocab の原則) と §2 (専用 kind を新設しない) は属性分割後も一般原則として妥当なため不変
 - **旧 DR-102 (未 push、`decisions(DR-102)`/`fixtures(definition-error)`/`docs(DESIGN)` の 3 commit)**: SPL-Q3 裁定 (案 C) により `jj abandon` 済み。番号 102 は本 DR に再利用
-- **fixtures**: `count-parse/cell-filter-range.json` / `value-typing/cell-filter-reject.json` / `definition-error/cell-filters-unknown-vocab.json` (→ `final-filters-unknown-vocab.json` に改名) / `multiple-parse/default-cell-ops.json` の属性名リネームと why 文の書き直し (旧属性名 `cell_filters` への言及は残さない、no-historical-noise)。新規: 排他違反 (definition-error kind=invalid-range) と `final_filters` への ARRAY-only 綴りの単純 unknown-vocab (旧 DR-102 fixture の置き換え)
+- **fixtures**: `count-parse/cell-filter-range.json` (→ `final-filter-range.json` に改名) / `value-typing/cell-filter-reject.json` (→ `final-filter-reject.json` に改名) / `definition-error/cell-filters-unknown-vocab.json` (→ `final-filters-unknown-vocab.json` に改名) / `multiple-parse/default-cell-ops.json` (→ `default-accum-ops.json` に改名) の属性名リネームと why 文の書き直し (旧属性名 `cell_filters` への言及は残さない、no-historical-noise)。新規: `filter-attribute-multiple-mismatch.json` (排他違反、definition-error kind=invalid-range) と `final-filters-array-only-unknown-vocab.json` (`final_filters` への ARRAY-only 綴りの単純 unknown-vocab、旧 DR-102 fixture の置き換え)
 - **schema/wire.schema.json**: `cell_filters` プロパティを `final_filters`/`accum_filters` の 2 プロパティに置換
 - **schema/builtin-descriptors.json**: `unique` の description 内「cell_filters 相」を「accum_filters 相」に更新
 - **DESIGN.md** §8.3/§8.5/§9 (required_group 波及との重複なし)・**PIPELINE.md** 段 7・**LOWERING.md** count 上限説明・**CONFORMANCE.md** §3 argv_pos 規約・**REFERENCE.md** 属性一覧/詳細節: 全 grep 追随、`just lint-reference` で検証
 
-### 提案する追記文 (DR-079, DR-101 §3 への Superseded 節)
+### 追記した Superseded 節 (適用済み、全文)
 
-DR-079 末尾に追加を提案:
+DR-079 末尾に追加済み:
 
 ```markdown
 ## Superseded (歴史)
@@ -61,7 +61,7 @@ DR-079 末尾に追加を提案:
 > **更新: `cell_filters` が multiple 宣言の有無で T→T/Acc→Acc という異なる型の語彙を 1 属性に内包していたことが構造的欠陥と判明し、D 行は D1 (`final_filters`、確定値 T→T、非 multiple 専用) / D2 (`accum_filters`、累積配列 Acc→Acc、multiple 専用) に分割された。§2 の artifact アンカー命名原則、§「採用しなかった案」の `accum_filters` 不採用理由 (「multiple 無し要素で名前が浮く」) は、本分割により該当ケースが構造的に無くなったため解消。他 3 座席 (A/B/C) の格子・命名原則は不変。**
 ```
 
-DR-101 末尾に追加を提案 (§3 全体の置換):
+DR-101 末尾に追加済み (§3 全体の置換):
 
 ```markdown
 ## Superseded (歴史)
