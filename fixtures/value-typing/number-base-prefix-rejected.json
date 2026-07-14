@@ -9,20 +9,20 @@
   "cases": [
     {
       "id": "hex-int-rejected",
-      "why": "整数 hex prefix は canonical で Error (DR-074 §2): `0x1F` は number_allow_base_prefix:false のため value_parser が拒否 → 完全経路 0 本 → failure (element=v / argv_pos=0 / kind=parse / reason=not_a_number)。無条件 hex 受理は survey で JS Number のみの少数派。",
-      "argv": ["0x1F"],
+      "why": "整数 hex prefix は canonical で Error (DR-074 §2): `0x1F` は number_allow_base_prefix:false のため value_parser が拒否 → 完全経路 0 本 → failure (element=v / args_pos=0 / kind=parse / reason=not_a_number)。無条件 hex 受理は survey で JS Number のみの少数派。",
+      "args": ["0x1F"],
       "expect": {
         "outcome": "failure",
-        "errors": [{"element": "v", "argv_pos": 0, "kind": "parse", "reason": "not_a_number"}]
+        "errors": [{"element": "v", "args_pos": 0, "kind": "parse", "reason": "not_a_number"}]
       }
     },
     {
       "id": "hex-float-rejected",
       "why": "hex float も canonical で Error (DR-074 §2): `0x1p4` (= 16、二進指数 p) も基数 prefix と統合された同一フラグの配下なので false では拒否 → failure。整数 hex (case 1) と hex float が canonical で対称に Error であることの固定 = ねじれ不在。",
-      "argv": ["0x1p4"],
+      "args": ["0x1p4"],
       "expect": {
         "outcome": "failure",
-        "errors": [{"element": "v", "argv_pos": 0, "kind": "parse", "reason": "not_a_number"}]
+        "errors": [{"element": "v", "args_pos": 0, "kind": "parse", "reason": "not_a_number"}]
       }
     }
   ]

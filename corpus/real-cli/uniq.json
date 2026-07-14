@@ -15,7 +15,7 @@
     {
       "id": "both-files-unambiguous",
       "why": "`uniq in.txt out.txt` (実機は in を読み out に書く)。2 トークンは input→output に順序割り当て、全消費経路が 1 本 (input=[in],output=[] は out.txt が残余、input=[],output=... は in.txt が余る) → 一意。連続 optional でも 2 個埋まれば曖昧でないことを固定。",
-      "argv": ["in.txt", "out.txt"],
+      "args": ["in.txt", "out.txt"],
       "expect": {
         "outcome": "success",
         "effects": [
@@ -28,7 +28,7 @@
     {
       "id": "no-files-stdin",
       "why": "`uniq` 単体 (実機は stdin→stdout)。両 optional とも 0 個 → `[]`/`[]`。flag false。0 個なら曖昧でない (両席空が唯一経路)。",
-      "argv": [],
+      "args": [],
       "expect": {
         "outcome": "success",
         "effects": [],
@@ -38,7 +38,7 @@
     {
       "id": "single-file-ambiguous",
       "why": "`uniq -c in.txt` (実機は in を読み stdout に count 付き出力 = in.txt は input)。だが kuu の 2-optional 定義では in.txt が input 席にも output 席にも収まり、両経路とも全消費に到達 → ambiguous (§15.4)。実機の『1 個目は input』という位置優先を素直な定義で表せないことを示すプローブ。interpretations は count=true 共通で input/output の帰属が入れ替わる 2 ビュー。issue: docs/issue/2026-07-07-corpus-sequential-optional-positionals.md。",
-      "argv": ["-c", "in.txt"],
+      "args": ["-c", "in.txt"],
       "expect": {
         "outcome": "ambiguous",
         "interpretations": [

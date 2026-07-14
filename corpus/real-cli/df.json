@@ -19,7 +19,7 @@
     {
       "id": "human-readable-all",
       "why": "`df -h` (実機は全マウントを人間可読で)。-h 発火 (unit グループ単独 → 排他成立)、files 0 個 `[]`。他 flag false、fstype absent。",
-      "argv": ["-h"],
+      "args": ["-h"],
       "expect": {
         "outcome": "success",
         "effects": [
@@ -31,7 +31,7 @@
     {
       "id": "human-with-path",
       "why": "`df -h /` (実機は / のあるファイルシステム)。-h + files に \"/\"。path operand の受理を固定。",
-      "argv": ["-h", "/"],
+      "args": ["-h", "/"],
       "expect": {
         "outcome": "success",
         "effects": [
@@ -44,7 +44,7 @@
     {
       "id": "inodes-and-type",
       "why": "`df -i -T apfs` (実機は inode 表示 + apfs のみ)。-i は独立 flag (unit グループ外) なので単位未指定でも成立、-T が \"apfs\" をバインド。inodes true、human/k/m false、fstype set。独立 flag と値オプションの共存。",
-      "argv": ["-i", "-T", "apfs"],
+      "args": ["-i", "-T", "apfs"],
       "expect": {
         "outcome": "success",
         "effects": [
@@ -56,12 +56,12 @@
     },
     {
       "id": "human-kilo-conflict",
-      "why": "`df -hk` — 連結だが単位 2 つは実機で片方無視/警告。ここでは排他をプローブ: human/kilobytes とも unit グループ committed → exclusive_group_violated。element=unit、argv_pos=argv.length=1 (連結でも消費後の argv 長は 1)。連結内で排他違反が立つケース。",
-      "argv": ["-hk"],
+      "why": "`df -hk` — 連結だが単位 2 つは実機で片方無視/警告。ここでは排他をプローブ: human/kilobytes とも unit グループ committed → exclusive_group_violated。element=unit、args_pos=args.length=1 (連結でも消費後の args 長は 1)。連結内で排他違反が立つケース。",
+      "args": ["-hk"],
       "expect": {
         "outcome": "failure",
         "errors": [
-          {"element": "unit", "argv_pos": 1, "kind": "constraint", "reason": "exclusive_group_violated"}
+          {"element": "unit", "args_pos": 1, "kind": "constraint", "reason": "exclusive_group_violated"}
         ]
       }
     }

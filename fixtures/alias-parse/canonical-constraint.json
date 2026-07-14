@@ -1,5 +1,5 @@
 {
-  "why": "alias 起動でも実体側の遅延述語が効く (DR-057 §2/§3 × DR-047/055): alias は入口だけの存在で、値源・結果キー・制約は canonical 実体側のまま (DR-057 §3)。canonical `decrypt` (requires key_file) に short alias `{alias:\"decrypt\", short:\"d\"}` を貼る。alias -d は decrypt セルへの別入口 (link 同型) なので、-d の発火は decrypt の committed を立てる (DR-045 の最終効果) — すると canonical に宣言された requires が --decrypt 発火時と全く同じに評価される (制約は実体側 = alias は requires を運ばない)。committed 判定は『その要素が CLI で発火したか』であり、入口が canonical でも alias でも同一 (DR-047)。違反 = 完全経路の不成立 = failure かつ kind:constraint、reason requires_violated (DR-066 の <属性名>_violated)。制約は全トークン消費後に評価されるため argv_pos = 評価時点 = argv.length。effects は cli 由来のみ・順序=適用順 (CONFORMANCE §2)。蒸留元: slice phase26 test 8 (a constraint on the canonical fires even when the alias entry triggers the commit)。canonical decrypt/key_file の wire は constraints-parse/requires.json と同型 (long:true が name 由来綴り --decrypt / --key-file を生成、DR-022 snake→kebab)。",
+  "why": "alias 起動でも実体側の遅延述語が効く (DR-057 §2/§3 × DR-047/055): alias は入口だけの存在で、値源・結果キー・制約は canonical 実体側のまま (DR-057 §3)。canonical `decrypt` (requires key_file) に short alias `{alias:\"decrypt\", short:\"d\"}` を貼る。alias -d は decrypt セルへの別入口 (link 同型) なので、-d の発火は decrypt の committed を立てる (DR-045 の最終効果) — すると canonical に宣言された requires が --decrypt 発火時と全く同じに評価される (制約は実体側 = alias は requires を運ばない)。committed 判定は『その要素が CLI で発火したか』であり、入口が canonical でも alias でも同一 (DR-047)。違反 = 完全経路の不成立 = failure かつ kind:constraint、reason requires_violated (DR-066 の <属性名>_violated)。制約は全トークン消費後に評価されるため args_pos = 評価時点 = args.length。effects は cli 由来のみ・順序=適用順 (CONFORMANCE §2)。蒸留元: slice phase26 test 8 (a constraint on the canonical fires even when the alias entry triggers the commit)。canonical decrypt/key_file の wire は constraints-parse/requires.json と同型 (long:true が name 由来綴り --decrypt / --key-file を生成、DR-022 snake→kebab)。",
   "query": "parse",
   "definition": {
     "options": [
@@ -11,17 +11,17 @@
   "cases": [
     {
       "id": "alias-requires-unmet",
-      "why": "alias 起動でも制約発動: -d が decrypt を commit させ、canonical の requires [key_file] が評価されるが key_file 未供給 (CLI なし・default なし) → 完全経路不成立で failure。kind:constraint (遅延述語違反、型照合や残余の parse 失敗とは層が違う DR-065 §3)。element=宣言元 decrypt (alias 名ではない — 制約は実体側)。argv_pos=1=argv.length (全消費後評価)。reason=requires_violated (DR-066)。--decrypt 直接発火と同一挙動になることの固定。",
-      "argv": ["-d"],
+      "why": "alias 起動でも制約発動: -d が decrypt を commit させ、canonical の requires [key_file] が評価されるが key_file 未供給 (CLI なし・default なし) → 完全経路不成立で failure。kind:constraint (遅延述語違反、型照合や残余の parse 失敗とは層が違う DR-065 §3)。element=宣言元 decrypt (alias 名ではない — 制約は実体側)。args_pos=1=args.length (全消費後評価)。reason=requires_violated (DR-066)。--decrypt 直接発火と同一挙動になることの固定。",
+      "args": ["-d"],
       "expect": {
         "outcome": "failure",
-        "errors": [{"element": "decrypt", "argv_pos": 1, "kind": "constraint", "reason": "requires_violated"}]
+        "errors": [{"element": "decrypt", "args_pos": 1, "kind": "constraint", "reason": "requires_violated"}]
       }
     },
     {
       "id": "alias-requires-satisfied",
       "why": "requires 充足: -d (alias 起動で decrypt commit) + --key-file k で目的語充足 → success。effects は適用順 (decrypt の set が先、key_file の set が後、順序は同一性成分 DR-038/045)。alias 入口経由でも制約充足の成立面が canonical 発火と同一であることの固定。result は decrypt=true (flag set) と key_file=k。",
-      "argv": ["-d", "--key-file", "k"],
+      "args": ["-d", "--key-file", "k"],
       "expect": {
         "outcome": "success",
         "effects": [

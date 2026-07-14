@@ -51,7 +51,7 @@
     {
       "id": "add-pathspec",
       "why": "`git add .` (実機は . 配下を stage)。add サブコマンド入場、pathspec=[.]。結果は add の下にネスト (DR-025)。all は未発火 false。ルート directory は未指定で absent (default なし値オプション)。",
-      "argv": ["add", "."],
+      "args": ["add", "."],
       "expect": {
         "outcome": "success",
         "effects": [
@@ -63,7 +63,7 @@
     {
       "id": "commit-with-message",
       "why": "`git commit -m 'msg'` (実機はメッセージ付きコミット)。commit 入場、-m が \"msg\" をバインド。結果 {commit:{message:\"msg\", all:false, amend:false}}。値オプションのネストを固定。",
-      "argv": ["commit", "-m", "msg"],
+      "args": ["commit", "-m", "msg"],
       "expect": {
         "outcome": "success",
         "effects": [
@@ -75,7 +75,7 @@
     {
       "id": "push-upstream",
       "why": "`git push -u origin main` (実機は upstream 設定付き push)。push 入場、-u flag、remote=\"origin\"、branch=[\"main\"] (optional)。flag とサブコマンド positional の共存。",
-      "argv": ["push", "-u", "origin", "main"],
+      "args": ["push", "-u", "origin", "main"],
       "expect": {
         "outcome": "success",
         "effects": [
@@ -89,7 +89,7 @@
     {
       "id": "root-option-with-subcommand",
       "why": "`git -C /repo commit -m msg` (実機は /repo で commit)。ルートオプション -C がサブコマンド入場前に発火し結果ルートに directory として露出、commit は子スコープにネスト。ルートオプション + サブコマンドの二層結果構造をプローブ (DR-025 の帰結)。effects は消費順 directory(root)→message(child)。",
-      "argv": ["-C", "/repo", "commit", "-m", "msg"],
+      "args": ["-C", "/repo", "commit", "-m", "msg"],
       "expect": {
         "outcome": "success",
         "effects": [
@@ -102,7 +102,7 @@
     {
       "id": "log-oneline-count",
       "why": "`git log --oneline -n 10` (実機は 1 行表示で 10 件)。log 入場、--oneline flag、-n が int 10。long flag と short 値オプションの混在をサブコマンド内で固定。",
-      "argv": ["log", "--oneline", "-n", "10"],
+      "args": ["log", "--oneline", "-n", "10"],
       "expect": {
         "outcome": "success",
         "effects": [

@@ -1,5 +1,5 @@
 {
-  "why": "ffmpeg (macOS 実機 `ffmpeg [global] {[in-opts] -i infile}... {[out-opts] outfile}`) のプローブ = 位置依存オプションの限界試験。ffmpeg のオプションは『直後/直前のファイルに適用される』位置依存で、同じ -c (codec) が -i の前なら入力デコーダ、出力ファイルの前なら出力エンコーダを指す。プローブ対象 = -i 反復入力 + 末尾出力ファイル positional の基本骨格を kuu で表現できるか。表現できない (= 設計スコープ外) もの: (1) オプションの『どのファイルに属すか』が argv 上の位置で決まる scoping (kuu の option は背骨上で順不同・グローバルなので入出力別スコープに割り振れない)、(2) `-c:v`/`-b:a` の `:` stream-specifier suffix (option 名の動的サフィックス)。ここでは位置非依存に読める骨格 (-i multiple + output) のみ定義し、位置依存 scoping は限界として記録する。",
+  "why": "ffmpeg (macOS 実機 `ffmpeg [global] {[in-opts] -i infile}... {[out-opts] outfile}`) のプローブ = 位置依存オプションの限界試験。ffmpeg のオプションは『直後/直前のファイルに適用される』位置依存で、同じ -c (codec) が -i の前なら入力デコーダ、出力ファイルの前なら出力エンコーダを指す。プローブ対象 = -i 反復入力 + 末尾出力ファイル positional の基本骨格を kuu で表現できるか。表現できない (= 設計スコープ外) もの: (1) オプションの『どのファイルに属すか』が args 上の位置で決まる scoping (kuu の option は背骨上で順不同・グローバルなので入出力別スコープに割り振れない)、(2) `-c:v`/`-b:a` の `:` stream-specifier suffix (option 名の動的サフィックス)。ここでは位置非依存に読める骨格 (-i multiple + output) のみ定義し、位置依存 scoping は限界として記録する。",
   "query": "parse",
   "definition": {
     "options": [
@@ -15,7 +15,7 @@
     {
       "id": "single-input-output",
       "why": "`ffmpeg -i in.mp4 out.avi` (実機は変換)。-i が \"in.mp4\" (multiple → `[\"in.mp4\"]`)、out.avi が唯一の非オプショントークン → output 必須 positional。基本の入出力骨格。overwrite false、codec absent。",
-      "argv": ["-i", "in.mp4", "out.avi"],
+      "args": ["-i", "in.mp4", "out.avi"],
       "expect": {
         "outcome": "success",
         "effects": [
@@ -28,7 +28,7 @@
     {
       "id": "codec-copy",
       "why": "`ffmpeg -i a.mp4 -c copy out.mp4` (実機は再エンコードなしコピー)。-c が \"copy\"。kuu では codec は 1 個のグローバルセルに入るが、実機では out.mp4 の前にあるので出力コーデック — この位置依存の意味 (入力側 -c なら別解釈) は kuu では区別できず、単一 codec セルへの近似になる。位置依存 scoping の限界を示すケース。",
-      "argv": ["-i", "a.mp4", "-c", "copy", "out.mp4"],
+      "args": ["-i", "a.mp4", "-c", "copy", "out.mp4"],
       "expect": {
         "outcome": "success",
         "effects": [
@@ -42,7 +42,7 @@
     {
       "id": "multiple-inputs",
       "why": "`ffmpeg -y -i a.mp4 -i b.mp3 out.mkv` (実機は映像+音声を多重化、上書き)。-y overwrite、-i 2 度発火 → input=[a.mp4,b.mp3]、output=out.mkv。反復入力 + 末尾出力。実機ではどの入力がどのストリームかは -map で制御するがそれも位置/専用文法 (スコープ外)。",
-      "argv": ["-y", "-i", "a.mp4", "-i", "b.mp3", "out.mkv"],
+      "args": ["-y", "-i", "a.mp4", "-i", "b.mp3", "out.mkv"],
       "expect": {
         "outcome": "success",
         "effects": [

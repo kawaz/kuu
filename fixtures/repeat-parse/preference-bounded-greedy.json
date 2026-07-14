@@ -11,7 +11,7 @@
     {
       "id": "bounded-greedy-max-left",
       "why": "有界 greedy {1,3} + {1,3} に `a b c d`: xs は ys が min:1 を得られる範囲で最長取り = 自分の max 3 まで `[a,b,c]`、ys は残り `[d]`。他の切り方は同一解釈の分割であって競合する完全経路ではない (DR-038 無傷) ので選好が枝刈りして一意。",
-      "argv": ["a", "b", "c", "d"],
+      "args": ["a", "b", "c", "d"],
       "expect": {
         "outcome": "success",
         "effects": [

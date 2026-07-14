@@ -13,7 +13,7 @@
     {
       "id": "undefined-into-string",
       "why": "未定義 `-x` が string positional へフォールスルー (DR-041 §5): -x はどの matcher にも一致せず (定義トリガは -v のみ)、読みゼロなので素通し枝が生き、string positional a が raw で `-x` を値消費 → a=\"-x\"、success。v は不発なので result で default false。option 形トークンでも string positional なら成功する側の固定 (number 側の held Error 対照は prefix-guard-number.json)。",
-      "argv": ["-x"],
+      "args": ["-x"],
       "expect": {
         "outcome": "success",
         "effects": [

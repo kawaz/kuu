@@ -23,7 +23,7 @@
     {
       "id": "grandchild-fires",
       "why": "孫スコープで発火: sub は verbose 入口を持たない (mid の chatty は非 global で伝播せず、root コピーは mid で止まる) → sub 閉じ→mid 再開で mid の chatty が拾う。root verbose は未発火 preset false、sub は selected 空 {}。effect entity は勝者 chatty。",
-      "argv": ["mid", "sub", "--verbose"],
+      "args": ["mid", "sub", "--verbose"],
       "expect": {
         "outcome": "success",
         "effects": [
@@ -35,7 +35,7 @@
     {
       "id": "mid-fires-then-sub",
       "why": "中間スコープで発火 (発火が先・sub 入場が後): mid の chatty が --verbose を直接拾い、続く sub トークンで sub に入場する。root verbose 未発火 preset false、sub は selected 空 {}。case 1 と発火位置が違うだけで同一 outcome。",
-      "argv": ["mid", "--verbose", "sub"],
+      "args": ["mid", "--verbose", "sub"],
       "expect": {
         "outcome": "success",
         "effects": [

@@ -14,7 +14,7 @@
     {
       "id": "full-key-value-operands",
       "why": "`dd if=/dev/zero of=/dev/null bs=1m count=10` (実機はブロックコピー)。4 operand すべて key=value。空 prefix long + eq 必須 matcher で if→input, of→output, bs→block_size (string \"1m\"), count→int 10 にバインド。全 operand が = 代入というのが getopt と根本的に違う点。順不同 (dd も operand 順自由)。",
-      "argv": ["if=/dev/zero", "of=/dev/null", "bs=1m", "count=10"],
+      "args": ["if=/dev/zero", "of=/dev/null", "bs=1m", "count=10"],
       "expect": {
         "outcome": "success",
         "effects": [
@@ -29,7 +29,7 @@
     {
       "id": "input-output-only",
       "why": "`dd if=input.img of=output.img` (実機は全体コピー)。2 operand のみ、bs/count は未指定 → absent (default なし値オプション)。key=value の部分指定を固定。",
-      "argv": ["if=input.img", "of=output.img"],
+      "args": ["if=input.img", "of=output.img"],
       "expect": {
         "outcome": "success",
         "effects": [
@@ -42,7 +42,7 @@
     {
       "id": "count-int-parse",
       "why": "`dd count=5` — count は int なので \"5\" → 5 (数値バインド)。= 右辺が型付きパースを通ること (string でなく int セル) を固定。他 operand absent。",
-      "argv": ["count=5"],
+      "args": ["count=5"],
       "expect": {
         "outcome": "success",
         "effects": [
@@ -53,11 +53,11 @@
     },
     {
       "id": "space-form-rejected",
-      "why": "(DR-091 §3 / DR-096 §1 の long_eq_sep:\"require\" が解決する軸) `if /dev/zero` (実機の dd もこの空間区切り形は受理しない — dd 独自文法は常に key=value): long_eq_sep:\"require\" により空間区切り形の読みが一切生成されないため \"if\" は if の候補読みを持たず、positional も無いので消費者不在。argv_pos=0、kind=parse / reason=unexpected_token。",
-      "argv": ["if", "/dev/zero"],
+      "why": "(DR-091 §3 / DR-096 §1 の long_eq_sep:\"require\" が解決する軸) `if /dev/zero` (実機の dd もこの空間区切り形は受理しない — dd 独自文法は常に key=value): long_eq_sep:\"require\" により空間区切り形の読みが一切生成されないため \"if\" は if の候補読みを持たず、positional も無いので消費者不在。args_pos=0、kind=parse / reason=unexpected_token。",
+      "args": ["if", "/dev/zero"],
       "expect": {
         "outcome": "failure",
-        "errors": [{"argv_pos": 0, "kind": "parse", "reason": "unexpected_token"}]
+        "errors": [{"args_pos": 0, "kind": "parse", "reason": "unexpected_token"}]
       }
     }
   ]

@@ -11,7 +11,7 @@
     {
       "id": "override-main-entry",
       "why": "上書き後も base は残る: alias long の `:set:true` (裸縮退形、DR-076 §4) が --tls 単独で ssl セルへ set true。差分上書きは継承 long を丸ごと差し替えるが、明示した綴り分の入口は生成される (DR-057 §3)。",
-      "argv": ["--tls"],
+      "args": ["--tls"],
       "expect": {
         "outcome": "success",
         "effects": [
@@ -22,17 +22,17 @@
     },
     {
       "id": "override-drops-variant",
-      "why": "variant が切れた: 継承 long に含まれていた `no:set:false` が override で除かれたため --no-tls は未定義トリガ。消費者が居らず完全経路 0 本 → failure。element 省略 = スコープレベルの残余躓き、argv_pos=0 (残余先頭)、kind parse / reason unexpected_token (DR-065 §3、slice の render_outcome=fail:unexpected token と同型)。『override は variant を切る』の負側の固定。",
-      "argv": ["--no-tls"],
+      "why": "variant が切れた: 継承 long に含まれていた `no:set:false` が override で除かれたため --no-tls は未定義トリガ。消費者が居らず完全経路 0 本 → failure。element 省略 = スコープレベルの残余躓き、args_pos=0 (残余先頭)、kind parse / reason unexpected_token (DR-065 §3、slice の render_outcome=fail:unexpected token と同型)。『override は variant を切る』の負側の固定。",
+      "args": ["--no-tls"],
       "expect": {
         "outcome": "failure",
-        "errors": [{"argv_pos": 0, "kind": "parse", "reason": "unexpected_token"}]
+        "errors": [{"args_pos": 0, "kind": "parse", "reason": "unexpected_token"}]
       }
     },
     {
       "id": "canonical-variant-intact",
       "why": "canonical variant は不変: override は alias 入口だけの差分であり実体側の綴りに触れない。--no-ssl は従来どおり ssl=false。alias override が canonical を退化させないことの固定。",
-      "argv": ["--no-ssl"],
+      "args": ["--no-ssl"],
       "expect": {
         "outcome": "success",
         "effects": [

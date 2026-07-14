@@ -19,7 +19,7 @@
     {
       "id": "numeric-sort-file",
       "why": "`sort -n data.txt` (実機は数値順)。-n 発火、data.txt が files。-k は multiple:append なので 0 回発火でも `[]` (DR-044)、他値オプションは absent。multiple セルの空表現 `[]` と scalar 値オプションの absent の対比を含む。",
-      "argv": ["-n", "data.txt"],
+      "args": ["-n", "data.txt"],
       "expect": {
         "outcome": "success",
         "effects": [
@@ -32,7 +32,7 @@
     {
       "id": "numeric-reverse-cluster",
       "why": "`sort -nr data.txt` — 連結 short (実機は数値降順)。short_combine で -n/-r 分解。effects は numeric→reverse→files。",
-      "argv": ["-nr", "data.txt"],
+      "args": ["-nr", "data.txt"],
       "expect": {
         "outcome": "success",
         "effects": [
@@ -46,7 +46,7 @@
     {
       "id": "multiple-keys",
       "why": "`sort -k 2 -k 3 data.txt` (実機は第2キー→第3キーの多段ソート)。-k が 2 度発火 → append で `[\"2\",\"3\"]` に累積 (DR-036、last-wins でなくリスト)。反復値オプションのプローブの核。effects は消費順に 2 個の key set → files。",
-      "argv": ["-k", "2", "-k", "3", "data.txt"],
+      "args": ["-k", "2", "-k", "3", "data.txt"],
       "expect": {
         "outcome": "success",
         "effects": [
@@ -60,7 +60,7 @@
     {
       "id": "output-to-file",
       "why": "`sort -o out.txt in.txt` (実機は out.txt へ書く)。-o が単発値オプションで out.txt をバインド、in.txt が files。-o は multiple でないので scalar。",
-      "argv": ["-o", "out.txt", "in.txt"],
+      "args": ["-o", "out.txt", "in.txt"],
       "expect": {
         "outcome": "success",
         "effects": [

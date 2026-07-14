@@ -12,7 +12,7 @@
     {
       "id": "omitted-type-fires-no-trace",
       "why": "`--sep --keep`: sep (type 省略=none) が発火するが値空間を持たないため result/effects に一切現れない — dd の export-key-inert.json と同型 (発火はするが痕跡なし)。keep は通常 flag として cli 発火し result に present。effects は keep の set 1 個のみ (sep の発火は effects エントリを持たない)。",
-      "argv": ["--sep", "--keep"],
+      "args": ["--sep", "--keep"],
       "expect": {
         "outcome": "success",
         "effects": [
@@ -23,8 +23,8 @@
     },
     {
       "id": "omitted-type-unfired-same-as-fired",
-      "why": "(対極) `--keep` のみ (sep 未発火): none は値空間ごと無いため、flag のような『未発火なら preset default false』も出ない (DR-051 §2 は値空間を持つ要素の規則、none には適用対象が無い) — sep は発火有無に関わらず絶対に result/effects/sources に現れない。この case の expect (effects/result) は前 case (sep 発火あり) と **バイト同一** — argv に `--sep` が含まれるかどうかが唯一の違いなのに観測面 (result/effects) には一切差が出ないこと自体が『none は簡易面に痕跡を残さない』の最も直接的な証拠になる。",
-      "argv": ["--keep"],
+      "why": "(対極) `--keep` のみ (sep 未発火): none は値空間ごと無いため、flag のような『未発火なら preset default false』も出ない (DR-051 §2 は値空間を持つ要素の規則、none には適用対象が無い) — sep は発火有無に関わらず絶対に result/effects/sources に現れない。この case の expect (effects/result) は前 case (sep 発火あり) と **バイト同一** — args に `--sep` が含まれるかどうかが唯一の違いなのに観測面 (result/effects) には一切差が出ないこと自体が『none は簡易面に痕跡を残さない』の最も直接的な証拠になる。",
+      "args": ["--keep"],
       "expect": {
         "outcome": "success",
         "effects": [
@@ -36,7 +36,7 @@
     {
       "id": "explicit-type-none-equivalent",
       "why": "`--sep2 --keep`: 明示 `type:\"none\"` の sep2 を発火させても、type 省略の sep と同じ expect (keep のみの result/effects) になる — 『省略 = none の糖衣』(DR-089 §2) が観測面で同値であることの固定。",
-      "argv": ["--sep2", "--keep"],
+      "args": ["--sep2", "--keep"],
       "expect": {
         "outcome": "success",
         "effects": [

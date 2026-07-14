@@ -1,5 +1,5 @@
 {
-  "why": "複数の候補経路が別々の argv 位置で dead-end になったとき、各経路の躓きを errors に全保持し、primary は argv 位置が最深の Error (DR-053 §2)。定義は or の 2 枝で、枝 A は number 1 個 (a)、枝 B は string+number の 2 消費 (s,b)。同じ argv でも枝ごとに躓く位置が違い、いずれの完全経路も立たない (0 本) とき、両方の held Error が診断材料として残る (「最深のみ保持」ではない)。primary = 最深 (最も進んだ解釈がどこで躓いたか) は失敗時アクション選択の argv 最小先勝ち (DR-048) とは向きが逆だが目的が違うので矛盾しない (DR-053 §2)。errors は集合比較で {element, argv_pos, kind, reason} を突き合わせ、reason は optional 検証、message は仕様外 (CONFORMANCE §3)。number positional が非数値を受けた失敗は kind:parse / reason:not_a_number (DR-066 §3)。対照ケースで、枝 B が全消費できる argv では完全経路 1 本に確定し errors が surface しないこと (0 本失敗との境界) を固定する。",
+  "why": "複数の候補経路が別々の args 位置で dead-end になったとき、各経路の躓きを errors に全保持し、primary は args 位置が最深の Error (DR-053 §2)。定義は or の 2 枝で、枝 A は number 1 個 (a)、枝 B は string+number の 2 消費 (s,b)。同じ args でも枝ごとに躓く位置が違い、いずれの完全経路も立たない (0 本) とき、両方の held Error が診断材料として残る (「最深のみ保持」ではない)。primary = 最深 (最も進んだ解釈がどこで躓いたか) は失敗時アクション選択の args 最小先勝ち (DR-048) とは向きが逆だが目的が違うので矛盾しない (DR-053 §2)。errors は集合比較で {element, args_pos, kind, reason} を突き合わせ、reason は optional 検証、message は仕様外 (CONFORMANCE §3)。number positional が非数値を受けた失敗は kind:parse / reason:not_a_number (DR-066 §3)。対照ケースで、枝 B が全消費できる args では完全経路 1 本に確定し errors が surface しないこと (0 本失敗との境界) を固定する。",
   "query": "parse",
   "definition": {
     "positionals": [
@@ -19,20 +19,20 @@
   "cases": [
     {
       "id": "both-paths-fail-deepest-primary",
-      "why": "argv `x y` の 2 解釈がどちらも dead-end → 完全経路 0 本 → failure で両躓きを全保持 (DR-053 §2)。解釈 A: number a が 'x'@0 を弾く (not_a_number) → a@0。解釈 B: string s が 'x'@0 を食い、number b が 'y'@1 を弾く → b@1。両 held Error が errors に残り、primary は最深 = b@1 (最も進んだ解釈 B の躓き) — primary は構造から導出される (最大 argv_pos) ので expect に別フィールドは持たず errors 集合で表現する (CONFORMANCE §2 の failure は errors のみ、表示・primary 抽出はレンダラ)。kind:parse / reason:not_a_number は両者とも number 枝の型照合失敗 (DR-066 §3)。",
-      "argv": ["x", "y"],
+      "why": "args `x y` の 2 解釈がどちらも dead-end → 完全経路 0 本 → failure で両躓きを全保持 (DR-053 §2)。解釈 A: number a が 'x'@0 を弾く (not_a_number) → a@0。解釈 B: string s が 'x'@0 を食い、number b が 'y'@1 を弾く → b@1。両 held Error が errors に残り、primary は最深 = b@1 (最も進んだ解釈 B の躓き) — primary は構造から導出される (最大 args_pos) ので expect に別フィールドは持たず errors 集合で表現する (CONFORMANCE §2 の failure は errors のみ、表示・primary 抽出はレンダラ)。kind:parse / reason:not_a_number は両者とも number 枝の型照合失敗 (DR-066 §3)。",
+      "args": ["x", "y"],
       "expect": {
         "outcome": "failure",
         "errors": [
-          {"element": "a", "argv_pos": 0, "kind": "parse", "reason": "not_a_number"},
-          {"element": "b", "argv_pos": 1, "kind": "parse", "reason": "not_a_number"}
+          {"element": "a", "args_pos": 0, "kind": "parse", "reason": "not_a_number"},
+          {"element": "b", "args_pos": 1, "kind": "parse", "reason": "not_a_number"}
         ]
       }
     },
     {
       "id": "deeper-path-commits",
-      "why": "対照 (case 1 と対): argv `x 5` は枝 B が全消費できるので完全経路 1 本 → commit、errors は surface しない (held Error は 0 本失敗のときだけ結末になる、DR-038)。枝 A (number a) は 'x'@0 を弾いて不成立、枝 B は s='x', b=5 で 2 トークン全消費 → success。effects は消費順 s→b (cli 由来)。枝 A の a は未選択なので absent (キー消失、DR-051 §1) で result に現れない。case 1 (0 本 → 両 Error 保持) との境界を固定する。",
-      "argv": ["x", "5"],
+      "why": "対照 (case 1 と対): args `x 5` は枝 B が全消費できるので完全経路 1 本 → commit、errors は surface しない (held Error は 0 本失敗のときだけ結末になる、DR-038)。枝 A (number a) は 'x'@0 を弾いて不成立、枝 B は s='x', b=5 で 2 トークン全消費 → success。effects は消費順 s→b (cli 由来)。枝 A の a は未選択なので absent (キー消失、DR-051 §1) で result に現れない。case 1 (0 本 → 両 Error 保持) との境界を固定する。",
+      "args": ["x", "5"],
       "expect": {
         "outcome": "success",
         "effects": [

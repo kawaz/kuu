@@ -18,7 +18,7 @@
     {
       "id": "path-and-name",
       "why": "`find . -name '*.txt'` (実機はカレント下の *.txt)。`.` は非ハイフンなので paths に、`-name` は単ハイフン long primary。find の primary は `--name` でなく `-name` の単ハイフン綴りなので config.long_prefix を \"-\" に設定して long \"name\" がトリガするようにする (getopt 系と違う find 固有の綴り規約を config で吸収できるかのプローブでもある)。name は multiple:append で `[\"*.txt\"]`。paths と primary の分離を固定。",
-      "argv": [".", "-name", "*.txt"],
+      "args": [".", "-name", "*.txt"],
       "expect": {
         "outcome": "success",
         "effects": [
@@ -31,7 +31,7 @@
     {
       "id": "type-and-name",
       "why": "`find . -type f -name '*.go'` (実機は通常ファイルの *.go)。paths=[.], type=\"f\", name=[\"*.go\"]。実機ではこれは暗黙 AND だが、kuu の平坦モデルでは両 primary が独立に値バインドされるだけ (AND 評価はアプリの述語ツリー構築の関心 = スコープ外)。primary 複数の共存を固定。",
-      "argv": [".", "-type", "f", "-name", "*.go"],
+      "args": [".", "-type", "f", "-name", "*.go"],
       "expect": {
         "outcome": "success",
         "effects": [
@@ -45,7 +45,7 @@
     {
       "id": "maxdepth-print",
       "why": "`find . -maxdepth 2 -print` (実機は深さ 2 まで、明示出力)。maxdepth=int 2、print flag true。値 primary と flag primary の混在。paths=[.]。",
-      "argv": [".", "-maxdepth", "2", "-print"],
+      "args": [".", "-maxdepth", "2", "-print"],
       "expect": {
         "outcome": "success",
         "effects": [
@@ -59,7 +59,7 @@
     {
       "id": "multiple-paths",
       "why": "`find src test -name '*.py'` (実機は src と test 両方を探索)。paths=[src,test] (先頭連続する非ハイフンが paths に畳まれる)、その後 primary。可変長 paths と primary 境界の固定 — paths は最初の primary で自然に終わる (ハイフン起動が背骨の positional 消費を止める)。",
-      "argv": ["src", "test", "-name", "*.py"],
+      "args": ["src", "test", "-name", "*.py"],
       "expect": {
         "outcome": "success",
         "effects": [

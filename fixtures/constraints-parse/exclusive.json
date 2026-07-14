@@ -1,5 +1,5 @@
 {
-  "why": "遅延述語の N 者排他 (exclusive_group) と、同一ペアの重複宣言時の独立評価 (DR-055 / DR-047)。exclusive_group: constraint installer が各要素の group ラベルをスコープ横断で集約し、グループごとに 1 つの遅延述語を宣言する。同一グループの member が 2 つ以上 committed で違反 (最大 1 つだけ committed 可、DESIGN §9.2)。exclusive_group 違反の error は group ラベルに紐付く: element=group ラベル (requires/conflicts が宣言元要素名に紐付くのと対、DR-063 §3 の element/group 二形)。同じペア (a,b) を exclusive_group と conflicts_with の両方で宣言すると、冗長でも両述語が独立に評価され 2 errors が出る — 冗長宣言の指摘は lint (静的 warn) の関心で、パースは両方を素直に評価する (放置が仕様、DR-055)。違反 = failure kind:constraint、argv_pos=argv.length (全消費後評価)。reason は <属性名>_violated: exclusive_group_violated / conflicts_with_violated (DR-066、fixture では optional §2)。errors は集合比較 (element/argv_pos/kind/reason の組、順序非規範、§3)。蒸留元: slice phase25 第15弾『同ペアが exclusive_group と conflicts_with 両方 → 両述語独立発火で 2 errors』。",
+  "why": "遅延述語の N 者排他 (exclusive_group) と、同一ペアの重複宣言時の独立評価 (DR-055 / DR-047)。exclusive_group: constraint installer が各要素の group ラベルをスコープ横断で集約し、グループごとに 1 つの遅延述語を宣言する。同一グループの member が 2 つ以上 committed で違反 (最大 1 つだけ committed 可、DESIGN §9.2)。exclusive_group 違反の error は group ラベルに紐付く: element=group ラベル (requires/conflicts が宣言元要素名に紐付くのと対、DR-063 §3 の element/group 二形)。同じペア (a,b) を exclusive_group と conflicts_with の両方で宣言すると、冗長でも両述語が独立に評価され 2 errors が出る — 冗長宣言の指摘は lint (静的 warn) の関心で、パースは両方を素直に評価する (放置が仕様、DR-055)。違反 = failure kind:constraint、args_pos=args.length (全消費後評価)。reason は <属性名>_violated: exclusive_group_violated / conflicts_with_violated (DR-066、fixture では optional §2)。errors は集合比較 (element/args_pos/kind/reason の組、順序非規範、§3)。蒸留元: slice phase25 第15弾『同ペアが exclusive_group と conflicts_with 両方 → 両述語独立発火で 2 errors』。",
   "query": "parse",
   "definition": {
     "options": [
@@ -10,20 +10,20 @@
   "cases": [
     {
       "id": "both-members-violate",
-      "why": "重複宣言の両述語独立発火: a と b が両方 committed。(a,b) は exclusive_group `g` に属し、かつ a conflicts_with b。両方が独立に違反判定され 2 errors。conflicts の error は宣言元要素 a に (element=a)、exclusive の error は group ラベル g に (element=g) 紐付く。両方 argv_pos=2=argv.length。errors は集合として比較 (順序非規範)。",
-      "argv": ["--a", "--b"],
+      "why": "重複宣言の両述語独立発火: a と b が両方 committed。(a,b) は exclusive_group `g` に属し、かつ a conflicts_with b。両方が独立に違反判定され 2 errors。conflicts の error は宣言元要素 a に (element=a)、exclusive の error は group ラベル g に (element=g) 紐付く。両方 args_pos=2=args.length。errors は集合として比較 (順序非規範)。",
+      "args": ["--a", "--b"],
       "expect": {
         "outcome": "failure",
         "errors": [
-          {"element": "a", "argv_pos": 2, "kind": "constraint", "reason": "conflicts_with_violated"},
-          {"element": "g", "argv_pos": 2, "kind": "constraint", "reason": "exclusive_group_violated"}
+          {"element": "a", "args_pos": 2, "kind": "constraint", "reason": "conflicts_with_violated"},
+          {"element": "g", "args_pos": 2, "kind": "constraint", "reason": "exclusive_group_violated"}
         ]
       }
     },
     {
       "id": "single-member-ok",
       "why": "単一 member committed → 排他成立せず success: グループ `g` で committed は a のみ (1 つ) なので exclusive も conflicts も立たない。result は a=true、未発火 flag b は preset default false で present。",
-      "argv": ["--a"],
+      "args": ["--a"],
       "expect": {
         "outcome": "success",
         "effects": [
@@ -35,7 +35,7 @@
     {
       "id": "b-alone-ok",
       "why": "対称確認 (b 単独): b だけ committed でも group member は 1 つで success。conflicts は a 側宣言だが a 未 committed で不成立。前ケースと対で『最大 1 つ committed は許容』を両 member で固定。result は b=true、a は preset default false。",
-      "argv": ["--b"],
+      "args": ["--b"],
       "expect": {
         "outcome": "success",
         "effects": [

@@ -1,5 +1,5 @@
 {
-  "why": "複数の失敗時アクションが selected されたとき、argv 消費位置が最小のもの (先勝ち) が発火する (DR-048 §4、効果列 = DR-045 の argv 順)。fired_action は発火要素の name (DR-053 §2)。表現上の注意: 本来 help と version は別種の失敗時アクションだが、wire form には現状 type:\"help\" プリセットしか無く、非 help の失敗時アクションを宣言する手段 (type:\"version\" プリセット or 汎用 fail-action 属性フィールド) が未予約。ここでは version を name のみ変えた type:\"help\" 要素として置き、先勝ち (argv 最小) の選択規則自体を固定する — 検証しているのは選択機構であり、アクション種別ラベルは wire 拡張確定までの暫定 (蒸留台帳 §4-2)。",
+  "why": "複数の失敗時アクションが selected されたとき、args 消費位置が最小のもの (先勝ち) が発火する (DR-048 §4、効果列 = DR-045 の args 順)。fired_action は発火要素の name (DR-053 §2)。表現上の注意: 本来 help と version は別種の失敗時アクションだが、wire form には現状 type:\"help\" プリセットしか無く、非 help の失敗時アクションを宣言する手段 (type:\"version\" プリセット or 汎用 fail-action 属性フィールド) が未予約。ここでは version を name のみ変えた type:\"help\" 要素として置き、先勝ち (args 最小) の選択規則自体を固定する — 検証しているのは選択機構であり、アクション種別ラベルは wire 拡張確定までの暫定 (蒸留台帳 §4-2)。",
   "query": "parse",
   "definition": {
     "options": [
@@ -10,21 +10,21 @@
   "cases": [
     {
       "id": "help-before-version",
-      "why": "--help が --version より前 → help 発火。--help@0 と --version@1 が両方 selected されるが、argv 消費位置最小 (help@0) が勝つ。--typo@2 は残余で完全経路 0 本。errors は残余トークン (argv_pos 2、unexpected_token)。",
-      "argv": ["--help", "--version", "--typo"],
+      "why": "--help が --version より前 → help 発火。--help@0 と --version@1 が両方 selected されるが、args 消費位置最小 (help@0) が勝つ。--typo@2 は残余で完全経路 0 本。errors は残余トークン (args_pos 2、unexpected_token)。",
+      "args": ["--help", "--version", "--typo"],
       "expect": {
         "outcome": "failure",
-        "errors": [{"argv_pos": 2, "kind": "parse", "reason": "unexpected_token"}],
+        "errors": [{"args_pos": 2, "kind": "parse", "reason": "unexpected_token"}],
         "fired_action": "help"
       }
     },
     {
       "id": "version-before-help",
-      "why": "順序反転で発火も反転 (case 1 と対、argv 順が最終決定): --version が --help より前 → version@0 が argv 最小で勝つ。効果列順序 (argv 順) が発火アクションを決める。errors は残余 --typo (argv_pos 2、unexpected_token)。",
-      "argv": ["--version", "--help", "--typo"],
+      "why": "順序反転で発火も反転 (case 1 と対、args 順が最終決定): --version が --help より前 → version@0 が args 最小で勝つ。効果列順序 (args 順) が発火アクションを決める。errors は残余 --typo (args_pos 2、unexpected_token)。",
+      "args": ["--version", "--help", "--typo"],
       "expect": {
         "outcome": "failure",
-        "errors": [{"argv_pos": 2, "kind": "parse", "reason": "unexpected_token"}],
+        "errors": [{"args_pos": 2, "kind": "parse", "reason": "unexpected_token"}],
         "fired_action": "version"
       }
     }

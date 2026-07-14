@@ -10,7 +10,7 @@
     {
       "id": "single-operand",
       "why": "最も典型: `sleep 5`。repeat {min:1} は 1 個で成立、結果は uniform array (DR-044) なので `[5]`。operand は number なので 5 (最短形、DR-074)。",
-      "argv": ["5"],
+      "args": ["5"],
       "expect": {
         "outcome": "success",
         "effects": [{"entity": "seconds", "op": "set", "operand": 5, "source": "cli"}],
@@ -20,7 +20,7 @@
     {
       "id": "fractional-operand",
       "why": "小数秒 `sleep 0.5` (BSD は小数を受理)。number 型は小数を受理する (§3.3)。`.5`/`0.5` 両形受理だがここでは `0.5`。",
-      "argv": ["0.5"],
+      "args": ["0.5"],
       "expect": {
         "outcome": "success",
         "effects": [{"entity": "seconds", "op": "set", "operand": 0.5, "source": "cli"}],
@@ -30,7 +30,7 @@
     {
       "id": "multiple-operands-summed",
       "why": "BSD 拡張: `sleep 1 2` は複数 operand を許し (実機は合計してスリープ)。repeat が複数トークンを取り分け `[1,2]` に畳む。合計計算自体はアプリの領分 — kuu は operand 列を渡すだけ。",
-      "argv": ["1", "2"],
+      "args": ["1", "2"],
       "expect": {
         "outcome": "success",
         "effects": [
@@ -42,11 +42,11 @@
     },
     {
       "id": "no-operand-fails",
-      "why": "`sleep` 単体は operand 不足 (BSD 実機も usage エラー)。repeat {min:1} の 1 個目必須 head がトークンを得られず → missing_operand、argv_pos=argv.length=0 (DR-065 §3)。",
-      "argv": [],
+      "why": "`sleep` 単体は operand 不足 (BSD 実機も usage エラー)。repeat {min:1} の 1 個目必須 head がトークンを得られず → missing_operand、args_pos=args.length=0 (DR-065 §3)。",
+      "args": [],
       "expect": {
         "outcome": "failure",
-        "errors": [{"element": "seconds", "argv_pos": 0, "kind": "parse", "reason": "missing_operand"}]
+        "errors": [{"element": "seconds", "args_pos": 0, "kind": "parse", "reason": "missing_operand"}]
       }
     }
   ]

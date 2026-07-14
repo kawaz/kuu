@@ -16,7 +16,7 @@
     {
       "id": "translate-two-sets",
       "why": "`tr a-z A-Z` (実機は小文字→大文字)。set1=\"a-z\" required、set2=[\"A-Z\"] optional。flag 全 false。標準の 2 集合変換。",
-      "argv": ["a-z", "A-Z"],
+      "args": ["a-z", "A-Z"],
       "expect": {
         "outcome": "success",
         "effects": [
@@ -29,7 +29,7 @@
     {
       "id": "delete-mode",
       "why": "`tr -d aeiou` (実機は母音削除)。-d flag 発火、set1=\"aeiou\"、set2 省略 → optional 0 個 `[]`。削除モードは 1 集合のみという実機挙動を近似 (set2 空で成立)。",
-      "argv": ["-d", "aeiou"],
+      "args": ["-d", "aeiou"],
       "expect": {
         "outcome": "success",
         "effects": [
@@ -42,7 +42,7 @@
     {
       "id": "squeeze-spaces",
       "why": "`tr -s ' '` (実機は連続空白を 1 個に圧縮、squeeze は 1 集合でも動く)。-s flag、set1=\" \"、set2 省略。squeeze も set2 任意という近似を固定。",
-      "argv": ["-s", " "],
+      "args": ["-s", " "],
       "expect": {
         "outcome": "success",
         "effects": [

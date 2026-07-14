@@ -10,17 +10,17 @@
   "cases": [
     {
       "id": "dst-starved",
-      "why": "`a b` は src の min:2 が両トークンを消費し、末尾 dst にトークンが残らず完全経路 0 本 → dst が operand を得られない構造的失敗。element=dst / kind=parse / reason=missing_operand、argv_pos=argv.length=2 (dd/basic case 3 と同型: 末尾 scalar の operand 不足)。",
-      "argv": ["a", "b"],
+      "why": "`a b` は src の min:2 が両トークンを消費し、末尾 dst にトークンが残らず完全経路 0 本 → dst が operand を得られない構造的失敗。element=dst / kind=parse / reason=missing_operand、args_pos=args.length=2 (dd/basic case 3 と同型: 末尾 scalar の operand 不足)。",
+      "args": ["a", "b"],
       "expect": {
         "outcome": "failure",
-        "errors": [{"element": "dst", "argv_pos": 2, "kind": "parse", "reason": "missing_operand"}]
+        "errors": [{"element": "dst", "args_pos": 2, "kind": "parse", "reason": "missing_operand"}]
       }
     },
     {
       "id": "split-one-trailing",
       "why": "`a b c`: greedy な src は dst が 1 トークン得られる範囲で最長取り = `[a,b]`、dst=`c`。src は flatten で配列、dst は scalar。",
-      "argv": ["a", "b", "c"],
+      "args": ["a", "b", "c"],
       "expect": {
         "outcome": "success",
         "effects": [
@@ -34,7 +34,7 @@
     {
       "id": "split-longer-src",
       "why": "`a b c d`: src=`[a,b,c]`、dst=`d`。min:2 は下限のみなので src は末尾に 1 個残す最長取り。",
-      "argv": ["a", "b", "c", "d"],
+      "args": ["a", "b", "c", "d"],
       "expect": {
         "outcome": "success",
         "effects": [

@@ -10,7 +10,7 @@
     {
       "id": "unfired-uses-declared-default-array-as-is",
       "why": "未発火、env 未設定: 宣言 default 配列 `[\"localhost\",\"backup\"]` がそのまま値になる — DR-083 §2 により piece 分割済みとして扱われ separator は適用されない (2要素のまま、\"localhost,backup\" のような単一文字列分割ではない)。source は default_source が書き換えられていないので `default`。effects 空 (CLI 未発火)。",
-      "argv": [],
+      "args": [],
       "expect": {
         "outcome": "success",
         "effects": [],
@@ -21,7 +21,7 @@
     {
       "id": "env-rewrites-declared-default-through-separator",
       "why": "未発火、env APP_HOSTS=\"a,b,c\": DR-081 の書き換えモデルにより env 供給が default 値そのものを書き換える。env 値は生文字列 \"a,b,c\" であり、宣言 default 配列 (既に分割済み) とは異なり pieceProcessor (separator 分割、DR-049 §2) をゼロから通って `[\"a\",\"b\",\"c\"]` になる — この書き換え済み値が default になる。source は default_source=env。CLI 未発火なので effects 空 (env 由来の値確定は effects 非掲載、CONFORMANCE §2)。unfired-uses-declared-default-array-as-is との対比で『宣言 default は piece 列として供給・env 書き換えは文字列として字句層を通る』という非対称を固定する。",
-      "argv": [],
+      "args": [],
       "env": {"APP_HOSTS": "a,b,c"},
       "expect": {
         "outcome": "success",

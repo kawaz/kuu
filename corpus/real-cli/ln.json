@@ -18,7 +18,7 @@
     {
       "id": "symbolic-link",
       "why": "`ln -s /a/b link` (実機は symlink 作成)。-s flag、source=/a/b、target=[link]。target は optional なので array。-f/-i 未発火。",
-      "argv": ["-s", "/a/b", "link"],
+      "args": ["-s", "/a/b", "link"],
       "expect": {
         "outcome": "success",
         "effects": [
@@ -32,7 +32,7 @@
     {
       "id": "symbolic-force-cluster",
       "why": "`ln -sf /a link` — 連結 short (実機は上書き symlink)。short_combine で `-sf` が -s/-f に分解。conflicts_with は -f 単独 committed (相手 -i 未 committed) なので不成立。effects は cluster 順 symbolic→force→source→target。",
-      "argv": ["-sf", "/a", "link"],
+      "args": ["-sf", "/a", "link"],
       "expect": {
         "outcome": "success",
         "effects": [
@@ -47,7 +47,7 @@
     {
       "id": "target-omitted",
       "why": "`ln -s /a/b` (実機は cwd に basename で張る)。target 省略 → optional 0 個 `[]`。source のみ required で成立。target のデフォルト (cwd/basename) はアプリ挙動。optional scalar positional のギャップ (yes/basename と同型)。",
-      "argv": ["-s", "/a/b"],
+      "args": ["-s", "/a/b"],
       "expect": {
         "outcome": "success",
         "effects": [
@@ -59,12 +59,12 @@
     },
     {
       "id": "force-interactive-conflict",
-      "why": "`ln -f -i a b` — -f と -i は実機で両立しない (後勝ちだが定義上は排他をプローブ)。conflicts_with が両 committed で違反。element=宣言元 force (conflicts は宣言元要素名に紐付く、constraints-parse/exclusive 参照)、kind=constraint、reason=conflicts_with_violated、argv_pos=argv.length=4。",
-      "argv": ["-f", "-i", "a", "b"],
+      "why": "`ln -f -i a b` — -f と -i は実機で両立しない (後勝ちだが定義上は排他をプローブ)。conflicts_with が両 committed で違反。element=宣言元 force (conflicts は宣言元要素名に紐付く、constraints-parse/exclusive 参照)、kind=constraint、reason=conflicts_with_violated、args_pos=args.length=4。",
+      "args": ["-f", "-i", "a", "b"],
       "expect": {
         "outcome": "failure",
         "errors": [
-          {"element": "force", "argv_pos": 4, "kind": "constraint", "reason": "conflicts_with_violated"}
+          {"element": "force", "args_pos": 4, "kind": "constraint", "reason": "conflicts_with_violated"}
         ]
       }
     }

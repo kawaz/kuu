@@ -13,7 +13,7 @@
     {
       "id": "export-key-inert",
       "why": "export_key 付き dd も値セルを持たない: -- が sever し -v が raw で x に落ちる (`x=-v`) のは basic.json と同じ。export_key=`marker` を設定しても結果に `marker` キーも `--` キーも現れず、result は positional x のみ。dd の export_key が inert (無意味・無害) であることを固定 (DR-064 §5)。effects は x の raw 消費のみ (dd は値効果を持たない)。",
-      "argv": ["--", "-v"],
+      "args": ["--", "-v"],
       "expect": {
         "outcome": "success",
         "effects": [

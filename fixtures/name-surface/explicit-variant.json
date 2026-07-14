@@ -11,7 +11,7 @@
     {
       "id": "explicit-spelling-fires",
       "why": "明示綴り `--v` が発火 → 結果キーは canonical name (verbose) で set(true)。トリガ綴り (v) と結果キー (verbose) が別軸で、alias が canonical 実体へ効果を流すことを固定 (DR-057 §2)。",
-      "argv": ["--v"],
+      "args": ["--v"],
       "expect": {
         "outcome": "success",
         "effects": [
@@ -22,17 +22,17 @@
     },
     {
       "id": "no-main-entry",
-      "why": "主入口なしの negative-control: canonical `verbose` は long 無し (トリガなし) なので name 由来の `--verbose` は生成されない。alias は別入口を追加するだけで canonical の主入口を生やさない (DR-057 §2)。よって `--verbose` は消費者を持たず残余トークン → failure (unexpected_token, argv_pos=0, element 省略)。『alias 併用でも name 由来主入口が自動追加されない』ことの固定 (主入口ありの main-entry.json との対照)。",
-      "argv": ["--verbose"],
+      "why": "主入口なしの negative-control: canonical `verbose` は long 無し (トリガなし) なので name 由来の `--verbose` は生成されない。alias は別入口を追加するだけで canonical の主入口を生やさない (DR-057 §2)。よって `--verbose` は消費者を持たず残余トークン → failure (unexpected_token, args_pos=0, element 省略)。『alias 併用でも name 由来主入口が自動追加されない』ことの固定 (主入口ありの main-entry.json との対照)。",
+      "args": ["--verbose"],
       "expect": {
         "outcome": "failure",
-        "errors": [{"argv_pos": 0, "kind": "parse", "reason": "unexpected_token"}]
+        "errors": [{"args_pos": 0, "kind": "parse", "reason": "unexpected_token"}]
       }
     },
     {
       "id": "unfired-default",
       "why": "未発火: 結果キーは name (verbose) で preset default false が result に present。明示 variant のみでも未発火なら default に落ちる対照。effects は空。",
-      "argv": [],
+      "args": [],
       "expect": {
         "outcome": "success",
         "effects": [],

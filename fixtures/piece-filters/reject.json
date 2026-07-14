@@ -1,5 +1,5 @@
 {
-  "why": "piece_filters の reject 輪郭 (DR-034 §pieceProcessor pre 相 / DR-062 §2 / PIPELINE §『段3 reject: filter 固有 reason、parse に届く前の門前払い』): 検証系 filter (non_empty、DR-040 §filters 最小セット) を piece_filters に持つ要素へ不合格文字列を渡すと parse に届く前に reject される。argv_pos は値トークンの 0-based 位置 (CONFORMANCE §2: piece_filters は piece 由来の値トークンに帰属する parse 直前の失敗なので kind=parse と同じ位置規約) / kind=filter / reason は filter 固有の宣言語彙 (non_empty は empty_value、DR-095)。",
+  "why": "piece_filters の reject 輪郭 (DR-034 §pieceProcessor pre 相 / DR-062 §2 / PIPELINE §『段3 reject: filter 固有 reason、parse に届く前の門前払い』): 検証系 filter (non_empty、DR-040 §filters 最小セット) を piece_filters に持つ要素へ不合格文字列を渡すと parse に届く前に reject される。args_pos は値トークンの 0-based 位置 (CONFORMANCE §2: piece_filters は piece 由来の値トークンに帰属する parse 直前の失敗なので kind=parse と同じ位置規約) / kind=filter / reason は filter 固有の宣言語彙 (non_empty は empty_value、DR-095)。",
   "query": "parse",
   "definition": {
     "options": [
@@ -10,7 +10,7 @@
     {
       "id": "matching-accepted",
       "why": "non_empty を満たす `abc` は piece_filters を通過して string parse (恒等) → success、result name=\"abc\" (reject 対比の基準ケース)。",
-      "argv": ["--name", "abc"],
+      "args": ["--name", "abc"],
       "expect": {
         "outcome": "success",
         "effects": [
@@ -21,11 +21,11 @@
     },
     {
       "id": "non-matching-rejected",
-      "why": "空文字列 `\"\"` は non_empty が parse に届く前に reject する (PIPELINE §『段3 reject』)。string 型は parse (恒等) では空文字を弾けないので、この failure は piece_filters が parse より前に効いている実証点でもある。argv_pos=1 は値トークン `\"\"` の 0-based 位置 (piece 帰属の失敗、kind=parse の not_a_number と同じ位置規約) / kind=filter / reason=empty_value (non_empty の宣言 reason、DR-095) で固定する。",
-      "argv": ["--name", ""],
+      "why": "空文字列 `\"\"` は non_empty が parse に届く前に reject する (PIPELINE §『段3 reject』)。string 型は parse (恒等) では空文字を弾けないので、この failure は piece_filters が parse より前に効いている実証点でもある。args_pos=1 は値トークン `\"\"` の 0-based 位置 (piece 帰属の失敗、kind=parse の not_a_number と同じ位置規約) / kind=filter / reason=empty_value (non_empty の宣言 reason、DR-095) で固定する。",
+      "args": ["--name", ""],
       "expect": {
         "outcome": "failure",
-        "errors": [{"element": "name", "argv_pos": 1, "kind": "filter", "reason": "empty_value"}]
+        "errors": [{"element": "name", "args_pos": 1, "kind": "filter", "reason": "empty_value"}]
       }
     }
   ]

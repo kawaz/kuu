@@ -1,5 +1,5 @@
 {
-  "why": "inherit 席がラダーに入る: cli > env > inherit > default (DR-031 #3 / DR-013)。inherit は席宣言型 installer で構造を生まず、値源ラダーの inherit 席に『最近祖先の同名実体の解決値を参照する』lookup を宣言する (LOWERING §B.7)。root が ttl (default 30) を宣言し、子コマンド up が自前の ttl を inherit=true (自前 default 99) で宣言する。子入場後、子の inherit 席は親の解決済み ttl を参照する。この領域は sources を主語彙にし、ネスト結果では sources のキーを result のパスに合わせる (root の ttl と 子 up.ttl を区別、= 本領域が提案する sources のネスト表記、findings 参照)。inherit 由来値は完走後の値確定なので effects 非掲載、result/sources で検証 (CONFORMANCE §2)。蒸留元 slice phase3:73 (DR-031/013 inherit)。command-scope 領域とクロス (サブコマンド入場・結果ネストは D6 の subcommand.json と同型)。\n\nRUNNER GAP の注記 (フェーズ2-① 要対応): slice の phase3 は inherit を scope 単位で検証する (親を resolve → inherited=inherited_of(親) を子 resolve に手渡す)。全ツリー argv 一発 parse で子の inherit 席へ親の解決値を通す end-to-end 経路は slice の最小 runner では未配線の可能性が高い。本 fixture は spec 準拠の end-to-end 期待値 (DR-070 §1b) を書き、runner 側の inherit スレッディング実装を促す (findings 報告)。",
+  "why": "inherit 席がラダーに入る: cli > env > inherit > default (DR-031 #3 / DR-013)。inherit は席宣言型 installer で構造を生まず、値源ラダーの inherit 席に『最近祖先の同名実体の解決値を参照する』lookup を宣言する (LOWERING §B.7)。root が ttl (default 30) を宣言し、子コマンド up が自前の ttl を inherit=true (自前 default 99) で宣言する。子入場後、子の inherit 席は親の解決済み ttl を参照する。この領域は sources を主語彙にし、ネスト結果では sources のキーを result のパスに合わせる (root の ttl と 子 up.ttl を区別、= 本領域が提案する sources のネスト表記、findings 参照)。inherit 由来値は完走後の値確定なので effects 非掲載、result/sources で検証 (CONFORMANCE §2)。蒸留元 slice phase3:73 (DR-031/013 inherit)。command-scope 領域とクロス (サブコマンド入場・結果ネストは D6 の subcommand.json と同型)。\n\nRUNNER GAP の注記 (フェーズ2-① 要対応): slice の phase3 は inherit を scope 単位で検証する (親を resolve → inherited=inherited_of(親) を子 resolve に手渡す)。全ツリー args 一発 parse で子の inherit 席へ親の解決値を通す end-to-end 経路は slice の最小 runner では未配線の可能性が高い。本 fixture は spec 準拠の end-to-end 期待値 (DR-070 §1b) を書き、runner 側の inherit スレッディング実装を促す (findings 報告)。",
   "query": "parse",
   "definition": {
     "options": [
@@ -19,7 +19,7 @@
     {
       "id": "parent-cli-inherited",
       "why": "親 CLI で ttl=50 → 子 up は cli/env 無しなので inherit 席が親の解決値 50 を参照 (@inherit)。--ttl 50 は up トークンより前なので root 背骨で発火し root ttl を set。effects は root の cli set のみ (子 inherit は effects 非掲載)。result は root ttl=50 + up ネストに inherit 50。",
-      "argv": ["--ttl", "50", "up"],
+      "args": ["--ttl", "50", "up"],
       "expect": {
         "outcome": "success",
         "effects": [
@@ -32,7 +32,7 @@
     {
       "id": "parent-default-inherited",
       "why": "親も CLI/env 無し → root ttl は自前 default 30 に落ちる。子は親の解決値 30 を inherit で継承する (default が inherit 経由で下流へ流れる、DR-031 inherit は default の上に座る)。子自前の default 99 には落ちない (親に値があるため)。effects 空、両 ttl とも非 cli 由来。",
-      "argv": ["up"],
+      "args": ["up"],
       "expect": {
         "outcome": "success",
         "effects": [],
@@ -43,7 +43,7 @@
     {
       "id": "child-cli-over-inherit",
       "why": "子自前の CLI が inherit に勝つ (cli は最上席): up 入場後の --ttl 7 は子背骨で発火し子 ttl=7。root ttl は CLI 未供給なので default 30。子の inherit 席は cli に負ける。effects は子の cli set のみ (root は default 由来で非掲載)。inherit が cli の下 = ラダー順の固定。",
-      "argv": ["up", "--ttl", "7"],
+      "args": ["up", "--ttl", "7"],
       "expect": {
         "outcome": "success",
         "effects": [

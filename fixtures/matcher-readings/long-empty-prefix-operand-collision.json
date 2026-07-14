@@ -26,7 +26,7 @@
     {
       "id": "operand-collision-forestalled",
       "why": "`height 168.5` — トークン `height` は bare long トリガとして読めるため、先食い (DR-041) により positional rest が raw で食う素通し枝は生成されない。option 読み (height が次トークンを space 形で値消費) だけが立ち、一意に success。rest は 0 回発火の反復系なので `[]` (DESIGN §6.1)。",
-      "argv": [
+      "args": [
         "height",
         "168.5"
       ],
@@ -49,7 +49,7 @@
     {
       "id": "value-slot-eats-option-lookalike",
       "why": "`height weight` — height の値スロットは次トークンを raw 消費する (値スロットに背骨がない、DR-041 の `--color -v` → color=\"-v\" と同型)。`weight` という綴りが仮に option 名風でも、値スロット内では再解釈されず height=\"weight\"。先食いは「トリガ位置 (背骨上)」の規則であり、値スロット内には及ばない — 2 つの規則の境界を対で固定する。",
-      "argv": [
+      "args": [
         "height",
         "weight"
       ],

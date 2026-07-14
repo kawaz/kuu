@@ -10,7 +10,7 @@
     {
       "id": "bare-defaults-to-y",
       "why": "`yes` 単体 (実機は \"y\" を無限出力)。optional positional 0 個 → `[]` (DR-044、absent でなく空 array)。default \"y\" の充填はここでは起きない — アプリが空を見て \"y\" にマップする関心。kuu 結果は `{expletive: []}`。",
-      "argv": [],
+      "args": [],
       "expect": {
         "outcome": "success",
         "effects": [],
@@ -20,7 +20,7 @@
     {
       "id": "explicit-string",
       "why": "`yes hello` (実機は \"hello\" を無限出力)。optional positional 1 個 → `[\"hello\"]`。",
-      "argv": ["hello"],
+      "args": ["hello"],
       "expect": {
         "outcome": "success",
         "effects": [{"entity": "expletive", "op": "set", "operand": "hello", "source": "cli"}],
@@ -29,11 +29,11 @@
     },
     {
       "id": "extra-operand-fails",
-      "why": "`yes a b` — optional は max:1 なので 2 個目 `b` は取り分超過で残余トークン失敗 (repeat-parse/exact-count の over-max と同型)。実機 BSD yes は複数 operand を空白連結で出すが、この定義 (単一 optional) では 2 個目が余る。max:1 の境界を固定するケース。element 省略 / unexpected_token / argv_pos=1。",
-      "argv": ["a", "b"],
+      "why": "`yes a b` — optional は max:1 なので 2 個目 `b` は取り分超過で残余トークン失敗 (repeat-parse/exact-count の over-max と同型)。実機 BSD yes は複数 operand を空白連結で出すが、この定義 (単一 optional) では 2 個目が余る。max:1 の境界を固定するケース。element 省略 / unexpected_token / args_pos=1。",
+      "args": ["a", "b"],
       "expect": {
         "outcome": "failure",
-        "errors": [{"argv_pos": 1, "kind": "parse", "reason": "unexpected_token"}]
+        "errors": [{"args_pos": 1, "kind": "parse", "reason": "unexpected_token"}]
       }
     }
   ]

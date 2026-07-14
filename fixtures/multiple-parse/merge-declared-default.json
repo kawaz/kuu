@@ -10,7 +10,7 @@
     {
       "id": "unfired-declared-default-markers-stay-literal",
       "why": "未発火: 宣言 default 配列 `[\"-a\",\"@\",\"b\"]` がそのまま値になる。DR-080 §1 によりマーカー解釈は CLI 発火 piece にのみ適用されるので、default 供給経路の `-a` と `@` はマーカーとして解釈されず literal のまま — 3要素とも変化なく result に現れる。source は default_source が書き換えられていないので `default`。effects 空 (CLI 未発火)。",
-      "argv": [],
+      "args": [],
       "expect": {
         "outcome": "success",
         "effects": [],
@@ -21,7 +21,7 @@
     {
       "id": "first-cli-firing-splices-literal-declared-default",
       "why": "`--fields -x,@,y` (初回 CLI 発火): piece=[-x,@,y]。marker あり (remove, splice) なので merge モード。old = 初回発火の下位席勝者 = 宣言 default 配列 `[\"-a\",\"@\",\"b\"]` (unfired-declared-default-markers-stay-literal と同じ、マーカー不活性で literal のまま保持されている値)。評価: -x (前置remove、operand=\"x\" — old の中に \"x\" という要素は無いので削除対象なし)、@ (splice、old をそのまま展開 → [\"-a\",\"@\",\"b\"])、y (add → [\"-a\",\"@\",\"b\",\"y\"])。結果 `[\"-a\",\"@\",\"b\",\"y\"]` — CLI 発火の `@` が宣言 default (literal のまま保持された \"-a\"/\"@\" を含む) を old として splice する PATH 型ユースケースの完成形。effects は3個 (remove(x), splice, add(y))。source=cli。",
-      "argv": ["--fields", "-x,@,y"],
+      "args": ["--fields", "-x,@,y"],
       "expect": {
         "outcome": "success",
         "effects": [

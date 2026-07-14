@@ -18,7 +18,7 @@
     {
       "id": "enum-branch-supplied",
       "why": "`--format json`: json 枝が発火し format=\"json\" で完全経路 1 本 (DESIGN §15.1)。値が確定しているので required 充足で success。実機確認 (2026-07-13、KUU_FIXTURES 経由 kuu.mbt): 期待通り success / result `{format:\"json\"}` で一致 (mismatch なし) — structural 形 (required-structural-or-branch.json の int-branch-supplied) と同じ『or + required、値供給』の構図でありながら、こちらは正しく成立することの直接対照。",
-      "argv": ["--format", "json"],
+      "args": ["--format", "json"],
       "expect": {
         "outcome": "success",
         "effects": [
@@ -29,11 +29,11 @@
     },
     {
       "id": "enum-missing-baseline",
-      "why": "argv 空: format 未発火で required 未充足、failure は自然 (required-structural-or-branch.json の missing-baseline と対称のベースライン、値供給の有無で outcome が正しく分岐することの確認)。element=format (or 自身の name、値の枝は匿名なので宣言元は or 親)。",
-      "argv": [],
+      "why": "args 空: format 未発火で required 未充足、failure は自然 (required-structural-or-branch.json の missing-baseline と対称のベースライン、値供給の有無で outcome が正しく分岐することの確認)。element=format (or 自身の name、値の枝は匿名なので宣言元は or 親)。",
+      "args": [],
       "expect": {
         "outcome": "failure",
-        "errors": [{"element": "format", "argv_pos": 0, "kind": "constraint", "reason": "required_violated"}]
+        "errors": [{"element": "format", "args_pos": 0, "kind": "constraint", "reason": "required_violated"}]
       }
     }
   ]

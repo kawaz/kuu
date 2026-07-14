@@ -11,7 +11,7 @@
     {
       "id": "co-exposure-collision",
       "why": "`--a --b`: 相異なる 2 要素 a・b が同一入力で両方 export_key `x` へ露出 → 実行時衝突で ambiguous (DESIGN §15.5)。interpretations は競合する結果ビューの列挙 (DR-053) で、キー x を a が占める解釈と b が占める解釈。両要素が flag のため両ビューとも {x:true} に退化するが、衝突は結果キーの provenance (どちらの実体が x を占めるか) の曖昧さであって値の相違ではない (DR-073)。退化ビューを区別するため各解釈に claimants 面 (露出キー → 占有実体 entity name、DR-073) を添える: 解釈 A は x を a が占有 ({x:\"a\"})、解釈 B は b が占有 ({x:\"b\"})。claimants をその解釈と束ねた {result, claimants} の組で表し、集合比較 (CONFORMANCE §3) で 2 解釈が distinct に保たれる (順序非依存、DR-073)。",
-      "argv": ["--a", "--b"],
+      "args": ["--a", "--b"],
       "expect": {
         "outcome": "ambiguous",
         "interpretations": [
@@ -23,7 +23,7 @@
     {
       "id": "single-exposure-ok",
       "why": "`--a` のみ: a だけが export_key x へ実際に露出し、衝突なし (検査は実際の共露出に対して、静的宣言に対してではない — §15.5)。result {x:true}。b は未発火の flag だが、その preset default false は共露出キー x のもとに現れない (result に {x:false} は混ざらない) — preset default が export_key 共露出に参加するかは要確認 (下記 §divergence)。",
-      "argv": ["--a"],
+      "args": ["--a"],
       "expect": {
         "outcome": "success",
         "effects": [

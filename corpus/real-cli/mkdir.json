@@ -15,7 +15,7 @@
     {
       "id": "parents-single-dir",
       "why": "`mkdir -p a/b/c` (実機は中間も作る)。-p flag 発火、a/b/c が directories に 1 個落ちる。verbose 未発火 false、mode absent (default なし値オプション)。",
-      "argv": ["-p", "a/b/c"],
+      "args": ["-p", "a/b/c"],
       "expect": {
         "outcome": "success",
         "effects": [
@@ -28,7 +28,7 @@
     {
       "id": "mode-value",
       "why": "`mkdir -m 755 dir` (実機は権限 755 で作成)。-m が string \"755\" を値バインド (8 進解釈はアプリ)。-p/-v 未発火。",
-      "argv": ["-m", "755", "dir"],
+      "args": ["-m", "755", "dir"],
       "expect": {
         "outcome": "success",
         "effects": [
@@ -41,7 +41,7 @@
     {
       "id": "multiple-dirs",
       "why": "`mkdir dir1 dir2` (実機は両方作成)。repeat {min:1} が 2 トークンを `[dir1,dir2]` に畳む。flag 全て未発火。",
-      "argv": ["dir1", "dir2"],
+      "args": ["dir1", "dir2"],
       "expect": {
         "outcome": "success",
         "effects": [
@@ -53,11 +53,11 @@
     },
     {
       "id": "no-dir-fails",
-      "why": "`mkdir` 単体は operand 不足 (実機 usage エラー)。directories は repeat {min:1} の 1 個目必須 head がトークンを得られず missing_operand、argv_pos=0。",
-      "argv": [],
+      "why": "`mkdir` 単体は operand 不足 (実機 usage エラー)。directories は repeat {min:1} の 1 個目必須 head がトークンを得られず missing_operand、args_pos=0。",
+      "args": [],
       "expect": {
         "outcome": "failure",
-        "errors": [{"element": "directories", "argv_pos": 0, "kind": "parse", "reason": "missing_operand"}]
+        "errors": [{"element": "directories", "args_pos": 0, "kind": "parse", "reason": "missing_operand"}]
       }
     }
   ]

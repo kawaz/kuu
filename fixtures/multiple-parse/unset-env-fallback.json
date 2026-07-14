@@ -10,7 +10,7 @@
     {
       "id": "unset-opens-ladder-to-env-separator-list",
       "why": "`--reset-tags` のみ、env TAGS=\"x,y,z\": unset (--reset-tags) が発火し CLI 席を committed=false のまま空席化してラダーを開放する。CLI 席に何も累積していない ([] のまま) ため下位の env 席まで落ち、TAGS=\"x,y,z\" が separator \",\" で [\"x\",\"y\",\"z\"] に分割されて供給される (DR-049 §2 の『env 値も pieceProcessor を通り multiple 要素なら separator 分割も効く』が accum セルでも成立することの実証)。effects は unset 1 個のみ (env 由来の値確定は effects 非掲載)。result `{tags:[\"x\",\"y\",\"z\"]}`、sources `{tags:env}`。",
-      "argv": ["--reset-tags"],
+      "args": ["--reset-tags"],
       "env": {"TAGS": "x,y,z"},
       "expect": {
         "outcome": "success",
@@ -24,7 +24,7 @@
     {
       "id": "unset-after-set-opens-ladder-to-env",
       "why": "`--tags a --reset-tags`、env TAGS=\"x,y,z\": set(a) が append accumulator に畳まれ [\"a\"] になった後、unset (--reset-tags) が CLI 席を委任前の空席化 (committed=false) に戻す。CLI 発火があった事実は effects に残るが、最終値確定はラダー解決 (§ 後段の env 席) で行われるため CLI の [\"a\"] は最終値に残らない — env の \"x,y,z\" が separator 分割されて上書きする。filters-cell-ops.json の unset-after-set-resets-to-empty-without-filter (下位値源なし → `[]`) との対比: 下位値源 (env) がある場合は `[]` ではなくその値が供給されることを固定する。effects は [set(a,cli), unset(cli)] の 2 個。result `{tags:[\"x\",\"y\",\"z\"]}`、sources `{tags:env}`。",
-      "argv": ["--tags", "a", "--reset-tags"],
+      "args": ["--tags", "a", "--reset-tags"],
       "env": {"TAGS": "x,y,z"},
       "expect": {
         "outcome": "success",
@@ -39,7 +39,7 @@
     {
       "id": "unset-with-no-lower-source-resets-to-empty",
       "why": "`--reset-tags` のみ、env 未設定: 下位値源が無いため unset はラダー最下段の default `[]` (DR-044 一様配列規約) に確定する — filters-cell-ops.json の unset-after-set-resets-to-empty-without-filter と同じ帰結の基準ケース (下位値源の有無だけが unset-opens-ladder-to-env-separator-list との差)。effects は unset 1 個。result `{tags:[]}`、sources `{tags:default}`。",
-      "argv": ["--reset-tags"],
+      "args": ["--reset-tags"],
       "expect": {
         "outcome": "success",
         "effects": [

@@ -10,17 +10,17 @@
   "cases": [
     {
       "id": "required-missing",
-      "why": "key (default なし) が argv 空で値を持たない → 完全経路が不成立で failure。kind:constraint (遅延述語違反、DR-047 §2)。argv_pos=0=argv.length (制約は全消費後に評価、DR-047 §4 空 argv の特別扱いは無い)。element=key (required は自分の話、DESIGN §9.3)。reason=required_violated (DR-066)。同一 case で mode (required:true, default:\"fast\") のエラーが errors に無いこと自体が、default 込みの値充足で required が自明成立する (DR-047 §5) ことの negative pin。",
-      "argv": [],
+      "why": "key (default なし) が args 空で値を持たない → 完全経路が不成立で failure。kind:constraint (遅延述語違反、DR-047 §2)。args_pos=0=args.length (制約は全消費後に評価、DR-047 §4 空 args の特別扱いは無い)。element=key (required は自分の話、DESIGN §9.3)。reason=required_violated (DR-066)。同一 case で mode (required:true, default:\"fast\") のエラーが errors に無いこと自体が、default 込みの値充足で required が自明成立する (DR-047 §5) ことの negative pin。",
+      "args": [],
       "expect": {
         "outcome": "failure",
-        "errors": [{"element": "key", "argv_pos": 0, "kind": "constraint", "reason": "required_violated"}]
+        "errors": [{"element": "key", "args_pos": 0, "kind": "constraint", "reason": "required_violated"}]
       }
     },
     {
       "id": "required-supplied",
       "why": "key を CLI で明示供給すると required 充足で success。mode は CLI 未供給のままだが default \"fast\" で required が充足するので値は default のまま変わらない。effects は key の cli set のみ (default 由来の mode は effects に載らない、CONFORMANCE §2)。result は key/mode 両方 present。",
-      "argv": ["--key", "k"],
+      "args": ["--key", "k"],
       "expect": {
         "outcome": "success",
         "effects": [

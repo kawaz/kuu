@@ -17,7 +17,7 @@
     {
       "id": "hex-integer-value-accepted-both-modes",
       "why": "hex 整数値は int_round モードによらず受理 (DR-075 §1 値空間判定 + DR-074 §2 base_prefix opt-in): `0xff` は number として parse すると値 255 (整数) なので int 型でも int_round に関わらず素通り (丸め不要)。number-base-prefix-optin.json::hex-int-accepted (number 型) と対称で、int 型でも同じ受理輪郭。error / floor 両モードで結果 255 に収束することを固定 — 整数値には int_round モードが影響しない (DR-075 §M2 との表裏関係の輪郭)。",
-      "argv": ["--e", "0xff", "--f", "0xff"],
+      "args": ["--e", "0xff", "--f", "0xff"],
       "expect": {
         "outcome": "success",
         "effects": [
@@ -30,7 +30,7 @@
     {
       "id": "hex-float-integer-value-accepted-both-modes",
       "why": "hex float でも値が整数なら int_round モードによらず受理 (DR-075 §1 / DR-074 §2 §「int 型は値空間で判定」): `0x1.8p3` = 1.5 * 2^3 = 12 は hex float だが値 12 は整数 → int 型で素通り。number-base-prefix-optin.json::hex-float-with-exponent (number 型で operand 12) と対称。「10 進 int も値空間で判定する読み」を hex にも一様適用する DR-074 §2 の帰結を int 型経由で固定 — 構文判定 (整数リテラルのみ受理) でなく値空間判定 (整数値なら受理) であることの hex 側裏取り。",
-      "argv": ["--e", "0x1.8p3", "--f", "0x1.8p3"],
+      "args": ["--e", "0x1.8p3", "--f", "0x1.8p3"],
       "expect": {
         "outcome": "success",
         "effects": [
@@ -42,17 +42,17 @@
     },
     {
       "id": "hex-float-fractional-error-mode-rejected",
-      "why": "hex float の fractional 値は int_round=error で拒否 (DR-075 §2 error モード + §6 reason 規則): `0x1.8p0` = 1.5 は hex float で値 1.5 (非整数) → int_er は `int_round=error` なので failure (element=e / argv_pos=1 / kind=parse / reason=not_an_integer)。number-base-prefix-optin.json::hex-float-no-exponent (number 型で operand 1.5) と対、int 型では non-integer なので rejected。`not_an_integer` は `int_round=error` のときのみ emit する reason (DR-075 §6 / DR-066 §3、丸めモードなら成功するので emit しない — 対照は次 case)。",
-      "argv": ["--e", "0x1.8p0"],
+      "why": "hex float の fractional 値は int_round=error で拒否 (DR-075 §2 error モード + §6 reason 規則): `0x1.8p0` = 1.5 は hex float で値 1.5 (非整数) → int_er は `int_round=error` なので failure (element=e / args_pos=1 / kind=parse / reason=not_an_integer)。number-base-prefix-optin.json::hex-float-no-exponent (number 型で operand 1.5) と対、int 型では non-integer なので rejected。`not_an_integer` は `int_round=error` のときのみ emit する reason (DR-075 §6 / DR-066 §3、丸めモードなら成功するので emit しない — 対照は次 case)。",
+      "args": ["--e", "0x1.8p0"],
       "expect": {
         "outcome": "failure",
-        "errors": [{"element": "e", "argv_pos": 1, "kind": "parse", "reason": "not_an_integer"}]
+        "errors": [{"element": "e", "args_pos": 1, "kind": "parse", "reason": "not_an_integer"}]
       }
     },
     {
       "id": "hex-float-fractional-floor-mode-accepted",
       "why": "hex float の fractional 値は丸めモードで丸めて受理 (DR-075 §2 floor モード): `0x1.8p0` = 1.5 は int_fl (`int_round=floor`) で −∞ 方向に丸め → 1。10 進 `1.5` を floor に落とすと 1 (int-round-modes.json::positive-tie-... の floor 挙動と同型) を hex 経路でも一様適用することの固定。error モード (前 case) と対で「丸めモードは値空間判定を強制する」(DR-075 §M2) 帰結が hex にも及ぶ裏取り。",
-      "argv": ["--f", "0x1.8p0"],
+      "args": ["--f", "0x1.8p0"],
       "expect": {
         "outcome": "success",
         "effects": [

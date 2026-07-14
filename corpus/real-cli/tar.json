@@ -63,7 +63,7 @@
     {
       "id": "create-gzip-cluster",
       "why": "`tar -czf archive.tar.gz dir/` (実機は dir/ を gzip 圧縮アーカイブ化)。連結 `-czf` が c/z/f に分解、末尾の値 short f がクラスタ後続の \"archive.tar.gz\" を値消費し、残る \"dir/\" が files に落ちる。クラスタ末尾の値 short の後方引数取得がプローブの核。effects は cluster 順 create→gzip→file(archive)→files(dir)。",
-      "argv": [
+      "args": [
         "-czf",
         "archive.tar.gz",
         "dir/"
@@ -112,7 +112,7 @@
     {
       "id": "extract-gzip-cluster",
       "why": "`tar -xzf archive.tar.gz` (実機は展開)。-xzf 分解、f=archive.tar.gz、files 0 個 `[]`。extract モード単独なので排他成立。create/list false。",
-      "argv": [
+      "args": [
         "-xzf",
         "archive.tar.gz"
       ],
@@ -152,7 +152,7 @@
     {
       "id": "list-verbose",
       "why": "`tar -tvf archive.tar` (実機は詳細一覧)。-tvf 分解、list/verbose flag、f=archive.tar。v (verbose) は mode グループ外なので list と共存。値 short f は末尾。",
-      "argv": [
+      "args": [
         "-tvf",
         "archive.tar"
       ],
@@ -191,8 +191,8 @@
     },
     {
       "id": "create-extract-conflict",
-      "why": "`tar -c -x` はモード 2 つで実機エラー。create/extract とも mode グループ committed → exclusive_group_violated。element=mode、argv_pos=argv.length=2。連結でなく個別指定でも排他が立つことを固定。",
-      "argv": [
+      "why": "`tar -c -x` はモード 2 つで実機エラー。create/extract とも mode グループ committed → exclusive_group_violated。element=mode、args_pos=args.length=2。連結でなく個別指定でも排他が立つことを固定。",
+      "args": [
         "-c",
         "-x"
       ],
@@ -201,7 +201,7 @@
         "errors": [
           {
             "element": "mode",
-            "argv_pos": 2,
+            "args_pos": 2,
             "kind": "constraint",
             "reason": "exclusive_group_violated"
           }
@@ -211,7 +211,7 @@
     {
       "id": "file-mid-cluster-swallows-flag-chars",
       "why": "`tar -tfzv` (実機 bsdtar: \"zv\" という名のファイルを list しようとする — z/v は発火しない)。f がクラスタ中間で、last_only により以降の文字 \"zv\" 全部が f の値として丸取りされる。scope 既定の allow なら f=\"zv\" 丸取りと f=\"z\"+v flag 発火の 2 完全経路が立って ambiguous になる入力 (DR-041 §3 の分割点列挙、cluster-split-string.json の -sax case と同型) が、last_only (DR-096 §2) は付着読みを丸取り形だけに制限するため一意に定まる。GNU getopt 慣習の直接再現で、実機 (exit 0、実在ファイル \"zv\" で観測) と kuu 意味論が一致することを固定する。",
-      "argv": [
+      "args": [
         "-tfzv"
       ],
       "expect": {
@@ -244,7 +244,7 @@
     {
       "id": "file-mid-cluster-single-char-tail",
       "why": "`tar -tfz` (実機 bsdtar: \"z\" という名のファイルを list — gzip は発火しない)。f 直後の残りが 1 文字だけの対照 case: 分割点が存在しない (\"z\" を f が付着で取る読みのみ — f が値を取らずに z を flag として残す読みは、0 文字の付着が形として存在しない (DR-096 §2 の非空要求) ため最初から生成されない) ため、実は allow でも last_only でも同じ一意解釈になる。上の -tfzv (複数文字で allow なら ambiguous) との対で「last_only が効くのは分割点が複数ある時だけ」という境界を固定する。",
-      "argv": [
+      "args": [
         "-tfz"
       ],
       "expect": {

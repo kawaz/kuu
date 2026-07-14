@@ -19,7 +19,7 @@
     {
       "id": "port-and-destination",
       "why": "`ssh -p 2222 user@host` (実機は 2222 番で接続)。-p が int 2222 を raw 消費。続く \"user@host\" (非ハイフン) が pattern dd に一致して発火・severed (消費0、自身はストリームに残る)。severed 後、destination 席が \"user@host\" を通常どおり型消費 (structural、dd/basic.json 先行 pin と同型)。command は後続トークンが無いので 0 発火 `[]`。",
-      "argv": ["-p", "2222", "user@host"],
+      "args": ["-p", "2222", "user@host"],
       "expect": {
         "outcome": "success",
         "effects": [
@@ -32,7 +32,7 @@
     {
       "id": "option-key-value-opaque",
       "why": "`ssh -o StrictHostKeyChecking=no host` (実機は当該オプションで接続)。-o の値 \"StrictHostKeyChecking=no\" は `=` を含むが kuu は分割せず 1 個の string として append (=split は long matcher 専用で option 値には効かない)。続く \"host\" が dd に一致して発火・severed、destination 席が型消費し destination=\"host\"、command=[]。",
-      "argv": ["-o", "StrictHostKeyChecking=no", "host"],
+      "args": ["-o", "StrictHostKeyChecking=no", "host"],
       "expect": {
         "outcome": "success",
         "effects": [
@@ -45,7 +45,7 @@
     {
       "id": "multiple-options",
       "why": "`ssh -o User=admin -o Port=22 host` (実機は 2 オプション適用)。-o 2 度発火 → append で 2 要素。続く \"host\" が dd に一致・severed し destination 席が型消費、command=[]。反復 key=value オプション + pass-through 開始点の共存。",
-      "argv": ["-o", "User=admin", "-o", "Port=22", "host"],
+      "args": ["-o", "User=admin", "-o", "Port=22", "host"],
       "expect": {
         "outcome": "success",
         "effects": [
@@ -59,7 +59,7 @@
     {
       "id": "known-option-spelling-after-destination-passes-through",
       "why": "`ssh host -p 2222` (実機は host 上でリテラル `-p`/`2222` というコマンドを実行しようとする — ssh 自身の -p (port) には決して再解釈されない)。先頭 \"host\" が非ハイフンで即座に dd に一致 → 発火・severed (port option は一度も読まれない)。destination 席が \"host\" を通常どおり型消費 (severed 後も structural 必須性は不変)。続く \"-p\"/\"2222\" は **ssh の既知 option 綴りだが severed 後は raw** — command (repeat) が消費し、port は未発火・default 無しで absent。command=[\"-p\",\"2222\"]。DR-090 が解決する本命の軸。",
-      "argv": ["host", "-p", "2222"],
+      "args": ["host", "-p", "2222"],
       "expect": {
         "outcome": "success",
         "effects": [

@@ -46,7 +46,7 @@
     {
       "id": "run-detach-publish",
       "why": "`docker run -d -p 8080:80 nginx` (実機はバックグラウンドでポート公開起動)。run 入場、-d flag、-p が \"8080:80\" (multiple append)。続く \"nginx\" (非ハイフン) が dd に一致して発火・severed (消費0、自身はストリームに残る)。severed 後、image 席が \"nginx\" を通常どおり型消費 (structural、dd/basic.json 先行 pin と同型)。cmd は後続トークンが無いので 0 発火 `[]`。env は未発火 `[]`。",
-      "argv": ["run", "-d", "-p", "8080:80", "nginx"],
+      "args": ["run", "-d", "-p", "8080:80", "nginx"],
       "expect": {
         "outcome": "success",
         "effects": [
@@ -60,7 +60,7 @@
     {
       "id": "run-it-known-option-spelling-after-image-passes-through",
       "why": "`docker run -it ubuntu -p 9000:9000` (実機はコンテナ内で `-p 9000:9000` というコマンド/引数を実行しようとする — docker 自身の -p (publish) には再解釈されない)。short_combine で -it → -i/-t が発火。続く \"ubuntu\" が非ハイフンで dd に一致 → 発火・severed (以降 publish option は一度も読まれない)。image 席が \"ubuntu\" を通常どおり型消費 (severed 後も structural 必須性は不変)。続く \"-p\"/\"9000:9000\" は **docker の既知 option 綴りだが severed 後は raw** — cmd (repeat) が消費し、publish は未発火のまま append セルの一様配列 `[]` (DR-044/051 §2)。cmd=[\"-p\",\"9000:9000\"]。DR-090 が解決する本命の軸。",
-      "argv": ["run", "-it", "ubuntu", "-p", "9000:9000"],
+      "args": ["run", "-it", "ubuntu", "-p", "9000:9000"],
       "expect": {
         "outcome": "success",
         "effects": [
@@ -76,7 +76,7 @@
     {
       "id": "ps-all",
       "why": "`docker ps -a` (実機は停止中含む全コンテナ)。ps 入場、-a flag。ps には pass-through 概念が無いため dd を持たない — positional なしの単純サブコマンド。quiet false。",
-      "argv": ["ps", "-a"],
+      "args": ["ps", "-a"],
       "expect": {
         "outcome": "success",
         "effects": [
@@ -88,7 +88,7 @@
     {
       "id": "build-tag-context",
       "why": "`docker build -t myimg:latest .` (実機は . を myimg:latest でビルド)。build にも pass-through 概念が無いため dd を持たず、context は旧来どおり型付き必須 positional のまま。tag と context の分離。file は absent。",
-      "argv": ["build", "-t", "myimg:latest", "."],
+      "args": ["build", "-t", "myimg:latest", "."],
       "expect": {
         "outcome": "success",
         "effects": [

@@ -11,7 +11,7 @@
     {
       "id": "flatten-into-list",
       "why": "min:1 repeat + scalar tail の flat 平坦化 (DR-043 / DR-044): `a b c` は src=[a, b] (repeat 2 発火が flatten で 1 リスト) + dst='c' (scalar)。effects は消費順 src(a) → src(b) → dst(c) の 3 個 (順序は同一性成分、DR-045)、result は src の flat list + dst scalar で構造が違う (accumulator の差)。分割点は dst が末尾 1 トークンを要求することで一意 (DR-038 完全経路 1 本)。",
-      "argv": ["a", "b", "c"],
+      "args": ["a", "b", "c"],
       "expect": {
         "outcome": "success",
         "effects": [

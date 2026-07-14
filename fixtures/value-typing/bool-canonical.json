@@ -10,7 +10,7 @@
     {
       "id": "true-word",
       "why": "`true` → true (DR-074 §3): bool_true_values の基準語。",
-      "argv": ["--enabled=true"],
+      "args": ["--enabled=true"],
       "expect": {
         "outcome": "success",
         "effects": [{"entity": "enabled", "op": "set", "operand": true, "source": "cli"}],
@@ -20,7 +20,7 @@
     {
       "id": "one-numeric",
       "why": "`1` → true (DR-074 §3): env の XX_FLAG=1 慣習が 1 を bool_true_values に含める決め手。文字列 \"1\" の parse であって number 1 の型変換ではない。",
-      "argv": ["--enabled=1"],
+      "args": ["--enabled=1"],
       "expect": {
         "outcome": "success",
         "effects": [{"entity": "enabled", "op": "set", "operand": true, "source": "cli"}],
@@ -30,7 +30,7 @@
     {
       "id": "true-mixedcase",
       "why": "`True` → true (DR-074 §3): bool_case_insensitive default true。任意混在 (survey で Go strconv は 3 形のみ・任意混在不可) を kuu は ci で受ける。",
-      "argv": ["--enabled=True"],
+      "args": ["--enabled=True"],
       "expect": {
         "outcome": "success",
         "effects": [{"entity": "enabled", "op": "set", "operand": true, "source": "cli"}],
@@ -40,7 +40,7 @@
     {
       "id": "true-upper",
       "why": "`TRUE` → true (DR-074 §3): 全大文字も ci で受理。True/TRUE を同一に固定 (YAML 1.2 の 3 形限定より寛容)。",
-      "argv": ["--enabled=TRUE"],
+      "args": ["--enabled=TRUE"],
       "expect": {
         "outcome": "success",
         "effects": [{"entity": "enabled", "op": "set", "operand": true, "source": "cli"}],
@@ -50,7 +50,7 @@
     {
       "id": "false-word",
       "why": "`false` → false (DR-074 §3): bool_false_values の基準語。",
-      "argv": ["--enabled=false"],
+      "args": ["--enabled=false"],
       "expect": {
         "outcome": "success",
         "effects": [{"entity": "enabled", "op": "set", "operand": false, "source": "cli"}],
@@ -60,7 +60,7 @@
     {
       "id": "zero-numeric",
       "why": "`0` → false (DR-074 §3): 1/0 対称。文字列 \"0\" の parse。",
-      "argv": ["--enabled=0"],
+      "args": ["--enabled=0"],
       "expect": {
         "outcome": "success",
         "effects": [{"entity": "enabled", "op": "set", "operand": false, "source": "cli"}],
@@ -70,7 +70,7 @@
     {
       "id": "empty-false",
       "why": "空文字 `\"\"` → false (DR-074 §3): env の FLAG= パターン対応で bool_false_values に \"\" を含める。eq-separator `--enabled=` は value \"\" を割り出す (entry-forms の --port=8080 と同じ eq_split)。empty_is_false 独立キーは持たず bool_false_values の要素として表現 (要素から外せば \"\" は Error)。",
-      "argv": ["--enabled="],
+      "args": ["--enabled="],
       "expect": {
         "outcome": "success",
         "effects": [{"entity": "enabled", "op": "set", "operand": false, "source": "cli"}],
@@ -79,17 +79,17 @@
     },
     {
       "id": "yes-rejected",
-      "why": "`yes` → Error (DR-074 §3): yes/no/on/off は canonical 外 (Norway problem 回避)。不正 bool 文字列は silent 変換せず Error → failure (element=enabled / argv_pos=0 / kind=parse / reason=not_a_bool、DR-066 §3 の bool value_parser 語彙)。yes を受けたいなら bool_true_values に opt-in 追加。",
-      "argv": ["--enabled=yes"],
+      "why": "`yes` → Error (DR-074 §3): yes/no/on/off は canonical 外 (Norway problem 回避)。不正 bool 文字列は silent 変換せず Error → failure (element=enabled / args_pos=0 / kind=parse / reason=not_a_bool、DR-066 §3 の bool value_parser 語彙)。yes を受けたいなら bool_true_values に opt-in 追加。",
+      "args": ["--enabled=yes"],
       "expect": {
         "outcome": "failure",
-        "errors": [{"element": "enabled", "argv_pos": 0, "kind": "parse", "reason": "not_a_bool"}]
+        "errors": [{"element": "enabled", "args_pos": 0, "kind": "parse", "reason": "not_a_bool"}]
       }
     },
     {
       "id": "space-form-true",
       "why": "space form `--enabled true` → true (DR-076 §4): bool は string/number と同格の値型で、`:set` (long:true の糖衣、DR-071) は空間形衛星 (exact + 値スロット) も立てる。値トークン `true` は canonical 語彙で照合 (DR-074 §3)。positional との取り合いは path-search の解決対象だが、本定義は positional を持たないので一意。",
-      "argv": ["--enabled", "true"],
+      "args": ["--enabled", "true"],
       "expect": {
         "outcome": "success",
         "effects": [{"entity": "enabled", "op": "set", "operand": true, "source": "cli"}],
@@ -98,20 +98,20 @@
     },
     {
       "id": "space-form-noncanonical-rejected",
-      "why": "space form の canonical 外値 `--enabled yes` → Error (DR-076 §4 + DR-074 §3): 空間形の値スロットも eq 形と同じ canonical 語彙で照合し、外れは not_a_bool。argv_pos=1 は値トークン `yes` の位置 (トリガが 0、値が 1)。",
-      "argv": ["--enabled", "yes"],
+      "why": "space form の canonical 外値 `--enabled yes` → Error (DR-076 §4 + DR-074 §3): 空間形の値スロットも eq 形と同じ canonical 語彙で照合し、外れは not_a_bool。args_pos=1 は値トークン `yes` の位置 (トリガが 0、値が 1)。",
+      "args": ["--enabled", "yes"],
       "expect": {
         "outcome": "failure",
-        "errors": [{"element": "enabled", "argv_pos": 1, "kind": "parse", "reason": "not_a_bool"}]
+        "errors": [{"element": "enabled", "args_pos": 1, "kind": "parse", "reason": "not_a_bool"}]
       }
     },
     {
       "id": "bare-trigger-missing-value",
-      "why": "裸 `--enabled` 単独 → Error (DR-076 §4 の帰結): `:set` は型に依らず「値を取って set」で、bool でも裸トリガ発火には `:set:true` の明示が要る (本定義 long:true = [\":set\"] のみなので値必須)。argv がトリガで尽きる = 値スロットの missing_operand (argv_pos=1 は値が要求された位置 = argv 長)。裸発火を受けたい定義は long:[\":set\", \":set:true\"] と書く (lowering/long/variant.json の ssl が輪郭)。",
-      "argv": ["--enabled"],
+      "why": "裸 `--enabled` 単独 → Error (DR-076 §4 の帰結): `:set` は型に依らず「値を取って set」で、bool でも裸トリガ発火には `:set:true` の明示が要る (本定義 long:true = [\":set\"] のみなので値必須)。args がトリガで尽きる = 値スロットの missing_operand (args_pos=1 は値が要求された位置 = args 長)。裸発火を受けたい定義は long:[\":set\", \":set:true\"] と書く (lowering/long/variant.json の ssl が輪郭)。",
+      "args": ["--enabled"],
       "expect": {
         "outcome": "failure",
-        "errors": [{"element": "enabled", "argv_pos": 1, "kind": "parse", "reason": "missing_operand"}]
+        "errors": [{"element": "enabled", "args_pos": 1, "kind": "parse", "reason": "missing_operand"}]
       }
     }
   ]

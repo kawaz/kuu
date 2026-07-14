@@ -19,7 +19,7 @@
     {
       "id": "nest-and-flatten",
       "why": "scope 入場 + 子 scope 内 repeat の flat 平坦化両立 (DR-025 / DR-043 / DR-044): `serve --host h a b` は serve コマンド発火で子 scope 入場、`--host h` で host=scalar 'h' を発火、続く `a b` は file positional の repeat が 2 発火して flat 化。effects は消費順 host → file(a) → file(b)。result は serve キーの下に host scalar と file list が両立して並ぶ (nest + flat は直交機構)。",
-      "argv": ["serve", "--host", "h", "a", "b"],
+      "args": ["serve", "--host", "h", "a", "b"],
       "expect": {
         "outcome": "success",
         "effects": [

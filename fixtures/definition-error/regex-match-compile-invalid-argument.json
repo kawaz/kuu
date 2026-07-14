@@ -1,5 +1,5 @@
 {
-  "why": "regex_match の pattern compile 失敗は definition-error (DR-085 §1 訂正、kind=invalid-argument 新設)。pattern の compile 可否自体は host の regex エンジン方言依存 (DR-085 §2) だが、`[` (未閉じ文字クラス) は regex 方言をほぼ問わず不正な構文であり (POSIX ERE/BRE・PCRE・ほとんどの言語標準ライブラリで共通に reject される)、DR-085 波及節が要求する『方言差の出ない共通パターンのみ』の条件を満たす — 特定 host 方言に依存しない共通の不正構文として fixture 化できる。invalid-argument は『単一引数値そのものが装置の受理範囲外』(DR-082 §3) — invalid-range (min>1 等、複数属性の組合せの値域外) とは層が異なる。argv は書かない (定義の静的検査であり実行しない、DR-082 §1)。",
+  "why": "regex_match の pattern compile 失敗は definition-error (DR-085 §1 訂正、kind=invalid-argument 新設)。pattern の compile 可否自体は host の regex エンジン方言依存 (DR-085 §2) だが、`[` (未閉じ文字クラス) は regex 方言をほぼ問わず不正な構文であり (POSIX ERE/BRE・PCRE・ほとんどの言語標準ライブラリで共通に reject される)、DR-085 波及節が要求する『方言差の出ない共通パターンのみ』の条件を満たす — 特定 host 方言に依存しない共通の不正構文として fixture 化できる。invalid-argument は『単一引数値そのものが装置の受理範囲外』(DR-082 §3) — invalid-range (min>1 等、複数属性の組合せの値域外) とは層が異なる。args は書かない (定義の静的検査であり実行しない、DR-082 §1)。",
   "query": "definition_error",
   "definition": {
     "options": [

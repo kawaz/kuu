@@ -14,7 +14,7 @@
     {
       "id": "single-complete-path",
       "why": "完全経路がちょうど 1 本 → commit (DR-038)。2 トークンが a=x, b=5 の一通りだけで全消費・構造完了する。unfired verbose は結果に preset default false で載る (effects には cli 発火分のみなので現れない、DR-051 §2)。",
-      "argv": ["x", "5"],
+      "args": ["x", "5"],
       "expect": {
         "outcome": "success",
         "effects": [
@@ -27,7 +27,7 @@
     {
       "id": "verbose-interjection",
       "why": "greedy が 2 positional の間に割り込む (DR-041 §4 の porous 面)。positional 面は多孔質で、a を消費した後・b を消費する前に --verbose が背骨上で発火できる。効果列は消費順 a→verbose→b で保存される (割り込みが順序に反映)。",
-      "argv": ["x", "--verbose", "5"],
+      "args": ["x", "--verbose", "5"],
       "expect": {
         "outcome": "success",
         "effects": [
@@ -40,29 +40,29 @@
     },
     {
       "id": "missing-trailing-operand",
-      "why": "完全経路 0 本 — 構造的必須の不成立 (DR-038/065 §3)。a=x の後、背骨の b (required 属性なしだが非 optional な背骨の子は消費必須) がトークンを得られず経路が閉じない。kind=parse (経路構築の失敗、明示 required の constraint とは層が違う)。argv_pos はトークンが尽きて b が要求した位置 = argv.length = 1。reason は missing_operand (DR-066 §3)。",
-      "argv": ["x"],
+      "why": "完全経路 0 本 — 構造的必須の不成立 (DR-038/065 §3)。a=x の後、背骨の b (required 属性なしだが非 optional な背骨の子は消費必須) がトークンを得られず経路が閉じない。kind=parse (経路構築の失敗、明示 required の constraint とは層が違う)。args_pos はトークンが尽きて b が要求した位置 = args.length = 1。reason は missing_operand (DR-066 §3)。",
+      "args": ["x"],
       "expect": {
         "outcome": "failure",
-        "errors": [{"element": "b", "argv_pos": 1, "kind": "parse", "reason": "missing_operand"}]
+        "errors": [{"element": "b", "args_pos": 1, "kind": "parse", "reason": "missing_operand"}]
       }
     },
     {
       "id": "residual-token",
-      "why": "完全経路 0 本 — 残余トークン (DR-038/065 §3)。a=x, b=5 で背骨は構造完了するが 3 トークン目 z の消費者が居ない (背骨終端・greedy 未発火)。全消費できず経路不成立。element 省略 = 特定要素に紐付かないスコープレベルの躓き、argv_pos は残余先頭 = 2。reason は unexpected_token (DR-066 §3)。case 3 (値不足) との失敗理由の書き分け。",
-      "argv": ["x", "5", "z"],
+      "why": "完全経路 0 本 — 残余トークン (DR-038/065 §3)。a=x, b=5 で背骨は構造完了するが 3 トークン目 z の消費者が居ない (背骨終端・greedy 未発火)。全消費できず経路不成立。element 省略 = 特定要素に紐付かないスコープレベルの躓き、args_pos は残余先頭 = 2。reason は unexpected_token (DR-066 §3)。case 3 (値不足) との失敗理由の書き分け。",
+      "args": ["x", "5", "z"],
       "expect": {
         "outcome": "failure",
-        "errors": [{"argv_pos": 2, "kind": "parse", "reason": "unexpected_token"}]
+        "errors": [{"args_pos": 2, "kind": "parse", "reason": "unexpected_token"}]
       }
     },
     {
       "id": "value-parser-reject",
       "why": "完全経路 0 本 — 値パーサ拒否 (DR-038/041 §5)。a=x の後、number positional b が非数値 'abc' を受けて value_parser が拒否する。トークンは全消費されるが b が値を確定できず経路不成立で、保持された DR-037 Error が surface する (汎用「no complete parse」文言ではなく b の実躓き)。kind=parse (型照合の失敗)、reason=not_a_number (DR-066 §3 の value_parser 語彙)。case 3 (missing_operand) と対で「トークンはあるが型が合わない」0 本を固定する。",
-      "argv": ["x", "abc"],
+      "args": ["x", "abc"],
       "expect": {
         "outcome": "failure",
-        "errors": [{"element": "b", "argv_pos": 1, "kind": "parse", "reason": "not_a_number"}]
+        "errors": [{"element": "b", "args_pos": 1, "kind": "parse", "reason": "not_a_number"}]
       }
     }
   ]

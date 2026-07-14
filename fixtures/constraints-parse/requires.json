@@ -1,5 +1,5 @@
 {
-  "why": "遅延述語の正の依存 (DR-055 / DR-047): requires (無条件の正依存) と値依存の正依存の輪郭。値依存の制約は専用 DSL を持たず『値の枝 (exact 要素) への requires 合成』で書く (DR-055 §1 決定、専用条件 DSL は同 DR『採用しなかった案』で却下)。format の or は §5.3 の values/enum 正規形で各値が照合消費の exact 要素になり、要素なら制約属性 (DR-012) が付く — json 枝に requires:[schema] を付けると『format が json に committed された経路でのみ』述語が立つ (DR-047 の遅延述語は最終状態評価なので自然に発火分岐する)。requires は lexical 解決なので目的語 schema がどこにいても届く。制約は constraint installer が回収する能力宣言型の遅延述語で、トークン消費に関与せず完全経路が全消費で構築できた後に評価される (DR-047)。committed 判定は『その要素が CLI で発火したか』(DR-045)、目的語充足は『値の有無』(default 充足でも成立、本ファイルの target には default を置かず未充足だけを見る — target-default 側は default-interaction.json)。違反 = 完全経路の不成立 = failure かつ kind:constraint (DR-053/065 §3)。argv_pos は評価時点 = 全トークン消費後 = argv.length。reason は <属性名>_violated (DR-066) = requires_violated (無条件も値依存も同じ requires 属性なので同一 reason)。値枝の element 参照: exact 枝は匿名 (name を付けると §2.3 で結果スコープを作り enum の意味が壊れる) なので、制約宣言元を指すために露出と直交な id (DR-052) を付け element でそれを参照する。値が格納される先は親 name format (entity=format) だが、制約の宣言元は json 枝 (element=fmt_json) — 帰属先と宣言元の非対称は正しい。fixture では reason は optional 検証 (CONFORMANCE §2)、golden は仕様準拠値 (DR-070 §1b)。flag 未発火セルは preset default false で result に present (LOWERING §A.5 / DR-051 §2)、値オプション未供給は absent (キー消失、DR-051 §1)。",
+  "why": "遅延述語の正の依存 (DR-055 / DR-047): requires (無条件の正依存) と値依存の正依存の輪郭。値依存の制約は専用 DSL を持たず『値の枝 (exact 要素) への requires 合成』で書く (DR-055 §1 決定、専用条件 DSL は同 DR『採用しなかった案』で却下)。format の or は §5.3 の values/enum 正規形で各値が照合消費の exact 要素になり、要素なら制約属性 (DR-012) が付く — json 枝に requires:[schema] を付けると『format が json に committed された経路でのみ』述語が立つ (DR-047 の遅延述語は最終状態評価なので自然に発火分岐する)。requires は lexical 解決なので目的語 schema がどこにいても届く。制約は constraint installer が回収する能力宣言型の遅延述語で、トークン消費に関与せず完全経路が全消費で構築できた後に評価される (DR-047)。committed 判定は『その要素が CLI で発火したか』(DR-045)、目的語充足は『値の有無』(default 充足でも成立、本ファイルの target には default を置かず未充足だけを見る — target-default 側は default-interaction.json)。違反 = 完全経路の不成立 = failure かつ kind:constraint (DR-053/065 §3)。args_pos は評価時点 = 全トークン消費後 = args.length。reason は <属性名>_violated (DR-066) = requires_violated (無条件も値依存も同じ requires 属性なので同一 reason)。値枝の element 参照: exact 枝は匿名 (name を付けると §2.3 で結果スコープを作り enum の意味が壊れる) なので、制約宣言元を指すために露出と直交な id (DR-052) を付け element でそれを参照する。値が格納される先は親 name format (entity=format) だが、制約の宣言元は json 枝 (element=fmt_json) — 帰属先と宣言元の非対称は正しい。fixture では reason は optional 検証 (CONFORMANCE §2)、golden は仕様準拠値 (DR-070 §1b)。flag 未発火セルは preset default false で result に present (LOWERING §A.5 / DR-051 §2)、値オプション未供給は absent (キー消失、DR-051 §1)。",
   "query": "parse",
   "definition": {
     "options": [
@@ -15,17 +15,17 @@
   "cases": [
     {
       "id": "requires-violated",
-      "why": "無条件 requires 違反: decrypt が committed だが目的語 key_file が値を持たない (CLI 未供給・default なし) → 完全経路が不成立で failure。kind:constraint (遅延述語違反、型照合や残余の parse 失敗とは層が違う、DR-065 §3)。argv_pos=1=argv.length (制約は全消費後に評価)。element=宣言元 decrypt。reason=requires_violated (DR-066)。",
-      "argv": ["--decrypt"],
+      "why": "無条件 requires 違反: decrypt が committed だが目的語 key_file が値を持たない (CLI 未供給・default なし) → 完全経路が不成立で failure。kind:constraint (遅延述語違反、型照合や残余の parse 失敗とは層が違う、DR-065 §3)。args_pos=1=args.length (制約は全消費後に評価)。element=宣言元 decrypt。reason=requires_violated (DR-066)。",
+      "args": ["--decrypt"],
       "expect": {
         "outcome": "failure",
-        "errors": [{"element": "decrypt", "argv_pos": 1, "kind": "constraint", "reason": "requires_violated"}]
+        "errors": [{"element": "decrypt", "args_pos": 1, "kind": "constraint", "reason": "requires_violated"}]
       }
     },
     {
       "id": "requires-satisfied",
-      "why": "無条件 requires 充足: decrypt committed かつ key_file が値 k を持つ → 述語成立で success。効果列は argv 適用順 (decrypt の set が先、key_file の set が後、順序は同一性成分 DR-038/045)。result は key_file present、format 系は未供給で absent。",
-      "argv": ["--decrypt", "--key-file", "k"],
+      "why": "無条件 requires 充足: decrypt committed かつ key_file が値 k を持つ → 述語成立で success。効果列は args 適用順 (decrypt の set が先、key_file の set が後、順序は同一性成分 DR-038/045)。result は key_file present、format 系は未供給で absent。",
+      "args": ["--decrypt", "--key-file", "k"],
       "expect": {
         "outcome": "success",
         "effects": [
@@ -37,8 +37,8 @@
     },
     {
       "id": "requires-vacuous",
-      "why": "requires は committed にのみ発火 (vacuous satisfaction): decrypt を出さなければ requires は評価されず success。空 argv でも制約違反にならないことの固定。result は未発火 flag decrypt が preset default false で present、値オプションは全て absent (DR-051 §1)。",
-      "argv": [],
+      "why": "requires は committed にのみ発火 (vacuous satisfaction): decrypt を出さなければ requires は評価されず success。空 args でも制約違反にならないことの固定。result は未発火 flag decrypt が preset default false で present、値オプションは全て absent (DR-051 §1)。",
+      "args": [],
       "expect": {
         "outcome": "success",
         "effects": [],
@@ -47,17 +47,17 @@
     },
     {
       "id": "value-requires-violated",
-      "why": "値依存 requires 発火 → 違反: format の committed 値が json (json 枝が照合消費で選ばれた) なので枝の requires:[schema] が立つが schema 未供給 → failure kind:constraint。値の帰属先は親 name format (entity=format) だが制約の宣言元は json 枝なので element=fmt_json (匿名 exact 枝に付けた id、DR-052 と直交)。argv_pos=2=argv.length。reason=requires_violated (無条件 requires と同じ属性なので同一 reason、DR-066 §3)。yaml 枝には requires が無い = 次ケースの対照。",
-      "argv": ["--format", "json"],
+      "why": "値依存 requires 発火 → 違反: format の committed 値が json (json 枝が照合消費で選ばれた) なので枝の requires:[schema] が立つが schema 未供給 → failure kind:constraint。値の帰属先は親 name format (entity=format) だが制約の宣言元は json 枝なので element=fmt_json (匿名 exact 枝に付けた id、DR-052 と直交)。args_pos=2=args.length。reason=requires_violated (無条件 requires と同じ属性なので同一 reason、DR-066 §3)。yaml 枝には requires が無い = 次ケースの対照。",
+      "args": ["--format", "json"],
       "expect": {
         "outcome": "failure",
-        "errors": [{"element": "fmt_json", "argv_pos": 2, "kind": "constraint", "reason": "requires_violated"}]
+        "errors": [{"element": "fmt_json", "args_pos": 2, "kind": "constraint", "reason": "requires_violated"}]
       }
     },
     {
       "id": "value-requires-nonfiring",
       "why": "値依存 requires 非発火: format=yaml は yaml 枝を選び、この枝に requires は無いので schema を要求せず success。同じ format 定義でも committed 値でどの枝の述語が立つかが分岐することの固定 (DR-055 §1『値の枝に付いた requires』)。値は親 name format に格納 (entity=format, operand=yaml)。result は format present、schema absent、未発火 flag decrypt は preset default false。",
-      "argv": ["--format", "yaml"],
+      "args": ["--format", "yaml"],
       "expect": {
         "outcome": "success",
         "effects": [
@@ -69,7 +69,7 @@
     {
       "id": "value-requires-satisfied",
       "why": "値依存 requires 充足: format=json で json 枝の requires:[schema] が立ち、schema=s がそれを満たす → success。前ケース (json 単独→違反) との対で『値枝の条件発火 + 目的語充足』の成立面を固定。値は親 name format に格納 (entity=format, operand=json)、schema も cli set。",
-      "argv": ["--format", "json", "--schema", "s"],
+      "args": ["--format", "json", "--schema", "s"],
       "expect": {
         "outcome": "success",
         "effects": [

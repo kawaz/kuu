@@ -20,7 +20,7 @@
     {
       "id": "optimize-attach",
       "why": "`gcc -O2 file.c` (実機は最適化レベル2でコンパイル)。`-O` の直後に区切りなしで値 `2` が付着する古典的 gcc/clang 記法。short_combine:false でも『単独発火 + 値の直接付着』は生きている (DESIGN §7.2 L539) ことを固定。optimize=\"2\" (数値を意味論として持つが clang は -Os/-Ofast/-Og のような英字値も受理するため type は string)。",
-      "argv": ["-O2"],
+      "args": ["-O2"],
       "expect": {
         "outcome": "success",
         "effects": [
@@ -32,7 +32,7 @@
     {
       "id": "output-space-separated",
       "why": "`gcc -o out.o prog.c` (実機は prog.c を out.o にコンパイル)。`-o` は値が同一トークンに付着しない場合、次トークンを raw 消費する空白区切り形も受理する (short 値スロットの一般規則、grep.json の `-A 3` case と同型、DR-041 §4)。output=\"out.o\"、sources=[\"prog.c\"] の分離を固定。",
-      "argv": ["-o", "out.o", "prog.c"],
+      "args": ["-o", "out.o", "prog.c"],
       "expect": {
         "outcome": "success",
         "effects": [
@@ -45,7 +45,7 @@
     {
       "id": "include-multiple-attach",
       "why": "`gcc -I/usr/include -I/opt/local/include foo.c` (実機は複数 include 検索パスを指定順で追加)。両方とも `-I` に直接付着したパス。multiple:append で出現順の配列に畳まれることを固定 (dd.json 型の付着とは別に、multiple append + attach の組合せをプローブ)。",
-      "argv": ["-I/usr/include", "-I/opt/local/include"],
+      "args": ["-I/usr/include", "-I/opt/local/include"],
       "expect": {
         "outcome": "success",
         "effects": [
@@ -58,7 +58,7 @@
     {
       "id": "library-multiple-attach",
       "why": "`gcc -lm -lpthread prog.o` (実機は libm と libpthread をリンク)。`-l` への直接付着で library=[\"m\",\"pthread\"]。`-lm` が `-l` + `-m` にクラスタ分解されないこと (= 値スロットを持つ short は付着値を greedy に食うため、クラスタ枝の有無以前に l 自身が \"m\" を値として確定させる) を暗に固定する — 明示的な非クラスタ確認は no-cluster-flags case 側で行う。",
-      "argv": ["-lm", "-lpthread", "prog.o"],
+      "args": ["-lm", "-lpthread", "prog.o"],
       "expect": {
         "outcome": "success",
         "effects": [
@@ -72,7 +72,7 @@
     {
       "id": "warning-family-attach",
       "why": "`gcc -Wall -Wextra foo.c` (実機は警告クラス all と extra を有効化)。`-Wall`/`-Wextra`/`-Werror`/`-Wno-unused` 等は clang/gcc で無数に存在し閉じた集合ではない (--help=warnings 相当の一覧は数百項目、実機 `clang --help` でも Wxxx 系は列挙しきれない) — find.json の `-name` のような『固定綴りの long_prefix primary』では表現できない開いた語彙。よって -W を short + 付着 string (multiple:append) としてモデル化した: -I/-l と同じ『識別子付着 + 複数蓄積』の形が gcc の -W 系の実態に最も忠実 (対照的に find.json は primary が有限集合なので long_prefix 選択が適切、という使い分けの判断)。warning=[\"all\",\"extra\"]。",
-      "argv": ["-Wall", "-Wextra"],
+      "args": ["-Wall", "-Wextra"],
       "expect": {
         "outcome": "success",
         "effects": [
@@ -85,7 +85,7 @@
     {
       "id": "no-cluster-flags",
       "why": "`-cg` という 1 トークン (実機の gcc/clang はこの綴りを認識せず不明オプション扱い、あるいは無視して単一ファイル名相当に落ちる実装依存の挙動を示すことがあるが、ここでは kuu 側の short_combine:false の意味論を固定するのが目的で実機の受理可否そのものは検証対象外)。c/g はどちらも値を持たない flag。short_combine:true (既定) なら `-cg` は -c -g のクラスタ読みが枝として立ち compile_only=debug=true になるはずだが、short_combine:false の scope ではそのクラスタ読みの枝が消え、`-cg` という綴りに一致する exact entry も無いため、DR-041 §5 (prefix ガード非採用、値 primitive は形だけで拒否しない) によりトークンは未消費のまま素通しし、寛容な string positional `sources` に raw 文字列として吸収される。compile_only=false, debug=false, sources=[\"-cg\"] という『クラスタが起きなかった』ことを直接観測できる形で固定する。",
-      "argv": ["-cg"],
+      "args": ["-cg"],
       "expect": {
         "outcome": "success",
         "effects": [
@@ -97,7 +97,7 @@
     {
       "id": "optimize-space-form-diverges-from-real-gcc",
       "why": "`-O 2` (実機 clang は space-form 値供給を `no such file or directory: '2'` で exit 1 拒否、2026-07-12 実機確認)。kuu spec 上は `optimize` に `short_attached_value: \"require\"` (本 fixture の要素単位 override) が付いているため space 形の読みが生成されず、`-O` 単独トークン (残り文字ゼロ) は付着読み (1 文字以上要求) も持てず完全経路ゼロになる — DR-041 §5 (prefix ガード非採用) により未消費のまま寛容な string positional `sources` に raw 落ちし、後続の `2` も別の positional トークンとして落ちる。**実機との挙動差**: 実機は exit 1 (拒否) だが kuu spec は success (`sources: [\"-O\", \"2\"]`) — kuu の positional 経路は『option 風に見える形』だけを理由に拒否しない設計 (DR-041 §5) であり、classic CLI 互換の unknown-option エラーは方言 opt-in の対象 (同 §、issue `2026-07-12-short-opt-attach-only-space-form` が報告した表現ギャップの最終形、`short_attached_value:\"require\"` により value 供給の拒否自体は表現できたが、それが unexpected_token ではなく寛容 positional への吸収になる点は kuu の一般設計方針であり本 DR の射程外)。",
-      "argv": ["-O", "2"],
+      "args": ["-O", "2"],
       "expect": {
         "outcome": "success",
         "effects": [

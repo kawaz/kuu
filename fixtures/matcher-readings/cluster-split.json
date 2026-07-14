@@ -11,7 +11,7 @@
     {
       "id": "suffix-rejected-split-only",
       "why": "canonical suffix 非採用が値付着枝を殺し分割枝だけ生かす (DR-074 §1 / DR-041 §3): `-n1.0f` の 2 読みのうち値付着 `n=\"1.0f\"` は canonical number が型 suffix `f` を拒否して not_a_number Error (held、完全経路にならない)。分割読み `n=\"1.0\"` + `-f` は `1.0` が有効な number で f が flag 発火 → 単一の完全経路 → success。held Error は完全経路 1 本以上あるので破棄され表示されない (DR-041 §5)。effects は適用順に n=1 (値) → f=true (flag) の 2 件 (DR-038/045 の効果列順序)。lenient 方言なら値付着も成功して ambiguous になる点が canonical との分岐 (DR-038 条件形例、cluster-split-string.json が suffix 非依存の ambiguous を固定)。",
-      "argv": ["-n1.0f"],
+      "args": ["-n1.0f"],
       "expect": {
         "outcome": "success",
         "effects": [
@@ -24,7 +24,7 @@
     {
       "id": "no-split-point",
       "why": "分割点なしで単一読みに潰れる (DR-041 §3): `-n1.0` は f が定義されていても `1.0` の後に flag 化できる文字が残らないため分割読みが完全経路を成さず、読みは 1 本 = n が `1.0` を取る。canonical number は `1.0` を受理 (最短形 1.0→1、DR-050 §4)。f は不発なので result で default false、effects には cli 由来の n=1 のみ載る (未発火 flag の false は result 側で確定、CONFORMANCE §2)。suffix を含まない値では canonical と lenient で挙動が変わらないことの対照。",
-      "argv": ["-n1.0"],
+      "args": ["-n1.0"],
       "expect": {
         "outcome": "success",
         "effects": [

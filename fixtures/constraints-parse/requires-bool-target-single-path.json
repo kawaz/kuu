@@ -22,7 +22,7 @@
     {
       "id": "c-unset-fails",
       "why": "c=false (暗黙 default) は「true であること」を満たさない → requires_violated。",
-      "argv": [
+      "args": [
         "--a"
       ],
       "expect": {
@@ -30,7 +30,7 @@
         "errors": [
           {
             "element": "a",
-            "argv_pos": 1,
+            "args_pos": 1,
             "kind": "constraint",
             "reason": "requires_violated"
           }
@@ -40,7 +40,7 @@
     {
       "id": "c-set-succeeds",
       "why": "c を CLI 発火で true に → 充足、success。",
-      "argv": [
+      "args": [
         "--a",
         "--c"
       ],

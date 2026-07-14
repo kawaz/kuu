@@ -16,7 +16,7 @@
     {
       "id": "repeat-naked-elements",
       "why": "`a b c`: repeat xs が 3 周回し各周回で名前付き要素 k が 1 トークンを消費・発火 (effects は消費順に entity=k の 3 連、DR-045)。通常なら xs:[{k:a},{k:b},{k:c}] だが k の export_key null で各要素からキーが落ち、result は {xs:[a,b,c]} — 配列の形 (3 要素) は保たれ値だけ裸になる。kv 文脈 (transparent-kv) では消える値が seq 文脈では残る、が透過の文脈依存の核心。",
-      "argv": ["a", "b", "c"],
+      "args": ["a", "b", "c"],
       "expect": {
         "outcome": "success",
         "effects": [
@@ -30,7 +30,7 @@
     {
       "id": "zero-fire-empty-array",
       "why": "0 発火 `[]`: repeat min:0 は要素ゼロでも [] を出す (DR-044、absent にならない)。透過 (export_key null) は要素の裸化であって配列の存在自体は反復系が保証するので、空でも xs:[] は present。",
-      "argv": [],
+      "args": [],
       "expect": {
         "outcome": "success",
         "effects": [],

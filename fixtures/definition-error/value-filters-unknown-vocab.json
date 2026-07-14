@@ -1,5 +1,5 @@
 {
-  "why": "filter 名 (value_filters に指定される scalar filter registry T→T のエントリ名) が filters registry の descriptor `owns` 集合 (DR-061 / DR-094) に登録されていない場合は definition-error (kind=unknown-vocab、DR-101)。判定入力は「wire に書かれた綴り + registry の owns 集合」で definition 時点で静的に既知なので、runtime 遅延させる必要が無く DR-054 §1 の Error 側 (「lowering が構成できない、または全入力で壊れる定義 = Error」) に該当する。専用 kind を新設せず DR-082 §2 の unknown-vocab 受け皿規定 (「語彙自体が未知 = transform 名が registry に無い等」) をそのまま適用する — DR-042 の installer / filter registry 同格原則により、long variant DSL の update transform 名検査 (DR-077 §2) と同族の判定。argv は書かない (DR-082 §1、definition の静的検査であり実行しない)。",
+  "why": "filter 名 (value_filters に指定される scalar filter registry T→T のエントリ名) が filters registry の descriptor `owns` 集合 (DR-061 / DR-094) に登録されていない場合は definition-error (kind=unknown-vocab、DR-101)。判定入力は「wire に書かれた綴り + registry の owns 集合」で definition 時点で静的に既知なので、runtime 遅延させる必要が無く DR-054 §1 の Error 側 (「lowering が構成できない、または全入力で壊れる定義 = Error」) に該当する。専用 kind を新設せず DR-082 §2 の unknown-vocab 受け皿規定 (「語彙自体が未知 = transform 名が registry に無い等」) をそのまま適用する — DR-042 の installer / filter registry 同格原則により、long variant DSL の update transform 名検査 (DR-077 §2) と同族の判定。args は書かない (DR-082 §1、definition の静的検査であり実行しない)。",
   "query": "definition_error",
   "definition": {
     "options": [

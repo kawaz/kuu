@@ -18,7 +18,7 @@
     {
       "id": "refire-overwrites-cell",
       "why": "`--hlcolors red blue --hlcolors red`: 1 回目の発火が red,blue を colorname 枝で 2 反復消費し hlcolors セルに [{colorname:\"red\"},{colorname:\"blue\"}] を書く。2 回目の `--hlcolors` 発火は multiple の accumulator を持たないため、前回のセル内容を捨てて新しい repeat 列 (1 反復、red のみ) で丸ごと上書きする。効果列は 3 個の set を消費順で全保持 (colorname=red, colorname=blue, colorname=red) — 効果列自体は畳まれない、collapse は result 確定時にセル単位で起きる (last-wins-scalar.json と同じ機序)。result は最後の発火だけが残る {hlcolors: [{colorname:\"red\"}]}。",
-      "argv": ["--hlcolors", "red", "blue", "--hlcolors", "red"],
+      "args": ["--hlcolors", "red", "blue", "--hlcolors", "red"],
       "expect": {
         "outcome": "success",
         "effects": [
@@ -32,7 +32,7 @@
     {
       "id": "single-fire-baseline",
       "why": "1 回発火の baseline: `--hlcolors red blue` は上書きが起きないので repeat 2 反復分の row 配列がそのまま result になる。refire-overwrites-cell と対照して『2 回目の発火が 1 回目を消す』ことが上書きであり反復消費自体の性質でないことを固定する (last-wins-scalar.json の single-fire-scalar と同じ役割)。",
-      "argv": ["--hlcolors", "red", "blue"],
+      "args": ["--hlcolors", "red", "blue"],
       "expect": {
         "outcome": "success",
         "effects": [

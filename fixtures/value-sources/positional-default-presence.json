@@ -10,7 +10,7 @@
     {
       "id": "no-token-default-fills-path-complete",
       "why": "トークン供給なし: absent/required-positional.json の missing-required (default 無し → failure/missing_operand) との対 — `seconds` は default:10 を持つため、経路探索段では『デフォルト有り』(DR-088 §1) として完全経路に数えられ、missing_operand にならない。遅延解決の最終フェーズ (DR-087) で default 10 が実体化されて success。effects 空 (default は cli/link 由来でないので効果列に載らない、CONFORMANCE §2)。sources で由来 default を検証。",
-      "argv": [],
+      "args": [],
       "expect": {
         "outcome": "success",
         "effects": [],
@@ -21,7 +21,7 @@
     {
       "id": "token-supplied-overrides-default",
       "why": "(対極) `5`: トークンが供給されれば通常どおり cli 値が default を上書きする (値源ラダー cli > default、DESIGN §11.4)。default 属性の有無は経路探索段の充足判定を変えるだけで、値が供給された時の優先順位そのものは変えない。",
-      "argv": ["5"],
+      "args": ["5"],
       "expect": {
         "outcome": "success",
         "effects": [

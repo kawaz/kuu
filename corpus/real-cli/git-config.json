@@ -37,8 +37,8 @@
   "cases": [
     {
       "id": "set-true-canonical",
-      "why": "`git config set --type=bool test.bool true` (実機観測: set OK → get=true)。true 系 canonical (bool_true_values に含まれる 4 値のうち最も基本)。config/set の subcommand trigger は effect に載らず (DR-045 の値セル操作 op のみ)、type/key/val の 3 効果が argv 順に積まれる。result は config/set 子スコープにネスト (DR-025)。",
-      "argv": ["config", "set", "--type=bool", "test.bool", "true"],
+      "why": "`git config set --type=bool test.bool true` (実機観測: set OK → get=true)。true 系 canonical (bool_true_values に含まれる 4 値のうち最も基本)。config/set の subcommand trigger は effect に載らず (DR-045 の値セル操作 op のみ)、type/key/val の 3 効果が args 順に積まれる。result は config/set 子スコープにネスト (DR-025)。",
+      "args": ["config", "set", "--type=bool", "test.bool", "true"],
       "expect": {
         "outcome": "success",
         "effects": [
@@ -52,7 +52,7 @@
     {
       "id": "set-yes-canonical",
       "why": "`git config set --type=bool test.bool yes` (実機観測: set OK → get=true)。yes は git 独自の true 綴り拡張 (POSIX/C99 bool にはない)。DR-074 §3 が canonical に含めなかった opt-in 語彙の代表で、bool_true_values への `yes` 追加で pin できることを固定する。",
-      "argv": ["config", "set", "--type=bool", "test.bool", "yes"],
+      "args": ["config", "set", "--type=bool", "test.bool", "yes"],
       "expect": {
         "outcome": "success",
         "effects": [
@@ -66,7 +66,7 @@
     {
       "id": "set-one-numeric",
       "why": "`git config set --type=bool test.bool 1` (実機観測: set OK → get=true)。数値 canonical の代表。実 git は `2`/`100`/`-1` 等の非ゼロ整数もすべて true 化する (実測、man 記述の 'positive numbers' は不正確 — 負数も true) が、kuu の bool_parser は文字列一致方式のため `1` のみ pin する。この限界は本 corpus の射程で、非ゼロ整数の一般 true 化を pin したければ pre_filter で数値正規化するか、bool_parser 側を撤回して int→bool の別 filter chain を組む必要がある (射程外)。",
-      "argv": ["config", "set", "--type=bool", "test.bool", "1"],
+      "args": ["config", "set", "--type=bool", "test.bool", "1"],
       "expect": {
         "outcome": "success",
         "effects": [
@@ -80,7 +80,7 @@
     {
       "id": "set-false-canonical",
       "why": "`git config set --type=bool test.bool false` (実機観測: set OK → get=false)。false 系 canonical。true 側との対称性を pin (bool_true_values / bool_false_values が独立に効く)。",
-      "argv": ["config", "set", "--type=bool", "test.bool", "false"],
+      "args": ["config", "set", "--type=bool", "test.bool", "false"],
       "expect": {
         "outcome": "success",
         "effects": [
@@ -94,7 +94,7 @@
     {
       "id": "set-no-canonical",
       "why": "`git config set --type=bool test.bool no` (実機観測: set OK → get=false)。no は git 独自の false 綴り拡張。DR-074 §3 が canonical に含めなかった opt-in 語彙の false 側の代表で、bool_false_values への `no` 追加で pin できることを yes/no ペアで固定する。",
-      "argv": ["config", "set", "--type=bool", "test.bool", "no"],
+      "args": ["config", "set", "--type=bool", "test.bool", "no"],
       "expect": {
         "outcome": "success",
         "effects": [
@@ -108,7 +108,7 @@
     {
       "id": "set-zero-numeric",
       "why": "`git config set --type=bool test.bool 0` (実機観測: set OK → get=false)。数値 canonical の false 側。DR-074 §3 の canonical `0` (bool_false_values default に含まれる) がそのまま git 実機と一致する数少ないケース (数値正の側は `1` のみ一致、負・複数桁は非対応)。",
-      "argv": ["config", "set", "--type=bool", "test.bool", "0"],
+      "args": ["config", "set", "--type=bool", "test.bool", "0"],
       "expect": {
         "outcome": "success",
         "effects": [
@@ -122,7 +122,7 @@
     {
       "id": "set-case-insensitive-TRUE",
       "why": "`git config set --type=bool test.bool TRUE` (実機観測: set OK → get=true。True/TRUE/YES/Yes/ON/On/FALSE/False/NO/OFF/Off... の全パターンで case 透過を実測)。bool_case_insensitive:true (canonical default、DR-074 §3) が実 git の case 透過を再現できることを pin する。同じ機構は values リスト全綴りに一様に効くため、代表 1 値で足りる。",
-      "argv": ["config", "set", "--type=bool", "test.bool", "TRUE"],
+      "args": ["config", "set", "--type=bool", "test.bool", "TRUE"],
       "expect": {
         "outcome": "success",
         "effects": [
@@ -135,11 +135,11 @@
     },
     {
       "id": "set-unknown-rejected",
-      "why": "`git config set --type=bool test.bool invalid` (実機観測: `fatal: bad boolean config value 'invalid' for 'test.bool'` rc=128。同様に `enable`/`positive` 等の bool 語彙外文字列も全てこの経路)。方言 config で語彙を拡張しても、リスト外の入力は not_a_bool で failure (DR-074 §3 の閉じた解釈 + DR-095 の builtin/bool_parser reasons 帰属)。kind=parse は value_parser の型照合失敗 (CONFORMANCE §2 の parse 系例示 not_a_number / not_an_integer と同族)。argv_pos=4 は val 値トークン (0-based) の位置。",
-      "argv": ["config", "set", "--type=bool", "test.bool", "invalid"],
+      "why": "`git config set --type=bool test.bool invalid` (実機観測: `fatal: bad boolean config value 'invalid' for 'test.bool'` rc=128。同様に `enable`/`positive` 等の bool 語彙外文字列も全てこの経路)。方言 config で語彙を拡張しても、リスト外の入力は not_a_bool で failure (DR-074 §3 の閉じた解釈 + DR-095 の builtin/bool_parser reasons 帰属)。kind=parse は value_parser の型照合失敗 (CONFORMANCE §2 の parse 系例示 not_a_number / not_an_integer と同族)。args_pos=4 は val 値トークン (0-based) の位置。",
+      "args": ["config", "set", "--type=bool", "test.bool", "invalid"],
       "expect": {
         "outcome": "failure",
-        "errors": [{"element": "val", "argv_pos": 4, "kind": "parse", "reason": "not_a_bool"}]
+        "errors": [{"element": "val", "args_pos": 4, "kind": "parse", "reason": "not_a_bool"}]
       }
     }
   ]

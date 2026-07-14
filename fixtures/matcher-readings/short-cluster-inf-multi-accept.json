@@ -13,7 +13,7 @@
     {
       "id": "three-way-value-cluster-split",
       "why": "3-way multi-Accept ambiguity (DR-074 §5 / DR-041 §3 / DR-038): `-sinf` は walk_short が s (string 値取り) の value 長さを 1 / 2 / 3 と生成し、string が全長さを受理するので 3 経路すべて全消費完成する。(A) s=`i` の後 `-n -f` cluster → n=true, f=true, i 未発火 preset false。(B) s=`in` の後 `-f` cluster → f=true, i / n 未発火 preset false。(C) s=`inf` で全消費 → i / n / f いずれも未発火 preset false。3 解釈は s の値と発火 flag 集合の両方で分岐し merge しない (DR-038 の効果列判定)。列挙順は非規範 (集合比較、CONFORMANCE §3)。DR-074 §5 の観念例 `-inf` が短 flag 列 `-i -n -f` と読める衝突を、s prefix で arity 駆動値として攻めた具体化 — s 側の in-token 値長 3 段 = flag 側の cluster 分割点 3 態 に対応する。",
-      "argv": ["-sinf"],
+      "args": ["-sinf"],
       "expect": {
         "outcome": "ambiguous",
         "interpretations": [

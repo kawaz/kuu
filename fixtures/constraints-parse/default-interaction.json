@@ -16,7 +16,7 @@
     {
       "id": "all-default-baseline",
       "why": "全 default ベースライン: 何も committed でないので requires (decrypt 未 committed) も json 枝の requires (format=default json は committed でない = json 枝が CLI で発火していない、DR-045) も発火せず success。default は値源なので key_file / format は result に present (source=default)。effects は空 (default 由来は effects に載らない、CONFORMANCE §2)。未発火 flag decrypt は preset default false。schema は default なしで absent。",
-      "argv": [],
+      "args": [],
       "expect": {
         "outcome": "success",
         "effects": [],
@@ -26,7 +26,7 @@
     {
       "id": "requires-target-default",
       "why": "requires TARGET は default で充足 (DR-047『目的語は値の有無』): decrypt committed で key_file を requires するが、key_file は CLI 未供給でも default `/id.key` を持つ = 値充足 → 述語成立で success。目的語充足は committed でなく『値の有無』で判定される面の固定。effects は decrypt の cli set のみ (key_file は default 由来で effects 非掲載)。result は decrypt=true + key_file/format の default 値。",
-      "argv": ["--decrypt"],
+      "args": ["--decrypt"],
       "expect": {
         "outcome": "success",
         "effects": [
@@ -37,11 +37,11 @@
     },
     {
       "id": "value-branch-cli-trigger",
-      "why": "値枝 requires の TRIGGER は committed でのみ発火 (case 1 の default json との対照): format を CLI で json に committed すると json 枝の requires:[schema] が立ち schema を要求、未供給で違反 → failure kind:constraint。ベースライン (case 1) では同じ json が default 由来ゆえ json 枝が発火しなかった — committed 判定 (DR-045) の非対称を crisp に示す対。値の帰属先は親 name format だが制約の宣言元は json 枝なので element=fmt_json (匿名 exact 枝に付けた id、DR-052 と直交)。argv_pos=2=argv.length。reason=requires_violated (無条件 requires と値枝 requires は同一 requires 属性、DR-066)。",
-      "argv": ["--format", "json"],
+      "why": "値枝 requires の TRIGGER は committed でのみ発火 (case 1 の default json との対照): format を CLI で json に committed すると json 枝の requires:[schema] が立ち schema を要求、未供給で違反 → failure kind:constraint。ベースライン (case 1) では同じ json が default 由来ゆえ json 枝が発火しなかった — committed 判定 (DR-045) の非対称を crisp に示す対。値の帰属先は親 name format だが制約の宣言元は json 枝なので element=fmt_json (匿名 exact 枝に付けた id、DR-052 と直交)。args_pos=2=args.length。reason=requires_violated (無条件 requires と値枝 requires は同一 requires 属性、DR-066)。",
+      "args": ["--format", "json"],
       "expect": {
         "outcome": "failure",
-        "errors": [{"element": "fmt_json", "argv_pos": 2, "kind": "constraint", "reason": "requires_violated"}]
+        "errors": [{"element": "fmt_json", "args_pos": 2, "kind": "constraint", "reason": "requires_violated"}]
       }
     }
   ]

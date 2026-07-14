@@ -10,7 +10,7 @@
     {
       "id": "kebab-trigger-fires",
       "why": "kebab トリガ `--dry-run` が発火 → 結果キーは name のまま snake (dry_run) で set(true)。トリガ綴り (kebab) と結果キー綴り (snake) が別軸であることを固定 (DR-022)。",
-      "argv": ["--dry-run"],
+      "args": ["--dry-run"],
       "expect": {
         "outcome": "success",
         "effects": [
@@ -21,17 +21,17 @@
     },
     {
       "id": "snake-not-generated",
-      "why": "snake 綴りの `--dry_run` は生成されていない (主入口の name 由来トリガは kebab のみ)。消費者が居ず残余トークンとして完全経路 0 本 → failure。element 省略 = スコープレベルの躓き、argv_pos=0 は残余先頭 (CONFORMANCE §2 / DR-065 §3 の unexpected_token)。『snake トリガは存在しない』ことの negative-control。",
-      "argv": ["--dry_run"],
+      "why": "snake 綴りの `--dry_run` は生成されていない (主入口の name 由来トリガは kebab のみ)。消費者が居ず残余トークンとして完全経路 0 本 → failure。element 省略 = スコープレベルの躓き、args_pos=0 は残余先頭 (CONFORMANCE §2 / DR-065 §3 の unexpected_token)。『snake トリガは存在しない』ことの negative-control。",
+      "args": ["--dry_run"],
       "expect": {
         "outcome": "failure",
-        "errors": [{"argv_pos": 0, "kind": "parse", "reason": "unexpected_token"}]
+        "errors": [{"args_pos": 0, "kind": "parse", "reason": "unexpected_token"}]
       }
     },
     {
       "id": "unfired-snake-default",
       "why": "未発火でも結果キーは snake (dry_run): preset default false が result に present で現れ、キー綴りが name (snake) 由来であること (トリガの kebab とは無関係) を固定。cli 効果なしで effects は空。",
-      "argv": [],
+      "args": [],
       "expect": {
         "outcome": "success",
         "effects": [],

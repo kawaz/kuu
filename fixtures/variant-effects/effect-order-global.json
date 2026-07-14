@@ -1,5 +1,5 @@
 {
-  "why": "link-sync 合流の別トークン同時発火 (DR-042 検証マトリクス): global オプション out の root 入口と、build コマンドスコープ内へ構造コピーされた入口が、同一 argv 内の別トークンで発火する。両入口は root の out セルへ link 同期する (global コピーは実体を新設せず祖先の 1 セルへ link、DR-042) ので、効果 [out=A, out=B] が root セルへ合流し scalar あと勝ち (DR-015)。global 発火は子スコープの result ネストから脱出し root キーに現れ (子セル新設なし)、build は起動された空スコープ {} として現れる。これは複数スコープからの効果列合流で、効果列順序が最終値を決めることを command 構造込みで固定する (effect-order.json の long/short 版と対、合流元がスコープ跨ぎになった形)。effects は両方 entity=out (root セル)・source=cli。蒸留元: slice phase18 link-sync (global の root 入口と command 内コピーが別トークン発火であと勝ち)。",
+  "why": "link-sync 合流の別トークン同時発火 (DR-042 検証マトリクス): global オプション out の root 入口と、build コマンドスコープ内へ構造コピーされた入口が、同一 args 内の別トークンで発火する。両入口は root の out セルへ link 同期する (global コピーは実体を新設せず祖先の 1 セルへ link、DR-042) ので、効果 [out=A, out=B] が root セルへ合流し scalar あと勝ち (DR-015)。global 発火は子スコープの result ネストから脱出し root キーに現れ (子セル新設なし)、build は起動された空スコープ {} として現れる。これは複数スコープからの効果列合流で、効果列順序が最終値を決めることを command 構造込みで固定する (effect-order.json の long/short 版と対、合流元がスコープ跨ぎになった形)。effects は両方 entity=out (root セル)・source=cli。蒸留元: slice phase18 link-sync (global の root 入口と command 内コピーが別トークン発火であと勝ち)。",
   "query": "parse",
   "definition": {
     "options": [
@@ -13,7 +13,7 @@
     {
       "id": "root-then-command-last-wins",
       "why": "root 入口 + command 内コピーの合流あと勝ち: --out A build --out B は root で out=A、build 内コピー入口で out=B を発火。両効果とも root の out セルへ link 同期するので効果列 [out=A, out=B] が root へ合流し scalar あと勝ちで result.out=B。build は起動された空スコープなので build:{} (子内 out は root へ脱出、子セル無し)。effects 配列順で A が先 B が後。sources=cli (out の最終値は CLI 由来)。",
-      "argv": ["--out", "A", "build", "--out", "B"],
+      "args": ["--out", "A", "build", "--out", "B"],
       "expect": {
         "outcome": "success",
         "effects": [
@@ -26,8 +26,8 @@
     },
     {
       "id": "reversed-last-wins",
-      "why": "順序反転であと勝ちも反転: --out B build --out A は効果列 [out=B, out=A] で result.out=A。スコープ跨ぎの合流でも効果列順序 (argv 消費順) が最終値を決めることを対照する (前ケースと同定義・値入替)。build:{} は不変 (子内発火は常に root へ脱出)。",
-      "argv": ["--out", "B", "build", "--out", "A"],
+      "why": "順序反転であと勝ちも反転: --out B build --out A は効果列 [out=B, out=A] で result.out=A。スコープ跨ぎの合流でも効果列順序 (args 消費順) が最終値を決めることを対照する (前ケースと同定義・値入替)。build:{} は不変 (子内発火は常に root へ脱出)。",
+      "args": ["--out", "B", "build", "--out", "A"],
       "expect": {
         "outcome": "success",
         "effects": [

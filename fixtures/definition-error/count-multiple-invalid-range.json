@@ -9,7 +9,7 @@
   "cases": [
     {
       "id": "count-with-multiple-is-invalid-range",
-      "why": "`n` は count 型 (number + default:0 + update:increment 糖衣) に multiple: true を宣言している。count の short 発火 (`-n`) は variant DSL を経由せず matcher が直接 update(increment) 効果を生成するため、multiple (accum セル、old = T[]) との組合せは accum×update と同じ型不一致に陥り、要素レベルで definition-error (invalid-range) になる。argv は書かない (定義の静的検査)。",
+      "why": "`n` は count 型 (number + default:0 + update:increment 糖衣) に multiple: true を宣言している。count の short 発火 (`-n`) は variant DSL を経由せず matcher が直接 update(increment) 効果を生成するため、multiple (accum セル、old = T[]) との組合せは accum×update と同じ型不一致に陥り、要素レベルで definition-error (invalid-range) になる。args は書かない (定義の静的検査)。",
       "expect": {
         "outcome": "definition-error",
         "errors": [{"element": "n", "kind": "invalid-range"}]

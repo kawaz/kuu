@@ -13,7 +13,7 @@
     {
       "id": "identity-and-mapped-co-exposure-collision",
       "why": "`--a v1 --b v2`: identity 解決の a (export_key 未指定→キー \"a\") と mapped の b (export_key:\"a\") が同一入力で両方キー \"a\" へ露出 → 実行時衝突で ambiguous (DESIGN §15.5)。値が \"v1\"/\"v2\" と異なるため2解釈のビューは既に区別できる (collision.json の flag 同士 (両者 true に退化) と異なり本 case は非退化) が、衝突の本質は provenance の曖昧さ (DR-073) であり値の相違で解消されるものではないため claimants は本 case でも同様に添える (collision.json の見せ方を踏襲): 解釈 A はキー a を option a が占有、解釈 B は option b が占有。ambiguous outcome に effects は載らない (ref-or-template.json / collision.json と同型)。",
-      "argv": ["--a", "v1", "--b", "v2"],
+      "args": ["--a", "v1", "--b", "v2"],
       "expect": {
         "outcome": "ambiguous",
         "interpretations": [
@@ -25,7 +25,7 @@
     {
       "id": "identity-alone-no-collision",
       "why": "(対極1) `--a v1` のみ: identity 解決の a だけがキー \"a\" へ実際に露出し、衝突なし (検査は実際の共露出に対して、DESIGN §15.5)。b/p/q は未発火の string (default なし) で absent (DR-051、キー消失)。",
-      "argv": ["--a", "v1"],
+      "args": ["--a", "v1"],
       "expect": {
         "outcome": "success",
         "effects": [
@@ -37,7 +37,7 @@
     {
       "id": "identity-vs-identity-different-names-no-collision",
       "why": "(対極2) `--p vp --q vq`: p・q はともに export_key 未指定 (identity 解決) だが name が異なる (\"p\" と \"q\") ため解決後のキーも異なり衝突しない — success。identity 解決であっても『同じキーに解決される場合のみ』検査対象になり、identity 同士だからといって特別扱いされたり過剰検出されたりしないことの固定 (DESIGN §15.5 の検査基準は解決キー文字列の一致のみ、解決経路の種類は無関係)。a/b は未発火で absent。",
-      "argv": ["--p", "vp", "--q", "vq"],
+      "args": ["--p", "vp", "--q", "vq"],
       "expect": {
         "outcome": "success",
         "effects": [

@@ -12,20 +12,20 @@
   "cases": [
     {
       "id": "bare-operand-without-dd-violated",
-      "why": "`msg` (-- 無し): args は repeat min:0 なので取り分候補が 2 つ生まれ、両方 dead-end になる。(1) args が \"msg\" を raw 消費 (dd/basic.json no-dd-flag-fires と同型の消費経路) して committed → requires のトリガが立つが目的語 `--` は未発火 (not committed) で不充足 — element=args (requires の宣言元=トリガ側)、kind:constraint、argv_pos=1=argv.length (制約は全消費後に評価、DR-047 §4)、reason=requires_violated (DR-066)。(2) args が 0 個消費 → \"msg\" が残留して unexpected_token (argv_pos=0、残留トークンの element は無帰属なので省略)。errors は取り分次元の dead-end を全保持する (DR-053 §2: 最深のみ保持ではない、全取り分の躓きが診断材料)。die の実機構文エラー (`die msg` は `--` が必須) と一致する failure — DR-093 §3 が DR-089 §4 の definition-error を置換したことで表現可能になった。",
-      "argv": ["msg"],
+      "why": "`msg` (-- 無し): args は repeat min:0 なので取り分候補が 2 つ生まれ、両方 dead-end になる。(1) args が \"msg\" を raw 消費 (dd/basic.json no-dd-flag-fires と同型の消費経路) して committed → requires のトリガが立つが目的語 `--` は未発火 (not committed) で不充足 — element=args (requires の宣言元=トリガ側)、kind:constraint、args_pos=1=args.length (制約は全消費後に評価、DR-047 §4)、reason=requires_violated (DR-066)。(2) args が 0 個消費 → \"msg\" が残留して unexpected_token (args_pos=0、残留トークンの element は無帰属なので省略)。errors は取り分次元の dead-end を全保持する (DR-053 §2: 最深のみ保持ではない、全取り分の躓きが診断材料)。die の実機構文エラー (`die msg` は `--` が必須) と一致する failure — DR-093 §3 が DR-089 §4 の definition-error を置換したことで表現可能になった。",
+      "args": ["msg"],
       "expect": {
         "outcome": "failure",
         "errors": [
-          {"argv_pos": 0, "kind": "parse", "reason": "unexpected_token"},
-          {"element": "args", "argv_pos": 1, "kind": "constraint", "reason": "requires_violated"}
+          {"args_pos": 0, "kind": "parse", "reason": "unexpected_token"},
+          {"element": "args", "args_pos": 1, "kind": "constraint", "reason": "requires_violated"}
         ]
       }
     },
     {
       "id": "dd-then-operand-satisfied",
       "why": "`-- msg`: `--` が発火 (committed) してから args が sever 後の raw 消費で \"msg\" を取り committed になる。requires のトリガ (args) が立つ時点で目的語 (`--`) は既に発火済みなので充足 → success。effects は args の cli set のみ (`--` 自身は none で痕跡なし、dd/export-key-inert.json と同型)。",
-      "argv": ["--", "msg"],
+      "args": ["--", "msg"],
       "expect": {
         "outcome": "success",
         "effects": [
@@ -35,9 +35,9 @@
       }
     },
     {
-      "id": "empty-argv-trigger-not-fired",
-      "why": "空 argv: args が repeat min:0 で 1 個も消費せず not committed → requires のトリガ自体が立たず vacuous success (fixtures/constraints-parse/requires.json の requires-vacuous と同型)。`--` も未発火だが目的語充足は問われない。die --help / --version がこの経路 (args 不発、`--` なしでも成功) を通ることの骨格固定 — corpus/real-cli/die.json の help-alone-no-dd / version-alone-no-dd が壊れない前提。",
-      "argv": [],
+      "id": "empty-args-trigger-not-fired",
+      "why": "空 args: args が repeat min:0 で 1 個も消費せず not committed → requires のトリガ自体が立たず vacuous success (fixtures/constraints-parse/requires.json の requires-vacuous と同型)。`--` も未発火だが目的語充足は問われない。die --help / --version がこの経路 (args 不発、`--` なしでも成功) を通ることの骨格固定 — corpus/real-cli/die.json の help-alone-no-dd / version-alone-no-dd が壊れない前提。",
+      "args": [],
       "expect": {
         "outcome": "success",
         "effects": [],

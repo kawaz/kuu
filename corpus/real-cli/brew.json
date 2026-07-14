@@ -38,7 +38,7 @@
     {
       "id": "install-single",
       "why": "`brew install wget` (実機は wget を導入)。install 入場、formulae=[\"wget\"] (repeat min1)。cask/head 未発火 false。long-only オプションと必須 positional。",
-      "argv": ["install", "wget"],
+      "args": ["install", "wget"],
       "expect": {
         "outcome": "success",
         "effects": [
@@ -50,7 +50,7 @@
     {
       "id": "install-cask",
       "why": "`brew install --cask firefox` (実機は cask で firefox 導入)。--cask long flag、formulae=[\"firefox\"]。long flag とサブコマンド positional の組合せ。",
-      "argv": ["install", "--cask", "firefox"],
+      "args": ["install", "--cask", "firefox"],
       "expect": {
         "outcome": "success",
         "effects": [
@@ -63,7 +63,7 @@
     {
       "id": "install-multiple",
       "why": "`brew install git curl jq` (実機は 3 つ導入)。formulae=[git,curl,jq] (repeat が 3 トークン畳み)。可変長必須 positional。",
-      "argv": ["install", "git", "curl", "jq"],
+      "args": ["install", "git", "curl", "jq"],
       "expect": {
         "outcome": "success",
         "effects": [
@@ -77,7 +77,7 @@
     {
       "id": "list-versions",
       "why": "`brew list --versions` (実機は導入済みをバージョン付き一覧)。list 入場、--versions flag。positional なし。cask false。",
-      "argv": ["list", "--versions"],
+      "args": ["list", "--versions"],
       "expect": {
         "outcome": "success",
         "effects": [
@@ -89,7 +89,7 @@
     {
       "id": "info-formula",
       "why": "`brew info git` (実機は git の情報)。info 入場、formula=\"git\" 必須 scalar。単一必須 positional のサブコマンド。cask false。",
-      "argv": ["info", "git"],
+      "args": ["info", "git"],
       "expect": {
         "outcome": "success",
         "effects": [

@@ -10,8 +10,8 @@
   "cases": [
     {
       "id": "default-member-satisfies-group-vacuously",
-      "why": "argv 空、explicit/fallback とも CLI 未発火: explicit は default を持たないため値空間ありでも値の有無判定で未充足 (absent)。fallback は default:\"auto\" を持つため、CLI 未発火でも値源ラダー (DR-031/047) が default 値で充足する — src グループは fallback 1 member の充足だけで成立し required_group_violated は起きない。explicit は未発火・default なしで absent (result にキーなし、DR-051 §1)。fallback は default 値 \"auto\" で present、source=default (CLI 由来ではないため effects には載らない、CONFORMANCE §2)。",
-      "argv": [],
+      "why": "args 空、explicit/fallback とも CLI 未発火: explicit は default を持たないため値空間ありでも値の有無判定で未充足 (absent)。fallback は default:\"auto\" を持つため、CLI 未発火でも値源ラダー (DR-031/047) が default 値で充足する — src グループは fallback 1 member の充足だけで成立し required_group_violated は起きない。explicit は未発火・default なしで absent (result にキーなし、DR-051 §1)。fallback は default 値 \"auto\" で present、source=default (CLI 由来ではないため effects には載らない、CONFORMANCE §2)。",
+      "args": [],
       "expect": {
         "outcome": "success",
         "effects": [],

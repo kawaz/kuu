@@ -1,5 +1,5 @@
 {
-  "why": "accum (multiple append) × value_filters(each、DR-009 段5) の配線輪郭 (PIPELINE §2 段5: `T→T` 要素単位、accumulator (段6) より前 = 各 piece の parse 済み値ごとに適用される)。**1 piece でも filter reject すれば全体 failure** — 「不正 piece を静かに除外して残りを累積する」経路ではないことを固定する (DR-037: reject された枝は静かに脱落するが、本 fixture の定義には代替枝が無いため reject = 即全体 failure に直結する)。reject の argv_pos は piece が由来する値トークンの位置 (CONFORMANCE §2 の piece 帰属規約: piece_filters/type.parse/value_filters は piece 由来の値トークン位置、final_filters/accum_filters (確定後、DR-102) の argv.length 帰属とは別軸)。multiple-parse/append.json (value_filters なし純累積) と対で、value_filters(each) が accumulator に混ざる前の各値を検査する層であることを固定する。multiple は `{accumulator:\"append\", separator:\",\"}` の詳細形 (separator を持たせても複数発火の輪郭は separator-split.json::no-separator-single と同様に不変、かつ 3 つ目の case で『1 トークン内の複数 piece』の輪郭も同じ definition で検証できる)。",
+  "why": "accum (multiple append) × value_filters(each、DR-009 段5) の配線輪郭 (PIPELINE §2 段5: `T→T` 要素単位、accumulator (段6) より前 = 各 piece の parse 済み値ごとに適用される)。**1 piece でも filter reject すれば全体 failure** — 「不正 piece を静かに除外して残りを累積する」経路ではないことを固定する (DR-037: reject された枝は静かに脱落するが、本 fixture の定義には代替枝が無いため reject = 即全体 failure に直結する)。reject の args_pos は piece が由来する値トークンの位置 (CONFORMANCE §2 の piece 帰属規約: piece_filters/type.parse/value_filters は piece 由来の値トークン位置、final_filters/accum_filters (確定後、DR-102) の args.length 帰属とは別軸)。multiple-parse/append.json (value_filters なし純累積) と対で、value_filters(each) が accumulator に混ざる前の各値を検査する層であることを固定する。multiple は `{accumulator:\"append\", separator:\",\"}` の詳細形 (separator を持たせても複数発火の輪郭は separator-split.json::no-separator-single と同様に不変、かつ 3 つ目の case で『1 トークン内の複数 piece』の輪郭も同じ definition で検証できる)。",
   "query": "parse",
   "definition": {
     "options": [
@@ -10,7 +10,7 @@
     {
       "id": "all-pieces-pass-then-accumulate",
       "why": "2 発火とも in_range:1:100 を通過 (5, 7) → value_filters(each) が各 piece を素通しし、append accumulator (段6) が [5,7] に畳む。effects は発火順の set 2 個 (DR-045 効果列 = 適用順)、result {ports:[5,7]}。value_filters(each) が accumulator の手前で単に検証だけ行い値を変えない基準ケース。",
-      "argv": ["--ports", "5", "--ports", "7"],
+      "args": ["--ports", "5", "--ports", "7"],
       "expect": {
         "outcome": "success",
         "effects": [
@@ -22,20 +22,20 @@
     },
     {
       "id": "one-piece-rejects-whole-not-partial-accumulate",
-      "why": "2 発火中 1 個 (500) が in_range:1:100 の上限超過で value_filters(each) reject → **全体 failure**。5 の accept 分だけを累積して [5] を result にする『不正 piece の静かな除外』は起きない — value_filters(each) は accumulator (段6) より前の関門であり、reject が出た時点でその要素全体が解けなかった枝として扱われる (DR-037)。本 definition には代替枝が無いため reject は即 failure に帰結する。argv_pos=3 は 500 の値トークン位置 (0-based: --ports=0, 5=1, --ports=2, 500=3、CONFORMANCE §2 の piece 帰属規約)。reason=too_large (in_range の上限側 reason、DR-095 の descriptor 宣言) / kind=filter。",
-      "argv": ["--ports", "5", "--ports", "500"],
+      "why": "2 発火中 1 個 (500) が in_range:1:100 の上限超過で value_filters(each) reject → **全体 failure**。5 の accept 分だけを累積して [5] を result にする『不正 piece の静かな除外』は起きない — value_filters(each) は accumulator (段6) より前の関門であり、reject が出た時点でその要素全体が解けなかった枝として扱われる (DR-037)。本 definition には代替枝が無いため reject は即 failure に帰結する。args_pos=3 は 500 の値トークン位置 (0-based: --ports=0, 5=1, --ports=2, 500=3、CONFORMANCE §2 の piece 帰属規約)。reason=too_large (in_range の上限側 reason、DR-095 の descriptor 宣言) / kind=filter。",
+      "args": ["--ports", "5", "--ports", "500"],
       "expect": {
         "outcome": "failure",
-        "errors": [{"element": "ports", "argv_pos": 3, "kind": "filter", "reason": "too_large"}]
+        "errors": [{"element": "ports", "args_pos": 3, "kind": "filter", "reason": "too_large"}]
       }
     },
     {
       "id": "separator-piece-rejects-whole",
-      "why": "separator 併用でも value_filters(each) は piece 単位に効く (DR-034 pieceProcessor は separator 分割後の piece が単位、multiple-parse/separator-split.json と同型の分割経路)。1 トークン `5,500` が separator \",\" で [5,500] の 2 piece に割れ、500 が in_range:1:100 を reject → 全体 failure。2 piece とも同一トークン (index 1) 由来なので argv_pos=1 (トークン単位の帰属、CONFORMANCE §2)。all-pieces-pass-then-accumulate / one-piece-rejects-whole が『複数発火 (複数トークン)』の輪郭を担うのに対し、本 case は『1 トークン内の複数 piece』でも同じ reject 規約が働くことを固定する。",
-      "argv": ["--ports", "5,500"],
+      "why": "separator 併用でも value_filters(each) は piece 単位に効く (DR-034 pieceProcessor は separator 分割後の piece が単位、multiple-parse/separator-split.json と同型の分割経路)。1 トークン `5,500` が separator \",\" で [5,500] の 2 piece に割れ、500 が in_range:1:100 を reject → 全体 failure。2 piece とも同一トークン (index 1) 由来なので args_pos=1 (トークン単位の帰属、CONFORMANCE §2)。all-pieces-pass-then-accumulate / one-piece-rejects-whole が『複数発火 (複数トークン)』の輪郭を担うのに対し、本 case は『1 トークン内の複数 piece』でも同じ reject 規約が働くことを固定する。",
+      "args": ["--ports", "5,500"],
       "expect": {
         "outcome": "failure",
-        "errors": [{"element": "ports", "argv_pos": 1, "kind": "filter", "reason": "too_large"}]
+        "errors": [{"element": "ports", "args_pos": 1, "kind": "filter", "reason": "too_large"}]
       }
     }
   ]

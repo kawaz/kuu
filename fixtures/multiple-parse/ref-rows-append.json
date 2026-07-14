@@ -18,7 +18,7 @@
     {
       "id": "two-fires-branch-append",
       "why": "`--hlcolors red --hlcolors 0 128 255`: 1回目の発火は colorname 枝 (1トークン \"red\") を完全消費し row {colorname:\"red\"} を append、2回目は rgb 枝 (3トークン) を完全消費し row {r:0,g:128,b:255} を append。同じ option の2発火が or の異なる枝を選んでも append accumulator は row をそのまま順に積むだけで枝の違いを畳まない (row の形自体は各発火の or 枝が決める、DESIGN §2.4/2.5)。effects は4個の set が消費順のまま並ぶ (colorname → r → g → b)、result はその2 row のリスト。",
-      "argv": ["--hlcolors", "red", "--hlcolors", "0", "128", "255"],
+      "args": ["--hlcolors", "red", "--hlcolors", "0", "128", "255"],
       "expect": {
         "outcome": "success",
         "effects": [
@@ -33,7 +33,7 @@
     {
       "id": "single-fire-list",
       "why": "1回発火でもリスト: append accumulator を持つセルは scalar 版 (append.json の single-fire-list) と同じく、発火が1回でも要素1件の配列になる (scalar への unwrap をしない、リスト形はセルの属性)。row 単体への縮退 (ref-template-no-repeat-degenerate.json) は multiple 無しの場合の話であって、multiple:\"append\" を持つ本 fixture では row がさらに配列へ包まれる。",
-      "argv": ["--hlcolors", "red"],
+      "args": ["--hlcolors", "red"],
       "expect": {
         "outcome": "success",
         "effects": [
@@ -45,7 +45,7 @@
     {
       "id": "zero-fires-empty",
       "why": "0回発火でも `[]` (DR-044 uniform array / DR-051 §2): accumulate セルは fire 0 回でも absent にならず空配列を描く。append.json の zero-fires-empty (scalar) と同じ縮退規則が row 累積でも成り立つことの固定。効果列は空。",
-      "argv": [],
+      "args": [],
       "expect": {
         "outcome": "success",
         "effects": [],

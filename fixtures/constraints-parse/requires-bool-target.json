@@ -40,7 +40,7 @@
     {
       "id": "c-unset-a-excluded",
       "why": "c 未指定 → c=false (暗黙 default) で a 経路の requires 不充足 → 除外、b 1 本で success。",
-      "argv": [
+      "args": [
         "--v"
       ],
       "expect": {
@@ -58,7 +58,7 @@
     {
       "id": "c-cli-both-survive",
       "why": "c を CLI で true に → a 経路も充足、両経路生存で ambiguous (対照: 2 経路の materialize 自体は制約と独立)。",
-      "argv": [
+      "args": [
         "--v",
         "--c"
       ],
@@ -69,7 +69,7 @@
     {
       "id": "c-env-both-survive",
       "why": "env C=true でも充足 (値源不問が本裁定の核 — committed 基準なら env は弾かれていた)。",
-      "argv": [
+      "args": [
         "--v"
       ],
       "env": {

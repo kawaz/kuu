@@ -12,7 +12,7 @@
     {
       "id": "env-split-string-basic",
       "why": "TAGS=\"a,b,c\" は env 席から raw string \"a,b,c\" として供給され、separator \",\" で [\"a\",\"b\",\"c\"] の 3 piece に分割 (separator-split.json の split-three-pieces を env 版に写した基準ケース)。各 piece は string 型なので parse は恒等、append accumulator が [a,b,c] に畳む。ports/trimmed は env 未設定・CLI 未発火・default なしだが、multiple 宣言要素なので DR-044 一様配列規約により absent にならず `[]`。",
-      "argv": [],
+      "args": [],
       "env": {"TAGS": "a,b,c"},
       "expect": {
         "outcome": "success",
@@ -24,7 +24,7 @@
     {
       "id": "env-split-typed-number",
       "why": "PORTS=\"5,7\" は separator \",\" で [\"5\",\"7\"] に分割後、各 piece が number 型 parse を通って 5/7 になる (separator-typed.json の option-separator-number-success を env 版に写す)。型変換は separator の有無・値源の種類と直交する pieceProcessor 段 (DR-034) なので、env 経由でも CLI と同じく piece ごとに parse が効くことを固定する。tags/trimmed は未供給で `[]`。",
-      "argv": [],
+      "args": [],
       "env": {"PORTS": "5,7"},
       "expect": {
         "outcome": "success",
@@ -36,7 +36,7 @@
     {
       "id": "env-split-per-piece-trim",
       "why": "TRIMMED=\" a , b \" は separator \",\" で [\" a \", \" b \"] に分割後、各 piece に piece_filters trim が効いて [\"a\",\"b\"] になる (per-piece-trim.json の per-piece 適用規約を env 値源に拡張)。DR-049 §2 の『pieceProcessor を通る』は piece_filters (段3) も含むので、env 由来の piece 列でも CLI と同一の trim 適用点を通ることを固定する。tags/ports は未供給で `[]`。",
-      "argv": [],
+      "args": [],
       "env": {"TRIMMED": " a , b "},
       "expect": {
         "outcome": "success",
@@ -47,12 +47,12 @@
     },
     {
       "id": "env-split-typed-piece-parse-rejected",
-      "why": "PORTS=\"5,abc\" は separator で [\"5\",\"abc\"] に分割後、2 piece 目 \"abc\" が number parse に失敗 (not_a_number) し全体 failure — separator-typed.json の option-separator-piece-parse-rejected と同型の『1 piece の不成立が全体を落とす』構造を env 値源で固定する。argv=[] のため、この失敗はどの argv トークンにも帰属しない env 由来の失敗であり、CONFORMANCE §2 の規約 (どのトークンにも帰属しない失敗は argv.length を指す) に従って argv_pos=0。",
-      "argv": [],
+      "why": "PORTS=\"5,abc\" は separator で [\"5\",\"abc\"] に分割後、2 piece 目 \"abc\" が number parse に失敗 (not_a_number) し全体 failure — separator-typed.json の option-separator-piece-parse-rejected と同型の『1 piece の不成立が全体を落とす』構造を env 値源で固定する。args=[] のため、この失敗はどの args トークンにも帰属しない env 由来の失敗であり、CONFORMANCE §2 の規約 (どのトークンにも帰属しない失敗は args.length を指す) に従って args_pos=0。",
+      "args": [],
       "env": {"PORTS": "5,abc"},
       "expect": {
         "outcome": "failure",
-        "errors": [{"element": "ports", "argv_pos": 0, "kind": "parse", "reason": "not_a_number"}]
+        "errors": [{"element": "ports", "args_pos": 0, "kind": "parse", "reason": "not_a_number"}]
       }
     }
   ]

@@ -1,5 +1,5 @@
 {
-  "why": "2 つの独立した accumulator が 1 つの result に共存する (DR-034/043): multiple option (tag, append accumulator) と repeat positional (src, flatten accumulator) が同一 result 内でそれぞれ別リストに畳まれる。両者は別軸 — multiple は『複数発火の値折り』(DR-034)、repeat は『構造反復』(DR-043) — で互いに干渉しない。greedy な --tag トリガは positional の消費の合間に割り込める (DR-041 positional 面は多孔質)、効果列は argv の消費順で tag と src の set が交錯する。result は 2 本の独立リスト。effects は cli 効果のみ・配列順 = 適用順。蒸留元 slice phase7 (multiple × repeat compose)。",
+  "why": "2 つの独立した accumulator が 1 つの result に共存する (DR-034/043): multiple option (tag, append accumulator) と repeat positional (src, flatten accumulator) が同一 result 内でそれぞれ別リストに畳まれる。両者は別軸 — multiple は『複数発火の値折り』(DR-034)、repeat は『構造反復』(DR-043) — で互いに干渉しない。greedy な --tag トリガは positional の消費の合間に割り込める (DR-041 positional 面は多孔質)、効果列は args の消費順で tag と src の set が交錯する。result は 2 本の独立リスト。effects は cli 効果のみ・配列順 = 適用順。蒸留元 slice phase7 (multiple × repeat compose)。",
   "query": "parse",
   "definition": {
     "options": [
@@ -13,7 +13,7 @@
     {
       "id": "multiple-and-repeat",
       "why": "`--tag x a --tag y b`: tag が x,y で 2 発火 (append→[x,y])、src が a,b を反復消費 (repeat flatten→[a,b])。--tag は greedy トリガとして positional 消費 (a) の後にも割り込んで発火する (多孔質 positional 面、DR-041 §4)。効果列は消費順 tag x → src a → tag y → src b。2 accumulator が独立に fold され result は {tag:[x,y],src:[a,b]}。",
-      "argv": ["--tag", "x", "a", "--tag", "y", "b"],
+      "args": ["--tag", "x", "a", "--tag", "y", "b"],
       "expect": {
         "outcome": "success",
         "effects": [

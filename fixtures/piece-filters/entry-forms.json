@@ -10,7 +10,7 @@
     {
       "id": "long-space-trimmed",
       "why": "long-space 形: `--name` が次トークン ` x ` を値スロットで借用 (DR-041 §3 外側借用)、piece_filters trim が \" x \" → \"x\" に整形してから string parse (恒等) → result name=\"x\"。",
-      "argv": ["--name", " x "],
+      "args": ["--name", " x "],
       "expect": {
         "outcome": "success",
         "effects": [
@@ -22,7 +22,7 @@
     {
       "id": "eq-split-trimmed",
       "why": "eq-split 形: eq_split matcher が単一トークン `--name= x ` を `--name` と ` x ` に内部分割 (DR-041 §3 内部断片分割)、piece_filters trim が ` x ` → \"x\" に整形 → 同じ name=\"x\"。long-space と同一セル・同一結果。",
-      "argv": ["--name= x "],
+      "args": ["--name= x "],
       "expect": {
         "outcome": "success",
         "effects": [
@@ -34,7 +34,7 @@
     {
       "id": "short-attach-trimmed",
       "why": "short-attach 形: short_combine matcher が `-n x ` を `n` の値付着として読み ` x ` を値に (DR-041 §3 値付着)、piece_filters trim が ` x ` → \"x\" に整形 → 同じ name=\"x\"。",
-      "argv": ["-n x "],
+      "args": ["-n x "],
       "expect": {
         "outcome": "success",
         "effects": [
@@ -46,7 +46,7 @@
     {
       "id": "short-next-token-trimmed",
       "why": "short-next-token 形: `-n` が値を付着させず次トークン ` x ` を借用 (DR-041 §3 外側借用)、piece_filters trim が \" x \" → \"x\" に整形 → 同じ name=\"x\"。4 形全てで piece_filters が同一に効くことの最後の一致点。",
-      "argv": ["-n", " x "],
+      "args": ["-n", " x "],
       "expect": {
         "outcome": "success",
         "effects": [

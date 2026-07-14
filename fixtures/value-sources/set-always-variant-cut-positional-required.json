@@ -12,12 +12,12 @@
   "cases": [
     {
       "id": "required-positional-starves-under-cut",
-      "why": "`--color always`: `:set` 読みは \"always\" を values (or) 照合込みで消費**できる**ため、DR-086 §1 の cut により `:set` 読みが直接採用される — 『`:set:always` (0引数) + positional が \"always\" を消費する』完全経路が存在しても、cut は後続文法の充足可能性を理由に引数なし枝へ再解釈しない (DR-086 §2 第1 bullet)。結果 `:set` が2トークンとも消費し、必須 positional `extra` は供給トークンを失う。plain positional の未充足は absent にならず missing_operand の failure に倒れる (fixtures/absent/required-positional.json §2c の帰結)。argv_pos はトークン枯渇位置 = argv.length = 2 (同 fixture の規約)。kind=parse / element=extra / reason=missing_operand で語彙を正確に踏襲する。",
-      "argv": ["--color", "always"],
+      "why": "`--color always`: `:set` 読みは \"always\" を values (or) 照合込みで消費**できる**ため、DR-086 §1 の cut により `:set` 読みが直接採用される — 『`:set:always` (0引数) + positional が \"always\" を消費する』完全経路が存在しても、cut は後続文法の充足可能性を理由に引数なし枝へ再解釈しない (DR-086 §2 第1 bullet)。結果 `:set` が2トークンとも消費し、必須 positional `extra` は供給トークンを失う。plain positional の未充足は absent にならず missing_operand の failure に倒れる (fixtures/absent/required-positional.json §2c の帰結)。args_pos はトークン枯渇位置 = args.length = 2 (同 fixture の規約)。kind=parse / element=extra / reason=missing_operand で語彙を正確に踏襲する。",
+      "args": ["--color", "always"],
       "expect": {
         "outcome": "failure",
         "errors": [
-          {"element": "extra", "argv_pos": 2, "kind": "parse", "reason": "missing_operand"}
+          {"element": "extra", "args_pos": 2, "kind": "parse", "reason": "missing_operand"}
         ]
       }
     }

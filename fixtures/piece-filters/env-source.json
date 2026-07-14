@@ -11,7 +11,7 @@
     {
       "id": "env-trimmed-then-parsed",
       "why": "RESCUED=\" 8080 \" は env 席から string \" 8080 \" として供給され、piece_filters trim → \"8080\" → number parse 成功。result rescued=8080、sources rescued=env (DR-049 §2 の CLI と同一パイプライン主張の実証)。",
-      "argv": [],
+      "args": [],
       "env": {"RESCUED": " 8080 "},
       "expect": {
         "outcome": "success",
@@ -22,12 +22,12 @@
     },
     {
       "id": "env-untrimmed-parse-rejected",
-      "why": "BARE=\" 8080 \" は piece_filters を持たない bare 要素に供給され、空白付きのまま number parse に渡って not_a_number で reject (DR-074 §1 canonical 字句)。env-trimmed-then-parsed との対比で、env 値であっても piece_filters の有無が parse 結果を分けることを固定する。argv_pos=0 は argv.length (argv=[] のため 0): env 由来の失敗はどの argv トークンにも帰属しないので、CONFORMANCE §2 の「どのトークンにも帰属しない失敗は argv.length を指す」規約 (env / config 由来の値の失敗を含む) に従う。",
-      "argv": [],
+      "why": "BARE=\" 8080 \" は piece_filters を持たない bare 要素に供給され、空白付きのまま number parse に渡って not_a_number で reject (DR-074 §1 canonical 字句)。env-trimmed-then-parsed との対比で、env 値であっても piece_filters の有無が parse 結果を分けることを固定する。args_pos=0 は args.length (args=[] のため 0): env 由来の失敗はどの args トークンにも帰属しないので、CONFORMANCE §2 の「どのトークンにも帰属しない失敗は args.length を指す」規約 (env / config 由来の値の失敗を含む) に従う。",
+      "args": [],
       "env": {"BARE": " 8080 "},
       "expect": {
         "outcome": "failure",
-        "errors": [{"element": "bare", "argv_pos": 0, "kind": "parse", "reason": "not_a_number"}]
+        "errors": [{"element": "bare", "args_pos": 0, "kind": "parse", "reason": "not_a_number"}]
       }
     }
   ]

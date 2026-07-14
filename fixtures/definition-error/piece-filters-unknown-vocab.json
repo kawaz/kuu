@@ -1,5 +1,5 @@
 {
-  "why": "filter 名 (piece_filters に指定される string 域 filter registry String→String のエントリ名) が filters registry の descriptor `owns` 集合 (DR-061 / DR-094) に登録されていない場合は definition-error (kind=unknown-vocab、DR-101)。value_filters と piece_filters は DESIGN §8.3 で同族属性として扱われる (pieceProcessor 内の 2 座席 = 分割 piece の string 域 / parse 後 T 域) — 判定入力 (綴り + owns 集合) が同一なので value-filters-unknown-vocab.json と対称に unknown-vocab で reject する。3 属性を 1 属性だけに絞る非対称は DR-034 の 3 属性統合と相容れない (DR-101 §3 の 3 属性一括適用)。argv は書かない (DR-082 §1、definition の静的検査であり実行しない)。",
+  "why": "filter 名 (piece_filters に指定される string 域 filter registry String→String のエントリ名) が filters registry の descriptor `owns` 集合 (DR-061 / DR-094) に登録されていない場合は definition-error (kind=unknown-vocab、DR-101)。value_filters と piece_filters は DESIGN §8.3 で同族属性として扱われる (pieceProcessor 内の 2 座席 = 分割 piece の string 域 / parse 後 T 域) — 判定入力 (綴り + owns 集合) が同一なので value-filters-unknown-vocab.json と対称に unknown-vocab で reject する。3 属性を 1 属性だけに絞る非対称は DR-034 の 3 属性統合と相容れない (DR-101 §3 の 3 属性一括適用)。args は書かない (DR-082 §1、definition の静的検査であり実行しない)。",
   "query": "definition_error",
   "definition": {
     "options": [

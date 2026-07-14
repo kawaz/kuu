@@ -12,7 +12,7 @@
     {
       "id": "null-passes-through",
       "why": "config {port:null, name:null} → null は供給なし。port は config 席を素通りして default 9 に落ち (source:default)、name は default なしなので absent (キー消失)。null がラダーを止めず通過することの固定。",
-      "argv": [],
+      "args": [],
       "config": {"port": null, "name": null},
       "expect": {
         "outcome": "success",
@@ -24,7 +24,7 @@
     {
       "id": "real-value-supplied",
       "why": "対照: 実値は config から正常供給。config {port:3000} → port=3000@config。name は未供給 (キー無し) で absent。null (case 1) と実値の差 = 供給の有無。",
-      "argv": [],
+      "args": [],
       "config": {"port": 3000},
       "expect": {
         "outcome": "success",

@@ -19,7 +19,7 @@
     {
       "id": "summarize-human-cluster",
       "why": "`du -sh dir` — 連結 short (実機はディレクトリ合計を人間可読で)。short_combine で -s/-h 分解。-s は walk グループ、-h は unit グループの別 member なので共存 OK (異なるグループ)。2 排他グループ独立のプローブの核。effects は cluster 順 summarize→human→files。",
-      "argv": ["-sh", "dir"],
+      "args": ["-sh", "dir"],
       "expect": {
         "outcome": "success",
         "effects": [
@@ -33,7 +33,7 @@
     {
       "id": "depth-value",
       "why": "`du -d 1 dir` (実機は深さ 1 まで集計)。-d が int 1 をバインド (walk グループの値付き member)。unit グループは未指定で 3 flag とも false、all/summarize も false。値付き排他 member のプローブ。",
-      "argv": ["-d", "1", "dir"],
+      "args": ["-d", "1", "dir"],
       "expect": {
         "outcome": "success",
         "effects": [
@@ -45,12 +45,12 @@
     },
     {
       "id": "all-and-summarize-conflict",
-      "why": "`du -a -s dir` は実機エラー (全表示と合計のみは両立しない)。all/summarize とも walk グループで committed → exclusive_group_violated。element=walk、argv_pos=argv.length=3。同一グループ内の排他をプローブ (前ケースの別グループ共存と対)。",
-      "argv": ["-a", "-s", "dir"],
+      "why": "`du -a -s dir` は実機エラー (全表示と合計のみは両立しない)。all/summarize とも walk グループで committed → exclusive_group_violated。element=walk、args_pos=args.length=3。同一グループ内の排他をプローブ (前ケースの別グループ共存と対)。",
+      "args": ["-a", "-s", "dir"],
       "expect": {
         "outcome": "failure",
         "errors": [
-          {"element": "walk", "argv_pos": 3, "kind": "constraint", "reason": "exclusive_group_violated"}
+          {"element": "walk", "args_pos": 3, "kind": "constraint", "reason": "exclusive_group_violated"}
         ]
       }
     }

@@ -16,7 +16,7 @@
     {
       "id": "lines-with-file",
       "why": "`tail -n 20 log.txt` (実機は末尾 20 行)。-n が int 20、log.txt が files。follow/reverse 未発火 → false。lines/bytes は default なし値オプションなので bytes は absent、lines は set 済。",
-      "argv": ["-n", "20", "log.txt"],
+      "args": ["-n", "20", "log.txt"],
       "expect": {
         "outcome": "success",
         "effects": [
@@ -29,7 +29,7 @@
     {
       "id": "follow-mode",
       "why": "`tail -f log.txt` (実機は追尾)。-f flag 発火 true。量オプション未指定なので lines/bytes とも absent。follow 軸は amount 排他とは独立なので単独で成立。",
-      "argv": ["-f", "log.txt"],
+      "args": ["-f", "log.txt"],
       "expect": {
         "outcome": "success",
         "effects": [
@@ -42,7 +42,7 @@
     {
       "id": "lines-and-follow-coexist",
       "why": "`tail -n 5 -f` (実機は末尾 5 行から追尾)。lines(amount 軸) と follow(独立軸) は別グループなので共存 OK。exclusive_group は同一グループ member 間だけに効くことを固定 — follow は amount member でないので違反しない。files 0 個 → `[]`。",
-      "argv": ["-n", "5", "-f"],
+      "args": ["-n", "5", "-f"],
       "expect": {
         "outcome": "success",
         "effects": [

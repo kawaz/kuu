@@ -18,7 +18,7 @@
     {
       "id": "bare-touch-file",
       "why": "`touch file.txt` (実機は無ければ作成、あれば時刻更新)。flag/値オプション全て未指定 → flag は false、値オプションは absent。files に file.txt 1 個。最も典型のケース。",
-      "argv": ["file.txt"],
+      "args": ["file.txt"],
       "expect": {
         "outcome": "success",
         "effects": [
@@ -30,7 +30,7 @@
     {
       "id": "no-create-flag",
       "why": "`touch -c missing.txt` (実機は存在しなければ何もしない)。-c flag 発火 true、files に missing.txt。値オプションは absent。",
-      "argv": ["-c", "missing.txt"],
+      "args": ["-c", "missing.txt"],
       "expect": {
         "outcome": "success",
         "effects": [
@@ -43,7 +43,7 @@
     {
       "id": "reference-file",
       "why": "`touch -r ref.txt target.txt` (実機は ref の時刻を target にコピー)。-r が参照ファイル ref.txt を値バインド、target.txt が files に落ちる。-r の値と positional の区別 (値オプションは次トークンを消費、残りが positional) を固定。",
-      "argv": ["-r", "ref.txt", "target.txt"],
+      "args": ["-r", "ref.txt", "target.txt"],
       "expect": {
         "outcome": "success",
         "effects": [

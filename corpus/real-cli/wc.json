@@ -18,7 +18,7 @@
     {
       "id": "single-flag-one-file",
       "why": "`wc -l file.txt` (実機は行数のみ)。-l 発火 true、file.txt が files に落ちる。未発火 flag は preset default false で result に present (DR-051 §2)。files は repeat 配列。",
-      "argv": ["-l", "file.txt"],
+      "args": ["-l", "file.txt"],
       "expect": {
         "outcome": "success",
         "effects": [
@@ -31,7 +31,7 @@
     {
       "id": "clustered-shorts",
       "why": "`wc -lw a.txt` — 連結 short (実機は行数+単語数)。config.short_combine により `-lw` が `-l`/`-w` の 2 読みに分解 (§15.8)。effects は cluster 内の消費順で lines→words、その後 files。cluster 分解がプローブの核。",
-      "argv": ["-lw", "a.txt"],
+      "args": ["-lw", "a.txt"],
       "expect": {
         "outcome": "success",
         "effects": [
@@ -44,8 +44,8 @@
     },
     {
       "id": "no-args-stdin",
-      "why": "`wc` 単体 (実機は stdin を読む)。flag 全て未発火 → 全 false、files 0 個 → `[]`。stdin 読込は kuu の射程外 (argv のみ)。全 flag が default false で present になることを固定。",
-      "argv": [],
+      "why": "`wc` 単体 (実機は stdin を読む)。flag 全て未発火 → 全 false、files 0 個 → `[]`。stdin 読込は kuu の射程外 (args のみ)。全 flag が default false で present になることを固定。",
+      "args": [],
       "expect": {
         "outcome": "success",
         "effects": [],

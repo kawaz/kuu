@@ -10,7 +10,7 @@
     {
       "id": "main-entry-fires",
       "why": "主入口が生成した `--v` トリガが発火 → 値セル v へ set(true)。name (v) から綴りを導出した long installer の主入口規則 (LOWERING §B.1) が parse で観測できることを固定。effects は cli 由来 1 本、result も同値。",
-      "argv": ["--v"],
+      "args": ["--v"],
       "expect": {
         "outcome": "success",
         "effects": [
@@ -22,7 +22,7 @@
     {
       "id": "unfired-default",
       "why": "未発火: flag の preset default false が result に present で現れる (LOWERING §A.5 / DR-051 §2、absent ではない)。cli 効果が無いので effects は空 (CONFORMANCE §2: ラダー/preset 充填は result 側検証)。主入口ありでも発火しなければ default に落ちる対照。",
-      "argv": [],
+      "args": [],
       "expect": {
         "outcome": "success",
         "effects": [],

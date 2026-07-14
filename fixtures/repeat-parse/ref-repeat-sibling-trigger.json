@@ -19,7 +19,7 @@
     {
       "id": "sibling-option-not-swallowed-after-repeats",
       "why": "`--hlcolors red blue --other x`: hlcolors が colorname 枝を 2 回反復消費した ([red,blue]) 直後に --other が来る。反復継続の判定で colorname (string leaf) は --other を raw 消費できず (先食い、DR-041 §4)、hlcolors の unfold はここで停止し (min:0 なので 2 反復で停止しても合法)、--other が独立した option 発火として解決される。effects は消費順 colorname(red) → colorname(blue) → other(x)。result `{hlcolors:[{colorname:red},{colorname:blue}], other:x}`。",
-      "argv": ["--hlcolors", "red", "blue", "--other", "x"],
+      "args": ["--hlcolors", "red", "blue", "--other", "x"],
       "expect": {
         "outcome": "success",
         "effects": [
@@ -33,7 +33,7 @@
     {
       "id": "sibling-option-immediately-after-zero-repeats",
       "why": "`--hlcolors --other x`: --hlcolors 発火の直後、repeat (min:0) の 1 回目の unfold を試みる前に次のトークンが --other (sibling option のトリガ) である。colorname 枝は --other を raw 消費できず (先食い)、hlcolors の unfold は 0 回で止まる — min:0 なので 0 反復でも合法 (DR-043 の optional 糖衣と同じ閉包規則の下限)。--hlcolors 自体のトリガ発火はあったが、値を運ぶ colorname への set 効果は 1 度も生じないので effects は other の 1 個のみ。result `{hlcolors:[], other:x}` — hlcolors は repeat 宣言要素なので 0 回でも absent にならず `[]` (DR-044/051 の一様配列規約)。min:0 の境界と sibling trigger 境界が同時に成立することを固定する。",
-      "argv": ["--hlcolors", "--other", "x"],
+      "args": ["--hlcolors", "--other", "x"],
       "expect": {
         "outcome": "success",
         "effects": [
@@ -45,7 +45,7 @@
     {
       "id": "unfired-repeat-option-uniform-empty",
       "why": "`--other x` (--hlcolors 未発火): hlcolors のトリガ自体が一度も発火しない場合でも、repeat 属性を持つ option は反復系 (DR-051 §2b: repeat / multiple / optional 糖衣は 0 回発火でも `[]` が出る、DESIGN §2.6) なので absent にならず一様形 `[]` になる。sibling-option-immediately-after-zero-repeats (--hlcolors 自体は発火し、その後の unfold が 0 回) との対比点: 『発火 0 反復』と『トリガ自体の未発火』は経路が違う (前者は --hlcolors の exact 衛星が発火してから unfold が即停止、後者は --hlcolors の exact 衛星自体が一度も発火しない) が、どちらも同じ一様形 `[]` に収束する — 反復系の absent 禁止規約がトリガ発火の有無に関わらず一貫することを固定する。effects は other の 1 個のみ (hlcolors 側は colorname への set 効果も、トリガ自体の効果も生じない)。",
-      "argv": ["--other", "x"],
+      "args": ["--other", "x"],
       "expect": {
         "outcome": "success",
         "effects": [

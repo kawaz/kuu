@@ -19,7 +19,7 @@
     {
       "id": "fold-overrides-default",
       "why": "cli/env 無し、stdout の tty_provider が `{terminal: false, cygwin: false}` を供給 (両方 false → fold = false || (true && false) = false)。宣言 default (true) と異なる値になることで、observation が宣言 default より優先されることを値そのもので示す (旧 tty-ladder.json の tty-fires-alone + tty-over-default を 1 case に統合 — preset 型モデルでは『観測が効く』こと自体に『観測が default に優先する』が構造的に含意されるため、値が同じか異なるかで別 case に分ける必要が薄い)。stderr 未供給なので cygwin_dial_on/off は absent (DR-051、宣言 default なし)。",
-      "argv": [],
+      "args": [],
       "tty": {"stdout": {"terminal": false, "cygwin": false}},
       "expect": {
         "outcome": "success",
@@ -31,7 +31,7 @@
     {
       "id": "null-observation-uses-default",
       "why": "cli/env 無し、tty_provider が stdout について何も供給しない (`tty` フィールド自体を省略 = 提供なし、CONFORMANCE §1 の runner 契約)。fold の入力そのものが null なので `default` 席は宣言 default (true) へフォールバックする — fold-overrides-default (前 case) との対で『観測なし = 宣言 default』『観測あり = 観測優先』の分岐点を固定する。",
-      "argv": [],
+      "args": [],
       "expect": {
         "outcome": "success",
         "effects": [],
@@ -42,7 +42,7 @@
     {
       "id": "cli-beats-observation",
       "why": "cli 明示 `--use-color false` があり、stdout の tty_provider は `{terminal: true, cygwin: false}` (fold=true、cli と逆の値) を供給。ラダー最上席の cli が勝つ — fold 結果 (true) は無視され use_color=false になる。effects に cli set が載り、result/sources は cli 由来 (DR-099 でも DR-031 のラダー最上位は不変)。",
-      "argv": ["--use-color", "false"],
+      "args": ["--use-color", "false"],
       "tty": {"stdout": {"terminal": true, "cygwin": false}},
       "expect": {
         "outcome": "success",
@@ -56,7 +56,7 @@
     {
       "id": "env-beats-observation",
       "why": "cli 無し、env CLICOLOR_FORCE=false、stdout の tty_provider は `{terminal: true, cygwin: false}` (fold=true、env と逆の値) を供給。env がラダーで tty 型の default 解決より上位の席なので env が勝つ — 実世界の CLICOLOR_FORCE (env が tty 自動検出を上書きする慣行) そのものの構図 (DR-098 §5 の根拠を DR-099 でも継承)。fold 結果は無視され use_color=false。effects は空 (env 由来は完走後確定)。",
-      "argv": [],
+      "args": [],
       "env": {"CLICOLOR_FORCE": "false"},
       "tty": {"stdout": {"terminal": true, "cygwin": false}},
       "expect": {
@@ -69,7 +69,7 @@
     {
       "id": "cygwin-dial-pair",
       "why": "同一の生観測 `{terminal: false, cygwin: true}` を stderr へ供給し、`tty_cygwin` config だけが異なる 2 要素 (cygwin_dial_on = 既定 true、cygwin_dial_off = 明示 false) を対で発火させる: cygwin_dial_on は fold = false || (true && true) = true、cygwin_dial_off は fold = false || (false && true) = false — 同じ raw observation から config だけで結果が分岐することを固定する (DR-099 §3 の `tty_cygwin` ダイヤル、既定 true は kawaz/die DR-0008 の Cygwin pty=TTY 裁定に整合)。両者とも observation 自体は供給されているので source は `tty` (値が false でも `default` にはフォールバックしない — null と false は別、DR-099 §2)。stdout 未供給の use_color は宣言 default (true) にフォールバックし source=default (null-observation-uses-default と同じ帰結)。",
-      "argv": [],
+      "args": [],
       "tty": {"stderr": {"terminal": false, "cygwin": true}},
       "expect": {
         "outcome": "success",

@@ -61,7 +61,7 @@
     {
       "id": "attach-required-accepts-attach",
       "why": "`-q80` (attach_only の scope 既定上書き、gcc `-O2` 型の最小実演): short_attached_value:\"require\" は付着形を受理する — DR-096 §2 の許可範囲。q への値付着 \"80\" が確定する。",
-      "argv": [
+      "args": [
         "-q80"
       ],
       "expect": {
@@ -85,7 +85,7 @@
     {
       "id": "attach-required-rejects-space-falls-to-positional",
       "why": "`-q 80` (対極): short_attached_value:\"require\" は space 分割形の読みを生成しない。`-q` 単独トークンは残り文字ゼロで付着読み (1 文字以上要求) も持たず、space 形読みも消えているため完全経路ゼロ — DR-041 §5 (prefix ガード非採用) により未定義扱いと同じ経路をたどり、寛容な string positional `sources` へ raw 消費される。後続の `80` も同様に q の消費先を失い別の positional トークンとして落ちる。attach_only は発火せず default のまま。",
-      "argv": [
+      "args": [
         "-q",
         "80"
       ],
@@ -118,7 +118,7 @@
     {
       "id": "space-denied-accepts-space",
       "why": "`-r 80` (space_only、attach を禁じた対称キー): short_attached_value:\"deny\" は付着読みだけを禁じ space 分割形は生きたまま — DR-041 §4 の値スロット一般規則の space 形経路 (grep.json `-A 3` case と同型) がそのまま適用される。",
-      "argv": [
+      "args": [
         "-r",
         "80"
       ],
@@ -143,7 +143,7 @@
     {
       "id": "attach-denied-falls-to-positional",
       "why": "`-r80` (対極): short_attached_value:\"deny\" は付着読みの枝を生成しない。`-r80` という 1 トークンに一致する定義済み entry の読みが無くなり (space 形は次トークンを要求する読みなので同一トークン内では成立しない)、DR-041 §5 により未定義相当として寛容な string positional に raw 消費される。space_only は発火せず default のまま。",
-      "argv": [
+      "args": [
         "-r80"
       ],
       "expect": {
@@ -167,8 +167,8 @@
     },
     {
       "id": "cluster-tail-attach-require-fires",
-      "why": "`-abq80` (クラスタ内付着 × require): a/b が短フラグとしてクラスタの先頭 2 文字を消費し、続く q が \"80\" を付着で取る。require が殺すのは space 形の読みだけで、付着読みは単独発火・クラスタ内を問わず位置条件なしで生きる (DR-096 §3.1)。この argv では q の付着分割が \"80\" 丸取りの 1 通りしかない (\"8\" で切ると残り \"0\" がどの entry でもなく読みが死ぬ) ため一意に success。",
-      "argv": [
+      "why": "`-abq80` (クラスタ内付着 × require): a/b が短フラグとしてクラスタの先頭 2 文字を消費し、続く q が \"80\" を付着で取る。require が殺すのは space 形の読みだけで、付着読みは単独発火・クラスタ内を問わず位置条件なしで生きる (DR-096 §3.1)。この args では q の付着分割が \"80\" 丸取りの 1 通りしかない (\"8\" で切ると残り \"0\" がどの entry でもなく読みが死ぬ) ため一意に success。",
+      "args": [
         "-abq80"
       ],
       "expect": {
@@ -204,7 +204,7 @@
     {
       "id": "cluster-tail-attach-deny-blocked",
       "why": "`-abr80` (対極 — deny): r への付着読みが short_attached_value:\"deny\" により位置を問わず生成されない (DR-096 §3.1)。short の matcher 読みは 1 トークンを完全消費するものだけが Accept される (DR-041) ため、a/b を読んだ後 \"r80\" 部分で継続できる読みが 1 本も無く、このトークン全体の完全経路がゼロになる — a/b の部分的な発火だけが生き残ることはない (付着以外に r80 を読み切る手が無いため、付着の禁止がクラスタ発火全体を巻き込む)。トークン全体が未消費のまま素通しで positional に落ち、a/b/space_only は全て default のまま。",
-      "argv": [
+      "args": [
         "-abr80"
       ],
       "expect": {
@@ -229,7 +229,7 @@
     {
       "id": "cluster-tail-space-allow-borrows",
       "why": "`-abp 80` (DR-096 §3.1 の space 借用 — allow 側 baseline): クラスタ末尾の値スロット entry p は単独発火と同じ値スロット一般規則 (DR-041 §4) に従い、付着だけでなく次トークンからの space 分割形供給も受けられる (getopt 系の実世界慣行 `-abo arg` と同型)。scope 既定 \"allow\" では借用が生きて p=\"80\"。「クラスタ末尾でも値取得の 2 形モデルが単独発火と同一に適用される」こと自体が pin 対象 — 従来どの fixture にも固定されていなかった暗黙規則の明文化 (DR-096 §3.1 で明文化)。",
-      "argv": [
+      "args": [
         "-abp",
         "80"
       ],
@@ -266,7 +266,7 @@
     {
       "id": "cluster-tail-space-require-blocked",
       "why": "`-abq 80` (対極 — require 側): short_attached_value:\"require\" はクラスタ末尾でも space 借用を禁じる (付着のみが値経路)。q は残り文字ゼロで付着読みを持たず、space 形読みも require で消えているため、a/b を読んだ後に q が値を取る継続読みが 1 本も無い。short の matcher 読みは 1 トークン完全消費のみ Accept (DR-041) なのでクラスタ発火全体が巻き込まれ、トークン `-abq` は素通しで positional に落ち、後続の `80` も消費先を失って別の positional トークンとして落ちる。a/b/attach_only は全て default のまま。",
-      "argv": [
+      "args": [
         "-abq",
         "80"
       ],
@@ -299,7 +299,7 @@
     {
       "id": "cluster-tail-space-deny-borrows",
       "why": "`-abr 80` (deny 側): short_attached_value:\"deny\" が禁じるのは付着形のみで、space 分割形は生きる — クラスタ末尾の r が次トークン `80` を space 形で取り r=\"80\"。単一トークン `-abr80` (cluster-tail-attach-deny-blocked case) との対比で「deny はクラスタ発火そのものを妨げず、付着という値経路だけを消す」ことを固定する。",
-      "argv": [
+      "args": [
         "-abr",
         "80"
       ],
@@ -336,7 +336,7 @@
     {
       "id": "cluster-attach-splits-under-require-ambiguous",
       "why": "`-q80ab` (require × 付着分割の列挙): require は付着読みを一切制限しない — 分割点の列挙 (DR-041 §3) もそのまま生きる。string 値はどの部分文字列も受理するため (A) q=\"80ab\" 丸取り、(B) q=\"80a\" + 末尾 b flag、(C) q=\"80\" + a/b flag クラスタ継続、の 3 読みが全消費で完成し ambiguous (cluster-split-string.json の -sax と同じ DR-038/DR-053 の帰結)。「require はクラスタ内の位置や分割を条件にしない」(DR-096 §3.1、kawaz 裁定 2026-07-12) の直接固定。q=\"8\" で切る読みは残り \"0ab\" の先頭 0 がどの entry でもないため完成しない。",
-      "argv": [
+      "args": [
         "-q80ab"
       ],
       "expect": {
@@ -363,7 +363,7 @@
     {
       "id": "last-only-full-tail-single-reading",
       "why": "`-g80ab` (last_only の本体): gnu_style は last_only なので付着読みが「残り全部を丸取りする形」1 通りに制限され、g=\"80ab\" の単読みで success。allow なら -q80ab (上 case) と同様に 3 分割の ambiguous になる入力が、last_only では GNU getopt 慣習 (値オプションに達したら以降の文字列全部がその値) どおり一意に定まる — 分割 ambiguity の抑制こそがこの値の存在理由 (DR-096 §2、kawaz 裁定 2026-07-12)。",
-      "argv": [
+      "args": [
         "-g80ab"
       ],
       "expect": {
@@ -387,7 +387,7 @@
     {
       "id": "last-only-cluster-then-full-tail",
       "why": "`-abg80` (クラスタ + last_only): a/b flag がクラスタを構成し、g に達した時点で残り \"80\" を丸取り。GNU getopt の `tar -xzffile` 型 (クラスタ走査が値オプションに達したら以降全部がその値) の直接再現。丸取り形はクラスタ読みでも 1 通りなので一意に success。",
-      "argv": [
+      "args": [
         "-abg80"
       ],
       "expect": {
@@ -423,7 +423,7 @@
     {
       "id": "last-only-space-form-lives",
       "why": "`-g 80` (last_only × space 形): last_only が制限するのは付着読みの分割列挙だけで、space 形は allow と同じく生きる (DR-096 §2 — GNU getopt も `-o value` の別引数供給を受ける)。g=\"80\"。",
-      "argv": [
+      "args": [
         "-g",
         "80"
       ],
@@ -448,7 +448,7 @@
     {
       "id": "unrelated-flag-cluster-unaffected",
       "why": "`-ab` (対照): a/b は値スロットを持たない flag で short_attached_value の管掌対象外 (DR-096 §3.2、値なし要素へは inert)。q/r への要素単位 override とは無関係に、scope 既定 short_combine:true のクラスタ読みがそのまま生きていることを固定する。",
-      "argv": [
+      "args": [
         "-ab"
       ],
       "expect": {

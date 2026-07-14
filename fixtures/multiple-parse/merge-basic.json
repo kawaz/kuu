@@ -10,7 +10,7 @@
     {
       "id": "no-marker-overwrites-cell",
       "why": "`--fields a,a,b,a,c`: 5 piece 全部が add (marker 無し) なので cell 上書き (old 不参照)。effects は 5 個の set。result `{fields:[a,a,b,a,c]}`。DR-080 §4 例1。",
-      "argv": ["--fields", "a,a,b,a,c"],
+      "args": ["--fields", "a,a,b,a,c"],
       "expect": {
         "outcome": "success",
         "effects": [
@@ -26,7 +26,7 @@
     {
       "id": "bare-splice-is-identity",
       "why": "`--fields a,a,b,a,c --fields @`: 1回目は例1と同じ上書きで [a,a,b,a,c]。2回目は piece=[@] のみ (marker あり = merge モード)。old = 直前発火の [a,a,b,a,c]、`@` がそのまま splice するので恒等。effects は1回目5個 + 2回目 splice 1個。result 不変。DR-080 §4 例2。",
-      "argv": ["--fields", "a,a,b,a,c", "--fields", "@"],
+      "args": ["--fields", "a,a,b,a,c", "--fields", "@"],
       "expect": {
         "outcome": "success",
         "effects": [
@@ -43,7 +43,7 @@
     {
       "id": "second-no-marker-fire-overwrites-again",
       "why": "`--fields a,a,b,a,c --fields d`: 1回目は例1と同じ [a,a,b,a,c]。2回目 piece=[d] は marker 無しなので cell 上書き (2回目単独の値になる、1回目の結果は old として参照されない)。effects は1回目5個 + 2回目 add(d) 1個。result `{fields:[d]}`。DR-080 §4 例5 — marker 無し発火は accumulator 無し要素の last-wins と同じ『再発火が前回を丸ごと消す』見え方であることを bare-splice-is-identity と対照する。",
-      "argv": ["--fields", "a,a,b,a,c", "--fields", "d"],
+      "args": ["--fields", "a,a,b,a,c", "--fields", "d"],
       "expect": {
         "outcome": "success",
         "effects": [
@@ -60,7 +60,7 @@
     {
       "id": "first-firing-add-then-remove-yields-empty",
       "why": "`--fields a,-a` (初回発火、下位値源なし): piece=[a,-a]。marker あり (remove) なので暗黙先頭 @ が補われ old (DR-051 §2b の一様形 `[]`) を splice するが、splice 結果は空なので観測上変化なし。a (add→[a])、-a (remove、a を除去→[])。結果 `[]`。effects は暗黙 @ を除いた実入力2個 (add(a), remove(a))。DR-080 §4 例12。",
-      "argv": ["--fields", "a,-a"],
+      "args": ["--fields", "a,-a"],
       "expect": {
         "outcome": "success",
         "effects": [
@@ -73,7 +73,7 @@
     {
       "id": "first-firing-remove-then-add-survives",
       "why": "`--fields -a,a` (初回発火、下位値源なし): piece=[-a,a]。暗黙先頭 @ (old=`[]` を splice、変化なし)、-a (remove、対象が無いので変化なし。remove は以後の add には効かない — DR-080 §3)、a (add→[a])。結果 `[a]` — first-firing-add-then-remove-yields-empty (add→remove) と発火順を入れ替えた対で、remove が『それ以後の add』には効かないことを固定する。DR-080 §4 例13。",
-      "argv": ["--fields", "-a,a"],
+      "args": ["--fields", "-a,a"],
       "expect": {
         "outcome": "success",
         "effects": [

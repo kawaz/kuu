@@ -9,17 +9,17 @@
   "cases": [
     {
       "id": "under-min",
-      "why": "`a` 1 個は min:2 未達。2 個目の必須 head がトークンを得られず完全経路 0 本 → 構造的必須の不成立で kind=parse / reason=missing_operand を f に紐付けて emit。argv_pos はトークンが尽きて要求した位置 = argv.length = 1 (DR-065 §3)。exact-count.json の同型 `[a]` ケース (min:2,max:2 でも `missing operand for f`) と一致すべき — min 未達の失敗は max の有無に依らない。",
-      "argv": ["a"],
+      "why": "`a` 1 個は min:2 未達。2 個目の必須 head がトークンを得られず完全経路 0 本 → 構造的必須の不成立で kind=parse / reason=missing_operand を f に紐付けて emit。args_pos はトークンが尽きて要求した位置 = args.length = 1 (DR-065 §3)。exact-count.json の同型 `[a]` ケース (min:2,max:2 でも `missing operand for f`) と一致すべき — min 未達の失敗は max の有無に依らない。",
+      "args": ["a"],
       "expect": {
         "outcome": "failure",
-        "errors": [{"element": "f", "argv_pos": 1, "kind": "parse", "reason": "missing_operand"}]
+        "errors": [{"element": "f", "args_pos": 1, "kind": "parse", "reason": "missing_operand"}]
       }
     },
     {
       "id": "at-min-two",
       "why": "`a b` 2 個で min:2 充足。flatten 蓄積で `[a,b]`。",
-      "argv": ["a", "b"],
+      "args": ["a", "b"],
       "expect": {
         "outcome": "success",
         "effects": [
@@ -32,7 +32,7 @@
     {
       "id": "above-min-three",
       "why": "`a b c` 3 個。上限なしなので Ref 末尾が伸びて全消費、`[a,b,c]`。min:2 は下限のみを縛る。",
-      "argv": ["a", "b", "c"],
+      "args": ["a", "b", "c"],
       "expect": {
         "outcome": "success",
         "effects": [

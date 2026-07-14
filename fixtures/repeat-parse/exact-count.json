@@ -9,17 +9,17 @@
   "cases": [
     {
       "id": "under-min",
-      "why": "`a` 1 個は min:2 未達。2 個目の必須 head がトークンを得られず → element=f / kind=parse / reason=missing_operand、argv_pos=argv.length=1。",
-      "argv": ["a"],
+      "why": "`a` 1 個は min:2 未達。2 個目の必須 head がトークンを得られず → element=f / kind=parse / reason=missing_operand、args_pos=args.length=1。",
+      "args": ["a"],
       "expect": {
         "outcome": "failure",
-        "errors": [{"element": "f", "argv_pos": 1, "kind": "parse", "reason": "missing_operand"}]
+        "errors": [{"element": "f", "args_pos": 1, "kind": "parse", "reason": "missing_operand"}]
       }
     },
     {
       "id": "exact-two",
       "why": "`a b` ちょうど 2 個で成立。`[a,b]`。",
-      "argv": ["a", "b"],
+      "args": ["a", "b"],
       "expect": {
         "outcome": "success",
         "effects": [
@@ -31,11 +31,11 @@
     },
     {
       "id": "over-max",
-      "why": "`a b c` 3 個目は max 2 超過。閉包が閉じた後の残余トークンで失敗 → element 省略 / kind=parse / reason=unexpected_token、argv_pos=残余先頭=2。",
-      "argv": ["a", "b", "c"],
+      "why": "`a b c` 3 個目は max 2 超過。閉包が閉じた後の残余トークンで失敗 → element 省略 / kind=parse / reason=unexpected_token、args_pos=残余先頭=2。",
+      "args": ["a", "b", "c"],
       "expect": {
         "outcome": "failure",
-        "errors": [{"argv_pos": 2, "kind": "parse", "reason": "unexpected_token"}]
+        "errors": [{"args_pos": 2, "kind": "parse", "reason": "unexpected_token"}]
       }
     }
   ]

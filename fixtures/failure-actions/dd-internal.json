@@ -13,20 +13,20 @@
   "cases": [
     {
       "id": "dd-internal-help",
-      "why": "dd 内部 --help は raw 消費で非発火: -- が pos0 で発火し severed。続く --help は greedy 面 off なので string positional p に raw で落ちる (p=\"--help\")。末尾 x は消費者不在で残余となり完全経路 0 本。help satellite は撃たれていない (severed 下で --help を消費した経路に FailMark が無い) ので fired_action なし。errors は残余 x (argv_pos 2、unexpected_token)。",
-      "argv": ["--", "--help", "x"],
+      "why": "dd 内部 --help は raw 消費で非発火: -- が pos0 で発火し severed。続く --help は greedy 面 off なので string positional p に raw で落ちる (p=\"--help\")。末尾 x は消費者不在で残余となり完全経路 0 本。help satellite は撃たれていない (severed 下で --help を消費した経路に FailMark が無い) ので fired_action なし。errors は残余 x (args_pos 2、unexpected_token)。",
+      "args": ["--", "--help", "x"],
       "expect": {
         "outcome": "failure",
-        "errors": [{"argv_pos": 2, "kind": "parse", "reason": "unexpected_token"}]
+        "errors": [{"args_pos": 2, "kind": "parse", "reason": "unexpected_token"}]
       }
     },
     {
       "id": "help-before-dd",
-      "why": "対照 (case 1 と対): dd で遮断されない位置 (dd 前) の --help は発火する。-- トークンが無いので severed は起きず、pos0 の --help が help satellite を発火 (先食いが --help の raw 消費を禁じる)。x は string positional p が消費 (p=\"x\")、末尾 y は残余で完全経路 0 本 → 候補に help がいるので発火。errors は残余 y (argv_pos 2、unexpected_token)、fired_action=help。severed の有無で --help の解釈が反転する (DR-042 の dd の狙い)。",
-      "argv": ["--help", "x", "y"],
+      "why": "対照 (case 1 と対): dd で遮断されない位置 (dd 前) の --help は発火する。-- トークンが無いので severed は起きず、pos0 の --help が help satellite を発火 (先食いが --help の raw 消費を禁じる)。x は string positional p が消費 (p=\"x\")、末尾 y は残余で完全経路 0 本 → 候補に help がいるので発火。errors は残余 y (args_pos 2、unexpected_token)、fired_action=help。severed の有無で --help の解釈が反転する (DR-042 の dd の狙い)。",
+      "args": ["--help", "x", "y"],
       "expect": {
         "outcome": "failure",
-        "errors": [{"argv_pos": 2, "kind": "parse", "reason": "unexpected_token"}],
+        "errors": [{"args_pos": 2, "kind": "parse", "reason": "unexpected_token"}],
         "fired_action": "help"
       }
     }

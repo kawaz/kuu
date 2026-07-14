@@ -12,7 +12,7 @@
     {
       "id": "config-files-path-supplies-true-satisfies-requires",
       "why": "`--a`、config_files の該当パス (`--config` 未指定なので default パス `/app.toml` が解決、path.json の default-path-wins と同じラダー解決) が `{c:true}` を返す: c は config_key 経由でこのオブジェクトから true を得る。requires の判定は解決後の値のみを見るので、値がパス動的な config_file 経由でも充足する (DR-047 §5 の値源不問 + DR-087 §4 の resolve 先行読者化)。effects は cli 発火した a のみ (c は config 由来で非掲載、CONFORMANCE §2)。config 要素自体はインフラで result 非掲載。result は {a:true, c:true}、sources で c=config を検証。他に未発火の同居要素は無い (config_file 要素以外は a/c のみの最小定義)。",
-      "argv": ["--a"],
+      "args": ["--a"],
       "config_files": {"/app.toml": {"c": true}},
       "expect": {
         "outcome": "success",
@@ -25,13 +25,13 @@
     },
     {
       "id": "config-files-path-supplies-false-still-violates",
-      "why": "(対極) `--a`、default パス `/app.toml` が `{c:false}` を返す: 『解決後の値が true』を満たさないので requires 違反。error 語彙は requires-bool-target-config-inherit.json の config-false-still-violates と同一 (element=a、kind=constraint、reason=requires_violated、argv_pos=1=argv.length)。値源が config_obj 単一注入か CfgFiles かに関わらず判定基準自体 (false なら不充足) は不変であることの固定。",
-      "argv": ["--a"],
+      "why": "(対極) `--a`、default パス `/app.toml` が `{c:false}` を返す: 『解決後の値が true』を満たさないので requires 違反。error 語彙は requires-bool-target-config-inherit.json の config-false-still-violates と同一 (element=a、kind=constraint、reason=requires_violated、args_pos=1=args.length)。値源が config_obj 単一注入か CfgFiles かに関わらず判定基準自体 (false なら不充足) は不変であることの固定。",
+      "args": ["--a"],
       "config_files": {"/app.toml": {"c": false}},
       "expect": {
         "outcome": "failure",
         "errors": [
-          {"element": "a", "argv_pos": 1, "kind": "constraint", "reason": "requires_violated"}
+          {"element": "a", "args_pos": 1, "kind": "constraint", "reason": "requires_violated"}
         ]
       }
     }

@@ -10,7 +10,7 @@
     {
       "id": "two-fires-last-wins",
       "why": "2 回発火 → last-wins scalar: --name a の後 --name b で name セルの最終値は b。効果列は set a / set b を適用順で 2 個とも保持する (最終勝ちの collapse は result 確定時に起き、効果列自体は畳まれない、conflicts.json case 4 と同型)。result は scalar 単値 b (append.json の [a,b] と対照)。",
-      "argv": ["--name", "a", "--name", "b"],
+      "args": ["--name", "a", "--name", "b"],
       "expect": {
         "outcome": "success",
         "effects": [
@@ -23,7 +23,7 @@
     {
       "id": "single-fire-scalar",
       "why": "1 回発火の baseline: scalar は 1 度発火なら素の単値 a。append.json の 1 回発火 [a] と対照して、accumulator の有無が『単値 vs 要素 1 件リスト』を分けることを固定する。",
-      "argv": ["--name", "a"],
+      "args": ["--name", "a"],
       "expect": {
         "outcome": "success",
         "effects": [

@@ -1,5 +1,5 @@
 {
-  "why": "final_filters (multiple 宣言のない値要素専用、scalar filter registry T→T、最終値ガード) を multiple 宣言のある要素に書くのは、その要素にそもそも存在しない属性を宣言した構造不一致であり definition-error kind=invalid-range で reject する (DR-102 §1/§3)。`fixtures/definition-error/accum-filters-on-non-multiple-invalid-range.json` (非 multiple 要素への accum_filters 宣言) と対で排他制約の両方向を固定する。argv は書かない (DR-082 §1、definition の静的検査であり実行しない)。",
+  "why": "final_filters (multiple 宣言のない値要素専用、scalar filter registry T→T、最終値ガード) を multiple 宣言のある要素に書くのは、その要素にそもそも存在しない属性を宣言した構造不一致であり definition-error kind=invalid-range で reject する (DR-102 §1/§3)。`fixtures/definition-error/accum-filters-on-non-multiple-invalid-range.json` (非 multiple 要素への accum_filters 宣言) と対で排他制約の両方向を固定する。args は書かない (DR-082 §1、definition の静的検査であり実行しない)。",
   "query": "definition_error",
   "definition": {
     "options": [

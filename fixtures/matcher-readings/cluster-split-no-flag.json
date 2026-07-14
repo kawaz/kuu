@@ -9,11 +9,11 @@
   "cases": [
     {
       "id": "no-flag-suffix-error",
-      "why": "f 未定義かつ canonical suffix 非採用で唯一の読みが Error → failure (DR-074 §1 / DR-041 §5): n が cluster 残余 `1.0f` を丸ごと値として取る読みが唯一 (分割先 `f` を読む要素が無く、残余 `f` を消費できないため分割読みは完全経路を成さない)。その唯一の読みで canonical number が `1.0f` の型 suffix を拒否 → not_a_number の held Error。他に完全経路が無いので held Error が表示される failure (element=n / argv_pos=0 / kind=parse / reason=not_a_number)。argv_pos=0 はトークン `-n1.0f` が位置 0 に存在し値解析で落ちる (present but wrong type、prefix-guard-number.json と同型)。",
-      "argv": ["-n1.0f"],
+      "why": "f 未定義かつ canonical suffix 非採用で唯一の読みが Error → failure (DR-074 §1 / DR-041 §5): n が cluster 残余 `1.0f` を丸ごと値として取る読みが唯一 (分割先 `f` を読む要素が無く、残余 `f` を消費できないため分割読みは完全経路を成さない)。その唯一の読みで canonical number が `1.0f` の型 suffix を拒否 → not_a_number の held Error。他に完全経路が無いので held Error が表示される failure (element=n / args_pos=0 / kind=parse / reason=not_a_number)。args_pos=0 はトークン `-n1.0f` が位置 0 に存在し値解析で落ちる (present but wrong type、prefix-guard-number.json と同型)。",
+      "args": ["-n1.0f"],
       "expect": {
         "outcome": "failure",
-        "errors": [{"element": "n", "argv_pos": 0, "kind": "parse", "reason": "not_a_number"}]
+        "errors": [{"element": "n", "args_pos": 0, "kind": "parse", "reason": "not_a_number"}]
       }
     }
   ]

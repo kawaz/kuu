@@ -10,7 +10,7 @@
     {
       "id": "within-range-accepted",
       "why": "上限内 (2) → final_filters 通過 → success (DR-077 §1 / DR-040 / DR-102): `-vv` は short cluster で 2 発火、cell fold で default 0 → 1 → 2、final_filters `in_range:0:2` が最終値 2 を通す (境界含む) → success。effects は 2 個の update event、result verbose=2、sources=cli。final_filters は完走後のセル評価なので途中 fold の 1 を通したか等の中間状態は影響しない (最終値検証、DR-009 §7 段)。update の結果にも final_filters が通るという意味論の scalar 側成功輪郭を担う。",
-      "argv": ["-vv"],
+      "args": ["-vv"],
       "expect": {
         "outcome": "success",
         "effects": [
@@ -23,11 +23,11 @@
     },
     {
       "id": "over-range-rejected",
-      "why": "上限超過 (3) → final_filters reject → failure kind=filter (DR-077 §1 / DR-040 / DR-009 §7 / DR-102 §4): `-vvv` は short cluster で 3 発火、cell fold で 0→1→2→3、final_filters `in_range:0:2` が最終値 3 を拒否 → failure。errors は reason=too_large (in_range の上限側、DR-095) 1 件のみ (parse 自体は成功、resolve 層の final_filters 適用で reject される — DR-009 §7 の resolve-layer failure の実例)。argv_pos=1=argv.length (final_filters の reject は特定トークンに帰属しない一括検証、DR-102 §4)。within-range-accepted (2, 通過) と対で in_range の境界 (0..2 通過 / 3 以上 reject) を固定する。",
-      "argv": ["-vvv"],
+      "why": "上限超過 (3) → final_filters reject → failure kind=filter (DR-077 §1 / DR-040 / DR-009 §7 / DR-102 §4): `-vvv` は short cluster で 3 発火、cell fold で 0→1→2→3、final_filters `in_range:0:2` が最終値 3 を拒否 → failure。errors は reason=too_large (in_range の上限側、DR-095) 1 件のみ (parse 自体は成功、resolve 層の final_filters 適用で reject される — DR-009 §7 の resolve-layer failure の実例)。args_pos=1=args.length (final_filters の reject は特定トークンに帰属しない一括検証、DR-102 §4)。within-range-accepted (2, 通過) と対で in_range の境界 (0..2 通過 / 3 以上 reject) を固定する。",
+      "args": ["-vvv"],
       "expect": {
         "outcome": "failure",
-        "errors": [{"element": "verbose", "argv_pos": 1, "kind": "filter", "reason": "too_large"}]
+        "errors": [{"element": "verbose", "args_pos": 1, "kind": "filter", "reason": "too_large"}]
       }
     }
   ]

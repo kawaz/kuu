@@ -11,7 +11,7 @@
     {
       "id": "string-value-flag-split",
       "why": "値付着と分割の 2 完全経路で ambiguous (DR-041 §3 / DR-038 / DR-053 §3): `-sax` は (A) s=`ax` 丸取り読み {s:\"ax\"} と (B) s=`a` + `-x` flag 読み {s:\"a\",x:true} の 2 経路が両方全消費で完成。string value_parser はどちらの部分文字列も受理するので枝が絞れない → ambiguous。interpretations は各読みを結果オブジェクト形ビューで全列挙 (DR-053 §3)。読み A では x 不発 = default false を省略ビュー、読み B では x:true。両者は s の値でも分岐する (\"ax\" vs \"a\") ため別解釈として残り merge しない (DR-038 の効果列判定)。列挙順は非規範 (interpretations は集合比較、CONFORMANCE §3)。s=\"\" + a,x 両 flag の読みは a が未定義 flag で脱落するため 2 経路のみ。",
-      "argv": ["-sax"],
+      "args": ["-sax"],
       "expect": {
         "outcome": "ambiguous",
         "interpretations": [{"s": "ax"}, {"s": "a", "x": true}]

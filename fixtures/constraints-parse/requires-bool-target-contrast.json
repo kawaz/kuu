@@ -23,7 +23,7 @@
     {
       "id": "c-env-set-satisfies-requires",
       "why": "env C=x があれば非 bool 目的語も充足する: env 宣言は『env から遅延解決する default_fn』と同型でデフォルトの存在 (DR-088 §1)、経路は静的宣言により完全と判定され、最終判定は遅延解決後の実値 c=x の有無で充足 (DR-088 §3、値充足は値源不問)。c は env 由来なので effects 非掲載、result / sources には present。",
-      "argv": [
+      "args": [
         "--a"
       ],
       "env": {

@@ -14,7 +14,7 @@
     {
       "id": "duplicate-dd-dedup",
       "why": "-- で両 dd 宣言の読みが同時に立つが、どちらも同効果 (severed + マーカー 1 消費・値なし) なので効果列 dedup で 1 解釈に合流。success であって ambiguous でない。後続の -v は severed 下で x が raw 消費。",
-      "argv": ["--", "-v"],
+      "args": ["--", "-v"],
       "expect": {
         "outcome": "success",
         "effects": [

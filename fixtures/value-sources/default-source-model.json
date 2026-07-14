@@ -10,7 +10,7 @@
     {
       "id": "unfired-no-env-falls-to-declared-default",
       "why": "`(--colorなし)`、env 未設定: cli 未発火・env 供給なしなので default は書き換わらず宣言値 \"auto\" のまま。source = default_source = \"default\" (DR-081 §1 の決定式、committed=false かつ default が在る場合)。effects 空。",
-      "argv": [],
+      "args": [],
       "expect": {
         "outcome": "success",
         "effects": [],
@@ -21,7 +21,7 @@
     {
       "id": "set-commits-cli-value",
       "why": "`--color always`: 主入口 `:set` (値スロット) が \"always\" を消費し committed=true で確定。source = cli (値を運んだのが cli 発火なので確定主体読みでも由来席読みでも同じ、set は DR-081 の影響を受けない通常経路)。effects は set 1個。",
-      "argv": ["--color", "always"],
+      "args": ["--color", "always"],
       "expect": {
         "outcome": "success",
         "effects": [
@@ -34,7 +34,7 @@
     {
       "id": "default-op-sets-declared-default-cli-source",
       "why": "`--default-color`、env 未設定: env 供給が無いので default は書き換わっておらず宣言値 \"auto\" のまま。op=default (--default-color) はその時点の (書き換えなしの) default を明示 set する。source は確定主体読みにより cli (DR-081 §2 — 値が default 値そのものと同じでも、確定させたのはユーザの明示操作)。effects は default 1個 (operand なし)。",
-      "argv": ["--default-color"],
+      "args": ["--default-color"],
       "expect": {
         "outcome": "success",
         "effects": [
@@ -47,7 +47,7 @@
     {
       "id": "unset-op-uncommits-to-declared-default",
       "why": "`--unset-color`、env 未設定: op=unset は committed=false へ戻す (DR-045 不変)。env 供給が無いので source = default_source = \"default\"、値は宣言値 \"auto\"。default-op-sets-declared-default-cli-source (case3) との対: 値は同じ auto だが、committed (true/false) と source (cli/default) が異なる。effects は unset 1個。",
-      "argv": ["--unset-color"],
+      "args": ["--unset-color"],
       "expect": {
         "outcome": "success",
         "effects": [
@@ -60,7 +60,7 @@
     {
       "id": "env-rewrites-default-unfired",
       "why": "`(--colorなし)`、env APP_COLOR=none: DR-081 の書き換えモデルにより env 供給は node の default 値を \"auto\" から \"none\" に、default_source を \"default\" から \"env\" に書き換える。cli 未発火 (committed=false) なので source = default_source = \"env\"。effects 空 (env 由来の値確定は effects 非掲載、CONFORMANCE §2)。unfired-no-env-falls-to-declared-default (case1) との対: 同じ『未発火』でも default_source の違いで source が変わる。",
-      "argv": [],
+      "args": [],
       "env": {"APP_COLOR": "none"},
       "expect": {
         "outcome": "success",
@@ -72,7 +72,7 @@
     {
       "id": "default-op-sets-env-rewritten-default",
       "why": "`--default-color`、env APP_COLOR=none: default はすでに env 供給によって \"none\" に書き換わっている (default_source=env)。op=default はこの書き換え済み default をそのまま明示 set するので、結果は宣言値 auto ではなく **none**。source は確定主体読みにより **cli** (default_source が env であっても確定させたのは cli 発火 — DR-081 §2 の canonical 例 `APP_COLOR=none --default-color # color=none source=cli` そのもの)。default-op-sets-declared-default-cli-source (case3、env 無し) との対: op=default は常に『その時点の default』を set するので、env 供給の有無で運ばれる値が変わる (auto vs none) が、source は常に cli で不変。",
-      "argv": ["--default-color"],
+      "args": ["--default-color"],
       "env": {"APP_COLOR": "none"},
       "expect": {
         "outcome": "success",
@@ -86,7 +86,7 @@
     {
       "id": "unset-op-uncommits-to-env-rewritten-default",
       "why": "`--unset-color`、env APP_COLOR=none: op=unset は committed=false へ戻す。env が default を \"none\" に書き換えているので default_source=env、source=env。値は none。default-op-sets-env-rewritten-default (case6) との対比が本 fixture の核心: **値はどちらも同じ none (env 書き換え済み default) — 差は committed (unset=false / default=true) と source (unset=env / default=cli) の2軸のみ**。unset-op-uncommits-to-declared-default (case4、env 無し) との対比では、default_source の違いで source が default→env に変わる。",
-      "argv": ["--unset-color"],
+      "args": ["--unset-color"],
       "env": {"APP_COLOR": "none"},
       "expect": {
         "outcome": "success",

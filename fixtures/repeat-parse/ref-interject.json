@@ -21,7 +21,7 @@
     {
       "id": "no-interject-baseline",
       "why": "`red blue`: 割り込みなしの基準ケース。ref-or-template.json の string-names-unique-split と同型 (verbose option の追加は結果に影響しない)。colorname 枝が 2 回反復し hlcolors=[{colorname:red},{colorname:blue}]、verbose は未発火なので flag の preset default (false) が present。",
-      "argv": ["red", "blue"],
+      "args": ["red", "blue"],
       "expect": {
         "outcome": "success",
         "effects": [
@@ -34,7 +34,7 @@
     {
       "id": "interject-mid-ref-repeat",
       "why": "`red --verbose blue`: hlcolors の反復 (colorname 枝 1 回目消費後、2 回目消費前) の間に --verbose が割り込む。ref 先の colorname (string leaf) は --verbose を raw 消費できない (先食い、DR-041 §4 — greedy 衛星の読めるトークンは素通し枝を作らない、これは leaf が ref 経由の入れ子であっても同じ規則が効く) ため、--verbose は独立した flag 発火として消費され、hlcolors の unfold は現在の背骨に留まったまま継続する (DR-043)。効果列は消費順 colorname(red) → verbose(true) → colorname(blue)。result は interjection.json の interject-mid-repeat と同型の輪郭 (repeat 要素が ref 経由でも porous 性が保たれる)。",
-      "argv": ["red", "--verbose", "blue"],
+      "args": ["red", "--verbose", "blue"],
       "expect": {
         "outcome": "success",
         "effects": [

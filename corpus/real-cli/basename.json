@@ -11,7 +11,7 @@
     {
       "id": "path-only",
       "why": "`basename /usr/bin/foo` → \"foo\" (実機)。path のみ、suffix は optional 0 個 → `[]`。path は required scalar なので set 効果 1 個、結果は scalar。suffix 空 array は absent でなく present (DR-044)。",
-      "argv": ["/usr/bin/foo"],
+      "args": ["/usr/bin/foo"],
       "expect": {
         "outcome": "success",
         "effects": [{"entity": "path", "op": "set", "operand": "/usr/bin/foo", "source": "cli"}],
@@ -21,7 +21,7 @@
     {
       "id": "path-and-suffix",
       "why": "`basename /a/b/foo.txt .txt` → \"foo\" (実機、suffix 一致で剥がす)。1 個目=path、2 個目=suffix。位置で役割が決まる (positionals 順序消費)。suffix は optional なので array `[\".txt\"]`。剥がす計算はアプリの領分 — kuu は path/suffix を分離して渡すだけ。",
-      "argv": ["/a/b/foo.txt", ".txt"],
+      "args": ["/a/b/foo.txt", ".txt"],
       "expect": {
         "outcome": "success",
         "effects": [
@@ -33,11 +33,11 @@
     },
     {
       "id": "no-operand-fails",
-      "why": "`basename` 単体は operand 不足 (実機 usage エラー)。path は required かつ構造的必須 head → missing_operand、argv_pos=0。",
-      "argv": [],
+      "why": "`basename` 単体は operand 不足 (実機 usage エラー)。path は required かつ構造的必須 head → missing_operand、args_pos=0。",
+      "args": [],
       "expect": {
         "outcome": "failure",
-        "errors": [{"element": "path", "argv_pos": 0, "kind": "parse", "reason": "missing_operand"}]
+        "errors": [{"element": "path", "args_pos": 0, "kind": "parse", "reason": "missing_operand"}]
       }
     }
   ]

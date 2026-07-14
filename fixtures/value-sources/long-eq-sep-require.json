@@ -12,7 +12,7 @@
     {
       "id": "eq-form-accepted",
       "why": "`if=/dev/zero of=/dev/null`: 両トークンとも `=` を含み eq-split matcher が long 候補として認識、if/of にそれぞれバインドされる (DR-096 §1 の canonical 用途)。",
-      "argv": ["if=/dev/zero", "of=/dev/null"],
+      "args": ["if=/dev/zero", "of=/dev/null"],
       "expect": {
         "outcome": "success",
         "effects": [
@@ -24,20 +24,20 @@
     },
     {
       "id": "space-form-rejected",
-      "why": "(対極) `if /dev/zero`: long_eq_sep:\"require\" により空間区切り形の読みが一切生成されない — \"if\" は `=` を含まないため if の候補読みが無く (トリガ不一致で読みゼロ)、positional も宣言されていないので消費者不在。残余トークンで完全経路 0 本 → failure。element 省略 = スコープレベルの躓き、argv_pos = 残余先頭 0、kind=parse / reason=unexpected_token (DR-065 §3、既存 unexpected_token fixture と同一語彙)。",
-      "argv": ["if", "/dev/zero"],
+      "why": "(対極) `if /dev/zero`: long_eq_sep:\"require\" により空間区切り形の読みが一切生成されない — \"if\" は `=` を含まないため if の候補読みが無く (トリガ不一致で読みゼロ)、positional も宣言されていないので消費者不在。残余トークンで完全経路 0 本 → failure。element 省略 = スコープレベルの躓き、args_pos = 残余先頭 0、kind=parse / reason=unexpected_token (DR-065 §3、既存 unexpected_token fixture と同一語彙)。",
+      "args": ["if", "/dev/zero"],
       "expect": {
         "outcome": "failure",
-        "errors": [{"argv_pos": 0, "kind": "parse", "reason": "unexpected_token"}]
+        "errors": [{"args_pos": 0, "kind": "parse", "reason": "unexpected_token"}]
       }
     },
     {
       "id": "bare-operand-no-collision",
       "why": "(対極) `foo`: `=` を含まないただの operand は if/of のどちらの綴りとも一致せず (long_eq_sep:\"require\" が eq-split 専用の matcher にしているため、`foo` という素の文字列が if/of の『部分一致』や『マッチしかけ』として誤って拾われることもない)、消費者不在の残余トークンとして通常どおり unexpected_token に落ちる。既知キーとの偶発的な衝突が起きないことの固定 (DR-096 §1 の『素の operand が long 経路と衝突しない』)。",
-      "argv": ["foo"],
+      "args": ["foo"],
       "expect": {
         "outcome": "failure",
-        "errors": [{"argv_pos": 0, "kind": "parse", "reason": "unexpected_token"}]
+        "errors": [{"args_pos": 0, "kind": "parse", "reason": "unexpected_token"}]
       }
     }
   ]

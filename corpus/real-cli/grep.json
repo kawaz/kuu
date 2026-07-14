@@ -23,7 +23,7 @@
     {
       "id": "ignore-case-one-file",
       "why": "`grep -i foo file.txt` (実機は大小無視で foo を検索)。-i 発火、pattern=foo (必須 positional exactly 1)、files=[file.txt]。pattern 必須なので 1 個目 non-option が確定的に pattern に落ち、曖昧が生じない (uniq の 2-optional 問題を回避する設計)。",
-      "argv": ["-i", "foo", "file.txt"],
+      "args": ["-i", "foo", "file.txt"],
       "expect": {
         "outcome": "success",
         "effects": [
@@ -37,7 +37,7 @@
     {
       "id": "recursive-linenum-cluster",
       "why": "`grep -rn pattern src/` (実機は src/ を再帰・行番号付き検索)。short_combine で -r/-n 分解、pattern=pattern、files=[src/]。連結 short と pattern/files 分離を同時にプローブ。",
-      "argv": ["-rn", "pattern", "src/"],
+      "args": ["-rn", "pattern", "src/"],
       "expect": {
         "outcome": "success",
         "effects": [
@@ -52,7 +52,7 @@
     {
       "id": "after-context-value",
       "why": "`grep -A 3 foo f.txt` (実機はマッチ後 3 行も表示)。-A が int 3 を値バインド、pattern=foo、files=[f.txt]。消費順 after(0-1)→pattern(2)→files(3)。値付き短オプションと positional の分離。",
-      "argv": ["-A", "3", "foo", "f.txt"],
+      "args": ["-A", "3", "foo", "f.txt"],
       "expect": {
         "outcome": "success",
         "effects": [
@@ -66,7 +66,7 @@
     {
       "id": "long-context-equal-sep",
       "why": "`grep --context=2 foo f.txt` (実機はマッチ前後 2 行)。`=` 連結 long 値 → long_eq_sep:\"allow\" の eq-split matcher が `--context=2` を [--context, 2] の読みに分解 (§15.8)。context セルは -C と同一 (long:[\"context\"] で別綴り追加)。effects: context set 2 → pattern → files。eq-split matcher のプローブの核。",
-      "argv": ["--context=2", "foo", "f.txt"],
+      "args": ["--context=2", "foo", "f.txt"],
       "expect": {
         "outcome": "success",
         "effects": [
@@ -80,7 +80,7 @@
     {
       "id": "pattern-only-stdin",
       "why": "`grep foo` (実機は stdin から foo 検索)。pattern=foo (必須)、files 0 個 `[]`。pattern が 1 個埋まれば files 空でも成立 (required は exactly 1、files は min0)。",
-      "argv": ["foo"],
+      "args": ["foo"],
       "expect": {
         "outcome": "success",
         "effects": [

@@ -10,7 +10,7 @@
     {
       "id": "link-merge-last-wins",
       "why": "`--port 80 -p 90`: long と short は同一 name のセル port へ link 合流し、消費順に 80 → 90 の 2 効果を積んで last-wins で 90 (DR-015)。effects は entity=port の 2 連 (順序が同一性成分、DR-045)。結果射影で export_key portnum が name 由来キー port を差し替え、result は {portnum:90}。合流は export_key と無関係に成立する。",
-      "argv": ["--port", "80", "-p", "90"],
+      "args": ["--port", "80", "-p", "90"],
       "expect": {
         "outcome": "success",
         "effects": [
@@ -23,7 +23,7 @@
     {
       "id": "short-entry-same-export",
       "why": "short 入口単独 `-p 90`: どちらの入口から発火しても同一セル port を経て export_key portnum で露出する。long/short の入口差は結果キーに影響しない (キーは export_key、入口は綴り軸)。",
-      "argv": ["-p", "90"],
+      "args": ["-p", "90"],
       "expect": {
         "outcome": "success",
         "effects": [

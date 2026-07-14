@@ -10,7 +10,7 @@
     {
       "id": "in-range-accepted",
       "why": "範囲内 → final_filters 通過 → success (DR-009 §7 / DR-102): --port 100 は in_range:1:65535 の境界内、resolve 層の final_filters を通って success、result port=100。",
-      "argv": ["--port", "100"],
+      "args": ["--port", "100"],
       "expect": {
         "outcome": "success",
         "result": {"port": 100},
@@ -19,11 +19,11 @@
     },
     {
       "id": "out-of-range-rejected",
-      "why": "範囲外 → final_filters reject → failure (DR-009 §7 / DR-102 §4): --port 99999 は in_range:1:65535 の上限超過、resolve 層の final_filters が reject して failure。argv_pos=2=argv.length (final_filters の reject は特定トークンに帰属しない一括検証で、value_filters の piece 実位置帰属とは異なる、DR-102 §4)。",
-      "argv": ["--port", "99999"],
+      "why": "範囲外 → final_filters reject → failure (DR-009 §7 / DR-102 §4): --port 99999 は in_range:1:65535 の上限超過、resolve 層の final_filters が reject して failure。args_pos=2=args.length (final_filters の reject は特定トークンに帰属しない一括検証で、value_filters の piece 実位置帰属とは異なる、DR-102 §4)。",
+      "args": ["--port", "99999"],
       "expect": {
         "outcome": "failure",
-        "errors": [{"element": "port", "argv_pos": 2, "kind": "filter", "reason": "too_large"}]
+        "errors": [{"element": "port", "args_pos": 2, "kind": "filter", "reason": "too_large"}]
       }
     }
   ]

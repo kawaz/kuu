@@ -24,7 +24,7 @@
     {
       "id": "grandchild-subtree-global",
       "why": "孫で発火: b は averb-alias のトリガを持たない (global 非伝播) が、無宣言スコープなので即閉じし継続が a の scope_step へ戻り、a 自身の averb-alias (--verbose) が読める (DR-041 §4 早閉じ+porous)。結果として b 内 --verbose は a の averb セルへ書く (root rverb には届かない)。averb は a キー下に present、b は selected 空 {}、root rverb は未発火 preset false。",
-      "argv": ["a", "b", "--verbose"],
+      "args": ["a", "b", "--verbose"],
       "expect": {
         "outcome": "success",
         "effects": [
@@ -36,7 +36,7 @@
     {
       "id": "mid-shadow-fires",
       "why": "中間で直接発火: a 内 --verbose は a 自前の averb-alias を発火。root rverb-alias は a に伝播しないトリガなので競合しない。b は未入場 → absent、rverb 未発火 preset false。",
-      "argv": ["a", "--verbose"],
+      "args": ["a", "--verbose"],
       "expect": {
         "outcome": "success",
         "effects": [
@@ -48,7 +48,7 @@
     {
       "id": "root-own-fires",
       "why": "対照: root で --verbose を発火させると root 自前の rverb-alias が発火する (a の averb-alias は a 未入場では読めない)。a は未入場 → absent。",
-      "argv": ["--verbose"],
+      "args": ["--verbose"],
       "expect": {
         "outcome": "success",
         "effects": [

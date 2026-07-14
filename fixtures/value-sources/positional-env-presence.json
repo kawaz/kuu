@@ -10,7 +10,7 @@
     {
       "id": "env-supplies-without-token",
       "why": "トークン供給なし、env TIMEOUT=30: env 宣言により経路は完全 (DR-088 §1/§2)、遅延解決で env 値 30 が実体化され success。sources で由来 env を検証。effects 空 (env 由来は effects 非掲載、CONFORMANCE §2)。",
-      "argv": [],
+      "args": [],
       "env": {"TIMEOUT": "30"},
       "expect": {
         "outcome": "success",
@@ -22,7 +22,7 @@
     {
       "id": "env-unset-no-token-stays-unset-absent",
       "why": "(対極) トークン供給なし、env 未設定: 経路は同じく完全 (§2 の静的宣言判定は env の実値を見ない) だが、遅延解決の最終フェーズで env が値を供給せず default 属性も無いため timeout は unset のまま (DR-088 §3)。timeout 単体には requires 等の述語が掛かっていないので違反判定に落ちる先が無く、outcome は success のまま — ただし timeout は値源ラダーを回しても値が無い非反復要素 (§2 の absent 除外3族 = default持ち/repeat/required のいずれにも非該当) なので DR-051 §1 の一般規則により結果からキーごと消える (absent)。missing_operand の failure にはならない (それは required positional 専用の帰結、absent/required-positional.json)。",
-      "argv": [],
+      "args": [],
       "env": {},
       "expect": {
         "outcome": "success",

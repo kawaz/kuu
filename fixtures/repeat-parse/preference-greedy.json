@@ -11,7 +11,7 @@
     {
       "id": "greedy-longest-left",
       "why": "greedy + greedy に `a b c d e`: 左の xs が最長取りを試す。`[a,b,c,d,e],[]` は ys の min:1 を満たせず失敗するので、それより 1 つ短い `[a,b,c,d],[e]` で確定 (さらに短い取り分は試さない)。一意・非 ambiguous。効果列は消費順に各トークンの set が並ぶ (DR-045 効果列 = 適用順)。result は flatten 蓄積で配列化 (DR-043/051)。",
-      "argv": ["a", "b", "c", "d", "e"],
+      "args": ["a", "b", "c", "d", "e"],
       "expect": {
         "outcome": "success",
         "effects": [

@@ -14,7 +14,7 @@
     {
       "id": "ambiguous-suppresses-help",
       "why": "help selected でも ambiguous なら非発火: --help@0 が help を撃った後、--v@1 が同一トリガ 2 エントリ (a / b) に分岐して 2 本の完全経路 ({help,a} と {help,b}) が立つ = ambiguous:2。help は両経路で selected だが完全経路が 0 本でないので発火せず、解釈列挙が結末となる。interpretations は各完全経路の結果オブジェクト形ビュー (発火した実際の束縛のみ、preset default は注入しない、DR-053 §3)。",
-      "argv": ["--help", "--v"],
+      "args": ["--help", "--v"],
       "expect": {
         "outcome": "ambiguous",
         "interpretations": [
@@ -25,11 +25,11 @@
     },
     {
       "id": "failure-fires-help",
-      "why": "対照 (case 1 と対): 同じ定義で完全経路 0 本の失敗なら help 発火。--help@0 が発火後、--x@1 は未定義トリガで消費者不在の残余 → 完全経路 0 本 → 候補に help がいるので発火。ambiguous と 0 本失敗で発火条件が分かれることの固定。errors は残余 --x (argv_pos 1、unexpected_token)、fired_action=help。",
-      "argv": ["--help", "--x"],
+      "why": "対照 (case 1 と対): 同じ定義で完全経路 0 本の失敗なら help 発火。--help@0 が発火後、--x@1 は未定義トリガで消費者不在の残余 → 完全経路 0 本 → 候補に help がいるので発火。ambiguous と 0 本失敗で発火条件が分かれることの固定。errors は残余 --x (args_pos 1、unexpected_token)、fired_action=help。",
+      "args": ["--help", "--x"],
       "expect": {
         "outcome": "failure",
-        "errors": [{"argv_pos": 1, "kind": "parse", "reason": "unexpected_token"}],
+        "errors": [{"args_pos": 1, "kind": "parse", "reason": "unexpected_token"}],
         "fired_action": "help"
       }
     }

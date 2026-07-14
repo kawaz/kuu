@@ -1,5 +1,5 @@
 {
-  "why": "none 要素の関わる静的検査の輪郭: (a) `x` は none (type 省略) でありながら env 宣言を持つ — 値源 (env) は値空間へ供給するものであり、値空間が空の要素に値源を宣言するのは構成として不成立 (DR-089 §7: none は値源席を持たない)、element は宣言を持つ x 自身、DR-082 §2 の『構文上は書けるが構成として不成立』枠で kind=invalid-range。(b) 対照として `a` は none 要素 `c` を requires の目的語にしているが、これは definition-error に**ならない** — requires の充足は型委譲であり (DR-093 §3)、none 目的語は『発火した (committed)』で充足する正当な宣言。errors の集合比較 (CONFORMANCE §3、DR-054 §4 の全列挙) により『x のエラーだけが返り a のエラーは存在しない』ことが同時に固定される。argv は書かない (定義の静的検査であり実行しない、DR-082 §1)。",
+  "why": "none 要素の関わる静的検査の輪郭: (a) `x` は none (type 省略) でありながら env 宣言を持つ — 値源 (env) は値空間へ供給するものであり、値空間が空の要素に値源を宣言するのは構成として不成立 (DR-089 §7: none は値源席を持たない)、element は宣言を持つ x 自身、DR-082 §2 の『構文上は書けるが構成として不成立』枠で kind=invalid-range。(b) 対照として `a` は none 要素 `c` を requires の目的語にしているが、これは definition-error に**ならない** — requires の充足は型委譲であり (DR-093 §3)、none 目的語は『発火した (committed)』で充足する正当な宣言。errors の集合比較 (CONFORMANCE §3、DR-054 §4 の全列挙) により『x のエラーだけが返り a のエラーは存在しない』ことが同時に固定される。args は書かない (定義の静的検査であり実行しない、DR-082 §1)。",
   "query": "definition_error",
   "definition": {
     "options": [

@@ -11,7 +11,7 @@
     {
       "id": "lazy-shortest-left",
       "why": "lazy + greedy に `a b c d e`: lazy な xs は必須の min:1 だけ (`[a]`) を取り、greedy な ys が残り `[b,c,d,e]` を取る。preference-greedy の同入力 `[a,b,c,d],[e]` と鏡像 — 選好の向きだけで確定点が反転することの固定。",
-      "argv": ["a", "b", "c", "d", "e"],
+      "args": ["a", "b", "c", "d", "e"],
       "expect": {
         "outcome": "success",
         "effects": [

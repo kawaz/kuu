@@ -12,7 +12,7 @@
     {
       "id": "bare-long-space-form",
       "why": "`height 168.5` — prefix なしのトークン `height` が long トリガに名前一致し、次トークンを space 分割形で値消費する (DR-041 §4 の値スロット一般規則は prefix の有無に依存しない)。weight は未発火で default 無しのため結果キー自体が現れない (absent)。",
-      "argv": ["height", "168.5"],
+      "args": ["height", "168.5"],
       "expect": {
         "outcome": "success",
         "effects": [
@@ -24,7 +24,7 @@
     {
       "id": "bare-long-pair",
       "why": "`height 168.5 weight 65.2` — bare long の連続。各トリガが自分の次トークンだけを値消費し、互いに干渉しない (kawaz 裁定の動機となった `app 身長 168.5 体重 65.2` 型の直接固定)。",
-      "argv": ["height", "168.5", "weight", "65.2"],
+      "args": ["height", "168.5", "weight", "65.2"],
       "expect": {
         "outcome": "success",
         "effects": [
@@ -37,7 +37,7 @@
     {
       "id": "bare-long-eq-form",
       "why": "`height=168.5` — 空 prefix でも eq 分割形は通常どおり生きる (long_eq_sep:\"allow\" は両形受理、DR-096 §1)。eq 形が空 prefix 専用の特殊形ではなく、prefix と直交する入口であることの確認。",
-      "argv": ["height=168.5"],
+      "args": ["height=168.5"],
       "expect": {
         "outcome": "success",
         "effects": [

@@ -11,7 +11,7 @@
     {
       "id": "lazy-min0-shortest-left-empty",
       "why": "lazy な xs (min:0) + greedy な ys (min:1) に `a b c`: lazy な xs は最短 (0 個、空) を取り、greedy な ys が残り全部 [a,b,c] を取る (DR-043 の取り分選好、min:0 側は空取りが最短)。xs は反復系なので 0 回発火でも result に [] が出る (DESIGN §「absent」の反復系規約)。",
-      "argv": ["a", "b", "c"],
+      "args": ["a", "b", "c"],
       "expect": {
         "outcome": "success",
         "effects": [
@@ -25,11 +25,11 @@
     {
       "id": "lazy-min0-shortest-left-empty-input",
       "why": "入力が空の場合、lazy な xs (min:0) は 0 個のまま、必須 min:1 の ys が充足できず missing_operand (DR-066 §3)。xs 側が暴走して ys の入力を先取りしないかの境界確認。",
-      "argv": [],
+      "args": [],
       "expect": {
         "outcome": "failure",
         "errors": [
-          {"element": "ys", "argv_pos": 0, "kind": "parse", "reason": "missing_operand"}
+          {"element": "ys", "args_pos": 0, "kind": "parse", "reason": "missing_operand"}
         ]
       }
     }

@@ -11,7 +11,7 @@
     {
       "id": "none-target-fired-satisfies",
       "why": "`--verbose --sep`: verbose (トリガ) committed、sep (目的語、none) も発火 (committed) して充足 → success。sep は発火しても none のため result/effects に一切現れず、result には verbose のみ present。requires の目的語が none 型でも decode/評価が通ること自体が、旧 DR-089 §4 の definition-error が DR-093 §3 で置換された証跡 (かつては本 definition 自体が定義時エラーだった)。",
-      "argv": ["--verbose", "--sep"],
+      "args": ["--verbose", "--sep"],
       "expect": {
         "outcome": "success",
         "effects": [
@@ -22,11 +22,11 @@
     },
     {
       "id": "none-target-not-fired-violated",
-      "why": "`--verbose` のみ (sep 未発火): verbose committed のトリガが requires を立てるが、目的語 sep が未発火 (not committed) で不充足 → failure。kind:constraint、argv_pos=1=argv.length (制約は全消費後に評価、DR-047 §4)。element=verbose (requires の宣言元=トリガ側、fixtures/constraints-parse/requires.json の requires-violated と同型)。reason=requires_violated (DR-066)。",
-      "argv": ["--verbose"],
+      "why": "`--verbose` のみ (sep 未発火): verbose committed のトリガが requires を立てるが、目的語 sep が未発火 (not committed) で不充足 → failure。kind:constraint、args_pos=1=args.length (制約は全消費後に評価、DR-047 §4)。element=verbose (requires の宣言元=トリガ側、fixtures/constraints-parse/requires.json の requires-violated と同型)。reason=requires_violated (DR-066)。",
+      "args": ["--verbose"],
       "expect": {
         "outcome": "failure",
-        "errors": [{"element": "verbose", "argv_pos": 1, "kind": "constraint", "reason": "requires_violated"}]
+        "errors": [{"element": "verbose", "args_pos": 1, "kind": "constraint", "reason": "requires_violated"}]
       }
     }
   ]

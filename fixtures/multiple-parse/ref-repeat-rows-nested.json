@@ -18,7 +18,7 @@
     {
       "id": "two-fires-preserve-firing-boundary",
       "why": "`--hlcolors red blue --hlcolors green`: 1回目の発火は repeat が colorname 枝を2反復消費し row 配列 [{colorname:red},{colorname:blue}] を作る、2回目の発火は1反復のみで [{colorname:green}]。last-wins-repeat-rows.json (multiple 無し) なら2回目が1回目を上書きするところ、multiple:\"append\" を持つ本 fixture では発火値である row 配列そのものを append accumulator が積む — 発火境界を潰さず外側配列の要素として保存する (T[][])。effects は3個の set が消費順のまま並ぶ、multiple の有無は effects を変えない (DR-045)。",
-      "argv": ["--hlcolors", "red", "blue", "--hlcolors", "green"],
+      "args": ["--hlcolors", "red", "blue", "--hlcolors", "green"],
       "expect": {
         "outcome": "success",
         "effects": [
@@ -32,7 +32,7 @@
     {
       "id": "single-fire-nested-not-flattened",
       "why": "`--hlcolors red blue` (1回発火のみ): append accumulator は1回発火でも要素1件のリストへ包む (append.json / ref-rows-append.json と同じ縮退規則)。ここでの要素は repeat 1発火分の row 配列そのものなので、result は [[{colorname:red},{colorname:blue}]] — 内側の2要素を平坦化した [{colorname:red},{colorname:blue}] にはならない。last-wins-repeat-rows.json の single-fire-baseline (multiple 無し、result が平坦な row 配列 [{colorname:red},{colorname:blue}]) との対比がこの case の軸: multiple の有無だけで外側にもう1層配列が被さる。",
-      "argv": ["--hlcolors", "red", "blue"],
+      "args": ["--hlcolors", "red", "blue"],
       "expect": {
         "outcome": "success",
         "effects": [

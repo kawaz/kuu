@@ -11,7 +11,7 @@
     {
       "id": "raw-eat-option-spelling",
       "why": "発火した値 greedy が次トークンを無条件 raw 消費 (getopt 同型)。--color が発火し、次の -v を値スロットで raw 消費するので color='-v'。-v は定義済み flag だが --color の値スロットに食われて発火しない (先食いは greedy トリガの綴り保護であって、既に発火した greedy の値スロットには効かない)。完全経路は 1 本 (--color 未発火だと '--color' の消費者が居らず残余で不成立)。unfired v は preset default false。",
-      "argv": ["--color", "-v"],
+      "args": ["--color", "-v"],
       "expect": {
         "outcome": "success",
         "effects": [
@@ -23,7 +23,7 @@
     {
       "id": "raw-eat-plain-token",
       "why": "通常の値消費の対照: --color が普通のトークン x を値に取る。case 1 と対で、raw 消費が「次トークンが option 綴りかどうかに無関係」であることを固定 (x でも -v でも同じ挙動)。",
-      "argv": ["--color", "x"],
+      "args": ["--color", "x"],
       "expect": {
         "outcome": "success",
         "effects": [
@@ -35,7 +35,7 @@
     {
       "id": "value-option-absent",
       "why": "値 option 未発火 → absent の対照。-v だけ発火し v=true。--color は未発火で、flag と違い preset default を持たない値 option なのでキー自体が結果から消える (absent、DR-051 §1)。case 1 の color present と対で「値 option は発火してはじめて結果に載る」ことを固定。",
-      "argv": ["-v"],
+      "args": ["-v"],
       "expect": {
         "outcome": "success",
         "effects": [

@@ -9,8 +9,8 @@
   "cases": [
     {
       "id": "no-fire-default-zero",
-      "why": "未発火時は count の preset default 0 で present (DR-077 §3 / DR-051 §2a): argv 空でも verbose セルは number + default:0 なのでラダー default 席から 0 が湧いて result present。effects は cli/link 由来のみ (CONFORMANCE §2) で default 由来は非掲載なので空。sources で由来 default を検証。count が未発火でも absent にならないことを固定 (flag の未発火 preset false と同じ機構、DR-051 §2a)。",
-      "argv": [],
+      "why": "未発火時は count の preset default 0 で present (DR-077 §3 / DR-051 §2a): args 空でも verbose セルは number + default:0 なのでラダー default 席から 0 が湧いて result present。effects は cli/link 由来のみ (CONFORMANCE §2) で default 由来は非掲載なので空。sources で由来 default を検証。count が未発火でも absent にならないことを固定 (flag の未発火 preset false と同じ機構、DR-051 §2a)。",
+      "args": [],
       "expect": {
         "outcome": "success",
         "effects": [],
@@ -21,7 +21,7 @@
     {
       "id": "long-single-fire-one",
       "why": "1 回発火 → 1 (DR-077 §1 / DR-015): `--verbose` は greedy 面の `{exact:'--verbose', link:'verbose', effect:{op:'update', transform:'increment'}}` 衛星が 0-token で発火し ledger に 1 個の update 効果を積む。cell fold は default 0 → increment → 1。effects は 1 個 (source=cli)、result verbose=1、sources=cli (default 席は上書きされた)。CLI 発火の最小 case。",
-      "argv": ["--verbose"],
+      "args": ["--verbose"],
       "expect": {
         "outcome": "success",
         "effects": [
@@ -34,7 +34,7 @@
     {
       "id": "long-double-fire-two",
       "why": "2 回発火 → 2 (DR-077 §1 の ledger fold 連鎖): `--verbose --verbose` は greedy 衛星が 2 回発火し 2 個の update 効果を消費順で積む (DR-045 効果列順序は同一性成分)。cell fold は 0 → 1 → 2。effects は 2 個 (両方 op:update, transform:increment, source:cli)、result verbose=2、sources=cli。increment の連鎖 fold が確定 (ledger 連鎖の可換性を単位元性で担保 — 0+1+1 = 2)。",
-      "argv": ["--verbose", "--verbose"],
+      "args": ["--verbose", "--verbose"],
       "expect": {
         "outcome": "success",
         "effects": [
@@ -48,7 +48,7 @@
     {
       "id": "short-cluster-triple-fire-three",
       "why": "short cluster での 3 発火 → 3 (DR-071 §3 short 非消費 + DR-077 §3 count は update(increment) を型で担う): `-vvv` は 1 トークン内で short_combine matcher が v/v/v の 3 char を順次消化し、各 char が短 entry `{exact:'-v', link:'verbose', effect:{op:'update', transform:'increment'}}` を発火 → 3 個の update 効果を消費順で積む (matcher.mbt walk_short の TCount 分岐で mk_eff の Update 発火)。cell fold は 0 → 1 → 2 → 3。effects は 3 個、result verbose=3、sources=cli。cluster 内でも long と同一 update 効果を発火することで short/long の対称性を固定 (flag の short=非消費・固定 true 供給と同型、型が慣習挙動を担う)。",
-      "argv": ["-vvv"],
+      "args": ["-vvv"],
       "expect": {
         "outcome": "success",
         "effects": [

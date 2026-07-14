@@ -13,7 +13,7 @@
     {
       "id": "dd-fired-satisfies",
       "why": "`--` のみが発火 (committed) して required 充足、rest は消費対象がなく repeat min:0 で空リスト → success。dd required:true が値空間なしでも committed だけで満たされることの基準固定 (DR-093 §2)。dd 自身は result/effects に一切現れない (export-key-inert.json と同型)。",
-      "argv": ["--"],
+      "args": ["--"],
       "expect": {
         "outcome": "success",
         "effects": [],
@@ -22,17 +22,17 @@
     },
     {
       "id": "dd-not-fired-violated",
-      "why": "argv 空で `--` が未発火 (not committed) → required_violated で完全経路 0 本。kind:constraint、argv_pos=0=argv.length (制約は全消費後に評価、DR-047 §4 空 argv の特別扱いは無い)。element=\"--\" (required の宣言元自身、DESIGN §9.3)。reason=required_violated (DR-066)。none 型でも required の明示強制が effective であることの negative 固定 (DR-093 §6『型保証の一様性』— none の保証は『発火した事実が必ずある』)。",
-      "argv": [],
+      "why": "args 空で `--` が未発火 (not committed) → required_violated で完全経路 0 本。kind:constraint、args_pos=0=args.length (制約は全消費後に評価、DR-047 §4 空 args の特別扱いは無い)。element=\"--\" (required の宣言元自身、DESIGN §9.3)。reason=required_violated (DR-066)。none 型でも required の明示強制が effective であることの negative 固定 (DR-093 §6『型保証の一様性』— none の保証は『発火した事実が必ずある』)。",
+      "args": [],
       "expect": {
         "outcome": "failure",
-        "errors": [{"element": "--", "argv_pos": 0, "kind": "constraint", "reason": "required_violated"}]
+        "errors": [{"element": "--", "args_pos": 0, "kind": "constraint", "reason": "required_violated"}]
       }
     },
     {
       "id": "dd-fired-severs-and-satisfies",
       "why": "`-- -x` で `--` が発火し severed、以降の -x が raw 消費で rest へ落ちる (dd/basic.json の dd-rescope-raw と同型の sever 挙動)。dd の required 充足と sever による raw 消費が同時に成立することを固定 — required は committed 判定だけを見るので sever 後の消費内容とは独立に働く。",
-      "argv": ["--", "-x"],
+      "args": ["--", "-x"],
       "expect": {
         "outcome": "success",
         "effects": [

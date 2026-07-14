@@ -26,7 +26,7 @@
     {
       "id": "silent-get",
       "why": "`curl -s https://example.com` (実機は進捗非表示で GET)。-s flag、url=[https://example.com]。値オプションは全 absent、multiple の header/data は `[]`、他 flag false。最小 GET のケース。",
-      "argv": ["-s", "https://example.com"],
+      "args": ["-s", "https://example.com"],
       "expect": {
         "outcome": "success",
         "effects": [
@@ -39,7 +39,7 @@
     {
       "id": "post-with-data",
       "why": "`curl -X POST -d name=foo https://api.test` (実機は POST でボディ送信)。-X が \"POST\"、-d が \"name=foo\" (multiple なので `[\"name=foo\"]`)。値オプション 2 個 + url。消費順 request→data→url。",
-      "argv": ["-X", "POST", "-d", "name=foo", "https://api.test"],
+      "args": ["-X", "POST", "-d", "name=foo", "https://api.test"],
       "expect": {
         "outcome": "success",
         "effects": [
@@ -53,7 +53,7 @@
     {
       "id": "multiple-headers",
       "why": "`curl -H 'A: 1' -H 'B: 2' https://x` (実機は 2 ヘッダ送信)。-H 2 度発火 → append で `[\"A: 1\",\"B: 2\"]` (DR-036)。反復ヘッダのプローブの核。他値オプション absent。",
-      "argv": ["-H", "A: 1", "-H", "B: 2", "https://x"],
+      "args": ["-H", "A: 1", "-H", "B: 2", "https://x"],
       "expect": {
         "outcome": "success",
         "effects": [
@@ -67,7 +67,7 @@
     {
       "id": "famous-cluster-fsSL",
       "why": "`curl -fsSL https://get.example.com` (install スクリプトで頻出の連結)。short_combine で -f/-s/-S/-L の 4 読みに分解。effects は cluster 内消費順 fail→silent→show_error→location→url。4 連結の分解を固定。",
-      "argv": ["-fsSL", "https://get.example.com"],
+      "args": ["-fsSL", "https://get.example.com"],
       "expect": {
         "outcome": "success",
         "effects": [
@@ -83,7 +83,7 @@
     {
       "id": "long-forms",
       "why": "`curl --location --output out.html https://x` (long 形)。--location は flag の long 入口、--output は値オプションの long 入口。同一セルを short/long どちらからでも書ける (long-forms のプローブ)。output=\"out.html\"、location true。",
-      "argv": ["--location", "--output", "out.html", "https://x"],
+      "args": ["--location", "--output", "out.html", "https://x"],
       "expect": {
         "outcome": "success",
         "effects": [

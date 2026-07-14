@@ -1,5 +1,5 @@
 {
-  "why": "global オプションの子スコープ伝播 + root 実体への link 同期 (DR-042): global は宣言層のコピーで子孫コマンドスコープの greedy 面へ衛星を植え (構造コピー、不変則②)、不動点反復で孫まで多段伝播する。コピーは実体を新設せず祖先 (root) の 1 実体へ link 同期する衛星 (ref/link 衛星の標準パターン) なので、子内で発火しても値は root セルへ入り、子ごとの新セルを作らない — したがって global 発火は result のネストから脱出し root キーに現れ、子スコープは {} のまま。global 発火が子内でも一意になるのは早閉じ抑制の帰結 (DR-041 §4)。root(verbose:flag, out:string) を両方 global にし a>b の入れ子で、copy-to-child / argv 順非依存 / 孫伝播 / 値 global 同期を 1 定義で固定。未発火 flag verbose は preset default false で present、default なし out は未発火なら absent (DR-051)。",
+  "why": "global オプションの子スコープ伝播 + root 実体への link 同期 (DR-042): global は宣言層のコピーで子孫コマンドスコープの greedy 面へ衛星を植え (構造コピー、不変則②)、不動点反復で孫まで多段伝播する。コピーは実体を新設せず祖先 (root) の 1 実体へ link 同期する衛星 (ref/link 衛星の標準パターン) なので、子内で発火しても値は root セルへ入り、子ごとの新セルを作らない — したがって global 発火は result のネストから脱出し root キーに現れ、子スコープは {} のまま。global 発火が子内でも一意になるのは早閉じ抑制の帰結 (DR-041 §4)。root(verbose:flag, out:string) を両方 global にし a>b の入れ子で、copy-to-child / args 順非依存 / 孫伝播 / 値 global 同期を 1 定義で固定。未発火 flag verbose は preset default false で present、default なし out は未発火なら absent (DR-051)。",
   "query": "parse",
   "definition": {
     "options": [
@@ -20,7 +20,7 @@
     {
       "id": "child-entry-fires",
       "why": "子入場後の global 発火: a に入り、a へコピーされた --verbose が発火 → root の verbose 実体へ link 同期する。よって verbose は root キーに現れ a は空 {} (子セル非新設、DR-042 link 同期)。out は default なし未発火 → absent。",
-      "argv": ["a", "--verbose"],
+      "args": ["a", "--verbose"],
       "expect": {
         "outcome": "success",
         "effects": [
@@ -31,8 +31,8 @@
     },
     {
       "id": "root-entry-fires",
-      "why": "argv 順非依存: root 入口で直接 --verbose を発火させても、子経由コピーで発火させても同一の root verbose セルに書く (link 同期)。case 1 と同一 outcome で、global の値配置が発火位置に依らないことを固定。",
-      "argv": ["--verbose", "a"],
+      "why": "args 順非依存: root 入口で直接 --verbose を発火させても、子経由コピーで発火させても同一の root verbose セルに書く (link 同期)。case 1 と同一 outcome で、global の値配置が発火位置に依らないことを固定。",
+      "args": ["--verbose", "a"],
       "expect": {
         "outcome": "success",
         "effects": [
@@ -44,7 +44,7 @@
     {
       "id": "grandchild-propagation",
       "why": "孫コマンドへの不動点伝播: a>b と 2 段入れ子でも global verbose のコピーが root->a->b と伝播し、孫 b 内の --verbose が root verbose セルへ link 同期する。verbose は root キー、a は b を selected 空で内包 {b:{}}。",
-      "argv": ["a", "b", "--verbose"],
+      "args": ["a", "b", "--verbose"],
       "expect": {
         "outcome": "success",
         "effects": [
@@ -56,7 +56,7 @@
     {
       "id": "valued-global-sync",
       "why": "値持ち global の root セル同期: 子 a 内で --out X を発火させても out=X は root セルへ同期し a は空 {} (flag 版と同型、DR-042 link 同期)。未発火の global flag verbose は preset default false で root に present。",
-      "argv": ["a", "--out", "X"],
+      "args": ["a", "--out", "X"],
       "expect": {
         "outcome": "success",
         "effects": [

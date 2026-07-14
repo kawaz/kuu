@@ -18,7 +18,7 @@
     {
       "id": "single-string-degenerate-row",
       "why": "非数値トークン 1 個は colorname 枝のみ成立、1 回発火で経路完結 (repeat が無いのでこれ以上の消費対象も無い)。hlcolor の result は row 単体 {colorname:\"red\"} — [{colorname:\"red\"}] のような配列包装はされない (repeat 無し = T[] でなく T、DESIGN §6.1 の逆)。",
-      "argv": ["red"],
+      "args": ["red"],
       "expect": {
         "outcome": "success",
         "effects": [
@@ -30,7 +30,7 @@
     {
       "id": "single-rgb-degenerate-row",
       "why": "数値 3 個: colorname 枝は 1 トークン (\"1\") しか消費できず残り \"2\",\"3\" が未消費のまま経路不成立 (repeat が無いので 2 回目以降の発火で拾えない)。rgb 枝のみが 3 トークン全消費で完全経路になり ambiguous にならない — ref-or-template.json の rgb-vs-3-names-ambiguous (repeat ありで colorname 枝が 3 回発火でも全消費できる) との対照点。hlcolor の result は row 単体 kv {r,g,b} (number に変換済み)。",
-      "argv": ["1", "2", "3"],
+      "args": ["1", "2", "3"],
       "expect": {
         "outcome": "success",
         "effects": [

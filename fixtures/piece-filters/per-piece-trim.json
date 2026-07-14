@@ -10,7 +10,7 @@
     {
       "id": "per-piece-not-whole-string",
       "why": "`\" a , b \"` を separator \",\" で分割すると [\" a \", \" b \"] の 2 piece。piece_filters trim は各 piece に適用されるので [\"a\",\"b\"]。全体 1 回 trim 説だと [\"a \", \" b\"] になり本 case の期待値と食い違う (上記 why 参照) — この差分が per-piece 適用の実証点。",
-      "argv": [" a , b "],
+      "args": [" a , b "],
       "expect": {
         "outcome": "success",
         "effects": [

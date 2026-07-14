@@ -10,7 +10,7 @@
     {
       "id": "two-fires-map-composition",
       "why": "`--define A=1 --define B=2`: 2発火とも異なるキーなので Map は単純に合成され {A:\"1\",B:\"2\"}。effects は消費順の2個の set (piece 文字列そのものが operand、DR-045 効果列は消費順)。",
-      "argv": ["--define", "A=1", "--define", "B=2"],
+      "args": ["--define", "A=1", "--define", "B=2"],
       "expect": {
         "outcome": "success",
         "effects": [
@@ -23,7 +23,7 @@
     {
       "id": "duplicate-key-last-wins",
       "why": "`--define A=1 --define B=2 --define A=3`: A が2回発火し3回目の値 \"3\" が最終値になる (last-wins、DR-015)。result は {A:\"3\",B:\"2\"} — **値の上書きは result で直接検証可能**だが、DR-091 §2 が言う『キー位置は first-seen』(= 内部的な Map の走査順で A が B より先に来る) は CONFORMANCE §3 の『構造等価: key 順序非規範』により本 fixture の result 比較では検証できない (JSON object の key 順は比較対象外)。この不可検証性は fixture 側の限界であって kv_map の挙動の疑義ではない — 値の last-wins だけを本 case の検証対象にする。effects は3個の set が消費順のまま (畳まれない、DR-045)。",
-      "argv": ["--define", "A=1", "--define", "B=2", "--define", "A=3"],
+      "args": ["--define", "A=1", "--define", "B=2", "--define", "A=3"],
       "expect": {
         "outcome": "success",
         "effects": [
@@ -37,7 +37,7 @@
     {
       "id": "value-with-equals-first-split-only",
       "why": "`--define A=b=c`: 最初の `=` でのみ分割するので key=\"A\"、value=\"b=c\" (2個目以降の `=` は value の一部)。DR-091 §2『最初の `=` で分割』の固定。",
-      "argv": ["--define", "A=b=c"],
+      "args": ["--define", "A=b=c"],
       "expect": {
         "outcome": "success",
         "effects": [
@@ -48,11 +48,11 @@
     },
     {
       "id": "no-equals-piece-rejected",
-      "why": "`--define A=1 --define bad`: 2個目の piece \"bad\" は `=` を含まず宣言された k=v 文法を満たさない → reject。DR-091 §2 の明文 (『piece の型 parse 失敗と同じエラー系』) により kind=parse — filter chain の Reject (kind=filter) ではない。reason は組み込み最小語彙 (DR-066 v1 表: not_a_number/not_an_integer) に kv_map 分割失敗の専用語が無いため、reason 未確定として省略し kind までの optional 検証に留める (DR-066 §5: reason は fixture 側が書けば検証、書かなければ kind まで)。argv_pos は value トークン \"bad\" の 0-based 位置 (3)。outcome=failure のため成功していない experiments の effects は掲載しない (CONFORMANCE の失敗 fixture 慣習)。",
-      "argv": ["--define", "A=1", "--define", "bad"],
+      "why": "`--define A=1 --define bad`: 2個目の piece \"bad\" は `=` を含まず宣言された k=v 文法を満たさない → reject。DR-091 §2 の明文 (『piece の型 parse 失敗と同じエラー系』) により kind=parse — filter chain の Reject (kind=filter) ではない。reason は組み込み最小語彙 (DR-066 v1 表: not_a_number/not_an_integer) に kv_map 分割失敗の専用語が無いため、reason 未確定として省略し kind までの optional 検証に留める (DR-066 §5: reason は fixture 側が書けば検証、書かなければ kind まで)。args_pos は value トークン \"bad\" の 0-based 位置 (3)。outcome=failure のため成功していない experiments の effects は掲載しない (CONFORMANCE の失敗 fixture 慣習)。",
+      "args": ["--define", "A=1", "--define", "bad"],
       "expect": {
         "outcome": "failure",
-        "errors": [{"element": "define", "argv_pos": 3, "kind": "parse"}]
+        "errors": [{"element": "define", "args_pos": 3, "kind": "parse"}]
       }
     }
   ]

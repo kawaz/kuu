@@ -27,7 +27,7 @@
     {
       "id": "help-selected-survives-bool-requires-failure",
       "why": "--help --a: help は selected、a は c=false で requires 違反 → Failure だが fired_action=help が両立 (DR-048/DR-053 §2)。",
-      "argv": [
+      "args": [
         "--help",
         "--a"
       ],
@@ -36,7 +36,7 @@
         "errors": [
           {
             "element": "a",
-            "argv_pos": 2,
+            "args_pos": 2,
             "kind": "constraint",
             "reason": "requires_violated"
           }

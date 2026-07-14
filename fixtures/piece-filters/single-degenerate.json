@@ -10,7 +10,7 @@
     {
       "id": "degenerate-single-piece-trimmed",
       "why": "`--name \" x \"` は multiple 無しなので長さ 1 の [\" x \"] に縮退 (DR-034)、piece_filters trim がその唯一の piece に適用され \"x\" → parse (string 恒等) → unwrap_single 相当の scalar collector で result name=\"x\" (配列でなくスカラー)。",
-      "argv": ["--name", " x "],
+      "args": ["--name", " x "],
       "expect": {
         "outcome": "success",
         "effects": [

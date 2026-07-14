@@ -1,5 +1,5 @@
 {
-  "why": "filter 名 (final_filters に指定される scalar filter registry T→T のエントリ名) が filters registry の descriptor `owns` 集合 (DR-061 / DR-094) に登録されていない場合は definition-error (kind=unknown-vocab、DR-101 §1)。final_filters は multiple 宣言のない値要素専用で、対象 registry は scalar filter registry のみに固定される (DR-102 §1) — 1 属性 1 registry の対応により、value_filters / piece_filters と判定形が同一の (綴り + scalar registry の owns 集合) の unknown-vocab 適用ケースになる。accum_filters (ARRAY filter registry) の owns 集合との層違い判定は発生しない (DR-101 §3 は DR-102 により superseded、判定は自 registry のみで完結)。argv は書かない (DR-082 §1、definition の静的検査であり実行しない)。",
+  "why": "filter 名 (final_filters に指定される scalar filter registry T→T のエントリ名) が filters registry の descriptor `owns` 集合 (DR-061 / DR-094) に登録されていない場合は definition-error (kind=unknown-vocab、DR-101 §1)。final_filters は multiple 宣言のない値要素専用で、対象 registry は scalar filter registry のみに固定される (DR-102 §1) — 1 属性 1 registry の対応により、value_filters / piece_filters と判定形が同一の (綴り + scalar registry の owns 集合) の unknown-vocab 適用ケースになる。accum_filters (ARRAY filter registry) の owns 集合との層違い判定は発生しない (DR-101 §3 は DR-102 により superseded、判定は自 registry のみで完結)。args は書かない (DR-082 §1、definition の静的検査であり実行しない)。",
   "query": "definition_error",
   "definition": {
     "options": [

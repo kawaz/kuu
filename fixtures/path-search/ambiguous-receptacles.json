@@ -11,7 +11,7 @@
     {
       "id": "zero-tokens-unique-split",
       "why": "トークン 0 個 → 取り分の自由度ゼロ → xs=[], ys=[] の一意経路で commit。両 repeat が min:0 かつ空でも absent にならず [] を持つ (DR-051 §1)。置くトークンが無ければ配分の切り方が 1 通りしかなく、選好を働かせるまでもなく確定する。case 2/3 と対で「曖昧に見える取り分は選好で 1 本に畳まれる」ことを固定。",
-      "argv": [],
+      "args": [],
       "expect": {
         "outcome": "success",
         "effects": [],
@@ -21,7 +21,7 @@
     {
       "id": "one-token-greedy-left",
       "why": "トークン 1 個 → 取り分は xs=[z]/ys=[] と xs=[]/ys=[z] の 2 通りだが、これは効果の異なる別解釈ではなく配分の自由 → greedy 既定で確定。左 (xs) から長い取り分を試し xs=[z] を採る → ys=[] (min:0) で完全経路に到達 → その取り分で commit。DR-038 の ambiguous にはならない (DR-043: 選好は取り分次元の中だけで働く)。蒸留元 (slice phase1:24) は取り分選好導入前の生 Many を写していたため 2 本列挙 ambiguous を期待していたが、それは陳腐化実測だった。",
-      "argv": ["z"],
+      "args": ["z"],
       "expect": {
         "outcome": "success",
         "effects": [{"entity": "xs", "op": "set", "operand": "z", "source": "cli"}],
@@ -31,7 +31,7 @@
     {
       "id": "two-tokens-greedy-left",
       "why": "トークン 2 個 → 取り分は 3 通り (xs=[a,b]/ys=[] | xs=[a]/ys=[b] | xs=[]/ys=[a,b]) だが全て同一解釈の配分違い → greedy 既定で最長取り分に確定。左 xs から長い順に試し xs=[a,b] を採る → ys=[] で完全経路に到達 → commit。それより短い取り分は試さない (最初に完全経路へ到達した取り分で確定, DR-043)。トークン数が増えても取り分の配分違いは選好で 1 本に畳まれ ambiguous 化しない (陳腐化前は分割点数 = 解釈数として全列挙していた)。",
-      "argv": ["a", "b"],
+      "args": ["a", "b"],
       "expect": {
         "outcome": "success",
         "effects": [{"entity": "xs", "op": "set", "operand": "a", "source": "cli"}, {"entity": "xs", "op": "set", "operand": "b", "source": "cli"}],

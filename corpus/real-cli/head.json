@@ -14,7 +14,7 @@
     {
       "id": "lines-with-file",
       "why": "`head -n 5 file.txt` (実機は先頭 5 行)。-n が int 5 を値バインド、file.txt が files に落ちる。-c は未発火で absent (default なし値オプション、DR-051)。effects は消費順 lines(pos0-1)→files(pos2)。",
-      "argv": ["-n", "5", "file.txt"],
+      "args": ["-n", "5", "file.txt"],
       "expect": {
         "outcome": "success",
         "effects": [
@@ -27,7 +27,7 @@
     {
       "id": "bytes-no-file",
       "why": "`head -c 100` (実機は先頭 100 バイト、stdin)。-c が int 100 を値バインド、files 0 個 → `[]`。lines は absent。exclusive_group は片方のみ committed なので不成立。",
-      "argv": ["-c", "100"],
+      "args": ["-c", "100"],
       "expect": {
         "outcome": "success",
         "effects": [
@@ -39,7 +39,7 @@
     {
       "id": "default-behavior-no-flag",
       "why": "`head file.txt` (実機は先頭 10 行 = アプリの default)。-n/-c とも未発火 → 両方 absent、files に file.txt。デフォルト 10 は kuu に持たせずアプリが absent を見て採る (kuu には値源がない = absent、DR-051)。",
-      "argv": ["file.txt"],
+      "args": ["file.txt"],
       "expect": {
         "outcome": "success",
         "effects": [
@@ -50,12 +50,12 @@
     },
     {
       "id": "lines-and-bytes-conflict",
-      "why": "`head -n 3 -c 10` は実機エラー (排他違反)。lines/bytes とも committed で exclusive_group `amount` 違反。element=group ラベル amount (constraints-parse/exclusive と同型)、kind=constraint、reason=exclusive_group_violated、argv_pos=argv.length=4 (全消費後評価)。",
-      "argv": ["-n", "3", "-c", "10"],
+      "why": "`head -n 3 -c 10` は実機エラー (排他違反)。lines/bytes とも committed で exclusive_group `amount` 違反。element=group ラベル amount (constraints-parse/exclusive と同型)、kind=constraint、reason=exclusive_group_violated、args_pos=args.length=4 (全消費後評価)。",
+      "args": ["-n", "3", "-c", "10"],
       "expect": {
         "outcome": "failure",
         "errors": [
-          {"element": "amount", "argv_pos": 4, "kind": "constraint", "reason": "exclusive_group_violated"}
+          {"element": "amount", "args_pos": 4, "kind": "constraint", "reason": "exclusive_group_violated"}
         ]
       }
     }
