@@ -29,9 +29,13 @@ member は **plain bool** (`type:"bool"` + `long:[":set:true"]`、DR-076 §2 の
 
 同名文字列 `"mode"` を両属性に書いても、`required_group` の group 集合と `exclusive_group` の group 集合は別々に評価される独立した遅延述語 — 同名にすることで意味的に「同じグループ」を指しているように見えるが、機構としては 2 つの独立述語が同じラベル文字列を共有しているだけ (`conflicts_with` と `exclusive_group` の重複宣言が独立評価される既存パターン、`fixtures/constraints-parse/exclusive.json::both-members-violate` と同型)。この独立 2 述語の組み合わせにより、**「ちょうど 1 つ」(exactly-one、tar のモード必須)** が「最大 1 つ (exclusive_group)」+「少なくとも 1 つ (required_group)」の合成として表現できる。同名共有は必須ではない — `required_group` のみを異なるグループ名で書けば「複数 member 同時発火可・ただし最低 1 つは必須」という exactly-one でない ALO も表現できる。
 
+> **明確化 (統括検証 2026-07-14、codex レビュー M-1 の反映): 上記の exactly-one 成立は、group member の値充足構成に条件が付く。** `exclusive_group` は committed (指定述語、CLI 上で発火したか) を数え、`required_group` は値充足 (値述語、default 込みの値の有無、DR-093) を数えており、両者は別の述語である。「最大 1 つ + 少なくとも 1 つ = ちょうど 1 つ」が成立するのは、**値充足と committed が一致する member 構成** — すなわち default/env/config/inherit 等の非 committed 値源を持たず、発火時にのみ値を持つ member 群 (tar fixture の plain bool 群がこれに該当) — に限られる。flag preset (暗黙 `default:false`) や `default` 宣言を持つ member が混ざると、0 発火でも required_group が値充足で成立し、exclusive_group も committed 0 で成立してしまう (= 0 トリガでも通る)。これは `required_group` が値述語として正しく振る舞った帰結であり、bug ではない (§7 の vacuous 成立と同根)。この限定を欠いた「exactly-one が一般に成立する」という主張は過剰一般化だった。
+
 ### 4. 縮退: 単独 member の `required_group` は `required: true` と等価
 
 グループの member が 1 要素のみの場合、その要素の `required_group` はグループ判定が単項判定に縮退し `required: true` と観測上同じ結果になる (`exclusive_group` が単独 member では排他が起こりようがなく no-op になるのと対称の性質)。
+
+> **明確化 (統括検証 2026-07-14、codex レビュー M-4 の反映): 「観測上同じ」は充足の真偽のみを指し、violation の wire 表現までは同一にならない。** 単独 member の `required_group` が `required:true` と等価なのは「グループが充足するか否かの真偽値」のみであり、違反時の error 構造は group 制約固有のまま変わらない — element はグループラベル、reason は `required_group_violated` (§2) — であって、`required` 単項の element = 要素名、reason = `required_violated` とは異なる。`fixtures/constraints-parse/required-group.json::solo-member-degenerates-to-required` の expect (`element: "target_grp"`, `reason: "required_group_violated"`) がこの相違を実証している。
 
 ### 5. scope 相互作用は exclusive_group の既存規定を同型適用
 
