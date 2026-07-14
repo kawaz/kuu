@@ -12,10 +12,11 @@
 
 裁定済み: **ACC-Q3 = Result 化** (kawaz 2026-07-14。線引き =「filter 席 = fallible / 構造装置 = total」、実装サイクルは complete DR の後)。ACC-Q1/Q2 は kawaz の再検討 (extend は言語非依存文脈で別義リスク / push も単独では迷い / 一般論では flat=spread・concat、そのまま=wrap・nest が低誤解) を受けて更新:
 
-- **ACC-Q1c**: accumulator 語彙の最終形 (2 語ペア、kawaz 方針)。**実物確認による前提修正: 展開結合は既存 accumulator `flatten` (DR-036、[T,[T,…]] → T[]) が既に担っており新設は不要** — 話は既存ペア {append / flatten} の改名。flatten も評価表△の深さ曖昧語なので、ペア改名で問題語 2 つが一度に消える:
-  - **a (統括推し): `push_one` (現 append) / `push_each` (現 flatten)** — one = 発火値を丸ごと 1 要素、each = 発火値の各要素を展開 (1 段を含意し深さ曖昧性が構造的に消える)。同一動詞 + 中学英語修飾子の対比で誤読余地なし
-  - **b: `add_one` / `add_each`** — 動詞がさらに平易 (Java add/addAll 同系)
-  - wrap/nest 系は kuu の accumulator が scalar 発火も受ける (入れ子が発生しない) ため不適合で非推奨
+- **ACC-Q1d** (最終確認): kawaz 案 =「語彙は `append` を維持し、`flatten` 属性 (ダイヤル) を足す」。統括賛成 + 副産物の統合案:
+  - `multiple: {accumulator: "append", flatten: true}` — flatten 既定 false (現挙動)、true で発火値が配列ならその要素を積む (1 段、spec で固定)
+  - **既存 flatten accumulator (DR-036) は append+flatten:true と同義なので統合して廃止** — 語彙が「2 accumulator」から「1 accumulator + 1 ダイヤル」へ削減、DR-100 の config ダイヤル路線と整合
+  - 残る懸念: 素の append の既定挙動は字面から確定しない (schema の flatten 既定値明記で実用上解消)。push_one/push_each 案 (one/each がどちらも「一つずつ」に聞こえる) は棄却
+  - **Yes/No で確定** — Yes なら ACC-Q4 と合わせて実行サイクルへ
 - **ACC-Q4**: Result 化の実効化に必要な**最初の検証系 array filter** — 現 ARRAY registry は unique (transform) のみで reject を出す住人がゼロのため、Result 化しても fixture で pin できない。**a (統括推し): `length_range:min:max`** (配列長の範囲検査、kawaz の挙げた「配列長検査」の直接表現) を Result 化と同サイクルで追加 / b: 別候補 / c: 住人なしで Result 化だけ先行 (pin は後日)
 
 副次 (裁定不要、次バッチで対応): unwrap_single / from_entries の descriptor が builtin-descriptors.json に未収載 (total なので reasons:[] を補うだけ)。
