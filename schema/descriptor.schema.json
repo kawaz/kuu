@@ -20,13 +20,18 @@
         },
         "kind": {
           "type": "string",
-          "enum": ["installer", "factory", "filter"],
-          "description": "descriptor が説明する registry 住人の種別。installer = DR-042 の特殊語彙展開装置 (owns/observes を持つ)。factory = DR-061 §3 の configurable factory (types/accumulators/completers 等の名前+config 参照先)。filter = DESIGN §8 の filters registry 住人 (owns/observes は通常空)。"
+          "enum": ["installer", "factory", "filter", "collector"],
+          "description": "descriptor が説明する registry 住人の種別。installer = DR-042 の特殊語彙展開装置 (owns/observes を持つ)。factory = DR-061 §3 の configurable factory (types/accumulators/completers 等の名前+config 参照先)。filter = DESIGN §8 の filters registry 住人 (owns/observes は通常空、scalar filter registry または ARRAY filter registry のいずれかに属する — 区別は `domain`)。collector = DR-036/DR-044 の累積結果変換装置 (T[]→U、`filters.*` namespace を共有するが filter chain の colon-DSL args とは異なる呼び出し規約を持つ、DR-106、codex レビュー #2 M-21 の反映)。"
+        },
+        "domain": {
+          "type": "string",
+          "enum": ["scalar", "array"],
+          "description": "`kind:\"filter\"` 限定の carrier 軸 (DR-106、codex レビュー #2 M-20 の反映)。`signature` (Validate/Transform) が fallibility 軸を表すのに対し、`domain` は入力の型 (T か T[] か) を表す — scalar = scalar filter registry (value_filters/piece_filters/final_filters が使う T→T)、array = ARRAY filter registry (accum_filters が使う T[]→T[]、DR-102)。`kind:\"filter\"` のエントリでは実質必須 (`in_range` と `length_range` のように同じ kind/signature の組でも carrier が異なる住人を区別するため)。installer/factory/collector descriptor には無関係 (出現しない)。"
         },
         "signature": {
           "type": "string",
           "enum": ["Validate", "Transform"],
-          "description": "filter descriptor 限定 (DESIGN §8.1)。scalar filter registry (kuu.mbt FilterDescriptor、value_filters/piece_filters/final_filters が使う T→T) と ARRAY filter registry (kuu.mbt ArrayFilterDescriptor、accum_filters が使う Acc→Acc、DR-102) の両方に同じ二分法を適用する (DR-105 §4 — ARRAY filter registry も fallibility を持てるようになった)。Validate = 入力を変えず成功か reject のみ (non_empty/in_range/length_range 等)、Transform = 入力から新しい値を計算し失敗しない (trim/increment/unique 等)。reasons が空か非空かの機械的判定根拠 (DR-095 §3)。installer/factory descriptor には無関係 (出現しない)。"
+          "description": "filter descriptor 限定 (DESIGN §8.1)。scalar filter registry (kuu.mbt FilterDescriptor、value_filters/piece_filters/final_filters が使う T→T) と ARRAY filter registry (kuu.mbt ArrayFilterDescriptor、accum_filters が使う Acc→Acc、DR-102) の両方に同じ二分法を適用する (DR-105 §4 — ARRAY filter registry も fallibility を持てるようになった)。Validate = 入力を変えず成功か reject のみ (non_empty/in_range/length_range 等)、Transform = 入力から新しい値を計算し失敗しない (trim/increment/unique 等)。reasons が空か非空かの機械的判定根拠 (DR-095 §3)。installer/factory/collector descriptor には無関係 (出現しない)。"
         },
         "owns": {
           "type": "array",

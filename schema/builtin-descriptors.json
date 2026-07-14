@@ -6,6 +6,7 @@
     "trim": {
       "name": "trim",
       "kind": "filter",
+      "domain": "scalar",
       "signature": "Transform",
       "reasons": [],
       "description": "文字列前後の ASCII 空白除去 (DESIGN §8.1 piece_filters 例)。Transform (常に成功、DR-095 §3) — 非 string 入力は素通し (kuu.mbt filter_trim の defensive 実装、value_filters/piece_filters は string→string 契約前提なので通常到達しない)。"
@@ -13,6 +14,7 @@
     "non_empty": {
       "name": "non_empty",
       "kind": "filter",
+      "domain": "scalar",
       "signature": "Validate",
       "reasons": ["empty_value"],
       "description": "空文字列を拒否する Validate (DESIGN §8.1、DR-040 §filters 最小セット)。failure mode は空文字列の 1 種のみ。reason 名は docs/issue/2026-07-08-schema-materialization-and-reason-descriptors.md SCH-Q3-b の提示をそのまま採用 (DR-066 §3 v1 表には対応語彙が無いため本 DR-095 で builtin ns に新設)。"
@@ -20,6 +22,7 @@
     "in_range": {
       "name": "in_range",
       "kind": "filter",
+      "domain": "scalar",
       "signature": "Validate",
       "config": {
         "min": { "type": "number", "description": "DSL 第1引数 (下限、含む)。値そのものは呼び出しごとの args であり descriptor config ではない — 本欄は DSL 引数の意味を記す注記。" },
@@ -31,6 +34,7 @@
     "regex_match": {
       "name": "regex_match",
       "kind": "filter",
+      "domain": "scalar",
       "signature": "Validate",
       "config": {
         "pattern": { "type": "string", "description": "DSL 唯一引数。host 方言準拠 (DR-085 §2)、compile 可否は定義時に静的判定される。" }
@@ -41,6 +45,7 @@
     "increment": {
       "name": "increment",
       "kind": "filter",
+      "domain": "scalar",
       "signature": "Transform",
       "reasons": [],
       "description": "count 要素の update transform (DR-077 §2/§3、0-arg、old+1)。Transform (常に成功) — 数値入力のみ受ける前提 (count 要素の value_filters/update transform として使われる、型不一致は filter-definition bug でありランタイム reason 体系の対象外)。"
@@ -48,6 +53,7 @@
     "unique": {
       "name": "unique",
       "kind": "filter",
+      "domain": "array",
       "signature": "Transform",
       "reasons": [],
       "description": "累積後の配列 (Acc→Acc、accum_filters 相、DR-102) から重複要素を除去 (kuu.mbt array_filter_unique、先勝ち順序保持)。Transform 相当 (拒否を持たない純関数、kuu.mbt ArrayFilterDescriptor.run に Result 型が無いことが実装的裏付け)。"
@@ -55,6 +61,7 @@
     "length_range": {
       "name": "length_range",
       "kind": "filter",
+      "domain": "array",
       "signature": "Validate",
       "config": {
         "min": { "type": "number", "description": "DSL 第1引数 (下限、含む)。値そのものは呼び出しごとの args であり descriptor config ではない — 本欄は DSL 引数の意味を記す注記。" },
@@ -65,17 +72,17 @@
     },
     "unwrap_single": {
       "name": "unwrap_single",
-      "kind": "filter",
+      "kind": "collector",
       "signature": "Transform",
       "reasons": [],
-      "description": "累積結果 (T[]→U、collector 相、DR-036) — 長さ 1 配列を要素へ再帰的に畳む (0 個・2 個以上の配列は不変のまま通す、DR-034 縮退ケース)。multiple プリセット `override` の default_collector。Transform 相当 (拒否を持たない純関数)。"
+      "description": "累積結果 (T[]→U、collector 相、DR-036) — 長さ 1 配列を要素へ再帰的に畳む (0 個・2 個以上の配列は不変のまま通す、DR-034 縮退ケース)。multiple プリセット `override` の default_collector。Transform 相当 (拒否を持たない純関数)。呼び出し規約は filter chain の colon-DSL args とは異なる (multiple.collector の宣言から導出、DR-106、codex レビュー #2 M-21 の反映)。"
     },
     "from_entries": {
       "name": "from_entries",
-      "kind": "filter",
+      "kind": "collector",
       "signature": "Transform",
       "reasons": [],
-      "description": "累積結果 (T[]→U、collector 相、DR-036/DR-044) — entries 配列形・指名 2 フィールド形・key 昇格形の 3 用法を一本で覆い Map へ変換する。multiple プリセット `map` の collector (旧 to_map + key_from を置換)。Transform 相当 (拒否を持たない純関数)。"
+      "description": "累積結果 (T[]→U、collector 相、DR-036/DR-044) — entries 配列形・指名 2 フィールド形・key 昇格形の 3 用法を一本で覆い Map へ変換する。multiple プリセット `map` の collector (旧 to_map + key_from を置換)。Transform 相当 (拒否を持たない純関数)。呼び出し規約は filter chain の colon-DSL args とは異なる (multiple.collector の object 形から導出する FromEntries spec を引数に取る、DR-106、codex レビュー #2 M-21 の反映)。"
     }
   },
 

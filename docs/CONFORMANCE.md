@@ -116,11 +116,23 @@
 - warnings は集合比較 (element の組。**kind は fixture 側に書かれている要素でのみ比較対象** (§2 の optional 検証))
 - `help_entry` は構造等価 (**fixture 側に書かれている場合のみ比較する opt-in**、§2)
 - `tried_triggers` は集合比較 (**fixture 側に書かれている場合のみ比較する opt-in**、§2。順序非規範 — 近接マッチ計算が DX 層の関心である以上、綴りの列挙順に規範性はない)
-- `candidates` (`query: "complete"`、§4) は集合比較 (`interpretations` と同じ扱い — DR-060 §1 の「和集合」はスペリングの和集合であり順序を課さない、DR-104 §4)。各候補は `spelling`/`is_value`/`ty`/`origin`/`term`/`meta` の構造等価で比較する。**`meta` (`is_alias`/`hidden`/`deprecated`) は候補同一性の成分であり必須検証** (省略 = default 値 `{false,false,false}` と等価という §3 冒頭の一般規約をそのまま適用すると省略時に検証が骨抜きになるため、`candidates[].meta` は常に書く運用とする、COMP-Q2)。**`completer` (値位置候補の completer 名) は opt-in 検証** — 書けば比較、書かなければ未検証 (`errors.reason` と同じ optional 検証パターン、COMP-Q3)。`path` は候補構造の wire に含めない (DR-104 §2/§3)
+- `candidates` (`query: "complete"`、§4) は**順序非依存の multiset 比較** (重複を保持したまま一対一対応。DR-060 §1 の「和集合」はスペリングの和集合であり順序を課さない、DR-104 §4) — `interpretations` (集合比較、重複解釈の dedup 可否は本書で定めない) との非対称に注意: `candidates` の dedup は DR-104 §3 により producer 側 (実装) の規範として既に確定しているため、actual 側の候補列に同一性 6 フィールドの重複があれば expect と一致せず mismatch になる。各候補は `spelling`/`is_value`/`ty`/`origin`/`term`/`meta` の構造等価で比較する。**`meta` (`is_alias`/`hidden`/`deprecated`) は候補同一性の成分であり必須検証** (省略 = default 値 `{false,false,false}` と等価という §3 冒頭の一般規約をそのまま適用すると省略時に検証が骨抜きになるため、`candidates[].meta` は常に書く運用とする、COMP-Q2)。**`completer` (値位置候補の completer 名) は opt-in 検証** — 書けば比較、書かなければ未検証 (`errors.reason` と同じ optional 検証パターン、COMP-Q3)。`path` は候補構造の wire に含めない (DR-104 §2/§3)。
+
+  `candidates[]` 各フィールドの分類 (DR-104 §2/§3、codex レビュー #2 C-3/M-4 の反映):
+
+  | フィールド | 分類 | 規定 |
+  |---|---|---|
+  | `spelling` | normalization-default | `is_value:false` で実質必須、`is_value:true` では省略 = `""` と等価に正規化 |
+  | `is_value` | required-no-default | 常に必須 |
+  | `origin` | required-no-default | 常に必須 |
+  | `term` | required-no-default | 常に必須 (`word_end`/`cont`) |
+  | `meta` | required-no-default | 常に必須・省略不可 (候補同一性の成分、default 読み替えなし) |
+  | `ty` | normalization-default (実質必須) | `is_value:true` で実質必須、`is_value:false` では意味を持たない |
+  | `completer` | opt-in-untested | 書けば比較、書かなければ未検証 (未実装のため fixture では書かない) |
 
 ## 4. 補完クエリ (`query: "complete"`、DR-104)
 
-`query: "complete"` の fixture は、`definition` に対する `args_before` (必須) / `args_after` (optional) を入力に `candidates` の期待集合を検証する。`word_before`/`word_after` (カーソル単語内の前後半) は v1 未使用可のまま予約されており fixture では書かない (DR-104 §1)。**本節は §2 の 7 op 表 (`effects[].op`) とは独立の語彙体系である** — complete は値セルへの副作用を持たない候補集合クエリであり、7 op 表と混同しない (COMP-Q5)。
+`query: "complete"` の fixture は、`definition` に対する `args_before` (必須) / `args_after` (optional) を入力に `candidates` の期待集合を検証する。`word_before`/`word_after` (カーソル単語内の前後半) は v1 未使用可のまま予約されており fixture では書かない (DR-104 §1)。**case オブジェクトに `word_before`/`word_after` が書かれていた場合、runner は fixture 不備として明示的に reject する** (silent ignore はしない、codex レビュー #2 m-4 の反映)。**本節は §2 の 7 op 表 (`effects[].op`) とは独立の語彙体系である** — complete は値セルへの副作用を持たない候補集合クエリであり、7 op 表と混同しない (COMP-Q5)。
 
 ```json
 {
@@ -136,7 +148,7 @@
       "expect": {
         "outcome": "complete",
         "candidates": [
-          {"spelling": "--port", "is_value": false, "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}},
+          {"spelling": "--port", "is_value": false, "origin": "port", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}},
           {"is_value": true, "ty": "number", "origin": "port", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}}
         ]
       }
@@ -145,11 +157,11 @@
 }
 ```
 
-- `cases[].args_before`: 必須。前処理済みトークン列、カーソル前 (DR-104 §1)
-- `cases[].args_after`: optional。前処理済みトークン列、カーソル後。与えられると after 整合フィルタ (§4 下記) が働く
+- `cases[].args_before`: 必須。前処理済みトークン列、カーソル前 (DR-104 §1)。**カーソル前で確定した完全トークンのみを含み、カーソルが単語内にある場合も進行中の部分単語は含めない** (DR-060 §2 の `before`/`word` フィールド分離設計の帰結、DR-104 §1 明確化 note) — 単語内カーソル時の candidates は単語頭カーソル時と同一集合になる
+- `cases[].args_after`: optional。前処理済みトークン列、カーソル後。与えられると after 整合フィルタ (§4 下記) が働く。**省略と明示的な空配列 `[]` の供給は同値** (length ベース判定、DR-104 §5 明確化 note)
 - `expect.outcome`: `"complete"` 固定
 - `expect.candidates`: `Cand` 構造の直訳 (DR-104 §2)。各要素は `{spelling?, is_value, ty?, origin, term, meta, completer?}`。`spelling` は `is_value:false` で実質必須 (`is_value:true` では省略可、省略 = `""` と等価)。`ty` は `is_value:true` で実質必須。`meta` は常に書く (§3)
-- **制約 (遅延述語) は `args_before` のみの候補生存判定に不参加**: `required`/`required_group`/`requires`/`exclusive_group`/`conflicts_with` はいずれも候補から除外する判定に使われない — 排他相手が committed 済みでもその候補は返る (DR-104 §5)。`args_after` が与えられた場合のみ、候補採用後の完全経路判定 (遅延述語込みの `parse()` フル実行) が間接的に働く — 値位置候補・`term:"cont"` の候補はこのフィルタの対象外 (ユーザ入力を発明できないため無条件で通る)
+- **制約 (遅延述語) は `args_before` のみの候補生存判定に不参加**: `required`/`required_group`/`requires`/`exclusive_group`/`conflicts_with` はいずれも候補から除外する判定に使われない — 排他相手が committed 済みでもその候補は返る (DR-104 §5)。**`args_after` が与えられた場合、exact かつ `term:"word_end"` の候補に限り** 候補採用後の完全経路判定 (遅延述語込みの `parse()` フル実行) が間接的に働く — 値位置候補・`term:"cont"` の候補はこのフィルタの対象外 (ユーザ入力を発明できないため無条件で通る)
 
 ## 5. ディレクトリ構成
 
