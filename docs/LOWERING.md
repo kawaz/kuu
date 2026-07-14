@@ -352,11 +352,11 @@ positionals / options の要素として command を直接置いてよい。
 ```
 所有語彙: repeat 属性
 入力:  {name: "file", type: "string", repeat: {min: 1}}
-出力 (背骨の参照 + templates 面の cons + 平坦化 accumulator — 断面表記は DR-063 §3):
+出力 (背骨の参照 + templates 面の cons + 平坦化 accumulator ダイヤル — 断面表記は DR-063 §3):
   背骨:      {ref: "file#cons"}
   templates: file#cons = {seq: [{ref: "file", link: "file"},          // head: file 実体の構造継承 + 値同期
                                 {ref: "file#cons", optional: true}]}  // 尾部: template 自身への再帰
-  値セル:    file = {type: "string", accumulator: "flatten"}
+  値セル:    file = {type: "string", accumulator: "append", flatten: true}
 ```
 
 ref 要素にもそのまま付く (head の構造継承先が変わるだけ):
@@ -391,8 +391,8 @@ ref 要素にもそのまま付く (head の構造継承先が変わるだけ):
 
 **規則**: repeat installer は `repeat` を回収し、**ref を使った再帰リスト構造 (cons)** へ lowering する。`[T, T[]]`
 の cons であり、3 引数なら `[T, [T, [T]]]` と unfold される。min は必須段の unroll、max は unroll 段数の上限、
-上限なしは再帰尾部で表現する。平坦化 (`[T,[T,…]]` → `T[]`) の accumulator は組み込み名 **`flatten`** (accumulators
-registry、DR-036) を同時にインストールする。**`optional: true` は `repeat: {min: 0, max: 1}` の糖衣**であり閉包に
+上限なしは再帰尾部で表現する。平坦化 (`[T,[T,…]]` → `T[]`) は `append` accumulator の **`flatten: true`** ダイヤル
+(DR-105) を同時にインストールする。**`optional: true` は `repeat: {min: 0, max: 1}` の糖衣**であり閉包に
 還元される (独立概念ではない、DR-043)。ゼロ進捗ガード (再帰 1 周で 1 トークン以上消費すること) は静的検査で保証する。
 unfold は現在の背骨に留まるため、反復間の greedy 割り込み (`cp src... --verbose dst`) は保たれる。
 

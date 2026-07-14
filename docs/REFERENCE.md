@@ -234,10 +234,13 @@ canonical 実体への別入口参照 (参照ファミリーの 3 人目: `ref` 
 
 **`multiple`**
 複数値経路のスイッチ。担うのは値の畳み方 (accumulator/collector/separator) のみで、出現回数の
-反復構造は `repeat` が担う。プリセット名 (string) または `{accumulator, collector?, separator?}`
-の詳細形。組み込みプリセット: `append` / `merge` / `set` / `map` (DESIGN §6.4)。
-最小例: `{"name": "tag", "type": "string", "multiple": "append"}`
-正本: DESIGN §6.1〜6.4, DR-034/036
+反復構造は `repeat` が担う。プリセット名 (string) または `{accumulator, collector?, separator?, flatten?}`
+の詳細形。組み込みプリセット: `append` / `merge` / `set` / `map` (DESIGN §6.4)。`flatten` は
+`accumulator: "append"` 専用のダイヤル (既定 false) — true で発火値が配列ならその要素を 1 段展開
+して積む。他 accumulator への宣言は definition-error kind=invalid-range。
+最小例: `{"name": "tag", "type": "string", "multiple": "append"}` /
+`{"name": "src", "type": "string", "multiple": {"accumulator": "append", "flatten": true}}`
+正本: DESIGN §6.1〜6.4, DR-034/036/105
 
 **`repeat`**
 構造閉包 (出現回数の反復)。`true` または `{min?, max?, lazy?}`。宣言した要素の結果は max の値に
@@ -563,6 +566,9 @@ xargs 型。最初の非ハイフン operand (utility 名) で発火、そのト
 | `regex_match` | Validate | `pattern_no_match` | pattern への部分一致検証 (unanchored、全体一致は `^$` で表現)。compile 失敗は definition-error (実行時 reason ではない) |
 | `increment` | Transform | (空) | count 要素の update transform (0-arg、`old+1`) |
 | `unique` | Transform | (空) | 累積後の配列 (`Acc→Acc`、accum_filters 相) から重複要素を除去 (先勝ち順序保持) |
+| `length_range` | Validate | `too_short`, `too_long` | 累積後の配列長の範囲検証 (`Acc→Acc`、accum_filters 相、DR-105) |
+| `unwrap_single` | Transform | (空) | 累積結果 (`T[]→U`、collector 相) — 長さ 1 配列を要素へ再帰的に畳む、0/2+ 個は不変 (`multiple` プリセット `override` の default_collector) |
+| `from_entries` | Transform | (空) | 累積結果 (`T[]→U`、collector 相) — entries 配列形/指名 2 フィールド形/key 昇格形を Map へ変換 (`multiple` プリセット `map` の collector) |
 <!-- kuu-lint:end -->
 
 `signature` が reasons の有無を機械的に決める: **Transform (常に成功) は `reasons: []`**、
@@ -635,6 +641,8 @@ constraint 系は `<属性名>_violated` で機械的に統一されている。
 | `too_small` | `in_range` | 下限未満 |
 | `too_large` | `in_range` | 上限超過 |
 | `pattern_no_match` | `regex_match` | 有効にコンパイルされた pattern に対象文字列が不一致 (compile 失敗は definition-error 側の `kind` で扱い、本語彙には含まない) |
+| `too_short` | `length_range` | 累積後の配列長が下限未満 |
+| `too_long` | `length_range` | 累積後の配列長が上限超過 |
 <!-- kuu-lint:end -->
 
 ### 7.5 builtin type factory が emit する reason
