@@ -1,6 +1,6 @@
 ---
 title: cell_filters の multiple 有無による二重意味を属性分割で解消する (kawaz 裁定 2026-07-13)
-status: wip
+status: resolved
 category: design
 created: 2026-07-14T09:37:24+09:00
 last_read: 2026-07-14T09:43:22+09:00
@@ -9,10 +9,10 @@ wip_entered: 2026-07-14T09:37:24+09:00
 blocked_entered:
 pending_entered:
 discarded_entered:
-resolved_entered:
+resolved_entered: 2026-07-14T13:40:45+09:00
 discard_reason:
 pending_reason:
-close_reason:
+close_reason: ["dr/DR-102", "implemented", "done: kuu.mbt 44e51ba0 (8 files) landed; final_filters/accum_filters 分割で層違い2段判定消滅; conformance decoded=218/mismatches=0; CI green (lockstep push #1 92a52de6 -> #3 414131f1)", "follow-up: issue/2026-07-14-codex-review-dr102-dr103-postland (post-land codex レビュー指摘)"]
 blocked_by:
 origin: 自リポ TODO
 ---
