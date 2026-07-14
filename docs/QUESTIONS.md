@@ -6,17 +6,17 @@
 > チャットでは「VF-Q 待ち」のようにラベルだけで参照する。回答はラベル + 選択肢記号 (例「VF-b で」) だけで通じる。
 > 参照パスは本リポ (spec) 相対。kuu.mbt 側は「kuu.mbt の <path>」と表記する。
 
-## ACC-Q1〜Q3: accumulator 語彙と accum_filters の Result 化 (調査完了、裁定待ち)
+## RGV-Q1: required 系の flag/bool member 充足を bool-truth に変えるか (RG-Q1 の再確認)
 
-調査結果 (fallibility 全数 + 言語横断動詞マトリクス): 詳細はセッション scratchpad の accum-fallibility-vocab-recon.md (findings 記録予定)。勢力図 = **filter 席は fallible 優勢 / 構造畳み装置 (accumulator/collector) は total が全員** (DR-082 の「構造的妥当性は definition-error へ、runtime は total」パターンの体系適用)。T[][] は ref×repeat×append で既に可能 (DR-084 §2 pin 済み) だが scalar 側は separator が piece に潰すため不可。
+kawaz の疑義 (2026-07-14 夜): 「flag フィールドは値の充足ではなく true を判断に使うべきでは？」
 
-裁定済み: **ACC-Q3 = Result 化** (kawaz 2026-07-14。線引き =「filter 席 = fallible / 構造装置 = total」、実装サイクルは complete DR の後)。ACC-Q1/Q2 は kawaz の再検討 (extend は言語非依存文脈で別義リスク / push も単独では迷い / 一般論では flat=spread・concat、そのまま=wrap・nest が低誤解) を受けて更新:
+現状の記録 (統括検証済み、間違いは未発見):
 
-裁定済み (2026-07-14): **ACC-Q1d = Yes** — `append` 維持 + `flatten` ダイヤル (既定 false、true で発火値が配列ならその要素を積む = 1 段)、既存 flatten accumulator は append+flatten:true に統合して廃止。「accumulator が実質 2 つのレイヤを扱っていたのを flatten 明記で整理」(kawaz)。実行サイクル着手済み。
-- 裁定済み (2026-07-14): **ACC-Q4 = OK** — `length_range:min:max` を Result 化と同サイクルで追加。**merge と flatten の整理** (kawaz 確認): flatten ダイヤルは append 専用 — merge の入力は常に scalar piece (merge × ref は DR-084 §3 が definition-error で封じ済みで、配列発火値が構造的に到達しない) ため選択肢自体が発生しない。他 accumulator への flatten 宣言は invalid-range (宣言形不一致の確立パターン) として DR-105 で pin
+- `requires` 目的語が bool/flag → **解決後の値が true** (kawaz 裁定 2026-07-09、DR-047 §5 明確化、`fixtures/constraints-parse/requires-bool-target.json`)
+- `required` / `required_group` → **値の有無** (default 込み、型委譲 DR-093)。flag member は暗黙 default false で常時充足 = vacuous 合法 (**RG-Q1 = kawaz 裁定 2026-07-14**、DR-103 §7、`fixtures/complete/constraint-required-group-vacuous-flag.json` 他で pin)
+- bool-truth の一様適用案 (RG-a) は DR-103「採用しなかった案 (4)」に**統括推し → kawaz 棄却**の記録あり。棄却理由 = required は値述語、requires は依存述語 — 「非対称は意図的」
 
-副次 (裁定不要、次バッチで対応): unwrap_single / from_entries の descriptor が builtin-descriptors.json に未収載 (total なので reasons:[] を補うだけ)。
+選択肢:
 
-## V1 残タスク (V1-Q1=b 裁定済み 2026-07-14、裁定待ちなし)
-
-V1-Q1 = **b (4 プロファイル全部の green が v1.0.0 発行条件)** で確定 → completion fixture 系統が v1 blocker に昇格、complete DR サイクル起草中。V1-Q2 は個別扱いで消化 (DR-070 §4 の単独 golden 要求を「席宣言型は組合せ内 coverage で足りる」に明確化 + 不足組合せの補充のみ)。V1-Q3 は V1-Q1=b により「今起草」で決着。リリースプロセス構築 (V1-R16〜18) は complete 系統の後。
+- **(a) 現状維持** — RG-Q1 の通り。値述語 vs 依存述語の区別を保つ (統括の推し: 語彙の意味論として一貫、tar 型実需は plain bool member で表現済み)
+- **(b) RG-a 再開** — required/required_group の bool/flag member にも bool-truth を適用。影響: DR-103 §7 の supersede、DR-047 §5・DR-093 整合再検討、fixture 2 本 (required-group.json / constraint-required-group-vacuous-flag.json)、kuu.mbt required_candidates 判定の変更
