@@ -66,6 +66,7 @@
 - [DR-043](DR-043-repeat-and-multiple-split.md): repeat (構造閉包、min/max は枝生成に効く、ref 再帰へ lowering) と multiple (値の畳み) の分離、両者 installer 化 (DR-019 の統合を部分的に覆す)
 - [DR-044](DR-044-repeated-group-result-shaping.md): 反復グループの結果整形 — 配列が既定、map は from_entries (entries 配列 / 指名 2 フィールド / key 昇格の 3 用法)
 - [DR-080](DR-080-merge-accumulator.md): merge accumulator — piece マーカー語彙 (remove 全削除 / @ splice / + escape、全体一致のみ)、L→R 評価 (marker なし = 上書き、marker あり = merge + 暗黙先頭 @)、remove は双方向 (作業リストと後続 @ の splice 内容)、old = セル現在値 (初回は下位席勝者 = ラダー合成の限定口、unset は f=identity の縮退)
+- [DR-105](DR-105-accumulator-flatten-and-array-filter-fallibility.md): accumulator `flatten` ダイヤル (append 専用、既定 false、true で発火値配列を 1 段展開) — 独立 accumulator エントリ `flatten` (DR-036/043) を統合廃止、他 accumulator への宣言は definition-error kind=invalid-range (merge×ref の DR-084 §3 と同型)。ARRAY filter registry (`accum_filters`) の fallibility 確立 (「filter 席=fallible/構造装置=total」の勢力図適用) + 最初の Validate 系住人 `length_range:min:max` 追加、DR-102 §4 の reject 位置帰属 (argv.length) が実効化
 
 ## ref / link / definitions
 

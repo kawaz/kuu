@@ -173,3 +173,7 @@ kawaz の整理:
 ### map collector の呼称 (from_entries に統一、DR-044)
 
 > **更新: map プリセットの collector `to_map` (+ 専用フィールド `key_from`) は DR-044 で `from_entries` に置換された。from_entries は entries 配列形・指名 2 フィールド形・key 昇格形の 3 用法を一本で覆う。**
+
+### `flatten` accumulator の独立エントリ廃止 (DR-105 で更新)
+
+> **更新: accumulators registry の独立エントリ `flatten` (`{accumulator: (piece, processor, prevs) → T[], default_collector: "identity"}`) は、「累積」と「1 段展開」という 2 つの関心を 1 accumulator 名に同居させる構造的欠陥と判明し廃止された。現役は `append` accumulator の `flatten: true` ダイヤル (DR-105) — repeat installer (DR-043) の cons 平坦化は `{accumulator: "append", flatten: true}` で表現する。他 accumulator (`merge`/`override`/`increment`/`kv_map`) は不変。**

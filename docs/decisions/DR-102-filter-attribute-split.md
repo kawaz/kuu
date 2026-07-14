@@ -39,6 +39,8 @@
 
 実測 (`value-typing/cell-filter-reject.json` [現 `final-filter-reject.json`] の `out-of-range-rejected` case、`argv_pos=2`=`argv.length`、`count-parse/cell-filter-range.json` [現 `final-filter-range.json`] の `over-range-rejected` case、`argv_pos=1`=`argv.length`、いずれも piece の実位置とは不一致) により、旧 `cell_filters` の reject は非 accum・accum を問わず一貫して `argv.length` (特定トークンに帰属しない) に帰属することが確認されている。分割後もこの帰属規則は両属性で維持する — `value_filters` (piece 実位置に帰属) との違いは「どの piece が原因かを名指ししない、確定した最終値/累積配列全体への一括検証」という意味論の observable な現れであり、この差異こそが両者を独立属性として残す実証的な根拠 (SPL-Q6 = a の決め手)。CONFORMANCE.md §3 の記述を「累積後の」という accum 限定の文言から「`final_filters`/`accum_filters` 両席の reject は argv.length」に補正する。
 
+> **明確化 (統括検証 2026-07-14、DR-105 の反映): `accum_filters` の reject 位置帰属 (`argv.length`) は、ARRAY filter registry の fallibility 確立 (DR-105 §4、`length_range` 等の Validate 系住人の追加) により初めて実効化される。** 本節策定時点では ARRAY filter registry に reject 可能な住人が存在せず (`unique` のみ、Transform)、この規定は `final_filters` 側の実測からの類推適用に留まっていた。
+
 ### 5. 非 accum 要素の宣言 default 値の pieceProcessor 通過 (DR-050 §4 / DR-083 §2 の対称性から導出)
 
 DR-083 §2 は multiple 要素の宣言 default 配列を「DR-050 §4 の config array と同型」— 各 piece は型一致なら T 域座席のみ (`value_filters` per piece → accumulator 畳み → `accum_filters`)、JSON string の piece は string 域 (`piece_filters` → parse) も通る、と規定する。DR-050 §4 自体は「config 値の型は要素の type が決める」という一般規則 (string → CLI/env と同一の全段 pipeline、非 string で型一致 → post_filters のみ、型一致ゆえ pre_filters/parse はスキップされる型の帰結) であり、accum 要素の宣言 default だけでなく **非 accum 要素 (§1 の定義、`is_accum_elem` に該当しない要素) の宣言 default にも同じ型依存規則がそのまま適用される** — 宣言 default は「値源」の一種であり、config 供給値と同じく「JSON 表現の型」に応じて pieceProcessor を通る/通らないかが決まる (これは値源の種別 (config か宣言 default か) ではなく値の型が決める規則であり、DR-050 §4 の対象を絞る理由がない)。
