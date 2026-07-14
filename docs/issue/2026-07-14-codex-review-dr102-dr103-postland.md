@@ -30,7 +30,8 @@ DR-102 (属性分割) / DR-103 (required_group) の land 直後に codex (gpt-5.
 - 出所: DR-102 (属性分割) / DR-103 (required_group) の land 直後の codex (gpt-5.6-sol)
   全方位レビュー (2026-07-14)
 - 統括 (メインセッション) が主要指摘を検証済み — 検証状態を各項目に明記
-- レビュー全文: セッション scratchpad の cycle-review-codex.md (findings 記録は別途)
+- レビュー全文: セッション scratchpad の cycle-review-codex.md
+- レビュー findings 記録: `docs/findings/2026-07-14-codex-review-dr102-dr103.md` (ea2cfa28)
 
 ### 指摘詳細 (M-番号 = codex レビューの指摘番号)
 
@@ -43,6 +44,14 @@ candidates 機構、`fixtures/constraints-parse/required-structural-or-branch.js
 だが CRequiredGroup は member 名 (`e.name`) しか見ていない。
 修正方針: CRequired と同じ候補セル解決を共有 + fixture (or member / ref member)。
 
+**→ 対応済み**: CRequired/CRequiredGroup 共通の `required_candidates` ヘルパーへ
+候補セル解決を統一 (`RequiredCandidate` = name + wrapper。wrapper は ref 経由
+展開時に宣言元要素の Scoped 部分木限定で透過し、無制限透過はしない、kuu.mbt
+bb97e349)。fixture 4 本 pin (新規 `required-group-structural-or-branch.json` /
+`required-group-ref-template-branch.json` / `required-ref-template-branch.json`
++ 既存 `required-structural-or-branch.json`、spec bd69b4db)。修正中の実機検証で
+required 単項×ref (ref 経由 structural or) でも同型バグが実在すると確定し同時修正。
+
 **[確定、DR-103 明確化 note ×2 (DR-047 §5 の追記前例形式)]**
 
 - M-1: §3 の exactly-one は member 構成の限定が必要 — exclusive は committed 述語 /
@@ -51,12 +60,16 @@ candidates 機構、`fixtures/constraints-parse/required-structural-or-branch.js
   bool 等) に限り exactly-one committed が成立」と限定する必要
 - M-4: §4「観測上同じ」は誤り — 充足真偽は同値だが error の element (group
   ラベル) / reason (`required_group_violated`) は group 固有
+- **→ 対応済み**: DR-103 §3 (M-1) / §4 (M-4) に統括検証の明確化 note を追記
+  (7797475d)
 
 **[設計分岐 → CR-Q1、QUESTIONS.md 参照] C-1: accum_filters の reject 規定と ARRAY registry の実態の乖離**
 
 DR-102 §4 と CONFORMANCE は accum 側 reject の `argv_pos` 帰属を規定するが、
 ArrayFilterDescriptor は「拒否を持たない純関数」(Result 経路なし) で reject を
 発生させられない (旧 cell_filters 時代から継承した規定と実態のずれ)。
+
+CR-Q1 として `docs/QUESTIONS.md` に起票済み、裁定待ち。
 
 **[報告ベース確認済み、要修正] M-5/M-6: エラー合成規則の未定義**
 
@@ -111,21 +124,25 @@ fixture 輪郭バッチ → M-3/M-9。args 改名サイクル (走行中) の完
 
 ## 受け入れ条件
 
-- [ ] M-2 の live probe が success (required_group member の structural or 枝で
-      値供給時に誤 violation が出ない)
-- [ ] DR-103 明確化 note 2 本 (M-1 exactly-one の member 限定、M-4 group 固有の
-      error element/reason) が反映済み
+- [x] M-2 の live probe が success (required_group member の structural or 枝で
+      値供給時に誤 violation が出ない) — kuu.mbt bb97e349、fixture 4 本 pin
+      (spec bd69b4db) で確認
+- [x] DR-103 明確化 note 2 本 (M-1 exactly-one の member 限定、M-4 group 固有の
+      error element/reason) が反映済み — DR-103 §3/§4 (7797475d)
 - [ ] C-1 (accum_filters の reject 規定と ARRAY registry 実態の乖離) が
-      CR-Q1 裁定を経て解消
+      CR-Q1 裁定を経て解消 — CR-Q1 起票済み (QUESTIONS.md)、裁定待ち
 - [ ] M-5/M-6 のエラー合成規則が DR-102 明確化 note + fixture + 実装修正で解消
 - [ ] M-8 (scalar default 型依存 pipeline) の fixture が揃い green
 - [ ] M-9 (type:"none" × final_filters) が裁定または導出で fixture 化
 - [ ] M-3 (constraint 系属性の positional 対応) が family 一括で fixture 化
 - [ ] fixture 輪郭補完リストの各項目が fixture 化済み
-- [ ] conformance mismatches = 0
+- [x] conformance mismatches = 0 — decoded=218 / ran_cases=571 / mismatches=0
+      (ロックステップ push #3: spec bd69b4db / kuu.mbt 414131f1)
 
 ## TODO
 
-- [ ] args 改名サイクル (走行中) の完了を待つ
-- [ ] M-2 の fixture (or member / ref member) を先に用意してから修正着手
-- [ ] CR-Q1 (C-1 の設計分岐) を QUESTIONS.md に起票して裁定を待つ
+- [x] args 改名サイクル (走行中) の完了を待つ — 完了確認済み (argv-to-args-rename
+      issue が close 済み)、M-2 着手前提クリア
+- [x] M-2 の fixture (or member / ref member) を先に用意してから修正着手 —
+      fixture 4 本 pin 後に kuu.mbt bb97e349 で修正
+- [x] CR-Q1 (C-1 の設計分岐) を QUESTIONS.md に起票 — 起票済み、裁定待ち
