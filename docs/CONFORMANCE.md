@@ -20,7 +20,7 @@
 | フィールド | 必須 | 内容 |
 |---|---|---|
 | `why` | ✓ | file / case の両レベルで必須。仕様意図と DR 根拠。lint は why 欠落を検出する |
-| `cases[].id` | ✓ | case の安定 slug (DR-072)。kebab-case (`[a-z0-9]` と `-`)、**fixture 内 unique**、意図を表す 2〜4 語 (通し番号禁止)。case オブジェクトの先頭キーに置く。参照表記は `rel::slug` (例 `dd/basic::empty-args`)。lint は id 欠落・重複を fixture 不備として検出する。parse 入力ではない (メタ) ため §2/§3 の比較には影響しない。**`cases[]` を持つ fixture 固有** — lower fixture (`query: "lower"`, DR-070) は単一トップレベル expect 形式で `cases[]` を持たず、参照は `rel`(`::lower`) で位置非依存のため id 対象外 |
+| `cases[].id` | ✓ | case の安定 slug (DR-072)。kebab-case (`[a-z0-9]` と `-`)、**fixture 内 unique**、意図が読める簡潔な語句 (通し番号禁止)。case オブジェクトの先頭キーに置く。参照表記は `rel::slug` (例 `dd/basic::empty-args`)。lint は id 欠落・重複を fixture 不備として検出する。parse 入力ではない (メタ) ため §2/§3 の比較には影響しない。**`cases[]` を持つ fixture 固有** — lower fixture (`query: "lower"`, DR-070) は単一トップレベル expect 形式で `cases[]` を持たず、参照は `rel`(`::lower`) で位置非依存のため id 対象外 |
 | `query` | ✓ | `"parse"` (本書 §2) / `"lower"` (lowering 断面、DR-070 — `installers` 列挙 (省略 = 全登録、順序非規範)、expect は DR-063 §3 の面構造を緩比較、順列検査は runner 組み込みで fixture に順列を列挙しない) / `"definition_error"` (静的検査、本書 §2「definition-error」、DR-082 — `parse_definition()` の返値をそのまま転用、`cases[].args` は不要) / `"complete"` (補完クエリ、本書 §4、DR-104) |
 | `definition` | ✓ | **wire form** (DR-063: 純構文正規化 (LOWERING §C.4) 適用済み + installer 語彙 inert + type 参照はそのまま) |
 | `cases[].args` | | 前処理済みトークン列、プログラム名 ($0) を含まない (`Array[String]`、DESIGN §0.1)。`query:"parse"` は必須、`query:"definition_error"` は定義の静的検査のみで実行しないため省略 (DR-082 §1) |
@@ -116,7 +116,7 @@
 - warnings は集合比較 (element の組。**kind は fixture 側に書かれている要素でのみ比較対象** (§2 の optional 検証))
 - `help_entry` は構造等価 (**fixture 側に書かれている場合のみ比較する opt-in**、§2)
 - `tried_triggers` は集合比較 (**fixture 側に書かれている場合のみ比較する opt-in**、§2。順序非規範 — 近接マッチ計算が DX 層の関心である以上、綴りの列挙順に規範性はない)
-- `candidates` (`query: "complete"`、§4) は**順序非依存の multiset 比較** (重複を保持したまま一対一対応。DR-060 §1 の「和集合」はスペリングの和集合であり順序を課さない、DR-104 §4) — `interpretations` (集合比較、重複解釈の dedup 可否は本書で定めない) との非対称に注意: `candidates` の dedup は DR-104 §3 により producer 側 (実装) の規範として既に確定しているため、actual 側の候補列に同一性 6 フィールドの重複があれば expect と一致せず mismatch になる。各候補は `spelling`/`is_value`/`ty`/`origin`/`term`/`meta` の構造等価で比較する。**`meta` (`is_alias`/`hidden`/`deprecated`) は候補同一性の成分であり必須検証** (省略 = default 値 `{false,false,false}` と等価という §3 冒頭の一般規約をそのまま適用すると省略時に検証が骨抜きになるため、`candidates[].meta` は常に書く運用とする、COMP-Q2)。**`completer` (値位置候補の completer 名) は opt-in 検証** — 書けば比較、書かなければ未検証 (`errors.reason` と同じ optional 検証パターン、COMP-Q3)。`path` は候補構造の wire に含めない (DR-104 §2/§3)。
+- `candidates` (`query: "complete"`、§4) は**順序非依存の multiset 比較** (重複を保持したまま一対一対応) — producer (実装) 側は §3 の 6 フィールド identity で重複する候補を出力してはならない (DR-104 §3 が既に確定させた producer 側の規範)、両者を合わせた規範が正 (DR-104 §4 明確化 note、codex レビュー #3 A-m2/B-M6)。DR-060 §1 の「和集合」がスペリングの和集合と表現されるのは `path` (祖先 scope 経路) を同一性の成分から除外する趣旨であって、spelling が一致すれば他フィールドを無視して畳むという意味ではない — 同一 spelling でも `term` (`fixtures/complete/eq-split-cont.json`) や `origin` (DR-041 §4 の重複トリガ) が異なれば畳まれず併存する。`interpretations` (集合比較、重複解釈の dedup 可否は本書で定めない) との非対称に注意: `candidates` の dedup は producer 側の規範として既に確定しているため、actual 側の候補列に同一性 6 フィールドの重複があれば expect と一致せず mismatch になる。各候補は `spelling`/`is_value`/`ty`/`origin`/`term`/`meta` の構造等価で比較する。**`meta` (`is_alias`/`hidden`/`deprecated`) は候補同一性の成分であり必須検証** (省略 = default 値 `{false,false,false}` と等価という §3 冒頭の一般規約をそのまま適用すると省略時に検証が骨抜きになるため、`candidates[].meta` は常に書く運用とする、COMP-Q2)。**`completer` (値位置候補の completer 名) は opt-in 検証** — 書けば比較、書かなければ未検証 (`errors.reason` と同じ optional 検証パターン、COMP-Q3)。`path` は候補構造の wire に含めない (DR-104 §2/§3)。
 
   `candidates[]` 各フィールドの分類 (DR-104 §2/§3、codex レビュー #2 C-3/M-4 の反映):
 
@@ -158,10 +158,11 @@
 ```
 
 - `cases[].args_before`: 必須。前処理済みトークン列、カーソル前 (DR-104 §1)。**カーソル前で確定した完全トークンのみを含み、カーソルが単語内にある場合も進行中の部分単語は含めない** (DR-060 §2 の `before`/`word` フィールド分離設計の帰結、DR-104 §1 明確化 note) — 単語内カーソル時の candidates は単語頭カーソル時と同一集合になる
-- `cases[].args_after`: optional。前処理済みトークン列、カーソル後。与えられると after 整合フィルタ (§4 下記) が働く。**省略と明示的な空配列 `[]` の供給は同値** (length ベース判定、DR-104 §5 明確化 note)
+- `cases[].args_after`: optional。前処理済みトークン列、カーソル後。**非空の場合に限り** after 整合フィルタ (§4 下記) が働く — **省略と明示的な空配列 `[]` の供給は同値** (どちらも非発火、length ベース判定、DR-104 §5 明確化 note)
 - `expect.outcome`: `"complete"` 固定
 - `expect.candidates`: `Cand` 構造の直訳 (DR-104 §2)。各要素は `{spelling?, is_value, ty?, origin, term, meta, completer?}`。`spelling` は `is_value:false` で実質必須 (`is_value:true` では省略可、省略 = `""` と等価)。`ty` は `is_value:true` で実質必須。`meta` は常に書く (§3)
-- **制約 (遅延述語) は `args_before` のみの候補生存判定に不参加**: `required`/`required_group`/`requires`/`exclusive_group`/`conflicts_with` はいずれも候補から除外する判定に使われない — 排他相手が committed 済みでもその候補は返る (DR-104 §5)。**`args_after` が与えられた場合、exact かつ `term:"word_end"` の候補に限り** 候補採用後の完全経路判定 (遅延述語込みの `parse()` フル実行) が間接的に働く — 値位置候補・`term:"cont"` の候補はこのフィルタの対象外 (ユーザ入力を発明できないため無条件で通る)
+- **制約 (遅延述語) は `args_before` のみの候補生存判定に不参加**: `required`/`required_group`/`requires`/`exclusive_group`/`conflicts_with` はいずれも候補から除外する判定に使われない — 排他相手が committed 済みでもその候補は返る (DR-104 §5)。**`args_after` が非空の場合に限り、exact かつ `term:"word_end"` の候補に限り** 候補採用後の完全経路判定 (遅延述語込みの `parse()` フル実行) が間接的に働く — 値位置候補・`term:"cont"` の候補はこのフィルタの対象外 (ユーザ入力を発明できないため無条件で通る)
+- `term` (`"word_end"` / `"cont"`) は表示上の hint ではなく **MUST 制約**: `cont` は「生成器はこの候補の直後に空白を挿入してはならない」ことを意味する (`--key=` 等の継続トークンで、空白を挟むと継続としての解釈が破綻する)。`word_end` は「空白を挿入してもよいが必須ではない」(DR-104 §2 明確化 note (e))
 
 ## 5. ディレクトリ構成
 
