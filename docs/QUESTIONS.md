@@ -6,26 +6,6 @@
 > チャットでは「VF-Q 待ち」のようにラベルだけで参照する。回答はラベル + 選択肢記号 (例「VF-b で」) だけで通じる。
 > 参照パスは本リポ (spec) 相対。kuu.mbt 側は「kuu.mbt の <path>」と表記する。
 
-## VF-Q: value_filters / piece_filters に ARRAY 専用綴りを書いた時の kind
-
-`value_filters: ["unique"]` のように scalar 席に ARRAY registry (Acc→Acc) にのみ載る綴りを書いた場合の definition-error kind。cell_filters 非 accum 位置の invalid-range 対称化 (DR-102 §1) は決定済みで、争点はこの 2 属性のみ。
-
-- **VF-a**: unknown-vocab のまま (DR-102 §2 の現文面。論拠 = DR-079 §1 の座席格子上、この 2 席は ARRAY registry と比較される場面が構造上ない)
-- **VF-b** (統括推し): invalid-range に対称化 (論拠 = DR-082 §2 の「unknown-vocab は語彙自体が未知に取っておく」— `unique` は filter 語彙の別層に実在するので「未知」ではない)
-
-参照: docs/decisions/DR-102-non-accum-array-only-filter-invalid-range.md §2 / DR-101-unknown-filter-definition-error.md §3 / DR-082-definition-error-fixture-format.md §2 / DR-079-filter-seat-lattice-and-artifact-anchored-names.md §1
-
-効き方: これが決まると DR-102 サイクルが決着し、ロックステップ push (spec → pin bump → kuu.mbt) → journal まで進む。VF-b の場合は §2 書き換え + fixture 2 件 + 実装拡張 (worker 待機済み、小 diff)。
-
-## VF-Q2: land 済み DR-101 §3 への注記 1 文追加の可否
-
-DR-102 波及節が「DR-101 §3 末尾に『本節の判定順は非 accum 位置にも対称適用される (DR-102)』の 1 文注記」を提案している。DR 本文不変規則の例外は Superseded 節の前例のみなので、注記型の追記を許すかは kawaz 判断。不許可でも INDEX と DR-102 から逆引き可能。
-
-- **VF-Q2-a**: 注記を許す (Superseded 節と同型の構造的ポインタ扱い)
-- **VF-Q2-b**: 不許可 (DR-101 は無編集、逆引きは INDEX に任せる)
-
-参照: docs/decisions/DR-102-non-accum-array-only-filter-invalid-range.md 波及節
-
 ## ALO-Q: at-least-one の新語彙
 
 tar 型 (独立トリガを持つ flag 群の「最低 1 つ必須」) の表現。kawaz スケッチ ({required:true, or:[{ref}...]}) は検証の結果不成立 (kuu の or は共有トリガ後の値文法分岐専用)。
