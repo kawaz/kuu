@@ -1,11 +1,11 @@
 ---
 title: DR-105 の fixture・実装追随 (flatten ダイヤル / ARRAY filter Result 化 / length_range)
-status: open
+status: wip
 category: task
 created: 2026-07-14T17:30:09+09:00
 last_read: 2026-07-14T18:51:16+09:00
 open_entered: 2026-07-14T17:30:09+09:00
-wip_entered:
+wip_entered: 2026-07-14T18:54:17+09:00
 blocked_entered:
 pending_entered:
 discarded_entered:
