@@ -1,5 +1,5 @@
 {
-  "why": "env 値も pieceProcessor (piece_filters → parse → cell_filters) を通る (DR-049 §2: 『env から来た値は string であり、要素の pieceProcessor を通る』)。env-ladder.json (値源ラダー骨格) の型を踏襲しつつ、本 fixture は piece_filters が env 経由の値にも効くことを固定する — env 由来は完走後の値確定で effects には載らず (CONFORMANCE §2)、result / sources で検証する。rescued (piece_filters あり) / bare (なし) を並べ、trim の有無で env 値の parse 結果が分かれる輪郭を parse-rescue.json の cli 版と対にする。",
+  "why": "env 値も pieceProcessor (piece_filters → parse → value_filters) を通る (DR-049 §2: 『env から来た値は string であり、要素の pieceProcessor を通る』)。env-ladder.json (値源ラダー骨格) の型を踏襲しつつ、本 fixture は piece_filters が env 経由の値にも効くことを固定する — env 由来は完走後の値確定で effects には載らず (CONFORMANCE §2)、result / sources で検証する。rescued (piece_filters あり) / bare (なし) を並べ、trim の有無で env 値の parse 結果が分かれる輪郭を parse-rescue.json の cli 版と対にする。",
   "query": "parse",
   "definition": {
     "options": [
