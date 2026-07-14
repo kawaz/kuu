@@ -1,0 +1,19 @@
+{
+  "why": "final_filters (multiple 宣言のない値要素専用、scalar filter registry T→T のみを対象、DR-102 §1) に、ARRAY filter registry (Acc→Acc、accum_filters 専用) にのみ登録された綴りを書いた場合の判定を pin する。DR-102 §2 の 1 属性 1 registry の単純化により、他 registry の owns 集合との層違い比較は発生せず、素直な unknown-vocab で reject される (DR-101 §3 の位置依存 2 段判定は DR-102 により superseded)。argv は書かない (DR-082 §1、definition の静的検査であり実行しない)。",
+  "query": "definition_error",
+  "definition": {
+    "options": [
+      {"name": "level", "type": "string", "long": true, "final_filters": ["unique"]}
+    ]
+  },
+  "cases": [
+    {
+      "id": "array-only-vocab-in-final-filters-is-unknown-vocab",
+      "why": "`level` は multiple 宣言のないスカラー要素 (string) で、final_filters は scalar filter registry のみを対象とする (DR-102 §1)。`unique` は ARRAY filter registry (Acc→Acc) の実在エントリ (DR-095 §3「累積後の配列から重複要素を除去」) だが scalar filter registry の owns 集合には載らないため、装置選択の段で失敗し unknown-vocab で reject される (DR-101 §1)。1 属性 1 registry の対応により『別 registry には載っている』という層違いの情報は kind の選択に影響しない — 旧 DR-102 (abandon 済み) が想定していた invalid-range 判定は、属性分割によって前提から不要化した。",
+      "expect": {
+        "outcome": "definition-error",
+        "errors": [{"element": "level", "kind": "unknown-vocab"}]
+      }
+    }
+  ]
+}
