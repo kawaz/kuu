@@ -1,0 +1,39 @@
+{
+  "why": "`in_range` の bound は対象型の canonical number として負数・小数を許す — `length_range` 固有の非負整数制約を `in_range` にまで広げた誤りの訂正 (DR-105 §5 明確化 note (a)、codex レビュー #3 B-M1/A-M5 の反映)。`in_range:-1.5:2.5` (負の下限・小数の上下限) を float 要素に宣言し、境界内 (負数を含む) の成功と境界外の reject を pin する。`final-filter-reject.json` (正の整数域 `in_range:1:65535`) との対で、scalar range が整数域に限定されないことを固定する。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {"name": "level", "type": "float", "long": true, "final_filters": ["in_range:-1.5:2.5"]}
+    ]
+  },
+  "cases": [
+    {
+      "id": "negative-value-within-range",
+      "why": "--level -1: 下限 -1.5 を上回る負数、上限 2.5 未満 → in_range:-1.5:2.5 通過 → success。in_range の bound/入力いずれも負数を許すことの直接実演 (length_range の非負整数制約との対比、DR-105 §5 明確化 note (a))。",
+      "args": ["--level", "-1"],
+      "expect": {
+        "outcome": "success",
+        "result": {"level": -1.0},
+        "sources": {"level": "cli"}
+      }
+    },
+    {
+      "id": "over-max-decimal-bound-rejected",
+      "why": "--level 3: 上限 2.5 (小数境界) を超過 → reject → failure、reason=too_large。args_pos=2=args.length (final_filters の reject は特定トークンに帰属しない一括検証、DR-102 §4)。",
+      "args": ["--level", "3"],
+      "expect": {
+        "outcome": "failure",
+        "errors": [{"element": "level", "args_pos": 2, "kind": "filter", "reason": "too_large"}]
+      }
+    },
+    {
+      "id": "under-min-negative-bound-rejected",
+      "why": "--level -2: 下限 -1.5 (負の小数境界) を下回る → reject → failure、reason=too_small。over-max-decimal-bound-rejected との対で、負の下限・小数の上下限いずれの境界も機能することを固定する。",
+      "args": ["--level", "-2"],
+      "expect": {
+        "outcome": "failure",
+        "errors": [{"element": "level", "args_pos": 2, "kind": "filter", "reason": "too_small"}]
+      }
+    }
+  ]
+}
