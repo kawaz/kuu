@@ -39,6 +39,16 @@ origin 決定則は named canonical element の単純ケースまでで、ref/li
       等の抽出関数として origin 決定則を確定する
 - [ ] DR-104 §2 に決定則を追記し、明確化 note (c) を解消する
 
+## 追記: codex #3 A-M-9 の論点を統合 (匿名候補の origin)
+
+codex レビュー #3 の A-M-9。DR-063 の A.1 (裸文字列 → exact 正規化) で生まれる exact 群は、
+名前を持つ owner 要素の外に出現しうる (= 構造位置に直接置かれた裸文字列)。この経路で
+生成される **name を持たない匿名候補** の origin が何になるか (空文字 / 省略 / synthetic id)
+も未定義領域として本 issue の射程に含める。
+
+候補同一性 (DR-104 §3 の 6 フィールド) に origin が直結するため、確定時は dedup への
+影響も合わせて pin する。
+
 ## TODO
 
 <!-- wip 時のみ -->
