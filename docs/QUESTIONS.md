@@ -6,6 +6,13 @@
 > チャットでは「VF-Q 待ち」のようにラベルだけで参照する。回答はラベル + 選択肢記号 (例「VF-b で」) だけで通じる。
 > 参照パスは本リポ (spec) 相対。kuu.mbt 側は「kuu.mbt の <path>」と表記する。
 
+## COMP-Q1d: 補完入力の最終命名 (微確認 2 点)
+
+kawaz 裁定 (2026-07-14): **argv は不採用** — 言語横断で $0 包含が拮抗している事実は「悪くない」ではなく「読み手によって意味が割れる曖昧語」の証拠であり、曖昧さを嫌う kuu は避けた命名を採る (「悪いわけじゃないから良い、ではなく良い名前が良い」)。方向: arg(s)_before/after + word_before/word_after の系統命名、complete_fn (自作補完関数) に渡す CompletionCtx にそのまま収まる形。line / line_pos は将来素材として complete DR に記録。残る微確認:
+
+- **Q1d-1**: トークン列の表記 — **`args_before` / `args_after`** (統括推し: 複数形 = 配列・単数形 (word_*) = 文字列という型シグナルが立つ。kawaz 記法「args_before/after:[]」とも一致) / `arg_before` / `arg_after`
+- **Q1d-2**: parse fixture の基底フィールド `"argv"` も **`"args"` へ一斉改名**するか — 統括推し = する (補完だけ args 系で親が argv のままだと系統不一致 + 曖昧語が残る。200+ fixture の機械置換 + CONFORMANCE §1 + kuu.mbt decode 層、ドラフト期の作業リスト)
+
 ## V1-Q1〜Q3: v1.0.0 発行条件まわり
 
 正本: **docs/findings/2026-07-13-v1-readiness-audit.md §4** (各 Q の詳細)。
