@@ -1,6 +1,6 @@
 ---
 title: fixture 基底フィールド argv → args / argv_pos → args_pos の一斉改名 (kawaz 裁定 2026-07-14)
-status: wip
+status: resolved
 category: task
 created: 2026-07-14T11:47:18+09:00
 last_read: 2026-07-14T12:17:58+09:00
@@ -9,10 +9,10 @@ wip_entered: 2026-07-14T12:16:02+09:00
 blocked_entered:
 pending_entered:
 discarded_entered:
-resolved_entered:
+resolved_entered: 2026-07-14T12:52:33+09:00
 discard_reason:
 pending_reason:
-close_reason:
+close_reason: ["done:spec fixtures+corpus 208件一括 argv→args 改名、二重置換回避+JSON構文全数検証 (8cc0b946)","done:spec schema+CONFORMANCE 改名+$0非包含明記 (fb65c18d)","done:spec docs(DESIGN/PIPELINE/LOWERING/REFERENCE) 追随 (bb17b1ab)","done:spec fixture名 argv-minimal.json→args-minimal.json (ae847ea0)","done:kuu.mbt decode層+ParseError.args_pos+内部識別子/コメント 15ファイル148/148の1対1置換 (1d220a4e)","done:検証 歴史記録ディレクトリ以外に argv 残存ゼロ(内容+ファイル名両面)、conformance decoded=215/ran_cases=562/skipped=0/mismatches=0(改名前と同数、flipゼロ)、CI green(kuu.mbt@97c3a5f6 run29304366021)","done:lockstep push#2 spec main=6542f413 / kuu.mbt main=97c3a5f6"]
 blocked_by:
 origin: kawaz 裁定 (COMP-Q1d, 2026-07-14) — 自リポ TODO
 ---
@@ -56,7 +56,7 @@ kawaz 裁定 (COMP-Q1d、2026-07-14): `args` は「引数のみ ($0 を含まな
 
 ## 受け入れ条件
 
-- [ ] 現役文書・fixture・schema に `argv` の残存ゼロ (DR/journal/findings
+- [x] 現役文書・fixture・schema に `argv` の残存ゼロ (DR/journal/findings
       の歴史記録は除く)
-- [ ] conformance decoded・ran_cases 数維持、mismatches=0
-- [ ] docs/CONFORMANCE.md に「args は $0 (プログラム名) を含まない」の明記
+- [x] conformance decoded・ran_cases 数維持、mismatches=0
+- [x] docs/CONFORMANCE.md に「args は $0 (プログラム名) を含まない」の明記
