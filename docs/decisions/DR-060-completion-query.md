@@ -31,6 +31,8 @@ complete(atomic, {
 - **after 整合フィルタ**: after が与えられたら「候補採用後に after も消費して完全経路に到達できる経路が 1 本以上あるもの」に絞れる — 行中間の補完で後続と矛盾する候補を落とす。全解決モデル (path-search) を持つ kuu ならではの精度で、逐次モデルの既存パーサには原理的にできない
 - 補完種別 (tab 連打 / 一覧要求) は shell 間で体系がバラバラ (COMP_TYPE / compstate / fish は概念ごと別) なので **API に入れない** — 生成器のポリシー入力
 
+> **明確化 (統括検証 2026-07-14、DR-104 での fixture format 確定に伴う命名改訂): 上記シグネチャの `before`/`word`/`word_suffix`/`after` は DR-104 により `args_before`/`word_before`/`word_after`/`args_after` に改名された。** `args`/`args_pos` への改名サイクル (issue `argv-to-args-rename`) と同じ命名統一の流れ — `before`/`after` 単独では「トークン列の前後」か「カーソル単語内の前後」か読み手が判別できないため、`args_`/`word_` の prefix で対象を明示する。意味論 (§1/§2 の決定内容) 自体は不変、語彙のみの改訂。`word_before`/`word_after` は本節が既に明記する「v1 未使用可」のまま、参照実装未着手で予約が継続する。
+
 ### 3. 候補構造: 素の素材 + メタ。ポリシーは持たない
 
 候補は以下の素材とメタで返す:

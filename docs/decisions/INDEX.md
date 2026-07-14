@@ -127,6 +127,7 @@
 - [DR-069](DR-069-conformance-profiles.md): 準拠プロファイル — 段階準拠 (parse-core 必須 / lowering / definition-error / completion opt-in)、descriptor の実装要求は owns + reasons のみ (observes / factory 一般化は canonical 実装の装備 = 準拠非要求)
 - [DR-070](DR-070-lower-fixture-format.md): lower fixture フォーマット — installers 列挙 (省略 = 全登録、順序非規範)、expect = DR-063 §3 断面の緩比較 (内部 id 綴りと席順は無視)、順列検査は runner 組み込み 2 段 (常時 = 決定的少数 / opt-in = 全順列)、粒度は基本 3 点セット + 厳選組合せ
 - [DR-072](DR-072-fixture-case-id.md): fixture case の安定 id (slug) — 各 case に required "id" (kebab-case・fixture 内 unique・意図 2〜4 語、通し番号禁止)、参照は rel::slug (位置依存 case#N の置換)、id 一意性は fixture メタ層の lint (DR-067 の wire 3 層とは disjoint)、id 欠落は fixture 不備
+- [DR-104](DR-104-completion-fixture-format.md): complete fixture フォーマット (DR-065 予約の解消、v1 blocker 化) — 入力 args_before/args_after (word_before/word_after は v1 未使用予約、DR-060 §2 の before/word/word_suffix/after から改名)、candidates は Cand 構造の直訳 (spelling/is_value/ty/origin/term/meta 必須・completer は opt-in・path は wire 非搭載) の集合比較、候補同一性は spelling/is_value/ty/origin/term/meta の完全一致 (path は同一性に不参加、実装既定を格上げ)、遅延述語は args_before-only の候補生存判定に不参加 (dead end=parse相/制約=resolve相)、args_after 供給時のみ完全経路判定 (遅延述語込み) で間接的に絞る
 
 ## レジストリ / 実装連携
 
