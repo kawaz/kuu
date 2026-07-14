@@ -3,7 +3,7 @@ title: codex レビュー #2 (DR-104/DR-105) のトリアージと対応
 status: open
 category: task
 created: 2026-07-14T17:40:48+09:00
-last_read:
+last_read: 2026-07-14T18:52:37+09:00
 open_entered: 2026-07-14T17:40:48+09:00
 wip_entered:
 blocked_entered:
