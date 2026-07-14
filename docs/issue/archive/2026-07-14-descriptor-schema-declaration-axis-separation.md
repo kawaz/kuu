@@ -1,6 +1,6 @@
 ---
 title: descriptor schema の宣言軸再整理 (role/construction/invocation/fallibility)
-status: open
+status: resolved
 category: design
 created: 2026-07-14T21:20:23+09:00
 last_read:
@@ -9,10 +9,10 @@ wip_entered:
 blocked_entered:
 pending_entered:
 discarded_entered:
-resolved_entered:
+resolved_entered: 2026-07-15T07:20:02+09:00
 discard_reason:
 pending_reason:
-close_reason:
+close_reason: ["dr/DR-107","implemented","finding/2026-07-15-codex-review4-dr107-triage","done:role(7値 installer/filter/collector/type_parser/accumulator/completer/provider)/construction(static|factory)/io_type(JSON表現可能型+array<T>/map<string,T>)/output_mode(preserve|transform)/fallibility(total|reject)/invocation(colon_args|object_args|none+parameters宣言)の直交軸化、kind→role rename、provider3種のsignature descriptor化、schemaでrole/construction条件分岐+fallibility⇔reasons連動+domain⟺io_type整合+envelope強制、lint-descriptors task新設、builtin16住人migration済み(tty fallibilityバグ修正込み)、codexレビュー#4トリアージ反映済み、conformance昇格/from_entries輪郭は既存issueへ分離、構造化constraint IRはDR-061§4維持で不採用、push済み(main 6d16b158)"]
 blocked_by:
 origin: 自リポ TODO
 ---
