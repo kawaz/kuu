@@ -1,0 +1,19 @@
+{
+  "why": "type:\"none\" (値空間なし、DR-089) への final_filters 宣言は invalid-range (DR-102 §3 の明確化 note、codex レビュー M-9)。final_filters は T→T (DR-102 §1) で値空間の型 T への変換/検証を前提とするが、none には値空間そのものが無く T が存在しないため構成不能 — DR-089 §4 (値充足を要求される席には値空間が無いため立てない、静的に既知なので definition-error) と同型の帰結。args は書かない (DR-082 §1、definition の静的検査であり実行しない)。",
+  "query": "definition_error",
+  "definition": {
+    "options": [
+      {"name": "sep", "type": "none", "long": true, "final_filters": ["non_empty"]}
+    ]
+  },
+  "cases": [
+    {
+      "id": "final-filters-on-none-is-invalid-range",
+      "why": "`sep` は type:\"none\" (値空間なし、DR-089) の非 accum 要素だが、T→T の final_filters を宣言している。T が存在しないため final_filters は構成不能 — DR-089 §4 と同型の理 (値充足を要求される席には値空間が無いため立てない) により invalid-range で reject する。`non_empty` は実在する scalar filter registry の綴りだが、綴りの登録有無以前に none 要素へのこの属性宣言自体が構造不一致であり、wrong-seat (DR-102 §3) と同じ扱いで unknown-vocab との二重報告は起きない。",
+      "expect": {
+        "outcome": "definition-error",
+        "errors": [{"element": "sep", "kind": "invalid-range"}]
+      }
+    }
+  ]
+}

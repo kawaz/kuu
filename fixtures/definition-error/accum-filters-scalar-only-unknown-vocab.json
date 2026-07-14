@@ -1,0 +1,19 @@
+{
+  "why": "逆方向の 1 registry 判定 (DR-102 §2): scalar filter registry 専用の綴り (`in_range`) を accum 要素の accum_filters (ARRAY filter registry 専用) に書いた場合の判定を pin する。`final-filters-array-only-unknown-vocab.json` (ARRAY-only 綴り `unique` を final_filters に書く逆方向) と対で、1 属性 1 registry の対応が双方向に一意 unknown-vocab を導くことを固定する。ここは wrong-seat (DR-102 §3) ではない — accum_filters は accum 要素にとって正しい席であり、綴り自体が ARRAY registry の owns 集合に無いだけの単純な unknown-vocab (DR-101 §1)。args は書かない (DR-082 §1、definition の静的検査であり実行しない)。",
+  "query": "definition_error",
+  "definition": {
+    "options": [
+      {"name": "ports", "type": "number", "long": true, "multiple": {"accumulator": "append"}, "accum_filters": ["in_range:0:100"]}
+    ]
+  },
+  "cases": [
+    {
+      "id": "scalar-only-spelling-in-accum-filters-is-unknown-vocab",
+      "why": "`ports` は multiple 宣言を持つ accum 要素で、accum_filters (ARRAY filter registry Acc→Acc 専用、DR-102 §1) を宣言している — 席自体は正しい (wrong-seat ではない)。しかし `in_range` は scalar filter registry のエントリ (DR-095 §3、value_filters/final_filters で使われる Validate) であり、ARRAY filter registry の owns 集合には存在しない。1 属性 1 registry の対応 (DR-102 §2) により、装置選択の段で失敗し unknown-vocab で reject される — scalar registry に `in_range` が実在するという事実は kind の選択に影響しない (層違い比較は発生しない、DR-101 §3 は superseded)。",
+      "expect": {
+        "outcome": "definition-error",
+        "errors": [{"element": "ports", "kind": "unknown-vocab"}]
+      }
+    }
+  ]
+}

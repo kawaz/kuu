@@ -1,0 +1,19 @@
+{
+  "why": "wrong-seat 属性 (accum 要素への final_filters 宣言) と未登録綴りが同時に成立するケースのエラー合成規則 (DR-102 §3 の明確化 note、codex レビュー M-6): wrong-seat 判定は構造ゲート先行であり、その属性の中身 (綴りの登録有無) は一切解釈しない。`final-filters-on-multiple-invalid-range.json` (実在する綴り `non_empty` を使う既存 fixture) との対 — 綴りが実在するかどうかに関わらず invalid-range のみが報告されることを、未登録綴りのケースで確認する。args は書かない (DR-082 §1、definition の静的検査であり実行しない)。",
+  "query": "definition_error",
+  "definition": {
+    "options": [
+      {"name": "tags", "type": "string", "long": true, "multiple": {"accumulator": "append"}, "final_filters": ["totally_unknown"]}
+    ]
+  },
+  "cases": [
+    {
+      "id": "wrong-seat-with-unknown-spelling-reports-invalid-range-only",
+      "why": "`tags` は multiple 宣言 (accum 要素) を持つが、非 accum 専用の `final_filters` を宣言している — wrong-seat (DR-102 §1/§3)。加えてその中身 `totally_unknown` は scalar filter registry の owns 集合に存在しない綴り。もし wrong-seat gate と unknown-vocab gate が独立に走れば invalid-range + unknown-vocab の 2 errors になるが、DR-102 §3 の明確化 note (M-6) により wrong-seat 判定が構造ゲート先行し綴りの中身は解釈しない — errors は invalid-range 1 件のみ (definition_error の完全一致集合、DR-054 §4)。",
+      "expect": {
+        "outcome": "definition-error",
+        "errors": [{"element": "tags", "kind": "invalid-range"}]
+      }
+    }
+  ]
+}
