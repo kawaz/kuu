@@ -26,7 +26,7 @@
         "max": { "type": "number", "description": "DSL 第2引数 (上限、含む)。" }
       },
       "reasons": ["too_small", "too_large"],
-      "description": "数値の範囲検証 (DESIGN §8.4 例、value_filters/cell_filters 両方で使われる — count の上限もここ、DR-040)。min 未満 = too_small、max 超過 = too_large。両 reason は DR-066 §2 本文・docs/PIPELINE.md・docs/CONFORMANCE.md §2 に既出 (本 DR-095 で descriptor 宣言として実体化)。"
+      "description": "数値の範囲検証 (DESIGN §8.4 例、value_filters/final_filters 両方で使われる — count の上限もここ、DR-040/DR-102)。min 未満 = too_small、max 超過 = too_large。両 reason は DR-066 §2 本文・docs/PIPELINE.md・docs/CONFORMANCE.md §2 に既出 (本 DR-095 で descriptor 宣言として実体化)。"
     },
     "regex_match": {
       "name": "regex_match",
@@ -50,7 +50,7 @@
       "kind": "filter",
       "signature": "Transform",
       "reasons": [],
-      "description": "累積後の配列 (Acc→Acc、cell_filters 相) から重複要素を除去 (kuu.mbt array_filter_unique、先勝ち順序保持)。Transform 相当 (拒否を持たない純関数、kuu.mbt ArrayFilterDescriptor.run に Result 型が無いことが実装的裏付け)。"
+      "description": "累積後の配列 (Acc→Acc、accum_filters 相、DR-102) から重複要素を除去 (kuu.mbt array_filter_unique、先勝ち順序保持)。Transform 相当 (拒否を持たない純関数、kuu.mbt ArrayFilterDescriptor.run に Result 型が無いことが実装的裏付け)。"
     }
   },
 

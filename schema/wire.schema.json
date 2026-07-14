@@ -92,9 +92,13 @@
           "$ref": "#/$defs/filterChain",
           "description": "separator 分割後の piece に対する String→String チェイン (parse 直前、piece 単位、DR-062 の二形)。"
         },
-        "cell_filters": {
+        "final_filters": {
           "$ref": "#/$defs/filterChain",
-          "description": "累積後 (accumulator 後) の Acc→Acc チェイン (cell 単位、DR-062 の二形)。"
+          "description": "確定した最終セル値への T→T チェイン (multiple 宣言のない値要素専用、DR-102、DR-062 の二形)。multiple 宣言のある要素への宣言は definition-error kind=invalid-range (DR-102 §3)。"
+        },
+        "accum_filters": {
+          "$ref": "#/$defs/filterChain",
+          "description": "累積後 (accumulator 後) の Acc→Acc チェイン (multiple 宣言のある値要素専用、cell 単位、DR-102、DR-062 の二形)。multiple 宣言のない要素への宣言は definition-error kind=invalid-range (DR-102 §3)。"
         },
         "env": {
           "type": "string",
