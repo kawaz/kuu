@@ -6,15 +6,6 @@
 > チャットでは「VF-Q 待ち」のようにラベルだけで参照する。回答はラベル + 選択肢記号 (例「VF-b で」) だけで通じる。
 > 参照パスは本リポ (spec) 相対。kuu.mbt 側は「kuu.mbt の <path>」と表記する。
 
-## SPL-Q1〜Q6: cell_filters 属性分割の設計
-
-kawaz 裁定 (2026-07-13、cell_filters の union 名付け棄却) を受けた分割設計の裁定バッチ。issue: docs/issue/2026-07-14-cell-filters-attribute-split.md。設計提案全文はセッション scratchpad の cell-filters-split-proposal.md (裁定確定後に新 DR として起草、その時点で repo に永続化)。
-
-裁定済み: SPL-Q6 = a (2 席を残す。「違うものを違うものとして扱え」、kawaz 2026-07-14)。SPL-Q3 = C / Q4 = 文言補正 / Q5 = definition-error は導出で確定 (詳細は新 DR に記録)。残りは命名 2 つのみ:
-
-- **SPL-Q1**: 非 accum 側 (T→T、最終値ガード) の属性名 — `final_filters` (推し) / `settle_filters` / `resolve_filters`
-- **SPL-Q2**: accum 側 (Acc→Acc、累積配列) の属性名 — `accum_filters` (推し。DR-079 で一度不採用だが不採用理由「multiple 無し要素で名前が浮く」は分割で構造的に解消) / `collected_filters` / `array_filters` (DR-079 §2 の進行段階アンカー命名原則に反し非推奨)
-
 ## BR-Q: kuu.mbt 旧リモート枝の削除 (不可逆、Yes/No)
 
 kuu.mbt の origin に残る kuu-v0 / ast-spec / slice / claude/review-* / dependabot 枝を削除してよいか。一覧の実物確認は `git ls-remote --heads origin` (kuu.mbt 側)。
