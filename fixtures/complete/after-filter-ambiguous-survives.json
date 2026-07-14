@@ -1,0 +1,27 @@
+{
+  "why": "after 整合フィルタは `Success`/`Ambiguous` なら残し `Failure` なら除外する (DR-104 §5) — `Ambiguous` を成功側として扱うのは `Success` とは独立した設計判断であり、`fixtures/complete/after-filter.json` の 10 ケースは全て `Success`/`Failure` の対立のみで `Ambiguous` 生存を検証しない (codex レビュー #2 M-10 の反映、統括検証 2026-07-14)。export_key 衝突 (DESIGN §15.5、`fixtures/export-key/collision.json` の parse 輪郭を流用) を使い、候補採用後の完全経路が ambiguous に解決するケースでもその候補が生存することを固定する。**注意 (spec 導出、未実機検証)**: 期待値はコード読解による理論導出であり、実機での `complete()` 呼び出し確認は行っていない — ロックステップ運用により実装側 (kuu.mbt) の検証で mismatch が出た場合は別途報告される前提でこの値を正とする。",
+  "query": "complete",
+  "definition": {
+    "options": [
+      {"name": "c", "type": "flag", "long": true},
+      {"name": "a", "type": "flag", "long": true, "export_key": "x"},
+      {"name": "b", "type": "flag", "long": true, "export_key": "x"}
+    ]
+  },
+  "cases": [
+    {
+      "id": "ambiguous-completion-still-survives-after-filter",
+      "why": "args_before 空、args_after: [\"--b\"]。候補 --c を採用すると経路 [\"--c\",\"--b\"] は b のみ発火し export_key x への衝突なしで Success — 生存する。候補 --a を採用すると経路 [\"--a\",\"--b\"] は a と b が両方発火し export_key x へ共露出、DESIGN §15.5 の実行時衝突検査により Ambiguous になる — それでも DR-104 §5「Success/Ambiguous なら残す」により --a は候補から除外されない。候補 --b を採用すると経路 [\"--b\",\"--b\"] は非 multiple flag の冪等な重複発火 (last-wins、M-8 由来の意味論) で b のみ発火 (a は未発火) → Success — 生存する。3 候補とも生存するが、--a のみが Ambiguous 経由での生存であることが、Success 分岐のみ実装した誤り (Ambiguous を落とす実装) を検出する。",
+      "args_before": [],
+      "args_after": ["--b"],
+      "expect": {
+        "outcome": "complete",
+        "candidates": [
+          {"spelling": "--c", "is_value": false, "origin": "c", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}},
+          {"spelling": "--a", "is_value": false, "origin": "a", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}},
+          {"spelling": "--b", "is_value": false, "origin": "b", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}}
+        ]
+      }
+    }
+  ]
+}

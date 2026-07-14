@@ -37,6 +37,20 @@
           {"is_value": true, "ty": "string", "origin": "file", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}}
         ]
       }
+    },
+    {
+      "id": "empty-after-array-same-as-omitted",
+      "why": "args_after を明示的に空配列 `[]` で供給 (省略ではない) — no-after-both-triggers-survive (省略) と全く同じ expect になることを固定する。省略と明示的な空配列供給は同値 (length ベース判定、参照実装 `outcome.mbt` の `after.length() == 0` 分岐、DR-104 §5 明確化 note)。presence (フィールドの有無) では判定しない — codex レビュー #2 M-1 の反映。",
+      "args_before": [],
+      "args_after": [],
+      "expect": {
+        "outcome": "complete",
+        "candidates": [
+          {"spelling": "--verbose", "is_value": false, "origin": "verbose", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}},
+          {"spelling": "--port", "is_value": false, "origin": "port", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}},
+          {"is_value": true, "ty": "string", "origin": "file", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}}
+        ]
+      }
     }
   ]
 }

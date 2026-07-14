@@ -1,0 +1,44 @@
+{
+  "why": "`conflicts_with` 述語の before-only 生存 + after-filter 除外の対 (DR-104 §5、DR-055、codex レビュー #2 M-7 の反映、統括検証 2026-07-14)。`conflicts_with` は名指しのペア排他で意味は対称 (片側に書けば両方向に効く) — `exclusive_group` (3+ 要素のグループ排他) と対照的な 2 要素専用の二項関係。**注意 (spec 導出、未実機検証)**: 期待値はコード読解による理論導出であり、実機での `complete()` 呼び出し確認は行っていない — ロックステップ運用により実装側 (kuu.mbt) の検証で mismatch が出た場合は別途報告される前提でこの値を正とする。",
+  "query": "complete",
+  "definition": {
+    "options": [
+      {"name": "verbose", "type": "flag", "long": true},
+      {"name": "foo", "type": "flag", "long": true, "conflicts_with": ["bar"]},
+      {"name": "bar", "type": "flag", "long": true}
+    ],
+    "positionals": [
+      {"name": "file", "type": "string"}
+    ]
+  },
+  "cases": [
+    {
+      "id": "conflicts-partner-still-candidate-before-only",
+      "why": "args_before: [\"--foo\"] (foo は既に committed): `conflicts_with` は候補生存判定に一切参加しないため、対立相手 `--bar` も普通に候補として返る — 実際に --bar を打てば実行時に `conflicts_with_violated` になるが、それは complete の関心ではない (DR-104 §5)。--verbose (無関係) と foo 自身 (冪等再発火、`constraint-non-participation.json` と同型の意味論) も候補、file の値位置候補も候補。",
+      "args_before": ["--foo"],
+      "expect": {
+        "outcome": "complete",
+        "candidates": [
+          {"spelling": "--foo", "is_value": false, "origin": "foo", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}},
+          {"spelling": "--bar", "is_value": false, "origin": "bar", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}},
+          {"spelling": "--verbose", "is_value": false, "origin": "verbose", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}},
+          {"is_value": true, "ty": "string", "origin": "file", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}}
+        ]
+      }
+    },
+    {
+      "id": "conflicts-partner-excluded-by-after-consistency-check",
+      "why": "args_before: [\"--foo\"]、args_after: [\"out.txt\"] (候補集合と重複しない中立トークン、positional file 用)。--bar を採用すると完全経路 [\"--foo\",\"--bar\",\"out.txt\"] は foo・bar が両方発火し `conflicts_with_violated` で Failure — after 整合フィルタにより除外される。--verbose を採用した経路 [\"--foo\",\"--verbose\",\"out.txt\"] は conflicts_with と無関係 → Success → 生存。--foo を採用した経路 [\"--foo\",\"--foo\",\"out.txt\"] も foo の冪等な再発火 (bar は未発火のまま) で conflicts_with_violated にならず Success → 生存。file の値位置候補は無条件生存。",
+      "args_before": ["--foo"],
+      "args_after": ["out.txt"],
+      "expect": {
+        "outcome": "complete",
+        "candidates": [
+          {"spelling": "--foo", "is_value": false, "origin": "foo", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}},
+          {"spelling": "--verbose", "is_value": false, "origin": "verbose", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}},
+          {"is_value": true, "ty": "string", "origin": "file", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}}
+        ]
+      }
+    }
+  ]
+}

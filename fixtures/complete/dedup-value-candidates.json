@@ -1,0 +1,26 @@
+{
+  "why": "dedup 規則の負側境界 (DR-104 §3): 値位置候補 (is_value:true) 同士でも origin が異なれば畳まれない — `dedup.json` の既存 case は exact 候補 (is_value:false) の positive dedup (同一 6 フィールドで 1 件に畳まれる) のみを検証しており、値位置候補の dedup 非発火は未検証だった (codex レビュー #2 M-11 の反映、統括検証 2026-07-14)。BOr (`or` DSL) で 1 つのトリガ消費点に異なる型・異なる要素名の 2 leaf を並立させ、両者が候補として同時に生存し dedup されないことを固定する。**注意 (spec 導出、未実機検証)**: BOr の lowering 後の分岐構造 (トリガ消費直後に 2 leaf が同時に Pending として並立するか) はコード読解による理論導出であり、実機での `complete()` 呼び出し確認は行っていない — ロックステップ運用により実装側 (kuu.mbt) の検証で mismatch が出た場合は別途報告される前提でこの値を正とする。",
+  "query": "complete",
+  "definition": {
+    "options": [
+      {"name": "level", "long": true, "or": [
+        {"type": "int", "name": "num"},
+        {"type": "bool", "name": "flag"}
+      ]}
+    ]
+  },
+  "cases": [
+    {
+      "id": "or-branch-value-candidates-distinct-origin-not-deduped",
+      "why": "args_before: [\"--level\"] は `level` のトリガを消費し、BOr の 2 leaf (`num`: int、`flag`: bool) がともに値スロット待ちになる。両者は is_value:true・term:word_end で共通するが、`ty` (int vs bool) と `origin` (num vs flag) が異なるため DR-104 §3 の 6 フィールド完全一致規則により dedup されず 2 件とも独立候補として残る。",
+      "args_before": ["--level"],
+      "expect": {
+        "outcome": "complete",
+        "candidates": [
+          {"is_value": true, "ty": "int", "origin": "num", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}},
+          {"is_value": true, "ty": "bool", "origin": "flag", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}}
+        ]
+      }
+    }
+  ]
+}

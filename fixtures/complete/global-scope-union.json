@@ -1,0 +1,32 @@
+{
+  "why": "global option の子孫 scope 候補和集合 (DR-042、DR-104 §3): `global:true` の祖先 option は子孫 command scope の greedy 面へ構造コピーされる (不動点反復、`fixtures/command-scope/global.json` の parse 輪郭)。子 scope 入場後の complete 候補は、子固有の候補 (子 positional の値位置候補) と、祖先からコピーされた global option の trigger 候補が同一 `candidates` 配列内で共存する — `command-scope.json` の既存 case は子入場で親の候補が完全に消える (祖先の greedy が子に届かない) 排他的切替のみを固定しており、`global` による例外 (子孫にも祖先候補が届く) は未検証だった (codex レビュー #2 M-12 の反映、統括検証 2026-07-14)。**注意 (spec 導出、未実機検証)**: 期待値はコード読解による理論導出であり、実機での `complete()` 呼び出し確認は行っていない — ロックステップ運用により実装側 (kuu.mbt) の検証で mismatch が出た場合は別途報告される前提でこの値を正とする。",
+  "query": "complete",
+  "definition": {
+    "options": [
+      {"name": "verbose", "type": "flag", "long": true, "global": true}
+    ],
+    "commands": [
+      {
+        "type": "command",
+        "name": "build",
+        "positionals": [
+          {"name": "target", "type": "string"}
+        ]
+      }
+    ]
+  },
+  "cases": [
+    {
+      "id": "global-option-coexists-with-child-positional-candidate",
+      "why": "args_before: [\"build\"] はコマンド名を消費して子 scope へ入場する。子固有の候補 (positional target の値位置候補) に加えて、`global:true` によりコピーされた `--verbose` の trigger 候補も同時に候補集合へ入る — `command-scope.json::child-scope-candidate-after-entry` (global なし、親候補が完全に消える) との対比。祖先 root scope 自身の `--verbose` トリガと子 scope へのコピーは同一 origin (link 同期する衛星、実体は root のまま) のため、6 フィールド同一性規則 (DR-104 §3) 上も dedup 判定に影響しない単一候補として現れる。",
+      "args_before": ["build"],
+      "expect": {
+        "outcome": "complete",
+        "candidates": [
+          {"is_value": true, "ty": "string", "origin": "target", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}},
+          {"spelling": "--verbose", "is_value": false, "origin": "verbose", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}}
+        ]
+      }
+    }
+  ]
+}

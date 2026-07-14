@@ -1,0 +1,36 @@
+{
+  "why": "last-wins-scalar.json の flag 版: accumulator を持たない (multiple 無し) flag オプションの重複発火は last-wins (DR-015) で success (冪等) — 値スロットを持たないトリガの再発火が exclusive_group 等の遅延述語と無関係に成立することを、`constraint-non-participation.json` の後方互換のため独立に pin する (codex レビュー #2 M-8 の反映、統括検証 2026-07-14: 旧 `constraint-non-participation.json` の exclusive_group ケースは『非-multiple flag の重複入力が成功し冪等である』というこの意味論への暗黙依存を持っていたが、その依存先を本 fixture として分離する)。scalar 値オプション (last-wins-scalar.json) は「2 回目の発火値で上書き」だが、flag は値を運ばないため 2 回目の発火は 1 回目と同じ literal true を produce するだけの冪等な再確認になる。effects は cli 効果のみ・配列順 = 適用順。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {"name": "verbose", "type": "flag", "long": true}
+    ]
+  },
+  "cases": [
+    {
+      "id": "two-fires-idempotent-success",
+      "why": "`--verbose --verbose`: 2 回発火しても multiple 宣言が無い flag は last-wins (DR-015) で単一セルに畳まれ、両方とも同じ operand (true) の set。効果列は 2 個の set を適用順で全保持 (順序は同一性成分、DR-038/045) するが、result は scalar 単値 true — 『トリガは 1 回消費されると再露出しない』という直感は値消費トリガにのみ成立し、値を取らないフラグの重複発火は failure にならない冪等な再確認であることを固定する。",
+      "args": ["--verbose", "--verbose"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "verbose", "op": "set", "operand": true, "source": "cli"},
+          {"entity": "verbose", "op": "set", "operand": true, "source": "cli"}
+        ],
+        "result": {"verbose": true}
+      }
+    },
+    {
+      "id": "single-fire-baseline",
+      "why": "1 回発火の baseline: `--verbose` 単発は result {verbose:true}、effects は set 1 個。two-fires-idempotent-success との対比で、重複発火が failure でも新しい状態でもなく同じ状態への冪等な再確認であることを示す。",
+      "args": ["--verbose"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "verbose", "op": "set", "operand": true, "source": "cli"}
+        ],
+        "result": {"verbose": true}
+      }
+    }
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "why": "`required_group` 述語の before-only 生存 + after-filter 除外の対 (DR-104 §5、DR-103、codex レビュー #2 M-7 の反映、統括検証 2026-07-14)。`required_group` は group member のうち少なくとも 1 つが充足すればよい論理和 (`exclusive_group` とは名前空間が独立、DR-103) — `exclusive_group` (最大 1 つ) と対称の下限側制約。**注意 (spec 導出、未実機検証)**: 期待値はコード読解による理論導出であり、実機での `complete()` 呼び出し確認は行っていない — ロックステップ運用により実装側 (kuu.mbt) の検証で mismatch が出た場合は別途報告される前提でこの値を正とする。",
+  "query": "complete",
+  "definition": {
+    "options": [
+      {"name": "verbose", "type": "flag", "long": true},
+      {"name": "create", "type": "flag", "long": true, "required_group": ["mode"]},
+      {"name": "update", "type": "flag", "long": true, "required_group": ["mode"]}
+    ],
+    "positionals": [
+      {"name": "target", "type": "string"}
+    ]
+  },
+  "cases": [
+    {
+      "id": "required-group-members-still-candidates-before-only",
+      "why": "args_before 空: `required_group` は候補生存判定に一切参加しないため、group member (`create`/`update`) も無関係な `verbose` も target (値位置候補) も全て候補として返る — mode group のどの member も未発火のまま完走すれば実行時に `required_violated` になるが、それは complete の関心ではない (DR-104 §5)。",
+      "args_before": [],
+      "expect": {
+        "outcome": "complete",
+        "candidates": [
+          {"spelling": "--verbose", "is_value": false, "origin": "verbose", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}},
+          {"spelling": "--create", "is_value": false, "origin": "create", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}},
+          {"spelling": "--update", "is_value": false, "origin": "update", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}},
+          {"is_value": true, "ty": "string", "origin": "target", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}}
+        ]
+      }
+    },
+    {
+      "id": "required-group-unsatisfied-path-excluded-by-after-consistency-check",
+      "why": "args_before 空、args_after: [\"x\"] (target 用の中立トークン)。--verbose を採用すると完全経路 [\"--verbose\",\"x\"] は verbose 発火・x は target へ落ちるが、mode group のどの member (create/update) も未発火のまま完走してしまい `required_violated` で Failure — after 整合フィルタにより除外される。--create を採用すると完全経路 [\"--create\",\"x\"] は create 発火で mode 充足 (論理和なので 1 member で足りる)、x は target へ → Success → 生存。--update も同様に mode 充足で生存。target の値位置候補は `is_value:true` のため無条件生存。",
+      "args_before": [],
+      "args_after": ["x"],
+      "expect": {
+        "outcome": "complete",
+        "candidates": [
+          {"spelling": "--create", "is_value": false, "origin": "create", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}},
+          {"spelling": "--update", "is_value": false, "origin": "update", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}},
+          {"is_value": true, "ty": "string", "origin": "target", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}}
+        ]
+      }
+    }
+  ]
+}
