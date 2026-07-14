@@ -12,7 +12,7 @@
       "why": "`tags` は `multiple:{accumulator:\"flatten\"}` で廃止済みの旧登録名を直接宣言している (DR-036 の独立エントリ、DR-105 で削除)。accumulators registry の owns 集合にこの語彙はもう存在しないため、`invalid-range` (構造上書けるが構成として不成立) ではなく一意に `unknown-vocab` (語彙自体が registry に無い) として definition-error になる。args は書かない (定義の静的検査であり実行しない、DR-082 §1)。",
       "expect": {
         "outcome": "definition-error",
-        "errors": [{"element": "src", "kind": "unknown-vocab"}]
+        "errors": [{"element": "tags", "kind": "unknown-vocab"}]
       }
     }
   ]

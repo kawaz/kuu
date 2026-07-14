@@ -22,11 +22,11 @@
     },
     {
       "id": "under-min-length-rejected",
-      "why": "1 発火のみ (min=2 未達) → 累積後の配列 [a] の長さが length_range:2:3 の下限を割り込み reject → failure。reason=too_short (length_range の下限側 reason、DR-105 §5 の in_range too_small との対称命名)。args_pos=1=args.length (accum_filters の reject は特定トークンに帰属しない一括検証、DR-102 §4、DR-105 §4 で初めて実効化)。element=tags (owner 要素、累積セルそのもの)。",
+      "why": "1 発火のみ (min=2 未達) → 累積後の配列 [a] の長さが length_range:2:3 の下限を割り込み reject → failure。reason=too_short (length_range の下限側 reason、DR-105 §5 の in_range too_small との対称命名)。args_pos=2=args.length (0-based、[\"--tags\",\"a\"] の 2 トークン全消費後の一括検証。accum_filters の reject は特定トークンに帰属しない一括検証、DR-102 §4、DR-105 §4 で初めて実効化)。element=tags (owner 要素、累積セルそのもの)。",
       "args": ["--tags", "a"],
       "expect": {
         "outcome": "failure",
-        "errors": [{"element": "tags", "args_pos": 1, "kind": "filter", "reason": "too_short"}]
+        "errors": [{"element": "tags", "args_pos": 2, "kind": "filter", "reason": "too_short"}]
       }
     },
     {
