@@ -79,6 +79,7 @@
 - [DR-055](DR-055-constraint-vocabulary.md): 制約語彙の拡充 — conflicts_with (名指しペア排他、対称)、値依存は値の枝への requires 合成 (新語彙ゼロ)、requires 語彙維持、constraint installer
 - [DR-047](DR-047-constraint-evaluation-layering.md): 制約評価のレイヤリング — 遅延述語は完全経路の成立条件 (経路フィルタ)、required は値充足 (default 込み)、exclusive_group / requires トリガは committed — 値空間なし要素の required / requires 目的語判定は refined by DR-093 (型委譲)
 - [DR-093](DR-093-required-type-directed-satisfaction.md): required / requires の充足は型委譲 — 値空間ありは値の有無 (DR-047 §5 不変)、値空間なし (`type: "none"`、dd 含む) は発火 (committed)。requires 目的語も同枠 (DR-089 §4 の definition-error を置換)、dd → greedy Seq 宣言語彙化 (DD2) は PoC 実測のうえ不採用のまま idea 降格
+- [DR-103](DR-103-required-group.md): 必須選択グループ — `required_group` (要素側属性、`exclusive_group` と同型の `Array[String]`、DR-047 §5 の値述語に分類、判定は `required` 単項充足 (DR-093) のグループ論理和)。名前空間は `exclusive_group` と独立、同名併用で exactly-one (tar のモード必須) を合成可能。単独 member は `required: true` と等価に縮退。definition/scope 側の `groups` 1 級座席は棄却 (kawaz 裁定「グループ判定は評価側が group ラベル集約で足りる」)。DR-012 の「グループ的必須は or+required で足りる」/ DR-055 §4 の同主張は独立トリガ群 (flag 群) には不成立と判明 (journal 実証) し Superseded 節追記を提案
 
 ## 継承
 
