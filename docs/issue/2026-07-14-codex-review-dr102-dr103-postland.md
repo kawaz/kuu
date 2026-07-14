@@ -3,7 +3,7 @@ title: codex レビュー指摘の対応 — DR-102/103 post-land (実バグ1 + 
 status: open
 category: bug
 created: 2026-07-14T12:22:20+09:00
-last_read:
+last_read: 2026-07-14T12:49:32+09:00
 open_entered: 2026-07-14T12:22:20+09:00
 wip_entered:
 blocked_entered:
