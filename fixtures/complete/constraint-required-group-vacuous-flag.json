@@ -1,0 +1,39 @@
+{
+  "why": "`required`/`required_group` は値述語であり発火ベースの真偽値ではない (DR-093、DR-103 §7、RG-Q1: bool-truth 化した発火ベースの読みは棄却済み)。member が暗黙 default を持つ plain `flag` の場合、未発火でも preset default:false により値が常時充足するため required_group は vacuous 充足になり、違反経路が構造的に存在しない — `constraint-required-group.json` は default 無し `bool` + `long:[\":set:true\"]` で意図的に違反経路を作った対比 fixture であり、本 fixture はその対極 (vacuous ケース) を complete 側で pin する: flag member の required_group は args_after を与えても group 由来の除外が一切起きない (全 exact 候補が無条件で生存する)。**注意 (spec 導出、未実機検証)**: 期待値はコード読解による理論導出であり、実機での `complete()` 呼び出し確認は行っていない — ロックステップ運用により実装側 (kuu.mbt) の検証で mismatch が出た場合は別途報告される前提でこの値を正とする。",
+  "query": "complete",
+  "definition": {
+    "options": [
+      {"name": "verbose", "type": "flag", "long": true, "required_group": ["mode"]}
+    ],
+    "positionals": [
+      {"name": "target", "type": "string"}
+    ]
+  },
+  "cases": [
+    {
+      "id": "vacuous-required-group-member-still-candidate-before-only",
+      "why": "args_before 空: `required_group` は候補生存判定に一切参加しないため (DR-104 §5)、`verbose` (mode group の唯一 member) も target (値位置候補) も候補として返る。",
+      "args_before": [],
+      "expect": {
+        "outcome": "complete",
+        "candidates": [
+          {"spelling": "--verbose", "is_value": false, "origin": "verbose", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}},
+          {"is_value": true, "ty": "string", "origin": "target", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}}
+        ]
+      }
+    },
+    {
+      "id": "vacuous-required-group-never-excluded-by-after-consistency-check",
+      "why": "args_before 空、args_after: [\"x\"] (target 用の中立トークン)。--verbose を採用しない完全経路 [\"x\"] (target のみ消費) でも、verbose は plain flag で暗黙 default:false により値が常時充足するため mode group は vacuous 充足のまま — `required_group_violated` は一切発生しない。したがって `--verbose` 自身の候補生死は required_group と無関係にトリガの通常挙動 (完全経路成立) のみで決まり、`constraint-required-group.json` の default 無し bool member と異なり after 整合フィルタでの除外が構造的に起こり得ないことを示す。",
+      "args_before": [],
+      "args_after": ["x"],
+      "expect": {
+        "outcome": "complete",
+        "candidates": [
+          {"spelling": "--verbose", "is_value": false, "origin": "verbose", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}},
+          {"is_value": true, "ty": "string", "origin": "target", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}}
+        ]
+      }
+    }
+  ]
+}

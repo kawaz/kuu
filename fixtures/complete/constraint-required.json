@@ -2,12 +2,13 @@
   "why": "`required` 述語の before-only 生存 + after-filter 除外の対 (DR-104 §5、`constraint-non-participation.json` は exclusive_group のみを固定しており他 4 種の遅延述語は未検証だった、codex レビュー #2 M-7 の反映、統括検証 2026-07-14)。`required` は単一要素の充足強制 (DESIGN §9.1、DR-093) で `exclusive_group` のような『相手』を持たないため、対比は『required 要素自身を発火させる候補』vs『無関係な候補 (required 要素を発火させない)』の間で作る。**注意 (spec 導出、未実機検証)**: 期待値はコード読解による理論導出であり、実機での `complete()` 呼び出し確認は行っていない — ロックステップ運用により実装側 (kuu.mbt) の検証で mismatch が出た場合は別途報告される前提でこの値を正とする。",
   "query": "complete",
   "definition": {
+    "config": {"long_eq_sep": "deny"},
     "options": [
       {"name": "verbose", "type": "flag", "long": true},
       {"name": "out", "type": "string", "long": true, "required": true}
     ],
     "positionals": [
-      {"name": "extra", "type": "string"}
+      {"name": "extra", "type": "string", "default": "fallback"}
     ]
   },
   "cases": [
@@ -26,7 +27,7 @@
     },
     {
       "id": "required-unsatisfied-path-excluded-by-after-consistency-check",
-      "why": "args_before 空、args_after: [\"y\"] (extra 用の中立トークン)。--verbose を採用すると完全経路 [\"--verbose\",\"y\"] は verbose 発火・y は extra へ落ちるが、`out` (required) が未発火のまま完走してしまい `required_violated` で Failure — after 整合フィルタにより除外される。--out を採用すると完全経路 [\"--out\",\"y\"] は out のトリガを消費し値スロットへ y が入って required 充足、extra は 0 個 (positional は required 宣言なしなので absent 許容) で Success — 生存する。extra の値位置候補は `is_value:true` のため after 整合フィルタの対象外で無条件に生存する。",
+      "why": "args_before 空、args_after: [\"y\"] (extra 用の中立トークン)。--verbose を採用すると完全経路 [\"--verbose\",\"y\"] は verbose 発火・y は extra へ落ちるが、`out` (required) が未発火のまま完走してしまい `required_violated` で Failure — after 整合フィルタにより除外される。--out を採用すると完全経路 [\"--out\",\"y\"] は out のトリガを消費し値スロットへ y が入って required 充足、extra は 0 個消費だが宣言 default (`fallback`) により値が充足するため absent にはならず Success — 生存する (素の positional はトークン消費が必須で default 無しなら飢えて Failure になる、DR-051 §2c / `absent/required-positional.json` の pin。default があれば `positional-default-presence.json` の pin により default 充足で Success になる)。extra の値位置候補は `is_value:true` のため after 整合フィルタの対象外で無条件に生存する。",
       "args_before": [],
       "args_after": ["y"],
       "expect": {

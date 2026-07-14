@@ -2,6 +2,7 @@
   "why": "`requires` 述語の before-only 生存 + after-filter 除外の対 (DR-104 §5、DR-093、codex レビュー #2 M-7 の反映、統括検証 2026-07-14)。`requires` は方向性のある正の依存 (自分が起動されたら列挙先も起動されている必要がある) — `conflicts_with` (対称の二項排他) と対照的な非対称関係。**注意 (spec 導出、未実機検証)**: 期待値はコード読解による理論導出であり、実機での `complete()` 呼び出し確認は行っていない — ロックステップ運用により実装側 (kuu.mbt) の検証で mismatch が出た場合は別途報告される前提でこの値を正とする。",
   "query": "complete",
   "definition": {
+    "config": {"long_eq_sep": "deny"},
     "options": [
       {"name": "verbose", "type": "flag", "long": true},
       {"name": "decrypt", "type": "flag", "long": true, "requires": ["key_file"]},
@@ -11,27 +12,27 @@
   "cases": [
     {
       "id": "requires-target-still-candidate-before-only",
-      "why": "args_before 空: `requires` は候補生存判定に一切参加しないため、`decrypt` (requires 元) も `key_file` (requires 先) も無関係な `verbose` も全て候補として返る — decrypt だけを発火させ key_file を発火させないまま完走すれば実行時に `requires_violated` になるが、それは complete の関心ではない (DR-104 §5)。",
+      "why": "args_before 空: `requires` は候補生存判定に一切参加しないため、`decrypt` (requires 元) も `key_file` (requires 先) も無関係な `verbose` も全て候補として返る — decrypt だけを発火させ key_file を発火させないまま完走すれば実行時に `requires_violated` になるが、それは complete の関心ではない (DR-104 §5)。name `key_file` (snake_case) 由来の主入口トリガは kebab-case に変換される (`--key-file`、origin は snake のまま `key_file`、DR-022、`name-surface/snake-kebab.json` の pin)。",
       "args_before": [],
       "expect": {
         "outcome": "complete",
         "candidates": [
           {"spelling": "--verbose", "is_value": false, "origin": "verbose", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}},
           {"spelling": "--decrypt", "is_value": false, "origin": "decrypt", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}},
-          {"spelling": "--key_file", "is_value": false, "origin": "key_file", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}}
+          {"spelling": "--key-file", "is_value": false, "origin": "key_file", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}}
         ]
       }
     },
     {
       "id": "requires-unsatisfied-path-excluded-by-after-consistency-check",
-      "why": "args_before 空、args_after: [\"--verbose\"] (key_file を発火させない中立トークン、verbose 自身は requires と無関係)。--decrypt を採用すると完全経路 [\"--decrypt\",\"--verbose\"] は decrypt・verbose が発火するが `key_file` (requires の目的語) が未発火のまま完走してしまい `requires_violated` で Failure — after 整合フィルタにより除外される。--verbose を採用すると完全経路 [\"--verbose\",\"--verbose\"] は verbose の冪等な重複発火のみで decrypt は無関係 → Success → 生存。--key_file を採用すると完全経路 [\"--key_file\",\"--verbose\"] は key_file のトリガ消費後、値スロットへ文字列 \"--verbose\" がそのまま値として消費され (string 型は任意文字列を受理)、decrypt は未発火のため requires 無関係 → Success → 生存。",
+      "why": "args_before 空、args_after: [\"--verbose\"] (key_file を発火させない中立トークン、verbose 自身は requires と無関係)。--decrypt を採用すると完全経路 [\"--decrypt\",\"--verbose\"] は decrypt・verbose が発火するが `key_file` (requires の目的語) が未発火のまま完走してしまい `requires_violated` で Failure — after 整合フィルタにより除外される。--verbose を採用すると完全経路 [\"--verbose\",\"--verbose\"] は verbose の冪等な重複発火のみで decrypt は無関係 → Success → 生存。`--key-file` (kebab トリガ、origin は key_file) を採用すると完全経路 [\"--key-file\",\"--verbose\"] は key-file のトリガ消費後、値スロットへ文字列 \"--verbose\" がそのまま値として消費され (string 型は任意文字列を受理)、decrypt は未発火のため requires 無関係 → Success → 生存。",
       "args_before": [],
       "args_after": ["--verbose"],
       "expect": {
         "outcome": "complete",
         "candidates": [
           {"spelling": "--verbose", "is_value": false, "origin": "verbose", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}},
-          {"spelling": "--key_file", "is_value": false, "origin": "key_file", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}}
+          {"spelling": "--key-file", "is_value": false, "origin": "key_file", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}}
         ]
       }
     }
