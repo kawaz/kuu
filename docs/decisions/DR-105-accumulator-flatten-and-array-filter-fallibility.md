@@ -16,7 +16,7 @@
 
 ### 2. `flatten` は `append` 専用 — 他 accumulator への宣言は definition-error
 
-`flatten: true` を `append` 以外の accumulator (`merge` / `override` / `increment` / `kv_map`) に宣言することは、その accumulator にそもそも存在しない属性を書いた構造不一致であり、**kind=invalid-range** で reject する — `merge` accumulator × `ref` (DR-084 §3、ref の発火値は piece 列を持たない row でありマーカー認識対象が構造上存在しない) と同型の「構文上は書けるが構成として不成立」パターン (DR-082 §2)。
+`flatten: true` を `append` 以外の accumulator (`merge` / `override` / `increment` / `kv_map`) に宣言することは、その accumulator にそもそも存在しない属性 (宣言形と合わない config) を書いた構造不一致であり、**kind=invalid-range** で reject する — 「構文上は書けるが構成として不成立」の確立パターン (DR-082 §2) の具体例: 非 accum 要素への配列 default 宣言 (`scalar-array-default-invalid-range.json`、DR-083 §5)、非 accum/accum 要素への `final_filters`/`accum_filters` の排他宣言 (DR-102 §3)、`merge` accumulator × `ref` (DR-084 §3、ref の発火値は piece 列を持たない row でありマーカー認識対象が構造上存在しない) と同型。
 
 **merge との整理 (kawaz 確認、2026-07-14)**: `flatten` ダイヤルは `append` 専用と決める根拠は `merge` の入力形にある — `merge` の入力は常に scalar piece であり (`merge` × `ref` は DR-084 §3 が definition-error で既に封じ済みで、配列発火値が `merge` に到達する経路が構造的に存在しない)、`merge` にとって「発火値が配列か」という分岐自体が発生しえない。したがって `flatten` を `merge` にも許すという選択肢は最初から意味を持たず、`append` 限定は妥協ではなく `merge`/`append` の入力形の違いがそのまま帰結する自然な線引きになる。
 
@@ -111,6 +111,7 @@ DR-102 §4 の末尾に追加:
 - DR-084 §3 (merge × ref の definition-error — `flatten` × 他 accumulator の invalid-range 判定の先例)
 - DR-102 (`final_filters`/`accum_filters` 属性分割 — ARRAY filter registry の座席定義、§4 の reject 位置帰属が本 DR で実効化)
 - DR-082 (definition-error kind 分類 — invalid-range の「構文上は書けるが構成として不成立」パターン)
+- DR-083 §5 (非 accum 要素への配列 default 宣言 — 同型 invalid-range パターンの先例)
 - DR-066 (reason コード規約 — `too_short`/`too_long` の命名対称性)
 - DR-091 §2 (kv_map の reject — matcher 手前ゲートで accumulator 自体の fallibility とは別軸)
 - docs/QUESTIONS.md ACC-Q1〜Q4 (裁定の記録)
