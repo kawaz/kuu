@@ -1,11 +1,11 @@
 ---
 title: exclusive_group に「少なくとも1つ必須」の表現が無い — tar のモード必須が書けない
-status: idea
+status: wip
 category: design
 created: 2026-07-12T18:39:04+09:00
 last_read:
 open_entered:
-wip_entered:
+wip_entered: 2026-07-14T10:13:19+09:00
 blocked_entered:
 pending_entered:
 discarded_entered:
@@ -42,6 +42,11 @@ kuu の現行語彙ではこの制約が表現できない。
 - 裏取り済みの事実はここまで。解決形 (グループ単位の `required` 宣言 /
   `definitions` 側の group descriptor 新設 / `exclusive_group` の詳細
   object 形への拡張 等) は未検討・未裁定。本 issue はそのフラグ立てのみ。
+
+## 裁定 (2026-07-14)
+
+kawaz 裁定確定: `required_group` 属性でグループ単位の「少なくとも1つ必須」を
+遅延述語層に追加する方針。DR-103 として起草開始 (未 land、進行中)。
 
 ## 受け入れ条件
 
