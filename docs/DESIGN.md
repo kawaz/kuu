@@ -1223,7 +1223,7 @@ complete(atomic, {args_before, args_after?, word_before?, word_after?}) → cand
 ```
 
 - `args_before` (カーソル前のトークン列、必須) / `args_after` (カーソル後のトークン列、optional)。`word_before`/`word_after` (カーソル単語の前半/後半) は v1 未使用可のまま予約 (DR-104、参照実装未着手)
-- `args_after` が与えられれば「候補採用後に args_after も消費して完全経路に到達できる」もので絞る (after 整合フィルタ — 全解決モデルならではの精度)。この完全経路判定は遅延述語 (制約、§15.9) を含む — DR-047 の「遅延述語は完全経路の成立条件」の一様適用 (DR-104 §5)
+- `args_after` が与えられれば、exact かつ term:word_end の候補に限り「候補採用後に args_after も消費して完全経路に到達できる」もので絞る (after 整合フィルタ — 全解決モデルならではの精度)。値位置候補・term:cont の候補はユーザ入力を発明できないため対象外で無条件に生存する。この完全経路判定は遅延述語 (制約、§15.9) を含む — DR-047 の「遅延述語は完全経路の成立条件」の一様適用 (DR-104 §5)。`args_after` の省略と明示的な空配列供給は同値 (length ベース判定)
 - **`args_before` のみの補完 (行末補完) では遅延述語は候補生存判定に一切不参加**: dead end 判定は parse 相、制約評価は resolve 相という相区分を固定する (DR-104 §5)。排他制約の相手が committed 済みでも、その候補は普通に返る — 実行時に選んでしまえば `exclusive_group_violated` 等の reason つきエラーで教える方針 (早期に隠すより打たせて教える UX 判断)
 - 候補 = exact 綴り (メタ: canonical/alias・hidden・deprecated・終端ヒント word_end/continue) + 値位置の型情報 / completer 名。**素材とメタのみ返し、絞り込みポリシー (tab-tab 切替等)・置換・着地は生成器と shell の領分**。候補の同一性は `spelling`/`is_value`/`ty`/`origin`/`term`/`meta` の完全一致 (`path` は同一性に関与しない、DR-104 §3)
 - 標準 completer (files/dirs 等) は生成器が shell 既存機能へマップ (クォート・変数展開は shell の責任領域)。動的候補は素の値文字列で返しクォートは shell/生成器

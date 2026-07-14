@@ -558,18 +558,23 @@ xargs 型。最初の非ハイフン operand (utility 名) で発火、そのト
 ## 6. builtin filter カタログ
 
 <!-- kuu-lint:vocab filters -->
-| filter | signature | reasons | 意味論 |
-|---|---|---|---|
-| `trim` | Transform | (空) | 文字列前後の ASCII 空白除去。非 string 入力は素通し |
-| `non_empty` | Validate | `empty_value` | 空文字列を拒否 |
-| `in_range` | Validate | `too_small`, `too_large` | 数値の範囲検証 (value_filters/final_filters 両方で使用可) |
-| `regex_match` | Validate | `pattern_no_match` | pattern への部分一致検証 (unanchored、全体一致は `^$` で表現)。compile 失敗は definition-error (実行時 reason ではない) |
-| `increment` | Transform | (空) | count 要素の update transform (0-arg、`old+1`) |
-| `unique` | Transform | (空) | 累積後の配列 (`Acc→Acc`、accum_filters 相) から重複要素を除去 (先勝ち順序保持) |
-| `length_range` | Validate | `too_short`, `too_long` | 累積後の配列長の範囲検証 (`Acc→Acc`、accum_filters 相、DR-105) |
-| `unwrap_single` | Transform | (空) | 累積結果 (`T[]→U`、collector 相) — 長さ 1 配列を要素へ再帰的に畳む、0/2+ 個は不変 (`multiple` プリセット `override` の default_collector) |
-| `from_entries` | Transform | (空) | 累積結果 (`T[]→U`、collector 相) — entries 配列形/指名 2 フィールド形/key 昇格形を Map へ変換 (`multiple` プリセット `map` の collector) |
+| filter | kind | domain | signature | reasons | 意味論 |
+|---|---|---|---|---|---|
+| `trim` | filter | scalar | Transform | (空) | 文字列前後の ASCII 空白除去。非 string 入力は素通し |
+| `non_empty` | filter | scalar | Validate | `empty_value` | 空文字列を拒否 |
+| `in_range` | filter | scalar | Validate | `too_small`, `too_large` | 数値の範囲検証 (value_filters/final_filters 両方で使用可) |
+| `regex_match` | filter | scalar | Validate | `pattern_no_match` | pattern への部分一致検証 (unanchored、全体一致は `^$` で表現)。compile 失敗は definition-error (実行時 reason ではない) |
+| `increment` | filter | scalar | Transform | (空) | count 要素の update transform (0-arg、`old+1`) |
+| `unique` | filter | array | Transform | (空) | 累積後の配列 (`Acc→Acc`、accum_filters 相) から重複要素を除去 (先勝ち順序保持) |
+| `length_range` | filter | array | Validate | `too_short`, `too_long` | 累積後の配列長の範囲検証 (`Acc→Acc`、accum_filters 相、DR-105) |
+| `unwrap_single` | collector | (無関係) | Transform | (空) | 累積結果 (`T[]→U`、collector 相) — 長さ 1 配列を要素へ再帰的に畳む、0/2+ 個は不変 (`multiple` プリセット `override` の default_collector) |
+| `from_entries` | collector | (無関係) | Transform | (空) | 累積結果 (`T[]→U`、collector 相) — entries 配列形/指名 2 フィールド形/key 昇格形を Map へ変換 (`multiple` プリセット `map` の collector) |
 <!-- kuu-lint:end -->
+
+`domain` (`kind:"filter"` 限定の carrier 軸、DR-106) は `signature` (fallibility 軸) と直交する
+— `in_range` (scalar) と `length_range` (array) は同じ `Validate` だが入力の型 (`T` か `T[]` か)
+が異なる。`kind:"collector"` (`unwrap_single`/`from_entries`) は `filters.*` namespace を共有する
+が filter chain の colon-DSL args とは呼び出し規約が異なるため `domain` は無関係 (DR-106)。
 
 `signature` が reasons の有無を機械的に決める: **Transform (常に成功) は `reasons: []`**、
 **Validate (拒否しうる) のみ非空の reasons を持つ** (DR-095 §3)。
