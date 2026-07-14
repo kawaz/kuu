@@ -17,7 +17,7 @@
         "query": {
           "type": "string",
           "enum": ["parse", "lower", "definition_error", "complete"],
-          "description": "fixture の種別 (CONFORMANCE §1)。parse = 本 Schema §parseCase、lower = DR-070 (installers 列挙 + lowered 断面)、definition_error = DR-082 (静的検査、argv なし)、complete は予約 (構造未確定)。"
+          "description": "fixture の種別 (CONFORMANCE §1)。parse = 本 Schema §parseCase、lower = DR-070 (installers 列挙 + lowered 断面)、definition_error = DR-082 (静的検査、args なし)、complete は予約 (構造未確定)。"
         },
         "definition": {
           "$ref": "wire.schema.json#/$defs/node",
@@ -58,7 +58,7 @@
 
     "case": {
       "type": "object",
-      "description": "1 fixture 内の 1 検証ケース (CONFORMANCE §1)。query=parse は argv 必須・expect は outcome union (§parseExpect)。query=definition_error は argv 省略・expect は definitionErrorExpect (DR-082 §1「argv は不要」)。",
+      "description": "1 fixture 内の 1 検証ケース (CONFORMANCE §1)。query=parse は args 必須・expect は outcome union (§parseExpect)。query=definition_error は args 省略・expect は definitionErrorExpect (DR-082 §1「args は不要」)。",
       "properties": {
         "id": {
           "type": "string",
@@ -70,10 +70,10 @@
           "minLength": 1,
           "description": "なぜこの入力で、なぜこの期待か (CONFORMANCE §1、case レベルで必須)。"
         },
-        "argv": {
+        "args": {
           "type": "array",
           "items": { "type": "string" },
-          "description": "前処理済みトークン列 (CONFORMANCE §1)。`query: \"parse\"` は必須、`query: \"definition_error\"` は定義の静的検査のみで実行しないため省略 (DR-082 §1)。"
+          "description": "前処理済みトークン列、プログラム名 ($0) を含まない (CONFORMANCE §1)。`query: \"parse\"` は必須、`query: \"definition_error\"` は定義の静的検査のみで実行しないため省略 (DR-082 §1)。"
         },
         "env": {
           "type": "object",
@@ -187,16 +187,16 @@
 
     "runtimeError": {
       "type": "object",
-      "description": "実行時エラー 1 件 (DR-053/066)。`{element, argv_pos, kind, reason, message, path?}`。",
+      "description": "実行時エラー 1 件 (DR-053/066)。`{element, args_pos, kind, reason, message, path?}`。",
       "properties": {
         "element": {
           "type": "string",
           "description": "省略 = 特定要素に紐付かないスコープレベルの躓き (残余トークン等、CONFORMANCE §2)。"
         },
-        "argv_pos": {
+        "args_pos": {
           "type": "integer",
           "minimum": 0,
-          "description": "0-based、失敗が帰属する argv トークンの位置。どのトークンにも帰属しない失敗は argv.length (CONFORMANCE §2)。"
+          "description": "0-based、失敗が帰属する args トークンの位置。どのトークンにも帰属しない失敗は args.length (CONFORMANCE §2)。"
         },
         "kind": {
           "type": "string",
@@ -218,7 +218,7 @@
           "description": "祖先パス列 (root-first、DR-066 §4)。optional 検証 (reason と同じ)。"
         }
       },
-      "required": ["argv_pos", "kind"],
+      "required": ["args_pos", "kind"],
       "additionalProperties": true
     },
 
