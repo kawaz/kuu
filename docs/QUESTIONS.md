@@ -6,6 +6,20 @@
 > チャットでは「VF-Q 待ち」のようにラベルだけで参照する。回答はラベル + 選択肢記号 (例「VF-b で」) だけで通じる。
 > 参照パスは本リポ (spec) 相対。kuu.mbt 側は「kuu.mbt の <path>」と表記する。
 
+## SPL-Q1〜Q6: cell_filters 属性分割の設計
+
+kawaz 裁定 (2026-07-13、cell_filters の union 名付け棄却) を受けた分割設計の裁定バッチ。issue: docs/issue/2026-07-14-cell-filters-attribute-split.md。設計提案全文はセッション scratchpad の cell-filters-split-proposal.md (裁定確定後に新 DR として起草、その時点で repo に永続化)。
+
+- **SPL-Q6** (最優先、Q1 の要否を決める): 非 accum 側の「最終値ガード」席を独立属性として**残す** (a、worker+統括推し) か、**value_filters に一本化** (b) か。
+  - a の根拠: value_filters (piece 毎に効き、piece トークンに argv_pos 帰属) と最終値ガード (確定後に 1 回、argv.length 帰属) は wire で観測可能に別物 (fixtures/multiple-parse/filters-each.json vs fixtures/count-parse/cell-filter-range.json の実測差)。count の下限付き range (`in_range:2:3`) は per-application では中間値 1 で必ず reject するため一本化だと**表現不能** = 表現力の喪失。「違うものを同じものとして扱うな」は per-piece と final-once の統合にも効く
+  - b の根拠: 属性数が減る。final-once の実需を裏付ける fixture/corpus 実例は現状無い (残余論拠であることは worker が明示)
+  - 補足 (裁定不要、報告): 非 multiple 要素の宣言 default 値が value_filters を通るかは DR-049/050/051 に明文なし — どちらを選んでも新 DR で座席を明文化する
+- **SPL-Q1** (Q6=a の場合のみ): 非 accum 側の属性名 — `final_filters` (推し) / `settle_filters` / `resolve_filters`
+- **SPL-Q2**: accum 側の属性名 — `accum_filters` (推し。DR-079 で一度不採用だが不採用理由「multiple 無し要素で名前が浮く」は分割で構造的に解消) / `collected_filters` / `array_filters` (DR-079 §2 の進行段階アンカー命名原則に反し非推奨)
+- **SPL-Q3**: 未 push DR-102 チェーン (spec 3 commit + kuu.mbt 実装 1 commit) の処置 — **C** (推し): commit は jj abandon し、番号 102 は新決定 (属性分割 DR) に再利用 (未 push なので番号と内容の同一性問題は外部に存在しない) / A: abandon + 永久欠番 / B: commit を rewrite
+- **SPL-Q5**: final/accum 席と multiple 有無の排他をどの層で強制するか — **definition-error kind=invalid-range** (推し。fixtures/definition-error/scalar-array-default-invalid-range.json の確立前例に一致、fixture で pin 可能。wire schema の if/then は補助に留める) / wire schema 構文層のみ (parse_definition が検査しない形は非 schema 検証実装の挙動が未規定になる)
+- **SPL-Q4** (ほぼ導出済み、確認のみ): CONFORMANCE §2 argv_pos 規約の「累積後の cell_filters reject は argv.length」を「final/accum 両席の reject は argv.length 帰属」に明文補正 (非 accum 側も argv.length 帰属であることは fixture 2 本で実測確認済み — 現文言が accum 側しか書いていないだけ)
+
 ## ALO-Q: at-least-one の新語彙
 
 tar 型 (独立トリガを持つ flag 群の「最低 1 つ必須」) の表現。kawaz スケッチ ({required:true, or:[{ref}...]}) は検証の結果不成立 (kuu の or は共有トリガ後の値文法分岐専用)。
