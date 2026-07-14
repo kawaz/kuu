@@ -1,0 +1,37 @@
+{
+  "why": "遅延述語 (制約) は args_before-only の候補生存判定に不参加、args_after 供給時のみ完全経路判定 (遅延述語込み) が間接的に働く (DR-104 §5、`docs/findings/2026-07-14-completion-constraint-and-identity.md` の決定)。dead end 判定は parse 相、制約評価は resolve 相という相区分の直接実演 — 排他相手が committed 済みでもその候補は普通に返る (早期に隠すより打たせて理由つきで教える方針)。exclusive_group の positive fixture (制約不参加) と after 整合フィルタ経由の除外 (完全経路判定は制約込み) を対で固定する (裁定の両側 pin)。",
+  "query": "complete",
+  "definition": {
+    "options": [
+      {"name": "json", "type": "flag", "long": true, "exclusive_group": ["format"]},
+      {"name": "yaml", "type": "flag", "long": true, "exclusive_group": ["format"]},
+      {"name": "verbose", "type": "flag", "long": true}
+    ]
+  },
+  "cases": [
+    {
+      "id": "exclusive-committed-partner-still-candidate",
+      "why": "args_before: [\"--json\"] (json は既に committed): args_before のみの補完では exclusive_group は候補生存判定に一切参加しないため、排他相手 --yaml も普通に候補として返る — 実際に --yaml を打てば実行時に exclusive_group_violated (reason つきエラー、DR-066 §3) になるが、それは complete の関心ではない。--verbose (制約と無関係) も引き続き候補。--json 自身はトリガが 1 回消費されると再露出しないため候補に出ない。",
+      "args_before": ["--json"],
+      "expect": {
+        "outcome": "complete",
+        "candidates": [
+          {"spelling": "--yaml", "is_value": false, "origin": "yaml", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}},
+          {"spelling": "--verbose", "is_value": false, "origin": "verbose", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}}
+        ]
+      }
+    },
+    {
+      "id": "exclusive-partner-excluded-by-after-consistency-check",
+      "why": "args_before: [\"--json\"]、args_after: [\"--verbose\"]: --yaml を採用すると完全経路 [\"--json\", \"--yaml\", \"--verbose\"] を組み立てて判定する (after 整合フィルタ、DR-060 §2) — この判定は `parse()` のフル実行であり遅延述語を含む (DR-047 の一様適用)。json と yaml が両方 committed になるため exclusive_group_violated で Failure、--yaml は候補から除外される。--verbose を採用した経路 [\"--json\", \"--verbose\", \"--verbose\"] は exclusive_group と無関係 (2 回目の --verbose は committed の冪等な再確認) で完全経路が成立するため候補として残る — exclusive-committed-partner-still-candidate との対比: args_after の有無だけで --yaml の生死が反転することが、制約不参加 (before-only) と完全経路判定 (after 供給時) の非対称の直接証拠になる。",
+      "args_before": ["--json"],
+      "args_after": ["--verbose"],
+      "expect": {
+        "outcome": "complete",
+        "candidates": [
+          {"spelling": "--verbose", "is_value": false, "origin": "verbose", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}}
+        ]
+      }
+    }
+  ]
+}

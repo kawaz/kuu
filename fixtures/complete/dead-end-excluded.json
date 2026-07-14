@@ -1,0 +1,21 @@
+{
+  "why": "dead end 除外 (DR-060 §1、DR-104): 値照合まで含めて成立しなくなった読みは候補集合から完全に除外される。参照実装 complete_wbtest.mbt「dead end (途中失敗の経路) は候補を出さない」テストの wire form 版 — もう成立しない解釈の候補はノイズなので、Held (parse なら held Error) だけが残る消費点では候補集合は空になる。",
+  "query": "complete",
+  "definition": {
+    "config": {"long_eq_sep": "deny"},
+    "options": [
+      {"name": "port", "type": "number", "long": true}
+    ]
+  },
+  "cases": [
+    {
+      "id": "value-mismatch-yields-no-candidates",
+      "why": "args_before: [\"--port\", \"abc\"] は --port トリガを消費した後、値スロットに \"abc\" を number として照合しようとして失敗する (not_a_number 相当の Held、DR-037)。この読みはもう成立しないため『次に読めるもの』が存在せず、candidates は空になる — 他に候補源となる要素が定義に無いため、この fixture では dead end 除外が『空集合』という最も直接的な形で観測できる。",
+      "args_before": ["--port", "abc"],
+      "expect": {
+        "outcome": "complete",
+        "candidates": []
+      }
+    }
+  ]
+}

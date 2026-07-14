@@ -1,0 +1,28 @@
+{
+  "why": "候補メタ (canonical/alias・hidden・deprecated、DR-057/058/060 §3、DR-104 §2) の非 default 値を実際に立てて pin する — カバレッジ穴 A6 (参照実装 complete_wbtest.mbt 全文で is_alias/hidden/deprecated の言及が grep 実測ゼロ件、`docs/findings/2026-07-13-complete-fixture-recon.md` A6) の埋め合わせ。definition は fixtures/alias-parse/deprecated.json の port canonical + alias 構造 (DR-057/058 の実演済みパターン) に hidden 要素を足したもの。素材とポリシーの分離 (DR-060 §3) により、complete API 自体は hidden/deprecated な入口も除外せず素直に候補として返す — 既定表示からの除外は生成器 (層2) の関心であり kuu core の関心ではない (DR-058 §1「表示層からの除外」は生成器のポリシーを指す、DR-104 §2 candidateMeta の hidden 注記)。",
+  "query": "complete",
+  "definition": {
+    "options": [
+      {"name": "port", "type": "number", "short": "p"},
+      {"alias": "port", "short": "n"},
+      {"alias": "port", "short": "o", "deprecated": true},
+      {"name": "secret", "type": "flag", "long": true, "hidden": true}
+    ]
+  },
+  "cases": [
+    {
+      "id": "alias-and-hidden-and-deprecated-candidates",
+      "why": "args_before 空: 4 つの独立した入口がすべて候補に出る。-p (canonical、meta 全 false) / -n (alias、is_alias:true) / -o (deprecated alias、is_alias:true かつ deprecated:true) はいずれも同じ由来要素 port へ束縛するが、spelling が異なるため dedup されず 3 件とも独立候補として残る (DR-104 §3 の同一性は spelling を含む組の完全一致)。--secret は hidden:true の flag — complete API はこれを除外せず meta.hidden:true として素直に返す (『既定で除外だがメタには残す』DR-060 §3 の直接実演)。",
+      "args_before": [],
+      "expect": {
+        "outcome": "complete",
+        "candidates": [
+          {"spelling": "-p", "is_value": false, "origin": "port", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}},
+          {"spelling": "-n", "is_value": false, "origin": "port", "term": "word_end", "meta": {"is_alias": true, "hidden": false, "deprecated": false}},
+          {"spelling": "-o", "is_value": false, "origin": "port", "term": "word_end", "meta": {"is_alias": true, "hidden": false, "deprecated": true}},
+          {"spelling": "--secret", "is_value": false, "origin": "secret", "term": "word_end", "meta": {"is_alias": false, "hidden": true, "deprecated": false}}
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,42 @@
+{
+  "why": "after 整合フィルタ (DR-060 §2、DR-104 §5): args_after が与えられると、候補採用後に args_after も消費して完全経路に到達できる経路が 1 本以上あるものだけに絞る。参照実装 complete_wbtest.mbt「after 整合フィルタは後続と矛盾する WordEnd 綴りを落とす」テストの wire form 版。値位置候補と term:cont の候補はユーザ入力を発明できないため無条件で通る (v1 の設計限界、DR-060 §2)。",
+  "query": "complete",
+  "definition": {
+    "config": {"long_eq_sep": "deny"},
+    "options": [
+      {"name": "verbose", "type": "flag", "long": true},
+      {"name": "port", "type": "number", "long": true}
+    ],
+    "positionals": [
+      {"name": "file", "type": "string"}
+    ]
+  },
+  "cases": [
+    {
+      "id": "wordend-candidate-filtered-by-after",
+      "why": "args_before 空、args_after: [\"5\"]。--verbose (値を取らない flag) を採用すると経路は [\"--verbose\", \"5\"] になり、\"5\" は file へ落ちて完全経路が成立する — 候補として残る。--port (number 値を取るオプション) を採用すると経路は [\"--port\", \"5\"] になり、\"5\" は port の値として消費され、必須の file が飢える (missing_operand) ため完全経路に到達できない — 候補から除外される。同じ後続トークン \"5\" でも、候補の値消費構造次第で生死が分かれることを固定する。",
+      "args_before": [],
+      "args_after": ["5"],
+      "expect": {
+        "outcome": "complete",
+        "candidates": [
+          {"spelling": "--verbose", "is_value": false, "origin": "verbose", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}},
+          {"is_value": true, "ty": "string", "origin": "file", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}}
+        ]
+      }
+    },
+    {
+      "id": "no-after-both-triggers-survive",
+      "why": "対照 (args_after を渡さない、行末補完): after 整合フィルタ自体が働かないため --verbose と --port の両方の exact 候補が生存する (args_after.length()==0 は無条件通過、DR-104 §5)。wordend-candidate-filtered-by-after との対で、after 供給の有無が --port の生死を分けることを示す。",
+      "args_before": [],
+      "expect": {
+        "outcome": "complete",
+        "candidates": [
+          {"spelling": "--verbose", "is_value": false, "origin": "verbose", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}},
+          {"spelling": "--port", "is_value": false, "origin": "port", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}},
+          {"is_value": true, "ty": "string", "origin": "file", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}}
+        ]
+      }
+    }
+  ]
+}

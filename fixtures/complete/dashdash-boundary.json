@@ -1,0 +1,41 @@
+{
+  "why": "dd (`--`) 境界と greedy 非露出の補完輪郭 (DR-042/064、DR-104): dd 発火後は severed により greedy 面全体が off になる (DR-041 §4) — それ以降のトークン位置での補完候補から greedy 系トリガ (option 等、dd 自身を含む) が消え、positional (raw 消費) のみが候補になる。definition は fixtures/dd/basic.json の輪郭 (a/b flag + dd + positional x) を流用する。",
+  "query": "complete",
+  "definition": {
+    "options": [
+      {"name": "a", "type": "flag", "short": "a"},
+      {"name": "b", "type": "flag", "short": "b"},
+      {"name": "--", "type": "dd"}
+    ],
+    "positionals": [
+      {"name": "x", "type": "string"}
+    ]
+  },
+  "cases": [
+    {
+      "id": "before-dd-all-greedy-and-positional-candidates",
+      "why": "args_before 空 (dd 未発火): -a / -b / -- (dd 自身のトリガ) と、値位置候補 x が全て『次に読めるもの』の和集合に入る。dd はまだ greedy 面の住人として普通に候補に出る (severed していない)。",
+      "args_before": [],
+      "expect": {
+        "outcome": "complete",
+        "candidates": [
+          {"spelling": "-a", "is_value": false, "origin": "a", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}},
+          {"spelling": "-b", "is_value": false, "origin": "b", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}},
+          {"spelling": "--", "is_value": false, "origin": "--", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}},
+          {"is_value": true, "ty": "string", "origin": "x", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}}
+        ]
+      }
+    },
+    {
+      "id": "after-dd-greedy-suppressed",
+      "why": "args_before: [\"--\"]: dd 発火により severed し greedy 面全体が off になる (DR-041 §4/DR-064) — -a / -b / -- (2 個目の dd も 1 個目の消費でトリガ自体が greedy 面ごと off になっているため候補に出ない、`fixtures/dd/basic.json::second-dd-literal` が示すリテラル化と同根) はいずれも候補から消え、positional x (raw 消費、値位置候補) のみが残る。",
+      "args_before": ["--"],
+      "expect": {
+        "outcome": "complete",
+        "candidates": [
+          {"is_value": true, "ty": "string", "origin": "x", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}}
+        ]
+      }
+    }
+  ]
+}

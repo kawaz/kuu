@@ -1,0 +1,50 @@
+{
+  "why": "DR-097 の parse/complete モード分岐 (issue の最優先要求、`docs/findings/2026-07-13-complete-fixture-recon.md` A8): 同一 definition・同一トークン列でも、args 終端で値スロットが Pending になる読みは parse モードでは viable 扱いされず先食い抑制が働かない (= `fixtures/matcher-readings/long-empty-prefix-typed.json::unparsable-both-fall-through` が pin 済みの素通し解放挙動) のに対し、complete モードでは同じ Pending が viable 扱いされ先食い抑制が働く (参照実装 `eval.mbt` の `has_viable`: `Pending(_, _) => if in_complete(ctx) { return true }`)。definition は同 fixture の bare long トリガ (`long_prefix: \"\"`) 構造をそのまま流用する。**注意 (spec 導出、未実機検証)**: 期待値はコード読解による理論導出であり、実機での `complete()` 呼び出し確認は行っていない — ロックステップ運用により実装側 (kuu.mbt) の検証で mismatch が出た場合は別途報告される前提でこの値を正とする。",
+  "query": "complete",
+  "definition": {
+    "config": {
+      "long_prefix": ""
+    },
+    "options": [
+      {
+        "name": "height",
+        "type": "number",
+        "long": true
+      }
+    ],
+    "positionals": [
+      {
+        "name": "rest",
+        "type": "string",
+        "repeat": {
+          "min": 0
+        }
+      }
+    ]
+  },
+  "cases": [
+    {
+      "id": "unfired-both-trigger-and-rest-candidate",
+      "why": "args_before 空: height トリガ自体まだ何も消費していないので、height の exact 綴り候補 (これから打てるトリガ) と rest の値位置候補 (0 回以上の repeat、まだ 0 個消費でも先頭候補は生存) の両方が和集合に入る — 両者はまだ競合していない (先食み判定は消費点で初めて働く)。",
+      "args_before": [],
+      "expect": {
+        "outcome": "complete",
+        "candidates": [
+          {"spelling": "height", "is_value": false, "origin": "height", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}},
+          {"is_value": true, "ty": "string", "origin": "rest", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}}
+        ]
+      }
+    },
+    {
+      "id": "pending-value-slot-viable-in-complete-mode-only",
+      "why": "args_before: [\"height\"]: parse モードなら args 終端で height の値スロットが飢える (missing_operand) ため『読みゼロ』扱いで先食み抑制が働かず、rest への素通し枝が生きる (unparsable-both-fall-through が固定する挙動)。しかし complete モードでは `has_viable` がこの同じ Pending を viable 扱いする (DR-097 の parse 相限定判定に対する complete 相の唯一の例外分岐) ため、height の読みが『読める』と判定され先食みが効く — rest への素通し枝は生成されず、height の値スロット候補 (型 number、由来 height) のみが和集合に残る。unfired-both-trigger-and-rest-candidate との対比: 同じ 2 要素の定義でも、args_before が height を 1 個消費した瞬間に候補集合が『両方』から『height の値スロットのみ』へ切り替わる。",
+      "args_before": ["height"],
+      "expect": {
+        "outcome": "complete",
+        "candidates": [
+          {"is_value": true, "ty": "number", "origin": "height", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}}
+        ]
+      }
+    }
+  ]
+}

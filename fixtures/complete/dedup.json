@@ -1,0 +1,23 @@
+{
+  "why": "候補 dedup 規則 (DR-104 §3): 2 つの候補が同一とみなされるのは spelling/is_value/ty/origin/term/meta の完全一致に限る (path は同一性に関与しない)。参照実装 complete_wbtest.mbt「同じ綴りが 2 つの異なる祖先 scope から来ても 1 件に畳まれる」テスト (Or([Scoped(\"a\",Exact(\"--x\")), Scoped(\"b\",Exact(\"--x\"))]) 直接構築) の意図を、DR-067 §1「同一スコープ内のトリガ重複は合法」を使って wire form で再現する — 2 つの独立した command 定義が同名 \"build\" を持つ構成は、2 つの異なる経路 (別々の CmdSat 衛星) から同じコマンド名トリガが供給されるという同型のシナリオになる。",
+  "query": "complete",
+  "definition": {
+    "commands": [
+      {"type": "command", "name": "build", "options": [{"name": "fast", "type": "flag", "long": true}]},
+      {"type": "command", "name": "build", "options": [{"name": "verbose", "type": "flag", "long": true}]}
+    ]
+  },
+  "cases": [
+    {
+      "id": "same-spelling-different-command-definition-collapses",
+      "why": "args_before 空: \"build\" という同じコマンド名トリガが 2 つの独立した command 定義 (それぞれ別の子スコープ構造を持つ) から生成されるが、いずれも spelling=\"build\"/is_value=false/origin=\"build\"/term=word_end/meta 全 false で完全一致するため 1 件に畳まれる。畳まれなければ『同じ綴りが 2 回出る』という DR-060 §3 の契約 (和集合はスペリングの和集合、経路の和集合ではない) 違反になる。",
+      "args_before": [],
+      "expect": {
+        "outcome": "complete",
+        "candidates": [
+          {"spelling": "build", "is_value": false, "origin": "build", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}}
+        ]
+      }
+    }
+  ]
+}

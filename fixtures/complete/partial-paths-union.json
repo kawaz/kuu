@@ -1,0 +1,37 @@
+{
+  "why": "全消費も一意性も課さない (DR-060 §1、DR-104): 生存 partial 経路の和集合を取るのが complete の意味論であり、既に完全経路 (KTop Accept) に到達している状態でも、まだ打てる greedy 面のトリガは併存する候補として返る。参照実装 complete_wbtest.mbt「既に完全でも続きの候補は出る」テストの wire form 版 — complete は DR-038 の全消費契約の別モードではなく期待集合の収集そのものなので、Accept と併存する Pending がそのまま候補になる。",
+  "query": "complete",
+  "definition": {
+    "options": [
+      {"name": "v", "type": "flag", "long": true}
+    ],
+    "positionals": [
+      {"name": "file", "type": "string"}
+    ]
+  },
+  "cases": [
+    {
+      "id": "complete-path-still-offers-sibling-trigger",
+      "why": "args_before: [\"x\"] は positional file を満たし、この経路は既に完全解決経路 (このまま実行可能) に到達している。しかし greedy 面の --v はまだ打っていない — 全消費モデル (DR-038) なら『もう完結しているので続きは考えない』となるところ、complete は別クエリ (§15.1 の契約の緩和ではない) なので、Accept に到達した経路と並行して --v の Pending も候補に残る。file は既に消費済みで値スロットが空いていないため候補には出ない (1 positional のみの定義、続きの positional 期待が無い)。",
+      "args_before": ["x"],
+      "expect": {
+        "outcome": "complete",
+        "candidates": [
+          {"spelling": "--v", "is_value": false, "origin": "v", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}}
+        ]
+      }
+    },
+    {
+      "id": "unfired-offers-both-trigger-and-value",
+      "why": "args_before 空: まだ何も消費していない段階では、greedy の --v (トリガ綴り) と positional file (値位置、まだ 0 個も消費していないので必須の先頭候補) の両方が『次に読めるもの』の和集合に入る — 複数の独立した供給源 (greedy 面 / positional 面) からの候補が同時に和集合へ合流することの基本形。",
+      "args_before": [],
+      "expect": {
+        "outcome": "complete",
+        "candidates": [
+          {"spelling": "--v", "is_value": false, "origin": "v", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}},
+          {"is_value": true, "ty": "string", "origin": "file", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}}
+        ]
+      }
+    }
+  ]
+}

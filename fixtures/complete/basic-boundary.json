@@ -1,0 +1,34 @@
+{
+  "why": "complete の基本輪郭 (DR-060 §1、DR-104): カーソル前のトークン列を消費できた生存 partial 経路の次消費点で読めるものの和集合。トリガ境界 (単語頭) では greedy 面の matcher トリガ綴りがそのまま候補になり、トリガ消費直後の値スロット飢餓点では型+由来を持つ値候補が返る。参照実装 complete_wbtest.mbt の同名テスト2本 (AtomicAST 直接構築、`Seq([Exact(\"--port\"), NumArg])` の space-form 単体) の wire form 版 — `long_eq_sep:\"deny\"` (DR-096 §1) で eq-split matcher の生成を止め、space form のみの経路にして wbtest の最小構成と 1:1 対応させる (既定 \"allow\" だと eq-split 由来の追加候補 (term:cont) も同時に出るため、matcher 元綴りの輪郭は別 fixture の関心)。",
+  "query": "complete",
+  "definition": {
+    "config": {"long_eq_sep": "deny"},
+    "options": [
+      {"name": "port", "type": "number", "long": true}
+    ]
+  },
+  "cases": [
+    {
+      "id": "trigger-spelling-at-word-start",
+      "why": "args_before 空 (単語頭): greedy 衛星 `Seq([Exact(\"--port\"), NumArg])` の先頭 Exact がトリガ境界に立つ。parse では EOF の Exact は沈黙 Reject (DR-037) だが、complete では『次に打てる綴りそのもの』(DR-060 §1)。--port は値を取るオプションだが、まだトリガ自体を打っていない段階なので候補は exact 綴りのみ (is_value:false)。term は word_end (プレーンなロング入口、eq-split 形式ではないため Cont ではない)。",
+      "args_before": [],
+      "expect": {
+        "outcome": "complete",
+        "candidates": [
+          {"spelling": "--port", "is_value": false, "origin": "port", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}}
+        ]
+      }
+    },
+    {
+      "id": "value-slot-after-trigger-consumed",
+      "why": "args_before: [\"--port\"] は Exact を消費し NumArg の値スロットが飢える — これがまさに Pending (DR-060 の complete 候補の源)。complete ではこれが『値位置』候補 (型 number、由来 port、completer 実行はしない、DR-060 §3/§4) になる。値待ちの経路しか生き残らないため --port 綴り自体はもう候補に出ない (同じ綴りをもう一度打てる構造ではない — トリガは 1 回消費されると再露出しない)。",
+      "args_before": ["--port"],
+      "expect": {
+        "outcome": "complete",
+        "candidates": [
+          {"is_value": true, "ty": "number", "origin": "port", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}}
+        ]
+      }
+    }
+  ]
+}

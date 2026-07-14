@@ -1,0 +1,39 @@
+{
+  "why": "command スコープ境界の補完輪郭 (DR-060 §1、DR-104): サブコマンドは親 greedy 面のトリガ衛星であり、その名前を消費すると子スコープの新しい背骨に入る (DR-041 §4、親の greedy はそこへ届かない)。子スコープの中身は入力が進むまで候補に混ざらない — 参照実装 complete_wbtest.mbt「コマンド名 (CmdSat) は境界で綴り候補になる」テストの wire form 版。definition は fixtures/command-scope/subcommand.json の子スコープ構造 (positional のみの最小形) を流用する。",
+  "query": "complete",
+  "definition": {
+    "commands": [
+      {
+        "type": "command",
+        "name": "build",
+        "positionals": [
+          {"name": "target", "type": "string"}
+        ]
+      }
+    ]
+  },
+  "cases": [
+    {
+      "id": "command-name-candidate-before-entry",
+      "why": "args_before 空: まだコマンドへ入場していない段階では、親 greedy 面のコマンド名綴り \"build\" のみが候補になる。子スコープの positional target はまだ候補集合に混ざらない (子の中身は入力が進むまで候補源にならない)。",
+      "args_before": [],
+      "expect": {
+        "outcome": "complete",
+        "candidates": [
+          {"spelling": "build", "is_value": false, "origin": "build", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}}
+        ]
+      }
+    },
+    {
+      "id": "child-scope-candidate-after-entry",
+      "why": "args_before: [\"build\"]: コマンド名を消費して子スコープへ経路が入ったため、子スコープの期待 (positional target、値位置候補) が候補集合に切り替わる。親のコマンド名綴り \"build\" はもう候補に出ない (トリガは 1 回消費されると再露出しない) — 祖先の greedy が子に届かない構造がそのまま complete の候補切り替えにも反映されることを固定する。",
+      "args_before": ["build"],
+      "expect": {
+        "outcome": "complete",
+        "candidates": [
+          {"is_value": true, "ty": "string", "origin": "target", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}}
+        ]
+      }
+    }
+  ]
+}
