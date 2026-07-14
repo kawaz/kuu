@@ -1,0 +1,23 @@
+{
+  "why": "DR-102 §5 (DR-050 §4 / DR-083 §2 の対称性から導出、非 accum 要素の宣言 default 値は JSON 表現の型に応じた pipeline を通る): JSON string の宣言 default は piece_filters → parse → value_filters の全段を通り、要素の type と型一致する JSON native (number/bool) の宣言 default は piece_filters/parse がスキップされ value_filters のみを通る。`from_string` (JSON string default) と `from_native` (JSON native number default) の 2 要素を同一 definition に置き、それぞれに『string で処理されれば挙動が変わる』piece_filters を持たせることで、型依存の分岐を同一 case (args: []、CLI 未発火・宣言 default のみのラダー供給) で同時に pin する。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {"name": "from_string", "type": "number", "long": true, "default": " 2 ", "piece_filters": ["trim"]},
+      {"name": "from_native", "type": "number", "long": true, "default": -5, "piece_filters": ["regex_match:^[0-9]+$"]}
+    ]
+  },
+  "cases": [
+    {
+      "id": "string-default-runs-full-pipeline-native-default-skips-piece-stage",
+      "why": "`from_string` の宣言 default は JSON string `\" 2 \"` (前後空白付き) — DR-102 §5 により piece_filters (`trim`) → parse → value_filters の全段を通る。trim が前後空白を除去して \"2\" にし、parse_number (DR-074 canonical lexer は前後空白を受理しない構文、value.mbt `parse_number`) が 2 としてパースする — もし piece_filters がスキップされていたら \" 2 \" はそのまま parse_number に渡り構文不一致で失敗するはずなので、このケースの成功自体が piece_filters 適用の証拠になる。`from_native` の宣言 default は JSON native number `-5` — 要素の type (number) と型一致するため DR-102 §5 により piece_filters/parse はスキップされ value_filters のみを通る (DR-050 §4 の型の帰結、config_to_value の CStr アームのみが piece_filters を経由する構造上の理由)。piece_filters に `regex_match:^[0-9]+$` (先頭マイナス記号を許容しないパターン) を持たせているので、もし piece_filters が (誤って) native 値にも適用されたら \"-5\" の文字列表現がパターン不一致で reject (pattern_no_match) になるはずだが、型一致による構造的スキップにより regex_match は一切評価されず成功する — このケースの成功自体が piece_filters スキップの証拠になる。両要素とも CLI 未発火なので effects は空、sources は両方 default。",
+      "args": [],
+      "expect": {
+        "outcome": "success",
+        "effects": [],
+        "result": {"from_string": 2, "from_native": -5},
+        "sources": {"from_string": "default", "from_native": "default"}
+      }
+    }
+  ]
+}

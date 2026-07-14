@@ -1,0 +1,20 @@
+{
+  "why": "DR-102 §5 の型依存 pipeline: 非 accum 要素の JSON string 宣言 default は piece_filters → parse → value_filters の全段を通る (`declared-default-type-dependent-pipeline.json` の成功側の対)。本 fixture は parse 段が失敗するケースを pin する — number 要素の default に number として構文不一致な文字列を宣言すると、CLI 未発火でもラダー供給時点で value_parser の型照合失敗になる (DR-050 §4 の string→型 pipeline がラダー供給にもそのまま適用される帰結)。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {"name": "n", "type": "number", "long": true, "default": "abc"}
+    ]
+  },
+  "cases": [
+    {
+      "id": "unparseable-string-default-is-parse-failure",
+      "why": "`n` の宣言 default は JSON string \"abc\" — DR-102 §5 により piece_filters (未宣言なので素通し) → parse の全段を通るが、\"abc\" は number の canonical lexer (DR-074) で構文不一致のため parse_number が失敗する (value.mbt `config_to_value` の `(CStr(s), TNum)` アーム、reason=not_a_number)。CLI 未発火 (args:[]) の宣言 default 由来の失敗はどの args トークンにも帰属しないため args_pos=args.length=0 (CONFORMANCE §3「env/config 由来の値の失敗、args:[] なら 0」の default 版)。kind=parse (value_parser の型照合失敗、CONFORMANCE §3)。",
+      "args": [],
+      "expect": {
+        "outcome": "failure",
+        "errors": [{"element": "n", "args_pos": 0, "kind": "parse", "reason": "not_a_number"}]
+      }
+    }
+  ]
+}

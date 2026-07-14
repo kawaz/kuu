@@ -1,0 +1,20 @@
+{
+  "why": "DR-102 §5 末尾: 宣言 default 値がセルに書き込まれる際、final_filters (T→T、非 accum 要素の最終値ガード) が一様適用される。CLI 未発火 (ラダー供給) でも default 値が確定した最終セル値である以上、`apply_entity_filters` は op の種類 (Set/Default) を区別せず一様に final_filters を通す (`count-parse/final-filter-range.json` が CLI 発火の update fold 最終値に対して固定した意味論と同型、DR-102 §1)。`final-filter-reject.json` (CLI 発火経路の final_filters reject) の default 版として、宣言 default 自体が範囲外のケースを pin する。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {"name": "n", "type": "number", "long": true, "default": 999, "final_filters": ["in_range:0:10"]}
+    ]
+  },
+  "cases": [
+    {
+      "id": "out-of-range-declared-default-rejected",
+      "why": "`n` の宣言 default (JSON native number 999、要素の type と型一致なので piece_filters/parse はスキップ、DR-102 §5) が最終セル値として確定した後、final_filters `in_range:0:10` を通る。999 は上限 10 を超えるため reject (reason=too_large、DR-095 §3 の in_range descriptor 宣言)。final_filters の reject は特定トークンに帰属しない一括検証 (DR-102 §4) であり、CLI 未発火 (args:[]) の場合 args_pos=args.length=0。CLI 発火経路の final_filters reject (`final-filter-reject.json::over-range-rejected`) と対で、reject の帰属規則が値源 (cli/default) を問わず一貫することを固定する。",
+      "args": [],
+      "expect": {
+        "outcome": "failure",
+        "errors": [{"element": "n", "args_pos": 0, "kind": "filter", "reason": "too_large"}]
+      }
+    }
+  ]
+}
