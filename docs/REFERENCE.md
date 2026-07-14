@@ -599,7 +599,7 @@ config は別の相、DR-061 §5)。
 
 ### 7.2 kind (層) と reason (機械可読識別子)
 
-`{element, argv_pos, kind, reason, message}` の `kind` は 3 値、`reason` は kind の中の細分:
+`{element, args_pos, kind, reason, message}` の `kind` は 3 値、`reason` は kind の中の細分:
 
 | kind | 意味 |
 |---|---|
