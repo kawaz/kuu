@@ -164,6 +164,11 @@
           "items": { "type": "string" },
           "description": "排他グループ名 (constraint installer 所有、DESIGN §9.2)。"
         },
+        "required_group": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "必須選択グループ名 — 同名 member のうち少なくとも 1 つが値充足 (DR-093 の型委譲) でなければ違反 (constraint installer 所有、DESIGN §9.2.5、DR-103)。名前空間は exclusive_group と独立、同名併用で exactly-one を合成可能。"
+        },
         "deprecated": {
           "type": "boolean",
           "description": "非推奨マーカー — 受理は不変、起動時に構造化警告を積む (DR-058 §2)。alias 要素にも乗る (DR-057 §4)。"
