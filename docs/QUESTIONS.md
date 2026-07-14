@@ -6,12 +6,6 @@
 > チャットでは「VF-Q 待ち」のようにラベルだけで参照する。回答はラベル + 選択肢記号 (例「VF-b で」) だけで通じる。
 > 参照パスは本リポ (spec) 相対。kuu.mbt 側は「kuu.mbt の <path>」と表記する。
 
-## BR-Q: kuu.mbt 旧リモート枝の削除 (不可逆、Yes/No)
-
-kuu.mbt の origin に残る kuu-v0 / ast-spec / slice / claude/review-* / dependabot 枝を削除してよいか。一覧の実物確認は `git ls-remote --heads origin` (kuu.mbt 側)。
-
-参照: docs/findings/2026-07-13-v1-readiness-audit.md の V1-R01 行 (ast-spec 枝の残存観測)
-
 ## COMP-Q1〜Q5: complete fixture 系統の設計
 
 正本: **docs/findings/2026-07-13-complete-fixture-recon.md §5** (各 Q の詳細)。関連 issue: docs/issue/2026-07-12-complete-query-fixture-coverage-gap.md
