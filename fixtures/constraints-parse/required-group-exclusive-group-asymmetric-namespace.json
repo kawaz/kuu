@@ -1,0 +1,43 @@
+{
+  "why": "required_group と exclusive_group の名前空間独立性 (DR-103 §3) を、member 集合が完全に一致しない非対称構成で実証する。既存 `required-group.json`/`exclusive.json` は同名グループの member 集合が完全に同じ (create/extract/list が両属性に同じ 3 member) ため、実装が誤って group member 集合を共有していても検出できない。本 fixture は同名 \"g\" のもとで required_group の member = {a,b}、exclusive_group の member = {a,c} という非対称構成にし、b のみ発火 (required 満たすが a も c も未発火なので exclusive は無関係)、c のみ発火 (exclusive は成立するが required は b が無いので違反) という組合せで、2 つの述語が別々の member 集合を見ていることを直接観測する。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {"name": "a", "type": "bool", "long": [":set:true"], "required_group": ["g"], "exclusive_group": ["g"]},
+      {"name": "b", "type": "bool", "long": [":set:true"], "required_group": ["g"]},
+      {"name": "c", "type": "bool", "long": [":set:true"], "exclusive_group": ["g"]}
+    ]
+  },
+  "cases": [
+    {
+      "id": "b-alone-satisfies-required-without-touching-exclusive",
+      "why": "`--b`: required_group \"g\" の member は {a,b} — b が発火し値充足 (plain bool) なので required は成立。exclusive_group \"g\" の member は {a,c} — a も c も未発火なので committed 0 個、exclusive も成立 (最大 1 つの制約に 0 は違反しない)。b は required_group の member だが exclusive_group の member ではない — required の充足に exclusive 側の判定が一切関与しないことを示す (両述語が別集合を見ている証拠)。a/c は plain bool (暗黙 default なし) で未発火のため absent、result にキーは現れない (`required-group.json` の同型ケースと同じ、DR-051 §1)。",
+      "args": ["--b"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "b", "op": "set", "operand": true, "source": "cli"}
+        ],
+        "result": {"b": true}
+      }
+    },
+    {
+      "id": "c-alone-satisfies-exclusive-but-violates-required",
+      "why": "`--c`: exclusive_group \"g\" の member は {a,c} — c のみ committed (1 個) なので exclusive は成立。required_group \"g\" の member は {a,b} — c は required_group の member ではないため c の発火は required の充足に一切寄与しない。a も b も未発火・default なしで値未充足のため required_group_violated (element=\"g\")。b-alone-satisfies-required-without-touching-exclusive との対比: 同じグループ名 \"g\" でも required_group と exclusive_group が別集合の member を見ている非対称性が、この失敗自体で実証される。args_pos=1=args.length。",
+      "args": ["--c"],
+      "expect": {
+        "outcome": "failure",
+        "errors": [{"element": "g", "args_pos": 1, "kind": "constraint", "reason": "required_group_violated"}]
+      }
+    },
+    {
+      "id": "a-and-c-violate-exclusive-while-required-stays-satisfied",
+      "why": "`--a --c`: exclusive_group \"g\" の member {a,c} が両方 committed (2 個) → exclusive_group_violated。required_group \"g\" の member {a,b} は a が発火し値充足しているため required は成立 (b は不要)。c は required_group の member でないため required 側の判定には現れず、a のみで required が満たされる — required_group が exclusive_group の違反とは独立に評価されることを示す。args_pos=2=args.length。",
+      "args": ["--a", "--c"],
+      "expect": {
+        "outcome": "failure",
+        "errors": [{"element": "g", "args_pos": 2, "kind": "constraint", "reason": "exclusive_group_violated"}]
+      }
+    }
+  ]
+}

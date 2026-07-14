@@ -1,0 +1,43 @@
+{
+  "why": "required_group の member 充足は required 単項と同一の型委譲 (DR-093/DR-103 §1/§7): 値空間なし (`type:\"none\"`、DR-089) の member は『発火したこと (committed)』で充足する。値空間ありの member (plain bool) との対で group \"g\" を構成し、none member 単独の発火でもグループが充足すること、および未発火時は他 member と同様に不充足に数えられることを pin する。`sync` (type 省略=none) は発火しても値を運ばず result/effects に一切痕跡を残さない (`none-value-space.json` と同型) が、required_group の充足判定には committed 基準で正しく参加する。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {"name": "sync", "long": true, "required_group": ["g"]},
+      {"name": "verbose", "type": "bool", "long": [":set:true"], "required_group": ["g"]}
+    ]
+  },
+  "cases": [
+    {
+      "id": "neither-member-fires-violates-required-group",
+      "why": "args 空: `sync` (none, 値空間なし) は未発火なので committed=false → 不充足。`verbose` (plain bool, 値空間あり) も未発火・default なしで値未充足 (absent、DR-051 §1)。group \"g\" の member がいずれも充足しないため required_group_violated (element=\"g\")。args_pos=0=args.length。",
+      "args": [],
+      "expect": {
+        "outcome": "failure",
+        "errors": [{"element": "g", "args_pos": 0, "kind": "constraint", "reason": "required_group_violated"}]
+      }
+    },
+    {
+      "id": "none-member-fires-satisfies-group-via-committed",
+      "why": "`--sync`: none 要素 `sync` が発火して committed=true になる — 値空間なしの充足基準 (発火したこと、DR-089 §4/DR-093) により group \"g\" が充足する。`sync` は値を運ばないため result/effects に一切現れない (`none-value-space.json` と同型)。`verbose` は未発火・default なしで absent (result にキーなし)。required_group_violated は起きない。",
+      "args": ["--sync"],
+      "expect": {
+        "outcome": "success",
+        "effects": [],
+        "result": {}
+      }
+    },
+    {
+      "id": "value-member-fires-satisfies-group-via-value-presence",
+      "why": "`--verbose`: plain bool `verbose` が発火し値充足 (値空間ありの充足基準、DR-093) — group \"g\" が充足する。`sync` は未発火のままだが group 充足には verbose 1 個で十分 (少なくとも 1 つ)。none-member-fires-satisfies-group-via-committed との対で、値空間の有無で異なる充足基準 (committed / 値の有無) の両方が同じ group 述語の下で正しく機能することを固定する。",
+      "args": ["--verbose"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "verbose", "op": "set", "operand": true, "source": "cli"}
+        ],
+        "result": {"verbose": true}
+      }
+    }
+  ]
+}

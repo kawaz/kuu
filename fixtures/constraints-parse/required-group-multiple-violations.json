@@ -1,0 +1,37 @@
+{
+  "why": "遅延述語は全保持 (DR-047 §3、CONFORMANCE §2 の errors 全保持配列) — 複数の独立した required_group が同時に未充足の場合、errors に両方の violation が列挙されることを pin する (`exclusive.json::both-members-violate` が exclusive_group×conflicts_with の重複宣言で同種の全列挙を固定しているのと対、required_group 側での実証)。g1 (member: a) と g2 (member: b) は完全に独立したグループ (名前も member も重複しない) — 1 つの constraint 違反が発生しても評価が打ち切られず、両方の group が独立に判定されることを示す。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {"name": "a", "type": "bool", "long": [":set:true"], "required_group": ["g1"]},
+      {"name": "b", "type": "bool", "long": [":set:true"], "required_group": ["g2"]}
+    ]
+  },
+  "cases": [
+    {
+      "id": "both-groups-unsatisfied-yields-two-errors",
+      "why": "args 空: a も b も未発火・default なしで値未充足 (absent)。g1 (member: {a}) と g2 (member: {b}) はそれぞれ独立に required_group_violated — 2 つの独立した group 述語が両方とも違反するため errors は 2 件 (element=g1 と element=g2、集合比較、CONFORMANCE §3)。先に評価された方の違反で打ち切られ 1 件だけになる、ということは起きない。args_pos は両方とも 0=args.length (遅延述語は全消費後評価、DR-047 §4)。",
+      "args": [],
+      "expect": {
+        "outcome": "failure",
+        "errors": [
+          {"element": "g1", "args_pos": 0, "kind": "constraint", "reason": "required_group_violated"},
+          {"element": "g2", "args_pos": 0, "kind": "constraint", "reason": "required_group_violated"}
+        ]
+      }
+    },
+    {
+      "id": "both-groups-satisfied-succeeds",
+      "why": "`--a --b`: a と b がそれぞれ発火し g1/g2 とも充足、required_group_violated は起きない。both-groups-unsatisfied-yields-two-errors との対で『独立した 2 グループが両方成立すれば success、両方不成立なら 2 errors』という全列挙の輪郭を固定する。",
+      "args": ["--a", "--b"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "a", "op": "set", "operand": true, "source": "cli"},
+          {"entity": "b", "op": "set", "operand": true, "source": "cli"}
+        ],
+        "result": {"a": true, "b": true}
+      }
+    }
+  ]
+}
