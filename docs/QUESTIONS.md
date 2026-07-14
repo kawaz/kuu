@@ -6,14 +6,11 @@
 > チャットでは「VF-Q 待ち」のようにラベルだけで参照する。回答はラベル + 選択肢記号 (例「VF-b で」) だけで通じる。
 > 参照パスは本リポ (spec) 相対。kuu.mbt 側は「kuu.mbt の <path>」と表記する。
 
-## CR-Q1: accum_filters の reject 能力 (codex レビュー C-1)
+## CR-Q1 → ACC-Q: accum_filters の Result 化 + accumulator 語彙の再検討 (調査中)
 
-DR-102 §4 と CONFORMANCE は accum_filters の reject 時 args 位置帰属を規定しているが、ARRAY filter registry の実態は「拒否を持たない純関数」(builtin-descriptors の unique 記述、ArrayFilterDescriptor に Result 経路なし) で **reject を発生させられない** — 旧 cell_filters 時代から継承した規定と実態の乖離が分割で顕在化した。
+kawaz 方向出し (2026-07-14): 「Result なしは初期に綺麗だからで選んだだけ。現実に即さないなら他でも生やしてるし Result を返しても良い」— fallible 化 (旧 CR-Q1-a) に前向き。ただし判断材料として (1) **filter 系装置の fallibility 全数調査** (失敗を返せない種別は他に何があるか、どちらが優勢か)、(2) **flat しない追加 (T[][]) の組み込み手段の有無** (あれば final 相でまとめて処理する迂回が成立)、(3) **append 語彙の妥当性** (Python append/extend、JS push/concat のように flat 有無で言語間の意味が割れる — 曖昧さのない動詞ペアへの見直し + flat する/しない両建ての要否) を統括が調査中。結果を ACC-Q バッチとして再提示する。
 
-- **CR-Q1-a**: ArrayFilterDescriptor を fallible 化 (Result 経路を通し、配列長検査のような検証系 array filter を書けるようにする。規定が実効化し fixture で pin 可能になる)
-- **CR-Q1-b** (統括推し): ARRAY registry は **transform 専用を正式契約に昇格** (現実態の明文化)。DR-102 §4 の accum 側 reject 規定は「将来 fallible な array filter が導入された場合の帰属規則」として条件付き化 (または削除)。fallible 化は検証系 array filter の実需が出た時に非破壊で追加できる — 今の fallible 化は将来の仮定的要件への先回り
-
-参照: docs/issue/2026-07-14-codex-review-dr102-dr103-postland.md (レビュー指摘全体) / docs/decisions/DR-102-filter-attribute-split.md §4 / schema/builtin-descriptors.json の unique
+参照: docs/issue/2026-07-14-codex-review-dr102-dr103-postland.md C-1 節 / docs/decisions/DR-102-filter-attribute-split.md §4 / DR-036 (accumulators registry)
 
 ## V1-Q1〜Q3: v1.0.0 発行条件まわり
 
