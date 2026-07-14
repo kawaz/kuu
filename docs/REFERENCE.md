@@ -88,6 +88,7 @@ wire 正規形のノードが持ちうる全属性。型・既定値・適用対
 | `ref` | string | なし | 任意ノード |
 | `repeat` | boolean \| object ({min?,max?,lazy?}) | なし | 任意要素 |
 | `required` | boolean | false | 任意要素 |
+| `required_group` | array[string] | なし | 任意要素 |
 | `requires` | array[string] | なし | 任意要素 |
 | `self` | `"drop"` \| `"keep"` | `"drop"` | `type:"dd"` の要素 |
 | `seq` | array[node] | なし | 枝ノード |
@@ -283,17 +284,24 @@ filter chain は全て配列 (差し替え・継承なし) / `{prepend?, append?
 最小例: `{"name": "json", "exclusive_group": ["format"]}`
 正本: DESIGN §9.2
 
+**`required_group`**
+グループ member のうち少なくとも 1 つが `required` と同じ型委譲充足を満たすこと (論理和)。
+`exclusive_group` とは名前空間が独立 (同名文字列でも別々に評価) — 同名併用で exactly-one を
+合成できる。単独 member は `required: true` と等価に縮退する。
+最小例: `{"name": "create", "exclusive_group": ["mode"], "required_group": ["mode"]}`
+正本: DESIGN §9.3, DR-103
+
 **`conflicts_with`**
 名指しのペア排他。意味は対称 — 片側に書けば両方向に効く。2 要素のペア排他が対象。
 最小例: `{"name": "foo", "conflicts_with": ["bar"]}`
-正本: DESIGN §9.4, DR-055
+正本: DESIGN §9.5, DR-055
 
 **`requires`**
 自分が起動された時、列挙された name の要素群も起動されている必要がある (正の依存)。目的語の
 充足判定も `required` と同じ型委譲 (DR-093): 値空間ありは値の有無、bool 型は解決後の値が
 true であること (値源不問)、値空間なしは発火 (committed)。
 最小例: `{"name": "decrypt", "requires": ["key-file"]}`
-正本: DESIGN §9.3, DR-093
+正本: DESIGN §9.4, DR-093
 
 #### 参照
 
@@ -589,7 +597,7 @@ config は別の相、DR-061 §5)。
 |---|---|
 | `parse` | 型照合・経路構築の失敗 (構造的必須の不成立・残余トークン・value_parser の型照合失敗) |
 | `filter` | filter chain の Error (DR-037) |
-| `constraint` | 遅延述語 (`required`/`requires`/`exclusive_group`/`conflicts_with`) の違反 |
+| `constraint` | 遅延述語 (`required`/`required_group`/`requires`/`exclusive_group`/`conflicts_with`) の違反 |
 
 `reason` は fixture では optional 検証 (書けば比較、書かなければ kind までの検証、DR-066 §5)。
 
@@ -603,6 +611,7 @@ installer 発生源 (下表) は `schema/builtin-descriptors.json` の descripto
 | `parse` | `missing_operand` | トークンが尽きて要素の消費要求が満たせない |
 | `parse` | `unexpected_token` | 消費者の居ないトークンが残る (残余トークン) |
 | `constraint` | `required_violated` | `required` の値充足 (DR-047) 失敗 |
+| `constraint` | `required_group_violated` | `required_group` 内のいずれの member も値充足しない (DR-103) |
 | `constraint` | `requires_violated` | `requires` の目的語不足 |
 | `constraint` | `exclusive_group_violated` | `exclusive_group` 内の committed 衝突 |
 | `constraint` | `conflicts_with_violated` | `conflicts_with` の committed 衝突 |
