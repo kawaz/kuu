@@ -1,11 +1,11 @@
 ---
 title: fixture 基底フィールド argv → args / argv_pos → args_pos の一斉改名 (kawaz 裁定 2026-07-14)
-status: open
+status: wip
 category: task
 created: 2026-07-14T11:47:18+09:00
 last_read:
 open_entered: 2026-07-14T11:47:18+09:00
-wip_entered:
+wip_entered: 2026-07-14T12:16:02+09:00
 blocked_entered:
 pending_entered:
 discarded_entered:
