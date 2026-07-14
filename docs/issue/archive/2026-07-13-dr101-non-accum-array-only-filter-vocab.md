@@ -1,6 +1,6 @@
 ---
 title: DR-101 §3 判定マトリクス — 非 accum × ARRAY-only 綴りの座席が未定 (unknown-vocab で reject するが対称論理では invalid-range が本来の座席)
-status: wip
+status: discarded
 category: design
 created: 2026-07-13T12:47:53+09:00
 last_read:
@@ -8,11 +8,11 @@ open_entered:
 wip_entered: 2026-07-13T14:56:49+09:00
 blocked_entered:
 pending_entered:
-discarded_entered:
+discarded_entered: 2026-07-14T09:39:20+09:00
 resolved_entered:
-discard_reason:
+discard_reason: ["discarded: kawaz裁定(2026-07-13)により前提解消 — 「非accum×ARRAY-onlyのkindをどちらにするか」という問い自体が、cell_filtersがmultiple有無でT→T/Acc→Accの異なる語彙を1属性に内包する誤った名付けの症状だった","issue/2026-07-14-cell-filters-attribute-split","DR-102チェーン(未push)は同issueのリワークで置き換え予定"]
 pending_reason:
-close_reason:
+close_reason: ["discarded"]
 blocked_by:
 origin: 自リポ TODO
 ---
