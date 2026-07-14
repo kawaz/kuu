@@ -1,5 +1,5 @@
 {
-  "why": "`requires` 述語の before-only 生存 + after-filter 除外の対 (DR-104 §5、DR-093、codex レビュー #2 M-7 の反映、統括検証 2026-07-14)。`requires` は方向性のある正の依存 (自分が起動されたら列挙先も起動されている必要がある) — `conflicts_with` (対称の二項排他) と対照的な非対称関係。**注意 (spec 導出、未実機検証)**: 期待値はコード読解による理論導出であり、実機での `complete()` 呼び出し確認は行っていない — ロックステップ運用により実装側 (kuu.mbt) の検証で mismatch が出た場合は別途報告される前提でこの値を正とする。",
+  "why": "`requires` 述語の before-only 生存 + after-filter 除外の対 (DR-104 §5、DR-093、codex レビュー #2 M-7 の反映、統括検証 2026-07-14)。`requires` は方向性のある正の依存 (自分が起動されたら列挙先も起動されている必要がある) — `conflicts_with` (対称の二項排他) と対照的な非対称関係。",
   "query": "complete",
   "definition": {
     "config": {"long_eq_sep": "deny"},

@@ -1,5 +1,5 @@
 {
-  "why": "`required` 述語の before-only 生存 + after-filter 除外の対 (DR-104 §5、`constraint-non-participation.json` は exclusive_group のみを固定しており他 4 種の遅延述語は未検証だった、codex レビュー #2 M-7 の反映、統括検証 2026-07-14)。`required` は単一要素の充足強制 (DESIGN §9.1、DR-093) で `exclusive_group` のような『相手』を持たないため、対比は『required 要素自身を発火させる候補』vs『無関係な候補 (required 要素を発火させない)』の間で作る。**注意 (spec 導出、未実機検証)**: 期待値はコード読解による理論導出であり、実機での `complete()` 呼び出し確認は行っていない — ロックステップ運用により実装側 (kuu.mbt) の検証で mismatch が出た場合は別途報告される前提でこの値を正とする。",
+  "why": "`required` 述語の before-only 生存 + after-filter 除外の対 (DR-104 §5、`constraint-non-participation.json` は exclusive_group のみを固定しており他 4 種の遅延述語は未検証だった、codex レビュー #2 M-7 の反映、統括検証 2026-07-14)。`required` は単一要素の充足強制 (DESIGN §9.1、DR-093) で `exclusive_group` のような『相手』を持たないため、対比は『required 要素自身を発火させる候補』vs『無関係な候補 (required 要素を発火させない)』の間で作る。",
   "query": "complete",
   "definition": {
     "config": {"long_eq_sep": "deny"},

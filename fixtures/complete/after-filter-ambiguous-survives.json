@@ -1,5 +1,5 @@
 {
-  "why": "after 整合フィルタは `Success`/`Ambiguous` なら残し `Failure` なら除外する (DR-104 §5) — `Ambiguous` を成功側として扱うのは `Success` とは独立した設計判断であり、`fixtures/complete/after-filter.json` の 10 ケースは全て `Success`/`Failure` の対立のみで `Ambiguous` 生存を検証しない (codex レビュー #2 M-10 の反映、統括検証 2026-07-14)。export_key 衝突 (DESIGN §15.5、`fixtures/export-key/collision.json` の parse 輪郭を流用) を使い、候補採用後の完全経路が ambiguous に解決するケースでもその候補が生存することを固定する。**注意 (spec 導出、未実機検証)**: 期待値はコード読解による理論導出であり、実機での `complete()` 呼び出し確認は行っていない — ロックステップ運用により実装側 (kuu.mbt) の検証で mismatch が出た場合は別途報告される前提でこの値を正とする。",
+  "why": "after 整合フィルタは `Success`/`Ambiguous` なら残し `Failure` なら除外する (DR-104 §5) — `Ambiguous` を成功側として扱うのは `Success` とは独立した設計判断であり、`fixtures/complete/after-filter.json` の 10 ケースは全て `Success`/`Failure` の対立のみで `Ambiguous` 生存を検証しない (codex レビュー #2 M-10 の反映、統括検証 2026-07-14)。export_key 衝突 (DESIGN §15.5、`fixtures/export-key/collision.json` の parse 輪郭を流用) を使い、候補採用後の完全経路が ambiguous に解決するケースでもその候補が生存することを固定する。",
   "query": "complete",
   "definition": {
     "options": [

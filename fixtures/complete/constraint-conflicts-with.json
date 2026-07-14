@@ -1,5 +1,5 @@
 {
-  "why": "`conflicts_with` 述語の before-only 生存 + after-filter 除外の対 (DR-104 §5、DR-055、codex レビュー #2 M-7 の反映、統括検証 2026-07-14)。`conflicts_with` は名指しのペア排他で意味は対称 (片側に書けば両方向に効く) — `exclusive_group` (3+ 要素のグループ排他) と対照的な 2 要素専用の二項関係。**注意 (spec 導出、未実機検証)**: 期待値はコード読解による理論導出であり、実機での `complete()` 呼び出し確認は行っていない — ロックステップ運用により実装側 (kuu.mbt) の検証で mismatch が出た場合は別途報告される前提でこの値を正とする。",
+  "why": "`conflicts_with` 述語の before-only 生存 + after-filter 除外の対 (DR-104 §5、DR-055、codex レビュー #2 M-7 の反映、統括検証 2026-07-14)。`conflicts_with` は名指しのペア排他で意味は対称 (片側に書けば両方向に効く) — `exclusive_group` (3+ 要素のグループ排他) と対照的な 2 要素専用の二項関係。",
   "query": "complete",
   "definition": {
     "options": [
