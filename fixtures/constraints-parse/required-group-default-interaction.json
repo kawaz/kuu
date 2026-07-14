@@ -1,0 +1,23 @@
+{
+  "why": "required_group (DR-103) と default 値源の相互作用: グループ member の 1 つが default 宣言を持つ場合、default による値充足 (DR-047 §6「required + default は常に充足する」の group への持ち上げ) だけでグループ全体が成立する — 明示的な CLI 発火が一切無くても vacuous に成立する。`required` 単項の「default 込みの値の有無」判定 (DR-093) をグループの論理和に持ち上げた帰結であり、required_group 固有の特殊規則ではない。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {"name": "explicit", "type": "string", "long": true, "required_group": ["src"]},
+      {"name": "fallback", "type": "string", "long": true, "default": "auto", "required_group": ["src"]}
+    ]
+  },
+  "cases": [
+    {
+      "id": "default-member-satisfies-group-vacuously",
+      "why": "argv 空、explicit/fallback とも CLI 未発火: explicit は default を持たないため値空間ありでも値の有無判定で未充足 (absent)。fallback は default:\"auto\" を持つため、CLI 未発火でも値源ラダー (DR-031/047) が default 値で充足する — src グループは fallback 1 member の充足だけで成立し required_group_violated は起きない。explicit は未発火・default なしで absent (result にキーなし、DR-051 §1)。fallback は default 値 \"auto\" で present、source=default (CLI 由来ではないため effects には載らない、CONFORMANCE §2)。",
+      "argv": [],
+      "expect": {
+        "outcome": "success",
+        "effects": [],
+        "result": {"fallback": "auto"},
+        "sources": {"fallback": "default"}
+      }
+    }
+  ]
+}

@@ -1,0 +1,55 @@
+{
+  "why": "required_group (グループ単位「少なくとも1つ必須」、DR-103) の輪郭: グループ内 member のいずれかが required 単項と同じ型委譲充足 (DR-093) を満たさなければ違反。mode グループ (create/extract/list、いずれも plain bool = `type:\"bool\"` + `long:[\":set:true\"]`、暗黙 default なし) は exclusive_group と required_group を同名 \"mode\" で併用し、tar のモード必須と同型の exactly-one を表現する。target_grp は target 単独の縮退ケース (required:true と等価)。vgrp は verbose (`type:\"flag\"`、暗黙 default:false) 単独のグループで、flag member が常に値充足し group が vacuous に成立する境界を示す (DR-103 §7、kawaz 裁定 2026-07-14「flag に required 付けても常に充足はそれで OK」)。member を plain bool にするのは、flag preset の暗黙 default:false だと required_group が常に vacuous 成立してしまい tar 型の「未発火なら不充足」を機能させる実例にならないため (DR-103 §1)。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {"name": "create", "type": "bool", "long": [":set:true"], "exclusive_group": ["mode"], "required_group": ["mode"]},
+      {"name": "extract", "type": "bool", "long": [":set:true"], "exclusive_group": ["mode"], "required_group": ["mode"]},
+      {"name": "list", "type": "bool", "long": [":set:true"], "exclusive_group": ["mode"], "required_group": ["mode"]},
+      {"name": "target", "type": "string", "long": true, "required_group": ["target_grp"]},
+      {"name": "verbose", "type": "flag", "long": true, "required_group": ["vgrp"]}
+    ]
+  },
+  "cases": [
+    {
+      "id": "violation-no-mode-member-fires",
+      "why": "`--target x` のみ: mode グループの create/extract/list はいずれも plain bool で未発火なら absent (値空間ありの型委譲判定、DR-093) なので、3 member とも値充足していない — mode グループのいずれも充足しないため required_group_violated (element=\"mode\"、DR-103 §2 の group ラベル帰属)。argv_pos=2=argv.length (遅延述語は全消費後評価、DR-047 §4)。target_grp (target 単独) は target が CLI 発火で値供給されており充足。vgrp (verbose 単独) も verbose 未発火だが flag の暗黙 default:false で値充足 (vacuous、DR-103 §7) — この 2 グループの充足は errors に現れないことで暗黙に pin される。",
+      "argv": ["--target", "x"],
+      "expect": {
+        "outcome": "failure",
+        "errors": [{"element": "mode", "argv_pos": 2, "kind": "constraint", "reason": "required_group_violated"}]
+      }
+    },
+    {
+      "id": "satisfied-single-mode-member",
+      "why": "`--create --target x`: create (plain bool) が発火し mode グループが充足、required_group_violated は起きない。target_grp は target 発火で充足。vgrp は verbose 未発火のまま vacuous 充足 (flag の暗黙 default:false、DR-103 §7) — この case は充足の基本形と vacuous 境界の両方を同時に固定する。extract/list は plain bool で未発火・default なしのため absent (result にキーが現れない、DR-051 §1)。",
+      "argv": ["--create", "--target", "x"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "create", "op": "set", "operand": true, "source": "cli"},
+          {"entity": "target", "op": "set", "operand": "x", "source": "cli"}
+        ],
+        "result": {"create": true, "target": "x", "verbose": false}
+      }
+    },
+    {
+      "id": "exactly-one-violates-exclusive-not-required",
+      "why": "`--create --extract --target x`: create と extract の 2 member が発火。required_group 的には『少なくとも 1 つ』を 2 つで余裕をもって満たすため required_group_violated は出ない。一方 exclusive_group (同名 \"mode\") は『最大 1 つ』の指定述語であり、2 member committed で違反 → exclusive_group_violated のみが errors に載る (DR-103 §3 の名前空間独立: required_group と exclusive_group は別々に評価される 2 述語)。これにより『最大 1 つ (exclusive_group) + 少なくとも 1 つ (required_group) = ちょうど 1 つ』の exactly-one 合成で、必須は満たしつつ排他だけ破る組合せを固定する — tar 型のモード必須がまさにこの合成。",
+      "argv": ["--create", "--extract", "--target", "x"],
+      "expect": {
+        "outcome": "failure",
+        "errors": [{"element": "mode", "argv_pos": 4, "kind": "constraint", "reason": "exclusive_group_violated"}]
+      }
+    },
+    {
+      "id": "solo-member-degenerates-to-required",
+      "why": "`--create` のみ (target 未供給): mode は create 発火で充足。target_grp は member が target 1 つだけのグループで、target が未発火・default なしのため absent = 値未充足 → required_group_violated (element=\"target_grp\")。単独 member の required_group は required:true と観測上同じ結果になるという DR-103 §4 の縮退を実証する。vgrp は verbose 未発火でも vacuous 充足のまま (このケースでも違反に現れない)。",
+      "argv": ["--create"],
+      "expect": {
+        "outcome": "failure",
+        "errors": [{"element": "target_grp", "argv_pos": 1, "kind": "constraint", "reason": "required_group_violated"}]
+      }
+    }
+  ]
+}
