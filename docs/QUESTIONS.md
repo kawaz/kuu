@@ -6,14 +6,11 @@
 > チャットでは「VF-Q 待ち」のようにラベルだけで参照する。回答はラベル + 選択肢記号 (例「VF-b で」) だけで通じる。
 > 参照パスは本リポ (spec) 相対。kuu.mbt 側は「kuu.mbt の <path>」と表記する。
 
-## COMP-Q1b: complete fixture の入力フィールド名の最終形 (小)
+## COMP-Q1c: 基底語彙 `argv` の維持可否 (調査中 → 表を添えて再提示予定)
 
-COMP-Q1〜Q5 は裁定済み (2026-07-14): Q1 = before/after 系で承認 / Q2 = `candidates[].meta` は必須 (候補同一性の成分ゆえ判定に必要) / Q3 = completer 名フィールドを wire に持たせ、fixture は「書けば検証」の opt-in / Q5 = 「7 op 表と無関係」の明示文を書いてよい。Q4 は kawaz の逆質問 (候補 dedup の path 無視は spec pin か / 制約の中間結果で候補が変わるべきでは) — 統括が調査中、提案を持って戻る。
+COMP-Q1b は裁定済み (2026-07-14): `argv_before` / `argv_after` 採用、word 系も `word_before` / `word_after` の系統命名に (旧 word / word_suffix は complete DR で改名、v1 未使用のため無傷)。
 
-残る小裁定: Q1 承認時の kawaz 不満 (「before/after の対象が何か分かりにくい — 前後の引数？word 中の前後？」) は実際に曖昧性の証左なので:
-
-- **COMP-Q1b-a** (統括推し): `argv_before` / `argv_after` — parse fixture の `argv` と語彙が繋がり「引数トークン列の前後」であることが自己説明的。word 内前後 (将来の word/word_suffix 拡張) との衝突も構造的に回避
-- **COMP-Q1b-b**: `before` / `after` のまま (DESIGN §15.13 のシグネチャ語彙と一致)
+残る確認: kawaz の宿題「argv という語彙は全言語で普遍的に同じ意味か」。論点は 2 つ — (1) 言語横断の認知度、(2) 伝統的 argv は $0 (プログラム名) 込みだが kuu の `argv` フィールドは $0 抜き、という意味ずれの許容可否 (代替候補: args 等)。統括が言語横断マトリクスを調査中 — 結果を添えて a) argv 維持 (+$0 非包含の明記) / b) 改名、を再提示する。argv で良いとなればそのまま確定。
 
 ## V1-Q1〜Q3: v1.0.0 発行条件まわり
 
