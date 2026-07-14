@@ -24,6 +24,11 @@ ensure-clean:
 lint-reference:
     ./scripts/lint-reference.sh
 
+# schema/builtin-descriptors.json が schema/descriptor.schema.json (envelope) に適合し、
+# key/name 一致・effect:preserve 不変量等の semantic 制約を満たすか検査 (DR-107、codex レビュー #4)
+lint-descriptors:
+    uv run --with jsonschema python3 ./scripts/lint-descriptors.py
+
 # fail if the current bookmark / branch is not the default
 [private]
 check-on-default-branch:

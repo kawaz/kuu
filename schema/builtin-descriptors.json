@@ -145,9 +145,9 @@
       "fallibility": "reject",
       "invocation": { "encoding": "none", "parameters": [] },
       "config": {
-        "number_thousand_sep": { "type": "array", "items": "string", "default": ["_"], "description": "桁区切り文字集合 (DR-074 §1/§4)。canonical は underscore のみ、カンマは opt-in。" },
-        "number_allow_base_prefix": { "type": "boolean", "default": false, "description": "0x/0o/0b 整数 + hex float の統合 opt-in (DR-074 §2)。" },
-        "number_leading_zero": { "type": "string", "enum": ["decimal", "octal"], "default": "decimal", "description": "先頭 0 の解釈 (DR-074 §4)。canonical は decimal、octal は移植ロック用 opt-in。" }
+        "number_thousand_sep": { "value_type": { "array": "string" }, "default": ["_"], "description": "桁区切り文字集合 (DR-074 §1/§4)。canonical は underscore のみ、カンマは opt-in。" },
+        "number_allow_base_prefix": { "value_type": "bool", "default": false, "description": "0x/0o/0b 整数 + hex float の統合 opt-in (DR-074 §2)。" },
+        "number_leading_zero": { "value_type": "string", "enum": ["decimal", "octal"], "default": "decimal", "description": "先頭 0 の解釈 (DR-074 §4)。canonical は decimal、octal は移植ロック用 opt-in。" }
       },
       "reasons": ["not_a_number"],
       "description": "number/float 共通の value_parser (DR-074 §1、DR-094 §9 案 A の新名 — 旧名 kuu_number_parser)。parse 相 (String→number) は構文不一致で reject しうる (fallibility:reject) — 構文不一致は全て not_a_number に帰着 (inf/nan 規定違反・hex float 未 opt-in 等も含む、DR-074 §1/§2/§7)。DR-066 §3 v1 表所収。"
@@ -161,7 +161,7 @@
       "fallibility": "reject",
       "invocation": { "encoding": "none", "parameters": [] },
       "config": {
-        "int_round": { "type": "string", "enum": ["floor", "ceil", "trunc", "away", "half_floor", "half_ceil", "half_trunc", "half_away", "half_even", "error"], "default": "error", "description": "非整数値の丸めモード 10 種 (DR-075 §2)。canonical default は error。" }
+        "int_round": { "value_type": "string", "enum": ["floor", "ceil", "trunc", "away", "half_floor", "half_ceil", "half_trunc", "half_away", "half_even", "error"], "default": "error", "description": "非整数値の丸めモード 10 種 (DR-075 §2)。canonical default は error。" }
       },
       "reasons": ["not_a_number", "not_an_integer", "int_out_of_range"],
       "description": "int の値空間判定 value_parser (DR-075 §1、DR-094 §9 案 A の新名 — 旧名 kuu_int_parser)。not_a_number = number として全く読めない入力。not_an_integer = 非整数値かつ int_round=error のときのみ emit (丸めモードでは丸めて成功するため emit しない、DR-075 §6 が reasons 宣言として明文)。int_out_of_range = 整数値だが host 実装の値域を超える (DR-075「int の値域は実装定義」節)。"
@@ -175,9 +175,9 @@
       "fallibility": "reject",
       "invocation": { "encoding": "none", "parameters": [] },
       "config": {
-        "bool_true_values": { "type": "array", "items": "string", "default": ["true", "1"], "description": "true と解釈する文字列集合 (DR-074 §3/§4、キー名は DR-100 で bool_ prefix 化)。" },
-        "bool_false_values": { "type": "array", "items": "string", "default": ["false", "0", ""], "description": "false と解釈する文字列集合。空文字列を含む (env の FLAG= 対応)。キー名は DR-100 で bool_ prefix 化。" },
-        "bool_case_insensitive": { "type": "boolean", "default": true, "description": "大小無視で照合するか (DR-074 §3)。false で JSON/TOML 準拠の大小厳密方言。キー名は DR-100 で bool_ prefix 化。" }
+        "bool_true_values": { "value_type": { "array": "string" }, "default": ["true", "1"], "description": "true と解釈する文字列集合 (DR-074 §3/§4、キー名は DR-100 で bool_ prefix 化)。" },
+        "bool_false_values": { "value_type": { "array": "string" }, "default": ["false", "0", ""], "description": "false と解釈する文字列集合。空文字列を含む (env の FLAG= 対応)。キー名は DR-100 で bool_ prefix 化。" },
+        "bool_case_insensitive": { "value_type": "bool", "default": true, "description": "大小無視で照合するか (DR-074 §3)。false で JSON/TOML 準拠の大小厳密方言。キー名は DR-100 で bool_ prefix 化。" }
       },
       "reasons": ["not_a_bool"],
       "description": "bool の value_parser (DR-074 §3、DR-094 §9 案 A)。config キーは factory 名 prefix 正準 (DR-100)。canonical 語彙外の入力 (例 \"yes\") は not_a_bool (DR-066 §3 v1 表、kawaz 裁定 2026-07-08 で追加、SCH-Q5 で自明と確認)。"
@@ -188,14 +188,14 @@
       "construction": "factory",
       "io_type": { "input": "string", "output": "bool" },
       "effect": "transform",
-      "fallibility": "total",
+      "fallibility": "reject",
       "invocation": { "encoding": "none", "parameters": [] },
       "config": {
-        "tty_stream": { "type": "string", "enum": ["stdin", "stdout", "stderr"], "required": true, "description": "tty_provider へ渡すストリーム識別子 (DR-099 §3)。必須 — 未指定 (bare `type: \"tty\"` を含む) は definition-error kind=invalid-range。要素名からの推測はしない (kawaz 裁定 TTY-Q2=(c))。" },
-        "tty_cygwin": { "type": "boolean", "default": true, "description": "Cygwin/MSYS pty を terminal 扱いに含めるダイヤル (DR-099 §3)。fold = `terminal || (tty_cygwin && cygwin)`。既定 true は kawaz/die DR-0008 の Cygwin pty=TTY 裁定に整合。" }
+        "tty_stream": { "value_type": "string", "enum": ["stdin", "stdout", "stderr"], "required": true, "description": "tty_provider へ渡すストリーム識別子 (DR-099 §3)。必須 — 未指定 (bare `type: \"tty\"` を含む) は definition-error kind=invalid-range。要素名からの推測はしない (kawaz 裁定 TTY-Q2=(c))。" },
+        "tty_cygwin": { "value_type": "bool", "default": true, "description": "Cygwin/MSYS pty を terminal 扱いに含めるダイヤル (DR-099 §3)。fold = `terminal || (tty_cygwin && cygwin)`。既定 true は kawaz/die DR-0008 の Cygwin pty=TTY 裁定に整合。" }
       },
-      "reasons": [],
-      "description": "bool を値空間の土台にする preset 型 (DR-099 §1、DR-076 の flag/count と同族の糖衣プリセット)。parse 相 (String→bool) は builtin/bool_parser と同一で reasons も同じ経路 (bool_parser 側に帰属、本 descriptor は追加しない) — fallibility:total は本 descriptor 自身が emit する実行時 reason が無いことの宣言 (tty_stream 必須違反は definition-error であり実行時 reason 体系の対象外)。値の由来 (`terminal || (tty_cygwin && cygwin)` の fold、tty_provider が null なら宣言 default) は値源ラダー §11.4 の `default` 席の型依存解決規則であり、filter/constraint の failure mode ではない。"
+      "reasons": ["not_a_bool"],
+      "description": "bool を値空間の土台にする preset 型 (DR-099 §1、DR-076 の flag/count と同族の糖衣プリセット)。DR-099 §1「それ以外のすべて (long/short/env 席の宣言可否、multiple、filters、required 充足) は素の bool と完全に同一に振る舞う」の通り、parse 相 (String→bool) は builtin/bool_parser と完全に同一の経路を通り、canonical bool 語彙外の文字列 (例 `--use-color yesplz`) は通常の bool parse と同じく `not_a_bool` で reject する。reasons の帰属は排他的所有ではないグローバル語彙 (`reasons` フィールドの description 参照) なので、`not_a_bool` を builtin/bool_parser と共有 emit することは compositional exemption を必要としない — 素の bool と完全に同一という DR-099 §1 の主張自体が fallibility:reject を要求する。値の由来 (`terminal || (tty_cygwin && cygwin)` の fold、tty_provider が null なら宣言 default) は値源ラダー §11.4 の `default` 席の型依存解決規則であり、この fold 自体は failure mode を持たない — fallibility:reject は bool parse 相にのみ由来する。"
     }
   },
 
