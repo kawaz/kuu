@@ -58,6 +58,20 @@ kawaz 裁定 (2026-07-13、VF-Q/VF-Q2 への回答として前提を棄却): `ce
 - 未 push の DR-102 チェーン (spec 3 commit + kuu.mbt 実装 1 commit) はリワーク
   で置き換え
 
+## 裁定 (2026-07-14 確定)
+
+kawaz 裁定確定 (SPL-Q バッチへの回答):
+
+- **SPL-Q6=a**: 非 accum 側の最終値ガード席を独立属性として残す。「違うものを
+  違うものとして扱え、同じにするな」。corpus 実例不在は表現力削減の論拠にならない
+- **SPL-Q1=`final_filters`**: 非 accum、T→T、scalar filter registry
+- **SPL-Q2=`accum_filters`**: accum、Acc→Acc、ARRAY filter registry
+- **SPL-Q3=C**: 旧 DR-102 の未 push commit 3 件は jj abandon、番号 102 は
+  分割 DR に再利用
+- **SPL-Q4**: CONFORMANCE の argv_pos 規約を両席 argv.length 帰属で明文補正
+- **SPL-Q5**: 排他 (multiple 有無 × 属性) は definition-error
+  kind=invalid-range (scalar-array-default 前例)
+
 ## 受け入れ条件
 
 - [ ] 命名裁定 (SPL-Q バッチで提示予定)
