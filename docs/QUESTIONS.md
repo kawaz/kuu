@@ -6,6 +6,20 @@
 > チャットでは「VF-Q 待ち」のようにラベルだけで参照する。回答はラベル + 選択肢記号 (例「VF-b で」) だけで通じる。
 > 参照パスは本リポ (spec) 相対。kuu.mbt 側は「kuu.mbt の <path>」と表記する。
 
+## RG-Q1: required (単項/required_group member) の bool 型充足は「解決後 true」か「値の有無」か
+
+DR-103 起草中の発見 (spec worker)。flag preset は暗黙 default:false を持つため、「値の有無 (default 込み)」判定だと **required:true を flag に付けても常に充足 (vacuous no-op)** — required_group の本命ユースケース (tar の flag 群 ALO) が機能しない。**現実装は vacuous を実測確認済み** (未発火 required flag が ok になる、統括 live probe 2026-07-14)。
+
+landed テキストは両読みが可能な内部緊張を持つ:
+- docs/decisions/DR-047-*.md §5 の表 + DR-093 §1 の bullet: required = 値の有無 (DR-047 §5 不変) → **A 読み (presence、vacuous 容認)**
+- DR-093 §1 の先例段落: requires 目的語の bool-truth 判定を「**bool 型の充足定義**」として型委譲の枠に一般化 → **B 読み (bool は解決後 true、聞き手不問)**
+
+選択肢:
+- **RG-a (worker+統括推し)**: bool 型の充足定義 (解決後 true、値源不問) を required 単項 / required_group member にも一様適用。required×flag は「明示 true の強制」(--yes ゲート等) という意味を獲得。DR-047 §5 明確化の vacuous 論拠 (「制約が黙って no-op になる」) がそのまま適用され、requires 目的語との非対称も解消。新 DR (104) で pin + DR-047 §5 表 / DR-093 §1 bullet に refine 注記 + DESIGN §9.1 に bool bullet + kuu.mbt 修正 + fixture pin。既存 fixture の flip なし (確認済み)
+- **RG-b**: presence のまま維持。required×bool は vacuous 容認 (lint の関心)。tar 型 required_group は plain bool (暗黙 default なし) member で書く運用 — flag preset を使うと黙って no-op になる罠が残る
+
+参照: docs/decisions/DR-093-required-requires-type-delegation*.md §1 / DR-047-*.md §5 (明確化 2026-07-09) / fixtures/constraints-parse/requires-bool-target.json (目的語側の truth-dispatch pin)
+
 ## COMP-Q1〜Q5: complete fixture 系統の設計
 
 正本: **docs/findings/2026-07-13-complete-fixture-recon.md §5** (各 Q の詳細)。関連 issue: docs/issue/2026-07-12-complete-query-fixture-coverage-gap.md
