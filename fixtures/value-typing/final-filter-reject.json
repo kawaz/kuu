@@ -1,0 +1,30 @@
+{
+  "why": "scalar (count 以外) の final_filters reject 輪郭 (DR-102 §1、DR-009 §7、DR-066): number セルに final_filters:[\"in_range:1:65535\"] を宣言し、range 内/外で success/failure を対にする。count-parse/final-filter-range.json は count セル (update fold + final_filters) の輪郭、本 fixture は set 経路 (単発 cli value) の final_filters 輪郭を担う。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {"name": "port", "type": "number", "long": true, "final_filters": ["in_range:1:65535"]}
+    ]
+  },
+  "cases": [
+    {
+      "id": "in-range-accepted",
+      "why": "範囲内 → final_filters 通過 → success (DR-009 §7 / DR-102): --port 100 は in_range:1:65535 の境界内、resolve 層の final_filters を通って success、result port=100。",
+      "argv": ["--port", "100"],
+      "expect": {
+        "outcome": "success",
+        "result": {"port": 100},
+        "sources": {"port": "cli"}
+      }
+    },
+    {
+      "id": "out-of-range-rejected",
+      "why": "範囲外 → final_filters reject → failure (DR-009 §7 / DR-102 §4): --port 99999 は in_range:1:65535 の上限超過、resolve 層の final_filters が reject して failure。argv_pos=2=argv.length (final_filters の reject は特定トークンに帰属しない一括検証で、value_filters の piece 実位置帰属とは異なる、DR-102 §4)。",
+      "argv": ["--port", "99999"],
+      "expect": {
+        "outcome": "failure",
+        "errors": [{"element": "port", "argv_pos": 2, "kind": "filter", "reason": "too_large"}]
+      }
+    }
+  ]
+}
