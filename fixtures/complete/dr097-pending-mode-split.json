@@ -1,9 +1,10 @@
 {
-  "why": "DR-097 の parse/complete モード分岐 (issue の最優先要求、`docs/findings/2026-07-13-complete-fixture-recon.md` A8): 同一 definition・同一トークン列でも、args 終端で値スロットが Pending になる読みは parse モードでは viable 扱いされず先食い抑制が働かない (= `fixtures/matcher-readings/long-empty-prefix-typed.json::unparsable-both-fall-through` が pin 済みの素通し解放挙動) のに対し、complete モードでは同じ Pending が viable 扱いされ先食い抑制が働く (参照実装 `eval.mbt` の `has_viable`: `Pending(_, _) => if in_complete(ctx) { return true }`)。definition は同 fixture の bare long トリガ (`long_prefix: \"\"`) 構造をそのまま流用する。**注意 (spec 導出、未実機検証)**: 期待値はコード読解による理論導出であり、実機での `complete()` 呼び出し確認は行っていない — ロックステップ運用により実装側 (kuu.mbt) の検証で mismatch が出た場合は別途報告される前提でこの値を正とする。",
+  "why": "DR-097 の parse/complete モード分岐 (issue の最優先要求、`docs/findings/2026-07-13-complete-fixture-recon.md` A8): 同一 definition・同一トークン列でも、args 終端で値スロットが Pending になる読みは parse モードでは viable 扱いされず先食い抑制が働かない (= `fixtures/matcher-readings/long-empty-prefix-typed.json::unparsable-both-fall-through` が pin 済みの素通し解放挙動) のに対し、complete モードでは同じ Pending が viable 扱いされ先食い抑制が働く (参照実装 `eval.mbt` の `has_viable`: `Pending(_, _) => if in_complete(ctx) { return true }`)。definition は同 fixture の bare long トリガ (`long_prefix: \"\"`) 構造をそのまま流用するが、`long_eq_sep:\"deny\"` (DR-096 §1) を追加して eq-split matcher の生成を止める — 既定 \"allow\" だと height の eq-split 由来候補 (term:cont) も同時に出て、本 fixture の焦点 (Pending の parse/complete モード分岐) が薄まるノイズになる (`basic-boundary.json` と同じ関心分離)。**注意 (spec 導出、未実機検証)**: 期待値はコード読解による理論導出であり、実機での `complete()` 呼び出し確認は行っていない — ロックステップ運用により実装側 (kuu.mbt) の検証で mismatch が出た場合は別途報告される前提でこの値を正とする。",
   "query": "complete",
   "definition": {
     "config": {
-      "long_prefix": ""
+      "long_prefix": "",
+      "long_eq_sep": "deny"
     },
     "options": [
       {
