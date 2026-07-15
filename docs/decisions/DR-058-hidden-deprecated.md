@@ -18,6 +18,8 @@
 - 値は **v1 では bool のみ**。代替の明示 (`deprecated: "<message>"` 等の string 拡張) は必要になったら検討する — alias 経由なら自動導出で足りるため
 - filter の warn (DR-021 — パース中の解釈警告) と deprecated の警告 (パース成功後の利用推奨警告) は**別層**であり、混ぜない
 
+> **明確化 (統括検証 2026-07-15、codex レビュー #6 の反映): 警告構造の `element` は canonical セル名 (= 代替すべき実体) を指す — 発火した deprecated 入口の要素名ではない。** 本 DR 原文の `warnings: [{element, kind: "deprecated", ...}]` は element の指示対象を明示していなかったが、警告の第一の用途が「use <canonical の入口> instead」の導出素材 (§2 の alias 節) である以上、レンダラが直接必要とするのは代替先 = canonical であり、fixture (`fixtures/alias-parse/deprecated.json` の short 入口版・`long-deprecated.json` の long 入口版) もこの形で pin 済み。**どの入口が発火したか**の特定は ParserContext の selected_names (DR-016) / 内部 id (DR-046 §4) の関心で、warnings には持たせない (エラー構造の element / path 分離 (DR-066 §4) と同じ「自分 + 帰属先」の関心分離)。warning の cardinality (同一 deprecated 入口の複数回起動で複数積むか要素単位で畳むか) は未規定のまま残る — fixture 実需が出た時に確定する (issue `deprecated-warning-boundary-fixtures` で追跡)。
+
 ## 採用しなかった案
 
 ### hidden の help 除外と補完除外を別フィールドに分ける
