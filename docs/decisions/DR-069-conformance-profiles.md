@@ -33,7 +33,8 @@ completion まで含む全実装を最初から要求すると移植の敷居が
 
 ## 関連
 
-- DR-068 (lifecycle — 準拠宣言の単位を本 DR が細分化)
+- DR-068 (lifecycle — 準拠宣言の単位を本 DR が細分化。DR-108 明確化 note が「実装の準拠名乗り (本 DR) vs spec の v1.0.0 発行条件 (DR-068)」の別軸整理を追記)
 - DR-061 / DR-066 (descriptor — §2 の要求レベル分離の対象)
 - DR-063 (宣言層 wire — parse-core が lowering 実装を内包する根拠)
 - ROADMAP (フェーズ 2 再構成と同時決定)
+- DR-108 (spec リリースプロセス — v1.0.0 発行条件は本 DR の 4 プロファイル全 green、V1-Q1=b)
