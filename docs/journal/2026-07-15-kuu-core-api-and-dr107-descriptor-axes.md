@@ -134,3 +134,86 @@ kuu で既に確立している cell operation descriptor の `effect`/`effects`
 解消された。当方の観測内容はそのまま回帰テストとして採用されている。
 dogfooding-feedback-upstream ルールに沿って、利用側 (本セッション) に
 留めず上流へ還元した事例。
+
+## 続報: v0.1.0 発行と completer 追随 (7-15 午前)
+
+### NEXT-Q1 裁定と着手判断の教訓活用
+
+DR-107 サイクル完了を受けて次アクションを NEXT-Q1 として提示、kawaz が
+a (spec リリースプロセス着手) / b (OK、置き場所は CLI-Q1 で別途裁定) /
+c (b の後で着手) / d (並行実施) / e (OK) と裁定した。§1 で記録した
+「まずは 1」の合意を着手指示と受け取れず待ってしまった反省を踏まえ、
+今回は **裁定が下りた時点で即着手** した (= 裁定完了を待って別途着手可否を
+問い直すことはしなかった)。
+
+### a: spec リリースプロセス (DR-108)
+
+V1-Q1=b (DR-068 §1 と DR-069 の関係の裁定) を正式に記録する形で
+`docs/decisions/DR-108-spec-release-process.md` を起草し、`VERSION`
+ファイル + `.github/workflows/release.yml` + `docs/runbooks/v1-release.md`
+を新設した。
+
+push 前に codex (sol) へ pre-push レビューを依頼した。今回は
+`claude -p --bare --allowedTools` 経由でツール実行権限を持たせて起動し、
+`gh` の実際の状態確認や `just` の dry-run まで実機検証させた (助言のみの
+レビューでなく、レビュアー自身が手を動かして裏取りする形)。結果は
+**No-Go 判定** (C1 + M7 + m3 の重大指摘込み)。主な指摘:
+
+- 供給チェーンの脆弱性 — `bump-semver` を `releases/latest` の可変 URL で
+  取得しており、write 権限を持つ workflow がバージョン固定なしに最新
+  バイナリを引いていた
+- bootstrap の fail-open — `latest-release`/`latest-tag` の非ゼロ終了を
+  無条件に「まだ何もない」と解釈しており、認証切れ等の異常系と初回
+  リリースの区別がない
+- `$id` 手順が lint と機械的に非両立 (M-6) — runbook が指示する手順通りに
+  進めると lint task 自体が通らない矛盾があった
+- runbook の記載順序が実行不能 (m3 相当) — 手順の前後関係が実際のコマンド
+  依存と食い違っていた
+
+全 11 件の指摘を裁定・修正して push した結果、**kuu spec v0.1.0
+(prerelease) が初回 release として発行成功** (run `29385062013`)。release
+notes にはプロファイル別 (parse-core/lowering/definition-error/completion)
+の fixture 内訳が自動集計されて載っている。修正の過程で判明した
+`bump-semver` の exit code 問題 (「空」と「エラー」を区別しない制約、
+DR-108 本文にも既述) は利用側 (本リポ) に留めず、裏取り済みの事実として
+上流 `kawaz/bump-semver` に起票した (dogfooding-feedback-upstream ルール
+適用)。
+
+### codex 直接 subagent 呼び出しの確立と制約
+
+この過程で codex モデルの呼び出し経路を整理した。`terra` (軽量モデル) は
+agent 定義の frontmatter `model` 指定経由で問題なく動作する一方、`sol`
+(レビュー用ハイエンドモデル) は **セッション起動時に固定されたモデル
+リストの外**にあり、今セッションでは Workflow/Agent tool の `model`
+パラメータに `sol` 系の名前を渡しても拒否された (次回セッション起動時
+からは選択可能になる見込み)。今回は `claude -p --bare --allowedTools=...`
+での直接起動をフォールバックとして採用し、bundle 制限を回避した。
+
+### d: completer 追随 (Cand.completer 配線)
+
+DR-104 §2 が宣言していた `Cand` への `completer` フィールド実装追随を
+実施 (issue `docs/issue/archive/2026-07-14-cand-completer-followup.md`
+close 済み)。作業内容:
+
+- `Cand` に `completer` フィールドを追加し `complete()` で配線
+- 同一 6 フィールド一致かつ `completer` だけ不一致の候補を merge する
+  規則を確定・実装 (不一致時は completer を省略した形に畳む)
+- 作業途中で **`Cand.link` を新設** — この過程で `Rooted` escape の
+  潜在バグを副次的に発見・修正した。同種の疑いがある `Held.path` 側は
+  別途 issue 化して追跡とした
+- spec 側 fixture 4 本
+  (`fixtures/complete/completer-{basic,positional,merge-conflict,merge-match}.json`)
+  + DR-104 §3 明確化 note + `schema/wire.schema.json` への completer
+  明示を追加
+
+新基準値: conformance **267/649/0/0** (decoded/ran_cases/mismatches/未使用)、
+fixture 267 本、`moon test` **332/332**。ロックステップ push #3 として
+spec → pin bump → kuu.mbt 実装の順で連続 push し、CI green を確認
+(run `29385675841`)。
+
+この作業では運用イベントも 2 件記録に値する。1 つは worker が「commit
+指示が無かった」と誤読して手が止まった件、もう 1 つは fixture 案ファイルの
+配置で複数 worker 間の race が起きて停止報告が上がった件。いずれも
+統括判断を仰いでから再開する形で解消したが、委譲プロンプトへの
+「コミット可否・書き込み範囲を明示する」規約 (worker-model-selection
+ルール) の重要性を再確認する事例になった。
