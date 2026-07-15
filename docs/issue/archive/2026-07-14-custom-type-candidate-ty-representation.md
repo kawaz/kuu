@@ -1,6 +1,6 @@
 ---
 title: custom type 使用時の candidate.ty 表現が未確定 (codex #2 M-13 残)
-status: open
+status: resolved
 category: design
 created: 2026-07-14T20:12:39+09:00
 last_read:
@@ -9,10 +9,10 @@ wip_entered:
 blocked_entered:
 pending_entered:
 discarded_entered:
-resolved_entered:
+resolved_entered: 2026-07-15T14:52:28+09:00
 discard_reason:
 pending_reason:
-close_reason:
+close_reason: ["dr/DR-104", "implemented"]
 blocked_by:
 origin: 自リポ TODO
 ---
