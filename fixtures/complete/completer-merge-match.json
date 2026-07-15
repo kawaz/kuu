@@ -1,0 +1,20 @@
+{
+  "why": "DR-104 §3 明確化 note: 6 フィールド一致 dedup で completer も一致する場合は completer が保持される (merge 規則の positive 対比、completer-merge-conflict.json と対)。",
+  "query": "complete",
+  "definition": {
+    "commands": [
+      {"type": "command", "name": "build", "positionals": [{"name": "target", "type": "string", "completer": "files"}]},
+      {"type": "command", "name": "build", "positionals": [{"name": "target", "type": "string", "completer": "files"}]}
+    ]
+  },
+  "cases": [
+    {
+      "id": "matching-completer-across-sibling-command-defs-is-preserved",
+      "why": "両 command 定義が同じ completer=files を宣言 → 6 フィールド一致 + completer 一致で 1 件に畳まれ completer=files を保持する",
+      "args_before": ["build"],
+      "expect": {"outcome": "complete", "candidates": [
+        {"is_value": true, "ty": "string", "origin": "target", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}, "completer": "files"}
+      ]}
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "why": "DR-060 §4: positional の値位置候補にも completer が配線されることの pin — DR-060 §4 は「アプリ固有の動的候補」を option 限定と規定していない (option 専用の hidden とは対照的)。",
+  "query": "complete",
+  "definition": {
+    "positionals": [
+      {"name": "target", "type": "string", "completer": "hosts"}
+    ]
+  },
+  "cases": [
+    {
+      "id": "positional-value-slot-completer",
+      "why": "args_before 空: positional target がまだ何も消費していない先頭値スロット、completer=hosts が乗る",
+      "args_before": [],
+      "expect": {"outcome": "complete", "candidates": [
+        {"is_value": true, "ty": "string", "origin": "target", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}, "completer": "hosts"}
+      ]}
+    }
+  ]
+}

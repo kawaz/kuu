@@ -1,0 +1,27 @@
+{
+  "why": "DR-060 §4 / DR-104 §2(d): Cand.completer の実装追随 pin。option の値位置候補に completer 名 (wire completer:\"<名前>\" → Entity.completer → Cand.completer) が配線されること、および opt-in 比較 (CONFORMANCE §3 COMP-Q3、書けば検証・書かなければ未検証) の両面を固定する。",
+  "query": "complete",
+  "definition": {
+    "options": [
+      {"name": "port", "type": "number", "long": true, "completer": "files"}
+    ]
+  },
+  "cases": [
+    {
+      "id": "value-slot-completer-checked",
+      "why": "--port のトリガ消費後の値スロット候補 (number, origin=port) に completer=files が乗る。opt-in 発火 (candidate に completer キーがある) — 値まで比較する",
+      "args_before": ["--port"],
+      "expect": {"outcome": "complete", "candidates": [
+        {"is_value": true, "ty": "number", "origin": "port", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}, "completer": "files"}
+      ]}
+    },
+    {
+      "id": "value-slot-completer-not-checked-when-omitted",
+      "why": "同じ入力・同じ実装挙動だが completer キーを書かない — opt-in 不発火のため実装の completer 値に関わらず PASS する (COMP-Q3)",
+      "args_before": ["--port"],
+      "expect": {"outcome": "complete", "candidates": [
+        {"is_value": true, "ty": "number", "origin": "port", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}}
+      ]}
+    }
+  ]
+}

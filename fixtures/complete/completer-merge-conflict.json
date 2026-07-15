@@ -1,0 +1,20 @@
+{
+  "why": "DR-104 §3 明確化 note: 6 フィールド完全一致 (spelling/is_value/ty/origin/term/meta) だが completer が食い違う値位置候補の merge 規則を pin する。build/build という同名の 2 つの独立 command 定義がそれぞれ独自の target positional (completer 違い) を持つ — 参照実装は completer なしへ畳む。completer-merge-match.json (一致時に保持) と対。同名 sibling command は path 表現 (scope 名の列) で区別できない (DR-067 §1 が合法化する同名重複の兄弟版) ため、実装は Entity 収集時点で衝突検出する形になっている。",
+  "query": "complete",
+  "definition": {
+    "commands": [
+      {"type": "command", "name": "build", "positionals": [{"name": "target", "type": "string", "completer": "files"}]},
+      {"type": "command", "name": "build", "positionals": [{"name": "target", "type": "string", "completer": "urls"}]}
+    ]
+  },
+  "cases": [
+    {
+      "id": "conflicting-completer-across-sibling-command-defs-merges-to-none",
+      "why": "\"build\" 消費後、両 command 定義の子 scope それぞれから origin=target の値スロット候補 (completer=files / completer=urls) が生成される。6 フィールドは一致するが completer が食い違うため completer なしへ畳まれる (completer:\"\" で opt-in を発火させつつ値が空であることを確認)",
+      "args_before": ["build"],
+      "expect": {"outcome": "complete", "candidates": [
+        {"is_value": true, "ty": "string", "origin": "target", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}, "completer": ""}
+      ]}
+    }
+  ]
+}
