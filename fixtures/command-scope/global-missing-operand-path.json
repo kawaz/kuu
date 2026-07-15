@@ -1,0 +1,53 @@
+{
+  "why": "global option (Rooted 衛星、DR-042) の値 starve (missing_operand) が emit する ParseError.path は発火時の動的パスであり、宣言元 (root) 基準の path が併存・混入してはならない (DR-066 §4『値は発火時の動的パス — link/ref 共有で 1 つの派生ノードが複数のユーザパスに仕える場合も、エラーが立った瞬間の walk のパスを記録する』の global 衛星への直接適用)。`global.json` (同ディレクトリ) が固定する『global 発火の値は常に root 実体へ link 同期する』構造 (DR-042 不変則②、コピー先の子 scope は新セルを作らない) と対をなす — 値の**行き先**は常に root セルで発火位置に依らない一方、エラーの**帰属パス**は発火位置 (walk 位置) に依る非対称を、a→b の 2 段ネストで固定する。参照実装 (kuu.mbt、読み専で確認) は `Cand.fire_path` 導入前、値 starve 時に宣言元 scope 基準 (path=[]) と発火先 scope 基準 (path=[\"a\"]) の Error が 2 件併存する bug を持っていた (codex レビュー発覚、修正済み)。この 2 件併存は {element, args_pos, kind, reason} の 4 フィールドが完全一致するため (path 以外の全フィールドが同一値)、CONFORMANCE §3 の errors 比較規約 (`element/args_pos/kind/reason` の組を同一性とする集合比較、`path` は DR-066 §4 により reason と同じ optional 検証で opt-in) に照らすと、**fixture 側が `path` を明示的に書かない限りこの重複は検出できない** — path を書かない集合比較では 2 件の重複 Error が同一性タプル上で 1 件に見えてしまう (集合の定義上、同一とみなされる要素は多重度を持たない)。本 fixture は全 case で `path` を明示することで、比較の同一性タプルを実質 `{element, args_pos, kind, reason, path}` へ拡張し、2 件併存バグを『expected 1 件 vs actual 2 件 (path 違い)』という集合不一致として検出可能にする — これが『1 件のみであること』を conformance の枠組みで pin する具体的な技法であり、他に手段はない (既存リポ全体で `errors[].path` を書く fixture はゼロ件、本 fixture が最初の実例)。配置は command-scope/ (global.json の隣) を選んだ — 本 bug の本質は global 衛星の scope 構造 (DR-042 の copy-to-child + link 同期) に起因し、path-search/ ディレクトリの既存 fixture 群 (held-errors-distinct-depth.json 等) が扱う『複数候補経路の dead-end 診断』とは無関係な別の関心 (scope 祖先チェーンの帰属) であるため。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {"name": "level", "type": "number", "long": true, "global": true}
+    ],
+    "commands": [
+      {
+        "type": "command",
+        "name": "a",
+        "commands": [
+          {"type": "command", "name": "b"}
+        ]
+      }
+    ]
+  },
+  "cases": [
+    {
+      "id": "child-scope-starve-path-is-fire-site",
+      "why": "`a --level` (子 scope 内で値 starve): --level は a へコピーされた衛星 (global、DR-042 不変則②) 経由で発火し、値スロットが要求する次トークンが無いまま args が尽きる → args_pos = args.length = 2、element = \"level\" (root 実体名、コピー先でも新セル名は作らない)、kind:parse / reason:missing_operand (DR-066 §3)。`path` は発火時の動的パス (DR-066 §4) = [\"a\"] — 宣言元 root 基準の path:[] が併存してはならない。本 case が bug (2 件併存) の直接的な pin: expect は 1 件のみ、かつ path を明示することで比較の同一性タプルに path が入り、実装が path:[] の Error をもう 1 件 emit していれば {element,args_pos,kind,reason,path} の集合として actual が 2 要素・expected が 1 要素で不一致になる。",
+      "args": ["a", "--level"],
+      "expect": {
+        "outcome": "failure",
+        "errors": [
+          {"element": "level", "args_pos": 2, "kind": "parse", "reason": "missing_operand", "path": ["a"]}
+        ]
+      }
+    },
+    {
+      "id": "root-scope-starve-path-is-empty",
+      "why": "対照: `--level` (root 直接、子 scope へ入場せず): global 衛星のコピー先を経由せず root の主実体トリガが直接発火する最小形。args_pos = args.length = 1、path = [] (root 直下、DR-066 §4『path: [] は root 直下』)。child-scope-starve-path-is-fire-site との対比で、path が発火位置に連動して変わる (固定値でも常に空でもない) ことを固定する。",
+      "args": ["--level"],
+      "expect": {
+        "outcome": "failure",
+        "errors": [
+          {"element": "level", "args_pos": 1, "kind": "parse", "reason": "missing_operand", "path": []}
+        ]
+      }
+    },
+    {
+      "id": "grandchild-scope-starve-path-is-two-deep",
+      "why": "深さ 2: `a b --level` は a→b と 2 段ネストした孫 scope まで global 衛星が不動点伝播 (`global.json::grandchild-propagation` と同じ伝播経路) した上で値 starve する。path = [\"a\",\"b\"] の 1 件に収束することが、参照実装の `Cand.fire_path` 導入修正 (統括検証) が実機確認した性質そのもの — 深さ 1 (case 1) だけでは『そもそも 2 段目まで伝播した上で正しく 1 件に収束するか』を区別できないため、この深さ 2 case が修正の実質的な pin になる。args_pos = args.length = 3。",
+      "args": ["a", "b", "--level"],
+      "expect": {
+        "outcome": "failure",
+        "errors": [
+          {"element": "level", "args_pos": 3, "kind": "parse", "reason": "missing_operand", "path": ["a", "b"]}
+        ]
+      }
+    }
+  ]
+}
