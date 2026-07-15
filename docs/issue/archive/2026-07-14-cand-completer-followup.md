@@ -1,6 +1,6 @@
 ---
 title: Cand への completer フィールド実装追随 (DR-104 §2 宣言済みタスク)
-status: wip
+status: resolved
 category: task
 created: 2026-07-14T20:14:03+09:00
 last_read:
@@ -9,10 +9,10 @@ wip_entered: 2026-07-15T10:57:26+09:00
 blocked_entered:
 pending_entered:
 discarded_entered:
-resolved_entered:
+resolved_entered: 2026-07-15T12:07:48+09:00
 discard_reason:
 pending_reason:
-close_reason:
+close_reason: ["dr/DR-104","implemented","done:pin テスト5本 (commits fca55c9c/712ebd37/742ee613)、fixtures/complete/completer-{basic,positional,merge-conflict,merge-match}.json 4本、conformance decoded=267/ran_cases=649/mismatches=0、moon test 332/332、ロックステップ push (spec 1ad9b448 → kuu.mbt ea001c49)、CI green (run 29385675841)"]
 blocked_by:
 origin: 自リポ TODO
 ---
