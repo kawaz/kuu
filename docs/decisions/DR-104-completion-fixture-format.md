@@ -62,6 +62,8 @@ DR-060 §2 のシグネチャ `{before, word, word_suffix?, after?}` を、`args
 
 > **明確化 (統括検証 2026-07-14、codex レビュー #2 の反映): 候補同一性の規範は上記太字文の「6 フィールド record 完全一致」のみであり、実装コメントが引用する「union over SPELLINGS」は spelling 単独の dedup 基準ではない。** 「union over SPELLINGS, not over the scopes that offer them」という論拠は、**path (祖先 scope 経路) を同一性の成分から除外する**論拠として引用されているのであって、「spelling が同じなら他のフィールドを無視して畳む」という意味ではない。同じ綴り (spelling) でも `origin` が異なる候補 (DR-041 §4 が合法とする「同一スコープ内で異なる origin の要素が同じトリガ綴りを持つ」重複トリガのシナリオ) は、6 フィールド規則により dedup されず 2 件のまま併存する。`completer` は同一性の成分ではない (6 フィールドに含まれない) — 6 フィールドが完全一致すれば `completer` だけが異なる候補は同一候補として扱われる。この場合にどちらの `completer` を残すかの merge 規則は、`completer` の実装追随時 (§2(d) 参照) に確定する。
 
+> **明確化 (統括検証 2026-07-15): `completer` の merge 規則を確定する — §2(d) が残していた宿題の解消。** 6 フィールド (`spelling`/`is_value`/`ty`/`origin`/`term`/`meta`) が完全一致し `completer` の値だけが食い違う候補は、**`completer` を持たない候補として畳まれる** (wire では `completer` を省略する)。6 フィールドが完全一致し `completer` も一致する場合はそのまま 1 件に保持する。参照実装が `completer` を追随実装した (kuu.mbt 2026-07-15、DR-104 §2(d) の実装追随完了) ことに伴う確定であり、`fixtures/complete/completer-merge-conflict.json` / `fixtures/complete/completer-merge-match.json` がこの規則を pin する。
+
 ### 4. `candidates` は集合比較
 
 DR-060 §1 の「和集合」は経路の和集合ではなくスペリングの和集合であり (§3 の dedup 規則がこれを裏付ける)、複数候補間に順序を課さない。`CONFORMANCE.md` §3 の `interpretations` (集合比較) と同じ扱いを `candidates` にも適用する。
