@@ -1,11 +1,11 @@
 ---
 title: Cand への completer フィールド実装追随 (DR-104 §2 宣言済みタスク)
-status: open
+status: wip
 category: task
 created: 2026-07-14T20:14:03+09:00
 last_read:
 open_entered: 2026-07-14T20:14:03+09:00
-wip_entered:
+wip_entered: 2026-07-15T10:57:26+09:00
 blocked_entered:
 pending_entered:
 discarded_entered:
