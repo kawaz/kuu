@@ -61,6 +61,7 @@ wire 正規形のノードが持ちうる全属性。型・既定値・適用対
 | `accum_filters` | filterChain (array \| {prepend?,append?}) | 空 | accum 要素専用 (`multiple`/`repeat`/`separator` のいずれか、DR-102) |
 | `alias` | string | なし | 独立要素 (canonical への別入口) |
 | `commands` | array[node] | なし | 任意ノード |
+| `completer` | registryIdentifier | なし | 値要素 (補完クエリの値位置候補生成) |
 | `config` | object | 親から継承 | 任意ノード |
 | `config_key` | array[string\|integer] | name スコープ階層と同型対応 | 値要素 |
 | `conflicts_with` | array[string] | なし | 任意要素 |
@@ -130,6 +131,13 @@ registry.types.X → warn+string フォールバック`(ユーザ定義が組み
 になる。
 最小例: `{"name": "verbose", "type": "flag", "export_key": "v"}`
 正本: DESIGN §2.4, DR-046/052
+
+**`completer`**
+`definitions.completers` / `registry.completers` への completer 名参照 (値位置候補の生成器配線)。
+実行はせず名前だけを返す — 標準 completer (files/dirs 等) は生成器が shell 既存機能へマップし、
+アプリ固有の動的候補は生成器が completer 名からアプリ提供関数へ配線する。
+最小例: `{"name": "path", "type": "string", "completer": "files"}`
+正本: DESIGN §15.13, DR-060 §4
 
 #### 構造プリミティブ
 

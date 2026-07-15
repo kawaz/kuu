@@ -30,6 +30,10 @@
           "$ref": "#/$defs/registryIdentifier",
           "description": "definitions/registry への型参照糖衣 (DR-028)。wire では展開せず参照文字列のまま残る (DR-063 §1、A.5 の flag/count/help 等プリセットも文字列参照のまま)。ns 付き識別子 (DR-094 §1/§3): definitions.types 側のユーザローカル名 (ns 対象外、DR-094 §6) も registry 側の builtin/拡張名も同一パターンで表現できる — bare 名は builtin ns の糖衣であり、ns 部分の有無で両者は構文上区別されない (解決は definitions → registry の順、DR-035)。"
         },
+        "completer": {
+          "$ref": "#/$defs/registryIdentifier",
+          "description": "値位置候補の completer 名参照 (completers registry、DR-060 §4)。実行はせず名前だけを返す — 標準 completer (files/dirs 等) は生成器が shell 既存機能へマップし、アプリ固有の動的候補は生成器が completer 名からアプリ提供関数へ配線する。wire では展開せず参照文字列のまま残る。complete API の候補構造 (`Cand.completer`、DESIGN §15.13) の由来元。"
+        },
 
         "or": {
           "type": "array",
