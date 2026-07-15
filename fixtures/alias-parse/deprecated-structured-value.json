@@ -1,0 +1,44 @@
+{
+  "why": "DR-058 §2 の deprecated 契約は要素の値構造 (単純値 / enum or / ref) に依存しない: 既存 fixture (`deprecated.json`/`long-deprecated.json`) は number 型の単純値スロットのみを pin しており、値が enum (`or` + 匿名 `exact` 枝、`fixtures/constraints-parse/required-value-enum-or-branch.json` の definition 形と同型) の場合にも同じ警告契約が成立するかは gap だった。本 fixture は deprecated を **alias 経由ではなく canonical 自身に直接**付ける (`{name:\"format\", deprecated:true, or:[...]}`) 構成を選ぶ — 参照実装 (`kuu.mbt` installer.mbt、読み専で確認) の `e.deprecated` は『directly-deprecated canonical entry と deprecated alias entry-copy の両方が同じ ElemDef.deprecated bool に fold される』(codex レビュー Major 2 の `with_depr` 統一 funnel 導入コメント) ため、alias 有無は値構造の検証には無関係な別軸であり、既存 2 fixture が alias 軸を、本 fixture が値構造軸を、それぞれ独立に固定する棲み分けとする。canonical 直付けの warning element は『代替すべき canonical』という alias 前提の説明 (DR-058 §2 明確化 note、統括検証 2026-07-15) をそのまま一般化し、要素自身の name (= 唯一の canonical 自体) を指す (参照実装 `eval.mbt` の `@depr:<name>` マーカーは lowering 時に焼き込まれた要素 name をそのまま運ぶだけで alias/canonical を区別しない、`warnings_of` 参照)。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {"name": "format", "long": true, "deprecated": true, "or": [
+        {"exact": "json"},
+        {"exact": "yaml"}
+      ]},
+      {"name": "level", "long": true, "or": [
+        {"exact": "debug"},
+        {"exact": "info"}
+      ]}
+    ]
+  },
+  "cases": [
+    {
+      "id": "deprecated-canonical-enum-entry-warns",
+      "why": "`--format json`: enum 値 (or の exact 枝、DESIGN §5.3) が発火し format=\"json\" (or 自身が name を持ち、匿名の exact 枝は照合消費のみで literal 値を運ぶ、`required-value-enum-or-branch.json` と同型の露出規則)。format は canonical 自身に deprecated:true が直付けされているため、受理は不変のまま (values 制約と deprecated は別層、値の妥当性検証はそのまま働く) 起動のたびに構造化警告を積む。警告 element は \"format\" (代替先の canonical が自分自身、alias 越しの間接参照が無い最小形)。単純値スロット (long-deprecated.json 等) と同じ warning 契約が enum 構造の値でも成立することの固定。",
+      "args": ["--format", "json"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "format", "op": "set", "operand": "json", "source": "cli"}
+        ],
+        "result": {"format": "json"},
+        "warnings": [{"element": "format", "kind": "deprecated"}]
+      }
+    },
+    {
+      "id": "non-deprecated-enum-entry-no-warn",
+      "why": "対照: `--level debug` は format と同じ enum 構造 (or + 匿名 exact 枝) の別 option だが deprecated 属性を持たないため無警告 (warnings 空)。値構造 (enum) が同じでも deprecated の有無だけで警告契約が分岐することの確認 — enum 構造そのものが誤って警告を誘発する実装 (values 検証と deprecation warning のロジックが混線するバグ) の排除。",
+      "args": ["--level", "debug"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "level", "op": "set", "operand": "debug", "source": "cli"}
+        ],
+        "result": {"level": "debug"},
+        "warnings": []
+      }
+    }
+  ]
+}
