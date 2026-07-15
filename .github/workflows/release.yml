@@ -1,0 +1,323 @@
+name: Release
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "VERSION"
+
+# Design rationale (codex レビュー #5 C-1): 既定は read-only。tag/Release の
+# 作成に write が要るのは release job のみで、他 job は最後まで read で足りる。
+permissions:
+  contents: read
+
+# 複数 push が同時に check-version の bootstrap 判定を通過する race を防ぐ
+# (codex レビュー #5 M-1)。gh release create 直前にも同 tag の最終 recheck を行う。
+concurrency:
+  group: kuu-release
+  cancel-in-progress: false
+
+env:
+  # releases/latest の可変 URL でなく固定バージョンを参照する (codex レビュー #5 C-1)。
+  # sha256 のハード pin は asset 一式の差し替えには耐えないため見送り —
+  # 供給元が kawaz 自身のリポであり、read-only checkout (persist-credentials: false)
+  # + release job 以外 contents:read の権限最小化で現実的な露出は covered と判断する。
+  BUMP_SEMVER_VERSION: "0.48.1"
+
+jobs:
+  check-version:
+    permissions:
+      contents: read
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.current }}
+      changed: ${{ steps.version.outputs.changed }}
+      prerelease: ${{ steps.version.outputs.prerelease }}
+      is_ge_1_0_0: ${{ steps.version.outputs.is_ge_1_0_0 }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0  # bump-semver の `vcs get latest-tag` で全 tag が必要
+          persist-credentials: false
+
+      - name: Install bump-semver (pinned version)
+        run: |
+          set -euo pipefail
+          curl -fsSL --retry 5 --retry-delay 2 --max-time 60 \
+            "https://github.com/kawaz/bump-semver/releases/download/v${BUMP_SEMVER_VERSION}/bump-semver-linux-amd64" \
+            -o /usr/local/bin/bump-semver
+          chmod +x /usr/local/bin/bump-semver
+          bump-semver --version
+
+      - name: Check version change
+        id: version
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          CURRENT_VERSION=$(cat VERSION | tr -d '[:space:]')
+          echo "current=${CURRENT_VERSION}" >> "$GITHUB_OUTPUT"
+
+          # VERSION=0.0.0 (or empty) はプレースホルダとしてスキップ
+          if [ -z "$CURRENT_VERSION" ] || [ "$CURRENT_VERSION" = "0.0.0" ]; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "prerelease=false" >> "$GITHUB_OUTPUT"
+            echo "is_ge_1_0_0=false" >> "$GITHUB_OUTPUT"
+            echo "Placeholder version (${CURRENT_VERSION:-empty}); skipping release."
+            exit 0
+          fi
+
+          # semver 形式の検証 (bump-semver get -qq で exit code のみ検証)
+          if ! bump-semver get "$CURRENT_VERSION" -qq; then
+            echo "::error::Invalid VERSION format: ${CURRENT_VERSION}"
+            exit 1
+          fi
+
+          # v1.0.0 未満はドラフト期 (DR-068 §1) — GitHub Release を prerelease として発行する。
+          # v1.0.0 到達 (4 プロファイル全 green、V1-Q1=b) 以降のみ正式 release 扱いにする。
+          if bump-semver compare lt "$CURRENT_VERSION" "1.0.0" -qq; then
+            echo "prerelease=true" >> "$GITHUB_OUTPUT"
+            echo "is_ge_1_0_0=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "prerelease=false" >> "$GITHUB_OUTPUT"
+            echo "is_ge_1_0_0=true" >> "$GITHUB_OUTPUT"
+          fi
+
+          # ---- semver gate: fail-closed bootstrap (codex レビュー #5 M-2) ----
+          #
+          # bump-semver v0.48.1 時点で `latest-release`/`latest-tag` は「該当なし」
+          # と「gh subprocess / 認証 / network error」を同一 exit code (3) で返す
+          # (上流の制約 — exit code 分離の改善提起は kawaz/bump-semver 側へ別途行う、
+          # 本 workflow の射程外)。stderr のメッセージ内容で区別し、
+          # "no semver-compatible" 系のみを bootstrap (= 本当に空) とみなす。
+          # それ以外 (認証切れ・network 障害等) は fail closed にする。
+          # 二軸とも --include-prerelease を付け対称化する。
+          FAIL=0
+
+          rel_err=$(mktemp)
+          if LATEST_REL=$(bump-semver vcs get latest-release --include-prerelease --repository "$REPO" 2>"$rel_err"); then
+            echo "latest-release: ${LATEST_REL}"
+            if ! bump-semver compare gt "$CURRENT_VERSION" "$LATEST_REL" -qq; then
+              echo "::error::v${CURRENT_VERSION} is not greater than latest GH release v${LATEST_REL}"
+              FAIL=1
+            fi
+          else
+            if grep -qi "no semver-compatible" "$rel_err"; then
+              echo "latest-release: (confirmed none); bootstrap"
+            else
+              echo "::error::latest-release lookup failed unexpectedly: $(cat "$rel_err")"
+              FAIL=1
+            fi
+          fi
+          rm -f "$rel_err"
+
+          tag_err=$(mktemp)
+          if LATEST_TAG=$(bump-semver vcs get latest-tag --include-prerelease --vcs git 2>"$tag_err"); then
+            echo "latest-tag: ${LATEST_TAG}"
+            if ! bump-semver compare gt "$CURRENT_VERSION" "$LATEST_TAG" -qq; then
+              echo "::error::v${CURRENT_VERSION} is not greater than latest git tag v${LATEST_TAG}"
+              FAIL=1
+            fi
+          else
+            if grep -qi "no semver-compatible" "$tag_err"; then
+              echo "latest-tag: (confirmed none); bootstrap"
+            else
+              echo "::error::latest-tag lookup failed unexpectedly: $(cat "$tag_err")"
+              FAIL=1
+            fi
+          fi
+          rm -f "$tag_err"
+
+          if [ "$FAIL" = "1" ]; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            exit 1
+          fi
+
+          # gh release で既存確認 (= 同 version 重複の最終 guard)
+          if gh release view "v${CURRENT_VERSION}" --repo "$REPO" >/dev/null 2>&1; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "Version unchanged: v${CURRENT_VERSION} already released"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            echo "New version detected: v${CURRENT_VERSION}"
+          fi
+
+  # schema/descriptor lint + fixture bundle の機械的整合性検査 (codex レビュー #5 M-3)。
+  # ローカル `just push` の lint gate を CI 側でも強制する — `git push` 直叩きでの迂回を防ぐ。
+  validate-bundle:
+    needs: check-version
+    if: needs.check-version.outputs.changed == 'true'
+    permissions:
+      contents: read
+    runs-on: ubuntu-latest
+    outputs:
+      total: ${{ steps.fixtures.outputs.total }}
+      parse: ${{ steps.fixtures.outputs.parse }}
+      lower: ${{ steps.fixtures.outputs.lower }}
+      definition_error: ${{ steps.fixtures.outputs.definition_error }}
+      complete: ${{ steps.fixtures.outputs.complete }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - uses: astral-sh/setup-uv@v8.3.2
+
+      - name: lint-reference
+        run: ./scripts/lint-reference.sh
+
+      - name: lint-descriptors
+        run: uv run --with jsonschema python3 ./scripts/lint-descriptors.py
+
+      - name: JSON syntax check (schema + fixtures)
+        run: |
+          set -euo pipefail
+          fail=0
+          while IFS= read -r -d '' f; do
+            if ! jq empty "$f" 2>/tmp/jqerr; then
+              echo "::error file=${f}::invalid JSON: $(cat /tmp/jqerr)"
+              fail=1
+            fi
+          done < <(find schema fixtures -name '*.json' -print0)
+          [ "$fail" -eq 0 ]
+
+      # fixture の query タグを jq で集計する (grep/find による全文一致から、DR-065 の
+      # 語彙 (parse/lower/definition_error/complete) の網羅と不変量検査へ強化、M-3)。
+      - name: fixture profile breakdown + invariant checks
+        id: fixtures
+        env:
+          IS_GE_1_0_0: ${{ needs.check-version.outputs.is_ge_1_0_0 }}
+          VERSION: ${{ needs.check-version.outputs.version }}
+        run: |
+          set -euo pipefail
+          total=0; parse=0; lower=0; definition_error=0; complete=0
+          while IFS= read -r -d '' f; do
+            q=$(jq -r '.query' "$f")
+            case "$q" in
+              parse) parse=$((parse + 1)) ;;
+              lower) lower=$((lower + 1)) ;;
+              definition_error) definition_error=$((definition_error + 1)) ;;
+              complete) complete=$((complete + 1)) ;;
+              *)
+                echo "::error file=${f}::unknown query '${q}'"
+                exit 1
+                ;;
+            esac
+            total=$((total + 1))
+          done < <(find fixtures -name '*.json' -print0)
+
+          sum=$((parse + lower + definition_error + complete))
+          if [ "$sum" -ne "$total" ]; then
+            echo "::error::profile sum (${sum}) != total fixture count (${total})"
+            exit 1
+          fi
+
+          for name in total parse lower definition_error complete; do
+            val="${!name}"
+            if ! [[ "$val" =~ ^[0-9]+$ ]]; then
+              echo "::error::${name} count is not a non-negative integer (${val})"
+              exit 1
+            fi
+          done
+
+          # v1.0.0 以降の発行は 4 プロファイル全非ゼロ + 証跡ファイル存在を要求
+          # (DR-108 §3「green の規範と証跡」、docs/runbooks/v1-release.md、M-4)。
+          # 中身の意味検証まではしない軽量 gate。
+          if [ "$IS_GE_1_0_0" = "true" ]; then
+            for name in parse lower definition_error complete; do
+              val="${!name}"
+              if [ "$val" -le 0 ]; then
+                echo "::error::v1.0.0+ 発行には全 4 プロファイルが非ゼロである必要がある (${name}=${val})"
+                exit 1
+              fi
+            done
+            evidence="docs/releases/v${VERSION}-evidence.md"
+            if [ ! -f "$evidence" ]; then
+              echo "::error::v1.0.0+ 発行には証跡ファイル ${evidence} が必要 (docs/runbooks/v1-release.md の手順を実行すること)"
+              exit 1
+            fi
+          fi
+
+          echo "total=${total}" >> "$GITHUB_OUTPUT"
+          echo "parse=${parse}" >> "$GITHUB_OUTPUT"
+          echo "lower=${lower}" >> "$GITHUB_OUTPUT"
+          echo "definition_error=${definition_error}" >> "$GITHUB_OUTPUT"
+          echo "complete=${complete}" >> "$GITHUB_OUTPUT"
+
+  release:
+    needs: [check-version, validate-bundle]
+    if: needs.check-version.outputs.changed == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      # kuu は「DESIGN + LOWERING + CONFORMANCE + fixture 集合 + JSON Schema」を
+      # 単一バージョンで発行する spec バンドル (DR-068 §2)。ビルド成果物を持たない
+      # ため release body は「バンドルの内訳」を示す — validate-bundle が集計した
+      # プロファイル別内訳 (DR-069) を自動生成ノートの前に差し込む (fixture の
+      # 再集計はしない — validate-bundle の出力を単一の真実源として使う、M-3)。
+      - name: Build release notes
+        env:
+          VERSION: ${{ needs.check-version.outputs.version }}
+          TOTAL: ${{ needs.validate-bundle.outputs.total }}
+          PARSE: ${{ needs.validate-bundle.outputs.parse }}
+          LOWER: ${{ needs.validate-bundle.outputs.lower }}
+          DEFERR: ${{ needs.validate-bundle.outputs.definition_error }}
+          COMPLETE: ${{ needs.validate-bundle.outputs.complete }}
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          {
+            echo "## fixture バンドル内訳 (DR-069 準拠プロファイル別)"
+            echo
+            echo "| プロファイル | fixture 数 |"
+            echo "|---|---|"
+            echo "| parse-core (\`query: \"parse\"\`) | ${PARSE} |"
+            echo "| lowering (\`query: \"lower\"\`) | ${LOWER} |"
+            echo "| definition-error (\`query: \"definition_error\"\`) | ${DEFERR} |"
+            echo "| completion (\`query: \"complete\"\`) | ${COMPLETE} |"
+            echo "| **合計** | **${TOTAL}** |"
+            echo
+            echo "参照実装 (kuu.mbt) の conformance green 状況は kuu.mbt の README / CI conformance report を参照。"
+            echo
+          } > notes.md
+          gh api "repos/${REPO}/releases/generate-notes" \
+            -f "tag_name=v${VERSION}" \
+            -f "target_commitish=${SHA}" \
+            --jq .body >> notes.md
+
+      # concurrency はこの workflow 同士の race を防ぐが、外部操作や過去 run との
+      # TOCTOU には最終 recheck が要る (codex レビュー #5 M-1)。
+      - name: Final same-tag recheck (TOCTOU guard)
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ needs.check-version.outputs.version }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          if gh release view "v${VERSION}" --repo "$REPO" >/dev/null 2>&1; then
+            echo "::error::v${VERSION} was already created (concurrent run or prior TOCTOU); aborting"
+            exit 1
+          fi
+
+      - name: Create release with tag
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ needs.check-version.outputs.version }}
+          COMMIT_SHA: ${{ github.sha }}
+          REPO: ${{ github.repository }}
+          PRERELEASE: ${{ needs.check-version.outputs.prerelease }}
+        run: |
+          set -euo pipefail
+          ARGS=(--repo "$REPO" --title "v${VERSION}" --target "$COMMIT_SHA" --notes-file notes.md)
+          if [ "$PRERELEASE" = "true" ]; then
+            ARGS+=(--prerelease)
+          fi
+          gh release create "v${VERSION}" "${ARGS[@]}"
