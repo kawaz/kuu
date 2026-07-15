@@ -1,0 +1,22 @@
+{
+  "why": "DR-063 A.1 の裸文字列→exact 正規化で生まれる匿名 exact 候補の origin 決定則 (DR-104 §2 明確化 note (iii)、統括検証 2026-07-15): 名前を持たない要素の origin は spelling 自身へフォールバックする。`positionals` 配列の要素位置に直接置かれた裸文字列 (A.1、wire form では既に `{exact: \"...\"}` へ正規化済み、DR-063 §1) は name フィールドを持たない — DR-025/033 の『name が結果スコープを作る』規則により結果キーも持たず、DR-046 §4 の匿名要素の内部 id (実装依存・非規範) 以外に由来元の名前を持たない。candidate.origin は必須フィールド (DR-104 §2/§3、6 フィールド同一性の成分) であり省略できないため、この fallback がなければ匿名 exact は origin 未定義になってしまう — spelling 自身を origin に採用することで `origin` 必須規約と一貫させる。DR-046 の nameless 要素 (`{\"type\": \"string\", \"id\": \"width\"}` 等、id 経由 ref/link 可能) とは異なり、本 fixture の exact 要素は id も持たない完全な匿名構造位置置きの literal — その意味でも『名前を持たない要素』の最も純粋な形。",
+  "query": "complete",
+  "definition": {
+    "positionals": [
+      {"exact": "init"}
+    ]
+  },
+  "cases": [
+    {
+      "id": "nameless-positional-exact-origin-is-own-spelling",
+      "why": "args_before 空: 唯一の positional は name を持たない裸文字列由来の exact ノード (`{exact: \"init\"}`)。この位置で complete すると exact 候補 (is_value:false) が 1 件返り、`origin` は由来要素名を持たないため spelling と同じ \"init\" にフォールバックする (DR-104 §2 明確化 note (iii))。`meta` は alias でも hidden でも deprecated でもない既定値、`term` は行末補完なので `word_end` (スペース挿入可、DR-104 §2)。",
+      "args_before": [],
+      "expect": {
+        "outcome": "complete",
+        "candidates": [
+          {"spelling": "init", "is_value": false, "origin": "init", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}}
+        ]
+      }
+    }
+  ]
+}

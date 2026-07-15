@@ -1,0 +1,33 @@
+{
+  "why": "repeat lowering の内部 id (`#` 予約名前空間、DR-046 §4) は complete candidate の origin に現れない (DR-104 §2 明確化 note (ii)、統括検証 2026-07-15)。unbounded `repeat: {min: 1}` の positional \"files\" は installer 実装上 `Ref(\"files#cons\")` (自己参照 template、DR-063 §3『repeat unfold の内部 id』、参照実装 `installer.mbt` の `e.name + \"#cons\"` mangle) へ lowering されるが、`#cons` は registry key 専用の内部予約名前空間であり (DR-046 §4『匿名要素の内部識別子』、DR-063 §3『`#` 修飾により ref の解決先が常に一意』)、primitive の name (\"files\") はその内部でも変わらず伝播する。complete の値位置候補は常に元の要素名を origin として返す — 1 回目の消費点 (unfold 先頭、mandatory head) だけでなく、既に 1 個消費した後の 2 回目の消費点 (自己参照 Ref(\"files#cons\") を辿った先) でも origin が \"files\" のまま変わらないことを両方の消費点で固定し、内部 id が候補メタへ漏れないことの再帰的な保証とする。",
+  "query": "complete",
+  "definition": {
+    "positionals": [
+      {"name": "files", "type": "string", "repeat": {"min": 1}}
+    ]
+  },
+  "cases": [
+    {
+      "id": "first-repeat-slot-origin-is-element-name",
+      "why": "args_before 空: repeat min:1 の 1 個目 (mandatory head) の値位置候補。origin は要素名 \"files\" — min-1=0 個の追加 mandatory head しか無いため、この消費点は既に `Ref(\"files#cons\")` の自己参照構造そのものを経由するが (`installer_wbtest.mbt` の『min:1 → min-1=0 mandatory heads → Ref(\"src#cons\") のみ 1 本』と同型)、origin には `#cons` が一切現れない。",
+      "args_before": [],
+      "expect": {
+        "outcome": "complete",
+        "candidates": [
+          {"is_value": true, "ty": "string", "origin": "files", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}}
+        ]
+      }
+    },
+    {
+      "id": "second-repeat-slot-origin-is-element-name",
+      "why": "args_before: [\"a\"]: 1 個消費済みで min:1 は充足しているが upper bound が無いため、`Ref(\"files#cons\")` の自己再帰を辿った先で 2 個目の値位置候補が生存する (repeat は Many と同じ porous、DR-043)。1 個目と同じく origin は \"files\" のまま — 自己参照の再帰を経由しても内部 id \"files#cons\" が origin へ漏れないことを、再帰 1 段階分の深さで再確認する (1 個目のみの検証では『そもそも #cons を経由したか』が区別できないため、この 2 個目 case が内部 id 非漏出の実質的な pin になる)。",
+      "args_before": ["a"],
+      "expect": {
+        "outcome": "complete",
+        "candidates": [
+          {"is_value": true, "ty": "string", "origin": "files", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}}
+        ]
+      }
+    }
+  ]
+}

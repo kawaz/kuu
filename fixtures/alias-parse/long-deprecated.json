@@ -1,0 +1,52 @@
+{
+  "why": "deprecated alias の long 入口版 (DR-058 §2 + DR-057 §3): 既存 `fixtures/alias-parse/deprecated.json` は short 入口 (-o) のみを pin しており、DR-058 §2 の deprecated 規定は spelling 種別 (short/long) を区別しない一般規定にもかかわらず long 入口側の gap が残っていた (統括裁定 2026-07-15)。canonical `port` は `long:true` (DR-071 の bool 二形、`:set` 主入口のみの糖衣) で `--port` を持つ。alias 側は明示 `long` を書かず、`name` だけを変えて canonical の long 宣言 (variant DSL 込みの構造) を継承する — DR-057 §3 の『name から導出される入口 (long 配列 = variant DSL 込み) は alias 要素の name で再導出される』の直接適用: `{alias:\"port\", name:\"listen-port\"}` は canonical の `long:true` 構造を継承しつつ、綴りの生成元だけを canonical の name (\"port\") から alias 自身の name (\"listen-port\") に差し替え、`--listen-port` を独立入口として立てる (具象綴りの文字列置換ではなく affix 構造 + name の合成で再導出、DR-057 §3 の『slice PoC 第 16 弾の flag』が退けた誤実装との対比)。deprecated alias `legacy-port` も同型で `--legacy-port` を再導出し、DR-058 §2 の『deprecated はこの入口限定』が long 入口でも成立することを固定する。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {"name": "port", "type": "number", "long": true},
+      {"alias": "port", "name": "listen-port"},
+      {"alias": "port", "name": "legacy-port", "deprecated": true}
+    ]
+  },
+  "cases": [
+    {
+      "id": "deprecated-long-entry-warns",
+      "why": "deprecated long 入口 --legacy-port: 受理は不変で port=80 へ束縛 (effect entity port、link 同型の合流)、かつ deprecation 警告を積む。警告 element は canonical port (DR-058 §2『代替すべき canonical』、short 版の -o と同じ帰結を long 綴りで再確認)。--legacy-port は canonical の long 宣言構造 (`:set` 主入口) を alias 自身の name \"legacy-port\" で再導出した独立綴りであり、canonical の `--port` を綴りとして共有しない (DR-057 §3)。",
+      "args": ["--legacy-port", "80"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "port", "op": "set", "operand": 80, "source": "cli"}
+        ],
+        "result": {"port": 80},
+        "warnings": [{"element": "port", "kind": "deprecated"}]
+      }
+    },
+    {
+      "id": "normal-long-alias-no-warn",
+      "why": "非 deprecated long alias --listen-port: 同じ port セルへ束縛するが警告は積まれない (warnings 空)。deprecated 属性が入口限定であること (--legacy-port だけが警告源、--listen-port は無警告) を long 入口でも固定する (DR-057 §2 入口限定 deprecated の long 版)。",
+      "args": ["--listen-port", "80"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "port", "op": "set", "operand": 80, "source": "cli"}
+        ],
+        "result": {"port": 80},
+        "warnings": []
+      }
+    },
+    {
+      "id": "canonical-long-entry-no-warn",
+      "why": "canonical long 入口 --port: 当然無警告 (warnings 空)。--legacy-port (deprecated, 警告あり) との対照で『警告は deprecated 入口の発火にのみ紐付く』ことを long 入口でも固定する。",
+      "args": ["--port", "80"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "port", "op": "set", "operand": 80, "source": "cli"}
+        ],
+        "result": {"port": 80},
+        "warnings": []
+      }
+    }
+  ]
+}
