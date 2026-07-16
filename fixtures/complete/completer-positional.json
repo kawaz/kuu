@@ -12,7 +12,7 @@
       "why": "args_before 空: positional target がまだ何も消費していない先頭値スロット、completer=hosts が乗る",
       "args_before": [],
       "expect": {"outcome": "complete", "candidates": [
-        {"is_value": true, "ty": "string", "origin": "target", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}, "completer": "hosts"}
+        {"is_value": true, "type": "string", "origin": "target", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}, "completer": "hosts"}
       ]}
     }
   ]

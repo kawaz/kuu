@@ -26,7 +26,7 @@
       "expect": {
         "outcome": "complete",
         "candidates": [
-          {"is_value": true, "ty": "number", "origin": "port", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}}
+          {"is_value": true, "type": "number", "origin": "port", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}}
         ]
       }
     }

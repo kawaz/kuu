@@ -14,7 +14,7 @@
       "expect": {
         "outcome": "complete",
         "candidates": [
-          {"is_value": true, "ty": "string", "origin": "files", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}}
+          {"is_value": true, "type": "string", "origin": "files", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}}
         ]
       }
     },
@@ -25,7 +25,7 @@
       "expect": {
         "outcome": "complete",
         "candidates": [
-          {"is_value": true, "ty": "string", "origin": "files", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}}
+          {"is_value": true, "type": "string", "origin": "files", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}}
         ]
       }
     }

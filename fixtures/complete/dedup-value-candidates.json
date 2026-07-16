@@ -1,5 +1,5 @@
 {
-  "why": "dedup 規則の負側境界 (DR-104 §3): 値位置候補 (is_value:true) 同士でも同一性 6 フィールドのどれか 1 個でも異なれば畳まれない。旧版は `ty` (int/bool) と `origin` (num/flag) を同時に変える 2 leaf の BOr だったため『origin が異なれば畳まれない』という主張自体は検証できていなかった (両方一致しても両方不一致でも見分けがつかない、codex レビュー #3 B-M4 の反映、統括検証 2026-07-14) — `same-ty-distinct-origin-not-deduped` を主 case として単一フィールド差 (`ty` 固定・`origin` のみ差) に再構成し、旧来の `ty`+`origin` 同時差 case (`or-branch-value-candidates-distinct-origin-not-deduped`) は同一定義内の別トリガ (`level2`) で対比として残す。**`meta` 単独差の値位置候補ペアは本 fixture では構成しない** — 値位置候補の `meta` は当該候補を生む entry point (canonical/alias) の宣言に紐付き、1 回の completion 呼び出しで同一 origin の値スロットが複数同時に pending 状態になる経路が構造的に存在しない (alias 経由でも args_before の 1 トリガ消費につき値スロットは 1 個に定まる、DR-060 の pending mode の帰結) — meta 単独差の識別性は exact 候補側 (is_value:false) の同一 origin 別 spelling シナリオでのみ観測可能であり、別途の課題として残す (codex レビュー #3 B-M4 の要求に対する構成可能性の限界、明示)。",
+  "why": "dedup 規則の負側境界 (DR-104 §3): 値位置候補 (is_value:true) 同士でも同一性 6 フィールドのどれか 1 個でも異なれば畳まれない。旧版は `type` (int/bool) と `origin` (num/flag) を同時に変える 2 leaf の BOr だったため『origin が異なれば畳まれない』という主張自体は検証できていなかった (両方一致しても両方不一致でも見分けがつかない、codex レビュー #3 B-M4 の反映、統括検証 2026-07-14) — `same-type-distinct-origin-not-deduped` を主 case として単一フィールド差 (`type` 固定・`origin` のみ差) に再構成し、旧来の `type`+`origin` 同時差 case (`or-branch-value-candidates-distinct-origin-not-deduped`) は同一定義内の別トリガ (`level2`) で対比として残す。**`meta` 単独差の値位置候補ペアは本 fixture では構成しない** — 値位置候補の `meta` は当該候補を生む entry point (canonical/alias) の宣言に紐付き、1 回の completion 呼び出しで同一 origin の値スロットが複数同時に pending 状態になる経路が構造的に存在しない (alias 経由でも args_before の 1 トリガ消費につき値スロットは 1 個に定まる、DR-060 の pending mode の帰結) — meta 単独差の識別性は exact 候補側 (is_value:false) の同一 origin 別 spelling シナリオでのみ観測可能であり、別途の課題として残す (codex レビュー #3 B-M4 の要求に対する構成可能性の限界、明示)。",
   "query": "complete",
   "definition": {
     "options": [
@@ -15,26 +15,26 @@
   },
   "cases": [
     {
-      "id": "same-ty-distinct-origin-not-deduped",
-      "why": "args_before: [\"--level\"] は `level` のトリガを消費し、BOr の 2 leaf (`num_a`/`num_b`、いずれも int) がともに値スロット待ちになる。`ty` (int/int)・`is_value` (true/true)・`term` (word_end/word_end)・`meta` (共に `{false,false,false}`) はすべて一致するが `origin` (num_a/num_b) のみが異なる — DR-104 §3 の 6 フィールド完全一致規則により、この単一フィールド差だけで dedup されず 2 件とも独立候補として残ることを固定する (`ty` を identity から誤って除外しても `origin` 差で 2 件残ってしまう旧 fixture の弱点を、`ty` を固定することで解消)。`level2` (別 option) のトリガはこの消費点では候補にならない (`level` の値スロットが確定した消費点であり、他 option の exact トリガは同時に候補にならない)。",
+      "id": "same-type-distinct-origin-not-deduped",
+      "why": "args_before: [\"--level\"] は `level` のトリガを消費し、BOr の 2 leaf (`num_a`/`num_b`、いずれも int) がともに値スロット待ちになる。`type` (int/int)・`is_value` (true/true)・`term` (word_end/word_end)・`meta` (共に `{false,false,false}`) はすべて一致するが `origin` (num_a/num_b) のみが異なる — DR-104 §3 の 6 フィールド完全一致規則により、この単一フィールド差だけで dedup されず 2 件とも独立候補として残ることを固定する (`type` を identity から誤って除外しても `origin` 差で 2 件残ってしまう旧 fixture の弱点を、`type` を固定することで解消)。`level2` (別 option) のトリガはこの消費点では候補にならない (`level` の値スロットが確定した消費点であり、他 option の exact トリガは同時に候補にならない)。",
       "args_before": ["--level"],
       "expect": {
         "outcome": "complete",
         "candidates": [
-          {"is_value": true, "ty": "int", "origin": "num_a", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}},
-          {"is_value": true, "ty": "int", "origin": "num_b", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}}
+          {"is_value": true, "type": "int", "origin": "num_a", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}},
+          {"is_value": true, "type": "int", "origin": "num_b", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}}
         ]
       }
     },
     {
       "id": "or-branch-value-candidates-distinct-origin-not-deduped",
-      "why": "参考: `ty` (int vs bool) と `origin` (num/flag) が同時に異なる旧来の BOr 構成 (`level2` の 2 leaf)。args_before: [\"--level2\"] で `num` (int)・`flag` (bool) の 2 leaf が、`ty`/`origin` の複合差で dedup されず併存することを示す (`same-ty-distinct-origin-not-deduped` が単一フィールド差を担うのに対し、本 case は複合差でも同じく併存することの対比)。",
+      "why": "参考: `type` (int vs bool) と `origin` (num/flag) が同時に異なる旧来の BOr 構成 (`level2` の 2 leaf)。args_before: [\"--level2\"] で `num` (int)・`flag` (bool) の 2 leaf が、`type`/`origin` の複合差で dedup されず併存することを示す (`same-type-distinct-origin-not-deduped` が単一フィールド差を担うのに対し、本 case は複合差でも同じく併存することの対比)。",
       "args_before": ["--level2"],
       "expect": {
         "outcome": "complete",
         "candidates": [
-          {"is_value": true, "ty": "int", "origin": "num", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}},
-          {"is_value": true, "ty": "bool", "origin": "flag", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}}
+          {"is_value": true, "type": "int", "origin": "num", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}},
+          {"is_value": true, "type": "bool", "origin": "flag", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}}
         ]
       }
     }

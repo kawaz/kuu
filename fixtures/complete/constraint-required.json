@@ -21,7 +21,7 @@
         "candidates": [
           {"spelling": "--verbose", "is_value": false, "origin": "verbose", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}},
           {"spelling": "--out", "is_value": false, "origin": "out", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}},
-          {"is_value": true, "ty": "string", "origin": "extra", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}}
+          {"is_value": true, "type": "string", "origin": "extra", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}}
         ]
       }
     },
@@ -34,7 +34,7 @@
         "outcome": "complete",
         "candidates": [
           {"spelling": "--out", "is_value": false, "origin": "out", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}},
-          {"is_value": true, "ty": "string", "origin": "extra", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}}
+          {"is_value": true, "type": "string", "origin": "extra", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}}
         ]
       }
     }

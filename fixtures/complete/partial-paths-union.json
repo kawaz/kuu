@@ -29,7 +29,7 @@
         "outcome": "complete",
         "candidates": [
           {"spelling": "--v", "is_value": false, "origin": "v", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}},
-          {"is_value": true, "ty": "string", "origin": "file", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}}
+          {"is_value": true, "type": "string", "origin": "file", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}}
         ]
       }
     }

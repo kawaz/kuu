@@ -22,7 +22,7 @@
           {"spelling": "-a", "is_value": false, "origin": "a", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}},
           {"spelling": "-b", "is_value": false, "origin": "b", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}},
           {"spelling": "--", "is_value": false, "origin": "--", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}},
-          {"is_value": true, "ty": "string", "origin": "x", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}}
+          {"is_value": true, "type": "string", "origin": "x", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}}
         ]
       }
     },
@@ -33,7 +33,7 @@
       "expect": {
         "outcome": "complete",
         "candidates": [
-          {"is_value": true, "ty": "string", "origin": "x", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}}
+          {"is_value": true, "type": "string", "origin": "x", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}}
         ]
       }
     }

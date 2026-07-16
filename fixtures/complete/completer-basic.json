@@ -12,7 +12,7 @@
       "why": "--port のトリガ消費後の値スロット候補 (number, origin=port) に completer=files が乗る。opt-in 発火 (candidate に completer キーがある) — 値まで比較する",
       "args_before": ["--port"],
       "expect": {"outcome": "complete", "candidates": [
-        {"is_value": true, "ty": "number", "origin": "port", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}, "completer": "files"}
+        {"is_value": true, "type": "number", "origin": "port", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}, "completer": "files"}
       ]}
     },
     {
@@ -20,7 +20,7 @@
       "why": "同じ入力・同じ実装挙動だが completer キーを書かない — opt-in 不発火のため実装の completer 値に関わらず PASS する (COMP-Q3)",
       "args_before": ["--port"],
       "expect": {"outcome": "complete", "candidates": [
-        {"is_value": true, "ty": "number", "origin": "port", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}}
+        {"is_value": true, "type": "number", "origin": "port", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}}
       ]}
     }
   ]

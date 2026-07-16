@@ -13,7 +13,7 @@
       "why": "\"build\" 消費後、両 command 定義の子 scope それぞれから origin=target の値スロット候補 (completer=files / completer=urls) が生成される。6 フィールドは一致するが completer が食い違うため completer なしへ畳まれる (completer:\"\" で opt-in を発火させつつ値が空であることを確認)",
       "args_before": ["build"],
       "expect": {"outcome": "complete", "candidates": [
-        {"is_value": true, "ty": "string", "origin": "target", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}, "completer": ""}
+        {"is_value": true, "type": "string", "origin": "target", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}, "completer": ""}
       ]}
     }
   ]

@@ -115,6 +115,8 @@ DR-060 §1 の「和集合」がスペリングの和集合である以上、複
 - **fixtures/complete/**: `docs/findings/2026-07-13-complete-fixture-recon.md` §3 の 10 本提案 + `docs/findings/2026-07-14-completion-constraint-and-identity.md` の positive fixture 提案 (排他確定候補も候補に残る) を実体化 (別 commit、本 DR とは独立に着手)
 - **DR-065 §1**: query タグ 4 種のうち `"complete"` が確定 (`"lower"` = DR-070、`"definition_error"` = DR-082 に続く 3 件目)。予約は尽きる
 
+> **追記 (TY-Q1、kawaz 裁定 2026-07-17): 候補フィールド `ty` を `type` に改名。** 本 DR の §2 表・§3 の 6 フィールド identity・明確化 note 群に現れる `ty` は全て `type` と読み替える。旧綴り `ty` は参照実装 (MoonBit) で `type` が予約語のため識別子に使えない事情が wire へ漏れたもので、「言語制約由来で spec を制限しない」(kawaz) に反していた。definition 側のフィールド `type` と同綴りになり語彙が一貫する。実装側の識別子は各言語の慣習で回避してよい (参照実装は MDR-003 の `fields(rename=...)` パターン)。CONFORMANCE §3/§4・schema/fixture.schema.json・fixtures/complete/ は同日改名済み。候補同一性の 6 フィールドは `spelling`/`is_value`/`type`/`origin`/`term`/`meta` となる (意味論の変更なし、綴りのみ)。
+
 ## 関連
 
 - DR-060 (補完クエリの意味論 — 本 DR は fixture format の確定であり意味論自体は変更しない、語彙のみ改名)

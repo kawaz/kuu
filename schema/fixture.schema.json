@@ -434,7 +434,7 @@
           "description": "値位置候補では意味を持たず省略可 (書く場合は `\"\"` のみ、DR-104 §2)。"
         },
         "is_value": { "const": true },
-        "ty": {
+        "type": {
           "type": "string",
           "enum": ["string", "number", "int", "float", "bool"],
           "description": "値位置候補の型 (解決済み primitive、`is_value:true` で実質必須、DR-104 §2。flag/count/none は値スロットを取らないため値位置候補として出現しない)。"
@@ -457,7 +457,7 @@
           "description": "値位置候補の completer 名 (DR-060 §3)。wire には持たせるが opt-in 検証 — 書けば比較、書かなければ未検証 (DR-104 §2、COMP-Q3)。参照実装 (kuu.mbt) は 2026-07-15 に `Cand.completer` フィールドを実装追随済み (DR-104 §2(d) の宿題解消、`fixtures/complete/completer-*.json` で pin)。"
         }
       },
-      "required": ["is_value", "ty", "origin", "term", "meta"],
+      "required": ["is_value", "type", "origin", "term", "meta"],
       "additionalProperties": false
     },
 

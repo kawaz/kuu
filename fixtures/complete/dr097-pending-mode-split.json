@@ -32,7 +32,7 @@
         "outcome": "complete",
         "candidates": [
           {"spelling": "height", "is_value": false, "origin": "height", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}},
-          {"is_value": true, "ty": "string", "origin": "rest", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}}
+          {"is_value": true, "type": "string", "origin": "rest", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}}
         ]
       }
     },
@@ -43,7 +43,7 @@
       "expect": {
         "outcome": "complete",
         "candidates": [
-          {"is_value": true, "ty": "number", "origin": "height", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}}
+          {"is_value": true, "type": "number", "origin": "height", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}}
         ]
       }
     }
