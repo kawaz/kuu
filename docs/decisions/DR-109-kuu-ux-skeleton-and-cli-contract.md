@@ -57,6 +57,11 @@ ambiguous の各 interpretation には値源ラダーを適用せず、parse 相
 - 参照実装 (kuu.mbt) は既にこの挙動 (conformance green)。kuu-cli の常時 resolve が fixture の resolve フラグ条件と無差別に交差して fail していたのは、この明文化で解消する
 
 > **訂正 (2026-07-16、同日): 本 §7 は裁定の誤読に基づくため再考中 — UX-Q7R (docs/QUESTIONS.md) で追跡。** kawaz の原文「UX-Q7: Q1-6で出た話も含めて最高」は「〜含めて**再考**」の typo であり、Q7=a の承認ではなかった (kawaz 訂正 2026-07-16)。§7 の内容 (既定 resolve 維持 / preset default の共露出非参加) は再裁定が下りるまで**暫定**扱い。`fixtures/export-key/collision.json` の why 更新 (§divergence 決着) も同様に暫定。再裁定の反映はこの note の下に追記する。
+>
+> **再裁定確定 (UX-Q7R、kawaz 2026-07-16 夜)**: §7 の 2 論点は次の形で決着した。
+>
+> 1. **CLI の resolve 適用条件という論点は取り下げ** — kuu-cli と runner の挙動差は「公開面が過剰な core を呼び出し側が各自組み合わせている」構造の産物であり、kuu-core の engine/builtins/kuu 分離 (PKG-Q1〜4 裁定済み) 後の一本道の玄関で構造的に消える。CLI 単独で resolve の既定を裁定する問題ではなかった
+> 2. **意味論の正しい定式化は「衝突検査の例外」ではなく「default 注入の充填判定が見る cell」** (kawaz 定式化): default 解決は「値 cell が空のままなら注入」という値源ラダーの既存意味論であり、export_key 共露出下ではその判定対象を **export_key 適用後の結果 cell 単位**とする。`--a` 発火で結果 cell x が埋まっていれば、b の default 解決は「x は空でない」を見て注入しない — 衝突自体が発生せず、例外規定は不要。対極も自然に切れる: b に env / config (default より上の席) が入っていれば x が埋まっていても主張になり、本物の衝突として Ambiguous になる (ユーザの意思表示は遠慮しない)。spec 明文化は DR-031 (値源ラダー) / DR-052 (export-key) の語彙でこの充填判定規則を書き、resolve 相込みで pin する fixture を追加する (runner が green だったのは検証層が届いていなかっただけ、の解消)。`fixtures/export-key/collision.json` の why はこの定式化で最終化する。kuu-cli の single-exposure-ok fail は core 分離後の新玄関乗り換えで自然解消見込み (それまで known-fail)
 
 ## 採用しなかった案
 
