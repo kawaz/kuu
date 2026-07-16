@@ -65,6 +65,8 @@ source は「**最終値を確定させた効果 / 充填の由来**」であり
 > - ラダーの優先順位 (cli > env > config > inherit > default) は **1 実体の値 cell 内で値源を選ぶ規則**であり、実体間のキー占有の競合をラダー順位で解決しない (a の cli と b の env が並んでも「cli が勝って success」にはならない — provenance 競合 = ambiguous、DR-073 §2)
 >
 > fixture: `fixtures/export-key/collision.json` (single-exposure-ok の resolve 相込み検証 / env-claim case)。
+>
+> **追記 (EXP-Q1、kawaz 2026-07-17)**: 共露出実体の宣言 default が**異なる値**の場合 (両者未発火・上位席なし)、どちらが cell を埋めるかを定義順などの順位規則で解決しない — 両 default が同一 cell を主張する provenance 競合として **ambiguous** に倒す (claimants が解釈を区別する、DR-073)。同値 default は観測可能な競合が無いため success のまま (`collision.json :: defaults-only-no-collision`)。定義時は「共露出キーの異 default 値」を DESIGN §15.6 の warn に加える (warn + 実行時 ambiguous の二段構え)。順序ベースの優先を退けるのは DR-038 (完全経路の一意性、優先なし) / DR-042 (installer 合成の順序非依存) と同じ線。fixture: `fixtures/export-key/collision-default-divergent.json`。
 
 ## Superseded (歴史)
 

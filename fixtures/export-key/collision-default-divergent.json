@@ -1,0 +1,39 @@
+{
+  "why": "共露出実体の宣言 default が異なる値の場合の帰結 (EXP-Q1、kawaz 2026-07-17)。UX-Q7R の充填判定 (default 注入は export_key 適用後の結果 cell を見る、DR-031 追記 note) は「先に埋まった cell へは注入しない」を定めるが、両者未発火・上位席なしで**両 default が同時に空 cell の注入候補**になる縁では、どちらが埋めるかの規則が要る。裁定: 定義順などの順位規則で解決せず、provenance 競合として ambiguous に倒す — 順序ベースの優先を退けるのは DR-038 (完全経路の一意性、優先なし) / DR-042 (installer 合成の順序非依存) と同じ線であり、「宣言の並び替えで結果が変わる」観測を仕様に持ち込まない。値が異なるので interpretations は結果ビュー自体が異なり、claimants (DR-073) が占有実体を示す。対極 (同値 default → 競合が観測不能で success) は collision.json :: defaults-only-no-collision が pin 済み。定義時には「共露出キーの異 default 値」が DESIGN §15.6 の warn 対象 (warn + 実行時 ambiguous の二段構え、reject はしない)。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {"name": "a", "type": "bool", "long": true, "default": true, "export_key": "x"},
+      {"name": "b", "type": "bool", "long": true, "default": false, "export_key": "x"}
+    ]
+  },
+  "cases": [
+    {
+      "id": "divergent-defaults-ambiguous",
+      "why": "args 空・env/config 供給なし: a (default true) と b (default false) がともに未発火で、空の結果 cell x へ両 default が注入候補になる。値が異なるため「どちらが埋めたか」が観測可能な差になり、定義順で先勝ちさせると宣言の並び替えが結果を変える — これを退け provenance 競合の ambiguous とする (EXP-Q1)。interpretations は a が占有する {x:true} と b が占有する {x:false} の 2 ビューで、退化しない (collision.json の同値 flag と対照的に claimants なしでも区別可能だが、占有実体の明示のため claimants を添える — DR-073 の担体は値の異同に関わらず一様)。ambiguous に effects は載らない (collision.json と同型)。",
+      "args": [],
+      "env": {},
+      "expect": {
+        "outcome": "ambiguous",
+        "interpretations": [
+          {"result": {"x": true}, "claimants": {"x": "a"}},
+          {"result": {"x": false}, "claimants": {"x": "b"}}
+        ]
+      }
+    },
+    {
+      "id": "divergent-defaults-fire-resolves",
+      "why": "対照: `--a` 発火があれば結果 cell x は a の cli 値 true で埋まり、b の default は充填判定 (cell は空でない) で注入されない — UX-Q7R の基本規則がそのまま働き、異 default 値でも衝突は発生しない。ambiguous になるのは「両者とも default しか無い」縁だけであることの輪郭固定。sources {x:\"cli\"} で resolve 相込みを検証 (collision.json :: single-exposure-ok と同じ規約)。",
+      "args": ["--a"],
+      "env": {},
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "a", "op": "set", "operand": true, "source": "cli"}
+        ],
+        "result": {"x": true},
+        "sources": {"x": "cli"}
+      }
+    }
+  ]
+}
