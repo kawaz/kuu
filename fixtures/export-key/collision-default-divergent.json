@@ -23,8 +23,8 @@
     },
     {
       "id": "divergent-defaults-fire-resolves",
-      "why": "対照: `--a` 発火があれば結果 cell x は a の cli 値 true で埋まり、b の default は充填判定 (cell は空でない) で注入されない — UX-Q7R の基本規則がそのまま働き、異 default 値でも衝突は発生しない。ambiguous になるのは「両者とも default しか無い」縁だけであることの輪郭固定。sources {x:\"cli\"} で resolve 相込みを検証 (collision.json :: single-exposure-ok と同じ規約)。",
-      "args": ["--a"],
+      "why": "対照: `--a true` 発火があれば結果 cell x は a の cli 値 true で埋まり、b の default は充填判定 (cell は空でない) で注入されない — UX-Q7R の基本規則がそのまま働き、異 default 値でも衝突は発生しない。ambiguous になるのは「両者とも default しか無い」縁だけであることの輪郭固定。`{type:\"bool\", long:true}` の糖衣は `[\":set\"]` = 値必須 (DR-076 §4: `:set` は型に依らず「値を取って set」、裸縮退の特例は bool にも無い) なので発火は値付き 2 token。sources {x:\"cli\"} で resolve 相込みを検証 (collision.json :: single-exposure-ok と同じ規約)。",
+      "args": ["--a", "true"],
       "env": {},
       "expect": {
         "outcome": "success",
