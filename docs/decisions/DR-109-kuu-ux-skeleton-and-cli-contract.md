@@ -56,6 +56,8 @@ ambiguous の各 interpretation には値源ラダーを適用せず、parse 相
 - その上で **resolve 相でも preset default は export_key 共露出に参加しない**ことを仕様として確定する — `fixtures/export-key/collision.json::single-exposure-ok` の why が保留していた §divergence (「preset default が export_key 共露出に参加するかは要確認」) の決着。共露出検査は「実際の共露出」(発火・値供給があった実体) に対して行い、未発火 flag の preset default が resolve で充填されても共露出キーには現れない
 - 参照実装 (kuu.mbt) は既にこの挙動 (conformance green)。kuu-cli の常時 resolve が fixture の resolve フラグ条件と無差別に交差して fail していたのは、この明文化で解消する
 
+> **訂正 (2026-07-16、同日): 本 §7 は裁定の誤読に基づくため再考中 — UX-Q7R (docs/QUESTIONS.md) で追跡。** kawaz の原文「UX-Q7: Q1-6で出た話も含めて最高」は「〜含めて**再考**」の typo であり、Q7=a の承認ではなかった (kawaz 訂正 2026-07-16)。§7 の内容 (既定 resolve 維持 / preset default の共露出非参加) は再裁定が下りるまで**暫定**扱い。`fixtures/export-key/collision.json` の why 更新 (§divergence 決着) も同様に暫定。再裁定の反映はこの note の下に追記する。
+
 ## 採用しなかった案
 
 ### UX-Q2 で (b) 上位集合 / (c) 2 モードを今採ること
