@@ -1,10 +1,10 @@
 {
-  "why": "露出キーの一意性検査は実行時 (DR-021 / DESIGN §15.5): 同じ export_key 値へ解決する 2 つの相異なる要素が、同一入力で両方露出したときのみ衝突 = ambiguous エラー (DESIGN §15.5、静的 reject ではなく warn + 実行時検出)。export_key は結果キーの指定なので、2 要素が同じキーへ落ちる構造は定義時には許され (§15.6 warn どまり)、実際の共露出でのみ ambiguous になる。片方のみ露出なら衝突しない (検査は実際の共露出に対してで、静的宣言に対してではない)。",
+  "why": "露出キーの一意性検査は実行時 (DR-021 / DESIGN §15.5): 同じ export_key 値へ解決する 2 つの相異なる要素が、同一入力で両方露出したときのみ衝突 = ambiguous エラー (静的 reject ではなく warn + 実行時検出、§15.6)。「実際の共露出」に数えるのは発火 (cli/link) と default より上の席の充填 (env/config/inherit) — ユーザ / 環境の意思表示は、共露出キーの結果 cell が他実体の値で埋まっていても主張として成立し、本物の衝突になる。対して default は主張ではない: default 注入の充填判定は export_key 適用後の結果 cell 単位で行われ (DR-031 追記 note、UX-Q7R)、結果 cell が既に埋まっていれば「cell は空でない」を見て注入しない — 衝突自体が発生せず、衝突検査への例外規定を要しない。片方のみ露出なら衝突しない (検査は実際の共露出に対してで、静的宣言に対してではない)。b の env 席 (B) は上位席の主張を検証する対極軸。",
   "query": "parse",
   "definition": {
     "options": [
       {"name": "a", "type": "flag", "long": true, "export_key": "x"},
-      {"name": "b", "type": "flag", "long": true, "export_key": "x"}
+      {"name": "b", "type": "flag", "long": true, "export_key": "x", "env": "B"}
     ]
   },
   "cases": [
@@ -22,14 +22,41 @@
     },
     {
       "id": "single-exposure-ok",
-      "why": "`--a` のみ: a だけが export_key x へ実際に露出し、衝突なし (検査は実際の共露出に対して、静的宣言に対してではない — §15.5)。result {x:true}。b は未発火の flag だが、その preset default false は共露出キー x のもとに現れない (result に {x:false} は混ざらない) — resolve 相でも preset default は export_key 共露出に参加しない (DR-109 §7 決着)。共露出検査は「実際の共露出」(発火・値供給があった実体) に対して行われ、未発火 flag の preset default が resolve で充填されても共露出キーには現れない。",
+      "why": "`--a` のみ (env 供給なし): a だけが export_key x へ実際に露出し、衝突なし (検査は実際の共露出に対して、静的宣言に対してではない — §15.5)。resolve 相込みの検証 (UX-Q7R): b は未発火 flag で preset default false を同梱する (LOWERING §A.5 / DR-051 §2) が、default 注入の充填判定は export_key 適用後の結果 cell 単位 (DR-031 追記 note) — 結果 cell x は a の cli 値で埋まっているため b の default は「x は空でない」を見て注入されない。result は {x:true} のまま ({x:false} への上書きも第 2 解釈の発生もない = 衝突自体が発生しない)。sources {x:\"cli\"} が resolve 相の実行とその由来を検証する (sources は射影後キーの下で由来を示す、rename-multiple.json と同じ規約) — sources の無い旧 expect では resolve 相を実行しない実装も green になれた (検証層が届いていなかった穴) の解消。",
       "args": ["--a"],
+      "env": {},
       "expect": {
         "outcome": "success",
         "effects": [
           {"entity": "a", "op": "set", "operand": true, "source": "cli"}
         ],
-        "result": {"x": true}
+        "result": {"x": true},
+        "sources": {"x": "cli"}
+      }
+    },
+    {
+      "id": "env-claim-collision",
+      "why": "(対極) `--a` + env B=true: 結果 cell x は a の cli 値で埋まっているが、b の env 席の充填は default と違い遠慮しない — env / config / inherit (default より上の席) はユーザ / 環境の意思表示であり、cell の充填状態と無関係に「実際の共露出」として成立する (UX-Q7R、DR-031 追記 note の対極規定)。相異なる 2 実体 a (cli 由来) / b (env 由来) が同一キー x を占有し合う本物の衝突で ambiguous (DESIGN §15.5)。env の文字列 \"true\" は flag (bool preset) の値パイプラインで true にパースされる (bool_parser、requires-bool-target.json の env C=true と同型) ため、両解釈のビューは {x:true} に退化する — claimants 面が解釈を区別する (DR-073)。実体間のキー占有競合はラダー順位で解決しない (ラダーは 1 実体の値 cell 内で値源を選ぶ規則、DR-031) — 「a の cli が b の env に勝って success」にはならないことの固定。ambiguous outcome に effects は載らない (co-exposure-collision / collision-identity.json と同型)。",
+      "args": ["--a"],
+      "env": {"B": "true"},
+      "expect": {
+        "outcome": "ambiguous",
+        "interpretations": [
+          {"result": {"x": true}, "claimants": {"x": "a"}},
+          {"result": {"x": true}, "claimants": {"x": "b"}}
+        ]
+      }
+    },
+    {
+      "id": "defaults-only-no-collision",
+      "why": "(UX-Q7R からの導出 pin、既存 pin 実例なし) args 空・env 供給なし: a・b とも未発火で、両者の preset default false だけが残る。default は主張ではないため衝突は発生しない (UX-Q7R — default 注入は cell 充填判定であって共露出への参加ではない)。flag は absent にならない (DR-051 §2、preset が default false を同梱) ので結果 cell x は default の false で埋まり、result {x:false} / sources {x:\"default\"}。どちらの実体の default が cell を埋めたかは観測不能 (両者とも false で値が一致し、success に claimants 面は無く、sources は席名 default を示すのみ) であり、fixture 語彙上の期待値は一意に定まる。",
+      "args": [],
+      "env": {},
+      "expect": {
+        "outcome": "success",
+        "effects": [],
+        "result": {"x": false},
+        "sources": {"x": "default"}
       }
     }
   ]

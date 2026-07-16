@@ -57,6 +57,15 @@ source は「**最終値を確定させた効果 / 充填の由来**」であり
 - DR-030 (実体だけノード、appconfig ストア)
 - DR-047 (制約評価のレイヤリング — 遅延述語の評価対象は本ラダー充填後の最終状態)
 
+> **追記 (UX-Q7R、kawaz 再裁定 2026-07-16 — 裁定経緯は DR-109 §7 の再裁定確定 note)**:
+> default 席の充填判定が見る cell を明確化する。default 解決は「値 cell が空のままなら注入する」という本 DR の既存意味論のまま変わらない。export_key 共露出 (相異なる複数要素が同一の結果キーへ解決する構造、DR-052 / DR-073) の下では、この充填判定の対象を **export_key 適用後の結果 cell 単位**とする — 冒頭の「1つの結果セル」は共露出下では射影後の結果キーが指す cell である。
+>
+> - 例: a・b がともに export_key x を持ち `--a` だけが発火した場合、b の default 解決は「結果 cell x は (a の cli 値で) 空でない」を見て注入しない。b の default 値が共露出キー x に現れることはなく、**衝突自体が発生しない** — 衝突検査 (DESIGN §15.5) への例外規定ではない
+> - 対極: **default より上の席 (env / config / inherit) の充填は遠慮しない**。上位席の値は「何も来なかった時のフォールバック」ではなくユーザ / 環境の意思表示であり、結果 cell が他実体の値で埋まっていても実際の共露出として成立する — 本物の衝突で ambiguous (DESIGN §15.5 / DR-073)
+> - ラダーの優先順位 (cli > env > config > inherit > default) は **1 実体の値 cell 内で値源を選ぶ規則**であり、実体間のキー占有の競合をラダー順位で解決しない (a の cli と b の env が並んでも「cli が勝って success」にはならない — provenance 競合 = ambiguous、DR-073 §2)
+>
+> fixture: `fixtures/export-key/collision.json` (single-exposure-ok の resolve 相込み検証 / env-claim case)。
+
 ## Superseded (歴史)
 
 > 以下の記述は後続 DR で覆された。現役仕様の理解には不要、判断経緯としてのみ残す。
