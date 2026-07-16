@@ -20,18 +20,3 @@
 - (d) その他 (再考の意図を自由文で)
 
 (kawaz の「再考」の意図がどの層 (CLI 既定 / spec 明文化 / kuu-ux との整合) に向いているか自由文で教えてもらえれば、選択肢を組み直します)
-
-## UX-Q8: config_files (パス動的 lookup) の CLI 注入形 (Q6 の追補、2026-07-16)
-
-kuu-cli の conformance sweep で blocked-skip 7 件。fixture の `config_files` (パス → config オブジェクトのマップ供給、動的 lookup) に対応する CLI 注入形が未設計 — 現 `--config <json|file>` は単一オブジェクト注入のみ。
-
-- **(a) `--config-file <path>=<json|file>` (繰返し可) を追加** (統括推し): fixture の config_files 軸と 1:1。実環境の既定動作 (定義解決パスの実ファイル読み) とも互換で、試験用の固定注入という Q6 の枠に素直に収まる
-- (b) `--config` を拡張して `{"<path>": {...}}` のマップ形も受ける (オプション数は増えないが、単一オブジェクトとマップの判別が値の形依存になる)
-- (c) 実需が薄ければ conformance 専用の隠し口 (環境変数等) に逃がし、公開 CLI 契約には載せない
-
-
-
-
-
-
-
