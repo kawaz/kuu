@@ -22,7 +22,7 @@
     },
     {
       "id": "single-exposure-ok",
-      "why": "`--a` のみ: a だけが export_key x へ実際に露出し、衝突なし (検査は実際の共露出に対して、静的宣言に対してではない — §15.5)。result {x:true}。b は未発火の flag だが、その preset default false は共露出キー x のもとに現れない (result に {x:false} は混ざらない) — preset default が export_key 共露出に参加するかは要確認 (下記 §divergence)。",
+      "why": "`--a` のみ: a だけが export_key x へ実際に露出し、衝突なし (検査は実際の共露出に対して、静的宣言に対してではない — §15.5)。result {x:true}。b は未発火の flag だが、その preset default false は共露出キー x のもとに現れない (result に {x:false} は混ざらない) — resolve 相でも preset default は export_key 共露出に参加しない (DR-109 §7 決着)。共露出検査は「実際の共露出」(発火・値供給があった実体) に対して行われ、未発火 flag の preset default が resolve で充填されても共露出キーには現れない。",
       "args": ["--a"],
       "expect": {
         "outcome": "success",
