@@ -6,7 +6,23 @@
 > チャットでは「VF-Q 待ち」のようにラベルだけで参照する。回答はラベル + 選択肢記号 (例「VF-b で」) だけで通じる。
 > 参照パスは本リポ (spec) 相対。kuu.mbt 側は「kuu.mbt の <path>」と表記する。
 
-> HELP-Q バッチ改訂 2 巡目 (kawaz 応答 2026-07-17 を受けて説明を書き直し)。裁定済み: HELP-Q2=a (query:"help" conformance 化)、HELP-Q7=a (v1 発行条件に help プロファイル追加 = 5 プロファイル green)。HELP-Q6 は前提誤りで取り下げ (下記 HELP-Q6R 参照)。HELP-Q3 は大規模リサーチ実施中 (メジャー CLI パーサ 10 系統の help 語彙横断調査) — 結果が出てから選択肢を再提示する。詳細の正本: `docs/findings/2026-07-17-help-mechanism-design-plan.md`。
+> HELP-Q バッチ改訂 2 巡目 (kawaz 応答 2026-07-17 を受けて説明を書き直し)。裁定済み: HELP-Q2=a (query:"help" conformance 化)、HELP-Q7=a (v1 発行条件に help プロファイル追加 = 5 プロファイル green)。HELP-Q6 は前提誤りで取り下げ (下記 HELP-Q6R 参照)。詳細の正本: `docs/findings/2026-07-17-help-mechanism-design-plan.md`。
+
+## HELP-Q3R: help グループ・順序語彙の v1 採否 (リサーチ完了、選択肢を作り直し)
+
+### リサーチ結果の要約 (正本: docs/findings/2026-07-17-cli-help-vocab-survey.md、12 系統 + 参考 2)
+
+- **グループ見出し (help_group_name 相当) は過半数が保有**: clap `help_heading` / argparse `add_argument_group` / typer `rich_help_panel` / yargs `.group` / Swift AP `@OptionGroup(title:)` / kong `group` / oclif `helpGroup` 等。持たないのは click 無印・System.CommandLine・bash 補完
+- **グループの表示順の明示 API はほぼ皆無** — 大半は「宣言順 / 呼び出し順」。唯一 Go kong が `Groups([]Group{Key,Title,Description})` のスライス順で明示制御 (グループ定義と表示メタを分離した 2 層設計)
+- **項目単位の表示順 (help_order 相当) の数値指定は少数派**: clap `display_order` / picocli `@Option(order=N)` のみ。他は宣言順
+- kuu の文脈での含意: wire form は JSON で**要素の宣言順が構造上保存される** (help model の entries も定義順保存を推す設計済み) ため、「宣言順 = 表示順」の主流モデルは**追加語彙ゼロで既に成立**している。数値 order が要るのは「宣言順と表示順を変えたい」場面のみ
+
+### 選択肢
+
+- **a. `help_group` (グループ名 string) のみ v1 導入。順序は宣言順で開始** (推し: 過半数の慣習に一致し、グループ見出しの実需は確実。順序の明示制御は kong 以外に前例が無く、宣言順で不足する実例が出てから `help_group_order`/`help_order` を追加互換で足す — JSON の宣言順保存が既に主流モデルをカバーしているため)
+- b. kong 型のフル 2 層 (要素側 `help_group` 参照 + definition 側 groups 定義リスト {name, title, description} で順序も一元制御) を v1 から導入
+- c. `help_group` + 数値 `help_order` の 2 語彙を v1 導入 (clap 型)
+- d. v1 では入れない (当初案 — リサーチ結果を踏まえると過半数慣習からの乖離が大きく非推奨に格下げ)
 
 ## HELP-Q1R: 失敗時アクション属性の正式フィールド名 (説明を書き直し)
 
