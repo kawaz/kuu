@@ -47,6 +47,45 @@
         "result": {"port": 80},
         "warnings": []
       }
+    },
+    {
+      "id": "deprecated-then-canonical-mixed-still-warns-once",
+      "why": "混在起動での入口限定の最直接検証 (issue deprecated-warning-boundary-fixtures (1)、規定は DR-057 §2 / DR-058 §2 の既存): deprecated 入口 -o と canonical 入口 -p を同一 parse 内で両方起動しても、warnings は -o の発火分 {element: port, kind: deprecated} 1 件のみ。deprecated 状態が canonical セル (port) に貼り付いて canonical/通常入口の発火まで警告源になる誤実装 — 『セルが deprecated』と『入口が deprecated』の混同 — を潰す。element が canonical 参照 (port) である規約と、警告発生源が入口である規約が独立であることの固定。",
+      "args": ["-o", "80", "-p", "81"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "port", "op": "set", "operand": 80, "source": "cli"},
+          {"entity": "port", "op": "set", "operand": 81, "source": "cli"}
+        ],
+        "result": {"port": 81},
+        "warnings": [{"element": "port", "kind": "deprecated"}]
+      }
+    },
+    {
+      "id": "deprecated-entry-repeated-warns-once",
+      "why": "cardinality の畳み (DEP-Q1=a、kawaz 裁定 2026-07-17、DR-058 §2 明確化 note): 同一 deprecated 入口 -o を 1 parse 内で 2 回起動しても、warnings には {element: port, kind: deprecated} を 1 件だけ積む (element 単位の重複排除)。warnings の用途は『use <canonical> instead』の導出素材であり発火回数は素材に不要 — 回数が要る場面はレンダラが別素材で扱う関心。effects は 2 発火とも記録される (scalar は last-wins で result は 2 発目の 81) — 発火自体の記録 (effects) と利用推奨警告 (warnings) の cardinality が独立であることも本 case が固定する。",
+      "args": ["-o", "80", "-o", "81"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "port", "op": "set", "operand": 80, "source": "cli"},
+          {"entity": "port", "op": "set", "operand": 81, "source": "cli"}
+        ],
+        "result": {"port": 81},
+        "warnings": [{"element": "port", "kind": "deprecated"}]
+      }
+    },
+    {
+      "id": "deprecated-entry-then-failure-drops-warnings",
+      "why": "failure 時の warnings 破棄 (DEP-Q2=a、kawaz 裁定 2026-07-17、DR-058 §2 明確化 note): deprecated 入口 -o の起動が成立した後、後続の未定義トリガ -z で parse が失敗すると、failure outcome に warnings は載らない (内部で積んだ警告は最終エラー時に捨てる — deprecated 警告は『パース成功後の利用推奨』であり、失敗した実行に乗り換え推奨を出しても行為として成立しない)。lint / 診断モードなら error も warning も全部出すべきだが、それは別層の関心 (DR-047 §7 系譜) で本 wire の対象外。errors は -z (pos 2) の未定義トリガ = 無帰属 unexpected_token (fixtures/failure-actions/args-minimal.json と同形、element なし)。",
+      "args": ["-o", "80", "-z"],
+      "expect": {
+        "outcome": "failure",
+        "errors": [
+          {"args_pos": 2, "kind": "parse", "reason": "unexpected_token"}
+        ]
+      }
     }
   ]
 }

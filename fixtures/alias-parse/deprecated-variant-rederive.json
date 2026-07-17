@@ -1,0 +1,51 @@
+{
+  "why": "variant DSL 込み long 再導出への deprecated 波及 (issue deprecated-warning-boundary-fixtures (4)、規定は DR-057 §3 の導出): alias の long 入口は canonical の long 配列 (variant DSL 込み) を alias 要素の name で再導出する — deprecated はその alias 要素の属性なので、再導出で生まれる**全 variant 入口**が警告源になる (variant ごとに deprecated の有無が割れる余地はない、入口宣言の単位は要素)。canonical ssl は `[\":set:true\", \"no:set:false\"]` の 2 variant を持ち、deprecated alias legacy-ssl は --legacy-ssl / --no-legacy-ssl の両入口を再導出する。既存 long-deprecated.json は long:true (素の 1 入口) のみで variant 波及を検証できなかった。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {"name": "ssl", "type": "bool", "default": true, "long": [":set:true", "no:set:false"]},
+      {"alias": "ssl", "name": "legacy-ssl", "deprecated": true}
+    ]
+  },
+  "cases": [
+    {
+      "id": "deprecated-rederived-affirmative-variant-warns",
+      "why": "再導出の肯定形 variant --legacy-ssl: canonical の `:set:true` variant が alias name で再導出された入口。発火は canonical セル ssl へ true を束縛し、deprecated 警告 {element: ssl} を積む (DR-057 §3 再導出 + DR-058 §2 入口限定、element は canonical 参照)。",
+      "args": ["--legacy-ssl"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "ssl", "op": "set", "operand": true, "source": "cli"}
+        ],
+        "result": {"ssl": true},
+        "warnings": [{"element": "ssl", "kind": "deprecated"}]
+      }
+    },
+    {
+      "id": "deprecated-rederived-negation-variant-warns",
+      "why": "再導出の否定形 variant --no-legacy-ssl: canonical の `no:set:false` variant (prefix affix `no-`) が alias name との合成で再導出された入口 (DR-057 §3 — affix 構造と name の合成、具象綴りの文字列置換ではない)。deprecated は要素単位の属性なので否定形入口の発火も同じ警告を積む — variant の一部だけが deprecated を免れる誤実装 (再導出時の属性伝播漏れ) を潰す。",
+      "args": ["--no-legacy-ssl"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "ssl", "op": "set", "operand": false, "source": "cli"}
+        ],
+        "result": {"ssl": false},
+        "warnings": [{"element": "ssl", "kind": "deprecated"}]
+      }
+    },
+    {
+      "id": "canonical-variant-no-warn",
+      "why": "対照: canonical 側の同じ否定形 variant --no-ssl は無警告 (warnings 空)。deprecated が alias 要素 (legacy-ssl) の入口群に限定され、canonical の variant 群 (--ssl / --no-ssl) には波及しないことの固定 — (1) の混在 case と同じ入口限定規約の variant 版。",
+      "args": ["--no-ssl"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "ssl", "op": "set", "operand": false, "source": "cli"}
+        ],
+        "result": {"ssl": false},
+        "warnings": []
+      }
+    }
+  ]
+}
