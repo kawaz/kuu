@@ -76,7 +76,7 @@
 
     "invocation": {
       "type": "object",
-      "description": "呼び出し形の宣言 (DR-107 §5、DAX-Q5)。colon_args = filter chain の colon-DSL (DR-009、DESIGN §8.4 の {name,args} エスケープ形も同一規約)、object_args = multiple.collector 由来の object 形引数 (DR-036/DR-044)、none = 直接引数を取らない (installer の wire 語彙経由呼び出し、type_parser/provider の名前参照のみ)。`encoding:\"none\"` は `parameters` が空でなければならない (codex レビュー #4 B-Maj2)。",
+      "description": "呼び出し形の宣言 (DR-107 §5、DAX-Q5)。colon_args = filter chain の colon-DSL (DR-009、DESIGN §8.4 の {name,args} エスケープ形も同一規約)、object_args = multiple 宣言 (object 形) から導出される object 形引数 (collector の宣言由来引数 DR-036/DR-044 に加え、accumulator の flatten ダイヤル等の宣言由来引数も同一経路 — DR-111 §4 が適用範囲を一般化)、none = 直接引数を取らない (installer の wire 語彙経由呼び出し、type_parser/provider/completer の名前参照のみ)。`encoding:\"none\"` は `parameters` が空でなければならない (codex レビュー #4 B-Maj2)。",
       "properties": {
         "encoding": { "type": "string", "enum": ["colon_args", "object_args", "none"] },
         "parameters": {
@@ -110,7 +110,7 @@
         "role": {
           "type": "string",
           "enum": ["installer", "filter", "collector", "type_parser", "accumulator", "completer", "provider"],
-          "description": "descriptor が説明する registry 住人の役割 (DR-107 §1、旧 `kind` の rename)。installer = DR-042 の特殊語彙展開装置。filter = DESIGN §8 の filters registry 住人 (scalar/array いずれかの carrier、区別は `domain`)。collector = DR-036/DR-044 の累積結果変換装置 (T[]→U)。type_parser = `types` registry の configurable factory (旧 `kind:\"factory\"` から construction 軸を分離した残り、DR-107 §1)。accumulator/completer = 対応 registry の役割 (本 Schema では実例なし、owns/observes 禁止のみ強制)。provider = env_provider/config_provider/tty_provider の 3 スロット (DR-107 §6)。"
+          "description": "descriptor が説明する registry 住人の役割 (DR-107 §1、旧 `kind` の rename)。installer = DR-042 の特殊語彙展開装置。filter = DESIGN §8 の filters registry 住人 (scalar/array いずれかの carrier、区別は `domain`)。collector = DR-036/DR-044 の累積結果変換装置 (T[]→U)。type_parser = `types` registry の configurable factory (旧 `kind:\"factory\"` から construction 軸を分離した残り、DR-107 §1)。accumulator = accumulators registry 住人の畳み装置 (append/merge/kv_map、DR-036/DR-111 — collector と同じ「構造畳み装置は total」の勢力図で const 固定)。completer = completers registry 住人の named capability marker (DR-060 §4/DR-111 §5 — io_type は runtime 問い合わせ ABI 確定まで持たない最小形)。provider = env_provider/config_provider/tty_provider の 3 スロット (DR-107 §6)。"
         },
         "construction": {
           "type": "string",
@@ -322,10 +322,54 @@
           }
         },
         {
-          "description": "role:\"accumulator\"|\"completer\" — 実例なし。owns/observes のみ禁止 (installer 固有の宣言軸)、他軸は将来 issue で具体化するまで非制約 (DR-107 §7、codex レビュー #4 B-Maj1 — 旧版は owns/observes すら強制していない穴があった)。",
-          "if": { "properties": { "role": { "enum": ["accumulator", "completer"] } } },
+          "description": "role:\"accumulator\" — io_type/output_mode/fallibility/invocation が必須 (DR-111 §1)。DR-105 §4 の勢力図 (構造畳み装置は total) を collector と同様に強制: output_mode=transform・fallibility=total・construction=static を const 固定、io_type.input は常に array ラップ (累積 piece 値列、DR-111 §2 — io_type の対象は畳み相 collect のみ、cell 解決相は評価器内部プロトコルで宣言対象外)。invocation.encoding は object_args 固定 (multiple 宣言の object 形から導出される引数、append の flatten ダイヤル等 — DR-105 §2 の wrong-seat 判定の機械可読な根拠、DR-111 §4)。domain は registry lane 軸で accumulator に無関係 (禁止)。config は常に禁止 (static 固定の帰結)。",
+          "if": { "properties": { "role": { "const": "accumulator" } } },
           "then": {
-            "not": { "anyOf": [{ "required": ["owns"] }, { "required": ["observes"] }] }
+            "required": ["io_type", "output_mode", "fallibility", "invocation"],
+            "properties": {
+              "output_mode": { "const": "transform" },
+              "fallibility": { "const": "total" },
+              "construction": { "const": "static" },
+              "io_type": { "properties": { "input": { "type": "object", "required": ["array"] } } },
+              "invocation": {
+                "type": "object",
+                "properties": { "encoding": { "const": "object_args" } }
+              }
+            },
+            "not": {
+              "anyOf": [
+                { "required": ["domain"] },
+                { "required": ["owns"] },
+                { "required": ["observes"] },
+                { "required": ["config"] }
+              ]
+            }
+          }
+        },
+        {
+          "description": "role:\"completer\" — named capability marker としての最小形 (DR-111 §5、DR-109 骨子柱 3 の $required の前提)。invocation が必須 (none 固定 — 要素の completer:\"<名前>\" 名前参照のみで wire 上の DSL args を持たない、DR-060 §4)、construction は static 固定。io_type は runtime 問い合わせ ABI (DR-109 骨子柱 6) 確定まで禁止 — 入力形 (補完文脈) を descriptor 側から発明しない (ABI 確定 DR が軸を追加する)。output 契約 (素の値文字列の列、DR-060 §4) は description で記す。reasons は常に空 — 補完チャンネルに reason を表面化する経路が無く、失敗は候補ゼロへの縮退が唯一の表現 (DR-111 §5)。output_mode/fallibility/domain/owns/observes/config は禁止。",
+          "if": { "properties": { "role": { "const": "completer" } } },
+          "then": {
+            "required": ["invocation"],
+            "properties": {
+              "construction": { "const": "static" },
+              "invocation": {
+                "type": "object",
+                "properties": { "encoding": { "const": "none" } }
+              },
+              "reasons": { "maxItems": 0 }
+            },
+            "not": {
+              "anyOf": [
+                { "required": ["domain"] },
+                { "required": ["io_type"] },
+                { "required": ["output_mode"] },
+                { "required": ["fallibility"] },
+                { "required": ["owns"] },
+                { "required": ["observes"] },
+                { "required": ["config"] }
+              ]
+            }
           }
         }
       ],
@@ -334,7 +378,7 @@
 
     "envelope": {
       "type": "object",
-      "description": "schema/builtin-descriptors.json のトップレベル形状 (DR-095 §3/§4、DR-107 §6) — filters/types/providers の 3 区分マップを検証する集合レベルの schema (codex レビュー #4 A-M11/B-Maj6、旧版はこの envelope 自体を検証する手段が無く descriptor.schema.json を builtin-descriptors.json のルートへ直接適用すると shape 不一致で失敗していた)。`filters` 配下は role:\"filter\"|\"collector\" のいずれか (DR-036「collectors registry は新設しない、filters で代替」)、`types` 配下は role:\"type_parser\" 固定、`providers` 配下は role:\"provider\" 固定 + 3 スロット (env_provider/config_provider/tty_provider) の完備性を強制する。map key と各 descriptor.name の一致、bare/canonical 名の重複検査は JSON Schema の表現範囲外 (プロパティ名と値の中身を突き合わせる標準機構が無い) — `scripts/lint-descriptors.sh` が semantic lint として検査する。",
+      "description": "schema/builtin-descriptors.json のトップレベル形状 (DR-095 §3/§4、DR-107 §6、DR-111 §3) — filters/types/accumulators/providers の 4 区分マップを検証する集合レベルの schema (codex レビュー #4 A-M11/B-Maj6、旧版はこの envelope 自体を検証する手段が無く descriptor.schema.json を builtin-descriptors.json のルートへ直接適用すると shape 不一致で失敗していた)。`filters` 配下は role:\"filter\"|\"collector\" のいずれか (DR-036「collectors registry は新設しない、filters で代替」)、`types` 配下は role:\"type_parser\" 固定、`accumulators` 配下は role:\"accumulator\" 固定 + 3 住人 (append/merge/kv_map、参照実装の registry 登録全員、DR-111 §3) の完備性を強制、`providers` 配下は role:\"provider\" 固定 + 3 スロット (env_provider/config_provider/tty_provider) の完備性を強制する。completers 区分は住人が生じるまで作らない (DR-111 §6 — 標準 completer 名の集合は補完生成器層の関心)。map key と各 descriptor.name の一致、bare/canonical 名の重複検査は JSON Schema の表現範囲外 (プロパティ名と値の中身を突き合わせる標準機構が無い) — `scripts/lint-descriptors.py` が semantic lint として検査する。",
       "properties": {
         "$comment": { "type": "string" },
         "$schema-ref": { "type": "string" },
@@ -356,6 +400,16 @@
             ]
           }
         },
+        "accumulators": {
+          "type": "object",
+          "additionalProperties": {
+            "allOf": [
+              { "$ref": "#/$defs/descriptor" },
+              { "properties": { "role": { "const": "accumulator" } } }
+            ]
+          },
+          "required": ["append", "merge", "kv_map"]
+        },
         "providers": {
           "type": "object",
           "additionalProperties": {
@@ -367,7 +421,7 @@
           "required": ["env_provider", "config_provider", "tty_provider"]
         }
       },
-      "required": ["filters", "types", "providers"],
+      "required": ["filters", "types", "accumulators", "providers"],
       "additionalProperties": false
     }
   }

@@ -39,6 +39,8 @@ flag (DR-076 §2) と完全対称の preset 合成になる:
 - **補完**: count の明示 variant リストは非空なら `:update:increment` を補完 (冪等)。absent / false / [] = 入口なし (三態同義、DR-071 §1)
 - **short**: 不変 (DR-071 §3)。count の short は非消費で、発火が update(increment) 効果を持つ (flag の固定 true 供給と同じく型が慣習挙動を担う)
 - **multiple:{accumulator:"increment"} は count から退役**: 現在値依存の変換は accumulator (セル側、DR-029/DR-036) でなく効果 (発火側) の仕事になる。multiple / accumulator は本来の関心 (複数「値」の畳み: append / merge 等) に純化する。increment を accumulators registry から除くかは Schema 実体化時に判断 (使用者が count のみなら除く)
+
+  > **決着 (DR-111 §3、2026-07-17): accumulators registry から除く。** 使用者は count のみであり、count は本 DR の update 効果正規化で accumulator 経路を離れた。参照実装 (kuu.mbt) にも registry 登録・fixture 使用実績が無い。`schema/builtin-descriptors.json` の accumulators 区分 (DR-111 で新設) は append/merge/kv_map の 3 種のみを収載する。filters registry の `increment` (transform filter、update 効果の参照先) は不変。
 - **値源との共存**: parser は (string) => T の純粋な字句層のまま (DR-074/075)。count に env / config を宣言した場合、そこから来る文字列は number として普通に parse → set される (`VERBOSITY=5` は 5 を set、increment ではない)。increment は CLI 発火だけの関心、という責務分離が本 DR の核
 - **count_or_set (DR-040)**: `[":set", ":update:increment"]` 相当の合成に還元できる見込みだが、optional 値スロット (`repeat:{min:0,max:1}`) との取り分整理を含むため正規形の確定は別途 (DR-040 の記述は当面現行のまま)
 

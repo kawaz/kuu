@@ -1,5 +1,5 @@
 {
-  "$comment": "kuu builtin registry 住人の宣言集合 — 各エントリは schema/descriptor.schema.json に適合する。正本は docs/decisions/DR-095-builtin-descriptor-reasons.md (§3 filters / §4 factories) + DR-107-descriptor-orthogonal-axes.md (role/construction/io_type/output_mode/fallibility/invocation の直交軸)。DR-095 §射程外の通り、installer 発生源 (missing_operand 等) と constraint 系 reason (required_violated 等) は本ファイルの対象外 — 前者はエンジン構造の発生源で installer descriptor 側の宣言軸が未実体化、後者は constraint installer (DR-047/055) 側で別途宣言が必要 (いずれも本 issue の射程外)。トップレベル区分名 (filters/types/providers) は DESIGN §13.1 の registry 区分名 (呼ばれるフィールド名の単位) を踏襲し、descriptor の `role` (DR-107) とは独立 — `types` registry 住人は `role:\"type_parser\"` を持つ (registry 区分名と role は別軸)。",
+  "$comment": "kuu builtin registry 住人の宣言集合 — 各エントリは schema/descriptor.schema.json に適合する。正本は docs/decisions/DR-095-builtin-descriptor-reasons.md (§3 filters / §4 factories) + DR-107-descriptor-orthogonal-axes.md (role/construction/io_type/output_mode/fallibility/invocation の直交軸)。DR-095 §射程外の通り、installer 発生源 (missing_operand 等) と constraint 系 reason (required_violated 等) は本ファイルの対象外 — 前者はエンジン構造の発生源で installer descriptor 側の宣言軸が未実体化、後者は constraint installer (DR-047/055) 側で別途宣言が必要 (いずれも本 issue の射程外)。トップレベル区分名 (filters/types/accumulators/providers) は DESIGN §13.1 の registry 区分名 (呼ばれるフィールド名の単位) を踏襲し、descriptor の `role` (DR-107) とは独立 — `types` registry 住人は `role:\"type_parser\"` を持つ (registry 区分名と role は別軸)。accumulators 区分は DR-111 §3 で新設 (append/merge/kv_map の 3 住人 = 参照実装の registry 登録全員、increment は DR-077 の宿題決着で除外、override は概念モデル上の名前で registry 住人ではない)。completers 区分は住人が生じるまで作らない (DR-111 §6)。",
   "$schema-ref": "descriptor.schema.json",
 
   "filters": {
@@ -196,6 +196,47 @@
       },
       "reasons": ["not_a_bool"],
       "description": "bool を値空間の土台にする preset 型 (DR-099 §1、DR-076 の flag/count と同族の糖衣プリセット)。DR-099 §1「それ以外のすべて (long/short/env 席の宣言可否、multiple、filters、required 充足) は素の bool と完全に同一に振る舞う」の通り、parse 相 (String→bool) は builtin/bool_parser と完全に同一の経路を通り、canonical bool 語彙外の文字列 (例 `--use-color yesplz`) は通常の bool parse と同じく `not_a_bool` で reject する。reasons の帰属は排他的所有ではないグローバル語彙 (`reasons` フィールドの description 参照) なので、`not_a_bool` を builtin/bool_parser と共有 emit することは compositional exemption を必要としない — 素の bool と完全に同一という DR-099 §1 の主張自体が fallibility:reject を要求する。値の由来 (`terminal || (tty_cygwin && cygwin)` の fold、tty_provider が null なら宣言 default) は値源ラダー §11.4 の `default` 席の型依存解決規則であり、この fold 自体は failure mode を持たない — fallibility:reject は bool parse 相にのみ由来する。"
+    }
+  },
+
+  "accumulators": {
+    "append": {
+      "name": "append",
+      "role": "accumulator",
+      "construction": "static",
+      "io_type": { "input": { "array": "value" }, "output": { "array": "value" } },
+      "output_mode": "transform",
+      "fallibility": "total",
+      "invocation": {
+        "encoding": "object_args",
+        "parameters": [
+          { "name": "flatten", "type": "bool", "required": false, "default": false, "description": "発火値が配列なら要素を 1 段だけ展開して積むダイヤル (DR-105 §1、既定 false = 発火値を丸ごと 1 要素として積む)。append 専用 — 他 accumulator への宣言はキーの存在自体が definition-error kind=invalid-range (DR-105 §2 の存在ベース wrong-seat 判定、この parameters 宣言がその機械可読な根拠、DR-111 §4)。" }
+        ]
+      },
+      "reasons": [],
+      "description": "リスト累積 (DR-036、multiple プリセット append/set/map の accumulator)。畳み相 (collect) は累積 piece 値列を素の配列へ (DR-111 §2 — io_type の対象は畳み相のみ、cell 解決相は評価器内部プロトコルで宣言対象外)。fallibility:total は DR-105 §4 の勢力図 (構造畳み装置は total) の const 固定。repeat installer の cons 平坦化は flatten:true で表現 (DR-105 §3、旧独立 flatten accumulator は廃止)。"
+    },
+    "merge": {
+      "name": "merge",
+      "role": "accumulator",
+      "construction": "static",
+      "io_type": { "input": { "array": "value" }, "output": { "array": "value" } },
+      "output_mode": "transform",
+      "fallibility": "total",
+      "invocation": { "encoding": "object_args", "parameters": [] },
+      "reasons": [],
+      "description": "マージリスト累積 (DR-080、multiple プリセット merge の accumulator)。piece マーカー語彙 (remove `-x` / splice `@` / escape `+`) の認識と old 合成 (DR-080 §2/§3) は cell 解決相の関心で descriptor の io_type には現れない — 畳み相 (collect) は解決済み piece 値列を素の配列へ畳むのみ。separator 省略時は「発火 1 回 = piece 1 個」の縮退 (fixtures/multiple-parse/merge-no-separator.json、DR-036 表の default_separator \",\" は multiple registry プリセット \"merge\" 側の糖衣内容)。merge × ref は definition-error (DR-084 §3)。"
+    },
+    "kv_map": {
+      "name": "kv_map",
+      "role": "accumulator",
+      "construction": "static",
+      "io_type": { "input": { "array": "string" }, "output": { "map": "string" } },
+      "output_mode": "transform",
+      "fallibility": "total",
+      "invocation": { "encoding": "object_args", "parameters": [] },
+      "reasons": [],
+      "description": "piece `k=v` を最初の `=` で分割し Map へ畳む累積 (DR-091 §2)。重複キーは last-wins (DR-015 のあと勝ち規約)。`=` を含まない piece の reject は matcher 手前ゲート (accumulator 到達前の構造検査、kv resident の node 層) であり accumulator 自体の fallibility とは別軸 (DR-105 §4 が明記) — fallibility:total は畳み相に失敗経路が無いことを表す。input が {\"array\":\"string\"} なのは piece が常に k=v 形の生文字列であるため (separator 分割を必要としない「1 token = 1 piece」、DR-091 §2)。"
     }
   },
 

@@ -2,7 +2,7 @@
 """schema/builtin-descriptors.json の集合レベル整合性を検査する。
 
 schema/descriptor.schema.json は単一 descriptor と envelope (filters/types/
-providers の 3 区分マップ) の両方を検証できるが、JSON Schema の表現範囲外の
+accumulators/providers の 4 区分マップ) の両方を検証できるが、JSON Schema の表現範囲外の
 semantic 制約 (map key と descriptor.name の一致、output_mode:"preserve" の
 io_type.input == io_type.output 不変量) は本スクリプトが machine-check する
 (codex レビュー #4 A-M11/B-Maj6 が指摘した「envelope 自体を検証する形が無い」
@@ -46,12 +46,12 @@ def main() -> int:
         for e in errors:
             fail(f"envelope: {'/'.join(str(p) for p in e.path)}: {e.message}")
     else:
-        print("[OK]   envelope shape (filters/types/providers, role 別条件分岐)")
+        print("[OK]   envelope shape (filters/types/accumulators/providers, role 別条件分岐)")
 
     # 2. map key と descriptor.name の一致 (codex レビュー #4 A-M7(3)/A-M11/B-Maj6)
     key_mismatches = []
     seen_names: dict[str, str] = {}
-    for section in ("filters", "types", "providers"):
+    for section in ("filters", "types", "accumulators", "providers"):
         for key, desc in data.get(section, {}).items():
             name = desc.get("name")
             if name != key:
@@ -74,7 +74,7 @@ def main() -> int:
     # 3. output_mode:"preserve" ⇒ io_type.input == io_type.output (DR-107 §4 が
     #    Schema では表現しないと明記、semantic lint の検査対象)
     preserve_mismatches = []
-    for section in ("filters", "types", "providers"):
+    for section in ("filters", "types", "accumulators", "providers"):
         for key, desc in data.get(section, {}).items():
             if desc.get("output_mode") != "preserve":
                 continue
