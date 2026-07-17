@@ -1,6 +1,6 @@
 ---
 title: completer/accumulator の descriptor 宣言軸を確定する (DR-107 §7 の未確定 role)
-status: open
+status: resolved
 category: design
 created: 2026-07-16T16:33:42+09:00
 last_read: 2026-07-17T08:44:17+09:00
@@ -9,10 +9,10 @@ wip_entered:
 blocked_entered:
 pending_entered:
 discarded_entered:
-resolved_entered:
+resolved_entered: 2026-07-17T21:52:18+09:00
 discard_reason:
 pending_reason:
-close_reason:
+close_reason: ["dr/DR-111","dr/DR-107 §7 note","dr/DR-077 note","implemented"]
 blocked_by:
 origin: DR-109 波及 (統括起票)
 ---
@@ -29,9 +29,9 @@ DR-109 §5 (UX-Q5=a、kawaz「早めにやりたい」) で次サイクル先行
 
 ## 受け入れ条件
 
-- [ ] completer / accumulator の role 別宣言軸を DR-107 追記または新 DR で確定
-- [ ] schema/descriptor.schema.json の role 別 oneOf に反映
-- [ ] builtin の completer/accumulator 住人が居るなら schema/builtin-descriptors.json に収載
-- [ ] lint-descriptors が追随
+- [x] completer / accumulator の role 別宣言軸を DR-107 追記または新 DR で確定
+- [x] schema/descriptor.schema.json の role 別 oneOf に反映
+- [x] builtin の completer/accumulator 住人が居るなら schema/builtin-descriptors.json に収載
+- [x] lint-descriptors が追随
 
 関連: DR-107 §7、DR-095、DR-109 §5・骨子柱 3
