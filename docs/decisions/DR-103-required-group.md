@@ -41,6 +41,8 @@ member は **plain bool** (`type:"bool"` + `long:[":set:true"]`、DR-076 §2 の
 
 `required_group` は `exclusive_group`/`conflicts_with`/`requires` と同じ **constraint installer** の所有語彙とする (DR-055 §5 の canonical セット拡張)。constraint installer が各要素の group ラベルをスコープ横断で集約し、グループごとに 1 つの遅延述語を宣言する — 集約範囲・スコープ境界の扱いは `exclusive_group` (DESIGN §9.2/§15.9) と同一の規定を流用し、`required_group` 固有の追加規定は設けない。
 
+> **明確化 (SCB-Q1=a / SCB-Q2=a、kawaz 裁定 2026-07-17): group label の集約は宣言 scope 単位 (scope 局所)、遅延述語の評価は選択された scope のみ。** 本節原文の「スコープ横断で集約」は誤記で、正しくは **scope ごとに独立集約** (exclusive_group の実挙動と同一) — 異なる scope の同名 label は別々の group として評価され、merge されない (lexical scope の直感: 同名変数が scope ごとに別であるのと同型)。さらに、**未選択 (未入場) の command scope に宣言された遅延述語は評価に参加しない** — 裁定原理は「グローバルオプション以外、サブコマンドは完全に別コマンドと見るべき」(kawaz)。`git commit` の必須制約が `git log` の呼び出しに影響しないのと同じで、選ばれなかった subcommand の required / required_group がその実行の成否を左右してはならない。root scope は常に選択済みとして評価される。DR-051 §3 の unselected scope = absent (キー消失) と整合 — 存在しない結果部分木に値述語を課すことはできない。指定述語 (exclusive_group / conflicts_with / requires) は committed 前提のため未選択 scope では従来から vacuous に真であり、この明確化で観測が変わるのは値述語 (required / required_group) のみ。発見の経緯・実測マトリクスは issue `required-group-scope-participation`、fixture は `fixtures/constraints-parse/required-group-scope-boundary.json` で pin。
+
 ### 6. `groups` のような 1 級座席は新設しない
 
 kawaz 裁定により、definition/scope 側に「グループ全体の規則」を宣言する専用座席は作らない。DR-012 の核判断 (「制約は要素属性として書く、グループ全体のルールを別場所に書く設計はしない」) は本 DR でも維持される — `required_group` は exclusive_group と同じく**要素属性**であり、DR-012 が禁じた `groupRules` 型の別座席ではない。
