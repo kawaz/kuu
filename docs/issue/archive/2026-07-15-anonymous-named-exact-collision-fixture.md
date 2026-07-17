@@ -1,6 +1,6 @@
 ---
 title: named 要素と匿名 exact の同綴り衝突 dedup を pin する collision fixture
-status: open
+status: resolved
 category: task
 created: 2026-07-15T15:52:41+09:00
 last_read: 2026-07-17T13:25:33+09:00
@@ -9,10 +9,10 @@ wip_entered:
 blocked_entered:
 pending_entered:
 discarded_entered:
-resolved_entered:
+resolved_entered: 2026-07-17T13:43:58+09:00
 discard_reason:
 pending_reason:
-close_reason:
+close_reason: ["done: fixtures/complete/anonymous-named-exact-collision.json 追加 (spec 4118b1df) — named要素(commandトリガ)×匿名exactの6フィールド完全一致dedupと、long option(--boot, origin=boot)×匿名exact(origin=--boot)のorigin相違での2件併存を対でpin","done: 受け入れ条件4項目達成 — dedup case+対照caseを同一fixture内に配置、fixtures/complete/配置","done: conformance green (kuu.mbt 274 decoded/667 ran/0 mismatch, CI green a1ea813f)","done: kuu-cli pin bump 569/569 (86575f29)、ロックステップpush完了"]
 blocked_by:
 origin: codex レビュー #6 (2026-07-15) の Minor 指摘
 ---
