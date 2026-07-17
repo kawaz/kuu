@@ -1,0 +1,37 @@
+{
+  "why": "constraint 系属性は「要素属性」(DR-012) で positional にも同型に付与できることを固定する。DR-055 §2 の conflicts_with (対称ペア排他) を positional (宣言席) × option (target) の mixed で組んだ形 — engine 側の CConflicts 評価 (eval.mbt) は committed 判定を entity 名で行うだけで option/positional を区別しないため、conflicts_with の相互作用は席の組合せを問わず対称に働く (option 版 conflicts.json の対、宣言席が異なる形の pin)。option-only の decode 限定は仕様ではなく decode 実装上の穴だった (codex レビュー M-3)。positional の committed 判定は required positional のトークン消費で確定 — success 経路では必ず値を持つ (DR-051 §2c)。option b の未指定時は非 committed (present/absent は席固有の縮退規則) なので述語不成立、a のみ committed の対照ケースが作れる。",
+  "query": "parse",
+  "definition": {
+    "positionals": [
+      {"name": "a", "type": "string", "required": true, "conflicts_with": ["b"]}
+    ],
+    "options": [
+      {"name": "b", "type": "string", "long": true}
+    ]
+  },
+  "cases": [
+    {
+      "id": "positional-conflict-fires",
+      "why": "positional a (required、トークン消費で committed) と option --b (供給で committed) が両方発火 → 対称衝突で failure kind:constraint (DR-053)。宣言は positional a 側にのみ置いたが判定は『両方 committed』(DR-055 §2)。element=宣言元 a、reason=conflicts_with_violated (DR-066)、args_pos=3=args.length (遅延述語は全消費後評価、DR-047 §4)。",
+      "args": ["x", "--b", "y"],
+      "expect": {
+        "outcome": "failure",
+        "errors": [
+          {"element": "a", "args_pos": 3, "kind": "constraint", "reason": "conflicts_with_violated"}
+        ]
+      }
+    },
+    {
+      "id": "positional-single-side-ok",
+      "why": "positional a のみ発火 (option --b 未供給で非 committed) → 述語不成立、success。effects は a の cli set 1 件のみ。b は option で未発火 → 結果に現れない (absent の一般規則、DR-051 §1)。",
+      "args": ["x"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "a", "op": "set", "operand": "x", "source": "cli"}
+        ],
+        "result": {"a": "x"}
+      }
+    }
+  ]
+}

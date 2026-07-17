@@ -1,0 +1,37 @@
+{
+  "why": "exclusive_group を positional に付与できる (DR-012 / DR-055 / DR-047 指定述語)。positional (宣言席) × option (同 group 参加) の mixed で構成し、席の組合せを問わず group メンバー数 committed が最大 1 で許容されることを固定する — engine の CExclusive 評価 (eval.mbt) は group ラベル別に committed 数を数えるだけで option/positional を区別しない。error の element は group ラベル (DR-063 §3 の element/group 二形、requires/conflicts が宣言元要素名に紐付くのと対)。option 版 (exclusive.json) の対 = 宣言席が異なるだけで観測意味論は同一 (option-only 限定は decode 実装上の穴、codex レビュー M-3)。",
+  "query": "parse",
+  "definition": {
+    "positionals": [
+      {"name": "a", "type": "string", "required": true, "exclusive_group": ["g"]}
+    ],
+    "options": [
+      {"name": "b", "type": "string", "long": true, "exclusive_group": ["g"]}
+    ]
+  },
+  "cases": [
+    {
+      "id": "positional-exclusive-fires",
+      "why": "positional a と option --b の両 member 発火 → group `g` の committed 数 2 で違反。element=g (group ラベル)、reason=exclusive_group_violated、args_pos=3=args.length。conflicts 版 (conflicts-positional.json) の element=宣言元 と対照して、exclusive の element が group ラベル固有であることを positional 参加席でも固定する (DR-103 §2 / DR-063 §3)。",
+      "args": ["x", "--b", "y"],
+      "expect": {
+        "outcome": "failure",
+        "errors": [
+          {"element": "g", "args_pos": 3, "kind": "constraint", "reason": "exclusive_group_violated"}
+        ]
+      }
+    },
+    {
+      "id": "positional-exclusive-single-ok",
+      "why": "positional a のみ committed (option --b 未供給で非 committed) → group `g` の committed 数 1 で許容、success (最大 1 つは OK、DESIGN §9.2)。effects は a の cli set 1 件、result は b absent。",
+      "args": ["x"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "a", "op": "set", "operand": "x", "source": "cli"}
+        ],
+        "result": {"a": "x"}
+      }
+    }
+  ]
+}

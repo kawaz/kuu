@@ -1,0 +1,37 @@
+{
+  "why": "required_group を positional に付与できる (DR-012 / DR-055 / DR-103)。positional (宣言席) × option (同 group 参加) の mixed で『少なくとも 1 つの member が値充足しなければ違反』を固定 — engine の CRequiredGroup 評価 (eval.mbt) は member の candidate_declared を entity 名で判定するだけで option/positional を区別しない。positional a は optional (`optional: true`、DR-044 反復セル一様形の 0..1 糖衣) で 0 発火時に非 committed = candidate 未充足、option b も未供給時に非 committed。両 non-committed で 0 メンバー充足 → 違反。片方でも発火すれば group 充足 → success。option 版 required-group.json (solo-member-degenerates-to-required) は single-member group の縮退を pin していたが、本 fixture は positional 参加席 × 複数 member の group で「少なくとも 1 つ」の基本形を positional 側で固定する。option-only の decode 限定は仕様ではなく decode 実装上の穴だった (codex レビュー M-3)。element=group ラベル (DR-103 §2)。",
+  "query": "parse",
+  "definition": {
+    "positionals": [
+      {"name": "a", "type": "string", "optional": true, "required_group": ["g"]}
+    ],
+    "options": [
+      {"name": "b", "type": "string", "long": true, "required_group": ["g"]}
+    ]
+  },
+  "cases": [
+    {
+      "id": "positional-required-group-violates",
+      "why": "positional a も option --b もどちらも未供給 (positional a は optional なので argv 空でも parse 失敗にならず、0 発火 = non-committed になる、DR-051 §2b + reversal reading: 反復セルは 0 発火で空配列 [] present だが committed は「値供給の実体化」で判定される、DR-093 型委譲) → group `g` の充足 member 0 → 違反。element=g、reason=required_group_violated、args_pos=0=args.length。",
+      "args": [],
+      "expect": {
+        "outcome": "failure",
+        "errors": [
+          {"element": "g", "args_pos": 0, "kind": "constraint", "reason": "required_group_violated"}
+        ]
+      }
+    },
+    {
+      "id": "positional-required-group-satisfied-by-positional",
+      "why": "positional a のみ発火 (トークン x で消費、a committed) → group `g` の member a 充足 → success。b は未発火 → absent。positional 側発火だけで group を充足させられることを固定 (DR-103 §1 の「いずれか 1 つでも候補セル充足していれば OK」を positional 席で pin)。",
+      "args": ["x"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "a", "op": "set", "operand": "x", "source": "cli"}
+        ],
+        "result": {"a": ["x"]}
+      }
+    }
+  ]
+}
