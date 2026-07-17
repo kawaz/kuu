@@ -1,6 +1,6 @@
 ---
 title: 未選択 scope の値述語 (required/required_group) が評価に参加し定義が使用不能になる — scope 参加規則と group label 集約範囲の未規定
-status: open
+status: resolved
 category: design
 created: 2026-07-17T18:09:56+09:00
 last_read:
@@ -9,10 +9,10 @@ wip_entered:
 blocked_entered:
 pending_entered:
 discarded_entered:
-resolved_entered:
+resolved_entered: 2026-07-17T19:52:58+09:00
 discard_reason:
 pending_reason:
-close_reason:
+close_reason: ["dr/DR-103","implemented","done: SCB-Q1=a/Q2=a (kawaz 裁定 2026-07-17、原理「グローバルオプション以外、サブコマンドは完全に別コマンドと見るべき」) を DR-103 §5 明確化 note で確定 (spec cfc432ed)","done: kuu.mbt 2相修正 — engine 側 eval_all_constraints に scope_selected gate (5090933c、{} scope_marker 判定で「入場したが未発火」と「未入場」を区別)、resolve 相 apply_requires_filter_with_export にも同一 gate を共用適用 (cacf5a37 系→51bc5205 に含まれる)","done: fixtures/constraints-parse/required-group-scope-boundary.json 6 case pin (spec 7fc5c9be、root 常時選択・未選択 sibling 不参加・入場 scope 評価・独立充足の輪郭)","done: lockstep 完了 — kuu.mbt CI green 51bc5205 (280 decoded/686 ran/0 mismatch)、kuu-cli 588/588 baseline ratchet (bebf9021)"]
 blocked_by:
 origin: 自リポ TODO
 ---
@@ -55,10 +55,10 @@ SCB-Q1 (scope 参加規則) / SCB-Q2 (label 集約範囲) を docs/QUESTIONS.md 
 
 ## 受け入れ条件
 
-- [ ] SCB-Q1/Q2 の裁定が DR-103 (または DR-047) に明確化 note として反映される
-- [ ] kuu.mbt の eval/集約が裁定どおりに修正される
-- [ ] scope 境界 fixture (worker draft ベース + root×child 混在 case) が fixtures/constraints-parse/ に pin される
-- [ ] codex-review-dr102-dr103-postland の「scope 境界 fixture」項目がこの issue 経由で解消される
+- [x] SCB-Q1/Q2 の裁定が DR-103 (または DR-047) に明確化 note として反映される
+- [x] kuu.mbt の eval/集約が裁定どおりに修正される
+- [x] scope 境界 fixture (worker draft ベース + root×child 混在 case) が fixtures/constraints-parse/ に pin される
+- [x] codex-review-dr102-dr103-postland の「scope 境界 fixture」項目がこの issue 経由で解消される
 
 ## 関連
 
