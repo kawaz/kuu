@@ -1,0 +1,43 @@
+{
+  "why": "named 要素と匿名 exact の同綴り衝突 dedup を pin する (DR-104 §2 明確化 note (iii) × §3、issue anonymous-named-exact-collision-fixture、codex レビュー #6 Minor)。note (iii) は名前を持たない裸文字列由来の exact 候補の origin を spelling 自身へフォールバックさせる — この fallback により、name がその spelling と同綴りの named 要素 (command トリガは spelling = name) が同一 scope で同時可読だと、両者の候補は 6 フィールド (spelling/is_value/type/origin/term/meta、DR-104 §3) が完全一致して 1 件に畳まれる。これは『origin は生成元要素への一意参照』ではなく『名前の文字列』を同一性の粒度とする DR-104 §3 の意図した帰結 (DR-073 の実体 entity 水準への精密化を採らないと明記済み) だが、fixture で pin しないと実装が origin を一意参照と誤解する退行を検知できない。対照には long option を使う — long トリガの spelling は `--<name>` で origin (= name) と一致しないため、同綴りの匿名 exact (origin = spelling 自身) と並べると origin だけが異なる候補対になり、6 フィールドの他成分を固定したまま『origin 相違なら畳まれない』(DR-104 §3 明確化 note — spelling 単独の dedup 基準ではない) を分離検証できる。",
+  "query": "complete",
+  "definition": {
+    "commands": [
+      {"type": "command", "name": "same", "commands": [
+        {"type": "command", "name": "init"}
+      ], "positionals": [
+        {"exact": "init"}
+      ]},
+      {"type": "command", "name": "diff", "options": [
+        {"name": "boot", "type": "flag", "long": true}
+      ], "positionals": [
+        {"exact": "--boot"}
+      ]}
+    ]
+  },
+  "cases": [
+    {
+      "id": "named-anonymous-same-spelling-collapses",
+      "why": "command `same` 入場直後: 子 command トリガ (named 要素、name=\"init\" → origin \"init\"、spelling も \"init\") と匿名 positional exact (`{exact: \"init\"}` = 裸文字列 \"init\" の A.1 正規化形、origin は note (iii) fallback で spelling 自身 = \"init\") が同時可読。両候補は spelling=\"init\"/is_value=false/origin=\"init\"/term=word_end/meta 全 false の 6 フィールド完全一致となり 1 件に畳まれる (DR-104 §3)。匿名側の fallback 由来 origin と named 側の実名由来 origin は区別されない — origin は名前の文字列であって生成元要素への参照ではない。",
+      "args_before": ["same"],
+      "expect": {
+        "outcome": "complete",
+        "candidates": [
+          {"spelling": "init", "is_value": false, "origin": "init", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}}
+        ]
+      }
+    },
+    {
+      "id": "same-spelling-different-origin-survives",
+      "why": "command `diff` 入場直後: flag option の long トリガ (name=\"boot\" → spelling \"--boot\"、origin \"boot\") と匿名 positional exact (`{exact: \"--boot\"}`、origin は fallback で spelling 自身 = \"--boot\") が同時可読。spelling は同じ \"--boot\" でも origin (\"boot\" vs \"--boot\") が異なるため 6 フィールド一致せず 2 件のまま併存する。is_value/term/meta は両者同一なので、dedup 発火 (上 case) と非発火の境界が origin 一致だけにあることを対で固定する。",
+      "args_before": ["diff"],
+      "expect": {
+        "outcome": "complete",
+        "candidates": [
+          {"spelling": "--boot", "is_value": false, "origin": "boot", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}},
+          {"spelling": "--boot", "is_value": false, "origin": "--boot", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}}
+        ]
+      }
+    }
+  ]
+}
