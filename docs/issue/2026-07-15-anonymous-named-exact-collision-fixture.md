@@ -3,7 +3,7 @@ title: named 要素と匿名 exact の同綴り衝突 dedup を pin する colli
 status: open
 category: task
 created: 2026-07-15T15:52:41+09:00
-last_read:
+last_read: 2026-07-17T13:25:33+09:00
 open_entered: 2026-07-15T15:52:41+09:00
 wip_entered:
 blocked_entered:
