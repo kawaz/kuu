@@ -1,0 +1,99 @@
+{
+  "why": "constraint 系 (required_group / exclusive_group / conflicts_with) の scope 境界挙動を pin する — SCB-Q1=a (kawaz 裁定 2026-07-17、docs/QUESTIONS.md の SCB batch、DR-103 §5 明確化 note): **未選択 (= 当該実行で入場していない) command scope に宣言された遅延述語は評価に参加しない**。原理は「グローバルオプション以外、サブコマンドは完全に別コマンドと見るべき」で、root scope (path=[]) は常に選択済み。constraint installer は各要素の group ラベルを **その要素が属する scope 内で集約**し、遅延述語をその scope の完全解決経路の成立条件として立てる — サブコマンド (子 scope、DR-018/025/041 §4) は独立した背骨・独立した完全経路を持つため、同名 group ラベルであっても親 scope の member と子 scope の member は別集合として集約される (集約は scope 内、越境しない、SCB-Q2=a)。異なる子 scope 間の同名 group も互いに独立の 2 述語。本 fixture は required_group で 3 属性共通の scope 境界規範を pin (constraint 系の scope 集約規範は 3 属性共通、DR-103 §5)。member を positional/option 混在にせず単純化 (constraint 系の positional 対応は `required-group-positional.json` 等の別 fixture が pin)。\n\n**group ラベルを scope ごとに分ける** (root=gr / child-a=ga / child-b=gb) 理由: 同名 label にすると constraint 違反 (`{element:g, args_pos, path}`) が別 scope 由来でも `element` が同じになり、DR-066 §4 の CmdSat 境界 path prepend + `push_error` dedup で **root scope 発の違反も child scope 発の違反も 1 件に潰れて区別できなくなる**。異名にすると `element` で由来を追えるため、gate の効き (未選択 child の述語が本当に評価から外れているか) を errors の element 顔ぶれで観測できる。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {"name": "r1", "type": "bool", "long": [":set:true"], "required_group": ["gr"]}
+    ],
+    "commands": [
+      {
+        "type": "command",
+        "name": "child-a",
+        "options": [
+          {"name": "a1", "type": "bool", "long": [":set:true"], "required_group": ["ga"]},
+          {"name": "a2", "type": "bool", "long": [":set:true"], "required_group": ["ga"]}
+        ]
+      },
+      {
+        "type": "command",
+        "name": "child-b",
+        "options": [
+          {"name": "b1", "type": "bool", "long": [":set:true"], "required_group": ["gb"]}
+        ]
+      }
+    ]
+  },
+  "cases": [
+    {
+      "id": "root-only-r1-success-children-unselected",
+      "why": "`--r1` のみ (子コマンド未入場): root scope の `gr` は r1 発火で充足。child-a scope の `ga` と child-b scope の `gb` はいずれも未選択 (SCB-Q1=a) — 評価に参加しないため違反ゼロで success。**もし選択 gate が resolve 相にも掛かっていなければ**、child-a/child-b の各グループが member 未発火で違反として付随し (path=[child-a]/[child-b] で `ga`/`gb`)、Success が Failure に落ちる。これが SCB gate の resolve 相適用の直接観測点 (bug 修正の逆側 pin)。",
+      "args": ["--r1"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "r1", "op": "set", "operand": true, "source": "cli"}
+        ],
+        "result": {"r1": true}
+      }
+    },
+    {
+      "id": "root-empty-only-root-gr-violates",
+      "why": "`[]` (何も入場せず、CmdSat 境界を一度も跨がない): root scope の `gr` は r1 未発火で違反 (path=[] のまま)。child-a/child-b は未選択なので評価に参加しない (SCB-Q1=a、`root-only-r1-success-children-unselected` と対をなす) — errors は root scope の `gr` 1 件のみ。args_pos=0=args.length (遅延述語は全消費後評価、DR-047 §4)。CmdSat 境界を跨がないため KTop 発 Held の path prepend が発生せず、element/path の元来の姿がそのまま観測できる。",
+      "args": [],
+      "expect": {
+        "outcome": "failure",
+        "errors": [
+          {"element": "gr", "args_pos": 0, "kind": "constraint", "reason": "required_group_violated", "path": []}
+        ]
+      }
+    },
+    {
+      "id": "child-a-enter-no-member-fires-root-and-child-a-both-violate",
+      "why": "`child-a` (child-a 入場、a1/a2 いずれも未発火): child-a scope の `ga` は member 未発火で違反、root scope の `gr` も r1 未発火で違反 (SCB-Q1=a の root 常時選択規範により root は常に評価される)。child-b は未選択なので評価に参加しない (SCB-Q1=a)。**KTop 発の Held は CmdSat 境界を跨ぐたびに `nest_path` で path prepend される (DR-066 §4、cont.mbt/eval.mbt の nest_branches コメント)** — root scope の `gr` 違反 (元は path=[]) も child-a scope の `ga` 違反 (元は path=[]) も、child-a の CmdSat を通って path=[child-a] にスタンプされる。異名 (`gr` vs `ga`) なので `push_error` dedup では潰れず 2 件が残り、element で由来を区別できる。args_pos=1=args.length。",
+      "args": ["child-a"],
+      "expect": {
+        "outcome": "failure",
+        "errors": [
+          {"element": "gr", "args_pos": 1, "kind": "constraint", "reason": "required_group_violated", "path": ["child-a"]},
+          {"element": "ga", "args_pos": 1, "kind": "constraint", "reason": "required_group_violated", "path": ["child-a"]}
+        ]
+      }
+    },
+    {
+      "id": "child-a-satisfied-by-a1-root-still-violates",
+      "why": "`child-a --a1`: child-a scope の `ga` は a1 発火で充足。root scope の `gr` は r1 未発火で違反 (SCB-Q1=a の root 常時選択規範) → 1 件残る。child-b は未選択で評価に参加しない。root の違反は KTop 発 Held で CmdSat 境界を跨いで path=[child-a] にスタンプされる (DR-066 §4)。element は `gr` (root scope 由来の group label) — path=[child-a] だが element の顔ぶれで「root 由来 (`gr`) の違反が 1 件」と読める。args_pos=2=args.length。a2 は plain bool で未発火・default なしのため absent (DR-051 §1)。",
+      "args": ["child-a", "--a1"],
+      "expect": {
+        "outcome": "failure",
+        "errors": [
+          {"element": "gr", "args_pos": 2, "kind": "constraint", "reason": "required_group_violated", "path": ["child-a"]}
+        ]
+      }
+    },
+    {
+      "id": "root-r1-child-a-a1-both-satisfied",
+      "why": "`--r1 child-a --a1`: root scope の `gr` は r1 発火で充足、child-a scope の `ga` も a1 発火で充足 → success。両 scope が独立して充足する完全経路。child-b は未選択で評価に参加しない (SCB-Q1=a)。結果は child-a 名の下に子 scope 分をネスト (DR-025)。",
+      "args": ["--r1", "child-a", "--a1"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "r1", "op": "set", "operand": true, "source": "cli"},
+          {"entity": "a1", "op": "set", "operand": true, "source": "cli"}
+        ],
+        "result": {"r1": true, "child-a": {"a1": true}}
+      }
+    },
+    {
+      "id": "child-b-enter-no-member-fires-independent-gb",
+      "why": "`child-b` (child-b 入場、b1 未発火): child-b scope の `gb` は member 未発火で違反、root scope の `gr` も r1 未発火で違反。child-a は未選択で評価に参加しない (SCB-Q1=a) — 同一入力で child-a scope の `ga` が **一切現れない**ことが、SCB gate が sibling child にも効いていることの pin。同名 group ラベルにしなかったおかげで (`gr` / `ga` / `gb` の 3 系統)、error の element 顔ぶれから「どの scope 由来の違反か」を直接読み取れる。CmdSat 境界 prepend で両方とも path=[child-b] にスタンプされる。args_pos=1=args.length。",
+      "args": ["child-b"],
+      "expect": {
+        "outcome": "failure",
+        "errors": [
+          {"element": "gr", "args_pos": 1, "kind": "constraint", "reason": "required_group_violated", "path": ["child-b"]},
+          {"element": "gb", "args_pos": 1, "kind": "constraint", "reason": "required_group_violated", "path": ["child-b"]}
+        ]
+      }
+    }
+  ]
+}
