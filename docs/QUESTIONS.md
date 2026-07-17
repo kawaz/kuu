@@ -6,54 +6,55 @@
 > チャットでは「VF-Q 待ち」のようにラベルだけで参照する。回答はラベル + 選択肢記号 (例「VF-b で」) だけで通じる。
 > 参照パスは本リポ (spec) 相対。kuu.mbt 側は「kuu.mbt の <path>」と表記する。
 
-> 詳細の正本: `docs/findings/2026-07-17-help-mechanism-design-plan.md` (統括反映後のパス)。
-> 前提: 「help installer は installer ではなく help query + レンダラ層に分解する」が本バッチの土台 (同 findings §2)。この分解自体に異議があれば HELP-Q0 として自由記述で。
+> HELP-Q バッチ改訂 2 巡目 (kawaz 応答 2026-07-17 を受けて説明を書き直し)。裁定済み: HELP-Q2=a (query:"help" conformance 化)、HELP-Q7=a (v1 発行条件に help プロファイル追加 = 5 プロファイル green)。HELP-Q6 は前提誤りで取り下げ (下記 HELP-Q6R 参照)。HELP-Q3 は大規模リサーチ実施中 (メジャー CLI パーサ 10 系統の help 語彙横断調査) — 結果が出てから選択肢を再提示する。詳細の正本: `docs/findings/2026-07-17-help-mechanism-design-plan.md`。
 
-## HELP-Q1: 失敗時アクション属性の正式フィールド名
+## HELP-Q1R: 失敗時アクション属性の正式フィールド名 (説明を書き直し)
 
-DR-048 §3 / DESIGN §13.9 が未予約のまま、参照実装 (kuu.mbt `src/kuu/wire_decode.mbt:95`) は `fail_action: bool` で先行。
+### 背景説明 (この属性は何か)
 
-- **a. `fail_action` を追認** (推し: 実装先行の名と意味が一致し簡潔、追加コストゼロ)
+kuu は「`--help` が argv に居たら即 exit してヘルプを出す」という **early-exit を持たない** (DR-048)。パースは常に最後まで走る。では `prog --hlep typo-arg` のようにパースが**失敗**した実行で `--help` も書かれていた場合にどうするか — DR-048 の答えが「失敗時アクション」: **パース失敗時に、この要素が argv 上で発火していたら、エラーと一緒に『この要素が発火していた』ことを報告に載せる** (報告の `fired_action` フィールド)。アプリはそれを見て「エラーではなくヘルプを出す」を選べる。つまり「失敗した時に自動でヘルプを出すか」をアプリが判断するための**素材フラグ**で、kuu 自体は何も出力しない。
+
+`type: "help"` プリセット (DESIGN §14.1) はこの属性を暗黙で同梱する。属性単体でも任意の要素 (例: `--version`) に付けられる — 「失敗時でも version は出したい」を opt-in する形。この**属性の wire フィールド名が未予約**のまま、参照実装が内部名 `fail_action: bool` で先行実装しているので、正式名を決めたい。
+
+- **a. `fail_action` を追認** (推し: 実装先行の名と意味が一致し簡潔)
 - b. `failure_action` (省略しない綴り)
 - c. 別名 (自由記述)
 
-## HELP-Q2: help model の露出経路 — query:"help" の conformance 化
+## HELP-Q4R: 長文説明の分離を v1 に入れるか (機能説明を書き直し)
 
-- **a. query タグ `"help"` を新設し `fixtures/help/` で pin、kuu-cli に `kuu help` として写す** (推し: complete (DR-104) と同じ型で、多言語実装間の help 素材同一性を機械検証できる + 極小バンドルモード (DR-109 §6) の help 供給経路になる)
-- b. help model は spec の散文定義のみ (fixture 化しない、実装の自由度優先)
+### 背景説明 (この機能は何か)
 
-## HELP-Q3: `help_group` (オプションのグループ見出し指定) を v1 に入れるか
+`-h` / `--help` を**ユーザがどう定義するか**の話ではない (それは既にユーザの自由)。**説明文の素材を 1 本持つか 2 本持つか**の話。多くのパーサは説明文の座席を 2 本持つ: 短い一行説明 (一覧表示に使う) と長い詳細説明 (単独表示に使う)。例: clap は `about` (短) と `long_about` (長) を持ち、`-h` では about、`--help` では long_about を表示する慣習。kuu は現在、表示メタとして `help` (string) 1 本のみ (DR-046 §3)。
 
-clap の `help_heading` / picocli の section 相当。純表示メタで追加互換。
+- **a. v1 では `help` 1 本のまま** (推し: 2 本目は追加互換なので実需が出てから。短/長の出し分けをしたいレンダラは当面同一素材で判断)
+- b. `help_long` を v1 から導入 (clap/picocli 等の慣習に合わせ最初から 2 本)
+- 注: HELP-Q3 のリサーチ (10 系統横断) で各パーサの実態を確認中 — 結果次第で b の根拠が強まる可能性あり。リサーチ後の再提示に含めて良ければこの Q は保留のままでも OK
 
-- **a. v1 では入れない** (推し: 追加互換なので実需が出てから。v1 語彙を最小に保つ)
-- b. v1 から予約だけする (フィールド名 `help_group: string` を DESIGN §1.4 に載せ、挙動は後続)
-- c. v1 で挙動まで入れる
+## HELP-Q5R: usage 行の素材をどこまで help model に含めるか (説明を書き直し)
 
-## HELP-Q4: 長文説明の分離 (`help_long` — clap の about/long_about 相当) を v1 に入れるか
+### 背景説明 (何の話か)
 
-- **a. v1 では入れない** (推し: HELP-Q3 と同根拠。`help` 1 本で始めて `--help` と `-h` の出し分けはレンダラが同一素材から判断する余地もある)
-- b. v1 から予約 / 導入
+help 画面の 1 行目にある `Usage: prog [OPTIONS] <FILE>... [-- <ARGS>...]` という**書式行**を、help query の出力 (help model JSON) からどうやって組み立てられるようにするか。3 つの選択肢は「model にどこまで加工済みの素材を入れるか」の粒度の違い:
 
-## HELP-Q5: usage 素材の粒度
+- **a. 要約素材のみ** (推し): model には「positional の進行列 (名前・repeat・optional)」+「オプションがあるか」「サブコマンドがあるか」「`--` 区切りがあるか」の bool 群だけ入れる。上の例なら `[OPTIONS]` は has_options=true から、`<FILE>...` は positionals 配列から、レンダラが組み立てる。kuu の定義は or/seq/repeat の任意ネストを持てるため、**どんな複雑な定義でも正確な 1 行に変換する規則**を spec が決めるのは沼 (docopt が逆方向 = usage 文字列→定義 で嵌った問題の裏返し)。複雑な定義の usage をどこまで丸めるかはレンダラの裁量に逃す
+- b. usage tree: 定義の構造 (or/seq/repeat のネスト) を丸ごと model に写す。レンダラは忠実な usage を組めるが、それは wire definition を直接読むのと同じ情報 — model の意義 (定義を読み直さず一覧が組める要約) が薄れる
+- c. usage 素材を model に入れない: レンダラが definition を直接読んで全部組む。model は一覧 (options/commands) だけ担当
 
-- **a. 要約素材のみ (positional 進行の要約 + has_options / has_subcommands / has_dd)** (推し: 任意ネスト構造の一行化は docopt の逆問題で沼。忠実な usage を組みたいレンダラは wire definition を直接読めば足りる — model は「定義を読み直さず一覧が組める要約」と割り切る)
-- b. usage tree (定義構造の写し) を model に含める
-- c. usage を model に含めない (レンダラが definition から全部組む)
+## HELP-Q6R: プログラム名の取り方 (前提を修正して再提示)
 
-## HELP-Q6: プログラム名 (`prog`) の座席
+旧 HELP-Q6 は「定義にプログラム名が存在しない」を前提にしたが、**kawaz 指摘で前提誤りと判明**: トップを command タイプ (`{"type": "command", "name": "myapp", ...}`) にすればトップの command name がプログラム名そのもので、サブコマンドも祖先も同じ規則で辿れる。fixture がトップ command を書いていないのは試験の関心外だからで、通常のアプリ定義はトップ command が基本形。
 
-args が $0 非包含 (DESIGN §0.1) のため定義にプログラム名が存在しない。
+この整理だと **help model のプログラム名は「選択 scope までの command name 経路」から自然に得られ、新設フィールドは不要** — help query の `path` 引数と合わせて `["myapp", "remote", "add"]` の連鎖が usage 行の `prog remote add` 素材になる。確認したいのは 1 点だけ:
 
-- **a. help model に含めない。レンダラ / kuu-cli 入力の関心** (推し: $0 非包含の既定と一貫。busybox 型は argv0 issue (`docs/issue/2026-07-14-argv0-preset-type.md`) の領分)
-- b. definition ルートに `prog_name` 表示メタを新設する
+- **a. help model に `command_path` (トップからの command name 列) を含める** (推し: レンダラが usage 行を組むのに毎回 definition を遡らなくて済む。トップが command でない定義 (fixture 的な素の {options,...}) では空列)
+- b. model に含めず、レンダラが definition + path から自分で辿る
 
-## HELP-Q7: v1 発行条件 (V1-Q1 = 4 プロファイル green) に help プロファイルを加えるか
+## HELP-Q8R: 失敗時アクション語彙の担当装置 (説明を書き直し)
 
-- a. 加える (5 プロファイル green が v1 条件)
-- **b. 加えない (help は v1 後の最初の増分)** (推し: v1 blocker を増やさない。ただし kawaz の発題「ヘルプは引数パースの次に必要」の温度感次第で a が妥当 — 温度感の裁定そのもの)
+### 背景説明 (何の話か)
 
-## HELP-Q8: 失敗時アクションの installer 区分
+typo サジェスト (「もしかして --port?」) は**別の既存機構** (`tried_triggers`、DR-053 §4 — 失敗位置で試された綴り一覧を報告に載せ、近接マッチ計算はレンダラの関心) で、この Q とは無関係。この Q は HELP-Q1R の属性 (`fail_action`) を **installer 体系のどの装置が所有するか**という内部整理の話。kuu では全 wire 語彙に「所有 installer」(その語彙を解釈して下流形に変換する唯一の担当装置、DR-042/056) を決める規約があり、`fail_action` の担当が未定。
 
-- **a. `failure_action` installer を canonical セット (DR-042 表) に追加** (推し: constraint installer と同型の「能力宣言型」で、1 語彙 1 所有者 (不変則③) と descriptor (`owns: ["fail_action"]`) が素直に立つ)
-- b. 入口系 installer (long/short/command) の共通規則にする (installer を増やさないが、1 語彙を複数装置が解釈する形になり不変則③との整合説明が毎回必要)
+- **a. 専用の failure_action installer を canonical セット (DR-042 表) に追加** (推し: constraint installer と同型の「能力宣言型」装置。1 語彙 1 所有者の規約が素直に立ち、descriptor 宣言 (owns: ["fail_action"]) も書ける)
+- b. 入口系 installer (long/short/command) の共通規則として吸収 (装置は増えないが、1 つの語彙を複数装置が解釈する形になり規約との整合説明が毎回必要)
+- どちらでも観測挙動は同じ (内部アーキテクチャの整理)。判断を統括に任せる場合はその旨で OK
