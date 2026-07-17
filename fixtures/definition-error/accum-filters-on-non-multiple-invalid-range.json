@@ -9,7 +9,7 @@
   "cases": [
     {
       "id": "accum-filters-on-non-multiple-element-is-invalid-range",
-      "why": "`port` は multiple 宣言を持たないスカラー要素 (number) だが、multiple 専用の `accum_filters` を宣言している。accum_filters が要求する ARRAY filter registry (Acc→Acc) は multiple 宣言のある要素にしか意味を持たず、DR-102 §1 の対応表に反する構造不一致として定義時点で invalid-range になる。対の `final-filters-on-multiple-invalid-range.json` (multiple 要素への final_filters 宣言) と合わせて排他制約の両方向を固定する。",
+      "why": "`port` は accum 適格 (multiple/repeat/separator いずれも宣言していない、`is_accum_elem` = false、DR-102 §1) を持たない非 accum 要素 (number スカラー) だが、accum 要素専用の `accum_filters` を宣言している。accum_filters が要求する ARRAY filter registry (Acc→Acc) は accum 要素 (累積配列を持つ経路) にしか意味を持たず、DR-102 §1 の対応表に反する構造不一致として定義時点で invalid-range になる。対の `final-filters-on-multiple-invalid-range.json` (accum 要素への非 accum 属性 final_filters 宣言) と合わせて排他制約の両方向を固定する。",
       "expect": {
         "outcome": "definition-error",
         "errors": [{"element": "port", "kind": "invalid-range"}]

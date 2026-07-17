@@ -1,0 +1,25 @@
+{
+  "why": "accum 要素の適格性は `multiple` 宣言だけでなく `is_accum_elem` 判定 (multiple/repeat/separator のいずれか、DR-102 §1) で決まる — `repeat` のみ宣言 (multiple 宣言なし) の要素にも `accum_filters` が意味を持ち成功経路を成す。対の `fixtures/definition-error/final-filters-on-repeat-only-invalid-range.json` (同じ repeat-only 要素への **非 accum 属性** `final_filters` 宣言は invalid-range) が排他違反側の境界を pin していたが、本 fixture は同じ repeat-only 要素に **正しい方の属性** `accum_filters` を宣言した **成功側** を pin する。accum_filters は ARRAY filter registry (Acc→Acc) の住人であり、accumulator (repeat の既定 append、DR-034) が畳んだ累積配列全体に一括変換を適用する — `unique` (DR-095 §3、重複除去) を宣言すれば重複を含む入力に対し結果が unique 済み配列になる。multiple object が無いため collector 席自体が存在せず (DR-034/DR-036、multiple 内属性)、accumulator → accum_filters で最終形が決まる。effects 列は消費順の cli 発火をそのまま保持する (accum_filters は累積後変換であって効果列を畳まない、CONFORMANCE §2)。",
+  "query": "parse",
+  "definition": {
+    "positionals": [
+      {"name": "tags", "type": "string", "repeat": {"min": 0, "max": 5}, "accum_filters": ["unique"]}
+    ]
+  },
+  "cases": [
+    {
+      "id": "repeat-only-accum-filters-unique-collapses-duplicates",
+      "why": "重複含む 3 発火 [a,b,a] を repeat の append accumulator が [a,b,a] に累積、accum_filters `unique` が重複除去して [a,b] を最終結果とする。effects は 3 個の cli set が消費順で全て残る (accum_filters は最終値変換であって効果列自体は畳まない、多重発火の `multiple-parse/accum-filters-before-collector.json::duplicate-fires-collapse-to-scalar-via-accum-filters-then-collector` と同型の観測)。result は unique 済み配列 (collector なしなので配列のまま、`unwrap_single` のような形変換は起きない)。",
+      "args": ["a", "b", "a"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "tags", "op": "set", "operand": "a", "source": "cli"},
+          {"entity": "tags", "op": "set", "operand": "b", "source": "cli"},
+          {"entity": "tags", "op": "set", "operand": "a", "source": "cli"}
+        ],
+        "result": {"tags": ["a", "b"]}
+      }
+    }
+  ]
+}

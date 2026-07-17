@@ -9,7 +9,7 @@
   "cases": [
     {
       "id": "final-filters-on-multiple-element-is-invalid-range",
-      "why": "`tags` は multiple 宣言 (`{\"accumulator\":\"append\"}`) を持つ要素だが、非 multiple 専用の `final_filters` を宣言している。final_filters が要求する scalar filter registry (T→T、最終値ガード) は multiple 宣言のある要素には意味を持たず (最終値でなく累積配列が確定するため)、invalid-range になる。対の `accum-filters-on-non-multiple-invalid-range.json` と合わせて排他制約の両方向を固定する。",
+      "why": "`tags` は multiple 宣言 (`{\"accumulator\":\"append\"}`) を持つ accum 要素 (`is_accum_elem` = true、DR-102 §1) だが、非 accum 要素専用の `final_filters` を宣言している。final_filters が要求する scalar filter registry (T→T、最終値ガード) は accum 要素には意味を持たず (最終値でなく累積配列が確定するため)、invalid-range になる。対の `accum-filters-on-non-multiple-invalid-range.json` (非 accum 要素への accum 属性 accum_filters 宣言) と合わせて排他制約の両方向を固定する。",
       "expect": {
         "outcome": "definition-error",
         "errors": [{"element": "tags", "kind": "invalid-range"}]
