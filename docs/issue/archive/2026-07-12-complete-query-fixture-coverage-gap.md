@@ -1,6 +1,6 @@
 ---
 title: complete クエリの fixture がゼロ件 — 補完挙動のカバレッジが kuu.mbt の wbtest のみ
-status: wip
+status: resolved
 category: task
 created: 2026-07-12T18:40:35+09:00
 last_read: 2026-07-17T13:54:55+09:00
@@ -9,10 +9,10 @@ wip_entered: 2026-07-13T14:57:45+09:00
 blocked_entered:
 pending_entered:
 discarded_entered:
-resolved_entered:
+resolved_entered: 2026-07-17T13:56:33+09:00
 discard_reason:
 pending_reason:
-close_reason:
+close_reason: ["dr/DR-104","implemented","done:CONFORMANCE.md §4 新設・fixtures/complete/ 26件・dr097-pending-mode-split.json で pin・kuu.mbt conformance green(92b9cee5)"]
 blocked_by:
 origin: 自リポ TODO
 ---
@@ -46,7 +46,7 @@ parse/complete モードで Pending の扱いを分ける実装になった (ト
 
 ## 受け入れ条件
 
-- [ ] `docs/CONFORMANCE.md` の complete op 節と既存 7 op 表の整合を確認
-- [ ] `fixtures/complete/` 系統を新設する方針を裁定 (対象輪郭の洗い出し含む)
-- [ ] DR-097 の Pending 扱い分岐 (parse/complete モード差) を含む fixture を最低 1 件作成
-- [ ] kuu.mbt が新設 fixture を pass することを確認
+- [x] `docs/CONFORMANCE.md` の complete op 節と既存 7 op 表の整合を確認 — §4 新設済み、query 表・比較規約 (candidates の multiset 比較、meta 必須検証 = COMP-Q2、completer opt-in = COMP-Q3) 整備済み (DR-104)
+- [x] `fixtures/complete/` 系統を新設する方針を裁定 (対象輪郭の洗い出し含む) — 新設済み、現在 26 fixture (方針裁定は DR-104 + COMP-Q バッチ)
+- [x] DR-097 の Pending 扱い分岐 (parse/complete モード差) を含む fixture を最低 1 件作成 — `fixtures/complete/dr097-pending-mode-split.json` の case `pending-value-slot-viable-in-complete-mode-only` で pin 済み
+- [x] kuu.mbt が新設 fixture を pass することを確認 — conformance green (decoded=274 ran_cases=667 mismatches=0、CI green 92b9cee5)
