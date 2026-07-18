@@ -172,7 +172,13 @@ DR-109 柱 4 の「semantic sections」を具体化する。**全フィールド
 - **`values` で指定可能カテゴリを制限できる** — 既存の value-enum (DR-055 §5.3) がそのまま効く
 - **`--help-command` のような引数なしオプションに help_category への固定文字列充足を担わせられる** — 既存の variant DSL `[":set:command"]` (固定値 set) がそのまま効く。「カテゴリ別ヘルプの専用入口」が語彙追加ゼロで組める
 
-統括の指摘した設計点 (DR で確定): (1) **help セルへの link 先の同定方法** — type:help_category の preset lowering が「どの help セルに true を送るか」の規約 (同一 scope の type:help 要素への自動 link か、明示参照か)。type:help 要素が無い定義で help_category だけ書いた場合の扱い (definition-error か、category セル単独で成立か) も同じ規約で決まる。(2) **複数 category 指定** (`--help net --help io` 等) — string 全体セルの last-wins が既定だが、multiple 宣言との合成を許すか。
+統括の指摘した設計点 (DR で確定): (1) **help セルへの link 先の同定方法** — 裁定済み (下記)。(2) **複数 category 指定** (`--help net --help io` 等) — string 全体セルの last-wins が既定だが、multiple 宣言との合成を許すか。
+
+> **設計点 (1) の裁定 (kawaz 2026-07-18): help の値セル実体は help 系要素のどれでもなく、help 機構が管理する内部セル — 各 help 系要素 (type:help / help_all / help_category) はそこへ link される、という認識モデルで良い。** 帰結:
+> - **help_category のみ存在 (type:help 露出なし) でも help の bool 充足自体は成立する** (内部セルに立つ) — type:help の露出は前提条件ではない
+> - ただし **type:help の露出が無い定義での help_category は無意味** (ユーザが help を引く入口が無い) — **definition-error にはせず受け入れ、lint warn 対象**。help_all も同様
+> - **例外: help 不在かつ name (export_key) 露出ありの help_all は、それ自体が help 値セルの露出を担って良い** (help_all が唯一の help 系露出なら、それが「help を引く入口 + 結果面の露出」を兼ねる)
+> - 「内部セル + link」モデルは全体単一セル (どのサブコマンド scope で発火しても同じセル) の実現機構としても一貫する — global + link の合成 (§Q8 の突合) を「help 機構管理の内部セルへの合流」と読み替えた形。DR では内部セルの result 露出規約 (export_key との関係、report にどう現れるか) を確定する
 
 ## 5.5 4 巡目裁定の反映 (kawaz 2026-07-18)
 
