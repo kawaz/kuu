@@ -167,7 +167,8 @@ DR-109 柱 4 の「semantic sections」を具体化する。**全フィールド
 - **Q4=a**: 説明文は `help` (短、既存) + `help_long` (長、新設) の 2 本立て。相互フォールバック (未設定側はもう一方を使う = clap 型)。model には両方載せ、-h/--help の出し分けはレンダラ。セクション拡張席 (epilog/examples 等) の扱いは help DR 起草時に語彙案を提示
 - **Q5=b**: help query の既定出力は選択 scope の 1 層分 (kawaz 案 = 既定)、加えて **depth 引数の opt-in で全層 (再帰) 出力も可能にする** — 「要求自体は現実に存在する」(man 生成等の一括消費者)。既定 1 層 + opt-in 全層の 2 段
 - **Q6=a**: help model に `command_path` (トップ command name + path の連鎖) を含める。構築者は help query の実装
-- **Q8=a**: type:help = bool セル + 全体単一セル構想 + `help_onfail` で設計を詰める (詳細は §5.4 と DR で)。version の従属論点は HELP-Q9、範囲出し分け (--help-full / --help [category]) は HELP-Q10 として裁定中
+- **Q8=a**: type:help = bool セル + 全体単一セル構想 + `help_onfail` で設計を詰める (詳細は §5.4 と DR で)。範囲出し分け (--help-full / --help [category]) は HELP-Q10 として裁定中
+- **Q9 裁定 (kawaz 2026-07-18)**: (1) **version への反応は成功・失敗ともアプリ責務** — 「flag を見て kuu のヘルプレンダラを実行する定型コードをアプリが書く」形 (help も同型: kuu が出力まで肩代わりするのではなく、model/レンダラを部品として提供しアプリが接続する)。(2) **失敗時発火の基盤は汎用属性** (旧 fail_action、DR-048 §3 の「help/version を特別扱いしない」を維持 — 正式名は help DR で確定、version にも任意の要素にも付く)。(3) **`help_onfail` は type:help プリセットの糖衣として採用** — ユーザに分かりやすく、**type config (preset の属性プリセット展開、DR-076 の枠) で汎用属性へ全展開できるのが優位点**。type:help の lowering が help_onfail (糖衣) を汎用の失敗時アクション属性に落とす、という 2 層 (糖衣 = ユーザ語彙 / 汎用属性 = 機構語彙) で確定
 
 ## 6. 露出経路と conformance
 
