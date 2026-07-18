@@ -1,0 +1,29 @@
+{
+  "why": "help_after の連鎖解決の規範 (DR-112 §6、DESIGN §14.6 の段 2)。連鎖 (A after B, B after C) は循環でない限りそのまま解決する — C の後ろに B、B の後ろに A。単純解決可能であり definition-error にしない (循環のみ kind=circular-ref、fixtures/help/def-errors-cycle.json が pin)。",
+  "query": "help",
+  "definition": {
+    "options": [
+      {"name": "a", "type": "flag", "long": true, "help_after": "b", "help": "after b"},
+      {"name": "b", "type": "flag", "long": true, "help_after": "c", "help": "after c"},
+      {"name": "c", "type": "flag", "long": true, "help": "chain root"},
+      {"name": "x", "type": "flag", "long": true, "help": "bystander"}
+    ]
+  },
+  "cases": [
+    {
+      "id": "chain-resolves-transitively",
+      "why": "a after b、b after c の連鎖。段 1 は宣言順 [a, b, c, x]。段 2 で after 持ち (a, b) を取り出して target の直後へ: b は c の直後、a は b の直後 (連鎖の推移的解決) → [c, b, a, x]。x は移動に巻き込まれず、c の後続として b, a が割り込んだ後の相対位置 (末尾) に残る。結果順のみが規範 — 実装の解決アルゴリズム (トポロジカル / 反復) は自由 (DR-112 §6 は規範を結果で定める)。",
+      "expect": {
+        "outcome": "help",
+        "command_path": [],
+        "usage": {"has_options": true},
+        "options": [
+          {"spellings": ["--c"], "help": "chain root"},
+          {"spellings": ["--b"], "help": "after c"},
+          {"spellings": ["--a"], "help": "after b"},
+          {"spellings": ["--x"], "help": "bystander"}
+        ]
+      }
+    }
+  ]
+}

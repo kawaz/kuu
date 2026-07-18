@@ -1,0 +1,23 @@
+{
+  "why": "help_after の循環は definition-error kind=circular-ref (DR-112 §6、DESIGN §14.6)。連鎖 (fixtures/help/after-chain.json) は解決可能だが、循環は「target の直後」という配置要求が充足不能な論理矛盾なので定義時に reject する — 不在 target (lint warn + fallback で動作継続) との対比で、循環だけがエラー側。検査は help_meta installer の parse_definition 寄与 (DR-112 §9 — 純所有 installer の lowering 寄与はゼロだが定義時検査は持つ)。",
+  "query": "definition_error",
+  "definition": {
+    "options": [
+      {"name": "a", "type": "flag", "long": true, "help_after": "b"},
+      {"name": "b", "type": "flag", "long": true, "help_after": "a"}
+    ]
+  },
+  "cases": [
+    {
+      "id": "mutual-after-is-circular-ref",
+      "why": "a after b かつ b after a の相互参照。どちらを先に置いても「target の直後」が両立しない循環なので kind=circular-ref (参照の循環の既存分類、DR-054 §4 の kind 語彙を help_after に適用)。エラーは循環に参加した要素に帰属する — errors は集合比較 (CONFORMANCE §3) で a, b 両方が列挙されることを pin (循環の全参加者を報告する全列挙原則、DR-054 §4)。args は書かない (定義の静的検査であり実行しない、DR-082 §1)。",
+      "expect": {
+        "outcome": "definition-error",
+        "errors": [
+          {"element": "a", "kind": "circular-ref"},
+          {"element": "b", "kind": "circular-ref"}
+        ]
+      }
+    }
+  ]
+}

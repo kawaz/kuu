@@ -1,0 +1,29 @@
+{
+  "why": "同一 target への複数 help_after の規範 (DR-112 §6、DESIGN §14.6 の段 2)。規範は結果で定める: 同一 target への複数 after は**定義順**で target の後ろに並ぶ (B も C も after: A なら結果は A, B, C — B, C の定義順)。連鎖 (A after B, B after C) は 1 ファイル 1 定義の制約から fixtures/help/after-chain.json が別途 pin する。",
+  "query": "help",
+  "definition": {
+    "options": [
+      {"name": "a", "type": "flag", "long": true, "help": "target"},
+      {"name": "x", "type": "flag", "long": true, "help": "unrelated tail"},
+      {"name": "b", "type": "flag", "long": true, "help_after": "a", "help": "first after"},
+      {"name": "c", "type": "flag", "long": true, "help_after": "a", "help": "second after"}
+    ]
+  },
+  "cases": [
+    {
+      "id": "multiple-after-same-target-definition-order",
+      "why": "b と c が共に after: a。段 1 は宣言順のまま [a, x, b, c] (order 明示なし = 実効 order が宣言 index の恒等ソート)。段 2 で b, c を取り出し a の直後へ**定義順で**並べる → [a, b, c, x]。b が c より先なのは定義順 (b の宣言 index 2 < c の 3) が規範だから (DR-112 §6)。x は after 移動の影響を受けず段 1 の相対位置のまま末尾に残る。",
+      "expect": {
+        "outcome": "help",
+        "command_path": [],
+        "usage": {"has_options": true},
+        "options": [
+          {"spellings": ["--a"], "help": "target"},
+          {"spellings": ["--b"], "help": "first after"},
+          {"spellings": ["--c"], "help": "second after"},
+          {"spellings": ["--x"], "help": "unrelated tail"}
+        ]
+      }
+    }
+  ]
+}

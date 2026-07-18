@@ -1,0 +1,23 @@
+{
+  "why": "同じグループ名に対する**別設定**の重複宣言は definition-error kind=invalid-range (DR-112 §5、DESIGN §14.6)。グループ宣言エントリはグループの表示メタ (title / description) の正本であり、食い違う 2 つの正本は構成として不成立 (DR-082 §2)。同一設定の再宣言は冪等で合法 (DR-112 §5) だが、冪等時の model 射影 (グループ宣言エントリが列に 1 個に畳まれるか 2 個残るか) は DR-112 未規定のため本初期セットでは pin しない。",
+  "query": "definition_error",
+  "definition": {
+    "options": [
+      {"help_group_name": "net", "help_group_title": "Network options"},
+      {"name": "port", "type": "number", "long": true, "help_group_name": "net"},
+      {"help_group_name": "net", "help_group_title": "Networking"}
+    ]
+  },
+  "cases": [
+    {
+      "id": "conflicting-group-redeclaration-invalid-range",
+      "why": "グループ net のグループ宣言エントリが 2 回、title が \"Network options\" と \"Networking\" で食い違う。どちらが正本か決められない別設定の重複なので kind=invalid-range (DR-112 §5)。port の所属参照 (help_group_name のみ、グループ宣言エントリではない) は正当な宣言でエラーに参加しない。element はグループ宣言エントリが name を持たないため省略 (特定要素に紐付かないスコープレベルの躓きの流儀、CONFORMANCE §2 の element 省略と同型)。args は書かない (静的検査、DR-082 §1)。",
+      "expect": {
+        "outcome": "definition-error",
+        "errors": [
+          {"kind": "invalid-range"}
+        ]
+      }
+    }
+  ]
+}

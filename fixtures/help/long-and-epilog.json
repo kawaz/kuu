@@ -1,0 +1,34 @@
+{
+  "why": "help_long / help_epilog 素材の model 射影 (DR-112 §3/§4、DESIGN §14.6)。help (短) と help_long (長) は 2 本立てで、model は未設定側を省略してそのまま載せる — 相互フォールバック (clap 型「未設定側はもう一方を使う」) は model に持ち込まない (レンダラの推奨 policy、素材と policy の分離)。help_epilog は選択スコープ要素のものが epilog として射影される。",
+  "query": "help",
+  "definition": {
+    "name": "tool",
+    "help": "short description",
+    "help_long": "Long description with full detail.\nMultiple lines are just string content.",
+    "help_epilog": "Report bugs to <bugs@example.com>.",
+    "options": [
+      {"name": "short-only", "type": "flag", "long": true, "help": "has help only"},
+      {"name": "long-only", "type": "flag", "long": true, "help_long": "has help_long only"},
+      {"name": "both", "type": "flag", "long": true, "help": "short text", "help_long": "long text"}
+    ]
+  },
+  "cases": [
+    {
+      "id": "no-fallback-materials-as-declared",
+      "why": "スコープの description = help、description_long = help_long、epilog = help_epilog がそれぞれ独立の素材として載る。entry レベル: short-only は help のみ (help_long 省略 = absent — help_long へ help を複製しない)、long-only は help_long のみ (help を help_long から埋めない)、both は両方。フォールバックの不在が仕様 — 「-h では help、--help では help_long を出し、無ければもう一方」の出し分け合成はレンダラの判断であり、model は宣言された素材だけを運ぶ (DR-112 §3)。",
+      "expect": {
+        "outcome": "help",
+        "command_path": ["tool"],
+        "usage": {"has_options": true},
+        "description": "short description",
+        "description_long": "Long description with full detail.\nMultiple lines are just string content.",
+        "epilog": "Report bugs to <bugs@example.com>.",
+        "options": [
+          {"spellings": ["--short-only"], "help": "has help only"},
+          {"spellings": ["--long-only"], "help_long": "has help_long only"},
+          {"spellings": ["--both"], "help": "short text", "help_long": "long text"}
+        ]
+      }
+    }
+  ]
+}

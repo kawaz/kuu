@@ -1,0 +1,40 @@
+{
+  "why": "help query のルート基本形 (DR-112 §2/§3、DESIGN §15.15)。help query は宣言層のみを読む純静的クエリ (パース実行なし・args 不要) で、出力の help model は文言・整形を含まない素材の構造。本 fixture は最小の実用定義 (値オプション + help 入口 + positional) から model の各セクション (command_path / usage / description / options / positionals / help_entry) が導出されることを pin する。素材のみの原則: default / env / value_name は定義に書かれた値がそのまま entry の注記素材として載る。options entries は宣言順 (order 語彙なし = 実効 order が宣言 index のみの安定ソート = 恒等) を保存し、順序込みで比較される (CONFORMANCE §5)。",
+  "query": "help",
+  "definition": {
+    "name": "prog",
+    "help": "Serve files over HTTP",
+    "options": [
+      {"name": "port", "type": "number", "long": true, "short": "p", "env": "PORT", "default": 8080, "value_name": "PORT", "help": "listen port"},
+      {"name": "help", "type": "help", "long": true, "help": "show help"}
+    ],
+    "positionals": [
+      {"name": "file", "type": "string", "value_name": "FILE", "help": "input file"}
+    ]
+  },
+  "cases": [
+    {
+      "id": "root-scope-basic",
+      "why": "path 省略 = ルートスコープの 1 層分 (depth 既定 \"scope\")。command_path はルート定義要素の name を先頭にした列 = [\"prog\"] (プログラム名 $0 は args 非包含で定義に存在しないため、model は定義の name だけを運ぶ — usage 行の実行名はレンダラ / 呼び出し側の供給)。usage は構造素材のみ: has_options = options に入口があるので true、positionals は value_name の進行要約 (repeat / optional 無宣言なので省略 = default)。description はルート要素の help 文字列。options entries は宣言順 [port, help]: port は spellings に long 主入口 --port と short -p を列挙し、定義に書かれた value_name / help / default / env がそのまま素材として載る。help 要素 (type:\"help\" プリセット) も通常の entry として載る (spellings は --help のみ、値スロットを持たないため value_name 等の値系素材は無い)。positionals は定義順で value_name / help を運ぶ。help_entry は定義中の help 入口の綴り \"--help\" (失敗時の誘導行素材と同じ座席、DR-053 §4 と同語)。hidden / deprecated / required / multiple は未宣言 = default (false) なので省略 (構造等価の省略規約、CONFORMANCE §3)。",
+      "expect": {
+        "outcome": "help",
+        "command_path": ["prog"],
+        "usage": {
+          "has_options": true,
+          "positionals": [
+            {"value_name": "FILE"}
+          ]
+        },
+        "description": "Serve files over HTTP",
+        "options": [
+          {"spellings": ["--port", "-p"], "value_name": "PORT", "help": "listen port", "default": 8080, "env": "PORT"},
+          {"spellings": ["--help"], "help": "show help"}
+        ],
+        "positionals": [
+          {"value_name": "FILE", "help": "input file"}
+        ],
+        "help_entry": "--help"
+      }
+    }
+  ]
+}
