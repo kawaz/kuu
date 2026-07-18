@@ -176,8 +176,7 @@ DR-109 柱 4 の「semantic sections」を具体化する。**全フィールド
 
 > **設計点 (1) の裁定 (kawaz 2026-07-18): help の値セル実体は help 系要素のどれでもなく、help 機構が管理する内部セル — 各 help 系要素 (type:help / help_all / help_category) はそこへ link される、という認識モデルで良い。** 帰結:
 > - **help_category のみ存在 (type:help 露出なし) でも help の bool 充足自体は成立する** (内部セルに立つ) — type:help の露出は前提条件ではない
-> - ただし **type:help の露出が無い定義での help_category は無意味** (ユーザが help を引く入口が無い) — **definition-error にはせず受け入れ、lint warn 対象**。help_all も同様
-> - **例外: help 不在かつ name (export_key) 露出ありの help_all は、それ自体が help 値セルの露出を担って良い** (help_all が唯一の help 系露出なら、それが「help を引く入口 + 結果面の露出」を兼ねる)
+> - ただし **type:help の露出が無い定義での help_category / help_all は原則 lint warn 対象** (definition-error にはせず受け入れる)。**warn の判定は name (export_key) 露出の有無で決まる**: help 不在でも **name 露出があれば warn 不要** — help_all も help_category も、それ自体が「help を引く入口 + 結果面の露出」を兼ねられる (help_category 単独なら、アプリ制作者は result の help_category が空かどうかで分岐すれば良いだけ)。warn になるのは「help 系要素はあるが、どれも結果面に露出していない = 発火をアプリが観測する手段が無い」構成のみ
 > - 「内部セル + link」モデルは全体単一セル (どのサブコマンド scope で発火しても同じセル) の実現機構としても一貫する — global + link の合成 (§Q8 の突合) を「help 機構管理の内部セルへの合流」と読み替えた形。DR では内部セルの result 露出規約 (export_key との関係、report にどう現れるか) を確定する
 
 ## 5.5 4 巡目裁定の反映 (kawaz 2026-07-18)
