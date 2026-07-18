@@ -37,6 +37,8 @@
 
 「候補経路で selected」の精密定義 (§2 の dead end 込み) は、issue `2026-07-03-failure-action-selected-scope` でトラッキングし、slice PoC 第 6 弾の観測マトリクス (journal `2026-07-03-slice-poc-5.md` 第 6 弾の節) を経て確定した。
 
+> **更新 (DR-112、2026-07-18): §2 の誘導行の JSON 構造は DR-053 §4 (`help_entry`) で、§3 が未確定とした属性のフィールド名・installer 区分は DR-112 §8 で確定した。** フィールド名は `on_failure` (汎用属性、bool)、installer 区分は専用 installer `on_failure` (constraint と同型の能力宣言型、canonical セット追加)。type:"help" 系プリセットは糖衣 `help_on_failure` (既定 true) を同梱し、type config で `on_failure` へ全展開する。DESIGN §13.9 の未予約は解消。
+
 ## 採用しなかった案
 
 ### 真の early exit (走査中断)

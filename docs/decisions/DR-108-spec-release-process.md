@@ -38,6 +38,8 @@ v1.0.0 未満 (ドラフト期、DR-068 §1) の release は GitHub の **prerel
 
 この整理により、DR-068 §1 の無限定な文言と DR-069 の opt-in 規定は矛盾でなく**「実装への要求レベル」と「spec 発行条件」の階層分離**として両立する。DR-068 本文・DR-069 本文それぞれに本 DR への明確化 note を追記済み (本文の「決定」自体は書き換えない、ドラフト期の判断経緯として維持)。
 
+> **更新 (DR-112 §11、HELP-Q7=a、2026-07-18): help query の conformance 化により準拠プロファイルは 5 つ (parse-core / lowering / definition-error / completion / help) になり、v1.0.0 発行条件は「5 プロファイル全ての fixture が指定参照実装 (`kuu.mbt`) で green」に改訂される。** 本節の「4 プロファイル」は 5 と読み替える。実装の準拠名乗り最小条件 (parse-core green) は不変。
+
 **green の規範と証跡** (M-4): 「green」が意味する内容 (全 file decode・全 case 実行・skipped=0・mismatches=0・対象 spec commit SHA 固定) は CONFORMANCE.md §0.1 に規定する。v1.0.0 発行時は、この規範を満たしたことを示す machine-readable な証跡ファイル (`docs/releases/v1.0.0-evidence.md` — spec commit SHA / kuu.mbt commit SHA / プロファイル別 fixture 件数・skipped・mismatches) を `docs/runbooks/v1-release.md` の手順で作成し、`release.yml` の `validate-bundle` job が `VERSION >= 1.0.0` の場合にその存在を検証する (中身の意味検証までは行わない軽量 gate — 存在しなければ release を止める)。「main branch protection や protected environment の承認」のような重い gate は本サイクルでは採らない (下記「採用しなかった案」参照)。
 
 ### 4. 参照実装の対応宣言の形

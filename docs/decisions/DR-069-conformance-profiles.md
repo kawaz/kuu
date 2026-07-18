@@ -17,6 +17,8 @@
 
 parse-core は全実装必須の最小プロファイル (lowering を内包する — wire が宣言層 (DR-063) なので parse には lowering 実装が要る。lowering プロファイルは lowered 断面の緩比較까지検証する強い準拠)。他は opt-in。「kuu 準拠」を名乗る最小条件は parse-core green。
 
+> **更新 (DR-112 §11、2026-07-18): `help` プロファイル (query: "help"、help query の再現、fixtures/help/) が opt-in として追加され、プロファイルは 5 つになった。** spec の v1.0.0 発行条件も 5 プロファイル全 green に改訂 (DR-108 §3 の note 参照)。実装の準拠名乗り最小条件 (parse-core green) は不変。
+
 ### 2. descriptor の実装要求レベル
 
 conformance の成立に必須なのは **owns (unknown-vocab 判定) と reasons (fixture の reason 検証)** の 2 軸のみ。**observes と configurable factory の一般適用 (types 以外) は canonical 実装の装備**であり、準拠実装には要求しない (lint / diagnose / L10n 素材は品質の関心で準拠の関心ではない)。仕様としては DR-061 の全軸が確定済みのまま — 分けたのは実装への要求レベルであって仕様の地位ではない。
