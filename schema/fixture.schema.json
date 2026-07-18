@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "kuu conformance fixture",
-  "description": "docs/CONFORMANCE.md §1-4 の写像 (JSON Schema ドラフト、DR-068 §3 によりドラフト期は $id を与えない)。fixture ファイル 1 個の形を規定する。query タグで分岐する 4 形 (DR-065 §1 / DR-070 / DR-082 / DR-104): parse (本書 §2)・lower (DR-070)・definition_error (DR-082)・complete (DR-104、CONFORMANCE §4)。why フィールドの必須性・reason/sources 等の optional 検証フィールドは各 case レベルで表現し、比較規約自体 (構造等価・集合比較等、CONFORMANCE §3) は Schema の表現力の外 (runner の関心)。",
+  "description": "docs/CONFORMANCE.md §1-5 の写像 (JSON Schema ドラフト、DR-068 §3 によりドラフト期は $id を与えない)。fixture ファイル 1 個の形を規定する。query タグで分岐する 5 形 (DR-065 §1 / DR-070 / DR-082 / DR-104 / DR-112): parse (本書 §2)・lower (DR-070)・definition_error (DR-082)・complete (DR-104、CONFORMANCE §4)・help (DR-112、CONFORMANCE §5)。why フィールドの必須性・reason/sources 等の optional 検証フィールドは各 case レベルで表現し、比較規約自体 (構造等価・集合比較等、CONFORMANCE §3) は Schema の表現力の外 (runner の関心)。",
   "$ref": "#/$defs/fixture",
 
   "$defs": {
@@ -16,8 +16,8 @@
         },
         "query": {
           "type": "string",
-          "enum": ["parse", "lower", "definition_error", "complete"],
-          "description": "fixture の種別 (CONFORMANCE §1)。parse = 本 Schema §parseCase、lower = DR-070 (installers 列挙 + lowered 断面)、definition_error = DR-082 (静的検査、args なし)、complete = DR-104 (補完クエリ、args_before/args_after 入力 + candidates 期待値、CONFORMANCE §4)。"
+          "enum": ["parse", "lower", "definition_error", "complete", "help"],
+          "description": "fixture の種別 (CONFORMANCE §1)。parse = 本 Schema §parseCase、lower = DR-070 (installers 列挙 + lowered 断面)、definition_error = DR-082 (静的検査、args なし)、complete = DR-104 (補完クエリ、args_before/args_after 入力 + candidates 期待値、CONFORMANCE §4)、help = DR-112 (help クエリ、path/depth/category 入力 + help model 期待値、CONFORMANCE §5、パース実行なし)。"
         },
         "definition": {
           "$ref": "wire.schema.json#/$defs/node",
@@ -31,7 +31,7 @@
         "cases": {
           "type": "array",
           "items": { "$ref": "#/$defs/case" },
-          "description": "`query: \"parse\"` / `\"definition_error\"` / `\"complete\"` で使う case 列 (CONFORMANCE §1、DR-072)。`query: \"lower\"` は cases を持たない (単一トップレベル expect、DR-070 §1)。ここでの `$ref` は 3 種の case 形に共通する緩い形 — `query` 別の厳密な形 (必須/禁止フィールド) は下記 allOf の `then` 節が `parseCase`/`definitionErrorCase`/`completeCase` で追加拘束する (codex レビュー #3 B-M2 の反映)。"
+          "description": "`query: \"parse\"` / `\"definition_error\"` / `\"complete\"` / `\"help\"` で使う case 列 (CONFORMANCE §1、DR-072)。`query: \"lower\"` は cases を持たない (単一トップレベル expect、DR-070 §1)。ここでの `$ref` は各 case 形に共通する緩い形 — `query` 別の厳密な形 (必須/禁止フィールド) は下記 allOf の `then` 節が `parseCase`/`definitionErrorCase`/`completeCase`/`helpCase` で追加拘束する (codex レビュー #3 B-M2 の反映)。"
         },
         "expect": {
           "description": "`query: \"lower\"` 専用のトップレベル expect (DR-070 §2: lowered 断面、DR-063 §3 の面構造 `{greedy, positionals, entities, templates, matcher, ...}`)。面構造の詳細な語彙は DR-063 §3 が正本 — 本 Schema は構文層のみを緩く object として受ける (wire.schema.json 同様、語彙層の検査は runner の関心)。",
@@ -66,6 +66,14 @@
           "then": {
             "required": ["cases"],
             "properties": { "cases": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/completeCase" } } }
+          }
+        },
+        {
+          "description": "query=\"help\": cases は最低 1 件、各 case は helpCase 形 (path/depth/category は全て optional、expect は helpExpect 固定、args 等の実行入力を一切禁止 — パース実行なしの純静的クエリ、CONFORMANCE §5/DR-112 §11)。",
+          "if": { "properties": { "query": { "const": "help" } } },
+          "then": {
+            "required": ["cases"],
+            "properties": { "cases": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/helpCase" } } }
           }
         }
       ],
@@ -132,9 +140,10 @@
           "oneOf": [
             { "$ref": "#/$defs/parseExpect" },
             { "$ref": "#/$defs/definitionErrorExpect" },
-            { "$ref": "#/$defs/completeExpect" }
+            { "$ref": "#/$defs/completeExpect" },
+            { "$ref": "#/$defs/helpModelExpect" }
           ],
-          "description": "outcome union (CONFORMANCE §2)、definition-error 形 (DR-082 §1)、または complete 形 (DR-104、CONFORMANCE §4)。"
+          "description": "outcome union (CONFORMANCE §2)、definition-error 形 (DR-082 §1)、complete 形 (DR-104、CONFORMANCE §4)、または help model 形 (DR-112、CONFORMANCE §5 — 不在 path/category は definition-error 形を使う)。"
         }
       },
       "required": ["id", "why", "expect"],
@@ -182,6 +191,85 @@
       },
       "required": ["id", "why", "args_before", "expect"],
       "additionalProperties": false
+    },
+
+    "helpCase": {
+      "description": "`query: \"help\"` 専用の厳密な case 形 (DR-112 §11、CONFORMANCE §5)。path/depth/category は全て optional (省略 = ルート / \"scope\" / 絞りなし)。パース実行なしの純静的クエリのため args・args_before・値源供給フィールド (env/tty/config/config_files) はいずれも禁止。expect は helpExpect 固定 (不在 path/category の case は definition-error 形)。",
+      "type": "object",
+      "properties": {
+        "id": { "$ref": "#/$defs/case/properties/id" },
+        "why": { "$ref": "#/$defs/case/properties/why" },
+        "path": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "選択スコープのサブコマンド名列 (DESIGN §15.15)。省略 = ルート (`[]` と同値)。存在しない path は definition-error kind=absent-ref を expect する。"
+        },
+        "depth": {
+          "type": "string",
+          "enum": ["scope", "all"],
+          "description": "省略 = \"scope\" (選択スコープの 1 層分、サブコマンドは一覧 entry のみ)。\"all\" = 全層再帰 (各 command entry に scope フィールドの再帰埋め込み、DR-112 §2/§3)。"
+        },
+        "category": {
+          "type": "string",
+          "description": "指定グループの entries に絞る (DR-112 §2)。存在しないグループ名は definition-error kind=absent-ref を expect する。"
+        },
+        "expect": { "$ref": "#/$defs/helpExpect" }
+      },
+      "required": ["id", "why", "expect"],
+      "additionalProperties": false
+    },
+
+    "helpExpect": {
+      "description": "`query: \"help\"` の expect (DR-112 §11、CONFORMANCE §5)。正常系は help model 形、不在 path/category は definition-error 形 (DR-082 転用の流儀)。",
+      "oneOf": [
+        { "$ref": "#/$defs/helpModelExpect" },
+        { "$ref": "#/$defs/definitionErrorExpect" }
+      ]
+    },
+
+    "helpModelExpect": {
+      "type": "object",
+      "description": "help model の期待値 (DR-112 §3、DESIGN §15.15 の直訳)。全フィールドが素材 — 文言・整形・並べ替えを含まない。options/commands/positionals は順序込み比較 (並べ替え適用後の定義順保存が規範)、他は構造等価 (省略 = default と等価、CONFORMANCE §3/§5)。語彙の詳細規定 (entry 内フィールド・group entry 形・depth:\"all\" の scope 再帰) は DESIGN §15.15 が正本 — 本 Schema は構文層のみを緩く受ける (wire.schema.json と同じ流儀)。",
+      "properties": {
+        "outcome": { "const": "help" },
+        "command_path": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "ルート定義要素の name (あれば) + path の連鎖 (DR-112 §3)。プログラム名 ($0) は定義に存在しないため含まれない (レンダラ / 呼び出し側の供給)。"
+        },
+        "usage": {
+          "type": "object",
+          "description": "構造素材のみ (positional 進行の要約 + has_options/has_subcommands/has_dd)。一行文字列は含めない (DR-112 §3)。",
+          "properties": {
+            "has_options": { "type": "boolean" },
+            "positionals": { "type": "array", "items": { "type": "object" } },
+            "has_subcommands": { "type": "boolean" },
+            "has_dd": { "type": "boolean" }
+          },
+          "additionalProperties": true
+        },
+        "description": { "type": "string", "description": "選択スコープ要素の help 文字列 (未設定なら省略 — フォールバックは model に持ち込まない、DR-112 §3)。" },
+        "description_long": { "type": "string", "description": "同 help_long 文字列。" },
+        "epilog": { "type": "string", "description": "同 help_epilog 文字列。" },
+        "commands": {
+          "type": "array",
+          "items": { "type": "object" },
+          "description": "サブコマンド一覧 entries (順序込み比較)。各 entry は {name, aliases?, help?, help_long?, hidden, deprecated} + depth:\"all\" 時の scope 再帰 (DR-112 §3)。"
+        },
+        "options": {
+          "type": "array",
+          "items": { "type": "object" },
+          "description": "オプション一覧 entries (順序込み比較)。通常 entry は {spellings, alias_spellings?, value_name?, display_name?, help?, help_long?, help_group_name?, default?, env?, required?, multiple?, hidden, deprecated}、グループ宣言エントリは {group: {name, title?, description?}} (DR-112 §3/§5)。"
+        },
+        "positionals": {
+          "type": "array",
+          "items": { "type": "object" },
+          "description": "positional 一覧 entries (定義順 = 消費構造順で固定、順序込み比較)。"
+        },
+        "help_entry": { "type": "string", "description": "定義の help 入口の綴り (DR-053 §4 と同じ素材)。" }
+      },
+      "required": ["outcome"],
+      "additionalProperties": true
     },
 
     "parseExpect": {
