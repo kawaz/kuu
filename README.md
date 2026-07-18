@@ -1,27 +1,45 @@
 # kuu
 
-言語非依存な CLI 引数定義の仕様と conformance suite。
+> English | [日本語](./README-ja.md)
 
-kuu の core は特定言語のバイナリではなく、**仕様 + API 契約 + conformance fixture (言語非依存のテストデータ集合)** である (spec-as-core)。各言語の kuu はこの core を実装するネイティブ実装であり、[kuu.mbt](https://github.com/kawaz/kuu.mbt) はその参照実装。
+A language-agnostic **specification** for CLI argument definitions, with a conformance suite.
 
-## 構成
+The core of kuu is not a binary in any particular language — it is the **spec + API contract + conformance fixtures** (a language-neutral test-data corpus). Each language gets a native implementation of this core; [kuu.mbt](https://github.com/kawaz/kuu.mbt) is the reference implementation, and [kuu-cli](https://github.com/kawaz/kuu-cli) is a standalone CLI frontend.
 
-| パス | 内容 |
+## What it looks like
+
+A CLI is defined as a JSON document (the *wire form*), and any conforming implementation parses argv against it with identical observable behavior:
+
+```json
+{
+  "options": [
+    {"name": "port", "type": "number", "long": true, "short": "p", "env": "PORT", "default": 8080},
+    {"name": "verbose", "type": "flag", "long": true}
+  ],
+  "commands": [
+    {"type": "command", "name": "serve", "positionals": [{"name": "dir", "type": "string"}]}
+  ]
+}
+```
+
+Definitions cover long/short options, subcommands, positionals, repetition, value sources (CLI / env / config files / tty), constraints, aliases, completion and help — all specified declaratively, all pinned by conformance fixtures.
+
+## Layout
+
+| Path | Contents |
 |---|---|
-| [docs/VISION.md](docs/VISION.md) | kuu 全体構想 (レイヤ構造・kuu-cli・外周構想) — 何を目指すか |
-| [ROADMAP.md](ROADMAP.md) | 全体構成方針と実装フェーズ — どの順で作るか |
-| [docs/DESIGN.md](docs/DESIGN.md) | 現役仕様の単一ソース (AST・パース意味論・API 契約) |
-| [docs/LOWERING.md](docs/LOWERING.md) | 糖衣展開 (lowering) のカノニカルカタログ |
-| [docs/decisions/](docs/decisions/INDEX.md) | Design Records — 全設計判断の意図と不採用理由の記録 |
-| docs/findings/ · docs/journal/ · docs/runbooks/ · docs/issue/ | 調査・経緯・手順・課題の記録 |
+| [docs/DESIGN.md](docs/DESIGN.md) | The single source of truth for the current spec (AST, parsing semantics, API contract) |
+| [docs/LOWERING.md](docs/LOWERING.md) | Canonical catalog of syntactic-sugar expansions |
+| [docs/CONFORMANCE.md](docs/CONFORMANCE.md) | Conformance fixture format and comparison rules |
+| [fixtures/](fixtures/) | The conformance fixture corpus |
+| [schema/](schema/) | JSON Schemas for the wire form and descriptors |
+| [docs/decisions/](docs/decisions/INDEX.md) | Design Records — the rationale (and rejected alternatives) behind every design decision |
 
-## DR 番号空間の注意
+Most in-repo documentation is currently written in Japanese while the spec is under heavy iteration; the spec itself is defined by the documents and fixtures above.
 
-本リポの DR (3 桁、DR-001〜) は参照実装 [kuu.mbt](https://github.com/kawaz/kuu.mbt) 側の DR (4 桁) と**別系統**。相互参照時は `[external: kuu.mbt DR-NNNN]` 記法で系統を明示する。
+## Status
 
-## ステータス
-
-垂直スライス実装 (kuu.mbt の slice 枝、167 テスト) との共設計を経て仕様はほぼ確定。conformance fixture の設計 ([ROADMAP](ROADMAP.md) フェーズ 1-2) が次の作業。全域で破壊的変更を許容する段階 ([DESIGN §0.1](docs/DESIGN.md))。
+Draft. The spec is largely settled through co-design with the reference implementation, and breaking changes are still allowed across the board. Version 1.0.0 will be published once all conformance profiles are green on the reference implementation.
 
 ## License
 
