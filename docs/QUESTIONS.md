@@ -6,51 +6,39 @@
 > チャットでは「VF-Q 待ち」のようにラベルだけで参照する。回答はラベル + 選択肢記号 (例「VF-b で」) だけで通じる。
 > 参照パスは本リポ (spec) 相対。kuu.mbt 側は「kuu.mbt の <path>」と表記する。
 
-> HELP-Q バッチ改訂 3 巡目 (kawaz 応答 2026-07-18 を受けて再改訂)。裁定済み: HELP-Q2=a、HELP-Q7=a、**HELP-Q3=kawaz 案** (グループ先頭宣言スタイル — 詳細は findings の設計プランに追記済み、正式化は help DR で)。**v1 方針の明確化を受領**: v1 = kuu-core の canonical (多言語展開と UX のベース) であり「後で追加互換で」の積み残しをしない — 必要なものは今全部検討して地に足のついた仕様にする。Q1R (fail_action 名) は Q8RR の kawaz 構想 (`help_onfail`) が答えを含むため統合。詳細の正本: `docs/findings/2026-07-17-help-mechanism-design-plan.md` + `docs/findings/2026-07-17-cli-help-vocab-survey.md`。
+> HELP-Q バッチ 4 巡目。裁定済み: Q2=a、Q7=a、Q3=グループ先頭宣言スタイル + order/help_after 併存 (意味論込み)、**Q4=a** (help + help_long の 2 本立て + 相互フォールバック)、**Q5=b** (既定は選択 scope の 1 層分、depth opt-in で全層も可)、**Q6=a** (command_path を model に含める)、**Q8=a** (type:help 全体単一セル + help_onfail 構想で設計を詰める)。全て findings の設計プランへ反映済み、正式化は help DR (P1)。残る Q は version の従属論点 (Q9) と help 範囲出し分けの新論点 (Q10)。詳細の正本: `docs/findings/2026-07-17-help-mechanism-design-plan.md` + `docs/findings/2026-07-17-cli-help-vocab-survey.md`。
 
-## HELP-Q4RR: 説明文の座席設計 (v1 採否でなく完備形を問う)
+## HELP-Q9: version の失敗時表示の扱い (Q8RR 従属、kawaz の説明要求への回答込み)
 
-前巡の「v1 に入れるか」は撤回。完備主義で設計する: 説明文の座席をどう完備させるか。リサーチ実測 (12 系統): 短/長 2 本立てが多数派 (clap about/long_about・thor desc/long_desc・Swift abstract/discussion・cobra Short/Long・oclif summary/description)、単一は argparse・System.CommandLine。clap は -h → 短 / --help → 長の出し分け + 双方向フォールバックまで持つ。
+### 「version についてはどんな話だったか」の説明
 
-- **a. `help` (短、既存) + `help_long` (長) の 2 本立て + 相互フォールバック規則 (推し)**: 多数派慣習と一致。help model には両方載せ、-h/--help の出し分けはレンダラ (未設定側はもう一方へフォールバック = clap 型)。既存 `help` の意味は不変 (追加のみ)
-- b. `help` 1 本 + セクション拡張 (before/after/examples 等) で長文を賄う
-- c. 別案 (自由記述 — 例: help を {short, long} のオブジェクト形も許す等)
-- 併せて確認: **セクション拡張の席** (epilog/examples/footer 相当、リサーチでは普遍的) も v1 で完備するか。する場合は definition/command レベルの `help_epilog` `help_examples` 等の語彙案を次巡で設計提示する
+現行 spec での version の位置づけ (DESIGN §14.2 / DR-048 §3): **version は「ただの flag」** — `{"name": "version", "type": "flag", "long": true, "global": true}` と書き、成功時は `result.version: true` を見て**アプリが**バージョン出力する (kuu はバージョン文字列を持たず、出力もしない)。**パース失敗時は結果がアプリに渡らないので何も出ない** — そこで DR-048 が「失敗時にも version を出したいアプリは失敗時アクション属性 (旧 fail_action) を opt-in する」とした。この「help も version も同じ汎用属性で救う (2 つを特別扱いしない)」が旧設計。Q8RR=a で属性名が `help_onfail` (help 専用の語感) になったため、version 側の失敗時 opt-in の座席が宙に浮いた — が今の論点。
 
-## HELP-Q5RR: help query の既定出力範囲 (kawaz 案の確認)
+### help との競合 (「失敗時実行とした場合 help との競合は?」)
 
-kawaz 案を仕様文に直すと: **help query の既定は選択 scope (path 引数で指定した command) の 1 層分** — その scope 直属の options / positionals / 直下 subcommand 名一覧を出し、孫以深へは降りない。`prog sub --help` 相当は path=["sub"] で sub の 1 層分。これは前巡の usage 粒度の問いを包含する (1 層分の positional 進行が usage 素材、ネスト構造の深掘りは不要になる)。
+既に DR-048 §4 が裁定済み: 失敗時に複数の失敗時アクション (help と version 両方が argv に居た等) が観測された場合、**argv 上の消費位置が最小のものを発火する (先勝ち)**。`prog --version --hlep-typo` なら version が勝つ。この規則は属性名がどうなっても不変で、競合の新規裁定は不要。
 
-- **a. kawaz 案どおり「選択 scope の 1 層分」を help model の範囲として確定 (推し)**: 実 CLI の --help の普遍的な形と一致し、usage 素材の沼 (任意ネストの一行化) も構造的に消える
-- b. opt-in で全層 (再帰) 出力モードも用意 (man 生成等の一括消費者向け。help query に depth 引数を足す形)
+### 「version が立ったら結果を無視して version アクションを採用する責務は kuu とアプリのどちらが負うべきか」
 
-### レンダラの実体について (Q5R の「レンダラって何?」への回答)
+これは**成功時**の話 (失敗時は上記で kuu が発火を選ぶ)。現行裁定 (DR-048 §4): 「成功時に衝突は存在しない — `--help --version` が両方 committed なら結果に両方現れ、**どちらに反応するかはアプリの領分 (kuu は決めない)**」。つまり現行はアプリ責務。ただし Q8RR=a で help は「ParserContext の help フラグ → パーサが出力切替」という kuu 側関与を持つため、version だけアプリ責務のままにするかが問い:
 
-指摘のとおり「レンダラに任せる」は設計逃げでした。実体はこう考えています: **レンダラ = help model (JSON) を消費してテキストを組む層で、kuu プロダクトが canonical 実装を 1 個標準提供する** (設計プラン P4 — kuu-cli の `--help` を self-hosting する GNU/clap 風テキストレンダラ)。クロージャかテンプレートかで言えば**テンプレート + 部品関数のハイブリッド**を想定: 全体骨格 (セクションの並び) はテンプレート、各部品 (オプション 1 行の組み方、usage 行の組み方) は言語側の関数。ただしこの canonical レンダラ自体の設計はまだ無い — **次の設計サイクルの対象として issue 起票する** (spec が決める help model と、レンダラの内部構造 (テンプレ語彙等) の線引きもそこで)。今の HELP-Q 群は「レンダラに渡す素材 (help model) の完備」を決めている、という関係です。
+- **a. 現行維持 — version への反応は成功・失敗ともアプリ責務 (失敗時発火の opt-in 属性だけ kuu が提供) (推し)**: kuu はバージョン文字列を持たない (DESIGN §14.2) 以上、「version アクションの採用」を kuu が引き受けても出せるものが無い — 責務を負う実体的な意味があるのはアプリ側だけ。help との非対称は「help は kuu が model を組める (定義から導出可能) / version 文字列は定義外の情報」という素材の所在の差から来る必然
+- b. `type: "version"` プリセットを新設し、help と対称の「全体単一セル + onfail」構造にする (バージョン文字列も定義に持たせる — DESIGN §14.2 の「AST にバージョン文字列を持たせない」を覆す)
+- c. 別案 (自由記述)
 
-## HELP-Q6RR: help model の所在と command_path の構築者 (Q6R の疑問への回答込み)
+### 従属: 失敗時 opt-in 属性の名前 (Q8RR=a の帰結の整理)
 
-**help model とは**: query:"help" (HELP-Q2=a で確定) の**出力 JSON の構造**のこと。fixture の `expect` に書かれる形 = 仕様が規定する wire 構造で、実装 (kuu.mbt の help query 関数 / kuu-cli の `kuu help` サブコマンド) がこの形を出力する。定義 (definition) 側の話ではなく**出力側の契約**。
+- **a. `help_onfail` は type:help 専用とし、version 等の他要素には汎用名 `show_onfail` (または `fire_onfail`) を別途用意** — 名前は 2 つになるが各々の語感が正確
+- **b. 属性は 1 つに統一し、名前を要素非依存の汎用名 (`onfail_action: true` 等) にする** — type:help もこれを同梱 (kawaz 構想の help_onfail は「help 要素にこの属性を付けた状態」の呼び名と整理)
+- c. 統括判断に任せる
 
-**command_path の構築者**: help query の実装 (kuu.mbt 等)。呼び出し側が渡す path 引数 (例 `["remote","add"]`) と definition のトップ command name から、実装が機械的に組む (トップが command なら `[トップ name] + path`)。レンダラや呼び出し側が組むのではない。
+## HELP-Q10: help の範囲出し分け (--help-full / --help [category]) の設計 (新論点)
 
-- **a. help model に `command_path` を含める (実装が組む、推し)**: レンダラは usage 行の `prog remote add` を model だけから組める
-- b. 含めない (レンダラが definition + path から自分で辿る)
+kawaz 発題: 「--help-full や --help-all、`--help [category]` (tag/label みたいな語彙) を置いて --help (引数なし) と範囲を出し分けるみたいなのもあるじゃない? その辺どうする?」
 
-## HELP-Q8RR: kawaz 構想 (type:help の全体単一セル + help_onfail) の設計化
+既存部品との突合: (1) hidden の既定除外 + 「--help-all で hidden も表示」はレンダラ policy として DR-058 が既に予告済み。(2) help model は hidden をメタとして落とさず運ぶ設計済み (レンダラが出し分け可能)。(3) help_group_name (Q3 裁定) がカテゴリの自然な単位になり得る。(4) type:help は bool セル (Q8RR=a) — `--help [category]` は**値を取る help** になり、bool でなく optional 値スロット (`repeat:{min:0,max:1}` の string) が要る。
 
-前巡の installer 区分の問いは撤回し、kawaz 構想を仕様案に直して確認する。構想の要素分解と既存設計との突合:
-
-1. **type:help は値セルを全体で 1 つだけ持ち、どのサブコマンド scope で発火しても同じセルが true になる** — 既存機構では **global + link の合成に相当** (DESIGN §14.1 の例が既に `global: true` 併記。global コピーの発火は宣言元セルへ link 同期する = 「全体で 1 セル」は既に成立)。type:help の preset が global を暗黙同梱するか、明示宣言に任せるかが設計点
-2. **long/short に好きな綴りを付けられる** — 既存どおり (type:help は入口 lowering が long/short と同型、LOWERING §A.5)
-3. **`help_onfail: true` で「失敗時に自動でヘルプを出す」を要素ごとに opt-in** — 旧 fail_action の正式名を `help_onfail` にする案に相当。ただし旧設計では fail_action は汎用属性 (version 等にも付く) だった — help 専用名にするなら version の失敗時表示は別属性になる
-4. **config で全体の自動ヘルプを有効化** — help セルも普通の値セルなので config/env 値源が自然に効く (DR-050 の既存経路)。「config で help_onfail 相当を制御」は、属性 (定義時固定) でなく値セル化する場合のみ成立する点に設計上の分岐あり
-
-- **a. 構想を採用し設計を詰める (推し)**: `type:help` = bool セル + global 暗黙同梱 + link 合成 (全体 1 セル)、失敗時自動表示は `help_onfail` 属性 (help 型専用、bool)。version の失敗時表示は当面 version 側に同名属性を許すか次巡で整理。詰めた形を DR 案として次巡提示する
-- b. 旧設計維持 (fail_action 汎用属性 + type:help が同梱)
-- c. 構想の方向で行くが詳細分岐 (global 暗黙化の是非、config 制御の意味論) は DR 起草時に個別 Q で
-
-### 旧 HELP-Q1R (fail_action の名前) の扱い
-
-Q8RR=a なら名前は `help_onfail` に確定し Q1R は消滅。Q8RR=b なら Q1R (fail_action / failure_action) が復活。よって Q1R は Q8RR の従属として保留。
-
+- **a. 出し分けは「複数の help 入口 + help model のフィルタ引数」で組む (推し)**: `--help` / `--help-full` は**別々の type:help 要素** (何個でも定義可能、全体単一セルは「help 系で 1 セル」でなく要素ごと) とし、どの入口が発火したかで レンダラが verbosity を変える。`--help [category]` は help query に filter 引数 (group 名 / category) を足し、type:help に optional 値スロットを許す形で表現。verbosity level (最小/full) は wire 語彙にせずレンダラ + 入口の対応付けに留める
+- b. type:help に `help_level` / `help_categories` 等の宣言語彙を持たせ、入口ごとの範囲を定義側で機械可読に固定する (レンダラ非依存で conformance 可能になるが語彙が増える)
+- c. 範囲出し分けは全てレンダラの関心とし、spec は関与しない (入口が複数あることと hidden メタの搬送だけで足りると割り切る)
+- 注: a と b は排他でなく「a で始めて b の宣言語彙を格上げ」も可能だが、v1 完備主義に照らすと今どちらかに決める。Q8RR=a の「全体単一セル」との整合 (help 系要素が複数ある時セルは 1 個か要素ごとか) も本 Q の従属論点として裁定に含めたい — 推し: 要素ごとにセル (--help と --help-full は別セル、どちらが発火したか result で区別できる)

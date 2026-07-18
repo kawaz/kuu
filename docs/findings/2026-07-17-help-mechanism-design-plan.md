@@ -162,6 +162,13 @@ DR-109 柱 4 の「semantic sections」を具体化する。**全フィールド
 > 4. **order との同時指定 (同一要素に help_order と help_after の両方) = definition-error**
 > 5. **同一 target への複数 after (B も C も after: A) = B, C の定義順** で A の後ろに並ぶ
 
+## 5.5 4 巡目裁定の反映 (kawaz 2026-07-18)
+
+- **Q4=a**: 説明文は `help` (短、既存) + `help_long` (長、新設) の 2 本立て。相互フォールバック (未設定側はもう一方を使う = clap 型)。model には両方載せ、-h/--help の出し分けはレンダラ。セクション拡張席 (epilog/examples 等) の扱いは help DR 起草時に語彙案を提示
+- **Q5=b**: help query の既定出力は選択 scope の 1 層分 (kawaz 案 = 既定)、加えて **depth 引数の opt-in で全層 (再帰) 出力も可能にする** — 「要求自体は現実に存在する」(man 生成等の一括消費者)。既定 1 層 + opt-in 全層の 2 段
+- **Q6=a**: help model に `command_path` (トップ command name + path の連鎖) を含める。構築者は help query の実装
+- **Q8=a**: type:help = bool セル + 全体単一セル構想 + `help_onfail` で設計を詰める (詳細は §5.4 と DR で)。version の従属論点は HELP-Q9、範囲出し分け (--help-full / --help [category]) は HELP-Q10 として裁定中
+
 ## 6. 露出経路と conformance
 
 ### query: "help" の fixture 化 (HELP-Q2)
