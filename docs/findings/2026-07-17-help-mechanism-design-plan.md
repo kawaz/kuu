@@ -162,6 +162,18 @@ DR-109 柱 4 の「semantic sections」を具体化する。**全フィールド
 > 4. **order との同時指定 (同一要素に help_order と help_after の両方) = definition-error**
 > 5. **同一 target への複数 after (B も C も after: A) = B, C の定義順** で A の後ろに並ぶ
 
+## 5.4b help_category の型化構想 (Q10 裁定、kawaz 2026-07-18)
+
+**Q10-1=a (help_category 属性の採用) + Q10-2 は値スロット案でなく `type: "help_category"` 構想で解く** (kawaz 案、統括評価: 賛成 — 全部が既存機構の組み合わせで成立する):
+
+- **`type: "help_category"`**: 内部的には string の**全体セル 1 つ** (type:help の全体単一セル構想と同型、link 合成)
+- **発火時に help の bool セルもトリガ** — preset が help セルへの固定 true 供給 (link + variant) を同梱する形。「category 指定 = help 表示要求」が 1 発火で両セルに立つ
+- **`or` で type:help と出し分け** — bool 枝 (`--help` 裸) と string 枝 (`--help net`) の or で**引数有無の両対応**を表現。optional 値スロット案 (旧 Q10-2 推し) より構造的 — 「次のトークンが category か positional か」の曖昧さを or の経路成立で解決するのは kuu の背骨モデルそのもの
+- **`values` で指定可能カテゴリを制限できる** — 既存の value-enum (DR-055 §5.3) がそのまま効く
+- **`--help-command` のような引数なしオプションに help_category への固定文字列充足を担わせられる** — 既存の variant DSL `[":set:command"]` (固定値 set) がそのまま効く。「カテゴリ別ヘルプの専用入口」が語彙追加ゼロで組める
+
+統括の指摘した設計点 (DR で確定): (1) **help セルへの link 先の同定方法** — type:help_category の preset lowering が「どの help セルに true を送るか」の規約 (同一 scope の type:help 要素への自動 link か、明示参照か)。type:help 要素が無い定義で help_category だけ書いた場合の扱い (definition-error か、category セル単独で成立か) も同じ規約で決まる。(2) **複数 category 指定** (`--help net --help io` 等) — string 全体セルの last-wins が既定だが、multiple 宣言との合成を許すか。
+
 ## 5.5 4 巡目裁定の反映 (kawaz 2026-07-18)
 
 - **Q4=a**: 説明文は `help` (短、既存) + `help_long` (長、新設) の 2 本立て。相互フォールバック (未設定側はもう一方を使う = clap 型)。model には両方載せ、-h/--help の出し分けはレンダラ。セクション拡張席 (epilog/examples 等) の扱いは help DR 起草時に語彙案を提示
