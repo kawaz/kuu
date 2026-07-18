@@ -106,7 +106,7 @@ exact であり、`value:` だけの literal は入力を検査しない (DESIGN
 
 **由来**: DR-015, DESIGN §5.3
 
-### A.5 type 糖衣プリセット (flag / count / help)
+### A.5 type 糖衣プリセット (flag / count / help 系)
 
 `type` の値のうち、独立した値プリミティブではなく「属性プリセットへの名前」であるもの。value_parser 中心の
 組み込み型 (string / number / ...) と同じ `type:` で書くが、展開先は属性の束である (DR-028)。
@@ -157,23 +157,48 @@ final_filters が通る = DR-077 §1)。
        構造の lowering は §B.4 (greedy 面の exact 衛星 + 発火で severed 化)。
 ```
 
-**help** = 起動時アクション:
+**help** = 内部セルへの link + 固定 true 供給 (DR-112 §7):
 
 ```
 入力:  {name: "help", type: "help", long: true, short: "h"}
-出力:  入口部 (long / short 衛星) は §B.1 / B.2 と同型に展開。
-       「起動時に ParserContext の help フラグを立てる」アクション部の
-       canonical AtomicAST 形は未予約 (DESIGN §13.9、下記 規則 参照)。
+展開:  値セルは help 機構が管理する内部 bool セル (# 予約名前空間の実装細部、DESIGN §14.1) への link。
+       要素自身は flag 同族の糖衣プリセット (DR-076 の枠) として bool を土台に展開され、
+       発火は固定 true 供給 (flag の `:set:true` と同型)。result への露出は要素自身の
+       name (export_key) 経由 — link の既存意味論 (値セル共有、露出は各入口の export_key)。
+       type config 糖衣 `help_on_failure` (bool、既定 true) を同梱し、汎用属性
+       `on_failure` へ全展開する (DR-112 §8) — on_failure installer が失敗時発火マーカー
+       能力を宣言する (構造衛星なし、constraint installer と同型の能力宣言型)。
+出力:  入口部 (long / short 衛星) は §B.1 / B.2 と同型に展開。どのサブコマンドスコープで
+       発火しても同じ内部セルに立つ (global + link の合成 = 内部セルへの合流)。
+```
+
+**help_all** = help と同じ preset 族 (DR-112 §7):
+
+```
+入力:  {name: "help_all", type: "help_all", long: true}
+展開:  入口・内部セル link・help_on_failure 同梱まで type:help と同一。異なるのは意図メタのみ
+       (「hidden 込み全表示」の要求をアプリ / レンダラに伝える) — lowering 上の差分は無い。
+```
+
+**help_category** = string 全体セル + help 内部 bool セルの同時トリガ (DR-112 §7):
+
+```
+入力:  {name: "help_category", type: "help_category", long: true}
+展開:  値セルは string の全体セル 1 つ (内部セルモデルと同型、link 合成)。発火時に help の
+       内部 bool セルへの固定 true 供給 (link + variant) も同梱する — 1 発火で両セルに立つ。
+       help_on_failure 同梱も type:help と同一。values (value-enum、A.4) / variant DSL の
+       固定値 set (`[":set:command"]` 等) がそのまま効く。複数発火は string 全体セルの
+       last-wins (DR-015)。
 ```
 
 **規則**: 各プリセットは値プリミティブ + default + 挙動の束を `type:` で参照する糖衣。flag / count の値・default・
-累積は上記のとおり確定する。help のアクション部の AtomicAST 形は DESIGN §13.9 で未予約だが、パースとの整合は
-early-exit ではなく**完走後の表示選択** (失敗時アクション、DR-048 / DESIGN §15.10) として確定済み — help は
-パース失敗時 (完全経路 0 本) も候補経路で selected なら発火する。失敗時アクションは汎用属性 (フィールド名は
-§13.9 で未予約) で、help プリセットがそれを同梱する。version は専用 type ではなく単なる flag (§14.2)、失敗時
-にも出したい場合は同属性を opt-in する。
+累積は上記のとおり確定する。help 系のパースとの整合は early-exit ではなく**完走後の表示選択** (失敗時アクション、
+DR-048 / DESIGN §15.10) として確定済み — help はパース失敗時 (完全経路 0 本) も候補経路で selected なら発火する。
+失敗時アクションは汎用属性 `on_failure` (DR-112 §8、on_failure installer 所有) で、help 系プリセットが糖衣
+`help_on_failure` として同梱する。version は専用 type ではなく単なる flag (§14.2)、失敗時にも出したい場合は
+`on_failure: true` を opt-in する。
 
-**由来**: DR-028, DR-015, DR-036, DESIGN §3.3
+**由来**: DR-028, DR-015, DR-036, DR-112, DESIGN §3.3
 
 ---
 
