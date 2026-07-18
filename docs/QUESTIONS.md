@@ -30,3 +30,28 @@
 
 - **Q10-1. help_category 案の採用確認**: **a. 採用** (help_category: [] 新設 + group_name 自動追加の糖衣、help query に category フィルタ引数、推し) / b. 修正あり (自由記述)
 - **Q10-2. `--help [category]` の値スロットと複数 help 入口のセル構造**: type:help が optional 値 (category 指定) を取れる形にする必要がある。**a. type:help に optional 値スロット (string) を持たせ、値が category として result に入る + help 系要素は要素ごとに別セル (--help と --help-full は独立、どちらが発火したか result で区別) (推し)** / b. 別案 (自由記述)
+- 裁定済み (kawaz 2026-07-18): **範囲違いの help 入口は別タイプで当てる** (`type: "help"` と `type: "help_all"` のような対) — -h/--help を短/長で区別する文化 (clap 型) を kuu が模倣する必要はなく、範囲の違いは型の違いとして宣言する。help DR で help_all プリセットの中身 (hidden 込み全表示の意図メタ) を確定
+
+## HELP-Q11: visibility の全体整理 (kawaz の再整理要求への回答)
+
+### 「visibility が completion にも関係する話」の所在 — 既存裁定の全体像
+
+visibility (hidden) は **help と completion の両方に既に一貫した裁定があります**。同じ 1 原則が両方を貫いています: **「素材とポリシーの分離」— hidden はメタとして常に運び、既定除外は消費側 (レンダラ / 生成器) のポリシー**。
+
+| 面 | 規定 | 正本 |
+|---|---|---|
+| 宣言 | `hidden: true` は「help 一覧と補完候補の両方から既定除外、**受理は不変**」(隠し要素は普通に起動できる) | DR-058 §1 |
+| completion | **complete API は hidden に関わらず候補を返し、候補の `meta.hidden` にフラグを載せる**。既定除外は生成器 (層 2) の関心。`candidates[].meta` = `{is_alias, hidden, deprecated}` は必須検証 (省略で検証が骨抜きになるのを防ぐ、COMP-Q2) | DR-060 §3、DR-104 §2/§3、schema/fixture.schema.json |
+| help | help model も同型: **hidden をメタとして落とさず運び、既定除外はレンダラ policy** (「--help-all で hidden も表示」をレンダラが作れるように) | 設計プラン §5.2 (DR-058 §1 の予告の実現) |
+| 絞り込みポリシーの例 | 「未入力 tab-tab は alias を隠す / 途中入力は全部出す」等は候補メタを見た生成器側の選択で kuu は固定しない | DR-060 §3 |
+| deprecated | 同じ分離: メタで運び、表示 (打消し線等) は消費側 | DR-058 §2、DR-104 |
+
+つまり **completion は「hidden メタ搬送 + ポリシーは層 2」で既に完全に裁定・実装・fixture pin 済み** (fixtures/complete/meta.json が hidden オプションの候補搬送を pin)。help 側は同じ原則を model に写すだけで、新規裁定は不要です。
+
+### 今回の help_all / help_category との接続
+
+- `--help-all` (hidden 込み全表示) = **help_all 型の入口** (上記裁定) + レンダラが hidden メタを見て表示に含める、で完結
+- completion 側に help_all 相当は不要 — yargs の `--show-hidden` のような救済も、生成器が meta.hidden を見て実装できる (kuu の語彙追加なし)
+- help_category は help 固有 (補完候補のフィルタには使わない)。ただし completion の候補メタに category を載せるか (生成器が「カテゴリ別補完メニュー」を作れるようになる) は設計余地 — **推し: 載せない** (補完は「次に打てるもの」の列挙であってカタログではない。実需が無いのに meta を太らせない)。異議があればこの点だけ裁定を
+
+visibility について新たに決めることは **completion 候補メタへの category 追加の可否 (推し: 否) のみ**で、他は全て既存裁定の再確認です。
