@@ -151,6 +151,8 @@ DR-109 柱 4 の「semantic sections」を具体化する。**全フィールド
 
 上の model は**既存の宣言語彙 (help / display_name / value_name / hidden / deprecated / alias / default / env / required / repeat / multiple / long / short / commands) だけから導出できる**。v1 で新設する要素属性は無し (`fail_action` の正式化は §4 で、これは表示でなく発火機構)。グループ化 (`help_group`) と長文分離 (`help_long`) は見送り候補 (HELP-Q3/Q4) — 追加互換な純表示メタなので、後から足しても既存定義・fixture を壊さない。
 
+> **改訂 (HELP-Q3 裁定、kawaz 2026-07-18): グループ語彙は「グループ先頭宣言スタイル」で v1 導入する。** 12 系統リサーチ (`2026-07-17-cli-help-vocab-survey.md`) の「表示順の明示 API はほぼ皆無・宣言順が主流」の観測を受けた kawaz の設計: (1) **順序は宣言順で十分** (kuu の wire form は JSON で宣言順が保存される — 数値 order 語彙は持たない)。(2) 要素属性 `help_group_name` (グループ名参照) を新設。(3) さらに **type も name も無い、グループ属性だけを持つ「グループ宣言エントリ」を options 配列に置ける** — `{"help_group_name": "g", "help_group_title": "...", "help_group_description": "..."}` のような entry を options 先頭に並べておくスタイル。これによりグループの表示順 (= 宣言順) と表示メタ (title/description) が一箇所で完結し、kong 型の「別座席の groups リスト」を作らずに同じ表現力が得られる (メンバー要素の 1 人がグループ設定も受け持つ不均衡も、先頭宣言スタイルで解消)。(4) title/description は「同時に書かれた group_name に紐付く追加属性」で、指定なしでも困らない (見出し = name)。(5) 同じグループ名に対する別設定の重複宣言は definition-error。(6) 大きめのコマンド定義の example でこのスタイルをショールーム的に示す (パターン参考用)。正式な語彙名・definition-error の kind・model 上の射影は help DR (P1) で確定する。
+
 ## 6. 露出経路と conformance
 
 ### query: "help" の fixture 化 (HELP-Q2)
