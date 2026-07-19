@@ -133,20 +133,23 @@ long: [
 
 **適用範囲**: universal fn DSL の全席 (variant DSL の long/short/env、filter DSL の各段、default_fn 属性) で同じ規約を採用。統一感 + 混乱回避。
 
-### 2.5 統合後の fn 呼び出し ABI (Q7-γ-45=b 反映)
+### 2.5 統合後の fn 呼び出し ABI (Q7-γ-45=b + kawaz mid=35 反映 role 固有 ctx)
 
-全 fn は同一 ABI:
+全 fn は同一 ABI 骨格 (共通は 2 点: 引数形式 + observes 軸)、**ctx は role 固有** (kawaz mid=35 指摘反映):
 
 ```
-fn signature: (args: string[], ctx: SourceFnCtx) → Result<Value, Reason>
+共通の ABI 骨格:
+  fn signature: (args: string[], ctx: <RoleFnCtx>) → Result<Value, Reason>
+  observes 軸 (descriptor 側で宣言): ["option:<name>", "env:<var>", "system:<key>", ...]
 
-SourceFnCtx API:
-- ctx.borrow_option(name) → Value | absent      // 他 option 値の遅延解決参照
-- ctx.env(var) → string | null                    // 環境変数
-- ctx.system(key) → any                           // system 提供 (git_branch / uuid_gen 等)
-- ctx.filter_input() → Value                      // filter 段: pipeline の入力値
-- ctx.effect_context() → EffectCtx                // 発火時 cell operation: cell / trigger 情報
+role 固有の ctx:
+- FilterFnCtx  (role=filter): pipeline 入力値 (ctx.input())、pipeline 段の位置情報等
+                              → 既存 kuu.mbt に相当機構がある可能性 (要確認)
+- DefaultFnCtx (role=default_fn): 他 option 参照 (ctx.borrow_option(name))、env、system
+- EffectFnCtx  (role=variant_effect): cell 情報、trigger 情報 (cell/trigger context)
 ```
+
+**共通機構は「DSL 書式 (colon-args + array 記法 §2.4b) + observes 軸」の 2 点だけ**。registry / ctx / failure reason / pipeline 位置は role 固有。「際限がなくなるリスク」(kawaz mid=34 懸念) の完全回避。
 
 **observes 軸** (descriptor 側で宣言、Q7-γ-45=b 承認):
 
@@ -162,17 +165,31 @@ observes: ["option:<name>", "env:<var>", "system:<key>", ...]
 
 ## 3. descriptor 直交軸の統合拡張 (DR-107 拡張)
 
-### 3.1 role enum の整理
+### 3.1 role enum + registry の整理 (kawaz mid=35 の質問反映)
 
-現 DR-107 §1 role enum = 7 値 (installer / filter / collector / type_parser / accumulator / completer / provider) + Q7-α で追加された default_fn = 8 値。
+現 DR-107 §1 role enum = 7 値 (installer / filter / collector / type_parser / accumulator / completer / provider) + Q7-α で追加された default_fn = 8 値 + variant_effect = 9 値。
 
-**統合案** (統括推し):
+**統合案** (統括推し、kawaz mid=35 質問反映):
 
-- **`role: "fn"` に統一しない**、`role` は現状の役割分類 (filter / default_fn / effect / …) を並列で保持
-- 理由: role は「registry lane の識別」= 何の registry に登録されるか (filter registry / default_fn registry / effect registry ) を表す軸。統合しても registry の分割は残る (filter は pipeline に載る fn、default_fn は default 席に載る fn、effect は cell operation を返す fn、各々の呼び出し文脈が違う)
-- **共通の fn ABI** (§2.5) は role 横断で共有、descriptor は「共通軸 + role 固有軸」の 2 層で管理
+- **`role: "fn"` に統一しない**、`role` は現状の役割分類を並列で保持
+- **registry も別々に分ける** (kawaz mid=35 質問 = 別 registry 派 (i) 推し)
+- 現 kuu の既存構造 (registry 1 個 = role 1 個の 1:1 対応) と整合
 
-**effect の role 新設**: 現状 variant DSL の effect (set/default/unset/empty) は spec の暗黙 registry (§7.4 の 4 種固定) で管理されており descriptor 化されていない。統合案では **`role: "variant_effect"`** (or `"cell_operation"`) を新設し、set/default/unset/empty を effect registry の住人として descriptor 化。3rd party 拡張 (`role: "variant_effect", ns: "myapp"`) も可能に。
+**registry 一覧** (統合後):
+
+| registry | role | 用途 | 新設? |
+|---|---|---|---|
+| `filters` | `filter` | pipeline に載る値変換 fn | 既存 (DR-036) |
+| `default_fns` | `default_fn` | default 席の値供給 fn (Q7-α 新設) | **新設** |
+| `variant_effects` | `variant_effect` | 発火時 cell operation fn (set/default/unset/empty + 拡張) | **新設** |
+| `types` | `type_parser` | 型 parser (既存) | 既存 (DR-107) |
+| `providers` | `provider` | env/config/tty (既存) | 既存 (DR-107) |
+| `installers` | `installer` | wire 語彙展開装置 | 既存 (DR-042) |
+| `accumulators` / `collectors` / `completers` | 各役割 | 既存 | 既存 (DR-036/DR-111) |
+
+**名前衝突の自動回避**: `filters` registry の `in_range` と `default_fns` registry の `borrow` は別物。bare 名は同じでも registry (ns) 明示で区別 (DR-094 namespace 機構)。
+
+**variant_effect の descriptor 化**: 現状 variant DSL の effect (set/default/unset/empty) は spec の暗黙 registry (§7.4 の 4 種固定) で管理されており descriptor 化されていない。統合後は **`variant_effects` registry** に 4 種を canonical descriptor として登載、3rd party 拡張 (`role: "variant_effect", ns: "myapp"`) も可能に。
 
 ### 3.2 observes 軸の追加 (Q7-γ-45=b)
 
@@ -337,7 +354,27 @@ observes: ["option:<name>", "env:<var>", "system:<key>"]
 - **role 固有**: SourceFnCtx の内容、failure reason 語彙、pipeline での位置
 - 「際限がなくなるリスク」(kawaz mid=34 懸念) の回避 = 共通機構を最小限に、role 固有は既存機構を尊重
 
-**成立可能性の結論**: **v1 で filter 系統合も含めて完遂可能**。既存 filter 機構 (registry / descriptor / pipeline) を大きく壊さず、DSL 書式の統一と array 記法追加、observes 軸の適用だけで実質的な統合が達成できる。実装コストは refactor よりも「新機構追加 + 既存を universal fn 経由に切り替え」で、TRI-Q4 (OutputView 一本化、4 コミット) 級 or それ以上だが、範囲膨大にはならない。
+**成立可能性の結論**: **v1 で filter 系統合も含めて完遂可能、実装コストは激減**。kawaz mid=35 の指摘 (registry と ctx は role で分離) を反映すると、Q8 統合の「真の姿」は:
+
+- **共通機構は「DSL 書式 (colon-args + array 記法) + observes 軸」の 2 点だけ**
+- **registry も ctx も failure reason も role 固有** (filter は既存機構をそのまま維持、default_fn / variant_effect は新設)
+
+= filter 系の「統合」の実質は「observes 軸を filter descriptor に追加する + array 記法をパーサで受ける」だけ。既存 filter 機構 (registry / descriptor / pipeline / FilterFnCtx) は refactor 不要。
+
+**実装コスト再見積** (kawaz mid=35 反映後):
+
+| 作業 | コスト | 内訳 |
+|---|---|---|
+| DSL パーサ (string/array 混在) の追加 | 小 | 既存 colon-string parser に array 分岐追加、1 モジュール ~100 行 |
+| observes 軸 (schema 追加 + parser 拡張 + 依存グラフ構築) | 中 | DR-107 role 別マトリクスに軸追加、DR-087 遅延解決に統合 |
+| default_fns registry + 6 builtin fn (borrow/inherit/env/set/computed/uuid) の実装 | 中 | 新規 registry と fn 実装 |
+| variant_effects registry + 4 fn (set/default/unset/empty) の descriptor 化 | 小 | 既存暗黙 registry を descriptor 化するだけ、実装は既存 |
+| filter 系: observes 軸追加のみ (既存 refactor 不要) | 小 | descriptor に observes フィールド追加 |
+| long DSL への default_fn 引き込み | 中 | variant DSL parser を universal fn parser に集約 (or 並列で受ける) |
+| fixtures 追随 | 中 | 記法不変、期待値変化 (universal fn 経路の lowering) |
+| DR-114 起草 + DR-113 の DR-114 前提書き直し | 中 | codex-sol 起草、統括レビュー |
+
+**総合**: TRI-Q4 (OutputView 一本化、4 コミット) 級 or それ以下。「範囲膨大」の懸念は kawaz mid=35 の役割分離戦略の精緻化で解消。
 
 **v1 スコープに filter 系統合を含める推し** (統括推し):
 - **選択 A' (推し、更新版)**: variant DSL / filter / default_fn の 3 種を universal fn として統合、ただし role 分離で共通機構は最小限。v1 完備主義準拠、full 統合

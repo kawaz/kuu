@@ -38,18 +38,28 @@ long: ["no:set:false", ":set", ["", "set", "a:b"], ["debug", "env", "LOG:PATH"]]
 - 候補 b: エスケープ (`\:`) 導入 — kawaz 却下済み
 - 候補 c: colon 含む値は書けない仕様として固定 — 実用性欠く
 
-## HIP-META-Q8-β: filter 系を universal fn 統合に含めるか (kawaz mid=34 問い)
+## HIP-META-Q8-β: filter 系を universal fn 統合に含めるか (kawaz mid=34 問い、mid=35 精緻化)
 
-### 見積結果 (finding §4.5)
+### 見積結果 (finding §4.5、kawaz mid=35 反映後)
 
-filter 系統合は **v1 で成立可能**、ただし **role 分離戦略** (共通機構は registry + DSL 書式 + observes 軸まで、SourceFnCtx / failure reason は role 固有) で「際限がなくなるリスク」を回避。
+**kawaz mid=35 指摘**: registry も ctx も role で分けるのが自然。統合の実体は「共通機構は DSL 書式 + observes 軸の 2 点だけ」。
+
+filter 系統合の実装コストは **激減**: 既存 filter 機構 (registry / descriptor / pipeline / FilterFnCtx) は refactor 不要、observes 軸を filter descriptor に追加する + array 記法をパーサで受けるだけで実質的な統合達成。
 
 ### 選択肢
 
-- **候補 A' (推し、統括推し、更新版)**: v1 で filter 系統合も含む full 統合、role 分離戦略で共通機構は最小限
+- **候補 A' (推し、統括推し、更新版)**: v1 で filter 系統合も含む full 統合、role 完全分離戦略 (registry + ctx + failure reason は role 固有、共通は DSL 書式 + observes 軸のみ)。実装コスト = TRI-Q4 級 or 以下
 - 候補 A (前案): filter 系は v2 に回す — 統括推し撤回、更新版 A' に集約
-- 候補 B: universal ABI だけ先行、DSL 集約は v2
-- 候補 C: 現状維持で v1、統合は v2
+- 候補 B: universal ABI だけ先行、DSL 集約は v2 — mid=35 反映後は「共通機構が薄い」= A' と B の差がほぼ消える、A' に統合
+- 候補 C: 現状維持で v1、統合は v2 — v1 完備主義違反
+
+## HIP-META-Q8-γ: registry vs role の分け方 (kawaz mid=35)
+
+### 選択肢
+
+- **候補 i (推し、統括推し)**: **別 registry** (`filters` / `default_fns` / `variant_effects` の 3 registry)。既存 kuu 構造 (registry 1 個 = role 1 個の 1:1 対応) と整合、名前衝突の自動回避 (DR-094 namespace)、物理的な分離 = 意味論分離が自然
+- 候補 ii: 同 registry で role で区別 (`fns` registry の中に role=filter と role=default_fn が並ぶ) — 現構造と非整合、実装コスト増
+- 候補 iii: registry + role の両方で冗長に区別 — 意味論的に無駄
 
 ## HIP-META-Q8: universal fn への統合 (kawaz 発題 mid=29) — variant DSL effect + default_fn を fn 機構に集約
 
