@@ -116,7 +116,8 @@
 
 - [DR-058](DR-058-hidden-deprecated.md): hidden / deprecated の挙動 — hidden は help/補完から除外 (受理不変)、deprecated は受理 + ParserContext.warnings (v1 bool のみ、表示はレンダラ)
 - [DR-060](DR-060-completion-query.md): 補完クエリ — 生存 partial 経路 (dead end 除外) の期待集合の和集合、after 整合フィルタ、素材+メタ返却でポリシーは生成器、completer は名前参照で shell 機能へ委譲、責務 4 層
-- [DR-112](DR-112-help-query-and-model.md): help 機構の確定 — help installer は不要 (help query = 宣言層寄与適用後の宣言層 → help model の静的クエリ、path/depth/category)、model は全フィールド素材 (usage 構造素材・command_path・spellings/alias 併記・hidden メタ保持、entries は並べ替え適用後の順序規範)、説明文 help + help_long + help_epilog、グループ先頭宣言スタイル (help_group_name + グループ宣言エントリ) + 明示順序 (help_order/help_group_order の安定ソート + help_after 後処理、不在 target は lint warn + fallback・循環は definition-error)、型プリセット help/help_all/help_category (help 機構管理の内部セル + link、or 出し分け・values 制限)、失敗時アクション属性は `on_failure` (専用 installer) + `help_on_failure` (type config 糖衣)、表示メタ所有は help_meta installer (純所有・lowering 寄与ゼロ)、query:"help" conformance 化で v1 発行条件を 5 プロファイル green に改訂 (DR-108 §3 更新)
+- [DR-112](DR-112-help-query-and-model.md): Superseded by DR-113 — help installer 不在・独立 help query を中心とした旧設計
+- [DR-113](DR-113-help-mechanism-redesign.md): help 機構の再設計 — help_installer の回収/植え付け/能力提供、5 直交 type、value_structure tree + type_ref + types + origin、default_fn registry、group/order/on_failure/conformance の確定
 
 ## conformance / 直列形
 

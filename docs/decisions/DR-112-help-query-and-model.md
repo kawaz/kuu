@@ -1,5 +1,7 @@
 # DR-112: help 機構 — help query・help model・表示メタ語彙・型プリセット群・on_failure の確定
 
+**Status: Superseded by DR-113 (2026-07-19)**
+
 > 由来: kawaz 発題「実装がない奴として help_installer が無くないですか？必要な機能やそれを実現するための語彙や展開方などの設計プランからまず立てる必要があるのでは」(2026-07-17)。設計プラン `docs/findings/2026-07-17-help-mechanism-design-plan.md` (HELP-Q1〜Q12 の裁定記録込み) と 12 系統リサーチ `docs/findings/2026-07-17-cli-help-vocab-survey.md` を正本とし、DR-048 §3 / DESIGN §13.9 が「help / completion installer の設計と同時に確定する」と保留した失敗時アクション属性の座席、DR-109 柱 4 の「semantic sections」の具体形、DR-056 が構想名で言及した「help installer」の正体を確定する。completion 側の同保留は DR-060 / DR-104 で解消済みであり、本 DR はその対称形として help 側を閉じる。
 
 ## 決定
