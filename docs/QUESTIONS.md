@@ -12,48 +12,53 @@
 >
 > **2026-07-19 通読による整理**: 統括が DR-112 全文と fixtures/help/ 全 13 本と kuu.mbt 実装を通読した結果、旧 HIP-Q1〜Q7 のうち Q2/Q5/Q6/Q7 は DR-112 §2〜§3 の規範に既に答えがあり Q でなく実装追随 issue (kuu.mbt 側に起票)。Q3 は DR-112 §5-6 の drift 訂正 (原裁定 findings に無い後段追加を削除)。真の裁定案件は Q1 (表現力チェック) と Q4 (グループ hidden の座) の 2 個。
 
-## HIP-Q1: global installer の宣言層寄与位置 — 表現力設計
+## HIP-Q1: help model entry に `origin` フィールドを追加するか
 
 ### 背景説明
 
-DR-112 §2 は「help query が読むのは installer の宣言層寄与を適用し終えた宣言層」と規範を持つ。global installer (DR-042) はサブコマンドスコープの宣言層に global 要素を宣言的にコピーするが、「**そのコピーを列のどこに挿入するか**」の仕様は pin されていない (fixture `fixtures/help/subcommand-path.json` の why 節が「順序判断が要らない構成にした」と明言)。§3 の「entries の順序は規範 (宣言順に §6 の並べ替え規則を適用した後の順序)」の前段 = 宣言順そのものが未 pin。
+実 CLI 調査 (`docs/findings/2026-07-19-help-display-order-and-visibility-patterns.md`) + CLI パーサライブラリ調査の統合 (`docs/findings/2026-07-19-kuu-help-display-expressibility-check.md`) で判明:
 
-実 CLI 調査 (`docs/findings/2026-07-19-help-display-order-and-visibility-patterns.md`) で判明した実態:
-
-- **単一位置に pin する 1 方式は存在しない**。実 CLI は 4 方式併存:
-  - 複製方式 (cargo): 自前 option と混在
-  - 省略方式 (rustup/git/docker/npm): サブコマンド help に一切見せない
-  - 参照方式 (kubectl): 値を出さず入手経路だけ案内 (`Use "kubectl options" for a list of global command-line options.`)
-  - 専用セクション方式 (gh: `INHERITED FLAGS`): 継承の事実を隠さず値も出す
-- 「複製方式」も 2 亜種: 混在型部分複製 (cargo) と独立ブロック型完全複製 (yarn/jj、一字一句同一)
-- 2 メタ軸: 深さ依存 (uv は階層の深さで複製⇄省略が切り替わる)、条件依存 (az は継承元の global 集合がコマンドの意味論で動的に変わる)
+- 実 CLI は global option の表示に **4 方式併存** (複製 cargo / 省略 rustup など / 参照 kubectl / 専用セクション gh) + 2 メタ軸 (深さ依存 uv / 条件依存 az)
+- 12 系統ライブラリ (clap / cobra / argparse / picocli / Swift AP / kong 等) は「継承先 help での表示」を「自動表示」派と「制御 API」派に分岐、過半数が個別 hidden + 見出しカスタム API を持つ
+- **現 kuu (DR-112 + DR-042) で不足しているのは 1 点だけ**: help model の options / commands entry に「由来 (origin)」を明示する素材が無い。gh 式 (方式 4)・kubectl 式 (方式 3)・uv 式 (メタ軸 A) のいずれも「レンダラが origin を見て policy 分岐する」ことで実現できるが、その素材が model に無い
 
 ### 論点
 
-「kuu で単一位置に pin する」の問い自体が実態と乖離。正しい問いは 2 段:
+DR-112 §3 の options / commands entry に `origin` フィールドを追加するか:
 
-1. **現 kuu (DR-112 + `help_group_name` + グループ宣言エントリ + `help_order`/`help_after`) で、上記 4 方式 + 2 メタ軸のどれを表現できるか?**
-2. **表現できない方式・軸があるなら、v1 で何を足すか、あるいは v1 では表現力を持たせず v2 以降か?**
+```json
+"options": [
+  {
+    "spellings": ["--verbose", "-v"],
+    "help": "...",
+    "origin": "local"  // 値: "local" | {"kind": "global", "declared_at": [<command_path>]}
+                       //     | {"kind": "inheritable", "declared_at": [...]} | {"kind": "alias", "of": "<canonical>"}
+  }
+]
+```
 
-現時点の統括の分析 (task #4 で詳細化予定):
-
-- **表現できる**: 専用セクション方式 (gh 式) は「グループ宣言エントリで INHERITED FLAGS セクションを別立てにすれば表現可能」。省略方式は「global installer の宣言層寄与を lint モードで無効化 (別の kuu 語彙が要る)」。参照方式は「モードでなくレンダラ policy の話 (kuu spec の外)」
-- **表現できない**: 深さ依存 (uv 式) と条件依存 (az 式) は動的挙動で、静的 wire form には座席が無い
+これがあれば:
+- 4 方式全てをレンダラ policy で実現 (素材と policy 分離の徹底、DR-112 骨格と整合)
+- メタ軸 A (深さ依存) はレンダラが呼び出し深さ + origin で表示切替 (素材追加不要)
+- メタ軸 B (条件依存 az 式) は「コマンドの副作用 semantics」= kuu spec の関心層外として**射程外化** (「後回し」でなく意識的な spec 対象外)
 
 ### 選択肢
 
-- **候補 α (推し・仮)**: v1 は「複製方式 + 専用セクション方式」の 2 モードだけ表現力を持たせる。省略・参照・メタ軸は v1 では持たない (レンダラ / 追加互換で足せる)。この場合 global installer の宣言層寄与位置は「専用セクション方式を選ぶなら別のグループ宣言エントリで包む、選ばないなら混在で末尾」の 2 択。**global installer descriptor に「寄与位置モード」の属性を持たせる**
-- 候補 β: v1 は全モードの表現力を持たない (単一固定モード = 複製方式のみ)。実 CLI で 4 方式併存の実態に対して kuu が固定を強制する
-- 候補 γ: 保留 (task #4 の詳細化を待つ)
+- **候補 a (推し)**: `origin` フィールドを DR-112 §3 に追加。global installer / inheritable installer / alias 機構が寄与に origin を付与し、help query が model に露出。v1 で 4 方式 + メタ軸 A の全表現力を持たせる。メタ軸 B は明示射程外化 (spec 関心層外の明記)
+- 候補 b: origin を追加せず、方式 4 (専用セクション) を諦める。実 CLI で gh 式が確実に存在する事実に対して kuu が表現不能を許容する
+- 候補 c: 保留
 
-**task #4 (kuu の表現力チェック & ギャップ提案) を統括が実施した後に本 Q の推しを確定する** — 現時点では表現力の実態が精査中。
+### 詳細分析
+
+`docs/findings/2026-07-19-kuu-help-display-expressibility-check.md` に全論点の展開あり (12 系統ライブラリ API 整理、現 kuu 表現力チェック、追加提案の詳細、v1 完備主義との整合、DR-042 への影響)。
 
 ### 参照
 
-- DR-112 §2 (読む層) / §3 (entries 順序規範) / §5 (グループ宣言エントリ)
-- DR-042 (global installer の宣言層寄与) / DR-057 (alias) / DR-059 (inheritable)
-- fixtures/help/subcommand-path.json (「順序判断が要らない構成」の自己申告)
-- docs/findings/2026-07-19-help-display-order-and-visibility-patterns.md (実 CLI 4 方式併存 + 2 メタ軸の観測)
+- DR-112 §3 (help model schema — origin 追加対象) / §2 (読む層) / §5 (グループ宣言エントリ)
+- DR-042 (global installer) / DR-057 (alias) / DR-059 (inheritable)
+- docs/findings/2026-07-19-kuu-help-display-expressibility-check.md (本 Q の詳細分析)
+- docs/findings/2026-07-19-help-display-order-and-visibility-patterns.md (4 方式 + 2 メタ軸の観測源)
+- docs/findings/2026-07-17-cli-help-vocab-survey.md (12 系統ライブラリ基礎資料)
 
 ## HIP-Q3-drift: DR-112 §5-6-6 の「同一設定は冪等」削除 (原裁定への訂正)
 
