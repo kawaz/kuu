@@ -18,9 +18,9 @@
 
 ### ✅ Q8-δ = cell_fns (mid=39 確定): registry 命名
 
-**kawaz 裁定 (mid=39)**: `cell_fns` 採用。「セル操作もあることを考えると source_fn では不足」。ctx 名も **CellFnCtx** に統一 (registry と対称)。
+**kawaz 裁定 (mid=39)**: `cell_fns` 採用。「セル操作もあることを考えると source_fn では不足」。ctx 名も **FnCtx** に統一 (registry と対称)。
 
-### ✅ Q8-ε 承認 (mid=38): 統一 CellFnCtx + mode 判別
+### ✅ Q8-ε 承認 (mid=38): 統一 FnCtx + mode 判別
 
 kawaz 指摘: 2 種類の ctx を fn signature で受けるのは対称性欠く。**統一 FnCtx + mode 判別 + 個別 ctx 取得** の設計:
 
