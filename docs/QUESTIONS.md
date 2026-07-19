@@ -6,96 +6,121 @@
 > チャットでは「VF-Q 待ち」のようにラベルだけで参照する。回答はラベル + 選択肢記号 (例「VF-b で」) だけで通じる。
 > 参照パスは本リポ (spec) 相対。kuu.mbt 側は「kuu.mbt の <path>」と表記する。
 
-> HELP-Q バッチは全問完了し DR-112 として land 済み (裁定記録は findings 2 本と DR-112 が正本)。TRI-Q バッチも全問裁定済み (Q1=分割案 / Q2=a 開いた失敗契約 / Q4=a OutputView 一本化 / Q8=a+named bundle。記録は kuu.mbt の分類表 findings と issue 群)。HOME-T1 (レジストリ publish) も完了。
+> HELP-Q バッチは全問完了し DR-112 として land 済み。TRI-Q バッチも全問裁定済み。HOME-T1 (レジストリ publish) も完了。
 >
-> **HIP-Q バッチ**: kuu.mbt の help query 実装 (kuu.mbt の `src/kuu/help.mbt` ほか、conformance 全 green) で顕在化した spec 未 pin 論点。実装は各問で「暫定採用形」を選んで green にしてあるので、**裁定は急がない** (採用形を追認するなら fixture 追加のみ、変えるなら実装追随が要る)。全問共通の選択肢表記: **a = 実装の暫定採用形を spec 規範として fixture で pin** / **b = 別の形を規範化 (実装追随)** / **c = v1 では未規定のまま保留**。
+> **HIP-Q バッチ**: kuu.mbt の help query 実装 (kuu.mbt の `src/kuu/help.mbt` ほか、conformance 全 green) と実 CLI 調査 (`docs/findings/2026-07-19-help-display-order-and-visibility-patterns.md`) で顕在化した設計論点。
+>
+> **2026-07-19 通読による整理**: 統括が DR-112 全文と fixtures/help/ 全 13 本と kuu.mbt 実装を通読した結果、旧 HIP-Q1〜Q7 のうち Q2/Q5/Q6/Q7 は DR-112 §2〜§3 の規範に既に答えがあり Q でなく実装追随 issue (kuu.mbt 側に起票)。Q3 は DR-112 §5-6 の drift 訂正 (原裁定 findings に無い後段追加を削除)。真の裁定案件は Q1 (表現力チェック) と Q4 (グループ hidden の座) の 2 個。
 
-## HIP-Q1: 自前宣言 vs global コピーの entries 相対順
-
-scope が global 要素のコピーを受けた時、help model の `entries` 内で自前宣言と global コピーをどう並べるか。fixture `fixtures/help/subcommand-path.json` の why が「順序判断が要らない構成にした」と明言している既知の穴。
-
-- **a (実装採用形)**: 自前宣言が先、global コピーは末尾に追加 (installer fixpoint の既存挙動そのまま)。推し — installer の宣言層寄与の自然な帰結で、追加機構が要らない
-- b: 別規範 (例: 宣言位置 interleave)
-- c: 保留
-
-## HIP-Q2: `depth` は何を制御する指定か (「all」の意味を含む)
+## HIP-Q1: global installer の宣言層寄与位置 — 表現力設計
 
 ### 背景説明
 
-DR-112 §2 の help query シグネチャに `depth?: "scope" | "all"` (省略時デフォルト = 1 層 / "scope") がある。「1 層」= 現在の scope で見える options / commands の**要素だけ**を返す。scope 下のサブコマンドの中身までは再帰的に開示しない。
+DR-112 §2 は「help query が読むのは installer の宣言層寄与を適用し終えた宣言層」と規範を持つ。global installer (DR-042) はサブコマンドスコープの宣言層に global 要素を宣言的にコピーするが、「**そのコピーを列のどこに挿入するか**」の仕様は pin されていない (fixture `fixtures/help/subcommand-path.json` の why 節が「順序判断が要らない構成にした」と明言)。§3 の「entries の順序は規範 (宣言順に §6 の並べ替え規則を適用した後の順序)」の前段 = 宣言順そのものが未 pin。
 
-「`depth: "all"` の意味」の候補:
+実 CLI 調査 (`docs/findings/2026-07-19-help-display-order-and-visibility-patterns.md`) で判明した実態:
 
-- **候補 P (再帰開示)**: scope 下のサブコマンドを再帰的に降りて、各サブコマンドの options / commands まで全部 model に含める。生成物は入れ子構造 (各 command entry に "scope" フィールドが付いて、その中に更に options / commands の列が入る)。実 CLI での「help --all」的な用途を想定した機能
-- **候補 Q (1 層と同義 / 語彙不要)**: `depth: "all"` に固有の意味を与えない。scope 指定と同じ 1 層 model を返す = そもそも depth 語彙自体が不要。fixture も追加しない
-- **候補 R (別の意味)**: scope 下でなく scope 上 (親スコープの global 継承分も含めて全部見せる) 等の別意味論を与える
+- **単一位置に pin する 1 方式は存在しない**。実 CLI は 4 方式併存:
+  - 複製方式 (cargo): 自前 option と混在
+  - 省略方式 (rustup/git/docker/npm): サブコマンド help に一切見せない
+  - 参照方式 (kubectl): 値を出さず入手経路だけ案内 (`Use "kubectl options" for a list of global command-line options.`)
+  - 専用セクション方式 (gh: `INHERITED FLAGS`): 継承の事実を隠さず値も出す
+- 「複製方式」も 2 亜種: 混在型部分複製 (cargo) と独立ブロック型完全複製 (yarn/jj、一字一句同一)
+- 2 メタ軸: 深さ依存 (uv は階層の深さで複製⇄省略が切り替わる)、条件依存 (az は継承元の global 集合がコマンドの意味論で動的に変わる)
 
-### 現状
+### 論点
 
-fixture が 1 本も無く、kuu.mbt 実装は暫定で「候補 Q 相当の 1 層 fallback」で動いている (DAll と DScope で同じ model を返す)。
+「kuu で単一位置に pin する」の問い自体が実態と乖離。正しい問いは 2 段:
+
+1. **現 kuu (DR-112 + `help_group_name` + グループ宣言エントリ + `help_order`/`help_after`) で、上記 4 方式 + 2 メタ軸のどれを表現できるか?**
+2. **表現できない方式・軸があるなら、v1 で何を足すか、あるいは v1 では表現力を持たせず v2 以降か?**
+
+現時点の統括の分析 (task #4 で詳細化予定):
+
+- **表現できる**: 専用セクション方式 (gh 式) は「グループ宣言エントリで INHERITED FLAGS セクションを別立てにすれば表現可能」。省略方式は「global installer の宣言層寄与を lint モードで無効化 (別の kuu 語彙が要る)」。参照方式は「モードでなくレンダラ policy の話 (kuu spec の外)」
+- **表現できない**: 深さ依存 (uv 式) と条件依存 (az 式) は動的挙動で、静的 wire form には座席が無い
 
 ### 選択肢
 
-- **候補 P (推し) — 再帰開示として規定 + fixture 追加**: 深い階層 CLI (kubectl / docker compose / gcloud 等の 2 段以上) で「全体像を 1 回で見たい」需要は実 CLI で観測できる (order-survey-a/b の調査から)。ただし再帰形の fixture 設計は中コスト (階層構造 + command_path の起点をどうするか等の設計判断が要る)
-- 候補 Q: 「depth 語彙を v1 で捨てる」— シグネチャから depth 引数ごと落とす。将来 P が必要になったら追加互換で入れる (v1 完備主義 [[feedback-v1-completeness-principle]] とは逆行)
-- 候補 R: 別意味 (親スコープ側の全開示) を与える — 実 CLI に対応する慣習なし
+- **候補 α (推し・仮)**: v1 は「複製方式 + 専用セクション方式」の 2 モードだけ表現力を持たせる。省略・参照・メタ軸は v1 では持たない (レンダラ / 追加互換で足せる)。この場合 global installer の宣言層寄与位置は「専用セクション方式を選ぶなら別のグループ宣言エントリで包む、選ばないなら混在で末尾」の 2 択。**global installer descriptor に「寄与位置モード」の属性を持たせる**
+- 候補 β: v1 は全モードの表現力を持たない (単一固定モード = 複製方式のみ)。実 CLI で 4 方式併存の実態に対して kuu が固定を強制する
+- 候補 γ: 保留 (task #4 の詳細化を待つ)
+
+**task #4 (kuu の表現力チェック & ギャップ提案) を統括が実施した後に本 Q の推しを確定する** — 現時点では表現力の実態が精査中。
 
 ### 参照
 
-- DR-112 §2 (help query シグネチャ)
-- kuu.mbt の `src/kuu/help.mbt` (DAll = DScope で 1 層返す暫定実装)
-- 2026-07-19 実 CLI 調査 (order-survey-a/b の findings で階層 CLI の全体開示ニーズを裏取り予定)
+- DR-112 §2 (読む層) / §3 (entries 順序規範) / §5 (グループ宣言エントリ)
+- DR-042 (global installer の宣言層寄与) / DR-057 (alias) / DR-059 (inheritable)
+- fixtures/help/subcommand-path.json (「順序判断が要らない構成」の自己申告)
+- docs/findings/2026-07-19-help-display-order-and-visibility-patterns.md (実 CLI 4 方式併存 + 2 メタ軸の観測)
 
-## HIP-Q3: 同名グループの重複宣言を許すか
+## HIP-Q3-drift: DR-112 §5-6-6 の「同一設定は冪等」削除 (原裁定への訂正)
 
 ### 背景説明
 
-DR-112 §5-3 のグループ宣言エントリ (`{"help_group_name": "net", "help_group_title": "Network options", ...}`) は options 列に置く。同じ scope の options 列に **同名 (help_group_name が同じ) のグループ宣言エントリを 2 個以上書けるか?** が本 Q の論点。
+DR-112 §5-6-6 の記述:
 
-**問題の由来**: 原裁定 (2026-07-18 findings) は「(5) 同じグループ名に対する**別設定**の重複宣言は definition-error」だけを書いた。DR-112 §5-6-6 に落とす段階で「別設定の重複は error、**同一設定の再宣言は冪等で合法**」と拡張された (「別設定以外 = 同一設定 = OK」と読み拡張)。fixture `fixtures/help/def-error-group-duplicate.json` の why 節が「同一設定の再宣言は冪等で合法だが、冪等時の model 射影は DR-112 未規定のため本初期セットでは pin しない」と自己申告している = **fixture 起草者自身が未確定領域と明示**。
+> 同じグループ名に対する別設定の重複宣言は definition-error (kind: `invalid-range` — 構文上書けるが構成として不成立、DR-082 §2 の既存分類)。**同一設定の再宣言は冪等で合法**。
 
-kawaz 直感 (2026-07-19 発題):「同名グループはスコープに 1 つでは?」= 原裁定の意図と整合し、そもそも「同一設定なら冪等」の後段拡張自体が不要な追加だった可能性が高い。
+後半 (太字部分) は kawaz 原裁定 findings (`docs/findings/2026-07-17-help-mechanism-design-plan.md` の HELP-Q3 裁定原文、2026-07-18 更新) には無い後段追加。原文は「(5) 同じグループ名に対する**別設定の重複宣言は definition-error**」だけを書いており、「同一設定なら冪等」は誰か (DR-112 起草時または help-plan worker) が「別設定以外 = 同一設定 = OK」と字面から読み拡張した drift。fixture `fixtures/help/def-error-group-duplicate.json` の why 節が「同一設定の再宣言は冪等で合法 (DR-112 §5) だが、冪等時の model 射影は DR-112 未規定のため本初期セットでは pin しない」と自己申告 = **fixture 起草者自身が未確定領域と明示**。
+
+kawaz 発題 (2026-07-19):「同名グループはスコープに 1 つでは?」= 原裁定の意図と整合し、「同一設定なら冪等」の後段拡張は原意図と乖離した drift の可能性が高い。
 
 ### 選択肢
 
-- **候補 a (推し) — 無条件重複禁止**: 同名グループの重複宣言は**別設定でも同一設定でも definition-error** (kind: `invalid-range`)。DR-112 §5-6-6 後半の「同一設定は冪等」を削除し、fixture def-error-group-duplicate も「同一設定重複」のケースを追加。kuu.mbt 実装は現「食い違う設定のみ error」を「無条件 error」に強化 (フォローアップ実装)。射影方式 (旧 Q3) の議論自体が消える (重複しないので dedup / 保持の選択が発生しない)
-- 候補 b: 現 DR-112 のまま (別設定 = error / 同一設定 = 冪等合法) + 冪等時の model 射影を pin (旧 Q3 の内容)。「同一設定でも重複を書ける必要がある」実 kuu ユースケースの提示が要る
+- **候補 a (推し)**: DR-112 §5-6-6 後半「同一設定の再宣言は冪等で合法」を削除。同名グループの重複宣言は**別設定でも同一設定でも definition-error** (kind: `invalid-range`)。理由:
+  - 原裁定 findings と整合
+  - fixture 起草者が「未 pin」と自己申告 = 誰も pin していない
+  - 「同一設定でも重複を書ける必要がある」実 kuu ユースケースが提示されていない
+  - a を採用すると射影方式 (旧 HIP-Q3) の議論自体が消え、仕様が単純化
+  - フォローアップ実装は「kuu.mbt の `collect_help_meta_errors` を『食い違う設定のみ error → 無条件 error』に強化」の 1 件のみ、fixture def-error-group-duplicate に「同一設定重複」ケースを追加
+- 候補 b: 現 DR-112 のまま維持 (別設定 = error / 同一設定 = 冪等)。射影方式は「宣言数だけ保持」で pin (実装採用形の追認)。**「同一設定でも重複を書けると嬉しい実 kuu ユースケース」の提示が要る**
 - 候補 c: 保留
 
 ### 参照
 
-- DR-112 §5 (6 項) (現行 spec が「同一設定は冪等」を書いている箇所 — 削除候補)
-- docs/findings/2026-07-17-help-mechanism-design-plan.md の HELP-Q3 裁定原文 (「別設定なら error」しか書いていない、原意図の物証)
+- DR-112 §5-6 (削除候補の記述)
+- docs/findings/2026-07-17-help-mechanism-design-plan.md (HELP-Q3 裁定原文、原意図の物証)
 - fixtures/help/def-error-group-duplicate.json (「本初期セットでは pin しない」の自己申告)
 
-## HIP-Q4: グループ宣言エントリへの hidden
+## HIP-Q4: グループ宣言エントリに `hidden` 属性を持たせるか
 
-グループ宣言エントリ (`{"group": ...}`) に `hidden` を書けるか。現実装は installer vocab 外のため decode reject (Malformed) に倒れている = 「書けない」が事実上の挙動。
+### 背景説明
 
-- **a (実装採用形)**: 書けない (reject) を仕様として fixture で pin。推し — hidden の面別分割 (ref&link) 裁定と整合し、グループの隠蔽はメンバー全 hidden で表現できる
-- b: 座席を与える (グループごと隠す semantics を規定)
-- c: 保留
+DR-112 §5 のグループ宣言エントリ (`{"help_group_name": "net", "help_group_title": "...", "help_group_description": "..."}`) の許容属性は `help_group_name` / `help_group_title` / `help_group_description` / `help_group_order` の 4 種のみ。`hidden` は明示的に許容も禁止もされていない (仕様が言及していない、実装は Malformed で reject)。
 
-## HIP-Q5: 名前付き alias entry の宣言位置規範
+DR-112 §10 の hidden 全体方針:
 
-名前付き alias (`{"alias": ...}`) が options 列の中間に宣言された場合、help model 内の実効位置をどうするか。現実装は wire decode が alias を別配列に分離するため**宣言位置が失われ**、help_after 無しの名前付き alias は列末尾相当に落ちる (kuu.mbt の `src/kuu/help.mbt:362-379`)。spec が「options 列内の宣言位置」を規範にするなら decode 形の変更が要る (中コスト)。
+> `hidden: bool` 1 本を維持。面別 hidden 語彙 (`hidden: ["help"]` 等) は導入しない。clap の「-h では隠すが --help では出す」相当の非対称が欲しい場合は、**ref & link で分割定義**すれば良い
 
-- a (実装採用形): 位置無規範 (末尾落ち許容)。alias に位置が要るなら help_after で明示させる
-- **b: options 列内の宣言位置を規範化**。推し — 他 entry は全て宣言位置が効くのに alias だけ例外になるのは「読み意味論から導出」の一貫性を欠く。ただし実装コストは a が最小
-- c: 保留
+実 CLI 調査で「グループ丸ごと隠す」の実例は cargo `-Z` の 1 件のみ (かつ「完全非表示」でなく「入口 1 行 + 別コマンドで詳細」の二段階可視性)。az は「条件依存で global 集合が変わる」があるが hidden とは別軸。
 
-## HIP-Q6: spellings 内の main/variant の並び順
+### 選択肢
 
-`long: ["no:set:false", ":set"]` のように variant spelling を main より先に宣言した場合、model の `spellings` 配列の順。現実装は main 全部 → variant 全部の順で、宣言順と乖離し得る (fixture `fixtures/help/variant-spellings.json` は main 先頭なので非発現)。
+- **候補 a (推し)**: グループ宣言エントリに `hidden` 属性を**持たせない**。理由:
+  - DR-112 §10 の「面別 hidden 語彙は導入しない、既存機構 (ref&link) で表現」哲学と整合
+  - 「グループ丸ごと隠す」は「メンバー全 hidden」で表現可能 (追加語彙不要)
+  - cargo `-Z` の二段階可視性は「グループ hidden」でなく「入口専用要素 + 別コマンドで詳細」の設計で、kuu では既存の type:help_category + カテゴリ別入口で同型が組める
+  - 実装は現状 (Malformed で reject) のまま、fixture を追加して「hidden は書けない」を pin
+- 候補 b: グループ宣言エントリに `hidden: bool` 属性を追加。cargo `-Z` 型「グループ全体を通常 help から除外」を語彙 1 つで表現。ただし「入口だけ露出 + 詳細は別」の二段階は 1 bool では表現不能で、単純化しすぎ
+- 候補 c: 保留
 
-- a (実装採用形): main 先 variant 後の正規化順
-- **b: 宣言順を保存**。推し — fixture why が既に「宣言順」と書いており、規範の言葉と実装を一致させるべき
-- c: 保留
+### 参照
 
-## HIP-Q7: command entry の aliases 併記・hidden/deprecated の fixture 化
+- DR-112 §5 (グループ宣言エントリの許容属性列挙) / §10 (hidden の全体方針)
+- docs/findings/2026-07-19-help-display-order-and-visibility-patterns.md (cargo `-Z` 唯一例、他ツールは対応パターン持たず)
 
-DR-112 §3 の model 形には command entry の `aliases` / `hidden` / `deprecated` があるが fixture が無く、現実装は固定値 (`aliases: [], hidden: false, deprecated: false`) のハードコードで green になっている (kuu.mbt の `src/kuu/help.mbt:445-452`)。既知の実装ギャップ。
+---
 
-- **a: fixture を追加して実装ギャップを露見させ、実装を直す**。推し — DR-112 §3 に形は確定済みなので裁定というより作業指示。b/c を選ぶ理由が思い当たらない
-- c: 保留 (v1 で command alias/hidden を help に出さない)
+## 統括作業 (裁定不要、実行タスク)
 
+以下は本ファイル外で進める:
+
+1. **DR-112 §5-6-6 後半削除** (HIP-Q3-drift = a なら): spec patch
+2. **kuu.mbt 実装追随 issue** 4 件を kuu.mbt の docs/issue/ に起票:
+   - depth:"all" 再帰実装 (旧 Q2、DR-112 §3 の scope 再帰埋め込みを実装)
+   - alias entry の canonical 併記実装 (旧 Q5、alias 独立 entry でなく alias_spellings 併記)
+   - variant spelling の宣言順保存 (旧 Q6、long 属性の宣言順そのまま)
+   - command entry の aliases/hidden/deprecated 実装 (旧 Q7、ハードコード解消)
+3. **task #4 (kuu の表現力チェック & ギャップ提案)** を統括が実施 → HIP-Q1 の推しを確定
