@@ -232,11 +232,30 @@ descriptor の各軸 (HIP-META-Q7-β 統括推し暫定):
 
 **schema 波及**: `schema/descriptor.schema.json` の `role` enum に `"default_fn"` 追加、`schema/builtin-descriptors.json` に builtin fn 6 種 (borrow / inherit / env / constant / computed / uuid) の descriptor 追加。P2 の波及作業 (§9)。
 
-### 4.4 既存 default との関係
+### 4.4 default_fn 一本化 (kawaz 追補 mid=28) — default 席の unified 意味論
 
-- `default: value` (静的定数) = 現行維持、糖衣として保持
-- `default_fn: "fn:args"` (動的) = 新設
-- **相互排他**: 併用は definition-error (`invalid-range`)
+kawaz mid=28 追加提案の裁定: **default 席の値は常に default_fn 経由**、`default: value` / `env: "VAR"` / `inherit: true` は全て default_fn の糖衣として整理:
+
+| 糖衣記法 (wire form 不変) | 展開後 default_fn |
+|---|---|
+| `default: value` | `default_fn: "constant:<value>"` |
+| `env: "VAR"` | `default_fn: "env:VAR"` |
+| `inherit: true` | `default_fn: "inherit"` (省略引数 = 自 name) |
+| `inherit: {"from": "other"}` (仮) | `default_fn: "inherit:other"` |
+| `default_fn: "fn:args"` (明示) | そのまま |
+
+**利点**:
+1. 実装機構が 1 個 (default_fn) — シンプル
+2. DR-088 kawaz 裁定原文「env 指定があるってことは env から遅延解決する default_fn が設定されてるようなもん」と厳密整合 = default 席は常に fn 経由の思想
+3. wire form 記法は不変 (`default: value` / `env: "VAR"` / `inherit: true` はそのまま書ける、既存 fixture / 実装への破壊的変更なし)
+4. 「default 席の値は必ず fn 経由」の unified 意味論
+5. 値源ラダー §11.4 の default 席が「fn 呼び出し 1 種類」に集約、他値源は全て default_fn の糖衣で表現可能
+
+**fn 命名**: `constant` を採用 (`set` は variant DSL の effect 語彙 `":set"` と衝突するため避ける)。
+
+**相互排他**: 同一要素に糖衣記法と `default_fn:` を併用は definition-error (kind: `invalid-range`)、または `default:` と `env:` の併用等の複数糖衣も併用は definition-error (糖衣層で自然に検出、default 席は 1 個の fn しか持てない)。
+
+**破壊的でない実装移行**: 既存 wire (`{"default": 8080}`) は internal で `{"default_fn": "constant:8080"}` に自動展開、runtime は default_fn 経路 1 本で走る。conformance fixtures の記法も不変。
 
 ### 4.5 failure semantics (dr113-review Major 5 反映、HIP-META-Q7-γ)
 
