@@ -14,6 +14,58 @@
 > - **meta-Q5** (mid=18 確定): **5 個の直交 type 構成** — `help` / `help_all_category` (旧 help_all 名前変更 + 意味論訂正、「全 category 絞りなし」) / `help_category` / `help_show_hidden` (独立軸新設、hidden 表示) / `help_tree` (独立軸新設、サブコマンド tree 全展開)。hidden は独立軸で分離 (混合概念回避)、現行 DR-112 §7 の type:"help_all" は完全撤回。各 type は or で組合せ可 (kuu 背骨の or 表現力そのまま)
 > - **meta-Q6 = A** (mid=23 確定): **default_fn 汎用機構**。fn registry 引き + DSL `"fn_name[:arg...]"` (filter/variant DSL と対称)。builtin fn = borrow / inherit / env / constant / computed / uuid。descriptor 引数の型宣言に kuu の positionals 定義式 (kawaz mid=21 追補)。**DR-088 で kawaz 裁定原文に「default_fn」の語が既出** (「env 指定があるってことは env から遅延解決する default_fn が設定されてるようなもん」) = 概念は既存、DSL 実装が新設分。専用属性 (default_from / default_for) 廃案
 
+## HIP-META-Q8: universal fn への統合 (kawaz 発題 mid=29) — variant DSL effect + default_fn を fn 機構に集約
+
+### 背景説明
+
+kawaz mid=29 の指摘:
+1. long DSL の `":set[:X]"` (variant effect 語彙) と default_fn `"constant:X"` の意味論重複 (「固定値供給」の同型)
+2. long DSL の `:区切り 2 個目以降` の書式は default_fn descriptor の args と同型
+3. → **long に値源としての default_fn を持ってこられる**可能性 (統合案)
+4. descriptor のジェネリクス T の追加 (統合時の型精密化)
+
+現 kuu では:
+- **variant DSL** (`":set:X"` / `"no:set:false"` 等、DESIGN §7.3-7.4) — 発火時 cell 操作、effect 4 種 (set/default/unset/empty)
+- **filter DSL** (`"trim"` / `"in_range:1:65535"` 等、DESIGN §8.4) — 値の変換・検証
+- **default_fn DSL** (mid=28 で確定、`"constant:X"` / `"borrow:Y"` / `"env:VAR"` 等) — default 席の値計算
+
+これら 3 種 DSL は書式が同型 (`"name[:arg...]"`)、意味論も「fn 呼び出しで結果を得る」で近い。**統合可能性**の検討。
+
+### 選択肢
+
+- **候補 A (統合推し、統括推し)**: **universal fn** 機構を kuu の背骨として立てる。variant DSL の effect / filter chain / default_fn を全て「fn 呼び出しの specialization」として統一。descriptor registry 引きで cell operation / value transformation / default supply を宣言。DSL は 1 種類に集約。「やりすぎ感」の kawaz 自問への回答 = やりすぎでなく、kuu 背骨 (or/seq/repeat/link/ref の任意ネストで機構を統一する思想) と整合、DR-088 kawaz 裁定「値源は全て default_fn」の完成形
+- 候補 B (現状維持、統合しない): 3 種 DSL は表面的に類似だが意味論的位相が違う (effect は発火時 cell 操作、filter は値変換、default_fn は default 席計算) として維持。「やりすぎ感」= 統合の複雑度が意味論明快性を上回るリスク
+- 候補 C: v1 では現状維持、v2 で統合検討 — **v1 完備主義 (メモリ feedback-v1-completeness-principle) 違反、不採用**
+
+### 統合の範囲 (候補 A 採用時)
+
+- **DSL 統一**: 3 種 DSL を 1 種の universal fn DSL に集約 (`"fn:args"` 書式)
+- **effect 語彙の再整理**: variant DSL の 4 effect (set/default/unset/empty) を fn 化 (set → constant、default → default (default 席参照)、unset → unset、empty → empty)
+- **descriptor の統一**: DR-107 の role enum に fn 系の役割を統合 (default_fn だけでなく effect / filter も同 role で扱う? or 別 role で共通 fn 機構を使う?)
+- **long DSL への default_fn 引き込み**: `long: ["ttl:constant:60"]` のように発火時 fn を明示 (現 variant DSL の一般化)
+- **ジェネリクス T の追加検討**: DR-107 §3 の型体系拡張 (現 "value" 近似で足りるか、精密性のため T 導入するか)
+
+### 影響範囲
+
+- kuu spec の背骨 (DSL / descriptor / lowering / effect / filter / default_fn) の統合再設計
+- 実装 (kuu.mbt) の広範な書き直し
+- 波及: DESIGN §7 (variant DSL) / §8 (filter) / §11 (default 席) / DR-011 (variant DSL) / DR-034 (multiple/collector) / DR-036 (filter chain) / DR-102 (filter パイプライン) / DR-087/088 (default 遅延解決) / DR-107 (descriptor 直交軸) / DR-111 (accumulator/completer) 等
+- fixtures (variant / filter / multiple / value-sources 系ほぼ全体) の記法確認
+
+### 統括推し
+
+**候補 A (統合)** — v1 完備主義に沿った推し。ただし **範囲膨大**なため、まず統括が **深掘り finding** (「universal fn 統合の設計プラン」) を起草してから v1 スコープ判断を確定する順序を推す。統合の副作用 (実装広範書き換え / 既存 DR/fixture への波及 / 現実装との整合) を精査してから最終裁定。
+
+### 参照
+
+- DESIGN §7.3-7.4 (variant DSL / effect 4 種)
+- DESIGN §8.4 (filter DSL)
+- DR-011 (variant DSL)、DR-034 (multiple)、DR-036 (collector)、DR-102 (filter パイプライン)
+- DR-087/088 (default 遅延解決、default_fn 概念)
+- DR-107 (descriptor 直交軸、role enum、io_type 型体系)
+- HIP-META-Q6 (default_fn 汎用機構、mid=28 で default_fn 一本化承認)
+- kuu 背骨 (or/seq/repeat/link/ref の任意ネスト、機構統一思想)
+
 ## HIP-META-Q7: default_fn の descriptor 軸と失敗意味論 (dr113-review 指摘 Critical 1 + Major 5)
 
 ### 背景説明
