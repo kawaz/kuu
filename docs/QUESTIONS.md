@@ -14,7 +14,17 @@
 > - **meta-Q5** (mid=18 確定): **5 個の直交 type 構成** — `help` / `help_all_category` (旧 help_all 名前変更 + 意味論訂正、「全 category 絞りなし」) / `help_category` / `help_show_hidden` (独立軸新設、hidden 表示) / `help_tree` (独立軸新設、サブコマンド tree 全展開)。hidden は独立軸で分離 (混合概念回避)、現行 DR-112 §7 の type:"help_all" は完全撤回。各 type は or で組合せ可 (kuu 背骨の or 表現力そのまま)
 > - **meta-Q6 = A** (mid=23 確定): **default_fn 汎用機構**。fn registry 引き + DSL `"fn_name[:arg...]"` (filter/variant DSL と対称)。builtin fn = borrow / inherit / env / constant / computed / uuid。descriptor 引数の型宣言に kuu の positionals 定義式 (kawaz mid=21 追補)。**DR-088 で kawaz 裁定原文に「default_fn」の語が既出** (「env 指定があるってことは env から遅延解決する default_fn が設定されてるようなもん」) = 概念は既存、DSL 実装が新設分。専用属性 (default_from / default_for) 廃案
 
-## HIP-META-Q8-α: args 値の colon 含む問題 — array 記法導入 (kawaz mid=34)
+## HIP-META-Q8 バッチ裁定確定サマリ (mid=32/34/35/36/37)
+
+- **✅ Q8 = A**: universal fn 統合承認 (mid=32)
+- **✅ Q8-α = a** (mid=37): args 値の array 記法導入、1 段限定
+- **✅ Q8-γ = i-2** (mid=37): 2 registry (`filters` 既存 + `fns` 新設)、`fns` は default_fn と variant_effect を統合、fn descriptor の返り値型 (Value/Sentinel) で「default 席で使える」vs「発火時のみ」を区別 (kawaz mid=36 指摘で default_fns と variant_effects を分ける必要ないと確認)
+- **Q8-β (filter 系統合の v1 スコープ)**: Q8-γ = i-2 の帰結で **filter は既存 registry 維持、今統合しない**が自然に決着 (fns registry のみ v1 新設、filter は observes 軸だけ後から追加可能。「際限がなくなるリスク」も回避、実装コスト激減)
+- **✅ Q8 統合の「真の姿」確定**: 共通機構は「DSL 書式 (colon-args + array 記法) + observes 軸」の 2 点だけ。registry / ctx / failure reason は役割固有 (filter registry + fns registry の 2 個、FilterFnCtx / DefaultFnCtx / EffectFnCtx の 3 種は独立)
+
+次アクション: DR-114 (universal fn 統合) 起草 + DR-113 (help 再設計) を DR-114 前提で書き直し。裁定完了、実装コスト激減、v1 完備主義準拠。
+
+## HIP-META-Q8-α: args 値の colon 含む問題 — array 記法導入 (kawaz mid=34, ✅ mid=37 = a 承認)
 
 ### 背景
 
@@ -38,7 +48,11 @@ long: ["no:set:false", ":set", ["", "set", "a:b"], ["debug", "env", "LOG:PATH"]]
 - 候補 b: エスケープ (`\:`) 導入 — kawaz 却下済み
 - 候補 c: colon 含む値は書けない仕様として固定 — 実用性欠く
 
-## HIP-META-Q8-β: filter 系を universal fn 統合に含めるか (kawaz mid=34 問い、mid=35 精緻化)
+## HIP-META-Q8-β: filter 系を universal fn 統合に含めるか (kawaz mid=34 問い、mid=35 精緻化、mid=37 帰結で決着)
+
+**決着 (mid=37)**: Q8-γ = i-2 (2 registry: filters 既存 + fns 新設) の帰結で **filter は既存 registry 維持、今統合しない**が自然に確定。fns registry のみ v1 で新設、filter は observes 軸だけ後から追加可能 (v1 or 追加互換で入れる)。「際限がなくなるリスク」回避 + 実装コスト激減。
+
+## HIP-META-Q8-β 元記述 (参考):
 
 ### 見積結果 (finding §4.5、kawaz mid=35 反映後)
 
@@ -53,7 +67,7 @@ filter 系統合の実装コストは **激減**: 既存 filter 機構 (registry
 - 候補 B: universal ABI だけ先行、DSL 集約は v2 — mid=35 反映後は「共通機構が薄い」= A' と B の差がほぼ消える、A' に統合
 - 候補 C: 現状維持で v1、統合は v2 — v1 完備主義違反
 
-## HIP-META-Q8-γ: registry vs role の分け方 (kawaz mid=35)
+## HIP-META-Q8-γ: registry vs role の分け方 (kawaz mid=35, ✅ mid=36 精緻化 + mid=37 = i-2 承認)
 
 ### 選択肢
 

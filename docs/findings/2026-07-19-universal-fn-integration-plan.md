@@ -175,21 +175,42 @@ observes: ["option:<name>", "env:<var>", "system:<key>", ...]
 - **registry も別々に分ける** (kawaz mid=35 質問 = 別 registry 派 (i) 推し)
 - 現 kuu の既存構造 (registry 1 個 = role 1 個の 1:1 対応) と整合
 
-**registry 一覧** (統合後):
+**registry 一覧** (統合後、kawaz mid=36 反映で default_fn と variant_effect を 1 registry に統合):
 
 | registry | role | 用途 | 新設? |
 |---|---|---|---|
-| `filters` | `filter` | pipeline に載る値変換 fn | 既存 (DR-036) |
-| `default_fns` | `default_fn` | default 席の値供給 fn (Q7-α 新設) | **新設** |
-| `variant_effects` | `variant_effect` | 発火時 cell operation fn (set/default/unset/empty + 拡張) | **新設** |
+| `filters` | `filter` | pipeline に載る値変換 fn (T → T、Reject/Error 2 種の失敗) | 既存 (DR-036) |
+| **`fns`** | `fn` | 値供給 fn + cell operation fn (default 席 / 発火時 の両方で使える。Sentinel を返す fn は発火時のみ) | **新設** |
 | `types` | `type_parser` | 型 parser (既存) | 既存 (DR-107) |
 | `providers` | `provider` | env/config/tty (既存) | 既存 (DR-107) |
 | `installers` | `installer` | wire 語彙展開装置 | 既存 (DR-042) |
 | `accumulators` / `collectors` / `completers` | 各役割 | 既存 | 既存 (DR-036/DR-111) |
 
-**名前衝突の自動回避**: `filters` registry の `in_range` と `default_fns` registry の `borrow` は別物。bare 名は同じでも registry (ns) 明示で区別 (DR-094 namespace 機構)。
+**`fns` registry の内容**:
+- **Value を返す fn** (default 席 + 発火時 両方で使える): `set` / `borrow` / `env` / `inherit` / `computed` / `uuid` 等
+- **Sentinel を返す fn** (発火時のみ、cell operation): `unset` / `empty` 等
+- fn descriptor の返り値型 (`io_type.output`) で「値」vs「cell operation (Sentinel)」を区別
+- 呼び出し側 (default 席 / 発火時 cell operation) は fn の返り値型を静的検査、default 席は Value を返す fn のみ受ける
 
-**variant_effect の descriptor 化**: 現状 variant DSL の effect (set/default/unset/empty) は spec の暗黙 registry (§7.4 の 4 種固定) で管理されており descriptor 化されていない。統合後は **`variant_effects` registry** に 4 種を canonical descriptor として登載、3rd party 拡張 (`role: "variant_effect", ns: "myapp"`) も可能に。
+**「使い分けの制約」= 呼び出し側の関心**:
+- **default 席** は Value を返す fn のみ受ける (Sentinel は default 席で意味を持たない → definition-error kind = `invalid-range` 相当)
+- **発火時 cell operation** は Value or Sentinel どちらも受ける
+- **filter 段** は `filters` registry から引く (Value → Value 変換)
+
+**ctx は呼び出し側が渡す** (mid=35 の役割固有 ctx 継承):
+- default 席 → `DefaultFnCtx` (他 option 参照 / env / system)
+- 発火時 cell operation → `EffectFnCtx` (cell/trigger 情報)
+- filter 段 → `FilterFnCtx` (pipeline 入力値)、既存機構
+- fn は「必要な情報を ctx から取る」の対称 interface (observes 軸で静的宣言)
+
+**同じ fn (set/borrow/env 等) が両文脈で使える** (universal fn の真の意味):
+- `long: ["ttl:set:60"]` = 発火時に set fn (Value 60 を返す) → cell に set operation
+- `default_fn: "set:60"` = default 席で set fn (Value 60 を返す) → default 値
+- **fn 自体は 1 個、呼び出し側が用途を決める**
+
+**variant_effect の descriptor 化**: 現状 variant DSL の effect (set/default/unset/empty) は spec の暗黙 registry で管理されているが、統合後は `fns` registry の canonical descriptor として登載。3rd party 拡張 (`role: "fn", ns: "myapp"`) も可能に。
+
+**名前衝突**: `filters` registry の `in_range` と `fns` registry の `set` は別 registry で衝突なし。fns registry 内の bare 名は builtin ns 前提 (DR-094)、拡張は ns 明示。
 
 ### 3.2 observes 軸の追加 (Q7-γ-45=b)
 
