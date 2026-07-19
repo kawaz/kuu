@@ -161,7 +161,7 @@ kawaz mid=29 の指摘:
 
 ### 選択肢
 
-- **候補 a (推し、統括推し + kawaz 提案)**: kawaz 案採用。variant effect 4 種 (set/default/unset/empty) に戻す、update は set fn の特殊化として ctx.old 参照で実現。DR-114 の update 特殊対応 (filters transform を EffectCtx に適用) 記述を削除、set fn ABI に `ctx.old` (Value | absent) 追加
+- **候補 a (推し、統括推し + kawaz 提案 + mid=47 訂正)**: kawaz 案採用。variant effect 4 種 (set/default/unset/empty) に戻す。DR-114 の update 特殊対応 (filters transform を EffectCtx に適用) 記述を削除、cell_fns registry の fn ABI に `ctx.old` (Value | absent) 追加。**update 相当は独立した fn (`incr` 等) が cell_fns registry に住人として登録、`ctx.old` を参照して新規値を返す形で実現** (例: `:incr` で発火時 cell に「old + 1」を set、`default_fn: "incr"` で default 席に「old + 1」を設定)。「variant 4 種」は long ドメイン上の DSL 呼称、実体は cell_fns の 4 個の builtin fn descriptor (kawaz mid=47 指摘)
 - 候補 b: 現状維持 (update effect + 特殊対応)。実装コスト削減なし、universal fn 統合の対称性劣化
 - 候補 c: filter と cell_fns の合流を今やる (Q8-γ の再検討、1 registry 化) — 範囲拡大リスク大、v1 では避ける
 

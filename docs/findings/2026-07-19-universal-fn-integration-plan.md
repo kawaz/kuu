@@ -48,18 +48,33 @@
 
 ## 2. 3 種 DSL の fn 化マッピング
 
-### 2.1 variant DSL effect の fn 化 (dr114-draft worker 指摘反映、update 追加)
+### 2.1 variant DSL effect の fn 化 (Q11 mid=46/47 反映、update forget + kawaz 「実体は 4 種 builtin fn」指摘)
 
-現 variant DSL (DESIGN §7.4 + DR-077 の effect 5 種、統括 finding 初版は update 脱落 = 4 種と誤記):
+「variant effect」は long DSL 上の呼称、**実体は cell_fns registry に登録される 4 種の builtin fn descriptor** (set/default/unset/empty、kawaz mid=47 指摘)。他 fn (borrow/env/incr/uuid 等) と同格の cell_fns 住人。DR-077 の update は forget = 独立 fn (`incr` 等) が `ctx.old` を参照して同型を実現 (Q11 mid=46 kawaz 対案)。
 
-| variant effect | 現形 | fn 化 (universal fn 呼び出し) |
+**cell_fns registry の 4 種 canonical builtin fn** (variant DSL 上の呼称と一致):
+
+| fn 名 | 現形 (DSL 上) | 意味論 |
 |---|---|---|
-| `set` (値なし) = 値スロット | `":set"` (主入口、値スロット) | 値スロット準備 = 発火時ユーザ引数を受けて fn を呼ぶ準備 (fn 呼び出しでなく「値供給待ち」の宣言) |
-| `set` (1 個以上引数、固定値供給) | `"no:set:false"` / `"red:set:rgb:255:0:0"` | **`fn:"set"` を呼ぶ**、args = 引数配列。set fn は「渡された値をそのまま返す」= constant 同型 |
-| `default` (default に戻す、committed=true) | `":default"` | **`fn:"default"` を呼ぶ**、default 席の default_fn を呼び出す (default 席参照) |
-| `unset` (default に戻す、committed=false) | `":unset"` | **`fn:"unset"` を呼ぶ**、cell を unset に |
-| `empty` (配列/Map を空に) | `":empty"` | **`fn:"empty"` を呼ぶ**、配列/Map を空に |
-| **`update` (DR-077 確定、count 正規形の変種、old に transform を適用)** | `":update:<transform>"` (count の increment 等) | **`fn:"update"` を呼ぶ**、args = [transform]。ctx (EffectCtx) から old value を取得、transform を適用して cell に書く。DR-077 の意味論をそのまま universal fn に移す |
+| `set` (値なし) = 値スロット | `":set"` (主入口、値スロット) | 値スロット準備 = 発火時ユーザ引数を受けて fn を呼ぶ準備 |
+| `set` (1 個以上引数、固定値供給) | `"no:set:false"` / `"red:set:rgb:255:0:0"` | args を Value として返す。ctx.old は参照しない (immutable set) |
+| `default` | `":default"` | default 席の default_fn を呼び出す (default 席参照)、Value 返り |
+| `unset` | `":unset"` | Sentinel `unset` を返す、cell を unset に |
+| `empty` | `":empty"` | Sentinel `empty` を返す、配列/Map を空に |
+
+**他 cell_fns registry 住人 (canonical、update 相当を含む)**:
+
+| fn 名 | 例 | 意味論 |
+|---|---|---|
+| `incr` | `":incr"` (発火時) / `default_fn: "incr"` (default 席) | `ctx.old` (Value | absent) を参照、`old + 1` を返す (count 型の update 相当) |
+| `borrow` | `default_fn: "borrow:X"` | ctx から他 option 値を borrow |
+| `env` | `default_fn: "env:VAR"` | (default_fn 席、env ラダー席は既存機構 §4.4) |
+| `uuid` | `default_fn: "uuid:v4"` | UUID 生成 |
+| `computed` | `default_fn: "computed:git_branch"` | system 値取得 |
+
+**帰結**: variant DSL の effect 部分は cell_fns registry の fn 呼び出しに集約。**`long: [":set:X"]` は cell_fns の `set` fn を発火時に呼び出し、返り値を cell に書く**。update effect は削除、`incr` 等の独立 fn が `ctx.old` 参照で同型を実現 (universal fn 統合の対称性向上)。
+
+**発火時 cell operation**: fn の返り値の型 (Value / Sentinel) が cell operation の種類を決める。Value → set operation、Sentinel `unset` → unset operation、Sentinel `empty` → empty operation。fn descriptor の返り値型 (`io_type.output`) で「Value / Sentinel どちら」を宣言。
 
 **帰結**: variant DSL の effect 部分は universal fn 呼び出しに集約。**`long: [":set:X"]` は `long: [":fn:set:X"]` の糖衣** (`:` の 2 個目が fn 名、それ以降が args) と読める。ただし DSL 書式は現行 `:set:X` のまま維持 (糖衣、破壊的でない)。
 
