@@ -148,7 +148,39 @@ kawaz mid=29 の指摘:
 - HIP-META-Q6 (default_fn 汎用機構、mid=28 で default_fn 一本化承認)
 - kuu 背骨 (or/seq/repeat/link/ref の任意ネスト、機構統一思想)
 
-## HIP-META-Q9: preset 暗黙 default と明示 default_fn の衝突 (dr114-draft worker 指摘 2026-07-20)
+## HIP-META-Q10: help capability 入力の contract + query 不在時の失敗 envelope (別 agent 再監査 Major 5/6)
+
+### Q10-α: `#help_all_category` / `#help_show_hidden` / `#help_tree` cell 値の renderer policy 入力 (Major 5)
+
+**背景**: DR-113 の 5 直交 type (help / help_all_category / help_category / help_show_hidden / help_tree) は発火時に対応する内部セルを立てるが、これらの cell 値を renderer policy へ渡す contract が DR-113 に明記されていない。基本 help も help_all_category も `category` を省略、`#help_all_category` cell が model / renderer policy に渡されていないため、両者は観測上同一。
+
+**選択肢**:
+
+- **候補 a (統括推し)**: help query capability の入力に **`category_mode: "default" | "all" | {"named": <string>}`** を追加。renderer は category_mode で「絞りなし全表示」「特定 category 絞り」「デフォルト表示」を分岐。`#help_all_category` cell からアプリ側が category_mode を組んで query 呼び出しに渡す
+- 候補 b: `#help_all_category` / `#help_show_hidden` / `#help_tree` の cell 値を help model の envelope に含める (`{help_all_category: bool, help_show_hidden: bool, help_tree: bool}`)、renderer が model から直接読む
+- 候補 c: renderer policy 指定オプション語彙 (HIP-META-Q4 で持ち越し) の 1 部として整理、canonical renderer 設計 issue で決定
+
+### Q10-β: help query の path/category 不在時の失敗 envelope (Major 6)
+
+**背景**: DR-113 は definition が合法でも呼び出し側が存在しない path/category を問い合わせただけで definition-error `absent-ref` を返すと規定。これは定義検証と query 実行失敗の**位相の混同** (definition-error は definition 側の欠陥、query 不在は呼び出し側の誤り)。
+
+**選択肢**:
+
+- **候補 a (統括推し)**: help query 固有の失敗 envelope を新設 (query-error `absent-path` / `absent-category`)、definition_error profile と分離。conformance runner は help query の失敗を definition_error と区別して扱う
+- 候補 b: 存在しない path/category 呼び出しは **空結果扱い** (help model は空の options/commands で返す)、失敗にしない
+- 候補 c: 現状維持 (definition-error `absent-ref`)、位相不整合を許容
+
+### 統括推し
+
+**Q10-α = a** (category_mode capability 入力追加)、**Q10-β = a** (help query 固有の失敗 envelope)。両者とも v1 完備主義準拠、v1 blocker として P2 (fixtures) 着手前に確定要。
+
+## ✅ HIP-META-Q9 (既存 DR から一意導出、裁定不要): preset 暗黙 default と明示 default_fn の衝突
+
+**決着 (2026-07-20)**: worker (dr114-draft) が「同席の明示 default_fn が preset 暗黙 default を置換する」規則を DR-076 (プリセット属性展開の枠) + DR-098 §5 (明示 > 暗黙の思想) から一意導出、DR-114 に含める。**発明でなく既存 DR からの応用**、kawaz 裁定不要。統括推し (i-2) と一致。DR-114 §? (該当節) で明記される。
+
+以下は議論の記録 (参考):
+
+## HIP-META-Q9 元記述 (参考):
 
 ### 背景説明
 
