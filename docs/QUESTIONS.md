@@ -14,7 +14,31 @@
 > - **meta-Q5** (mid=18 確定): **5 個の直交 type 構成** — `help` / `help_all_category` (旧 help_all 名前変更 + 意味論訂正、「全 category 絞りなし」) / `help_category` / `help_show_hidden` (独立軸新設、hidden 表示) / `help_tree` (独立軸新設、サブコマンド tree 全展開)。hidden は独立軸で分離 (混合概念回避)、現行 DR-112 §7 の type:"help_all" は完全撤回。各 type は or で組合せ可 (kuu 背骨の or 表現力そのまま)
 > - **meta-Q6 = A** (mid=23 確定): **default_fn 汎用機構**。fn registry 引き + DSL `"fn_name[:arg...]"` (filter/variant DSL と対称)。builtin fn = borrow / inherit / env / constant / computed / uuid。descriptor 引数の型宣言に kuu の positionals 定義式 (kawaz mid=21 追補)。**DR-088 で kawaz 裁定原文に「default_fn」の語が既出** (「env 指定があるってことは env から遅延解決する default_fn が設定されてるようなもん」) = 概念は既存、DSL 実装が新設分。専用属性 (default_from / default_for) 廃案
 
-## HIP-META-Q8 バッチ裁定確定サマリ (mid=32/34/35/36/37)
+## HIP-META-Q8 バッチ裁定確定サマリ (mid=32/34/35/36/37/38)
+
+### Q8-δ: registry 命名 (mid=38 で `fns` 不明瞭指摘)
+
+- **kawaz 案**: `source_fns`
+- **統括推し (追加案)**: `cell_fns` — kuu の中心概念 (cell) に紐付いて命名意図が明確、値供給と cell operation の両方を「cell に対する fn」として統一視点
+- 他候補: `value_fns` / `supply_fns`
+- **kawaz 裁定要**
+
+### Q8-ε: 統一 FnCtx + mode 判別 (mid=38)
+
+kawaz 指摘: 2 種類の ctx を fn signature で受けるのは対称性欠く。**統一 FnCtx + mode 判別 + 個別 ctx 取得** の設計:
+
+```
+fn signature: (args: string[], ctx: FnCtx) → Result<Value | Sentinel, Reason>
+
+FnCtx API:
+- ctx.mode() → "default" | "effect" | "filter"
+- ctx.as_default() / as_effect() / as_filter() → 個別 ctx | null (mode 一致時のみ非 null)
+- 共通 API: ctx.env(var) / ctx.system(key) / ctx.observes()
+```
+
+- **統括推し = 承認 (kawaz 案採用)**、finding §2.5 反映済み
+
+
 
 - **✅ Q8 = A**: universal fn 統合承認 (mid=32)
 - **✅ Q8-α = a** (mid=37): args 値の array 記法導入、1 段限定

@@ -133,23 +133,38 @@ long: [
 
 **適用範囲**: universal fn DSL の全席 (variant DSL の long/short/env、filter DSL の各段、default_fn 属性) で同じ規約を採用。統一感 + 混乱回避。
 
-### 2.5 統合後の fn 呼び出し ABI (Q7-γ-45=b + kawaz mid=35 反映 role 固有 ctx)
+### 2.5 統合後の fn 呼び出し ABI (Q7-γ-45=b + kawaz mid=35 + mid=38 反映、統一 FnCtx + mode 判別)
 
-全 fn は同一 ABI 骨格 (共通は 2 点: 引数形式 + observes 軸)、**ctx は role 固有** (kawaz mid=35 指摘反映):
+kawaz mid=38 指摘: 2 種類の ctx を fn signature で受けるのは対称性を欠く、**統一 FnCtx + mode 判別 + 個別 ctx 取得** の設計に変更:
 
 ```
-共通の ABI 骨格:
-  fn signature: (args: string[], ctx: <RoleFnCtx>) → Result<Value, Reason>
-  observes 軸 (descriptor 側で宣言): ["option:<name>", "env:<var>", "system:<key>", ...]
+fn signature (統一): (args: string[], ctx: FnCtx) → Result<Value | Sentinel, Reason>
 
-role 固有の ctx:
-- FilterFnCtx  (role=filter): pipeline 入力値 (ctx.input())、pipeline 段の位置情報等
-                              → 既存 kuu.mbt に相当機構がある可能性 (要確認)
-- DefaultFnCtx (role=default_fn): 他 option 参照 (ctx.borrow_option(name))、env、system
-- EffectFnCtx  (role=variant_effect): cell 情報、trigger 情報 (cell/trigger context)
+FnCtx API (mode 判別 + 個別 ctx 取得、kawaz mid=38 案):
+- ctx.mode() → "default" | "effect" | "filter"  (呼び出し文脈の識別)
+- ctx.as_default() → DefaultCtx | null   (mode="default" 時のみ非 null、逆は null)
+- ctx.as_effect()  → EffectCtx | null    (mode="effect" 時のみ非 null)
+- ctx.as_filter()  → FilterCtx | null    (mode="filter" 時のみ非 null)
+- 共通 API (mode 非依存):
+  - ctx.env(var)
+  - ctx.system(key)
+  - ctx.observes() → 自 fn が宣言した observes 集合の runtime 参照
+
+言語別実装:
+- Rust: enum FnCtx { Default(DefaultCtx), Effect(EffectCtx), Filter(FilterCtx) } + shared env/system
+- Kotlin/MoonBit: sealed class + when 分岐
+- 動的言語: dict/hash + mode key
+
+observes 軸 (descriptor 側で宣言): ["option:<name>", "env:<var>", "system:<key>", ...]
 ```
 
-**共通機構は「DSL 書式 (colon-args + array 記法 §2.4b) + observes 軸」の 2 点だけ**。registry / ctx / failure reason / pipeline 位置は role 固有。「際限がなくなるリスク」(kawaz mid=34 懸念) の完全回避。
+**fn 内部の使い方**:
+- 特定 mode 前提: `let ctx_d = ctx.as_default()?; ctx_d.borrow_option(name)` (null なら error)
+- mode 分岐: `match ctx.mode() { "default" => ..., "effect" => ..., "filter" => ... }`
+
+**逆 mode 呼び出しの防御**: descriptor の返り値型 (Value/Sentinel) と呼び出し側の期待型で spec 側の静的検証で除外、runtime error は defensive check としてのみ意味を持つ (通常は到達しない)。
+
+**共通機構は「DSL 書式 (colon-args + array 記法 §2.4b) + observes 軸 + 統一 FnCtx」の 3 点**。fn signature は 1 種類 (対称性)。「際限がなくなるリスク」(kawaz mid=34 懸念) の完全回避。
 
 **observes 軸** (descriptor 側で宣言、Q7-γ-45=b 承認):
 
@@ -180,7 +195,7 @@ observes: ["option:<name>", "env:<var>", "system:<key>", ...]
 | registry | role | 用途 | 新設? |
 |---|---|---|---|
 | `filters` | `filter` | pipeline に載る値変換 fn (T → T、Reject/Error 2 種の失敗) | 既存 (DR-036) |
-| **`fns`** | `fn` | 値供給 fn + cell operation fn (default 席 / 発火時 の両方で使える。Sentinel を返す fn は発火時のみ) | **新設** |
+| **`cell_fns`** (仮命名、kawaz mid=38 で `fns` は不明瞭指摘、統括推し = cell_fns / kawaz 案 = source_fns / 他候補 = value_fns / supply_fns) | `fn` | 値供給 fn + cell operation fn (default 席 / 発火時 の両方で使える。Sentinel を返す fn は発火時のみ) | **新設** |
 | `types` | `type_parser` | 型 parser (既存) | 既存 (DR-107) |
 | `providers` | `provider` | env/config/tty (既存) | 既存 (DR-107) |
 | `installers` | `installer` | wire 語彙展開装置 | 既存 (DR-042) |
