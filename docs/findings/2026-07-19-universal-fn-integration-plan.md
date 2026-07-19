@@ -100,6 +100,39 @@ Q7-α+一本化 (mid=28+32) 確定の形:
 
 これは「fn は呼び出し文脈 (default 席 / 発火時 / filter 段) を問わず同じ実体を再利用できる」の対称性で、kuu 背骨 (機構統一) と整合。
 
+### 2.4b args 値の colon 含む問題 — array 記法の導入 (kawaz mid=34 発題)
+
+**問題**: colon-args DSL (`"fn:arg1:arg2"`) は args に colon (`:`) を含む値を書けない。例: `env: "PATH:LOCAL"` を borrow したい時、`"env:PATH:LOCAL"` は fn=env, args=["PATH", "LOCAL"] と読まれる。
+
+**エスケープ案の却下** (kawaz 懸念): `\:` の暗黙知要求 (どの文字要エスケープ / 不要文字にエスケープつけたらどうなるかの不安)、事故源になる。導入しない。
+
+**採用案 — array 記法** (kawaz mid=34 提案、統括推し 1 段限定):
+
+wire form 上、colon-string と array of string を**同じ位置で受け入れる**混在配列を許容:
+
+```json
+long: [
+  "no:set:false",              // 従来の string (colon 区切り済み)
+  ":set",                       // 従来の string
+  ["", "set", "a:b"],           // array 記法: prefix="" / fn="set" / args=["a:b"] (colon 含む)
+  ["debug", "env", "LOG:PATH"]  // array 記法: prefix="debug" / fn="env" / args=["LOG:PATH"]
+]
+```
+
+**規約 (1 段限定)**:
+- 各要素は string or array of string の**どちらか**
+- **array 要素の中身は string のみ** (array of array は不許可 = 1 段限定、際限なし化を回避)
+- string 記法と array 記法は**意味論的に等価** (`"no:set:false"` = `["no", "set", "false"]`)
+- 混在配列 OK: 同じ `long: [...]` 内で string と array が混ざってよい
+
+**利点**:
+- エスケープ不要、書き手は「colon 含む値」を意識せず自然に書ける
+- 既存 wire form (string 配列) は不変 (糖衣として維持、破壊的でない)
+- schema 更新: `oneOf: [{type: "string"}, {type: "array", items: {type: "string"}}]` の追加のみ
+- parser 更新: string 要素は colon で split (既存)、array 要素はそのまま部品配列として扱う
+
+**適用範囲**: universal fn DSL の全席 (variant DSL の long/short/env、filter DSL の各段、default_fn 属性) で同じ規約を採用。統一感 + 混乱回避。
+
 ### 2.5 統合後の fn 呼び出し ABI (Q7-γ-45=b 反映)
 
 全 fn は同一 ABI:
@@ -273,14 +306,43 @@ observes: ["option:<name>", "env:<var>", "system:<key>"]
 3. kawaz の他優先事項との競合
 
 **選択 A の推奨実現順**:
-1. **Phase U-1** (spec): DR-114 「universal fn 統合」起草、DR-113 (help 再設計) を DR-114 前提で書き直し。schema 更新
+1. **Phase U-1** (spec): DR-114 「universal fn 統合」起草、DR-113 (help 再設計) を DR-114 前提で書き直し。schema 更新 (array 記法 §2.4b 含む)
 2. **Phase U-2** (spec): DR-011 / DR-034 / DR-036 / DR-087 / DR-088 / DR-102 / DR-107 の関連注記追加、DESIGN §7/§8/§11 の統合再記述
-3. **Phase U-3** (fixtures): 既存 fixture の記法不変性を確認 (糖衣として維持)、期待値更新、新規 fixture 追加
-4. **Phase U-4** (kuu.mbt): universal fn parser + registry + SourceFnCtx + 循環チェックの新規実装、既存 3 種 DSL の lowering を universal fn 経由に refactor
+3. **Phase U-3** (fixtures): 既存 fixture の記法不変性を確認 (糖衣として維持)、期待値更新、新規 fixture 追加 (array 記法 / 統合合成例)
+4. **Phase U-4** (kuu.mbt): universal fn parser (string/array 混在) + registry + SourceFnCtx + 循環チェックの新規実装、既存 3 種 DSL の lowering を universal fn 経由に refactor
 5. **Phase U-5** (kuu-cli): universal fn の consumer 追随 (canonical レンダラは別 issue)
 6. **Phase U-6**: v1 発行条件 (5 プロファイル green) 達成
 
 **kawaz 裁定要**: 選択 A / B / C のいずれか。統括推し = A。
+
+### 4.5 filter 系統合の見積 (kawaz mid=34 問い) — 成立可能、ただし role 分離戦略
+
+**成立する部分** (v1 で統合可能):
+- filter DSL 書式 (`"trim"` / `"in_range:1:65535"`) は universal fn DSL と既に同型 = **DSL 統一の恩恵はゼロコストで得られる**
+- descriptor は DR-107 の `role: "filter"` を universal fn の specialization として維持 = 既存 filter descriptor 13 個は refactor 不要 (role 名維持)
+- registry 統一 (fn registry の中に filter/default_fn/variant_effect の各 role が並ぶ)、ns 分離 (DR-094) で衝突なし
+- array 記法 (§2.4b) は filter 属性でも同じ規約で適用可能
+
+**問題になりそうな点**:
+
+| 問題 | 内容 | 統合戦略での回答 |
+|---|---|---|
+| **返り値の意味論違い** | variant_effect は cell operation、default_fn は値、filter は値。pipeline 内での使い方が違う | **role 固有**: role で pipeline 位置を識別、返り値の型は role の output_mode で分岐 |
+| **SourceFnCtx の役割違い** | filter 段の ctx (pipeline 入力値) / default_fn の ctx (他 option 参照) / variant_effect の ctx (cell/trigger 情報) が違う | **role 固有 ctx**: `SourceFnCtx` を base、role ごとに `FilterCtx` / `DefaultFnCtx` / `EffectCtx` extends の形。共通機構は observes 軸 (静的宣言) のみ |
+| **failure semantics** | filter は Reject / Error 2 種 (DR-037)、default_fn は absent-source で unset (DR-088) | **fallibility 軸は共通** (total/reject)、reason 語彙は role 固有 (filter の reasons registry と default_fn の reasons registry は別 registry) |
+| **既存 fixture 追随** | filter fixture ~40 個の期待値変化 (universal fn 経由で lowering が変わる) | 記法は不変 (糖衣として維持)、lowering (AtomicAST) が universal fn 呼び出し形になる場合の期待値更新 |
+
+**統合戦略の要**:
+- **共通機構は「registry + DSL 書式 + observes 軸 + universal ABI の骨格 (name + args + ctx)」まで**
+- **role 固有**: SourceFnCtx の内容、failure reason 語彙、pipeline での位置
+- 「際限がなくなるリスク」(kawaz mid=34 懸念) の回避 = 共通機構を最小限に、role 固有は既存機構を尊重
+
+**成立可能性の結論**: **v1 で filter 系統合も含めて完遂可能**。既存 filter 機構 (registry / descriptor / pipeline) を大きく壊さず、DSL 書式の統一と array 記法追加、observes 軸の適用だけで実質的な統合が達成できる。実装コストは refactor よりも「新機構追加 + 既存を universal fn 経由に切り替え」で、TRI-Q4 (OutputView 一本化、4 コミット) 級 or それ以上だが、範囲膨大にはならない。
+
+**v1 スコープに filter 系統合を含める推し** (統括推し):
+- **選択 A' (推し、更新版)**: variant DSL / filter / default_fn の 3 種を universal fn として統合、ただし role 分離で共通機構は最小限。v1 完備主義準拠、full 統合
+- 選択 A (前案): filter 系は v2 に回す — 統括推し撤回、更新版 A' に集約
+- 選択 B / C: 変更なし
 
 ## 5. リスク・悪い面
 

@@ -14,6 +14,43 @@
 > - **meta-Q5** (mid=18 確定): **5 個の直交 type 構成** — `help` / `help_all_category` (旧 help_all 名前変更 + 意味論訂正、「全 category 絞りなし」) / `help_category` / `help_show_hidden` (独立軸新設、hidden 表示) / `help_tree` (独立軸新設、サブコマンド tree 全展開)。hidden は独立軸で分離 (混合概念回避)、現行 DR-112 §7 の type:"help_all" は完全撤回。各 type は or で組合せ可 (kuu 背骨の or 表現力そのまま)
 > - **meta-Q6 = A** (mid=23 確定): **default_fn 汎用機構**。fn registry 引き + DSL `"fn_name[:arg...]"` (filter/variant DSL と対称)。builtin fn = borrow / inherit / env / constant / computed / uuid。descriptor 引数の型宣言に kuu の positionals 定義式 (kawaz mid=21 追補)。**DR-088 で kawaz 裁定原文に「default_fn」の語が既出** (「env 指定があるってことは env から遅延解決する default_fn が設定されてるようなもん」) = 概念は既存、DSL 実装が新設分。専用属性 (default_from / default_for) 廃案
 
+## HIP-META-Q8-α: args 値の colon 含む問題 — array 記法導入 (kawaz mid=34)
+
+### 背景
+
+universal fn DSL (`"fn:arg1:arg2"`) は args に colon を含む値を書けない。エスケープ (`\:`) は暗黙知要求で不安、導入したくない (kawaz mid=34)。
+
+### 提案 (kawaz mid=34)
+
+wire form 上、colon-string と array of string を**同じ位置で受け入れる**混在配列:
+
+```json
+long: ["no:set:false", ":set", ["", "set", "a:b"], ["debug", "env", "LOG:PATH"]]
+```
+
+- 各要素は string or array of string の**どちらか**
+- **array 要素の中身は string のみ** (1 段限定、際限なし化を回避)
+- string と array は意味論的に等価
+
+### 選択肢
+
+- **候補 a (推し、統括推し)**: array 記法導入、1 段限定。エスケープ不要、明示的、書き手負担なし
+- 候補 b: エスケープ (`\:`) 導入 — kawaz 却下済み
+- 候補 c: colon 含む値は書けない仕様として固定 — 実用性欠く
+
+## HIP-META-Q8-β: filter 系を universal fn 統合に含めるか (kawaz mid=34 問い)
+
+### 見積結果 (finding §4.5)
+
+filter 系統合は **v1 で成立可能**、ただし **role 分離戦略** (共通機構は registry + DSL 書式 + observes 軸まで、SourceFnCtx / failure reason は role 固有) で「際限がなくなるリスク」を回避。
+
+### 選択肢
+
+- **候補 A' (推し、統括推し、更新版)**: v1 で filter 系統合も含む full 統合、role 分離戦略で共通機構は最小限
+- 候補 A (前案): filter 系は v2 に回す — 統括推し撤回、更新版 A' に集約
+- 候補 B: universal ABI だけ先行、DSL 集約は v2
+- 候補 C: 現状維持で v1、統合は v2
+
 ## HIP-META-Q8: universal fn への統合 (kawaz 発題 mid=29) — variant DSL effect + default_fn を fn 機構に集約
 
 ### 背景説明
