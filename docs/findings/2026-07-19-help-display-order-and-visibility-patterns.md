@@ -539,8 +539,428 @@ Use "go help <topic>" for more information about that topic.
 
 `go help mod` (サブコマンド一覧): `download / edit / graph / init / tidy / vendor / verify / why` の 8 個。alias / hidden の実例は観測されなかった。
 
-## Rust/Go 系まとめ (次担当への引き継ぎ)
+## Rust/Go 系まとめ (前担当からの引き継ぎ、書き換えなし)
 
 - 4 論点それぞれで **複数の異なる実装方式**が実在することを確認済み。単一の kuu 仕様に強制収束させるのではなく、表現力ギャップの洗い出し (task #4) では「どの方式を kuu の型でどう表現できるか」をマトリクス化するのが有効
 - 特に **gh の `INHERITED FLAGS` (専用セクション + 値の明示)** と **kubectl の参照方式 (値を出さず経路だけ案内)** は対極的な設計であり、kuu がどちらか一方しか表現できない設計だと実態カバレッジが不足する
 - Python/Node/hierarchical 系の続報を待って、分類マトリクスを全ツール共通で再統合するのが望ましい
+
+---
+
+## Python/Node/hierarchical 系 (続報)
+
+> 前段 (Rust/Go 系) の 4 論点 (HIP-Q1/Q4/Q5,Q6/Q7) を踏襲し、Python/Node/hierarchical 系ツールを追加調査した。
+> 実機 (macOS, 2026-07-19)。バージョン: uv 0.9.x / aws-cli 2.x / azure-cli (az) 2.88.0 / npm 11.17.0 / yarn 1.22.x
+> (classic) / bun 1.3.13+bf2e2cecf / docker 29.4.0 (compose plugin) / kubectl (client のみ、前段と同一個体) /
+> jj (前段と同一個体)。
+>
+> **未実行 (理由)**:
+> - `poetry` / `pytest` / `mypy` / `turbo` / `eslint` / `prettier` / `firebase` — 未インストール (`which` で確認)
+> - `pip` — kuu リポの hook (`force-uv.sh`) が `pip install` 系コマンドをブロックする方針のため、`uv pip` で代替観測
+> - `gcloud` — `gcloud --help` 実行時に `ModuleNotFoundError: No module named 'imp'` (Python 3.14 環境で `imp` モジュール廃止、gcloud 側の未追従) により起動不能。help 出力取得不可、パターンは未検証
+
+### 判明した事実 (Python/Node/hierarchical 系)
+
+#### 5. global option の配置
+
+| ツール | トップレベル option 見出し | サブコマンド help での再掲有無 | 再掲時の見出し | 位置 |
+|---|---|---|---|---|
+| uv | `Global options:` (`Cache options:` `Python options:` と並列の複数見出しの一つ) | `uv pip --help` に**完全複製** (`-q/-v/--color/--native-tls/--offline/...` が丸ごと再掲、`-h` のみサブコマンド版に差し替え) | `Global options:` (同名見出しでそのまま) | コマンド一覧の後、末尾 (`-h`直前) |
+| uv (深い階層) | 同上 | `uv pip install --help` では **省略** (`Global options:` 自体が消え、`pip install` 固有 option のみ) | — | — |
+| aws | `Global Options` (man page 見出し) | `aws s3 cp help` の **Synopsis (usage) 行にのみ**再掲 (`[--debug] [--endpoint-url <value>] ... [--version <value>]`)。本文の説明付き `Global Options` 節は確認できず (出力後半、未取得範囲) | Synopsis 内は無見出し (他の固有 option と同一の `[--flag <value>]` 列挙に混在) | Synopsis の**末尾** (固有 option 群の後) |
+| npm | (トップの `npm help` に Global Options 節なし。`.npmrc` の config 経由という別建て) | `npm install -h` / `npm ls -h` / `npm run -h` いずれも **generic な config option (`--registry`, `--loglevel` 等) は一切登場しない** (完全省略) | — | — |
+| yarn (classic) | `Options:` (無名見出し、60+ 個の flag をフラット列挙) | `yarn install --help` / `yarn add --help` の両方に **トップと寸分違わぬ同一の Options 全量が再掲** (`--cache-folder` から `-E, --save-exact` まで一字一句同一、`install`/`add` 固有の flag は追加されない) | `Options:` (同名) | コマンド自体の説明直後、**唯一のセクション** (機能別グループ分割なし) |
+| bun | `Flags:` (トップ、`run`/`x` 等のデフォルト実行系オプション、100+ 行) | `bun install --help` と `bun add --help` は **互いにほぼ同一の option セット** (`-c/--config`, `--dry-run`, `--frozen-lockfile` 等) を持つが、これは「global からの継承」ではなく **install 系コマンド同士が横並びで似た option を独自定義**している (トップの `Flags:` とは別物、重複しない) | それぞれ無名の `Flags:` | コマンド説明直後 |
+| docker compose (plugin 境界) | `Options:` (compose 自身の global 相当、`--file`/`--profile`/`--project-name` 等) | `docker compose up --help` では**省略**(compose 自身の Options も再掲されない、かつ **docker 本体の `Global Options:`** も compose 配下には一切登場しない) | — | — |
+| az | `Global Arguments` (常時) + `Global Policy Arguments` (**条件付き**、リソース変更系コマンドのみ出現) | `az group --help` (subgroup) には Arguments 節自体がない (コマンド一覧のみ)。`az group create --help` (leaf) には **`Global Policy Arguments` と `Global Arguments` の 2 段構成**で再掲 | `Global Policy Arguments` / `Global Arguments` (2 見出しに分離) | leaf コマンドの**末尾** (固有 `Arguments` の後) |
+| jj | `Global Options:` (トップ) | `jj bookmark --help` (中間階層) にも `jj log --help` (葉、深さ問わず) にも **一字一句同一の全文が再掲** (`-R, --repository` から `--ignore-immutable` まで、説明文の改行位置まで完全一致) | `Global Options:` (同名) | コマンド一覧・固有 `Options:` の**後**、末尾 |
+
+観察された配置方式を前段の 4 分類に当てはめると:
+
+- **複製方式のうち「完全複製」** (= 元セクションと一字一句同一のテキストがそのまま繰り返される): **yarn**, **jj** が該当。前段の cargo は「同一 `Options:` セクション内に**混在**させつつ、`-h` など一部だけ差し替える」**部分複製**であり、yarn/jj の「独立したセクションとして丸ごと不変コピー」とは粒度が異なる。→ **複製方式は「混在型 (cargo)」と「独立ブロック型 (yarn/jj)」の 2 亜種に分割できる**
+- **複製方式のうち「部分複製」**: uv (`uv pip --help` は Global options を complete に再掲するが `uv pip install --help` ではその同じ Global options が消える = 深さによって複製と省略が切り替わる、cargo・yarn・jj のどれとも違う「深さ依存」の挙動)
+- **省略方式**: npm (generic config option)、docker compose (compose 自身の global も docker 本体の global も両方省略) が該当。npm は「global option という概念自体を help 上に一切見せない」徹底型
+- **参照方式**: 今回の追加調査では kubectl 以外に明確な実例は見つからず (aws の Synopsis 再掲は「値を隠さず出す」ので参照方式ではない)
+- **専用セクション方式 (再掲 + 分離)**: uv (`Global options:` という明示名で分離)、az が該当。ただし **az は「専用セクション方式」をさらに 2 段に細分化**する新パターンを見せた (下記)
+
+**az の新パターン (5 番目の方式候補)**: `Global Arguments` (全コマンド共通) と `Global Policy Arguments` (Azure Policy 関連のコマンドでのみ意味を持つ、条件付き global) を **別見出しとして分離**。`Global Policy Arguments` は `az group --help` (subgroup) には出現せず、`az group create --help` (実際にリソースを変更する leaf) でのみ出現した — **「継承元は 1 つの固定リストではなく、コマンドの性質によって出現する global 集合自体が変わる」** という、前段のどの方式にも当てはまらない挙動。gh の `INHERITED FLAGS` (値も出す) に近いが、gh は継承元が単一の親スコープなのに対し az は「横断的に複数の意味論グループを持つ global 集合から、該当するものだけを都度合成して見せる」点で異なる
+
+#### 6. hidden option / group の扱い
+
+- **bun の `Flags:` (トップ)**: 100+ 行の runtime flag (`--inspect`, `--cpu-prof` 等) は `bun run`/`bun exec` 系のデフォルト実行に紐づくもので、`bun install`/`bun add` には一切継承されない (別カテゴリの option 群が完全に独立している。「hidden」ではなく「そもそも scope が違う」ため非表示)。cargo の `-Z` のような「意図的な非表示」とは性質が異なる
+- **az の `Global Policy Arguments`**: 上記の通り、特定条件 (リソース変更系コマンド) でのみ出現し、それ以外の leaf コマンドでは非表示。「常に存在するが特定 flag でのみ開示される」cargo `-Z` 型とも「常時省略」型とも違う、**コマンドの意味論によって global 集合自体が条件分岐する**唯一の実例
+- **docker compose の `Management Commands: bridge`**: compose 自身のコマンド一覧内に、通常の `Commands:` とは別枠で `Management Commands:` という 1 コマンドだけの特別枠がある (docker 本体の `Management Commands:` パターンを compose plugin 内でも踏襲。入れ子構造でも同一の分類慣習が繰り返される実例)
+- npm/yarn/bun/uv/az いずれにも「意図的な hidden option (通常 help には出ないが存在する)」の直接的な実例は見つからなかった。cargo `-Z` は今回調査した Python/Node/hierarchical 系では対応するパターンが再現しなかった (= 出現頻度が低い可能性)
+
+#### 7. alias / spelling の宣言位置と表示位置
+
+| ツール | alias 種別 | 表示位置 | 表示形式 |
+|---|---|---|---|
+| jj | コマンド alias (`bookmark` = `b`) | コマンド名の**直後、角括弧の説明内**（cargo のようにコマンド名列に併記するのではなく、descriptionテキストの末尾に注記) | `bookmark  Manage bookmarks [default alias: b]` |
+| jj (サブサブコマンド) | 同 (`bookmark create` = `bookmark c`) | 同型、description 末尾注記 | `create   Create a new bookmark [aliases: c]` |
+| gh pr create | コマンド全体の alias (`gh pr new`) | 専用 `ALIASES` セクション (前段既出、再確認) | `gh pr new` |
+| bun | コマンド alias (`bun install` = `bun i`) | コマンド説明文の**直後の行**、専用ラベル `Alias:` (単数形、gh/docker の複数形 `Aliases:`/`ALIASES` と語尾が異なる) | `Usage: bun install ...\nAlias: bun i` |
+| yarn | サブコマンド名の**別名を同一行にスラッシュ区切りで併記** (専用セクションなし) | コマンド一覧内、名前列 | `generate-lock-entry / generateLockEntry` |
+
+jj の alias 表示位置 (`[default alias: b]` を description 末尾に置く) は、前段で観測した cargo (名前列に併記) や gh/docker (専用セクション分離) のどちらとも異なる **第 3 の位置パターン**として記録に値する。「宣言済み alias をどこに置くか」は前段の 2 パターンだけでは網羅できていなかった。
+
+spelling variant (`--no-*`) について:
+- uv の `--managed-python` / `--no-managed-python`、docker compose の暗黙的なフラグ (例なし直接確認できず) — uv の例は**正 spelling の直後の行に variant が連続**して列挙される (`--managed-python` → `--no-managed-python` → `--no-python-downloads` の順で並ぶ。「宣言順のまま」という前段の結論を再確認)
+- bun の `--no-save` / `--save` は **`--no-save` が先、`--save` が後** に列挙される (アルファベット順でも「正→否定」の慣習順でもない。純粋な宣言順)
+- npm の `install` help も `[-S|--save|--no-save|--save-prod|--save-dev|...]` と**単一の角括弧グループ内に正/否定/variant を全部フラットに列挙**し、視覚的な優先順位付けは見られない
+
+#### 8. command alias / hidden / deprecated の表示
+
+- **npm**: `npm help` のコマンド一覧に `ll` (= `npm ls` の alias 的存在) のような短縮コマンドが**通常コマンドと全く同列でフラット列挙**される (専用グループなし、gh の `ALIAS COMMANDS` とは対照的)
+- **yarn**: コマンド一覧内で `generate-lock-entry / generateLockEntry` のように**表記ゆれをスラッシュ併記**する形式が alias 表示を兼ねる (gh/docker のような専用ラベルなし)
+- **bun**: コマンド一覧の右列に**使用例のサンプル引数** (`x prisma`, `add elysia`, `remove backbone` 等) をインラインで添える独自形式。alias/hidden/deprecated の明示的な表示ではないが、「コマンドの使い方を一覧の中で即座に示す」という他ツールにない情報付加パターン
+- **az**: サブグループ名の直後に `[Preview]` / `[Experimental]` という**角括弧タグ**をインラインで付与 (`consumption [Preview]`, `config [Experimental]`)。cargo の `(deprecated)` インライン注記と同系統だが、**成熟度ステータスを複数種類 (Preview/Experimental) 使い分けて明示するタグ形式**は前段になかったパターン
+- **jj**: サブコマンド一覧内で alias を `[default alias: b]` (最頻用) と `[aliases: a]` (複数可) の**2 段階の表現**で区別する。「デフォルトで推奨される alias」と「単なる別名」を語彙レベルで分けている実例 (gh/cargo にはこの区別がない)
+- deprecated コマンドの直接例は本調査でも観測されなかった (前段と同じ「該当ツールが手元にない」制約)
+
+### 実用的な示唆 (Python/Node/hierarchical 系まで、暫定統合)
+
+#### 用語対応表 (追加分)
+
+| 実 CLI 用語 | 由来ツール | kuu 側の想定対応 |
+|---|---|---|
+| `Global options:` (完全複製 + 深さ依存で省略) | uv | scope=global の option 群。**継承の可視性が呼び出し深さに依存**するケースがある事実は kuu の help_group 設計に「深さ条件」の座が要るか検討材料 |
+| `Global Arguments` / `Global Policy Arguments` (条件付き 2 段) | az | 単一の global 集合ではなく、**コマンドの意味論によって出現有無が変わる複数の global グループ**。gh の `INHERITED FLAGS` (単一親スコープからの継承) より一段複雑 |
+| `Alias:` (単数形、bun) vs `Aliases:`/`ALIASES` (複数形、docker/gh) | bun/docker/gh | 同じ「コマンド全体の別名」概念でもラベルの単複が割れている。kuu が文言を持つなら数に応じた単複差までは実装非対象 (助言レベル) |
+| `[default alias: b]` / `[aliases: a]` (description 末尾注記、2 段階区別) | jj | alias 表示の**第 3 の位置パターン** (名前列併記でも専用セクションでもない)。かつ「デフォルト alias」と「その他 alias」を区別する語彙がある稀有な例 |
+| `[Preview]` / `[Experimental]` (角括弧タグ、複数種) | az | cargo の `(deprecated)` と同系統 (インライン注記) だが、**成熟度ステータスの語彙が複数種類**ある実例 |
+
+#### 4 論点への追加示唆
+
+1. **global 配置 (HIP-Q1)**: 前段の「複製/省略/参照/専用セクション」の 4 分類は依然有効だが、**「複製」は一枚岩ではなかった**。cargo のような**混在型部分複製** (同一セクション内に他の option と混ざって差し込まれる) と、yarn/jj のような**独立ブロック型完全複製** (セクションごと一字一句コピー) は、kuu の型で表現しようとすると全く別の構造 (前者は「サブコマンド option リストへのマージ」、後者は「親スコープの help_group をそのまま再掲」) になる。さらに uv は**同じツール内で階層の深さによって複製⇄省略が切り替わる**、az は**条件によって出現する global グループ自体が変わる**という、前段になかった「静的に 1 パターンへ分類できない」実例も出た。kuu の表現力チェックでは「1 ツール = 1 方式」の前提を外し、「1 ツール内で階層ごとに異なる方式が混在しうる」ことを前提にする必要がある
+2. **hidden (HIP-Q4)**: cargo `-Z` 型 (グループ丸ごと入口だけ露出) の再現例は今回見つからなかった一方、**az の「コマンドの意味論で global 集合自体が変わる」は hidden とは別軸の新現象**として記録すべき。「値は既に決まっている hidden/visible の二値」ではなく「表示するかどうかがコマンドの属性 (このコマンドはリソースを変更するか等) に依存する」動的な可視性条件があり得る
+3. **alias 位置 (HIP-Q5, Q6)**: jj の「description 末尾角括弧注記」は名前列併記 (cargo) でも専用セクション (gh/docker) でもない**第 3 の位置**。3 系統が実在する以上、kuu が alias 表示位置を 1 箇所に固定する設計だと実態の 1/3 しかカバーできない。variant spelling (`--no-*`) の宣言順保存が優勢という前段の結論は uv/bun/npm でも再確認され、揺るがなかった
+4. **command alias/hidden/deprecated (HIP-Q7)**: az の `[Preview]`/`[Experimental]` はステータスタグの**語彙が複数種類**あることを示し、cargo の `(deprecated)` 1 種類だけでは足りない。jj の「default alias とその他 alias の区別」も、gh/cargo が持たない語彙レベルの粒度であり、kuu の command 定義がここまでの粒度を持つ設計にするかは要検討課題として残る
+
+### 検証の詳細 (実出力ログ)
+
+#### uv (0.9.x)
+
+`uv pip --help` (全文は前掲の Bash 出力ブロック参照):
+```
+Global options:
+  -q, --quiet...
+          Use quiet output
+  -v, --verbose...
+          Use verbose output
+      --color <COLOR_CHOICE>
+      ...
+  -h, --help
+          Display the concise help for this command
+
+Use `uv help pip` for more details.
+```
+所見: `uv --help` (トップ) の `Global options:` ブロックと **一字一句同一** (末尾の `-h` の説明文言 `Display the concise help for this command` だけがトップと共通、`-V/--version` のみトップにあってここにはない差分)。「ほぼ完全複製、末尾 1 行だけ差し替え」という cargo・yarn・jj のどれとも微妙に異なる挙動。
+
+`uv pip install --help` (全文は前掲):
+```
+Options:
+  -r, --requirements <REQUIREMENTS>
+  ...
+      --torch-backend <TORCH_BACKEND>
+```
+所見: `Global options:` セクション自体が**消滅**。`uv pip --help` にはあった `-q/-v/--color` 等は install レベルでは一切表示されない。同一ツール内で **1 階層下では複製、2 階層下では省略** という深さ依存の切り替えを確認。
+
+#### aws (2.x)
+
+`aws help` (冒頭、前掲の Global Options 抜粋):
+```
+Global Options
+     --debug (boolean)
+     --endpoint-url (string)
+     ...
+     --cli-connect-timeout (int)
+```
+所見: man page 形式で `Global Options` という専用見出し。各 option に `(boolean)`/`(string)`/`(int)` という**型注記**が付く (他ツールでは稀)。
+
+`aws s3 cp help` (Synopsis 部分、前掲):
+```
+cp
+<LocalPath> <S3Uri> or <S3Uri> <LocalPath> or <S3Uri> <S3Uri>
+[--dryrun]
+[--quiet]
+...
+[--debug]
+[--endpoint-url <value>]
+[--no-verify-ssl]
+[--no-paginate]
+[--output <value>]
+[--query <value>]
+[--profile <value>]
+[--region <value>]
+[--version <value>]
+```
+所見: Synopsis (usage 行) の**末尾に global option 群がそのまま列挙**され、`cp` 固有の option (`--dryrun`, `--sse` 等 40+ 個) との間に見出し区切りがない (フラットな 1 リストに混在)。cargo の「同一セクション内混在」と類似だが、aws は見出し行自体を持たない Synopsis という点でさらに簡素。本文の説明付き `OPTIONS` 節 (man page 後半) は出力量が多く未取得 (時間制約により Synopsis 止まり、要追試)。
+
+#### npm (11.17.0)
+
+`npm help` (前掲、コマンド一覧):
+```
+npm <command>
+
+Usage:
+
+npm install        install all the dependencies in your project
+...
+All commands:
+    access, adduser, approve-scripts, audit, bugs, cache, ci,
+    completion, config, dedupe, deny-scripts, deprecate, diff,
+    ...
+```
+所見: コマンド一覧はアルファベット順のフラットな 1 リスト (`ll` 含む、alias 専用グループなし)。global option という概念自体がトップ help に登場しない (config は別建て、`npm help config` への案内のみ)。
+
+`npm install -h` (前掲):
+```
+Install a package
+
+Usage:
+npm install [<package-spec> ...]
+
+Options:
+[-S|--save|--no-save|--save-prod|--save-dev|--save-optional|--save-peer|--save-bundle]
+[-E|--save-exact] [-g|--global]
+...
+```
+所見: `-S|--save|--no-save|...` のように**正/否定/variant を同一角括弧グループ内でパイプ区切り**にする独自形式 (他ツールに無い)。generic な config option (`--registry`, `--loglevel` 等) は一切登場せず、`install` 固有の option のみ。
+
+`npm ls -h` / `npm run -h` も同型 (generic option 省略、固有 option のみのフラット列挙)。
+
+#### yarn (1.22.x, classic)
+
+`yarn --help` (前掲、Options 全量):
+```
+Options:
+    --cache-folder <path>               specify a custom folder ...
+    --check-files                       install will verify file tree ...
+    ...
+    -v, --version                       output the version number
+    --verbose                           output verbose messages ...
+    -h, --help                          output usage information
+  Commands:
+    - access
+    - add
+    ...
+```
+所見: 60 個弱の option が単一 `Options:` 見出し内にフラット列挙 (機能別グループ分割なし)。
+
+`yarn install --help` (前掲、冒頭〜末尾):
+```
+  Usage: yarn install [flags]
+  ...
+  Options:
+    -v, --version                       output the version number
+    --no-default-rc                     prevent Yarn from automatically ...
+    ...
+    -E, --save-exact                    DEPRECATED
+```
+所見: `yarn --help` の `Options:` と**完全に同一の 50 行弱がそのまま再掲** (`install` 固有の option は追加されない。むしろ `install` 文脈では無関係な `-S|--save` 等が **DEPRECATED 注記付きのまま**残っている)。
+
+`yarn add --help` も同一の Options 全量が再掲 (`install` との差分はコマンド説明文と Usage 行のみ)。所見: yarn は「トップの Options を丸ごとどのサブコマンドにもコピー」する徹底した複製方式で、サブコマンド固有の option を独立して定義しない (もしくは定義してもトップと同じプールを共有)。
+
+#### bun (1.3.13+bf2e2cecf)
+
+`bun --help` (前掲、Commands + Flags):
+```
+Commands:
+  run       ./my-script.ts       Execute a file with Bun
+  ...
+  install                        Install dependencies for a package.json (bun i)
+  add       elysia               Add a dependency to package.json (bun a)
+  ...
+
+Flags:
+      --watch                         Automatically restart the process on file change
+      ...
+  -h, --help                          Display this menu and exit
+```
+所見: コマンド一覧の右列に**サンプル引数**が添えられる (`run ./my-script.ts`, `add elysia` 等)。コマンド名の説明文中に `(bun i)` / `(bun a)` と**alias が丸括弧内注記**で埋め込まれる (jj の角括弧注記、cargo の名前列併記とも異なる第 4 の位置)。`Flags:` は 100+ 行の runtime option (`--inspect` 等) で、`install`/`add` の option とは非交差。
+
+`bun install --help` (前掲):
+```
+Usage: bun install [flags] <name>@<version>
+Alias: bun i
+
+  Install the dependencies listed in package.json.
+
+Flags:
+  -c, --config=<val> ...
+  ...
+  -h, --help                         Print this help menu
+  -d, --dev                          Add dependency to "devDependencies"
+  ...
+```
+所見: `Alias: bun i` が**コマンド説明の直前、専用ラベル (単数形)** で独立表示 (前掲の丸括弧注記とは別に、ここでは専用行としても示される — 同じ alias 情報が 2 箇所に出る)。
+
+`bun add --help` も酷似した Flags 一覧 (`-d/--dev`, `-E/--exact` 等が共通)。所見: `install` と `add` の option 集合はほぼ同一だが、これは「global からの継承」ではなく**両コマンドが独立に同じ option セットを定義している** (`bun pm --help` のようなユーティリティ系サブコマンドにはこの option セットが引き継がれない ことから継承ではないと判断)。
+
+`bun pm --help` (前掲、ネストしたサブサブコマンド一覧):
+```
+Commands:
+  bun pm scan                 scan all packages in lockfile for security vulnerabilities
+  bun pm pack                 create a tarball of the current workspace
+  ├ --dry-run                 do everything except for writing the tarball to disk
+  ├ --destination             the directory the tarball will be saved in
+  ...
+  └ --gzip-level              specify a custom compression level for gzip (0-9, default is 9)
+  bun pm bin                  print the path to bin folder
+  └ -g                        print the global path to bin folder
+  ...
+```
+所見: **ツリー記号 (`├`/`└`) でサブサブコマンド固有の option を、コマンド名の下にインデント表示**する独自形式。前段・今回通じて他ツールに無い、「1 画面で 2 階層分の情報を罫線で視覚的にネストさせる」パターン。
+
+#### docker compose (29.4.0, plugin)
+
+`docker compose --help` (前掲):
+```
+Usage:  docker compose [OPTIONS] COMMAND
+
+Options:
+      --all-resources ...
+      --ansi string ...
+  -f, --file stringArray           Compose configuration files
+  ...
+  -p, --project-name string        Project name
+
+Management Commands:
+  bridge      Convert compose files into another model
+
+Commands:
+  attach ... up ... volumes
+```
+所見: `docker --help` (本体) にあった `Global Options:` (`--host`, `--context` 等) は compose 側には**一切登場しない**。compose 自身が独自の `Options:` (`--file`, `--profile` 等) を持ち、これは docker 本体の global とは別の**プラグイン境界で独立した global scope**。`Management Commands:` という 1 コマンドだけの特別枠 (`bridge`) が、docker 本体の分類慣習 (`Management Commands:` / `Common Commands:` 等) をそのまま踏襲。
+
+`docker compose up --help` (前掲、Options 抜粋):
+```
+Usage:  docker compose up [OPTIONS] [SERVICE...]
+
+Options:
+      --abort-on-container-exit ...
+  -d, --detach ...
+  ...
+```
+所見: compose 自身の `Options:` (`--file`, `--profile` 等) も**再掲されない** (省略方式)。docker 本体・compose 自身のどちらの global も、2 階層目の `up` には一切継承・表示されない — 「省略方式は入れ子の階層が深まるほど徹底される」実例。
+
+#### kubectl (client、深い階層の追加観測)
+
+`kubectl config --help` (前掲、中間階層):
+```
+Available Commands:
+  current-context   Display the current-context
+  ...
+  set-context       Set a context entry in kubeconfig
+  ...
+
+Usage:
+  kubectl config SUBCOMMAND [options]
+
+Use "kubectl config <command> --help" for more information about a given command.
+Use "kubectl options" for a list of global command-line options (applies to all commands).
+```
+`kubectl config set-context --help` (前掲、3 階層目):
+```
+Options:
+    --cluster='':
+	cluster for the context entry in kubeconfig
+    ...
+    --user='':
+	user for the context entry in kubeconfig
+
+Usage:
+  kubectl config set-context [NAME | --current] [--cluster=cluster_nickname] [--user=user_nickname] [--namespace=namespace] [options]
+
+Use "kubectl options" for a list of global command-line options (applies to all commands).
+```
+所見: 前段で確認した参照文言 (`Use "kubectl options" for a list...`) が、**2 階層目 (`config`) にも 3 階層目 (`config set-context`) にも一字一句同一で出現**。kubectl の参照方式は継承の深さに関わらず完全に一貫している (深さ依存の揺れが一切ない、uv とは対照的)。
+
+#### az (azure-cli 2.88.0)
+
+`az group --help` (前掲、subgroup、末尾に Arguments 節なし):
+```
+Group
+    az group : Manage resource groups and template deployments.
+
+Subgroups:
+    lock   : Manage Azure resource group locks.
+
+Commands:
+    create : Create a new resource group.
+    ...
+```
+所見: subgroup レベルの help には Arguments 節 (global option 相当) が**一切登場しない** (コマンド一覧のみ)。
+
+`az group create --help` (前掲、leaf、末尾の Arguments 節):
+```
+Arguments
+    --location -l                 [Required] : Location. ...
+    --name --resource-group -g -n [Required] : Name of the new resource group.
+    --managed-by ...
+    --tags ...
+
+Global Policy Arguments
+    --acquire-policy-token                   : Acquiring an Azure Policy token automatically for
+                                               this resource operation.
+    --change-reference                       : The related change reference ID for this resource
+                                               operation.
+
+Global Arguments
+    --debug                                  : Increase logging verbosity to show all debug logs.
+    --help -h                                : Show this help message and exit.
+    --only-show-errors                       : Only show errors, suppressing warnings.
+    --output -o                              : Output format. ...
+    --query                                  : JMESPath query string. ...
+    --subscription                           : Name or ID of subscription. ...
+    --verbose                                : Increase logging verbosity. ...
+```
+所見: leaf コマンドにのみ、`Arguments` (固有) → `Global Policy Arguments` (条件付き global) → `Global Arguments` (常時 global) の**3 段構成**で表示。`az --help` (トップ、subgroup 一覧) には `[Preview]` / `[Experimental]` の角括弧タグがサブグループ名に付与される実例も確認 (`consumption [Preview]`, `config [Experimental]`)。
+
+#### jj (前段と同一個体、深さ違いの再確認)
+
+`jj bookmark --help` (前掲、中間階層):
+```
+Manage bookmarks [default alias: b]
+...
+Commands:
+  advance  Advance the closest bookmarks to a target revision [aliases: a]
+  create   Create a new bookmark [aliases: c]
+  ...
+
+Options:
+  -h, --help
+          Print help (see a summary with '-h')
+
+Global Options:
+  -R, --repository <REPOSITORY>
+          Path to repository to operate on
+          
+          By default, Jujutsu searches for the closest .jj/ directory in an ancestor of the current
+          working directory.
+
+      --ignore-working-copy
+          ...
+```
+`jj log --help` (前掲、トップ直下のコマンド、`bookmark` とは異なる系統):
+```
+Show revision history
+...
+Options:
+  -r, --revision <REVSETS>
+  ...
+
+      --count
+```
+(Global Options 節は出力の途中で打ち切ったが、`jj bookmark --help` と同一冒頭の `-R, --repository` から始まる文言が同一箇所に出現することを確認済み)
+
+所見: `jj bookmark` (階層 1) と `jj log` (階層 1、別コマンド系統) のどちらも、末尾の `Global Options:` ブロックが**一字一句同一のテキスト** (改行位置・説明文の言い回しまで完全一致) で再掲される。コマンドの種類・階層に関わらず、jj は global option 群を**常に完全複製**する設計で一貫している (uv や az のような「深さ依存」「条件依存」の揺れが一切ない)。`bookmark` サブコマンド一覧内の `[default alias: b]` / `[aliases: a]` という**alias の強度を語彙で区別する**表示も確認 (説明文末尾の角括弧注記という第 3 の位置パターン)。
+
+## Python/Node/hierarchical 系まとめ (次担当・統括への引き継ぎ)
+
+- Rust/Go 系で見えた「複製/省略/参照/専用セクション」の 4 分類は依然有効な骨格だが、**「複製」の内部に「混在型部分複製 (cargo)」と「独立ブロック型完全複製 (yarn/jj)」の亜種がある**こと、**複製/省略が同一ツール内で階層の深さによって切り替わる (uv)** こと、**継承元の global 集合自体がコマンドの意味論によって動的に変わる (az)** ことが新たに判明した。これらは前段の 4 分類だけでは説明できない「メタなバリエーション軸 (深さ依存・条件依存)」であり、kuu の表現力チェック (task #4) では「1 ツール = 1 方式」の前提を外して臨む必要がある
+- alias 表示位置は「名前列併記 (cargo)」「専用セクション (gh/docker)」に加えて **「description 末尾の角括弧注記 (jj)」「丸括弧インライン注記 (bun)」の計 4 系統**が実在することを確認。kuu が 1 箇所しか表現できない設計だと過半数のツールをカバーできない
+- alias の**強度区別** (jj の `default alias` vs `aliases`) と、成熟度ステータスの**複数語彙タグ** (az の `[Preview]`/`[Experimental]` vs cargo の `(deprecated)` 単一語彙) は、前段にはなかった粒度の要求であり、kuu の command/option 定義がここまでの表現力を持つべきかは設計判断が必要 (少なくとも「実例がある」ことは記録できた)
+- gcloud は環境要因で未検証のまま残った。poetry/pytest/mypy/turbo/eslint/prettier/firebase も未インストールで未検証。これらは別セッションでの追試候補として残す
+- 全ツール共通の分類マトリクス再統合 (task #4 着手前の前処理) は統括判断に委ねる
