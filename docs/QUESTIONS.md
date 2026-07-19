@@ -132,6 +132,95 @@ canonical レンダラ設計 issue (別立て、DR-112 波及節「canonical レ
 
 **本付録は HIP-META-Q4 の model 側裁定 (value_structure tree = a) に影響しない** — model は tree で表現力保存、レンダラ policy は canonical レンダラ設計 issue で決める。ここは統括の推しを記録するにとどめる。
 
+### 付録 2: definitions で構造型を共有する場合の model + レンダラ設計 (kawaz 提示 mid=17)
+
+kawaz が示した実用例: kuu の既存機構 (`definitions` + `ref`) で構造型を定義し、複数の option がそれを参照する。共有型は help でも集約表示するのが自然:
+
+```
+--fg COLOR
+--bg COLOR
+--level-colors INFO WARN DEBUG
+
+Types:
+  COLOR, INFO, WARN, DEBUG:
+    <COLOR_NAME>       色名 (red, green, ...)
+    <R> <G> <B>        RGB (0-255 の数値 3 個)
+```
+
+定義側 (推測形):
+
+```json
+{
+  "definitions": {
+    "color_value": {
+      "value_name": "COLOR",
+      "or": [
+        {"value_name": "COLOR_NAME", "values": ["red", "green", ...]},
+        {"seq": [{"value_name": "R", "type": "number"}, {"value_name": "G", "type": "number"}, {"value_name": "B", "type": "number"}]}
+      ]
+    }
+  },
+  "options": [
+    {"name": "fg", "long": true, "ref": "color_value"},
+    {"name": "bg", "long": true, "ref": "color_value"},
+    {"name": "level-colors", "long": true, "seq": [
+      {"ref": "color_value", "value_name": "INFO"},
+      {"ref": "color_value", "value_name": "WARN"},
+      {"ref": "color_value", "value_name": "DEBUG"}
+    ]}
+  ]
+}
+```
+
+これは value_structure tree 設計を **type_ref ノード + model トップの types セクション** に拡張する必要:
+
+**model 側の追加**:
+
+1. **value_structure tree に `type_ref` ノード追加**:
+
+   ```json
+   {"type_ref": "color_value", "value_name": "INFO"}
+   ```
+
+   - `type_ref` は definitions への参照 (kuu 既存 `ref` 機構)
+   - `value_name` は**参照箇所固有の名前**の上書き (`level-colors` の 3 引数を `INFO WARN DEBUG` と個別命名する用)。省略時は type 定義側の value_name (`COLOR`) を使う
+
+2. **help model のトップに `types` セクション追加** (参照されている definitions を集約射影):
+
+   ```json
+   {
+     "command_path": [...],
+     "usage": {...},
+     "types": [
+       {
+         "id": "color_value",
+         "value_structure": {
+           "or": [...]
+         },
+         "help": "...",
+         "used_as": ["COLOR", "INFO", "WARN", "DEBUG"]  // 参照箇所の value_name 一覧
+       }
+     ],
+     "options": [...],
+     ...
+   }
+   ```
+
+**レンダラ policy** (canonical レンダラ設計 issue で決定):
+
+- type_ref ノードの**参照回数**を集計 (types セクションの `used_as` で判別可能)
+- **参照回数 ≥ 2**: usage 行は value_name 短縮表記 (`COLOR`, `INFO WARN DEBUG`)、末尾 `Types:` セクションで詳細展開。**共有型の重複展開を防ぐ**
+- **参照回数 1**: `types` セクションに載せず、value_structure を inline 展開する (統一感重視、統括推し) or type_ref のまま表示 (省略統一)
+- kawaz 例の `COLOR, INFO, WARN, DEBUG:` は 4 名前を集約表示するパターン (canonical レンダラの既定 policy)
+
+**HIP-META-Q4 との整合**:
+
+value_structure tree = a (Q4 の推し) に **type_ref ノード対応** を追加する形で拡張。model schema の骨格 (value_structure が or/seq/repeat/single/type_ref の 5 種ノードの tree) は同じ。types セクションは model トップの新規フィールド。
+
+**kuu の既存機構 (definitions + ref) との整合**:
+
+kuu spec は既に definitions (DR-063 §1) と ref を持つ = help model の type_ref はこれの直接射影。**新規語彙は「model 側の type_ref ノード名 + types セクション」のみ**、definition 側の wire form 側は既存機構をそのまま使う。
+
 ## HIP-Q バッチ (発生順)
 
 > **注**: HIP-META-Q1 = a 裁定に伴う DR-112 全体撤回 + 立て直しを待つため、HIP-Q1〜Q4 の議論は保留。新 DR (help_installer 設計プラン起草後の正本) の記述に応じて再定式化する。旧 HIP-Q1〜Q7 のうち Q2/Q5/Q6/Q7 は実装追随 issue に、Q3 は drift 訂正、Q1/Q4 は新 DR に取り込みで消化される見込み。
