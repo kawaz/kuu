@@ -10,7 +10,7 @@
 > - **meta-Q1 = a**: help_installer が必要、DR-112 §1 撤回、設計プランから立て直し。実装ロールバック計画へ
 > - **meta-Q2**: order 関連 / display_name / value_name / help_on_failure 齟齬なし承認。**help_epilog = a 採用** (mid=15 の "epilog のことか、理解。ok" で確定)
 > - **meta-Q3**: depth = "scope" | "all" 承認、数値 depth 不要。他 worker 起草部分も「基本よさそう」
-> - **meta-Q4** (mid=13/16/17 で継続議論): 他 CLI パーサに前例無しの kuu 独自の悩みと確認、value_structure tree = a 相当を暫定推し。type_ref ノード + model トップ types セクション拡張 (mid=17 の共有型実用例) 提示済み。レンダラ 3 案 (pipe 曖昧回避、canonical レンダラ設計に持ち越し)
+> - **meta-Q4** (mid=13/16/17/20 で継続議論・確定): value_structure tree = a **承認**。type_ref ノード + model トップ types セクション拡張 (mid=17 の共有型) = **承認 (mid=20)**。レンダラ側は「趣味もある、後日レンダラ policy 指定オプション語彙追加で 1 行表現も選択可能に」(canonical レンダラ設計 issue に持ち越し、集約表示 vs 1 行 inline vs 詳細説明形式の選択可能化)。pipe 曖昧回避 (mid=16) も同 issue に持ち越し
 > - **meta-Q5** (mid=18 確定): **5 個の直交 type 構成** — `help` / `help_all_category` (旧 help_all 名前変更 + 意味論訂正、「全 category 絞りなし」) / `help_category` / `help_show_hidden` (独立軸新設、hidden 表示) / `help_tree` (独立軸新設、サブコマンド tree 全展開)。hidden は独立軸で分離 (混合概念回避)、現行 DR-112 §7 の type:"help_all" は完全撤回。各 type は or で組合せ可 (kuu 背骨の or 表現力そのまま)
 
 ## HIP-META-Q6: 他 option の値借用機構 (default_from / default_for) の追加 (kawaz 発題 mid=19)
@@ -99,7 +99,9 @@ HIP-META-Q5 で確定した 5 直交 type (`help` / `help_all_category` / `help_
 - DESIGN §11.4 (値源ラダー、default 席の位置)
 - HIP-META-Q5 (5 直交 type、本 Q の需要源)
 
-## HIP-META-Q4: 複合値構造 option の help model 表現
+## HIP-META-Q4: 複合値構造 option の help model 表現 (裁定確定 mid=20)
+
+**裁定サマリ**: 本体 = a (value_structure tree) 承認、付録 2 (共有型 type_ref + types セクション) mid=20 で承認。レンダラ側 (pipe 曖昧回避 / 集約 vs inline / 詳細説明) は canonical レンダラ設計 issue に持ち越し、「レンダラ policy 指定オプション語彙」を追加して選択可能に (kawaz mid=20 落とし所)。以下は議論の記録 (次のセッション参照用)。
 
 ### kawaz 追補 (mid=13)
 
