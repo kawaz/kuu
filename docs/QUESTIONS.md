@@ -148,6 +148,38 @@ kawaz mid=29 の指摘:
 - HIP-META-Q6 (default_fn 汎用機構、mid=28 で default_fn 一本化承認)
 - kuu 背骨 (or/seq/repeat/link/ref の任意ネスト、機構統一思想)
 
+## HIP-META-Q11: update effect の forget + set fn ABI に old 追加 (kawaz mid=46 発題)
+
+### 背景
+
+私 (統括) が別 agent 再監査 Major 4 対応で「update は total 限定 + filters registry の transform を EffectCtx の現在値に適用」と finding + DR-114 で書いたが、kawaz mid=46 で **筋が悪い**指摘。kawaz 対案:
+
+- update を forget、変わりに **値提供 fn (set 系) の ctx に old (現在値) を入れる**
+- 単なる値供給 (`set(60)`) は old を使わない (immutable set)
+- update 相当は `set:incr` 等の fn が `ctx.old` を参照する形で表現
+- 「図らずも前の値を ctx に入れることでフィルタとも合流できてしまいそう」= T → T の同一 ABI、filter/cell_fns 合流の入り口
+
+### 選択肢
+
+- **候補 a (推し、統括推し + kawaz 提案)**: kawaz 案採用。variant effect 4 種 (set/default/unset/empty) に戻す、update は set fn の特殊化として ctx.old 参照で実現。DR-114 の update 特殊対応 (filters transform を EffectCtx に適用) 記述を削除、set fn ABI に `ctx.old` (Value | absent) 追加
+- 候補 b: 現状維持 (update effect + 特殊対応)。実装コスト削減なし、universal fn 統合の対称性劣化
+- 候補 c: filter と cell_fns の合流を今やる (Q8-γ の再検討、1 registry 化) — 範囲拡大リスク大、v1 では避ける
+
+### 統括推し = a、理由
+
+1. universal fn 統合の対称性向上 (5 種 effect → 4 種、update は set の特殊化)
+2. fn ABI 統一 (set が old を optional 受け取り、他 fn は無視すれば OK)
+3. DR-114 の update 特殊対応記述削除で単純化
+4. Major 4 (update fallible 意味論) が消滅 = v1 blocker が 1 個減る
+5. filter と cell_fns の合流基盤 (T → T の同一 ABI)、将来 v2 以降の統合再検討の入り口
+
+### 修正範囲
+
+- finding §2.1 の 5 種 → 4 種 (update 削除)
+- finding §2.5 の fn ABI に `ctx.old` 追加
+- DR-114 の update 節削除 + set fn ABI 更新
+- Major 4 該当なしになる
+
 ## HIP-META-Q10: help capability 入力の contract + query 不在時の失敗 envelope (別 agent 再監査 Major 5/6)
 
 ### Q10-α: `#help_all_category` / `#help_show_hidden` / `#help_tree` cell 値の renderer policy 入力 (Major 5)
