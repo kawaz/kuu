@@ -6,64 +6,12 @@
 > チャットでは「VF-Q 待ち」のようにラベルだけで参照する。回答はラベル + 選択肢記号 (例「VF-b で」) だけで通じる。
 > 参照パスは本リポ (spec) 相対。kuu.mbt 側は「kuu.mbt の <path>」と表記する。
 
-> **⚠ 2026-07-19 HIP-META-Q バッチ裁定 (mid=14, mid=15)**:
+> **⚠ 2026-07-19 HIP-META-Q バッチ裁定 (mid=14, mid=15, mid=18)**:
 > - **meta-Q1 = a**: help_installer が必要、DR-112 §1 撤回、設計プランから立て直し。実装ロールバック計画へ
 > - **meta-Q2**: order 関連 / display_name / value_name / help_on_failure 齟齬なし承認。**help_epilog = a 採用** (mid=15 の "epilog のことか、理解。ok" で確定)
-> - **meta-Q3**: depth = "scope" | "all" 承認、数値 depth 不要。他 worker 起草部分も「基本よさそう」。**ただし mid=15 で type:"help_all" の意味論齟齬発覚 → 下記 HIP-META-Q5**
-> - **meta-Q4**: 他 CLI パーサに前例無しの kuu 独自の悩みと確認、value_structure tree = a 相当を暫定推し。レンダラ 3 案 (`--color <COLOR_NAME|R G B>` 1 行 / 2 行分離 / 詳細説明付き) は canonical レンダラ設計時に決定
-
-## HIP-META-Q5: type:"help_all" の意味論齟齬 + サブコマンド全展開 type 新設 (mid=15)
-
-### 齟齬の内容
-
-現 DR-112 §7 (worker 起草) と kawaz 原意 (mid=15 で発覚) が乖離:
-
-- **現 DR-112 §7 の type:"help_all"**: 「hidden 込み全表示の意図メタ」= hidden な要素も含めて表示 (worker 起草解釈)
-- **kawaz 原意**: 「全 category を見せるフラグ」= 全オプションに暗黙的に all カテゴリが付与されてそれを選ぶ = カテゴリを絞らない help
-
-つまり kawaz 原意の「help_all」は **「カテゴリ絞りなしの help」 = 現行 type:"help" と重なる領域** で、実 CLI で `-h` (要約) vs `--help` (詳細) のような**詳細度差**を category という機構で表現する構想。「hidden 込み」の意味は原意に無い。
-
-### kawaz 追補 (mid=15 の追加提案)
-
-> 「よく考えたら、サブコマンド等含めた全展開モードという見方もあるね、君らはこっちのイメージで話してたから少しズレを感じてたのか。そして全展開モードはあって良いと思うのでそのトリガとしての type も新設して良いかもですね」
-
-= サブコマンド tree 全展開モード (depth:all + hidden 込みの全開示) は別 type として新設して良い。**別々の 2 種の意図を、別々の type で分ける方向**。
-
-### 整理表 (kawaz 原意 + 新 type)
-
-| type | 意味論 (kawaz 原意 + 追補) | 補足 |
-|---|---|---|
-| `type:"help"` | 基本 help (bool、現スコープ、絞りなし) | 承認済み |
-| `type:"help_all"` | **全 category を見せる (絞りなし)** — 現 DR-112 §7「hidden 込み」記述は撤回、kawaz 原意に修正 | 「よく使うもの」と「詳細」を category で分けたアプリで、`--help-basic` (絞り) と `--help-all` (絞りなし) の 2 段運用を素材化 |
-| `type:"help_category"` | 特定 category に絞る (string 値) | 承認済み |
-| **新 type (未命名)** | **サブコマンド tree 全展開 + hidden 込み** (depth:all + hidden 露出) | サブコマンド階層を再帰的に一挙開示 (man 生成や `--help-full` 相当) |
-
-### 選択肢
-
-**選択肢 1: 新 type の命名 (statiに 4 択)**
-
-- **候補 a (推し)**: `type:"help_tree"` — サブコマンド tree 展開の意。最も意味論に近く、depth:"all" (「全層再帰 = tree 全開」) と紐付けが明確
-- 候補 b: `type:"help_full"` — 完全形の意。汎用だが「何が full か」が読み手依存
-- 候補 c: `type:"help_expand"` — 展開の意。tree/all 意味論に近いが英単語として微妙
-- 候補 d: `type:"help_recursive"` — 再帰の意。長くて他 kuu 語彙と綴りバランス悪
-
-**選択肢 2: hidden 露出の紐付け先**
-
-kawaz 原意で「help_all は hidden 込みではない」なので、「hidden 露出」の意図メタは新 type (help_tree 相当) に紐付ける、あるいは独立フラグとして持つか:
-
-- **候補 α (推し)**: 新 type (help_tree) が hidden 露出を含む (depth:all + hidden 込みの複合意味論)。「サブコマンド全展開の時は hidden も見たい」は自然な運用直感
-- 候補 β: hidden 露出は独立 (別 type or 独立属性)。help_tree は hidden を出さない、hidden 露出は別途 `--help-hidden` 等で
-
-**選択肢 3: type:"help_all" の記述修正**
-
-- **候補 A (推し)**: DR-112 §7 の type:"help_all" 節を「hidden 込み」から「全 category 絞りなし」に**書き換え** (kawaz 原意への訂正)
-- 候補 B: type:"help_all" を廃止し type:"help" と統合 (「基本 help = 全 category 絞りなし」で 1 本に)。help_all という名前を捨てる
-
-### 参照
-
-- DR-112 §7 (現記述、worker 起草解釈)
-- DR-112 §5 (グループ = category、help_group_name)
-- mid=15 (kawaz 原意 + 追補の一次資料)
+> - **meta-Q3**: depth = "scope" | "all" 承認、数値 depth 不要。他 worker 起草部分も「基本よさそう」
+> - **meta-Q4** (mid=13/16/17 で継続議論): 他 CLI パーサに前例無しの kuu 独自の悩みと確認、value_structure tree = a 相当を暫定推し。type_ref ノード + model トップ types セクション拡張 (mid=17 の共有型実用例) 提示済み。レンダラ 3 案 (pipe 曖昧回避、canonical レンダラ設計に持ち越し)
+> - **meta-Q5** (mid=18 確定): **5 個の直交 type 構成** — `help` / `help_all_category` (旧 help_all 名前変更 + 意味論訂正、「全 category 絞りなし」) / `help_category` / `help_show_hidden` (独立軸新設、hidden 表示) / `help_tree` (独立軸新設、サブコマンド tree 全展開)。hidden は独立軸で分離 (混合概念回避)、現行 DR-112 §7 の type:"help_all" は完全撤回。各 type は or で組合せ可 (kuu 背骨の or 表現力そのまま)
 
 ## HIP-META-Q4: 複合値構造 option の help model 表現
 
