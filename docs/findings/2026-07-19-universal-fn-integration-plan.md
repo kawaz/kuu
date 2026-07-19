@@ -20,7 +20,7 @@
 
 ### 1.2 統合案 — universal fn 機構
 
-**universal fn = 「name で registry から fn 実体を引き、colon-args + SourceFnCtx を渡して呼び出し、結果を得る」の 1 種類の機構**。3 種の DSL は universal fn の specialization として位置づける:
+**universal fn = 「name で registry から fn 実体を引き、colon-args + CellFnCtx を渡して呼び出し、結果を得る」の 1 種類の機構**。3 種の DSL は universal fn の specialization として位置づける:
 
 | specialization | universal fn 呼び出しの解釈 | 結果の使い方 |
 |---|---|---|
@@ -35,7 +35,7 @@
 3. **DR-088 kawaz 裁定原文の完成形**: 「値源は全て default_fn」= universal fn の統合形
 4. **kuu 背骨 (or/seq/repeat/link/ref) との整合**: 「機構を統一する思想」の延長
 5. **3rd party 拡張の対称性**: サードパーティ fn が variant effect / filter / default_fn のいずれとしても使える (DR-094 namespace で名前空間分離)
-6. **循環チェックの universal 化**: DR-087 遅延解決グラフに全 fn が乗る (SourceFnCtx.observes 軸で依存グラフ構築)
+6. **循環チェックの universal 化**: DR-087 遅延解決グラフに全 fn が乗る (CellFnCtx.observes 軸で依存グラフ構築)
 
 ### 1.4 統合の懸念 (v1 スコープ判断の材料)
 
@@ -133,14 +133,14 @@ long: [
 
 **適用範囲**: universal fn DSL の全席 (variant DSL の long/short/env、filter DSL の各段、default_fn 属性) で同じ規約を採用。統一感 + 混乱回避。
 
-### 2.5 統合後の fn 呼び出し ABI (Q7-γ-45=b + kawaz mid=35 + mid=38 反映、統一 FnCtx + mode 判別)
+### 2.5 統合後の fn 呼び出し ABI (Q7-γ-45=b + kawaz mid=35 + mid=38 反映、統一 CellFnCtx + mode 判別)
 
-kawaz mid=38 指摘: 2 種類の ctx を fn signature で受けるのは対称性を欠く、**統一 FnCtx + mode 判別 + 個別 ctx 取得** の設計に変更:
+kawaz mid=38 指摘: 2 種類の ctx を fn signature で受けるのは対称性を欠く、**統一 CellFnCtx + mode 判別 + 個別 ctx 取得** の設計に変更:
 
 ```
-fn signature (統一): (args: string[], ctx: FnCtx) → Result<Value | Sentinel, Reason>
+fn signature (統一): (args: string[], ctx: CellFnCtx) → Result<Value | Sentinel, Reason>
 
-FnCtx API (mode 判別 + 個別 ctx 取得、kawaz mid=38 案):
+CellFnCtx API (mode 判別 + 個別 ctx 取得、kawaz mid=38 案):
 - ctx.mode() → "default" | "effect" | "filter"  (呼び出し文脈の識別)
 - ctx.as_default() → DefaultCtx | null   (mode="default" 時のみ非 null、逆は null)
 - ctx.as_effect()  → EffectCtx | null    (mode="effect" 時のみ非 null)
@@ -151,7 +151,7 @@ FnCtx API (mode 判別 + 個別 ctx 取得、kawaz mid=38 案):
   - ctx.observes() → 自 fn が宣言した observes 集合の runtime 参照
 
 言語別実装:
-- Rust: enum FnCtx { Default(DefaultCtx), Effect(EffectCtx), Filter(FilterCtx) } + shared env/system
+- Rust: enum CellFnCtx { Default(DefaultCtx), Effect(EffectCtx), Filter(FilterCtx) } + shared env/system
 - Kotlin/MoonBit: sealed class + when 分岐
 - 動的言語: dict/hash + mode key
 
@@ -164,7 +164,7 @@ observes 軸 (descriptor 側で宣言): ["option:<name>", "env:<var>", "system:<
 
 **逆 mode 呼び出しの防御**: descriptor の返り値型 (Value/Sentinel) と呼び出し側の期待型で spec 側の静的検証で除外、runtime error は defensive check としてのみ意味を持つ (通常は到達しない)。
 
-**共通機構は「DSL 書式 (colon-args + array 記法 §2.4b) + observes 軸 + 統一 FnCtx」の 3 点**。fn signature は 1 種類 (対称性)。「際限がなくなるリスク」(kawaz mid=34 懸念) の完全回避。
+**共通機構は「DSL 書式 (colon-args + array 記法 §2.4b) + observes 軸 + 統一 CellFnCtx」の 3 点**。fn signature は 1 種類 (対称性)。「際限がなくなるリスク」(kawaz mid=34 懸念) の完全回避。
 
 **observes 軸** (descriptor 側で宣言、Q7-γ-45=b 承認):
 
@@ -213,9 +213,9 @@ observes: ["option:<name>", "env:<var>", "system:<key>", ...]
 - **filter 段** は `filters` registry から引く (Value → Value 変換)
 
 **ctx は呼び出し側が渡す** (mid=35 の役割固有 ctx 継承):
-- default 席 → `DefaultFnCtx` (他 option 参照 / env / system)
-- 発火時 cell operation → `EffectFnCtx` (cell/trigger 情報)
-- filter 段 → `FilterFnCtx` (pipeline 入力値)、既存機構
+- default 席 → `DefaultCellFnCtx` (他 option 参照 / env / system)
+- 発火時 cell operation → `EffectCellFnCtx` (cell/trigger 情報)
+- filter 段 → `FilterCellFnCtx` (pipeline 入力値)、既存機構
 - fn は「必要な情報を ctx から取る」の対称 interface (observes 軸で静的宣言)
 
 **同じ fn (set/borrow/env 等) が両文脈で使える** (universal fn の真の意味):
@@ -317,7 +317,7 @@ observes: ["option:<name>", "env:<var>", "system:<key>"]
 
 1. **universal fn parser** (colon-args を parse する共通機構、既に各 DSL で類似実装)
 2. **fn registry** (filter registry / default_fn registry / variant_effect registry を統合、DR-094 namespace で分離)
-3. **SourceFnCtx ABI** (parse context 参照用、observes 軸に基づく依存グラフ構築)
+3. **CellFnCtx ABI** (parse context 参照用、observes 軸に基づく依存グラフ構築)
 4. **循環チェック** (DR-087 遅延解決に fn 依存を組み込む)
 5. **variant DSL / filter / default_fn の lowering** (universal fn 呼び出しに集約)
 6. **既存 descriptor の統合** (現 filter descriptor 13 個 + type_parser + provider を DR-107 の統一軸で書き直し)
@@ -345,7 +345,7 @@ observes: ["option:<name>", "env:<var>", "system:<key>"]
 **選択肢**:
 
 - **選択 A (統合を v1 で完遂、統括推し)**: universal fn 統合を v1 発行前に完成。DR-113 (help 再設計) は universal fn 統合を前提として書き直し、DR-114 (universal fn) を並行 or 先行して起草。**v1 完備主義に厳密に沿う**、後で追加互換で入れる縮小推しを避ける
-- 選択 B (universal ABI だけ先行、DSL 集約は v2): universal fn ABI (fn registry + SourceFnCtx + observes 軸) だけ先行、DSL 集約 (variant DSL / filter / default_fn の統合表記) は v2 で。default_fn 一本化 (Q7-α+一本化) と最低限の互換だけ v1、統合 DSL の恩恵は後で
+- 選択 B (universal ABI だけ先行、DSL 集約は v2): universal fn ABI (fn registry + CellFnCtx + observes 軸) だけ先行、DSL 集約 (variant DSL / filter / default_fn の統合表記) は v2 で。default_fn 一本化 (Q7-α+一本化) と最低限の互換だけ v1、統合 DSL の恩恵は後で
 - 選択 C (現状維持で v1、統合は v2 検討): 3 種 DSL を維持したまま v1 発行、universal fn 統合は v2 で全面検討
 
 **選択 A の推し理由**:
@@ -362,7 +362,7 @@ observes: ["option:<name>", "env:<var>", "system:<key>"]
 1. **Phase U-1** (spec): DR-114 「universal fn 統合」起草、DR-113 (help 再設計) を DR-114 前提で書き直し。schema 更新 (array 記法 §2.4b 含む)
 2. **Phase U-2** (spec): DR-011 / DR-034 / DR-036 / DR-087 / DR-088 / DR-102 / DR-107 の関連注記追加、DESIGN §7/§8/§11 の統合再記述
 3. **Phase U-3** (fixtures): 既存 fixture の記法不変性を確認 (糖衣として維持)、期待値更新、新規 fixture 追加 (array 記法 / 統合合成例)
-4. **Phase U-4** (kuu.mbt): universal fn parser (string/array 混在) + registry + SourceFnCtx + 循環チェックの新規実装、既存 3 種 DSL の lowering を universal fn 経由に refactor
+4. **Phase U-4** (kuu.mbt): universal fn parser (string/array 混在) + registry + CellFnCtx + 循環チェックの新規実装、既存 3 種 DSL の lowering を universal fn 経由に refactor
 5. **Phase U-5** (kuu-cli): universal fn の consumer 追随 (canonical レンダラは別 issue)
 6. **Phase U-6**: v1 発行条件 (5 プロファイル green) 達成
 
@@ -381,13 +381,13 @@ observes: ["option:<name>", "env:<var>", "system:<key>"]
 | 問題 | 内容 | 統合戦略での回答 |
 |---|---|---|
 | **返り値の意味論違い** | variant_effect は cell operation、default_fn は値、filter は値。pipeline 内での使い方が違う | **role 固有**: role で pipeline 位置を識別、返り値の型は role の output_mode で分岐 |
-| **SourceFnCtx の役割違い** | filter 段の ctx (pipeline 入力値) / default_fn の ctx (他 option 参照) / variant_effect の ctx (cell/trigger 情報) が違う | **role 固有 ctx**: `SourceFnCtx` を base、role ごとに `FilterCtx` / `DefaultFnCtx` / `EffectCtx` extends の形。共通機構は observes 軸 (静的宣言) のみ |
+| **CellFnCtx の役割違い** | filter 段の ctx (pipeline 入力値) / default_fn の ctx (他 option 参照) / variant_effect の ctx (cell/trigger 情報) が違う | **role 固有 ctx**: `CellFnCtx` を base、role ごとに `FilterCtx` / `DefaultCellFnCtx` / `EffectCtx` extends の形。共通機構は observes 軸 (静的宣言) のみ |
 | **failure semantics** | filter は Reject / Error 2 種 (DR-037)、default_fn は absent-source で unset (DR-088) | **fallibility 軸は共通** (total/reject)、reason 語彙は role 固有 (filter の reasons registry と default_fn の reasons registry は別 registry) |
 | **既存 fixture 追随** | filter fixture ~40 個の期待値変化 (universal fn 経由で lowering が変わる) | 記法は不変 (糖衣として維持)、lowering (AtomicAST) が universal fn 呼び出し形になる場合の期待値更新 |
 
 **統合戦略の要**:
 - **共通機構は「registry + DSL 書式 + observes 軸 + universal ABI の骨格 (name + args + ctx)」まで**
-- **role 固有**: SourceFnCtx の内容、failure reason 語彙、pipeline での位置
+- **role 固有**: CellFnCtx の内容、failure reason 語彙、pipeline での位置
 - 「際限がなくなるリスク」(kawaz mid=34 懸念) の回避 = 共通機構を最小限に、role 固有は既存機構を尊重
 
 **成立可能性の結論**: **v1 で filter 系統合も含めて完遂可能、実装コストは激減**。kawaz mid=35 の指摘 (registry と ctx は role で分離) を反映すると、Q8 統合の「真の姿」は:
@@ -395,7 +395,7 @@ observes: ["option:<name>", "env:<var>", "system:<key>"]
 - **共通機構は「DSL 書式 (colon-args + array 記法) + observes 軸」の 2 点だけ**
 - **registry も ctx も failure reason も role 固有** (filter は既存機構をそのまま維持、default_fn / variant_effect は新設)
 
-= filter 系の「統合」の実質は「observes 軸を filter descriptor に追加する + array 記法をパーサで受ける」だけ。既存 filter 機構 (registry / descriptor / pipeline / FilterFnCtx) は refactor 不要。
+= filter 系の「統合」の実質は「observes 軸を filter descriptor に追加する + array 記法をパーサで受ける」だけ。既存 filter 機構 (registry / descriptor / pipeline / FilterCellFnCtx) は refactor 不要。
 
 **実装コスト再見積** (kawaz mid=35 反映後):
 
@@ -422,7 +422,7 @@ observes: ["option:<name>", "env:<var>", "system:<key>"]
 - **範囲膨大**: v1 発行遅延 (数週間〜1 ヶ月級?)
 - **regression リスク**: variant DSL / filter / default_fn の統合実装で既存 fixture が化ける
 - **kuu.mbt 実装ロールバックの拡大**: 現 help query 実装 3 コミット (TRI-Q4 除く) + variant / filter 大規模 refactor
-- **観測手段の変化**: fn 呼び出しの副作用 (SourceFnCtx.borrow_option 経由の他 option 参照) が既存 debug 手段 (fired_action / tried_triggers 等) にどう見えるか要検討
+- **観測手段の変化**: fn 呼び出しの副作用 (CellFnCtx.borrow_option 経由の他 option 参照) が既存 debug 手段 (fired_action / tried_triggers 等) にどう見えるか要検討
 - **DR-107 拡張のリスク**: role enum / observes / io_type ジェネリクス T の判断が universal fn 統合に依存 = 統合設計が固まらないと DR-107 拡張も固まらない
 
 ## 6. スコープ外 (別 issue / 別 DR)
