@@ -13,6 +13,92 @@
 > - **meta-Q4** (mid=13/16/17 で継続議論): 他 CLI パーサに前例無しの kuu 独自の悩みと確認、value_structure tree = a 相当を暫定推し。type_ref ノード + model トップ types セクション拡張 (mid=17 の共有型実用例) 提示済み。レンダラ 3 案 (pipe 曖昧回避、canonical レンダラ設計に持ち越し)
 > - **meta-Q5** (mid=18 確定): **5 個の直交 type 構成** — `help` / `help_all_category` (旧 help_all 名前変更 + 意味論訂正、「全 category 絞りなし」) / `help_category` / `help_show_hidden` (独立軸新設、hidden 表示) / `help_tree` (独立軸新設、サブコマンド tree 全展開)。hidden は独立軸で分離 (混合概念回避)、現行 DR-112 §7 の type:"help_all" は完全撤回。各 type は or で組合せ可 (kuu 背骨の or 表現力そのまま)
 
+## HIP-META-Q6: 他 option の値借用機構 (default_from / default_for) の追加 (kawaz 発題 mid=19)
+
+### 背景説明
+
+HIP-META-Q5 で確定した 5 直交 type (`help` / `help_all_category` / `help_category` / `help_show_hidden` / `help_tree`) を実際に使う場面で、「1 個の flag で複数の type を同時発火する宣言」を書きたい:
+
+```
+--help-all  = --help-all-category + --help-show-hidden
+--help-full = --help-all-category + --help-show-hidden + --help-tree
+```
+
+現 kuu 精査結果:
+
+- **variant DSL の effect** (DESIGN §7.4) は 4 種 (`set` / `default` / `unset` / `empty`)、1 入口 1 effect
+- **link** (DESIGN §10.2) は 1 対 N (1 実体、N 参照)、逆方向 (1 入口 N 実体) は無い
+- **inherit** (DESIGN §11.2) は「祖先 scope の同 name 借用」、同 scope の他 name 借用は無い
+- **or** は 1 path で 1 発火、複数 cell 同時 set にはならない
+- **同一トリガ重複宣言** は静的 warn + 実行時 ambiguous、不安定
+
+**現 kuu では書けない**。kawaz 示唆の「default 注入で他 option 値借用」機構は kuu に無く、追加設計として提案価値あり。
+
+### 選択肢 (追加設計の方向)
+
+**案 α (推し) — 被参照側で宣言する `default_from` 属性**:
+
+```json
+{
+  "options": [
+    {"name": "help-all", "long": true, "type": "flag"},
+    {"name": "help-all-category", "long": true, "type": "help_all_category", "default_from": "help-all"},
+    {"name": "help-show-hidden", "long": true, "type": "help_show_hidden", "default_from": "help-all"}
+  ]
+}
+```
+
+- `--help-all` を打つと `help-all-category` / `help-show-hidden` の default に `help-all` 値が借用される
+- 個別に `--help-all-category` だけ / `--help-show-hidden` だけ発火も可能 (default より CLI 明示が優先、値源ラダー §11.4)
+- 既存 `inherit` の意味論拡張 (「祖先 scope 」を「同 scope 他 option」に一般化) に近い
+
+**案 β — 参照側で宣言する `default_for` 属性**:
+
+```json
+{
+  "options": [
+    {"name": "help-all", "long": true, "type": "flag",
+     "default_for": ["help-all-category", "help-show-hidden"]}
+  ]
+}
+```
+
+- 「この値をリストされた他 option の default に流し込む」= 逆方向宣言
+- 「fullest help」の 1 flag で 3 直交軸を立てる: `default_for: ["help-all-category", "help-show-hidden", "help-tree"]`
+- 記述の凝集度: 案 α は複数 option に分散、案 β は 1 option にまとめる
+
+**案 γ — 両方向を許容 (`default_from` と `default_for` の双対)**:
+
+- 使い分け: 「複数の source を持つ target」= 案 α 側で書く (target ごとに source を宣言)、「1 個の source が複数 target」= 案 β 側で書く (source ごとに target 群を宣言)
+- 実装は同じ (裏で双方向解決)、記述の凝集度で使い分け
+
+**案 δ — 採用しない (現 kuu で書けない状態を維持、5 直交 type の合成は諦め)**:
+
+- ユーザは `--help-all-category --help-show-hidden` と手動で複数 flag を打つ (合成 flag を提供しない)
+- 5 直交 type の意味は活きるが、UX 上の合成ショートカットが書けない
+
+### 統括推し
+
+**候補 α (default_from)** — 既存 `inherit` との対称性、値源ラダーへの自然な載り、記述の直感 (「この option の default は他 option の値から借用」の宣言的読み)。案 γ は将来拡張として open、案 β は α の逆方向で追加コストありに対して記述凝集度の利得はやや薄い、案 δ は「v1 完備主義」違反 (欲しい表現が書けない状態を放置)。
+
+### kuu 全体への波及
+
+これは help 機構専用の追加設計でなく、**汎用の option 間値借用機構**。他ユースケース:
+
+- 汎用 verbose 系: `--verbose` の値を `--log-level` / `--progress` / `--dry-run-detail` に借用
+- 集約 flag: `--strict` の値を `--strict-types` / `--strict-imports` / `--strict-runtime` に借用
+- テーマ系: `--theme=dark` の値を複数の色 option の default に借用
+
+汎用機構として設計する価値あり (help 専用でなく)。
+
+### 参照
+
+- DESIGN §7.4 (effect 語彙 4 種、現機構の限界)
+- DESIGN §10.2 (link は 1 対 N)
+- DESIGN §11.2 (inherit は祖先 scope 参照、同 scope 他 name は無い)
+- DESIGN §11.4 (値源ラダー、default 席の位置)
+- HIP-META-Q5 (5 直交 type、本 Q の需要源)
+
 ## HIP-META-Q4: 複合値構造 option の help model 表現
 
 ### kawaz 追補 (mid=13)
