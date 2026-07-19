@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "kuu registry descriptor (installer / filter / collector / type_parser / accumulator / completer / provider self-description)",
+  "title": "kuu registry descriptor (installer / filter / fn / collector / type_parser / accumulator / completer / provider self-description)",
   "description": "registry 住人の自己記述形の JSON Schema ドラフト (DR-061 §1 の宣言軸原型、DR-066 §2 が reasons 追加、DR-106 が kind/domain 軸を追加、DR-107 が kind→role rename + construction/io_type/output_mode/fallibility/invocation の直交軸化を実施)。DESIGN §13.1「installer / registry 住人は自身を説明する descriptor を持つ」。DR-068 (ドラフト期は $id を与えない) に基づき draft 扱い。role 別に必須・禁止フィールドが分岐する (下記 allOf の role 条件分岐 — `oneOf` ではなく `allOf`+`if`/`then`、role 間の排他性は `role` フィールド自体の `const` 一致で保証されるため `if`/`then` で十分、codex レビュー #4 B-Min3)。分岐を Schema で強制することが本 Schema の目的そのもの (codex レビュー #3 A-C1 の反映、DR-107 §7 が role 別マトリクスとして拡張、codex レビュー #4 で強制力の実装漏れを是正)。個々の builtin descriptor の実体は schema/builtin-descriptors.json (DR-095、DR-107 で provider 3 種を追加、DR-107 codex レビュー #4 で envelope schema による集合検証を追加)。",
   "$ref": "#/$defs/descriptor",
 
@@ -29,6 +29,21 @@
           "items": { "$ref": "#/$defs/value_type" },
           "minItems": 2,
           "uniqueItems": true
+        }
+      ]
+    },
+
+    "fn_output_type": {
+      "description": "fn を含む descriptor output 型。通常の JSON value_type に、role:fn のトップレベル出力だけが使える tagged Sentinel を加える (DR-114 §9)。",
+      "oneOf": [
+        { "$ref": "#/$defs/value_type" },
+        {
+          "type": "object",
+          "properties": {
+            "sentinel": { "type": "string", "enum": ["use_default", "unset", "empty"] }
+          },
+          "required": ["sentinel"],
+          "additionalProperties": false
         }
       ]
     },
@@ -74,6 +89,73 @@
       "additionalProperties": false
     },
 
+    "fn_invocation_parameter": {
+      "type": "object",
+      "description": "fn の positional 引数 leaf。通常の named parameter に leaf-level repeat を加える (DR-114 §9 の set descriptor)。",
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^([a-z][a-z0-9_]*/)?[a-z][a-z0-9_]*$",
+          "minLength": 1
+        },
+        "type": { "$ref": "#/$defs/value_type" },
+        "required": { "type": "boolean" },
+        "constraint": { "type": "string" },
+        "description": { "type": "string" },
+        "default": {},
+        "repeat": {
+          "type": "object",
+          "properties": {
+            "min": { "type": "integer", "minimum": 0 },
+            "max": { "type": "integer", "minimum": 0 }
+          },
+          "additionalProperties": false
+        }
+      },
+      "required": ["name", "type", "required"],
+      "additionalProperties": false
+    },
+
+    "invocation_parameter_expression": {
+      "description": "fn role 専用の positional 定義式。seq / or / repeat を任意ネストできる (DR-114 §9)。parameters 配列自体が外側の seq を表す。",
+      "oneOf": [
+        { "$ref": "#/$defs/fn_invocation_parameter" },
+        {
+          "type": "object",
+          "properties": {
+            "seq": { "type": "array", "items": { "$ref": "#/$defs/invocation_parameter_expression" } }
+          },
+          "required": ["seq"],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "or": { "type": "array", "items": { "$ref": "#/$defs/invocation_parameter_expression" } }
+          },
+          "required": ["or"],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "repeat": {
+              "type": "object",
+              "properties": {
+                "min": { "type": "integer", "minimum": 0 },
+                "max": { "type": "integer", "minimum": 0 },
+                "node": { "$ref": "#/$defs/invocation_parameter_expression" }
+              },
+              "required": ["node"],
+              "additionalProperties": false
+            }
+          },
+          "required": ["repeat"],
+          "additionalProperties": false
+        }
+      ]
+    },
+
     "invocation": {
       "type": "object",
       "description": "呼び出し形の宣言 (DR-107 §5、DAX-Q5)。colon_args = filter chain の colon-DSL (DR-009、DESIGN §8.4 の {name,args} エスケープ形も同一規約)、object_args = multiple 宣言 (object 形) から導出される object 形引数 (collector の宣言由来引数 DR-036/DR-044 に加え、accumulator の flatten ダイヤル等の宣言由来引数も同一経路 — DR-111 §4 が適用範囲を一般化)、none = 直接引数を取らない (installer の wire 語彙経由呼び出し、type_parser/provider/completer の名前参照のみ)。`encoding:\"none\"` は `parameters` が空でなければならない (codex レビュー #4 B-Maj2)。",
@@ -81,7 +163,7 @@
         "encoding": { "type": "string", "enum": ["colon_args", "object_args", "none"] },
         "parameters": {
           "type": "array",
-          "items": { "$ref": "#/$defs/invocation_parameter" }
+          "items": {}
         }
       },
       "required": ["encoding", "parameters"],
@@ -96,7 +178,7 @@
 
     "descriptor": {
       "type": "object",
-      "description": "1 registry 住人分の自己記述。installer / filter / collector / type_parser / accumulator / completer / provider のいずれも同型で表現する — DESIGN §13.1 の「installer / registry 住人」という一般化に対応。`role` の値に応じて他フィールドの必須性・禁止性が分岐する (下記 allOf の role 条件分岐、DR-107 §7 の role 別マトリクス)。",
+      "description": "1 registry 住人分の自己記述。installer / filter / fn / collector / type_parser / accumulator / completer / provider のいずれも同型で表現する — DESIGN §13.1 の「installer / registry 住人」という一般化に対応。`role` の値に応じて他フィールドの必須性・禁止性が分岐する (下記 allOf の role 条件分岐、DR-107 §7 の role 別マトリクス)。",
       "properties": {
         "name": {
           "type": "string",
@@ -109,8 +191,8 @@
         },
         "role": {
           "type": "string",
-          "enum": ["installer", "filter", "collector", "type_parser", "accumulator", "completer", "provider"],
-          "description": "descriptor が説明する registry 住人の役割 (DR-107 §1、旧 `kind` の rename)。installer = DR-042 の特殊語彙展開装置。filter = DESIGN §8 の filters registry 住人 (scalar/array いずれかの carrier、区別は `domain`)。collector = DR-036/DR-044 の累積結果変換装置 (T[]→U)。type_parser = `types` registry の configurable factory (旧 `kind:\"factory\"` から construction 軸を分離した残り、DR-107 §1)。accumulator = accumulators registry 住人の畳み装置 (append/merge/kv_map、DR-036/DR-111 — collector と同じ「構造畳み装置は total」の勢力図で const 固定)。completer = completers registry 住人の named capability marker (DR-060 §4/DR-111 §5 — io_type は runtime 問い合わせ ABI 確定まで持たない最小形)。provider = env_provider/config_provider/tty_provider の 3 スロット (DR-107 §6)。"
+          "enum": ["installer", "filter", "fn", "collector", "type_parser", "accumulator", "completer", "provider"],
+          "description": "descriptor が説明する registry 住人の役割。DR-107 の 7 値に DR-114 §8 の fn を追加する。fn = cell_fns registry の default 値供給 / 発火時 cell operation。installer = 特殊語彙展開装置。filter = filters registry 住人。collector = 累積結果変換装置。type_parser = types registry の parser。accumulator = accumulators registry の畳み装置。completer = named capability marker。provider = env/config/tty の固定 3 スロット。"
         },
         "construction": {
           "type": "string",
@@ -124,12 +206,12 @@
         },
         "io_type": {
           "type": "object",
-          "description": "入出力の値型 (DR-107 §3、DAX-Q3)。VISION §4 (独自 filter の可搬性) が要求する型情報 — descriptor 単体から import 先で interface/モックを生成するために必要。実呼び出しシグネチャは `fn(value: io_type.input, ...invocation.parameters 宣言順) → T | Result<T, reason>` として io_type と invocation を合成する (DR-107 §5、codex レビュー #4 A-C2)。",
+          "description": "呼び出し値型 (DR-107 §3 / DR-114 §9)。filter 等は input+output、fn は output-only。fn の args は invocation.parameters が担い、output は JSON value_type または tagged Sentinel。",
           "properties": {
             "input": { "$ref": "#/$defs/value_type" },
-            "output": { "$ref": "#/$defs/value_type" }
+            "output": { "$ref": "#/$defs/fn_output_type" }
           },
-          "required": ["input", "output"],
+          "required": ["output"],
           "additionalProperties": false
         },
         "output_mode": {
@@ -144,7 +226,7 @@
         },
         "invocation": {
           "$ref": "#/$defs/invocation",
-          "description": "呼び出し形の宣言 (DR-107 §5)。`role:\"filter\"` は encoding=colon_args 固定、`role:\"collector\"` は object_args 固定、`role:\"type_parser\"`/`role:\"provider\"` は none 固定。"
+          "description": "呼び出し形の宣言 (DR-107 §5 / DR-114 §9)。filter/fn は colon_args、collector/accumulator は object_args、type_parser/provider/completer は none 固定。"
         },
         "owns": {
           "type": "array",
@@ -158,13 +240,9 @@
         },
         "observes": {
           "type": "array",
-          "items": {
-            "type": "string",
-            "pattern": "^([a-z][a-z0-9_]*/)?[a-z][a-z0-9_]*$",
-            "minLength": 1
-          },
+          "items": { "type": "string", "minLength": 1 },
           "uniqueItems": true,
-          "description": "観測語彙 (installer descriptor の宣言軸、DR-061 §1)。あれば副次成果物 (表示・補完等) に影響するが効果列には影響しない語彙 (DR-056 の advisory read の機械可読化)。宣言は lint/diagnose の素材であり実行時強制はしない。installer 以外は禁止 (role 条件分岐で強制)。"
+          "description": "role 別の観測宣言。installer では宣言語彙名 (DR-061)、filter/fn では runtime 参照 `option:<name>` / `env:<var>` / `system:<key>` (DR-114 §9/§10)。fn の `ctx.old` は対象 cell の内在状態なので edge に含めない。具体的な文字列形は role 条件分岐で強制する。"
         },
         "config": {
           "type": "object",
@@ -179,7 +257,7 @@
           "type": "array",
           "items": {
             "type": "string",
-            "pattern": "^([a-z][a-z0-9_]*/)?[a-z][a-z0-9_]*$"
+            "pattern": "^([a-z][a-z0-9_]*/)?[a-z][a-z0-9_-]*$"
           },
           "uniqueItems": true,
           "description": "emit しうる reason 識別子の列挙 (DR-066 §2、descriptor の宣言軸)。reason は ns 付き識別子 (DR-094 §1/§5)、bare は builtin ns の糖衣。空配列は「この descriptor は失敗しない」の明示 (DR-095 §3)。reason は排他所有ではないグローバル語彙 — 複数 descriptor が同じ reason (`too_small` 等) を共有 emit してよい。provider の `null` 返却は本フィールドの対象外 (`io_type.output` の union で表現、DR-107 §6) — provider は常に空 (role 条件分岐で強制)。`fallibility:\"total\"` は空、`fallibility:\"reject\"` は 1 件以上を要求する (トップレベル allOf、DR-095 §3、codex レビュー #4 B-C3)。"
@@ -203,17 +281,26 @@
           "then": { "properties": { "reasons": { "minItems": 1 } } }
         },
         {
-          "description": "role:\"filter\" — domain/io_type/output_mode/fallibility/invocation が必須 (DR-107 §7)。owns/observes は installer 固有のため禁止。invocation.encoding は colon_args 固定 (DR-009 の colon-DSL)。construction:factory では config 必須、construction:static では config 禁止 (DR-107 §2、codex レビュー #4 B-C2)。domain は io_type.input の array ラップ有無と一致しなければならない (codex レビュー #4 A-M2/B-C4)。",
+          "description": "role:\"filter\" — domain/io_type/output_mode/fallibility/invocation が必須 (DR-107 §7)。owns は installer 固有のため禁止し、observes は runtime 参照宣言として任意。invocation.encoding は colon_args 固定 (DR-009 の colon-DSL)。construction:factory では config 必須、construction:static では config 禁止 (DR-107 §2、codex レビュー #4 B-C2)。domain は io_type.input の array ラップ有無と一致しなければならない (codex レビュー #4 A-M2/B-C4)。",
           "if": { "properties": { "role": { "const": "filter" } } },
           "then": {
             "required": ["domain", "io_type", "output_mode", "fallibility", "invocation"],
             "properties": {
+              "io_type": { "required": ["input"] },
               "invocation": {
                 "type": "object",
-                "properties": { "encoding": { "const": "colon_args" } }
+                "properties": {
+                  "encoding": { "const": "colon_args" },
+                  "parameters": {
+                    "items": { "$ref": "#/$defs/invocation_parameter" }
+                  }
+                }
+              },
+              "observes": {
+                "items": { "type": "string", "pattern": "^(option|env|system):.+$" }
               }
             },
-            "not": { "anyOf": [{ "required": ["owns"] }, { "required": ["observes"] }] },
+            "not": { "required": ["owns"] },
             "allOf": [
               {
                 "if": { "properties": { "construction": { "const": "factory" } } },
@@ -223,11 +310,60 @@
               {
                 "if": { "properties": { "domain": { "const": "array" } } },
                 "then": {
-                  "properties": { "io_type": { "properties": { "input": { "type": "object", "required": ["array"] } } } }
+                  "properties": { "io_type": { "required": ["input"], "properties": { "input": { "type": "object", "required": ["array"] } } } }
                 },
                 "else": {
                   "properties": { "io_type": { "properties": { "input": { "not": { "type": "object", "required": ["array"] } } } } }
                 }
+              }
+            ]
+          }
+        },
+        {
+          "description": "tagged Sentinel は role:fn の output に限定する (DR-114 §9)。",
+          "if": { "properties": { "role": { "not": { "const": "fn" } } } },
+          "then": {
+            "properties": {
+              "io_type": {
+                "properties": {
+                  "output": { "not": { "type": "object", "required": ["sentinel"] } }
+                }
+              }
+            }
+          }
+        },
+        {
+          "description": "role:\"fn\" — cell_fns registry の値供給 / cell operation (DR-114 §8/§9)。io_type は output-only、invocation は colon_args、fallibility は必須。output_mode は入力保持/変換の filter 軸なので禁止。observes は runtime 参照を option/env/system 形式で宣言する。factory のみ config 必須。",
+          "if": { "properties": { "role": { "const": "fn" } } },
+          "then": {
+            "required": ["io_type", "fallibility", "invocation"],
+            "properties": {
+              "invocation": {
+                "type": "object",
+                "properties": {
+                  "encoding": { "const": "colon_args" },
+                  "parameters": {
+                    "items": { "$ref": "#/$defs/invocation_parameter_expression" }
+                  }
+                }
+              },
+              "observes": {
+                "items": { "type": "string", "pattern": "^(option|env|system):.+$" }
+              }
+            },
+            "not": {
+              "anyOf": [
+                { "required": ["domain"] },
+                { "required": ["output_mode"] },
+                { "required": ["owns"] },
+                { "properties": { "io_type": { "required": ["input"] } }, "required": ["io_type"] }
+              ]
+            },
+            "allOf": [
+              {
+                "if": { "properties": { "construction": { "const": "factory" } } },
+                "then": { "required": ["config"] },
+                "else": { "not": { "required": ["config"] } }
               }
             ]
           }
@@ -242,10 +378,15 @@
               "output_mode": { "const": "transform" },
               "fallibility": { "const": "total" },
               "construction": { "const": "static" },
-              "io_type": { "properties": { "input": { "type": "object", "required": ["array"] } } },
+              "io_type": { "required": ["input"], "properties": { "input": { "type": "object", "required": ["array"] } } },
               "invocation": {
                 "type": "object",
-                "properties": { "encoding": { "const": "object_args" } }
+                "properties": {
+                  "encoding": { "const": "object_args" },
+                  "parameters": {
+                    "items": { "$ref": "#/$defs/invocation_parameter" }
+                  }
+                }
               }
             },
             "not": {
@@ -264,7 +405,7 @@
             "required": ["io_type", "output_mode", "fallibility", "invocation"],
             "properties": {
               "output_mode": { "const": "transform" },
-              "io_type": { "properties": { "input": { "const": "string" } } },
+              "io_type": { "required": ["input"], "properties": { "input": { "const": "string" } } },
               "invocation": {
                 "type": "object",
                 "properties": { "encoding": { "const": "none" } }
@@ -288,6 +429,7 @@
             "properties": {
               "name": { "enum": ["env_provider", "config_provider", "tty_provider"] },
               "construction": { "const": "static" },
+              "io_type": { "required": ["input"] },
               "invocation": {
                 "type": "object",
                 "properties": { "encoding": { "const": "none" } }
@@ -310,6 +452,14 @@
           "description": "role:\"installer\" — domain/io_type/output_mode/fallibility/invocation は filter/collector/type_parser/provider 固有の宣言軸であり installer には無関係 (DR-061 §1 の owns/observes/config 軸のまま不変)。",
           "if": { "properties": { "role": { "const": "installer" } } },
           "then": {
+            "properties": {
+              "observes": {
+                "items": {
+                  "type": "string",
+                  "pattern": "^([a-z][a-z0-9_]*/)?[a-z][a-z0-9_]*$"
+                }
+              }
+            },
             "not": {
               "anyOf": [
                 { "required": ["domain"] },
@@ -330,10 +480,15 @@
               "output_mode": { "const": "transform" },
               "fallibility": { "const": "total" },
               "construction": { "const": "static" },
-              "io_type": { "properties": { "input": { "type": "object", "required": ["array"] } } },
+              "io_type": { "required": ["input"], "properties": { "input": { "type": "object", "required": ["array"] } } },
               "invocation": {
                 "type": "object",
-                "properties": { "encoding": { "const": "object_args" } }
+                "properties": {
+                  "encoding": { "const": "object_args" },
+                  "parameters": {
+                    "items": { "$ref": "#/$defs/invocation_parameter" }
+                  }
+                }
               }
             },
             "not": {
@@ -378,7 +533,7 @@
 
     "envelope": {
       "type": "object",
-      "description": "schema/builtin-descriptors.json のトップレベル形状 (DR-095 §3/§4、DR-107 §6、DR-111 §3) — filters/types/accumulators/providers の 4 区分マップを検証する集合レベルの schema (codex レビュー #4 A-M11/B-Maj6、旧版はこの envelope 自体を検証する手段が無く descriptor.schema.json を builtin-descriptors.json のルートへ直接適用すると shape 不一致で失敗していた)。`filters` 配下は role:\"filter\"|\"collector\" のいずれか (DR-036「collectors registry は新設しない、filters で代替」)、`types` 配下は role:\"type_parser\" 固定、`accumulators` 配下は role:\"accumulator\" 固定 + 3 住人 (append/merge/kv_map、参照実装の registry 登録全員、DR-111 §3) の完備性を強制、`providers` 配下は role:\"provider\" 固定 + 3 スロット (env_provider/config_provider/tty_provider) の完備性を強制する。completers 区分は住人が生じるまで作らない (DR-111 §6 — 標準 completer 名の集合は補完生成器層の関心)。map key と各 descriptor.name の一致、bare/canonical 名の重複検査は JSON Schema の表現範囲外 (プロパティ名と値の中身を突き合わせる標準機構が無い) — `scripts/lint-descriptors.py` が semantic lint として検査する。",
+      "description": "schema/builtin-descriptors.json のトップレベル形状 (DR-095 §3/§4、DR-107 §6、DR-111 §3、DR-114 §8) — filters/cell_fns/types/accumulators/providers の 5 区分マップを検証する集合レベルの schema (codex レビュー #4 A-M11/B-Maj6、旧版はこの envelope 自体を検証する手段が無く descriptor.schema.json を builtin-descriptors.json のルートへ直接適用すると shape 不一致で失敗していた)。`filters` 配下は role:\"filter\"|\"collector\" のいずれか (DR-036「collectors registry は新設しない、filters で代替」)、`cell_fns` 配下は role:\"fn\" 固定 + canonical 10 住人の完備性を強制、`types` 配下は role:\"type_parser\" 固定、`accumulators` 配下は role:\"accumulator\" 固定 + 3 住人 (append/merge/kv_map、参照実装の registry 登録全員、DR-111 §3) の完備性を強制、`providers` 配下は role:\"provider\" 固定 + 3 スロット (env_provider/config_provider/tty_provider) の完備性を強制する。completers 区分は住人が生じるまで作らない (DR-111 §6 — 標準 completer 名の集合は補完生成器層の関心)。map key と各 descriptor.name の一致、bare/canonical 名の重複検査は JSON Schema の表現範囲外 (プロパティ名と値の中身を突き合わせる標準機構が無い) — `scripts/lint-descriptors.py` が semantic lint として検査する。",
       "properties": {
         "$comment": { "type": "string" },
         "$schema-ref": { "type": "string" },
@@ -390,6 +545,17 @@
               { "properties": { "role": { "enum": ["filter", "collector"] } } }
             ]
           }
+        },
+        "cell_fns": {
+          "type": "object",
+          "description": "default_fn と variant effect が共有する universal fn registry (DR-114 §8)。",
+          "additionalProperties": {
+            "allOf": [
+              { "$ref": "#/$defs/descriptor" },
+              { "properties": { "role": { "const": "fn" } } }
+            ]
+          },
+          "required": ["set", "default", "unset", "empty", "incr", "borrow", "env", "inherit", "uuid", "computed"]
         },
         "types": {
           "type": "object",
@@ -421,7 +587,7 @@
           "required": ["env_provider", "config_provider", "tty_provider"]
         }
       },
-      "required": ["filters", "types", "accumulators", "providers"],
+      "required": ["filters", "cell_fns", "types", "accumulators", "providers"],
       "additionalProperties": false
     }
   }

@@ -1,5 +1,5 @@
 {
-  "$comment": "kuu builtin registry 住人の宣言集合 — 各エントリは schema/descriptor.schema.json に適合する。正本は docs/decisions/DR-095-builtin-descriptor-reasons.md (§3 filters / §4 factories) + DR-107-descriptor-orthogonal-axes.md (role/construction/io_type/output_mode/fallibility/invocation の直交軸)。DR-095 §射程外の通り、installer 発生源 (missing_operand 等) と constraint 系 reason (required_violated 等) は本ファイルの対象外 — 前者はエンジン構造の発生源で installer descriptor 側の宣言軸が未実体化、後者は constraint installer (DR-047/055) 側で別途宣言が必要 (いずれも本 issue の射程外)。トップレベル区分名 (filters/types/accumulators/providers) は DESIGN §13.1 の registry 区分名 (呼ばれるフィールド名の単位) を踏襲し、descriptor の `role` (DR-107) とは独立 — `types` registry 住人は `role:\"type_parser\"` を持つ (registry 区分名と role は別軸)。accumulators 区分は DR-111 §3 で新設 (append/merge/kv_map の 3 住人 = 参照実装の registry 登録全員、increment は DR-077 の宿題決着で除外、override は概念モデル上の名前で registry 住人ではない)。completers 区分は住人が生じるまで作らない (DR-111 §6)。",
+  "$comment": "kuu builtin registry 住人の宣言集合 — 各エントリは schema/descriptor.schema.json に適合する。正本は docs/decisions/DR-095-builtin-descriptor-reasons.md (§3 filters / §4 factories) + DR-107-descriptor-orthogonal-axes.md (role/construction/io_type/output_mode/fallibility/invocation の直交軸) + DR-114-universal-fn-integration.md (cell_fns / fn role / observes / tagged Sentinel)。DR-095 §射程外の通り、installer 発生源 (missing_operand 等) と constraint 系 reason (required_violated 等) は本ファイルの対象外 — 前者はエンジン構造の発生源で installer descriptor 側の宣言軸が未実体化、後者は constraint installer (DR-047/055) 側で別途宣言が必要 (いずれも本 issue の射程外)。トップレベル区分名 (filters/cell_fns/types/accumulators/providers) は DESIGN §13.1 の registry 区分名 (呼ばれるフィールド名の単位) を踏襲し、descriptor の `role` (DR-107) とは独立 — `types` registry 住人は `role:\"type_parser\"` を持つ (registry 区分名と role は別軸)。accumulators 区分は DR-111 §3 で新設 (append/merge/kv_map の 3 住人 = 参照実装の registry 登録全員、increment は DR-077 の宿題決着で除外、override は概念モデル上の名前で registry 住人ではない)。completers 区分は住人が生じるまで作らない (DR-111 §6)。",
   "$schema-ref": "descriptor.schema.json",
 
   "filters": {
@@ -132,6 +132,149 @@
       },
       "reasons": [],
       "description": "累積結果 (T[]→U、collector 相、DR-036/DR-044) — entries 配列形・指名 2 フィールド形・key 昇格形の 3 用法を一本で覆い Map へ変換する。multiple プリセット `map` の collector (旧 to_map + key_from を置換)。domain:array/output_mode:transform/fallibility:total はいずれも collector 役割の const 固定 (DR-107 §7)。呼び出し規約は filter chain の colon-DSL args とは異なる (multiple.collector の object 形から導出する FromEntries spec を引数に取る、DR-106、codex レビュー #2 M-21 の反映)。"
+    }
+  },
+
+  "cell_fns": {
+    "set": {
+      "name": "set",
+      "role": "fn",
+      "construction": "static",
+      "io_type": { "output": "value" },
+      "fallibility": "total",
+      "invocation": {
+        "encoding": "colon_args",
+        "parameters": [
+          { "name": "value", "type": "value", "required": true, "repeat": { "min": 1 } }
+        ]
+      },
+      "observes": [],
+      "reasons": [],
+      "description": "1 個以上の logical value を返す cell fn (DR-114 §2/§4/§9)。variant 入口では返り値を cell へ set し、default 糖衣では native JSON value を typed internal call として渡す。"
+    },
+    "default": {
+      "name": "default",
+      "role": "fn",
+      "construction": "static",
+      "io_type": { "output": { "sentinel": "use_default" } },
+      "fallibility": "total",
+      "invocation": { "encoding": "colon_args", "parameters": [] },
+      "observes": [],
+      "reasons": [],
+      "description": "use_default sentinel を返し、cell を default placeholder へ戻す effect-mode cell operation (DR-114 §2/§9)。"
+    },
+    "unset": {
+      "name": "unset",
+      "role": "fn",
+      "construction": "static",
+      "io_type": { "output": { "sentinel": "unset" } },
+      "fallibility": "total",
+      "invocation": { "encoding": "colon_args", "parameters": [] },
+      "observes": [],
+      "reasons": [],
+      "description": "unset sentinel を返す effect-mode cell operation (DR-114 §2/§9)。"
+    },
+    "empty": {
+      "name": "empty",
+      "role": "fn",
+      "construction": "static",
+      "io_type": { "output": { "sentinel": "empty" } },
+      "fallibility": "total",
+      "invocation": { "encoding": "colon_args", "parameters": [] },
+      "observes": [],
+      "reasons": [],
+      "description": "empty sentinel を返し、array / map cell を空にする effect-mode cell operation (DR-114 §2/§9)。"
+    },
+    "incr": {
+      "name": "incr",
+      "role": "fn",
+      "construction": "static",
+      "io_type": { "output": "number" },
+      "fallibility": "total",
+      "invocation": { "encoding": "colon_args", "parameters": [] },
+      "observes": [],
+      "reasons": [],
+      "description": "ctx.old を任意参照して old + 1 を返す count 更新 cell fn (DR-114 §2/§7)。old は対象 cell の内在状態なので observes edge ではない。暫定契約: 引数なしで number を total に返す。old が absent の場合を含む詳細契約は P3 の kuu.mbt 実装時に確定する。"
+    },
+    "borrow": {
+      "name": "borrow",
+      "role": "fn",
+      "construction": "static",
+      "io_type": { "output": "value" },
+      "fallibility": "reject",
+      "invocation": {
+        "encoding": "colon_args",
+        "parameters": [
+          { "name": "source", "type": "string", "required": true }
+        ]
+      },
+      "observes": ["option:<source>"],
+      "reasons": ["absent-source"],
+      "description": "他 option の値を返す cell fn。observes template を decoded source へ束縛して依存 edge を作る (DR-114 §2/§9/§10)。"
+    },
+    "env": {
+      "name": "env",
+      "role": "fn",
+      "construction": "static",
+      "io_type": { "output": "value" },
+      "fallibility": "reject",
+      "invocation": {
+        "encoding": "colon_args",
+        "parameters": [
+          { "name": "var", "type": "string", "required": true }
+        ]
+      },
+      "observes": ["env:<var>"],
+      "reasons": ["absent-source"],
+      "description": "明示した環境値を返す cell fn。値源ラダーの env 席とは別の universal fn 呼び出し (DR-114 §2/§4.1/§10)。暫定契約: env(var) → value、参照不在は absent-source。詳細契約は P3 の kuu.mbt 実装時に確定する。"
+    },
+    "inherit": {
+      "name": "inherit",
+      "role": "fn",
+      "construction": "static",
+      "io_type": { "output": "value" },
+      "fallibility": "reject",
+      "invocation": {
+        "encoding": "colon_args",
+        "parameters": [
+          { "name": "source", "type": "string", "required": true }
+        ]
+      },
+      "observes": ["option:<source>"],
+      "reasons": ["absent-source"],
+      "description": "祖先 scope の明示 source から値を返す cell fn。wire の inherit ラダー席とは別の universal fn 呼び出し (DR-114 §4.1/§8)。暫定契約: inherit(source) → value、参照不在は absent-source。詳細契約は P3 の kuu.mbt 実装時に確定する。"
+    },
+    "uuid": {
+      "name": "uuid",
+      "role": "fn",
+      "construction": "static",
+      "io_type": { "output": "string" },
+      "fallibility": "total",
+      "invocation": {
+        "encoding": "colon_args",
+        "parameters": [
+          { "name": "version", "type": "string", "required": true }
+        ]
+      },
+      "observes": [],
+      "reasons": [],
+      "description": "registry 実装が UUID 値を生成して返す cell fn (`uuid:v4`、DR-114 §2/§4)。暫定契約: uuid(version) → string total。version の許容集合を含む詳細契約は P3 の kuu.mbt 実装時に確定する。"
+    },
+    "computed": {
+      "name": "computed",
+      "role": "fn",
+      "construction": "static",
+      "io_type": { "output": "value" },
+      "fallibility": "reject",
+      "invocation": {
+        "encoding": "colon_args",
+        "parameters": [
+          { "name": "key", "type": "string", "required": true }
+        ]
+      },
+      "observes": ["system:<key>"],
+      "reasons": ["absent-source"],
+      "description": "system key に対応する計算値を取得して返す cell fn。参照対象は observes template から concrete edge 化する (DR-114 §2/§10)。暫定契約: computed(key) → value、参照不在は absent-source。key の集合を含む詳細契約は P3 の kuu.mbt 実装時に確定する。"
     }
   },
 

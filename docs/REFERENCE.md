@@ -66,6 +66,7 @@ wire 正規形のノードが持ちうる全属性。型・既定値・適用対
 | `config_key` | array[string\|integer] | name スコープ階層と同型対応 | 値要素 |
 | `conflicts_with` | array[string] | なし | 任意要素 |
 | `default` | any | なし | 値要素 |
+| `default_fn` | string \| array[string] | なし | 値要素 (default 席の cell_fns 呼び出し、DR-114) |
 | `definitions` | object | なし | 任意ノード |
 | `deprecated` | boolean | false | 任意要素 / alias 要素 |
 | `display_name` | string | name 由来 | 任意ノード (表示メタ) |
@@ -85,8 +86,9 @@ wire 正規形のノードが持ちうる全属性。型・既定値・適用対
 | `help_long` | string | なし | 任意ノード (表示メタ) |
 | `help_on_failure` | boolean | true | `type:"help"` 系要素専用 (糖衣) |
 | `help_order` | number | 宣言 index | options/commands の通常 entry |
+| `hidden` | boolean | false | 任意要素 (表示 policy 用メタ、受理は不変) |
 | `id` | string (`#` 禁止) | name を兼ねる | 全ノード |
-| `inherit` | boolean | false | 値要素 |
+| `inherit` | boolean \| {from:string} | false | 値要素 (inherit ラダー席) |
 | `inheritable` | boolean | false | 値要素 |
 | `link` | string | なし | 任意ノード |
 | `long` | boolean \| array[longItem] | false (`[]`) | option 要素 |

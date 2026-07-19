@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "kuu conformance fixture",
-  "description": "docs/CONFORMANCE.md §1-5 の写像 (JSON Schema ドラフト、DR-068 §3 によりドラフト期は $id を与えない)。fixture ファイル 1 個の形を規定する。query タグで分岐する 5 形 (DR-065 §1 / DR-070 / DR-082 / DR-104 / DR-112): parse (本書 §2)・lower (DR-070)・definition_error (DR-082)・complete (DR-104、CONFORMANCE §4)・help (DR-112、CONFORMANCE §5)。why フィールドの必須性・reason/sources 等の optional 検証フィールドは各 case レベルで表現し、比較規約自体 (構造等価・集合比較等、CONFORMANCE §3) は Schema の表現力の外 (runner の関心)。",
+  "description": "docs/CONFORMANCE.md §1-5 の写像 (JSON Schema ドラフト、DR-068 §3 によりドラフト期は $id を与えない)。fixture ファイル 1 個の形を規定する。query タグで分岐する 5 形 (DR-065 §1 / DR-070 / DR-082 / DR-104 / DR-113): parse (本書 §2)・lower (DR-070)・definition_error (DR-082)・complete (DR-104、CONFORMANCE §4)・help (DR-113、CONFORMANCE §5)。why フィールドの必須性・reason/sources 等の optional 検証フィールドは各 case レベルで表現し、比較規約自体 (構造等価・集合比較等、CONFORMANCE §3) は Schema の表現力の外 (runner の関心)。",
   "$ref": "#/$defs/fixture",
 
   "$defs": {
@@ -17,7 +17,7 @@
         "query": {
           "type": "string",
           "enum": ["parse", "lower", "definition_error", "complete", "help"],
-          "description": "fixture の種別 (CONFORMANCE §1)。parse = 本 Schema §parseCase、lower = DR-070 (installers 列挙 + lowered 断面)、definition_error = DR-082 (静的検査、args なし)、complete = DR-104 (補完クエリ、args_before/args_after 入力 + candidates 期待値、CONFORMANCE §4)、help = DR-112 (help クエリ、path/depth/category 入力 + help model 期待値、CONFORMANCE §5、パース実行なし)。"
+          "description": "fixture の種別 (CONFORMANCE §1)。parse = 本 Schema §parseCase、lower = DR-070 (installers 列挙 + lowered 断面)、definition_error = DR-082 (静的検査、args なし)、complete = DR-104 (補完クエリ、args_before/args_after 入力 + candidates 期待値、CONFORMANCE §4)、help = DR-113 (help クエリ、path/depth/category_mode 入力 + help model 期待値、CONFORMANCE §5、パース実行なし)。"
         },
         "definition": {
           "$ref": "wire.schema.json#/$defs/node",
@@ -69,7 +69,7 @@
           }
         },
         {
-          "description": "query=\"help\": cases は最低 1 件、各 case は helpCase 形 (path/depth/category は全て optional、expect は helpExpect 固定、args 等の実行入力を一切禁止 — パース実行なしの純静的クエリ、CONFORMANCE §5/DR-112 §11)。",
+          "description": "query=\"help\": cases は最低 1 件、各 case は helpCase 形 (path/depth/category_mode は全て optional、expect は helpExpect 固定、args 等の実行入力を一切禁止 — パース実行なしの純静的クエリ、CONFORMANCE §5/DR-113 §9)。",
           "if": { "properties": { "query": { "const": "help" } } },
           "then": {
             "required": ["cases"],
@@ -141,9 +141,10 @@
             { "$ref": "#/$defs/parseExpect" },
             { "$ref": "#/$defs/definitionErrorExpect" },
             { "$ref": "#/$defs/completeExpect" },
-            { "$ref": "#/$defs/helpModelExpect" }
+            { "$ref": "#/$defs/helpModelExpect" },
+            { "$ref": "#/$defs/queryErrorExpect" }
           ],
-          "description": "outcome union (CONFORMANCE §2)、definition-error 形 (DR-082 §1)、complete 形 (DR-104、CONFORMANCE §4)、または help model 形 (DR-112、CONFORMANCE §5 — 不在 path/category は definition-error 形を使う)。"
+          "description": "parse outcome union、definition-error、complete、help model、または help_query 固有の query-error (DR-113 §1/§9)。"
         }
       },
       "required": ["id", "why", "expect"],
@@ -194,7 +195,7 @@
     },
 
     "helpCase": {
-      "description": "`query: \"help\"` 専用の厳密な case 形 (DR-112 §11、CONFORMANCE §5)。path/depth/category は全て optional (省略 = ルート / \"scope\" / 絞りなし)。パース実行なしの純静的クエリのため args・args_before・値源供給フィールド (env/tty/config/config_files) はいずれも禁止。expect は helpExpect 固定 (不在 path/category の case は definition-error 形)。",
+      "description": "`query: \"help\"` 専用の厳密な case 形 (DR-113 §1/§9、CONFORMANCE §5)。path/depth/category_mode は全て optional (省略 = ルート / \"scope\" / \"default\")。パース実行なしの純静的クエリのため args・args_before・値源供給フィールド (env/tty/config/config_files) はいずれも禁止。expect は helpExpect 固定 (不在 path / named category は query-error 形)。",
       "type": "object",
       "properties": {
         "id": { "$ref": "#/$defs/case/properties/id" },
@@ -202,16 +203,24 @@
         "path": {
           "type": "array",
           "items": { "type": "string" },
-          "description": "選択スコープのサブコマンド名列 (DESIGN §15.15)。省略 = ルート (`[]` と同値)。存在しない path は definition-error kind=absent-ref を expect する。"
+          "description": "選択スコープのサブコマンド名列 (DESIGN §15.15)。省略 = ルート (`[]` と同値)。存在しない path は query-error kind=absent-path を expect する。"
         },
         "depth": {
           "type": "string",
           "enum": ["scope", "all"],
-          "description": "省略 = \"scope\" (選択スコープの 1 層分、サブコマンドは一覧 entry のみ)。\"all\" = 全層再帰 (各 command entry に scope フィールドの再帰埋め込み、DR-112 §2/§3)。"
+          "description": "省略 = \"scope\" (選択スコープの 1 層分、サブコマンドは一覧 entry のみ)。\"all\" = 全層再帰 (各 command entry に scope フィールドの再帰埋め込み、DR-113 §2/§4.4)。"
         },
-        "category": {
-          "type": "string",
-          "description": "指定グループの entries に絞る (DR-112 §2)。存在しないグループ名は definition-error kind=absent-ref を expect する。"
+        "category_mode": {
+          "description": "help_query capability の category 選択 (DR-113 §1/§2)。省略 = `default`。`all` は category 絞りなし、`{named:name}` は指定グループと当該グループ宣言 entry に絞る。",
+          "oneOf": [
+            { "type": "string", "enum": ["default", "all"] },
+            {
+              "type": "object",
+              "properties": { "named": { "type": "string" } },
+              "required": ["named"],
+              "additionalProperties": false
+            }
+          ]
         },
         "expect": { "$ref": "#/$defs/helpExpect" }
       },
@@ -220,56 +229,264 @@
     },
 
     "helpExpect": {
-      "description": "`query: \"help\"` の expect (DR-112 §11、CONFORMANCE §5)。正常系は help model 形、不在 path/category は definition-error 形 (DR-082 転用の流儀)。",
+      "description": "`query: \"help\"` の expect (DR-113 §1/§9)。正常系は help model、不在 path / named category は definition-error と分離した query-error envelope。",
       "oneOf": [
         { "$ref": "#/$defs/helpModelExpect" },
-        { "$ref": "#/$defs/definitionErrorExpect" }
+        { "$ref": "#/$defs/queryErrorExpect" }
       ]
+    },
+
+    "queryErrorExpect": {
+      "type": "object",
+      "description": "合法な definition に対する help_query 呼び出し入力の失敗 (DR-113 §1)。definition-error outcome とは位相を混ぜない。",
+      "properties": {
+        "outcome": { "const": "query-error" },
+        "errors": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "kind": { "type": "string", "enum": ["absent-path", "absent-category"] }
+            },
+            "required": ["kind"],
+            "additionalProperties": true
+          },
+          "minItems": 1
+        }
+      },
+      "required": ["outcome", "errors"],
+      "additionalProperties": true
     },
 
     "helpModelExpect": {
       "type": "object",
-      "description": "help model の期待値 (DR-112 §3、DESIGN §15.15 の直訳)。全フィールドが素材 — 文言・整形・並べ替えを含まない。options/commands/positionals は順序込み比較 (並べ替え適用後の定義順保存が規範)、他は構造等価 (省略 = default と等価、CONFORMANCE §3/§5)。語彙の詳細規定 (entry 内フィールド・group entry 形・depth:\"all\" の scope 再帰) は DESIGN §15.15 が正本 — 本 Schema は構文層のみを緩く受ける (wire.schema.json と同じ流儀)。",
+      "description": "help_installer の help_query capability が返す構造素材 (DR-113 §4/§9)。options/commands/positionals は順序込み比較し、value_structure tree・共有 types・origin を失わない。",
       "properties": {
         "outcome": { "const": "help" },
         "command_path": {
           "type": "array",
           "items": { "type": "string" },
-          "description": "ルート定義要素の name (あれば) + path の連鎖 (DR-112 §3)。プログラム名 ($0) は定義に存在しないため含まれない (レンダラ / 呼び出し側の供給)。"
+          "description": "ルート定義要素の name (あれば) + 選択 path (DR-113 §4.4)。"
         },
         "usage": {
           "type": "object",
-          "description": "構造素材のみ (positional 進行の要約 + has_options/has_subcommands/has_dd)。一行文字列は含めない (DR-112 §3)。",
+          "description": "一行文字列へ整形する前の usage 構造素材 (DR-113 §4.4)。",
           "properties": {
             "has_options": { "type": "boolean" },
-            "positionals": { "type": "array", "items": { "type": "object" } },
+            "positionals": { "type": "array", "items": { "$ref": "#/$defs/helpUsagePositional" } },
             "has_subcommands": { "type": "boolean" },
             "has_dd": { "type": "boolean" }
           },
-          "additionalProperties": true
+          "additionalProperties": false
         },
-        "description": { "type": "string", "description": "選択スコープ要素の help 文字列 (未設定なら省略 — フォールバックは model に持ち込まない、DR-112 §3)。" },
-        "description_long": { "type": "string", "description": "同 help_long 文字列。" },
-        "epilog": { "type": "string", "description": "同 help_epilog 文字列。" },
+        "description": { "type": "string" },
+        "description_long": { "type": "string" },
+        "epilog": { "type": "string" },
+        "types": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/helpTypeEntry" },
+          "description": "definitions の共有値構造を集約射影した列 (DR-113 §4.2)。"
+        },
         "commands": {
           "type": "array",
-          "items": { "type": "object" },
-          "description": "サブコマンド一覧 entries (順序込み比較)。各 entry は {name, aliases?, help?, help_long?, hidden, deprecated} + depth:\"all\" 時の scope 再帰 (DR-112 §3)。"
+          "items": { "$ref": "#/$defs/helpCommandEntry" },
+          "description": "サブコマンド entries。depth=all では scope に子 help model を再帰埋め込みする。"
         },
         "options": {
           "type": "array",
-          "items": { "type": "object" },
-          "description": "オプション一覧 entries (順序込み比較)。通常 entry は {spellings, alias_spellings?, value_name?, display_name?, help?, help_long?, help_group_name?, default?, env?, required?, multiple?, hidden, deprecated}、グループ宣言エントリは {group: {name, title?, description?}} (DR-112 §3/§5)。"
+          "items": {
+            "oneOf": [
+              { "$ref": "#/$defs/helpOptionEntry" },
+              { "$ref": "#/$defs/helpGroupEntry" }
+            ]
+          },
+          "description": "通常 option entry と group 宣言 entry の順序付き列 (DR-113 §4/§8)。"
         },
         "positionals": {
           "type": "array",
-          "items": { "type": "object" },
-          "description": "positional 一覧 entries (定義順 = 消費構造順で固定、順序込み比較)。"
+          "items": { "$ref": "#/$defs/helpPositionalEntry" },
+          "description": "value_structure を保持する positional entries。定義順で比較する。"
         },
-        "help_entry": { "type": "string", "description": "定義の help 入口の綴り (DR-053 §4 と同じ素材)。" }
+        "help_entry": { "type": "string" }
       },
       "required": ["outcome"],
+      "additionalProperties": false
+    },
+
+    "helpValueStructure": {
+      "description": "or / seq / repeat / single / type_ref の任意ネスト tree (DR-113 §4.1)。",
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": { "single": { "$ref": "#/$defs/helpSingleValue" } },
+          "required": ["single"],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": { "seq": { "type": "array", "items": { "$ref": "#/$defs/helpValueStructure" } } },
+          "required": ["seq"],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": { "or": { "type": "array", "items": { "$ref": "#/$defs/helpValueStructure" } } },
+          "required": ["or"],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "repeat": {
+              "type": "object",
+              "properties": {
+                "min": { "type": "integer", "minimum": 0 },
+                "max": { "type": "integer", "minimum": 0 },
+                "node": { "$ref": "#/$defs/helpValueStructure" }
+              },
+              "required": ["node"],
+              "additionalProperties": false
+            }
+          },
+          "required": ["repeat"],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type_ref": { "type": "string" },
+            "value_name": { "type": "string" }
+          },
+          "required": ["type_ref"],
+          "additionalProperties": false
+        }
+      ]
+    },
+
+    "helpSingleValue": {
+      "type": "object",
+      "properties": {
+        "value_name": { "type": "string" },
+        "type": { "type": "string" },
+        "values_enum": { "type": "array" }
+      },
       "additionalProperties": true
+    },
+
+    "helpOrigin": {
+      "description": "options / commands entry の由来 (DR-113 §4.3)。",
+      "oneOf": [
+        { "const": "local" },
+        {
+          "type": "object",
+          "properties": {
+            "kind": { "type": "string", "enum": ["global", "inheritable"] },
+            "declared_at": { "type": "array", "items": { "type": "string" } }
+          },
+          "required": ["kind", "declared_at"],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": { "const": "alias" },
+            "of": { "type": "string" }
+          },
+          "required": ["kind", "of"],
+          "additionalProperties": false
+        }
+      ]
+    },
+
+    "helpTypeEntry": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "value_structure": { "$ref": "#/$defs/helpValueStructure" },
+        "help": { "type": "string" },
+        "used_as": { "type": "array", "items": { "type": "string" } }
+      },
+      "required": ["id", "value_structure", "used_as"],
+      "additionalProperties": false
+    },
+
+    "helpCommandEntry": {
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "aliases": { "type": "array", "items": { "type": "string" } },
+        "help": { "type": "string" },
+        "help_long": { "type": "string" },
+        "hidden": { "type": "boolean" },
+        "deprecated": { "type": "boolean" },
+        "origin": { "$ref": "#/$defs/helpOrigin" },
+        "scope": { "$ref": "#/$defs/helpModelExpect" }
+      },
+      "required": ["name", "hidden", "deprecated", "origin"],
+      "additionalProperties": false
+    },
+
+    "helpOptionEntry": {
+      "type": "object",
+      "properties": {
+        "spellings": { "type": "array", "items": { "type": "string" } },
+        "alias_spellings": { "type": "array", "items": { "type": "string" } },
+        "value_structure": { "$ref": "#/$defs/helpValueStructure" },
+        "display_name": { "type": "string" },
+        "help": { "type": "string" },
+        "help_long": { "type": "string" },
+        "help_group_name": { "type": "string" },
+        "default": {},
+        "env": { "type": "string" },
+        "required": { "type": "boolean" },
+        "multiple": { "type": "boolean" },
+        "hidden": { "type": "boolean" },
+        "deprecated": { "type": "boolean" },
+        "origin": { "$ref": "#/$defs/helpOrigin" }
+      },
+      "required": ["spellings", "hidden", "deprecated", "origin"],
+      "additionalProperties": false
+    },
+
+    "helpGroupEntry": {
+      "type": "object",
+      "properties": {
+        "group": {
+          "type": "object",
+          "properties": {
+            "name": { "type": "string" },
+            "title": { "type": "string" },
+            "description": { "type": "string" }
+          },
+          "required": ["name"],
+          "additionalProperties": false
+        }
+      },
+      "required": ["group"],
+      "additionalProperties": false
+    },
+
+    "helpUsagePositional": {
+      "type": "object",
+      "description": "usage 内の positional 進行素材。詳細一覧の hidden/deprecated は持たず value_structure だけを保持する (DR-113 §4)。",
+      "properties": {
+        "value_structure": { "$ref": "#/$defs/helpValueStructure" }
+      },
+      "required": ["value_structure"],
+      "additionalProperties": false
+    },
+
+    "helpPositionalEntry": {
+      "type": "object",
+      "properties": {
+        "value_structure": { "$ref": "#/$defs/helpValueStructure" },
+        "help": { "type": "string" },
+        "help_long": { "type": "string" },
+        "hidden": { "type": "boolean" },
+        "deprecated": { "type": "boolean" }
+      },
+      "required": ["value_structure", "hidden", "deprecated"],
+      "additionalProperties": false
     },
 
     "parseExpect": {
@@ -363,7 +580,7 @@
         },
         "reason": {
           "type": "string",
-          "pattern": "^([a-z][a-z0-9_]*/)?[a-z][a-z0-9_]*$",
+          "pattern": "^([a-z][a-z0-9_]*/)?[a-z][a-z0-9_-]*$",
           "description": "機械可読な失敗理由の識別子 (DR-066、ns 付き識別子 DR-094)。fixture では optional 検証 — 書けば比較、書かなければ kind までの検証 (CONFORMANCE §2/§3)。"
         },
         "message": {
@@ -403,24 +620,15 @@
 
     "effect": {
       "type": "object",
-      "description": "1 効果記述子 (DR-045 §4 op + DR-077 §1 update + DR-080 §2 merge accumulator piece op)。op 語彙は CONFORMANCE.md §2 の op 表と往復一致 (7 op + transform/args)。",
+      "description": "1 効果記述子 (DR-045 §4 の cell operation + DR-080 §2 の merge accumulator piece op)。DR-114 §2 により update effect は廃止し、ctx.old を参照する独立 cell fn の Value 返却を通常の set operation として表す。",
       "properties": {
         "entity": { "type": "string", "description": "実体 (値セル) の name / id。" },
         "op": {
           "type": "string",
-          "enum": ["set", "default", "unset", "empty", "update", "remove", "splice"],
-          "description": "DR-045 §4 の 4 op (set/default/unset/empty) + DR-077 §1 の update (5 番目、old→transform の書き戻し) + DR-080 §2 の merge accumulator piece op のうち集合演算系 2 種 (remove = 全削除、splice = old 展開。add piece は通常の set として現れる、DR-080 §4)。"
+          "enum": ["set", "default", "unset", "empty", "remove", "splice"],
+          "description": "DR-045 §4 の 4 op (set/default/unset/empty) + DR-080 §2 の merge accumulator piece op の集合演算系 2 種 (remove = 全削除、splice = old 展開。add piece と cell fn の Value 返却は通常の set として現れる)。"
         },
         "operand": { "description": "op が要求する場合のみ (set の値 / remove の除去対象)。JSON 表現は canonical 規約 (数値は最短形、DR-050 §4)。" },
-        "transform": {
-          "type": "string",
-          "description": "`op: \"update\"` 限定 (DR-077 §1/§2)。filters registry の Transform シグネチャを持つエントリ名 (ns 付き識別子、DR-094)。組み込みは `increment`。"
-        },
-        "args": {
-          "type": "array",
-          "items": { "type": "string" },
-          "description": "`op: \"update\"` の transform に渡す追加引数 (optional、DR-077 §2「args 付き transform は filters の既存 colon 規約のネスト」)。0-arg transform (increment 等) では省略。"
-        },
         "source": { "type": "string", "const": "cli", "description": "parse fixture では cli のみ登場 (CONFORMANCE §2)。" }
       },
       "required": ["entity", "op", "source"],
