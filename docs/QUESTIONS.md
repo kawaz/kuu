@@ -6,128 +6,13 @@
 > チャットでは「VF-Q 待ち」のようにラベルだけで参照する。回答はラベル + 選択肢記号 (例「VF-b で」) だけで通じる。
 > 参照パスは本リポ (spec) 相対。kuu.mbt 側は「kuu.mbt の <path>」と表記する。
 
-> **⚠ 2026-07-19 HIP-META-Q バッチ裁定 (mid=14, mid=15, mid=18)**:
+> **⚠ 2026-07-19 HIP-META-Q バッチ裁定 (mid=14, mid=15, mid=18, mid=23)**:
 > - **meta-Q1 = a**: help_installer が必要、DR-112 §1 撤回、設計プランから立て直し。実装ロールバック計画へ
 > - **meta-Q2**: order 関連 / display_name / value_name / help_on_failure 齟齬なし承認。**help_epilog = a 採用** (mid=15 の "epilog のことか、理解。ok" で確定)
 > - **meta-Q3**: depth = "scope" | "all" 承認、数値 depth 不要。他 worker 起草部分も「基本よさそう」
 > - **meta-Q4** (mid=13/16/17/20 で継続議論・確定): value_structure tree = a **承認**。type_ref ノード + model トップ types セクション拡張 (mid=17 の共有型) = **承認 (mid=20)**。レンダラ側は「趣味もある、後日レンダラ policy 指定オプション語彙追加で 1 行表現も選択可能に」(canonical レンダラ設計 issue に持ち越し、集約表示 vs 1 行 inline vs 詳細説明形式の選択可能化)。pipe 曖昧回避 (mid=16) も同 issue に持ち越し
 > - **meta-Q5** (mid=18 確定): **5 個の直交 type 構成** — `help` / `help_all_category` (旧 help_all 名前変更 + 意味論訂正、「全 category 絞りなし」) / `help_category` / `help_show_hidden` (独立軸新設、hidden 表示) / `help_tree` (独立軸新設、サブコマンド tree 全展開)。hidden は独立軸で分離 (混合概念回避)、現行 DR-112 §7 の type:"help_all" は完全撤回。各 type は or で組合せ可 (kuu 背骨の or 表現力そのまま)
-
-## HIP-META-Q6: default_fn 汎用機構の追加 (kawaz 発題 mid=19 → 対案 mid=21)
-
-### 背景説明
-
-HIP-META-Q5 で確定した 5 直交 type (`help` / `help_all_category` / `help_category` / `help_show_hidden` / `help_tree`) を実際に使う場面で、「1 個の flag で複数の type を同時発火する宣言」を書きたい (`--help-all` = `--help-all-category` + `--help-show-hidden` 等)。
-
-**現 kuu 精査結果 (私の spec 読み込み範囲)**:
-
-- variant DSL の effect (DESIGN §7.4) は 4 種、1 入口 1 effect
-- link (DESIGN §10.2) は 1 対 N、逆方向は無い
-- inherit (DESIGN §11.2) は祖先 scope 参照、同 scope の他 name 参照は無い
-- or は 1 path で 1 発火、複数 cell 同時 set にはならない
-- **default 席は宣言値 (定数) のみ、動的計算 / 他 option 参照 / 環境変数取得の機構は無い**
-- default_fn の registry / シグネチャ機構も無い
-
-現 kuu では書けない。追加設計が要る。
-
-### kawaz 対案 (mid=21) — default_fn 汎用機構
-
-専用属性 (`default_from` / `default_for`) を毎回増やすとキリがない。**汎用の `default_fn` 属性** で fn registry 引き + DSL:
-
-```
-default_fn: "fn_name[:arg[:arg...]]"
-```
-
-**具体 DSL 例** (filter/variant DSL と同じ書式):
-
-```json
-{"name": "help-all-category", "type": "help_all_category",
- "long": true, "default_fn": "borrow:help-all"}
-
-{"name": "log-file", "type": "path",
- "long": true, "default_fn": "env:LOG_FILE"}
-
-{"name": "branch", "type": "string",
- "long": true, "default_fn": "computed:git_branch"}
-
-{"name": "session-id", "type": "string",
- "long": true, "default_fn": "uuid:v4"}
-```
-
-**builtin default_fn 候補** (kuu ns):
-
-| fn | args | 用途 |
-|---|---|---|
-| `borrow` | `<other_option_name>` | 同 scope 他 option 値借用 (mid=19 発題用途) |
-| `inherit` | `<name>?` (省略時は自 name) | 祖先 scope 継承の明示形 (現 `inherit: true` の対称、汎用化) |
-| `env` | `<VAR_NAME>` | 環境変数 |
-| `constant` | `<value>` | 定数 (現 `default: value` の 1 対 1 対応、糖衣で自動変換候補) |
-| `computed` | `<key>` | 動的計算 (registry で拡張、system 提供 = git_branch / hostname / date_now 等) |
-| `uuid` | `<v1\|v4\|v7>` | UUID 生成 (例) |
-
-**descriptor 設計** (DR-061 と対称):
-
-```json
-{
-  "id": "borrow", "ns": "builtin", "kind": "default_fn",
-  "owns": ["borrow"],
-  "args": [{"name": "source", "type": "string"}],  // kawaz 追補: kuu の positionals 定義式そのまま
-  "returns": {"type": "same_as_target"}
-}
-```
-
-引数の型宣言に **kuu の positionals 定義式**を使えるのが大きい (kawaz 追補) — `values` みたいに enum 制約もかけられる (既存機構の再利用)。
-
-**既存 default との関係**:
-
-- `default: value` (静的定数) = 現行維持、糖衣として保持
-- `default_fn: "fn:args"` (動的) = 新設
-- **相互排他**: 併用は definition-error (`invalid-range`)、fn は「関数呼び出しで default 値を計算」の位相、value は「宣言値」で位相違い
-
-**他機構との類似性 (kuu 骨格と対称)**:
-
-- filter DSL (`"trim"`, `"in_range:1:65535"`, `"regex_match:^...$"`) と同じ書式
-- variant DSL (`":set"`, `"no:set:false"`, `"red:set:rgb:255:0:0"`) と同じ書式
-- completer 参照 (`completer: "files"`) と同じ registry 参照
-- filter registry / factory registry / completer registry と対称の default_fn registry
-
-### 選択肢
-
-- **候補 A (推し、kawaz 対案 mid=21)**: `default_fn` 汎用機構 + builtin fn 5〜6 個。専用属性を毎回増やさず、汎用 registry で全ユースケース吸収。DSL 書式と descriptor は既存機構 (filter / variant / completer) と対称
-- 候補 B (mid=19 の旧提案): `default_from` / `default_for` 専用属性。用途特化で読みやすいが、他ケース (env / computed / uuid) ごとに新語彙が要り増殖する
-- 候補 C: 採用しない (5 直交 type の合成は諦め、ユーザが手動で複数 flag を打つ)。v1 完備主義違反
-
-### 統括推し
-
-**候補 A (default_fn 汎用機構)** — kawaz 対案。理由:
-
-1. kuu 骨格 (registry + DSL + descriptor + values) と完全に対称
-2. 汎用性: help 専用でなく env / computed / uuid / borrow / inherit を 1 機構で吸収
-3. 拡張性: 3rd party ns の descriptor で新 fn を足せる (拡張 ns 経由、DR-094)
-4. v1 完備主義に整合 (専用語彙で埋め尽くさず、1 汎用機構で拡張性確保)
-
-### kuu 全体への波及 (default_fn の他ユースケース)
-
-- 汎用 verbose 系: `--verbose` の値を `--log-level` / `--progress` / `--dry-run-detail` の default_fn "borrow:verbose" で借用
-- 集約 flag: `--strict` の値を `--strict-types` / `--strict-imports` / `--strict-runtime` の default_fn "borrow:strict" で借用
-- テーマ系: `--theme=dark` の値を複数色 option の default_fn "borrow:theme" で借用
-- 動的値: `--branch` の default_fn "computed:git_branch" で現在ブランチを自動取得
-- 環境: `--config` の default_fn "env:APP_CONFIG"
-- 現 `inherit: true` の汎用化: `default_fn "inherit"` (省略引数)、または `default_fn "inherit:parent_name"` で名前指定
-
-**現 `inherit: true` との整合**: default_fn "inherit" は既存 `inherit: true` の関数形。糖衣として `inherit: true` を残すか、`default_fn: "inherit"` に統一するかの裁定は追加論点 (裁定 A の後で議論)。
-
-### 参照
-
-- DESIGN §7.4 (effect 語彙、現機構の限界)
-- DESIGN §7.3 / §8.4 (variant DSL / filter DSL の書式、default_fn の書式基盤)
-- DESIGN §10.2 (link 1 対 N)
-- DESIGN §11.2 (inherit 祖先 scope 参照)
-- DESIGN §11.4 (値源ラダー、default 席の位置)
-- DR-061 (descriptor 骨格、default_fn descriptor の設計基盤)
-- DR-094 (namespace、ns 経由の拡張)
-- DR-055 §5.3 (values enum、descriptor args の positionals 定義式の類似)
-- HIP-META-Q5 (5 直交 type、本 Q の需要源)
+> - **meta-Q6 = A** (mid=23 確定): **default_fn 汎用機構**。fn registry 引き + DSL `"fn_name[:arg...]"` (filter/variant DSL と対称)。builtin fn = borrow / inherit / env / constant / computed / uuid。descriptor 引数の型宣言に kuu の positionals 定義式 (kawaz mid=21 追補)。**DR-088 で kawaz 裁定原文に「default_fn」の語が既出** (「env 指定があるってことは env から遅延解決する default_fn が設定されてるようなもん」) = 概念は既存、DSL 実装が新設分。専用属性 (default_from / default_for) 廃案
 
 ## HIP-META-Q4: 複合値構造 option の help model 表現 (裁定確定 mid=20)
 
