@@ -14,6 +14,58 @@
 > - **meta-Q5** (mid=18 確定): **5 個の直交 type 構成** — `help` / `help_all_category` (旧 help_all 名前変更 + 意味論訂正、「全 category 絞りなし」) / `help_category` / `help_show_hidden` (独立軸新設、hidden 表示) / `help_tree` (独立軸新設、サブコマンド tree 全展開)。hidden は独立軸で分離 (混合概念回避)、現行 DR-112 §7 の type:"help_all" は完全撤回。各 type は or で組合せ可 (kuu 背骨の or 表現力そのまま)
 > - **meta-Q6 = A** (mid=23 確定): **default_fn 汎用機構**。fn registry 引き + DSL `"fn_name[:arg...]"` (filter/variant DSL と対称)。builtin fn = borrow / inherit / env / constant / computed / uuid。descriptor 引数の型宣言に kuu の positionals 定義式 (kawaz mid=21 追補)。**DR-088 で kawaz 裁定原文に「default_fn」の語が既出** (「env 指定があるってことは env から遅延解決する default_fn が設定されてるようなもん」) = 概念は既存、DSL 実装が新設分。専用属性 (default_from / default_for) 廃案
 
+## HIP-META-Q7: default_fn の descriptor 軸と失敗意味論 (dr113-review 指摘 Critical 1 + Major 5)
+
+### 背景説明
+
+DR-113 起草時、finding §4.3 の descriptor 設計が **DR-107 (descriptor 直交軸化、`kind` 廃止・`role`/`construction`/`invocation` 軸) と非整合**な旧方言で書かれていた (dr113-review Critical 1)。DR-107 の現 role enum は `installer | filter | collector | type_parser | accumulator | completer | provider` の 7 値で **default_fn 該当なし**。default_fn の descriptor は role 軸に新値を追加する必要があり、その追加は kawaz 裁定が要る。
+
+加えて default_fn の**失敗意味論** (unknown fn / arity 不正 / absent source / cycle / unset source の outcome/error kind) が finding にも DR-113 にも未定義 (dr113-review Major 5)。v1 blocker として P2/P3 前に閉じる必要あり。
+
+### Q7-α: default_fn の role 軸への追加方式
+
+- **候補 a (推し、統括推し)**: `role` enum に新値 **`"default_fn"`** を追加。DR-107 §1 の「将来 completers registry 実体化時の enum 拡張手続きを省くため広めに宣言」の方針と整合、default_fn は独立の役割 (registry 住人として独立実装者が host 言語で書きうる runtime callable ABI を持つ、DR-107 §1 の role 軸対象性を満たす)
+- 候補 b: 既存 role のいずれかに当てはめる (推奨できない — filter/collector/type_parser/provider いずれも default 席の値計算 fn とは意味論が違う)
+- 候補 c: default_fn は role でなく別軸として descriptor 群を切る (無用な複雑化、a で足りる)
+
+### Q7-β: default_fn descriptor の軸 const 固定案
+
+`role: "default_fn"` 追加時の各軸 (統括推し暫定):
+
+| 軸 | 値 | 根拠 |
+|---|---|---|
+| `construction` | `"static" | "factory"` (自由) | builtin fn 6 種は static、拡張 fn は factory (config を取る computed fn 等) |
+| `io_type` | 必須、`input` は `"value"` (fn ごと自由)、`output` は `"same_as_target"` 相当の値型 | fn は arbitrary value を返す (target option の型に合わせる) |
+| `output_mode` | 禁止 (default 席は「入力保持」概念が無い、fn は新規値を生成) | provider と同じ扱い |
+| `fallibility` | 必須、`total` or `reject` (fn ごと自由) | `borrow` は absent source で reject、`constant` は total 等 |
+| `invocation` | 必須、`encoding: "colon_args"` 固定 (filter/variant DSL と同じ書式) | `default_fn: "fn:args"` の DSL |
+| `owns` / `observes` | 禁止 | installer 軸 |
+| `config` | `construction:factory` なら必須、`static` なら禁止 | DR-107 §7 の filter と同型 |
+| `reasons` | 必須 (fallibility=reject 時)、`fallibility=total` なら空 | fn の失敗 reason 語彙 |
+
+### Q7-γ: default_fn の失敗意味論
+
+以下を DR-113 (or 追加 DR) で確定する必要:
+
+1. **unknown fn 参照** (`default_fn: "unknown:args"`、descriptor registry に無い): definition-error kind = `unknown-vocab` (DR-101 と同型) を推し
+2. **arity/type 不正** (`default_fn: "borrow:a:b"` = borrow は arg 1 個なのに 2 個): definition-error kind = `invalid-argument` (DR-085 と同型) を推し
+3. **absent source** (`default_fn: "borrow:X"` で X が値未持ち): fn の reason で reject 相当。DR-088「遅延評価でデフォルト解決したらやっぱりありませんでした、になったらそのノードは unset のまま = committed=false に戻されて落ちる」= **fallback を持たない default_fn の absent は unset のまま** を推し
+4. **循環依存** (`X borrow:Y`, `Y borrow:X`): definition-error kind = `circular-ref` (§6 の help_after 循環と同型) を推し
+5. **unset source (最終的に何も無い)**: 3 と同じ扱い (unset で落ちる)
+6. **依存グラフ解決順**: DR-087 の遅延解決に載せる。位相順で回し、循環は 4 で kind=circular-ref
+
+### 参照
+
+- **DR-107** (descriptor 直交軸、`role`/`construction`/`invocation` 軸、7 role 値の初期集合)
+- DR-087 (default 遅延解決、依存グラフ、位相順)
+- DR-088 (宣言された値源はデフォルトの存在、default_fn の概念既出)
+- DR-101 (unknown-vocab)
+- DR-085 (invalid-argument)
+- DR-082 (definition-error 分類、invalid-range/circular-ref)
+- schema/descriptor.schema.json (P2 波及、default_fn 追加要)
+- schema/builtin-descriptors.json (P2 波及、builtin fn 6 種の追加要)
+- dr113-review verdict (Critical 1 + Major 5)
+
 ## HIP-META-Q4: 複合値構造 option の help model 表現 (裁定確定 mid=20)
 
 **裁定サマリ**: 本体 = a (value_structure tree) 承認、付録 2 (共有型 type_ref + types セクション) mid=20 で承認。レンダラ側 (pipe 曖昧回避 / 集約 vs inline / 詳細説明) は canonical レンダラ設計 issue に持ち越し、「レンダラ policy 指定オプション語彙」を追加して選択可能に (kawaz mid=20 落とし所)。以下は議論の記録 (次のセッション参照用)。
