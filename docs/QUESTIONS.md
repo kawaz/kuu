@@ -127,13 +127,84 @@ DR-112 §1 は上記中心提案をそのまま spec 化。**kawaz 未承認の 
 
 このため HIP-META-Q4 として立てる (下記):
 
-## HIP-META-Q4: 複数引数 option の help model 表現
+## HIP-META-Q4: 複合値構造 option の help model 表現 (kawaz 追補 2026-07-19)
 
-`--color r g b` (positional 3 個消費) / `--tag key value` (2 個消費) / `--point x,y,z` (kv 型分解) 等、1 option が複数値を消費する形式が、現 kuu spec (DESIGN.md §6 の multiple / seq 構造 / arity 駆動) でどう宣言され、help model にどう射影されるか。DR-112 §3 の options entry は `value_name` 1 個しか持たないため、素材として不足の疑いあり。
+### 背景説明
 
-- **候補 a**: 現 kuu spec で表現可能。help model 側は `value_name` を `value_names: []` に変更 (or 追加) して素材化。統括の要精査
-- 候補 b: 現 kuu spec でそもそも複数引数 option が自然に書けない → 追加設計が要る (spec 側の arity/multi-slot 語彙追加)
-- 候補 c: 保留 (統括の精査完了まで)
+kuu spec の背骨は **or / seq / repeat の任意ネスト**を許す (DESIGN §0.1/§0.2、DR-041 等)。1 option が単純な単一値を取るケースは特殊で、実際は複雑な複合値構造が正当に書ける:
+
+- **単純単一値**: `--port 8080` — value 1 個
+- **単純複数値 (seq)**: `--color r g b` — seq 構造 3 個の value
+- **kv 型 (2 値 seq)**: `--tag key value` — seq 構造 2 個
+- **or 分岐**: `--color red` or `--color 255 0 0` — or { colorname (single), seq (r,g,b) } の分岐
+- **repeat**: `--point x y z` を複数回 (`--point 0 0 0 --point 1 1 1`)、= seq(3) の repeat
+- **これらの任意ネスト**: `--layer <color-or-rgb> <opacity>` 等
+
+DR-112 §3 の options entry は `spellings: [...]` (綴りの列) + `value_name: "PORT"` (**単一 value 名 1 個**) の schema。**この単純 schema では上記の複合値構造を素材化しきれない**。
+
+### 論点
+
+help model の options entry に **value_structure の tree** を持たせて、AST 側の or / seq / repeat をそのまま射影するべきか。素材 (model) はレンダラに複合値の構造をそのまま渡し、レンダラが `--color <RED> <GREEN> <BLUE> | <COLORNAME>` のような usage 行を組む。
+
+### 選択肢
+
+- **候補 a (推し)**: options entry に `value_structure` フィールドを追加。tree 形は AST の or/seq/repeat と同型:
+
+  ```json
+  {
+    "spellings": ["--color"],
+    "value_structure": {
+      "or": [
+        {"single": {"value_name": "COLORNAME", "values_enum": ["red", "green", ...]}},
+        {"seq": [
+          {"single": {"value_name": "R", "type": "number"}},
+          {"single": {"value_name": "G", "type": "number"}},
+          {"single": {"value_name": "B", "type": "number"}}
+        ]}
+      ]
+    },
+    ...
+  }
+  ```
+
+  レンダラは value_structure を再帰的にトラバースして usage 行と help 説明を組む。**素材と policy 分離**の原則 (DR-112 骨格) に整合。既存 `value_name` (単一名) は `{"single": {"value_name": "PORT"}}` に簡約可能。**「単純 option」は tree の 1 ノード ({single: ...}) として特殊ケース化される**
+
+- 候補 b: `value_name` を `value_names: [...]` の平坦 list に変更 (単純な複数値のみ対応、or 分岐は非対応)。kuu spec の or 表現力を model が捨てる = **表現力縮小の縮小推し (v1 完備主義違反)** で不採用側
+
+- 候補 c: 現状維持 (value_name 1 個)、複雑構造 option は help model に射影しない (レンダラが AST を直接読む)。**素材と policy 分離の原則を破る、DR-112 骨格違反**
+
+### 前提の理解 (kawaz 質問 mid=13 への統括回答)
+
+**UsefulAST の理解 confirm**: DESIGN §0.1/§0.2 の骨格:
+1. **UsefulAST** = 人間が書く高抽象度層 (各言語の DX、クロージャあり)
+2. **UsefulAST JSON = wire form** = UsefulAST を JSON にした形 (クロージャ部分は `$required` プレースホルダ、DESIGN §16 用語表で正式登録)
+3. **AtomicAST** = parse_definition() で wire form を lowering した「実行時評価可能な確定形」
+
+DR-112 §2 の「installer の宣言層寄与を適用し終えた宣言層」は wire form (= UsefulAST JSON) に installer の宣言層寄与オーバーレイを重ねた中間形 (AtomicAST への lowering 前) = **help query の読む層**。
+
+**`--color` or 分岐の kuu 表現例** (現 kuu spec の背骨で正当):
+
+```json
+{"name": "color", "long": true,
+ "or": [
+   {"name": "named", "type": "string", "values": ["red", "green", "blue", "yellow"]},
+   {"seq": [
+     {"name": "r", "type": "number"},
+     {"name": "g", "type": "number"},
+     {"name": "b", "type": "number"}
+   ]}
+ ]}
+```
+
+これを help model に射影するには value_structure tree が必要 = 候補 a の設計。
+
+### 参照
+
+- DR-112 §3 (現 options entry schema、value_name 1 個の限界)
+- DESIGN §0.1/§0.2 (UsefulAST / wire form / AtomicAST の 3 段構造)
+- DESIGN §16 (用語表: UsefulAST / AtomicAST / parse_definition)
+- DR-041 (or / seq / repeat の任意ネスト、kuu 背骨)
+- docs/findings/2026-07-17-cli-help-vocab-survey.md (metavar / value_name 相当は普遍的、ただし tree 構造 model は survey 対象外)
 
 ### 回答 D: `epilog` は変な略称ではない、実 CLI パーサで確立した用語
 
