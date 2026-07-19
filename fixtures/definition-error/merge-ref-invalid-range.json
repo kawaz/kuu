@@ -1,5 +1,5 @@
 {
-  "why": "merge accumulator × ref は definition-error (DR-084 §3): merge accumulator のマーカー語彙 (DR-080 §2) は separator 分割された string piece 列が前提 (piece 全体一致で remove/splice/add/escape を判定、operand は要素 type で parse)。ref 要素の発火値は消費文法 (or 枝) の産物である row であり、piece 列という構造そのものを持たない — マーカーの認識対象が構造上存在しない。accum 宣言 (multiple) も ref 宣言も definition 時点で静的に既知の組み合わせなので、accum-update-invalid-range.json / option-ref-repeat-min-invalid-range.json と同根の invalid-range として定義時点で reject する (DR-082 §2 / DR-083 §5 の『静的に既知は定義時に倒す』筋)。採用しなかった案 (merge×ref をマーカー不活性の上書きとして許容) は宣言を恒久に無意味なまま静かに受理してしまうため不採用 (DR-084 『採用しなかった案』節)。",
+  "why": "merge accumulator × ref は definition-error (DR-084 §3): merge accumulator のマーカー語彙 (DR-080 §2) は separator 分割された string piece 列が前提 (piece 全体一致で remove/splice/add/escape を判定、operand は要素 type で parse)。ref 要素の発火値は消費文法 (or 枝) の産物である row であり、piece 列という構造そのものを持たない — マーカーの認識対象が構造上存在しない。accum 宣言 (multiple) も ref 宣言も definition 時点で静的に既知の組み合わせなので、option-ref-repeat-min-invalid-range.json と同根の invalid-range として定義時点で reject する (DR-082 §2 / DR-083 §5 の『静的に既知は定義時に倒す』筋)。採用しなかった案 (merge×ref をマーカー不活性の上書きとして許容) は宣言を恒久に無意味なまま静かに受理してしまうため不採用 (DR-084 『採用しなかった案』節)。",
   "query": "definition_error",
   "definition": {
     "definitions": {

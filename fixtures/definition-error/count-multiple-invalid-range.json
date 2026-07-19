@@ -1,5 +1,5 @@
 {
-  "why": "definition_error format の実例化 (DR-082 §1)。count 型要素への multiple 宣言は静的 definition-error (DR-082 §2 の invalid-range 系)。count は number + default:0 + `:update:increment` の綴り合成 (DR-077 §3、accum-update-invalid-range.json と同族の型不一致: count の short 発火は variant DSL を経由せず matcher が直接 Update(increment) 効果を生成する独立経路を持つため、accum×update の variant 走査だけでは検出できず count×multiple という組合せ自体を要素レベルで閉じる必要がある)。count の update(increment) は old (セルの現在値) が number であることを前提にしており、multiple を宣言すると old が累積状態 T[] になり accum-update-invalid-range.json と同じ型不一致に帰着する。対極 (count 単体、multiple 無し) は count-parse/basic.json の short-cluster-triple-fire-three 等が既に固定している通常用法で reject されない。",
+  "why": "count preset は scalar number cell、default 0、入口発火時の `cell_fns` `incr` 呼び出しを一体として canonical 展開する (DR-114 §2/§7)。`multiple` は同じ要素を accumulator が畳む collection cell として宣言するため、count preset の scalar cell 形と構造的に両立しない。両宣言は definition 時点で静的に既知なので、count × multiple は definition-error `invalid-range` とする (DR-082 §2)。multiple 無しの count は count-parse/basic.json が通常用法を固定する。",
   "query": "definition_error",
   "definition": {
     "options": [
@@ -9,7 +9,7 @@
   "cases": [
     {
       "id": "count-with-multiple-is-invalid-range",
-      "why": "`n` は count 型 (number + default:0 + update:increment 糖衣) に multiple: true を宣言している。count の short 発火 (`-n`) は variant DSL を経由せず matcher が直接 update(increment) 効果を生成するため、multiple (accum セル、old = T[]) との組合せは accum×update と同じ型不一致に陥り、要素レベルで definition-error (invalid-range) になる。args は書かない (定義の静的検査)。",
+      "why": "`n` は scalar number cell + default 0 + `cell_fns` `incr` 発火を持つ count preset に、collection cell を宣言する `multiple` を併用している。両方の canonical cell 形は同一要素上で構成できないため、要素レベルの definition-error `invalid-range` になる。args は書かない (定義の静的検査)。",
       "expect": {
         "outcome": "definition-error",
         "errors": [{"element": "n", "kind": "invalid-range"}]

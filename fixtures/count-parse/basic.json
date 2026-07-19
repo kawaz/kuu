@@ -1,5 +1,5 @@
 {
-  "why": "count 型の CLI 発火時 ledger fold 輪郭 (DR-077 §1・§3 / DR-045 update op / DR-015 mutation ledger): count は number + default:0 + `:update:increment` 綴り合成の正規形 (DR-077 §3、flag = DR-076 §2 と完全対称)。各 CLI 発火は 0-token の update 効果 `{op:'update', transform:'increment'}` を積み (DR-077 §1)、DR-015 mutation ledger 上で default 0 → 1 → 2 → ... と単調に畳まれる (fold は cell = f(old) = old + 1 の連鎖)。effects は各発火が 1 個ずつ operand なしで載る (CONFORMANCE §2 の `{entity, op, operand?, source}` で operand 省略、`transform` フィールドは harness 拡張として update op のみで検証)。short cluster (`-vvv`) は 1 トークン内で 3 発火 = 3 update 効果を生む (DR-071 §3 short は非消費・固定挙動、count では update(increment) を型が担う)。default 由来値 0 は present で sources=default (DR-051 §2a、default 保持要素は absent にならない)。CLI 発火があれば sources=cli に転じる。fixtures/lowering/count/bare-increment.json (lowering 断面) の parse 対応。flag の裸発火 (set true 縮退形、DR-076) と対で「count = update(increment) 縮退形」の意味論を parse 面で固定する。value cells は number cell (default 0) + update 効果の適用 = 単純な整数累加、final_filters (in_range 等) の適用は DR-040/DR-102 の関心で count-parse/final-filter-range.json (within-range success 輪郭) が担う。",
+  "why": "count preset の `long:true` は DR-114 の canonical 展開で `cell_fns` の `incr` 呼び出しになる。`incr` は発火直前の `FnCtx.old` から old + 1 の Value を返し、その Value が通常の set operand として cell へ適用される。default 0 から long/short の発火順に 1, 2, 3 と更新され、effects は各時点の set operation を保持する。",
   "query": "parse",
   "definition": {
     "options": [
@@ -9,7 +9,7 @@
   "cases": [
     {
       "id": "no-fire-default-zero",
-      "why": "未発火時は count の preset default 0 で present (DR-077 §3 / DR-051 §2a): args 空でも verbose セルは number + default:0 なのでラダー default 席から 0 が湧いて result present。effects は cli/link 由来のみ (CONFORMANCE §2) で default 由来は非掲載なので空。sources で由来 default を検証。count が未発火でも absent にならないことを固定 (flag の未発火 preset false と同じ機構、DR-051 §2a)。",
+      "why": "未発火時は count preset の default 0 が present となる。default 由来値は CLI effect へ載らず、result と sources で確認する。",
       "args": [],
       "expect": {
         "outcome": "success",
@@ -20,12 +20,12 @@
     },
     {
       "id": "long-single-fire-one",
-      "why": "1 回発火 → 1 (DR-077 §1 / DR-015): `--verbose` は greedy 面の `{exact:'--verbose', link:'verbose', effect:{op:'update', transform:'increment'}}` 衛星が 0-token で発火し ledger に 1 個の update 効果を積む。cell fold は default 0 → increment → 1。effects は 1 個 (source=cli)、result verbose=1、sources=cli (default 席は上書きされた)。CLI 発火の最小 case。",
+      "why": "count preset が `long:true` を `cell_fns` の `incr` 呼び出しへ canonical 展開する。`--verbose` の発火で old=0 から Value 1 を返し、set operand 1 として cell へ適用される。",
       "args": ["--verbose"],
       "expect": {
         "outcome": "success",
         "effects": [
-          {"entity": "verbose", "op": "update", "transform": "increment", "source": "cli"}
+          {"entity": "verbose", "op": "set", "operand": 1, "source": "cli"}
         ],
         "result": {"verbose": 1},
         "sources": {"verbose": "cli"}
@@ -33,13 +33,13 @@
     },
     {
       "id": "long-double-fire-two",
-      "why": "2 回発火 → 2 (DR-077 §1 の ledger fold 連鎖): `--verbose --verbose` は greedy 衛星が 2 回発火し 2 個の update 効果を消費順で積む (DR-045 効果列順序は同一性成分)。cell fold は 0 → 1 → 2。effects は 2 個 (両方 op:update, transform:increment, source:cli)、result verbose=2、sources=cli。increment の連鎖 fold が確定 (ledger 連鎖の可換性を単位元性で担保 — 0+1+1 = 2)。",
+      "why": "`--verbose --verbose` は `incr` を発火順に2回呼び、old=0→1、old=1→2 の Value を set operand 1, 2 として積む。",
       "args": ["--verbose", "--verbose"],
       "expect": {
         "outcome": "success",
         "effects": [
-          {"entity": "verbose", "op": "update", "transform": "increment", "source": "cli"},
-          {"entity": "verbose", "op": "update", "transform": "increment", "source": "cli"}
+          {"entity": "verbose", "op": "set", "operand": 1, "source": "cli"},
+          {"entity": "verbose", "op": "set", "operand": 2, "source": "cli"}
         ],
         "result": {"verbose": 2},
         "sources": {"verbose": "cli"}
@@ -47,14 +47,14 @@
     },
     {
       "id": "short-cluster-triple-fire-three",
-      "why": "short cluster での 3 発火 → 3 (DR-071 §3 short 非消費 + DR-077 §3 count は update(increment) を型で担う): `-vvv` は 1 トークン内で short_combine matcher が v/v/v の 3 char を順次消化し、各 char が短 entry `{exact:'-v', link:'verbose', effect:{op:'update', transform:'increment'}}` を発火 → 3 個の update 効果を消費順で積む (matcher.mbt walk_short の TCount 分岐で mk_eff の Update 発火)。cell fold は 0 → 1 → 2 → 3。effects は 3 個、result verbose=3、sources=cli。cluster 内でも long と同一 update 効果を発火することで short/long の対称性を固定 (flag の short=非消費・固定 true 供給と同型、型が慣習挙動を担う)。",
+      "why": "short cluster `-vvv` は3発火を生み、long と同じ `incr` cell fn を順に呼ぶ。effects は set operand 1, 2, 3、最終値は3となる。",
       "args": ["-vvv"],
       "expect": {
         "outcome": "success",
         "effects": [
-          {"entity": "verbose", "op": "update", "transform": "increment", "source": "cli"},
-          {"entity": "verbose", "op": "update", "transform": "increment", "source": "cli"},
-          {"entity": "verbose", "op": "update", "transform": "increment", "source": "cli"}
+          {"entity": "verbose", "op": "set", "operand": 1, "source": "cli"},
+          {"entity": "verbose", "op": "set", "operand": 2, "source": "cli"},
+          {"entity": "verbose", "op": "set", "operand": 3, "source": "cli"}
         ],
         "result": {"verbose": 3},
         "sources": {"verbose": "cli"}

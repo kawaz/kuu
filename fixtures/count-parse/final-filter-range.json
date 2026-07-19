@@ -1,5 +1,5 @@
 {
-  "why": "count + final_filters 上限の輪郭 (DR-102 §1/§4、DR-077 §1、DR-040、DR-009): count の値セル (number + default:0) に final_filters:[\"in_range:0:2\"] を宣言し、update(increment) の結果にも final_filters が通ることを固定する (DR-077 §1 の意味論を final_filters が引き継ぐ)。DR-040「count の上限は final_filters (in_range 等) で書く」の具体実装 = count は専用の max フィールドを持たず、in_range フィルタを最終値に足すことで上限を表現する。count セルは multiple 宣言を持たないスカラーセル (cli seat 内で old→transform を都度 fold するのみ) なので、final_filters (scalar filter registry、DR-102 §1) が最終値に対して一様適用される。within-range (`-vv` → fold 2 → in_range 通過 → success) と over-range (`-vvv` → fold 3 → in_range reject → failure kind=filter) の対を本 fixture が担い、count-parse/basic.json (final_filters 未適用の基本 fold) と対比する。",
+  "why": "count preset の `long:true` は DR-114 の canonical 展開で `cell_fns` の `incr` 呼び出しになる。各発火で `incr` が FnCtx.old + 1 の Value を返し、その Value が set operand として cell へ適用された後、最終 cell 値へ `in_range:0:2` を適用する。2は通過し、3は too_large で reject される。",
   "query": "parse",
   "definition": {
     "options": [
@@ -9,13 +9,13 @@
   "cases": [
     {
       "id": "within-range-accepted",
-      "why": "上限内 (2) → final_filters 通過 → success (DR-077 §1 / DR-040 / DR-102): `-vv` は short cluster で 2 発火、cell fold で default 0 → 1 → 2、final_filters `in_range:0:2` が最終値 2 を通す (境界含む) → success。effects は 2 個の update event、result verbose=2、sources=cli。final_filters は完走後のセル評価なので途中 fold の 1 を通したか等の中間状態は影響しない (最終値検証、DR-009 §7 段)。update の結果にも final_filters が通るという意味論の scalar 側成功輪郭を担う。",
+      "why": "`-vv` は `incr` を2回呼び、set operand 1, 2 を積む。最終値2は inclusive な `in_range:0:2` を通過する。",
       "args": ["-vv"],
       "expect": {
         "outcome": "success",
         "effects": [
-          {"entity": "verbose", "op": "update", "transform": "increment", "source": "cli"},
-          {"entity": "verbose", "op": "update", "transform": "increment", "source": "cli"}
+          {"entity": "verbose", "op": "set", "operand": 1, "source": "cli"},
+          {"entity": "verbose", "op": "set", "operand": 2, "source": "cli"}
         ],
         "result": {"verbose": 2},
         "sources": {"verbose": "cli"}
@@ -23,7 +23,7 @@
     },
     {
       "id": "over-range-rejected",
-      "why": "上限超過 (3) → final_filters reject → failure kind=filter (DR-077 §1 / DR-040 / DR-009 §7 / DR-102 §4): `-vvv` は short cluster で 3 発火、cell fold で 0→1→2→3、final_filters `in_range:0:2` が最終値 3 を拒否 → failure。errors は reason=too_large (in_range の上限側、DR-095) 1 件のみ (parse 自体は成功、resolve 層の final_filters 適用で reject される — DR-009 §7 の resolve-layer failure の実例)。args_pos=1=args.length (final_filters の reject は特定トークンに帰属しない一括検証、DR-102 §4)。within-range-accepted (2, 通過) と対で in_range の境界 (0..2 通過 / 3 以上 reject) を固定する。",
+      "why": "`-vvv` は最終値3まで更新した後、final_filters `in_range:0:2` が too_large で拒否する。final filter failure は特定トークンに帰属しないため args_pos=args.length。",
       "args": ["-vvv"],
       "expect": {
         "outcome": "failure",
