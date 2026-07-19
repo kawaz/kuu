@@ -40,8 +40,8 @@ FnCtx API:
 - **✅ Q8 = A**: universal fn 統合承認 (mid=32)
 - **✅ Q8-α = a** (mid=37): args 値の array 記法導入、1 段限定
 - **✅ Q8-γ = i-2** (mid=37): 2 registry (`filters` 既存 + `fns` 新設)、`fns` は default_fn と variant_effect を統合、fn descriptor の返り値型 (Value/Sentinel) で「default 席で使える」vs「発火時のみ」を区別 (kawaz mid=36 指摘で default_fns と variant_effects を分ける必要ないと確認)
-- **Q8-β (filter 系統合の v1 スコープ)**: Q8-γ = i-2 の帰結で **filter は既存 registry 維持、今統合しない**が自然に決着 (fns registry のみ v1 新設、filter は observes 軸だけ後から追加可能。「際限がなくなるリスク」も回避、実装コスト激減)
-- **✅ Q8 統合の「真の姿」確定**: 共通機構は「DSL 書式 (colon-args + array 記法) + observes 軸」の 2 点だけ。registry / ctx / failure reason は役割固有 (filter registry + fns registry の 2 個、FilterFnCtx / DefaultFnCtx / EffectFnCtx の 3 種は独立)
+- **✅ Q8-β = A' full (訂正 2026-07-20)**: filter 系も universal fn 統合の対象 (共通機構 = DSL 書式 + observes 軸)、ただし **registry は Q8-γ = i-2 で分離** (filters registry + cell_fns registry の 2 個体制)。registry 分離 (Q8-γ) と共通機構統合 (Q8-β) は独立で両立。filter 側の実装コストは激減 (observes 軸を filter descriptor に追加するだけ)。旧記述「filter は今統合しない」は Q8-γ = i-2 (registry 分離) を誤読していたための drift、訂正
+- **✅ Q8 統合の「真の姿」確定 (訂正 2026-07-20)**: 共通機構は「DSL 書式 (colon-args + array 記法) + observes 軸 + **統一 FnCtx + mode 判別** (Q8-ε mid=38 確定)」の 3 点。registry / failure reason は役割固有 (filter registry + cell_fns registry の 2 個)、ctx は unified FnCtx (mode="filter"|"default"|"effect" で内部を分岐、旧「FilterFnCtx/DefaultFnCtx/EffectFnCtx 独立」記述は Q8-ε 承認で unified に統合済み、旧記述は drift)
 
 次アクション: DR-114 (universal fn 統合) 起草 + DR-113 (help 再設計) を DR-114 前提で書き直し。裁定完了、実装コスト激減、v1 完備主義準拠。
 
@@ -71,7 +71,7 @@ long: ["no:set:false", ":set", ["", "set", "a:b"], ["debug", "env", "LOG:PATH"]]
 
 ## HIP-META-Q8-β: filter 系を universal fn 統合に含めるか (kawaz mid=34 問い、mid=35 精緻化、mid=37 帰結で決着)
 
-**決着 (mid=37)**: Q8-γ = i-2 (2 registry: filters 既存 + fns 新設) の帰結で **filter は既存 registry 維持、今統合しない**が自然に確定。fns registry のみ v1 で新設、filter は observes 軸だけ後から追加可能 (v1 or 追加互換で入れる)。「際限がなくなるリスク」回避 + 実装コスト激減。
+**決着 (mid=37 → 2026-07-20 訂正)**: Q8-γ = i-2 は **registry の分離** (filters と cell_fns の 2 個) を意味するが、これは Q8-β の「filter 系を共通機構 (DSL 書式 + observes 軸) に含めるか」とは**独立**。Q8-β = **A' full** (filter 系も共通機構統合) が正しい裁定 (旧記述「filter は今統合しない」は Q8-γ の意味を誤読していた drift、訂正)。filter 側の実装コストは激減 (observes 軸を filter descriptor に追加するだけ、既存 registry / pipeline / FilterFnCtx は refactor 不要)。
 
 ## HIP-META-Q8-β 元記述 (参考):
 
