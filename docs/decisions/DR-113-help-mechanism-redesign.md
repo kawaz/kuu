@@ -1,56 +1,58 @@
-# DR-113: help 機構の再設計 — help_installer・5 直交 type・value_structure tree・default_fn
+# DR-113: help 機構の再設計 — help_installer・5 直交 type・構造化 model
 
-> 由来: kawaz 発題「実装がない奴として help_installer が無くないですか？必要な機能やそれを実現するための語彙や展開方などの設計プランからまず立てる必要があるのでは」(2026-07-17) と、`docs/QUESTIONS.md` の HIP-META-Q1〜Q6 裁定 (2026-07-19)。HIP-META-Q1=a により DR-112 §1 の「help_installer は存在しない」を撤回し、原発題どおり help_installer を中心に設計し直す。HIP-META-Q4 は value_structure tree + type_ref + types、HIP-META-Q5 は 5 直交 type、HIP-META-Q6=A は default_fn 汎用機構を確定した。下敷きは `docs/findings/2026-07-19-help-mechanism-redesign-v2.md`。
+> 由来: kawaz 発題「実装がない奴として help_installer が無くないですか？必要な機能やそれを実現するための語彙や展開方などの設計プランからまず立てる必要があるのでは」(2026-07-17) と、`docs/QUESTIONS.md` の HIP-META-Q1〜Q8 裁定 (2026-07-19)。HIP-META-Q1=a により help_installer を中心に設計し直し、Q4 により `value_structure` tree + `type_ref` + `types`、Q5 により 5 直交 type、Q6〜Q8 により DR-114 の universal fn / `cell_fns` / default_fn 一本化を採用した。下敷きは `docs/findings/2026-07-19-help-mechanism-redesign-v2.md`。本 DR は DR-114 を前提とし、DR-112 を Supersede する。
 
 ## 決定
 
 ### 1. help_installer は回収・植え付け・能力提供の 3 役を担う
 
-DR-042 の installer 3 役を help 機構へそのまま当てはめる:
+DR-042 の installer 3 役を help 機構へそのまま当てはめる。
 
 | 役 | help_installer の実体 |
 |---|---|
 | 回収 | 表示メタ語彙 `help` / `help_long` / `help_epilog` / `display_name` / `value_name` / `help_group_name` / `help_group_title` / `help_group_description` / `help_group_order` / `help_order` / `help_after` を宣言層から取り込む |
-| 植え付け | `type: "help"` / `"help_all_category"` / `"help_category"` / `"help_show_hidden"` / `"help_tree"` の 5 型 preset を canonical 展開する。各 preset は long / short / env の入口、内部セル link、固定値供給、`on_failure` 展開、`help_on_failure` 糖衣、必要な values 制約を持つ |
-| 能力提供 | **help_query capability** を提供する。installer の宣言層寄与を適用し終えた断面から help model を組み立てる純関数であり、実装主体は help_installer である |
+| 植え付け | `type: "help"` / `"help_all_category"` / `"help_category"` / `"help_show_hidden"` / `"help_tree"` の 5 preset を canonical 展開する。各 preset は入口、内部セル link、`cell_fns` による固定値供給、`on_failure` 展開、`help_on_failure` 糖衣、必要な values 制約を持つ |
+| 能力提供 | 宣言層寄与適用後の断面から help model を組む **help_query capability** を提供する |
 
-help_installer は上表の表示メタ語彙に加え、5 個の type 値と `help_on_failure` を所有する。`on_failure` 自体は専用 on_failure installer が所有し、help_installer は糖衣を参照して展開する。
+help_installer は表示メタ語彙、5 個の type 値、`help_on_failure` を所有する。`on_failure` 自体は専用 on_failure installer が所有し、help_installer は糖衣から展開する。
 
-DR-112 の `help_meta` installer が担っていた純所有・定義時検査は help_installer の回収役へ統合する。表示メタ語彙の unknown-vocab 正当化、グループ・順序語彙の定義時検査、help model への射影を同じ装置が担う。
+表示メタ語彙の unknown-vocab 正当化、グループ・順序語彙の definition-time 検査、5 preset の lowering、help model への射影を一つの装置が担う。表示メタは宣言層に inert 属性として残り、lowered 産物や評価器へ運ばない。
 
-help_query capability の概念シグネチャは次のとおり:
+help_query capability の概念シグネチャ:
 
 ```
 help_query(definition, {
   path?: ["<サブコマンド名>", ...],
   depth?: "scope" | "all",
-  category?: "<グループ名>",
+  category?: "<グループ名>"
 }) → help model
 ```
 
-- `definition` は wire form。パース実行も args も要らない
-- `path` は選択スコープ、省略時はルート。存在しない path は definition-error `absent-ref`
+- `definition` は wire form。args のパース実行は行わない
+- `path` は選択スコープ。省略時はルート
 - `depth` は既定 `"scope"`、全層再帰は `"all"`。数値 depth は持たない
-- `category` は `help_group_name` と同じ名前空間を指す。指定時は該当グループ所属 entry と当該グループ宣言 entry に絞る。存在しない category は `absent-ref`
-- 読む層は **installer の宣言層寄与を適用し終えた宣言層**。global / alias / inheritable の宣言的コピーを含み、lowered 産物は読まない
+- `category` は `help_group_name` と同じ名前空間。指定時は該当グループの entry とグループ宣言 entry に絞る
+- 読む層は全 installer の宣言層寄与を適用し終えた宣言層。global / alias / inheritable の宣言的コピーを含み、lowered 産物は読まない
 
-この capability は spec の独立した query 語彙ではない。`kuu help` は kuu-cli が help_installer の capability を呼び出すサブコマンドであり、complete query と同格の spec query を新設しない。
+**HIP-META-Q10-β 裁定待ち**: 合法な definition に対する不在 path / category の問い合わせ失敗を、definition-error に分類しないことだけを確定する。help query 固有の failure envelope (`query-error` の `absent-path` / `absent-category`) とするか、空結果とするかは裁定後に規範化する。
+
+help_query は help_installer が提供する capability であり、complete と同格の独立 spec query を新設するものではない。fixture の `query: "help"` は conformance runner がこの capability を選ぶ discriminator である。
 
 ### 2. help 系 type は 5 個の直交軸に分ける
 
 #### 2.1 `type: "help"`
 
-基本 help を発火する bool preset:
+基本 help を発火する bool preset。
 
 - long / short / env の入口を持てる。flag preset と同型
 - 内部セルは `#help` (bool)
-- 発火時に `#help = true`
+- 発火時に `cell_fns` の `set:true` で `#help = true`
 - `help_on_failure` の既定は true。`on_failure: true` へ展開する
-- help 系要素が存在しても name 経由の結果露出が一つも無い構成は lint warn
+- help 系要素が存在しても name / export_key 経由の結果露出が一つも無い構成だけを lint warn にする
 
 #### 2.2 `type: "help_all_category"`
 
-category の絞りを外し、全 category を並べる bool preset:
+category の絞りを外し、全 category を並べる bool preset。
 
 - long / short / env の入口を持てる
 - 内部セルは `#help` と `#help_all_category`
@@ -60,10 +62,10 @@ category の絞りを外し、全 category を並べる bool preset:
 
 #### 2.3 `type: "help_category"`
 
-特定 category を選ぶ string preset:
+特定 category を選ぶ string preset。
 
 - long / short / env の入口と値スロットを持てる
-- `or` により bool 枝と string 枝を組み合わせ、`--help` と `--help <category>` の 2 経路を表現できる
+- `or` により bool 枝と string 枝を組み、`--help` と `--help <category>` を表現できる
 - 内部セルは `#help` と string の `#help_category`
 - 発火時に `#help = true` と指定 category 文字列を供給する
 - 複数指定は string 全体セルの last-wins
@@ -72,36 +74,56 @@ category の絞りを外し、全 category を並べる bool preset:
 
 #### 2.4 `type: "help_show_hidden"`
 
-hidden 露出だけを表す独立 bool 軸:
+hidden 露出だけを表す独立 bool 軸。
 
 - long / short / env の入口を持てる
 - 内部セルは `#help_show_hidden`
-- 発火時に `#help_show_hidden = true` を供給する
-- **`#help` は立てない**。hidden 露出と help 発火を混ぜない
-- 単独では表示要求にならないため、他の help type との合成または `default_fn` による連動を定義側で行う
+- 発火時に `#help_show_hidden = true`
+- `#help` は立てない。hidden 露出と help 発火を混ぜない
+- 単独では表示要求にならない。他の help type との `or` 合成または default_fn 連動を定義側で行う
 - `help_on_failure` の既定は false
 
 #### 2.5 `type: "help_tree"`
 
-サブコマンド tree の全展開を表す独立 bool 軸:
+サブコマンド tree の全展開を表す独立 bool 軸。
 
 - long / short / env の入口を持てる
 - 内部セルは `#help` と `#help_tree`
 - 発火時に両セルへ true を供給する
-- レンダラは `#help_tree` により `depth: "all"` を暗黙採用し、サブコマンド tree を全展開する
+- `#help_tree` が立った help 表示では `depth: "all"` を採用する
 - `help_on_failure` の既定は true
 
-5 type は、`or` で入口形の代替経路を組み、`default_fn` で複数軸を連動させる。`help_all_category` と `help_show_hidden` を分けることで、「全 category」と「hidden を見せる」を混合概念にしない。
+5 type は `or` で入口形を合成し、DR-114 の default_fn で複数軸を連動させる。`help_all_category` と `help_show_hidden` を分けることで、「全 category」と「hidden を見せる」を一つの概念にしない。
+
+help 出力の orchestration は内部セルを capability 入力へ次のように写す。
+
+- `#help` が立っていれば help_query capability を呼ぶ
+- `#help_category` が値を持つ named category の入力は `category` にその値を渡す
+- `#help_tree` が true なら `depth: "all"`、それ以外は `"scope"`
+- `#help_show_hidden` は model 取得条件を変えず、hidden entry を表示する renderer policy 入力になる
+
+**HIP-META-Q10-α 裁定待ち**: 基本 help の既定 category と `#help_all_category` の「全 category」を capability 入力上どう区別するかは未確定である。候補は `category_mode: "default" | "all" | {"named": <string>}` の追加、または `#help_all_category` を renderer policy へ明示的に渡す契約。裁定までは `#help_all_category` の capability mapping を規範化しない。
 
 ### 3. help type の合成は default_fn で表現する
 
-同一 flag から複数の help 軸を立てるための専用属性 `default_from` / `default_for` は作らない。被参照側が `default_fn: "borrow:<source>"` を宣言する:
+help 専用の `default_from` / `default_for` は作らない。target 側が `default_fn: "borrow:<source>"` を宣言する。
 
 ```json
 {
   "options": [
-    {"name": "help-all", "long": true, "type": "flag"},
     {"name": "help-full", "long": true, "type": "flag"},
+    {
+      "name": "help-all",
+      "long": true,
+      "type": "flag",
+      "default_fn": "borrow:help-full"
+    },
+    {
+      "name": "help-tree",
+      "long": true,
+      "type": "help_tree",
+      "default_fn": "borrow:help-full"
+    },
     {
       "name": "help-all-category",
       "long": true,
@@ -113,49 +135,80 @@ hidden 露出だけを表す独立 bool 軸:
       "long": true,
       "type": "help_show_hidden",
       "default_fn": "borrow:help-all"
-    },
-    {
-      "name": "help-tree",
-      "long": true,
-      "type": "help_tree",
-      "default_fn": "borrow:help-full"
     }
   ]
 }
 ```
 
-この定義では `--help-all` が all-category + show-hidden を立て、`--help-full` が tree を立てる。`full = all + tree` としたい場合は、`help-all` に `default_fn: "borrow:help-full"` を指定する。これにより help-full → help-all → all-category + show-hidden と、help-full → help-tree の両経路が立つ。
+値伝播の帰結:
 
-### 4. help model は value_structure tree・type_ref・types・origin を持つ
+- `--help-full`: help-full → help-all + help-tree → help-all-category + help-show-hidden
+- `--help-all`: help-all → help-all-category + help-show-hidden。help-tree は立たない
+- `--help-tree`: help-tree の preset が管理する `#help` と `#help_tree` が立つ
+- `--help-all-category` / `--help-show-hidden` / `--help-category` / `--help`: 各 preset の内部セルを個別に立てる
 
-help model は表示文言でなく構造素材を返す。基本形は次のとおり:
+`default_fn` は DR-114 の `cell_fns` registry を使う。`borrow` は統一 `FnCtx` の default mode から参照先 option を読み、descriptor の `observes` が依存 edge を宣言する。
+
+help preset の `default_fn` は入口 effect の再発火を意味しない。help_installer は preset が管理する各内部セルへ同じ default placeholder を植え付ける。`help_all_category` なら `#help` と `#help_all_category`、`help_tree` なら `#help` と `#help_tree` が同じ `borrow` 依存から解決される。入口発火と default 解決のどちらでも同じ内部セル集合が充足されるため、DR-087 の一回限りの遅延解決を破らない。
+
+### 4. help model は構造素材を完全に保持する
+
+help model は表示文言でなく、レンダラが policy を選ぶための構造素材を返す。`value_structure` は `or` / `seq` / `repeat` / `single` / `type_ref` の tree、共有型は model トップの `types` に射影し、options / commands は `origin` を持つ。
+
+完全形の例:
 
 ```json
 {
-  "command_path": ["prog", "remote", "add"],
+  "command_path": ["prog", "paint"],
   "usage": {
     "has_options": true,
-    "positionals": [],
+    "positionals": [
+      {
+        "value_structure": {
+          "repeat": {
+            "min": 1,
+            "node": {"single": {"value_name": "FILE", "type": "string"}}
+          }
+        }
+      }
+    ],
     "has_subcommands": true,
     "has_dd": true
   },
-  "description": "...",
-  "description_long": "...",
-  "epilog": "...",
+  "description": "画像を処理する",
+  "description_long": "入力画像へ指定した変換を適用する",
+  "epilog": "詳細はマニュアルを参照",
   "types": [
     {
       "id": "color_value",
-      "value_structure": {},
-      "help": "...",
+      "value_structure": {
+        "or": [
+          {
+            "single": {
+              "value_name": "COLOR_NAME",
+              "type": "string",
+              "values_enum": ["red", "green", "blue"]
+            }
+          },
+          {
+            "seq": [
+              {"single": {"value_name": "R", "type": "number"}},
+              {"single": {"value_name": "G", "type": "number"}},
+              {"single": {"value_name": "B", "type": "number"}}
+            ]
+          }
+        ]
+      },
+      "help": "色名または RGB 3 値",
       "used_as": ["COLOR", "INFO", "WARN", "DEBUG"]
     }
   ],
   "commands": [
     {
-      "name": "run",
-      "aliases": ["r"],
-      "help": "...",
-      "help_long": "...",
+      "name": "show",
+      "aliases": ["s"],
+      "help": "結果を表示する",
+      "help_long": "処理後の画像を表示する",
       "hidden": false,
       "deprecated": false,
       "origin": "local"
@@ -164,23 +217,21 @@ help model は表示文言でなく構造素材を返す。基本形は次のと
   "options": [
     {
       "group": {
-        "name": "net",
-        "title": "Network options",
-        "description": "..."
+        "name": "appearance",
+        "title": "Appearance options",
+        "description": "表示色の設定"
       }
     },
     {
-      "spellings": ["--port", "-p"],
-      "alias_spellings": ["-n"],
-      "value_structure": {
-        "single": {"value_name": "PORT", "type": "number"}
-      },
-      "display_name": "ポート番号",
-      "help": "...",
-      "help_long": "...",
-      "help_group_name": "net",
-      "default": 8080,
-      "env": "PORT",
+      "spellings": ["--fg"],
+      "alias_spellings": ["-f"],
+      "value_structure": {"type_ref": "color_value", "value_name": "COLOR"},
+      "display_name": "前景色",
+      "help": "前景色を指定する",
+      "help_long": "色名または RGB 3 値で前景色を指定する",
+      "help_group_name": "appearance",
+      "default": "green",
+      "env": "FG_COLOR",
       "required": false,
       "multiple": false,
       "hidden": false,
@@ -188,150 +239,143 @@ help model は表示文言でなく構造素材を返す。基本形は次のと
       "origin": "local"
     },
     {
-      "spellings": ["--fg"],
-      "value_structure": {"type_ref": "color_value"},
-      "help": "...",
-      "origin": "local"
+      "spellings": ["--level-colors"],
+      "value_structure": {
+        "seq": [
+          {"type_ref": "color_value", "value_name": "INFO"},
+          {"type_ref": "color_value", "value_name": "WARN"},
+          {"type_ref": "color_value", "value_name": "DEBUG"}
+        ]
+      },
+      "help": "ログレベル別の色を指定する",
+      "required": false,
+      "multiple": false,
+      "hidden": false,
+      "deprecated": false,
+      "origin": {
+        "kind": "inheritable",
+        "declared_at": ["prog"]
+      }
     }
   ],
-  "positionals": [],
+  "positionals": [
+    {
+      "value_structure": {
+        "repeat": {
+          "min": 1,
+          "node": {"single": {"value_name": "FILE", "type": "string"}}
+        }
+      },
+      "help": "入力ファイル",
+      "hidden": false,
+      "deprecated": false
+    }
+  ],
   "help_entry": "--help"
 }
 ```
 
-#### 4.1 value_structure tree
+#### 4.1 `value_structure`
 
-DR-112 の単一 `value_name` を、`or` / `seq` / `repeat` / `single` / `type_ref` の任意ネスト tree に置き換える。kuu の or/seq/repeat 表現力を help model でも失わない:
+- `single`: 1 値の `value_name` / type / enum 等
+- `seq`: 子 node の順序付き連接
+- `or`: 代替枝
+- `repeat`: 子 node と min / max
+- `type_ref`: definitions の共有値構造への参照
+- node は任意にネストでき、kuu の or / seq / repeat 表現力を model でも失わない
 
-```json
-{
-  "value_structure": {
-    "or": [
-      {
-        "single": {
-          "value_name": "COLOR_NAME",
-          "values_enum": ["red", "green", "blue"]
-        }
-      },
-      {
-        "seq": [
-          {"single": {"value_name": "R", "type": "number"}},
-          {"single": {"value_name": "G", "type": "number"}},
-          {"single": {"value_name": "B", "type": "number"}}
-        ]
-      }
-    ]
-  }
-}
-```
-
-レンダラが tree を一行 pipe 表記、複数行、詳細説明のどれへ落とすかは canonical レンダラの policy で決める。model の tree 自体には曖昧さがない。
-
-#### 4.2 type_ref と types
-
-`definitions` + `ref` で共有された値構造は `type_ref` ノードとして射影する:
-
-```json
-{"type_ref": "color_value", "value_name": "INFO"}
-```
+#### 4.2 `type_ref` と `types`
 
 - `type_ref` は definitions の共有型を指す
-- `value_name` は参照箇所固有の上書き。省略時は型定義側の名前を使う
-- 参照回数が 2 以上の共有型は model トップの `types` に集約射影する
+- 参照箇所の `value_name` は型定義側の名前を上書きできる
+- 共有型は model トップの `types` に集約射影する
 - `used_as` は参照箇所の value_name 一覧を保持する
+- inline 表示か `Types:` 集約表示かはレンダラ policy が決める。model は両方に必要な素材を保持する
 
-単一参照を inline 展開するか type_ref 表示のまま扱うか、複数参照を `Types:` セクションへどう集約するかは canonical レンダラ policy の関心である。
+#### 4.3 `origin`
 
-#### 4.3 origin
-
-options / commands entry に由来素材 `origin` を載せる:
+options / commands entry の由来は次の形で載せる。
 
 - `"local"`
-- `{"kind": "global", "declared_at": ["<command_path>", ...]}`
-- `{"kind": "inheritable", "declared_at": ["<command_path>", ...]}`
+- `{"kind": "global", "declared_at": [...]}`
+- `{"kind": "inheritable", "declared_at": [...]}`
 - `{"kind": "alias", "of": "<canonical_name>"}`
 
-これにより、global 由来 entry の混在表示、完全省略、参照文への集約、専用セクション表示、深さ依存表示を、素材を失わずレンダラ policy で選べる。コマンドの副作用 semantics に応じて global 集合自体を動的変更する挙動は spec の関心外とする。
+これにより、global 由来 entry の混在、完全省略、参照文への集約、専用セクション、depth 依存表示をレンダラが選べる。
 
-#### 4.4 model の既存規約
+#### 4.4 model の共通規約
 
-- `command_path` はルート定義要素の name があれば先頭に置き、選択 path を続ける。プログラム名を定義が持たない場合はレンダラ / 呼び出し側が供給する
+- `command_path` はルート定義要素の name があれば先頭に置き、選択 path を続ける。定義に無いプログラム名は呼び出し側が供給する
 - `hidden` は model に残す。除外はレンダラ policy
 - alias は canonical entry の `alias_spellings` / `aliases` に併記し、独立一覧しない
 - `default` / `env` / `required` / `multiple` / `deprecated` は注記素材
 - usage は構造素材のみで、一行文字列を持たない
 - `depth: "all"` は各 command entry の `scope` に子 help model を再帰埋め込みする
-- options / commands の順序は §8 の並べ替え適用後の順序を保存し、conformance は順序込みで比較する。positionals は定義順
+- options / commands は §8 の並べ替え後の順序を保存し、positionals は定義順を保存する
 - `help` / `help_long` の未設定側は省略する。相互フォールバックはレンダラ policy
 - version 文字列は載せない
 
-### 5. default_fn は汎用 registry 機構とする
+### 5. default_fn は DR-114 の `cell_fns` を使う
 
-#### 5.1 DSL
+#### 5.1 DSL と array 記法
 
 ```
 default_fn: "fn_name[:arg[:arg...]]"
+default_fn: ["fn_name", "arg", "arg:with:colon"]
 ```
 
-filter / variant DSL と同じ colon args 形式を使う。args は string として受け、descriptor 側の引数定義でキャスト・制約する。bare 名は DR-094 により builtin namespace の糖衣となる。
+colon-string と array of string は意味論的に等価で、array は 1 段限定とする。bare fn 名は DR-094 により builtin namespace の糖衣である。
 
-#### 5.2 builtin default_fn
+#### 5.2 default 席の一本化
 
-| fn | args | 用途 |
-|---|---|---|
-| `borrow` | `<other_option_name>` | 同一 scope の他 option 値を借用する |
-| `inherit` | `<name>?` (省略時は自 name) | 祖先 scope 継承の明示形 |
-| `env` | `<VAR_NAME>` | 環境変数から解決する |
-| `constant` | `<value>` | 定数。`default: value` と 1 対 1 に対応する |
-| `computed` | `<key>` | registry 拡張による動的計算 |
-| `uuid` | `<v1|v4|v7>` | UUID を生成する拡張候補 |
+| wire 糖衣 | canonical default_fn |
+|---|---|
+| `default: value` | typed internal call `set(value)`。native JSON value を保持し、string DSL へ serialize しない |
+| 明示 `default_fn` | そのまま |
+| `env: "VAR"` | env ラダー席を維持。default_fn 糖衣ではない |
+| `inherit: true` / `inherit: {"from": "other"}` | inherit ラダー席を維持。default_fn 糖衣ではない |
 
-`computed` の system 提供候補は `git_branch` / `hostname` / `date_now` 等である。`uuid` を含む具体的住人の実体化は descriptor と fixture で確定する。
+DR-114 §4.1 に従い、env / config / inherit / default の異なる値源席は共存できる。同じ default 席へ `default` と明示 `default_fn` を併用する等、同一席の複数宣言だけを definition-error `invalid-range` とする。type preset の暗黙 default は同じ席のユーザ明示 default / default_fn に置換される。
 
-#### 5.3 descriptor
+#### 5.3 descriptor と ABI
 
-DR-061 / DR-107 / DR-111 の descriptor 骨格に従う:
+DR-107 の `role` enum へ DR-114 が `"fn"` を追加し、default_fn と variant effect は `cell_fns` registry の同じ住人を使う。`role: "default_fn"` や default 専用 registry は設けない。
 
-```json
-{
-  "id": "borrow",
-  "ns": "builtin",
-  "kind": "default_fn",
-  "owns": ["borrow"],
-  "args": [
-    {"name": "source", "type": "string"}
-  ],
-  "returns": {"type": "same_as_target"}
-}
+`cell_fns` descriptor は `construction` / `io_type` / `fallibility` / `invocation` / `observes` / `reasons` の直交軸に載る。`io_type` は output-only で、args の型と個数は `invocation.parameters` が担う。`output_mode` は filter の入力保持 / 変換軸なので `fn` role では禁止し、`io_type.output` の `Value` / tagged `Sentinel` で結果種別を表す。fn ABI は次の 1 種類である。
+
+```
+(args: string[], ctx: FnCtx) → Result<Value | Sentinel, Reason>
 ```
 
-引数宣言には kuu の positionals 定義式を使い、`values` による enum 制約も利用できる。
+help type 合成の `borrow` は `ctx.mode() == "default"` で `ctx.as_default()` を取得し、descriptor の `observes: ["option:<source>"]` から依存 edge を構築する。default 席は `Value` を返す fn だけを受ける。
 
-#### 5.4 default との関係と評価時点
+#### 5.4 failure semantics
 
-- DR-088 の既存概念を DSL として明示する。`env: "VAR"` は `default_fn: "env:VAR"`、`inherit: true` は `default_fn: "inherit"`、`default: value` は `default_fn: "constant:<value>"` の糖衣として整合的に位置づけ可能である
-- 既存の `env` / `inherit` / `default` 語彙と値源ラダーは維持する
-- `default_fn: "fn:args"` は動的 default を表す
-- `default` と `default_fn` の併用は definition-error `invalid-range`
-- DR-087 の placeholder モデルに従い、default_fn は解決フェーズまで評価しない
-- 値源が他 cell に依存する場合は依存グラフの位相順で実体化する
-- DR-088 に従い、default_fn の宣言は探索中の「デフォルトあり」判定へ参加し、最終充足は遅延解決後の実値で判定する
+| 失敗パターン | outcome / error kind |
+|---|---|
+| unknown fn | definition-error `unknown-vocab` (DR-101) |
+| arity / type 不正 | definition-error `invalid-argument` (DR-085) |
+| default 席で Sentinel fn を指定 | definition-error `invalid-range` |
+| `observes` の依存循環 | definition-error `circular-ref` (DR-082) |
+| `borrow:X` の source が最終的に不在 / unset | fn reason `absent-source`。呼び出し元も unset のまま落ちる |
+
+default_fn は DR-087 の placeholder と依存グラフへ載せ、位相順で解決する。DR-088 に従い、宣言は探索中の「default あり」判定へ参加するが、遅延解決後に値が無ければ unset のまま落ち、探索へ戻らない。
 
 ### 6. 内部セルは help の直交軸をそのまま表す
 
-help 機構が管理する内部セルは定義全体でそれぞれ単一の実体であり、どのサブコマンド scope の入口から発火しても同じセルへ link して合流する。セルは次の 5 個:
+help 機構が管理する内部セルは定義全体で各 1 実体であり、どの command scope の入口から発火しても同じセルへ link して合流する。
 
-- `#help`: bool。help / help_all_category / help_category / help_tree の発火で立つ
-- `#help_all_category`: bool。help_all_category の発火で立つ
+- `#help`: bool。help / help_all_category / help_category / help_tree で立つ
+- `#help_all_category`: bool。help_all_category で立つ
 - `#help_category`: string。help_category の発火値を保持する
-- `#help_show_hidden`: bool。help_show_hidden の発火で立つ。`#help` は立てない
-- `#help_tree`: bool。help_tree の発火で立つ
+- `#help_show_hidden`: bool。help_show_hidden で立つ。`#help` は立てない
+- `#help_tree`: bool。help_tree で立つ
 
 内部セルは `#` 予約 namespace の実装細部で、wire と result に直接現れない。result への露出は各 type の name / export_key を経由し、link の既存意味論を使う。
 
-help 系要素が存在しても、name / export_key 経由で発火を結果面に観測できる要素が一つも無い構成だけを lint warn にする。`type: "help"` が無くても、help_all_category / help_category / help_show_hidden / help_tree 自身に name 露出があれば warn しない。
+help 系要素が存在しても、name / export_key 経由で発火を観測できる要素が一つも無い構成だけを lint warn にする。`type: "help"` が無くても、他 help type 自身に露出があれば warn しない。
 
-### 7. 説明文・失敗時発火・hidden の既存語彙を維持する
+### 7. 説明文・失敗時発火・hidden の語彙を確定する
 
 #### 7.1 help / help_long / help_epilog
 
@@ -339,173 +383,208 @@ help 系要素が存在しても、name / export_key 経由で発火を結果面
 - `help_long`: 長い説明
 - `help_epilog`: 選択スコープの一覧後に置く自由テキスト素材
 
-3 語彙とも inert な表示メタであり、文言の出し分けとフォールバックはレンダラの関心とする。
+3 語彙は inert な表示メタであり、出し分けとフォールバックはレンダラの関心とする。
 
 #### 7.2 on_failure / help_on_failure
 
 - `on_failure` は任意要素に付く汎用 bool 属性、既定 false
-- 完全経路 0 本の failure 時、dead end 込み候補経路で selected なら発火する。意味論は DR-048 を維持する
+- 完全経路 0 本の failure 時、dead end 込み候補経路で selected なら発火する。意味論は DR-048
 - `on_failure` は専用 installer が所有する
-- `help_on_failure` は help 系 preset の糖衣で、help_installer が `on_failure` へ展開する
-- help / help_all_category / help_category / help_tree の既定は true、help_show_hidden の既定は false
-- help 系 type 以外への `help_on_failure` は definition-error `invalid-range`
+- `help_on_failure` は help preset の糖衣で、help_installer が `on_failure` へ展開する
+- help / help_all_category / help_category / help_tree の既定は true、help_show_hidden は false
+- help type 以外への `help_on_failure` は definition-error `invalid-range`
 
 #### 7.3 hidden / deprecated
 
 - `hidden: bool` 1 本を維持する
-- help / completion からの既定除外は表示層の policy であり、受理は変えない
+- help / completion からの既定除外は表示 policy であり、受理は変えない
 - 面別の非対称は ref & link による分割定義で表現する
 - deprecated は canonical entry の構造化メタとして model に残す
 
-### 8. グループと順序の語彙を維持し、重複規則を訂正する
+### 8. グループと順序を宣言層の構造として保持する
 
 #### 8.1 グループ宣言
 
 - 通常 entry の `help_group_name` は所属グループ名参照
-- `name` / `id` / `type` / 入口属性を持たず、グループ属性だけを持つ options entry はグループ宣言エントリ
-- `help_group_title` / `help_group_description` は同時に書かれた `help_group_name` に属する
+- `name` / `id` / `type` / 入口属性を持たず、グループ属性だけを持つ options entry はグループ宣言 entry
+- `help_group_title` / `help_group_description` は同じ entry の `help_group_name` に属する
 - model では `{"group": {"name", "title", "description"}}` entry としてフラット列に残す
-- **同じグループ名の重複宣言は、設定が同一か否かを問わず definition-error `invalid-range`**。同一設定の再宣言を冪等で合法とはしない
-- commands のグループ宣言席は本 DR では追加しない
+- 同じグループ名の重複宣言は、設定が同一か否かを問わず definition-error `invalid-range`
+- commands のグループ宣言席は追加しない
 
 #### 8.2 順序
 
 - `help_order`: 通常 entry の表示順
 - `help_group_order`: グループ宣言 entry の表示順
-- `help_after`: 同一 scope・同一 entries 列の name を参照し、その直後へ配置する
+- `help_after`: 同一 scope・同一 entries 列の name を参照し、その直後へ配置
 - 座席違いの order 指定、および同一要素への order と help_after の併用は definition-error `invalid-range`
 
-並べ替えは options / commands の各フラット列へ独立に 2 段適用する:
+options / commands の各フラット列へ独立に 2 段適用する。
 
 1. 明示 order、無ければ宣言 index を実効 order として安定ソートする。同値なら宣言順を保つ
-2. help_after entry を取り出し、target の直後へ配置する
+2. help_after entry を段 1 の列から取り出し、target の直後へ配置する
 
 help_after の規則:
 
 - 同一 target への複数 after は定義順
-- 連鎖は解決して許容する
+- 連鎖は解決して許容
 - 循環は definition-error `circular-ref`
-- 不在 target は lint warn とし、段 1 の位置へ fallback する
+- 不在 target は lint warn とし、段 1 の位置へ fallback
 - positionals は並べ替えず、順序語彙は lint warn + 無視
 
-### 9. conformance は help_installer の標準経路を検証する
+### 9. conformance は kuu.mbt runner が capability を直接呼ぶ
 
-`fixtures/help/` は help model と順序を pin するが、`query: "help"` という独立 spec query を意味しない。kuu-cli の `kuu help` サブコマンドが definition と選択引数を受け、help_installer の capability を呼び出す標準経路の入力・出力 fixture と位置づける。
+`fixtures/help/` の `query: "help"` は fixture discriminator であり、独立 spec query の宣言ではない。標準検証経路は次のとおり。
+
+1. kuu.mbt runner が definition と case の path / depth / category を読む
+2. assembly の help_installer を適用する
+3. help_installer の help_query capability を直接呼ぶ
+4. 返った help model を fixture expect と比較する
+
+この経路は kuu-cli に依存しない。DR-108 が定める v1 発行条件の主語は指定参照実装 kuu.mbt であり、kuu-cli は capability の consumer である。
 
 検証対象:
 
-- 5 直交 type の canonical 展開と合成
+- 5 直交 type の canonical 展開と default_fn 合成
 - value_structure の or / seq / repeat / single / type_ref
-- types 集約射影と used_as
-- origin の local / global / inheritable / alias
+- types / used_as と origin
 - help_long / help_epilog
 - グループ宣言と order / after
 - hidden / deprecated
 - path / depth / category
-- absent-ref / invalid-range / circular-ref
-- default_fn と default の排他、borrow の依存解決
+- invalid-range / circular-ref、および Q10-β 裁定後の不在 path / category の query failure
+- cell_fns の unknown-vocab / invalid-argument / absent-source と依存解決
 
-options / commands / positionals は順序込みで比較する。v1.0.0 発行条件は DR-108 §3 の改訂を維持し、parse-core / lowering / definition-error / completion / help の 5 プロファイルすべてが指定参照実装 kuu.mbt で green であることとする。
+options / commands / positionals は順序込みで比較する。v1 発行条件は parse-core / lowering / definition-error / completion / help の 5 プロファイルすべてが指定参照実装 kuu.mbt で green であることとする。
 
 ## 採用しなかった案
 
 ### help_installer を置かず、help を独立 query とする
 
-DR-112 §1 の案。kawaz 未承認の worker 解釈であり、原発題「help_installer が無くないですか。必要な機能・語彙・展開方の設計プランから立てる必要がある」の真逆へ拡張していたため撤回する。
-
-この案は installer 3 役のうち model 構築だけを切り出し、5 type の preset 展開、表示メタ語彙の所有・検査、内部セルへの canonical lowering を一つの責務として扱えない。新設計は 3 役を help_installer に統合し、help_query はその capability として位置づける。
+installer 3 役のうち model 構築だけを切り出すと、5 type の preset 展開、表示メタ語彙の所有と検査、内部セルへの canonical lowering が別責務へ分散する。help_query は help_installer の能力提供として置く。
 
 ### `type: "help_all"` に全 category と hidden 表示を混在させる
 
-「全 category 絞りなし」と「hidden を見せる」は独立軸であり、1 type に混ぜると組合せを失う。`help_all_category` と `help_show_hidden` に分ける。
+「category 絞りなし」と「hidden を見せる」は独立軸である。`help_all_category` と `help_show_hidden` に分ける。
 
-### help type 合成専用の default_from / default_for
+### help type 合成専用の `default_from` / `default_for`
 
-help 以外の集約 flag、env、computed、uuid、inherit ごとに専用語彙が増殖する。既存の registry + DSL + descriptor の骨格に揃う default_fn を採る。
+help 以外の値連動でも同じ語彙が必要になる。DR-114 の `default_fn: "borrow:<source>"` を使う。
 
-### value_name 1 個または value_names 平坦列
+### default_fn 専用の role / registry / context
 
-or / seq / repeat の任意ネストと共有型参照を表せず、kuu の定義表現力を help model が縮小する。value_structure tree を採る。
+variant effect と同じ値供給 fn を重複実装し、universal fn の対称性を失う。DR-114 の `cell_fns`、`role: "fn"`、統一 `FnCtx` を使う。
+
+### default の固定値 fn を `constant` と呼ぶ
+
+variant DSL の `set` と同じ意味なので `set` に統一する。
+
+### `value_name` 1 個または `value_names` 平坦列
+
+or / seq / repeat の任意ネストと共有型参照を表せず、kuu の定義表現力を model が縮小する。`value_structure` tree を採る。
 
 ### usage の一行文字列を model に含める
 
-任意ネスト構造の忠実な一行化はレンダラ policy であり、素材と文言を混ぜる。model は構造素材を保持する。
+任意ネスト構造の一行化はレンダラ policy である。model は構造素材を保持する。
 
-### origin を持たず global 表示方式を一つに固定する
+### origin を持たず global 表示方式を固定する
 
-実 CLI には混在、完全複製、省略、参照、専用セクション、深さ依存が実在する。origin が無いと複数 policy を選べないため、素材として origin を保持する。
+混在、省略、参照、専用セクション、depth 依存表示の選択肢を失う。素材として origin を保持する。
 
 ### hidden の面別属性
 
-`hidden: bool` と ref & link の分割定義で表現できる。表示面ごとの専用語彙は増やさない。
+`hidden: bool` と ref & link の分割定義で表現できる。
 
 ### 同じグループ設定の再宣言を冪等として許す
 
-元裁定に無い worker 追加であり、宣言箇所を一意にするグループ先頭宣言スタイルを崩す。同名グループの重複は無条件に definition-error とする。
+グループ宣言箇所を一意にする先頭宣言スタイルを崩す。同名グループの重複は無条件に definition-error とする。
+
+### help_category を optional 値スロットで表す
+
+次トークンが category か positional かを特殊規則で解くことになる。bool 枝と string 枝の `or` なら経路成立の既存意味論へ載る。
+
+### depth に数値を持たせる
+
+必要な軸は選択 scope だけか全 tree かの 2 値である。`"scope" | "all"` とする。
 
 ## 波及
 
-本 DR の実装追随は次の段階で行う。本 DR 自体は設計記録だけを確定し、以下のファイルは別 change で更新する。
+本 DR と DR-114 の実現は同じ Phase U-1〜U-6 で進める。本 change は DR だけを確定し、以下は別 task で更新する。
 
-### P2: spec 本文・schema・fixture
+### Phase U-1: schema 3 層と builtin descriptor
 
-- **DESIGN.md**: help_installer 3 役、5 type、内部セル、default_fn、value_structure / type_ref / types / origin、表示メタ、group / order、on_failure の現行設計へ更新
-- **LOWERING.md**: help_installer の preset 展開、内部セル link、固定値供給、help_on_failure → on_failure、default_fn placeholder と依存解決を追記
-- **CONFORMANCE.md**: help プロファイルを help_installer 標準経路として定義し、順序込み比較と fixture 契約を更新
-- **schema/wire.schema.json**: 5 type、新規表示メタ、default_fn、value_structure 関連の入力語彙・制約を反映
-- **fixtures/help/**: 5 直交 type の合成、value_structure tree、type_ref / types、origin、default_fn、グループ・順序、意味論訂正を pin。DR-112 依存の `help_all` と同一設定再宣言の fixture を訂正
+- **`schema/wire.schema.json` (入力)**: 5 type、表示メタ、group / order、on_failure / help_on_failure、default_fn の string / 1 段 array 記法を受理
+- **`schema/fixture.schema.json` (model 出力 + discriminator)**: `query: "help"` 分岐、help model の value_structure / type_ref / types / origin、順序込み expect を定義
+- **`schema/descriptor.schema.json` (registry 宣言)**: DR-114 の `role: "fn"`、`cell_fns`、`observes`、FnCtx に必要な出力型制約を追加
+- **`schema/builtin-descriptors.json` (住人データ)**: `set` / `default` / `unset` / `empty` / `update` / `borrow` / `env` / `inherit` / `computed` / `uuid` 等の cell fn descriptor を追加
 
-### P3: kuu.mbt
+### Phase U-2: spec 本文と関連 DR
 
-- DR-112 に基づく独立 help query 実装を forward rewrite で撤回
-- help_installer、5 type、内部セル、value_structure / type_ref / types / origin、default_fn を実装
-- conformance runner を新 fixture 契約へ追随
-- spec fixture・pin・実装の lockstep 窓を維持する
+- `docs/DESIGN.md`: help_installer 3 役、5 type、内部セル、構造化 model、display/group/order/on_failure と DR-114 の universal fn を §7 / §8 / §11 を含めて統合再記述
+- `docs/LOWERING.md`: help preset 展開、内部セル link、cell_fns 固定値供給、help_on_failure → on_failure、default_fn placeholder を記述
+- `docs/CONFORMANCE.md`: help_installer capability の標準経路、fixture discriminator、順序込み比較を記述
+- DR-042 / DR-057 / DR-058 / DR-059 / DR-063 / DR-076 / DR-087 / DR-088 / DR-094 / DR-101 / DR-102 / DR-107 / DR-108 / DR-109 / DR-111 に関係を追記
 
-### P4: kuu-cli
+### Phase U-3: fixtures
 
-- `kuu help` サブコマンドを help_installer capability へ接続
-- canonical レンダラを別 issue の設計に従って実装
-- value_structure の pipe 曖昧回避、集約表示と inline 表示、詳細説明、renderer policy 指定オプション、version binding を確定
+- `fixtures/help/`: 5 type の個別・合成、value_structure tree、type_ref / types、origin、display/group/order、default_fn、失敗意味論を pin
+- help_all の旧意味論と同一グループ再宣言を許す期待値を訂正
+- universal fn の string / array 混在と colon を含む arg を追加
 
-### P5: v1 発行条件
+### Phase U-4: kuu.mbt
+
+- help_installer の回収・植え付け・能力提供
+- 5 type、内部セル、構造化 model
+- kuu.mbt runner から capability を直接呼ぶ help conformance 経路
+- DR-114 の cell_fns / FnCtx / observes / 遅延解決を使用
+- spec fixture・pin・実装の lockstep 窓を維持
+
+### Phase U-5: kuu-cli
+
+- `kuu help` サブコマンドを U-4 の help_installer capability へ接続する
+- capability の入力と構造化 model 出力を CLI envelope へ写す
+- canonical レンダラの実装や policy は含めない
+
+### Phase U-6: v1 発行条件
 
 5 プロファイルすべてを指定参照実装 kuu.mbt で green にし、DR-108 の発行条件を満たす。
 
 ## 射程外
 
-- canonical レンダラの具体設計: pipe 曖昧回避、集約 vs inline、詳細説明形式、renderer policy 指定オプション、version binding
-- help の文言、翻訳、幅、折返し、色、ページング、ソート既定、stdout/stderr、exit code、man / Markdown 生成
-- default_fn の 3rd party registry の具体的住人。拡張 namespace の経路は DR-094 に従う
-- help_category の multiple 合成。v1 で pin するのは last-wins
-- コマンドの副作用 semantics に応じた global 集合の動的変更
-- v1.0.0 の発行そのもの
+- canonical レンダラの具体設計: pipe 曖昧回避、集約 vs inline、詳細説明、renderer policy 指定語彙、version binding
+- help の文言、翻訳、幅、折返し、色、ページング、stdout / stderr、exit code、man / Markdown 生成
+- v1.0.0 の発行時期と発行操作
+- 3rd party fn registry の配布・登録・運用規約
+- help_category の multiple 合成。v1 は last-wins
+- command の副作用 semantics に応じた global 集合の動的変更
 
 ## リスク・悪い面
 
-- DR-112 に基づいて DESIGN.md / LOWERING.md / CONFORMANCE.md / schema / fixtures へ入った記述を forward rewrite する必要がある
-- help query 実装済みの参照実装を help_installer へ組み替える必要がある
-- fixtures/help/ の意味論変更と追加が広く、spec pin と kuu.mbt の同期を外すと conformance が一時的に red になる
-- default_fn は help 以外にも及ぶ汎用機構であり、descriptor・遅延解決・definition-error を一体で実装する必要がある
-- value_structure tree と types は model の表現力を上げる一方、canonical レンダラが複雑 tree を読みやすく表示する policy を別途設計する必要がある
+- DR-112 に基づく spec / fixture / 実装を help_installer へ組み替える必要がある
+- help model の表現力が増えるため、schema と runner の一方だけを更新すると profile が不整合になる
+- help と universal fn が同じ lockstep 波に入り、spec pin を単独で動かすと conformance が red になる
+- default_fn の `observes` 宣言漏れは help type 合成の依存順を壊すため、descriptor と実装の整合検査が必要である
+- canonical レンダラを分離するため、U-5 完了時点でも構造化 JSON の consumer と、人間向け標準表示の完成は別である
 
 ## 関連
 
-- DR-112 (本 DR により Superseded)
-- DR-042 (installer 3 役・合成契約)
-- DR-057 (alias の表示帰属)
+- DR-112 (本 DRにより Superseded)
+- DR-042 (installer 3 役)
+- DR-048 (on_failure の意味論)
+- DR-057 (alias)
 - DR-058 (hidden / deprecated)
-- DR-059 (inheritable の宣言的コピー)
-- DR-063 (wire form = 宣言層)
-- DR-076 (preset の属性展開)
-- DR-087 / DR-088 (default の遅延解決と宣言充足)
+- DR-059 (inheritable)
+- DR-063 (wire form と宣言層)
+- DR-076 (preset 属性展開)
+- DR-082 / DR-085 / DR-101 (definition-error kind)
+- DR-087 / DR-088 (default 遅延解決と宣言充足)
 - DR-094 (registry namespace)
-- DR-098 / DR-099 (注入値源から preset 型へ責務を移す先例)
+- DR-107 / DR-111 (descriptor 直交軸)
 - DR-108 (v1 発行条件)
-- DR-109 (semantic model + policy、renderer は言語側)
-- DR-111 (descriptor 直交軸)
-- `docs/findings/2026-07-17-help-mechanism-design-plan.md` (原設計プランと HELP-Q 裁定)
-- `docs/findings/2026-07-19-help-display-order-and-visibility-patterns.md` (実 CLI の表示方式)
-- `docs/findings/2026-07-19-kuu-help-display-expressibility-check.md` (origin の必要性)
-- `docs/findings/2026-07-19-help-mechanism-redesign-v2.md` (本 DR の下敷き)
-- `docs/QUESTIONS.md` の HIP-META-Q1〜Q6 裁定履歴
+- DR-109 (semantic model と renderer の境界)
+- DR-114 (universal fn / cell_fns / FnCtx / observes)
+- `docs/findings/2026-07-17-help-mechanism-design-plan.md`
+- `docs/findings/2026-07-19-help-display-order-and-visibility-patterns.md`
+- `docs/findings/2026-07-19-kuu-help-display-expressibility-check.md`
+- `docs/findings/2026-07-19-help-mechanism-redesign-v2.md`
+- `docs/QUESTIONS.md` の HIP-META-Q1〜Q8 裁定
