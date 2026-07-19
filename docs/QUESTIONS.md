@@ -148,7 +148,13 @@ kawaz mid=29 の指摘:
 - HIP-META-Q6 (default_fn 汎用機構、mid=28 で default_fn 一本化承認)
 - kuu 背骨 (or/seq/repeat/link/ref の任意ネスト、機構統一思想)
 
-## HIP-META-Q11: update effect の forget + set fn ABI に old 追加 (kawaz mid=46 発題)
+## ✅ HIP-META-Q11 = a (mid=48 確定): update effect の forget + cell_fns fn ABI に ctx.old 追加
+
+**裁定 (mid=48)**: variant effect 4 種 (set/default/unset/empty) に戻す、update は cell_fns registry の独立 fn (`incr` 等) が `ctx.old` を参照する形で実現。cell_fns fn ABI に `ctx.old` (Value | absent) 追加。DR-114 修正要 (update 節削除、set fn ABI 更新)。
+
+以下は議論の記録 (参考):
+
+## HIP-META-Q11 元記述 (参考): update effect の forget + set fn ABI に old 追加 (kawaz mid=46 発題)
 
 ### 背景
 
@@ -180,7 +186,15 @@ kawaz mid=29 の指摘:
 - DR-114 の update 節削除 + set fn ABI 更新
 - Major 4 該当なしになる
 
-## HIP-META-Q10: help capability 入力の contract + query 不在時の失敗 envelope (別 agent 再監査 Major 5/6)
+## ✅ HIP-META-Q10 = a (mid=48 確定): help capability 入力の contract + query 不在時の失敗 envelope
+
+**裁定 (mid=48)**:
+- **Q10-α = a**: help query capability の入力に `category_mode: "default" | "all" | {"named": <string>}` を追加。renderer は category_mode で 3 分岐 (絞りなし全表示 / 特定 category 絞り / デフォルト表示)。`#help_all_category` cell 値からアプリ側が category_mode を組んで query 呼び出しに渡す。DR-113 修正要
+- **Q10-β = a**: help query 固有の失敗 envelope 新設 (query-error `absent-path` / `absent-category`)、definition_error profile と分離。conformance runner は help query の失敗を definition_error と区別。DR-113 修正要
+
+以下は議論の記録 (参考):
+
+## HIP-META-Q10 元記述 (参考): help capability 入力の contract + query 不在時の失敗 envelope (別 agent 再監査 Major 5/6)
 
 ### Q10-α: `#help_all_category` / `#help_show_hidden` / `#help_tree` cell 値の renderer policy 入力 (Major 5)
 
