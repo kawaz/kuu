@@ -148,6 +148,37 @@ kawaz mid=29 の指摘:
 - HIP-META-Q6 (default_fn 汎用機構、mid=28 で default_fn 一本化承認)
 - kuu 背骨 (or/seq/repeat/link/ref の任意ネスト、機構統一思想)
 
+## HIP-META-Q9: preset 暗黙 default と明示 default_fn の衝突 (dr114-draft worker 指摘 2026-07-20)
+
+### 背景説明
+
+DR-076 (プリセット属性展開) の flag preset は「暗黙 `default: false` を同梱」する。統括 finding §2.3 の合成例で `type: "flag"` + 明示 `default_fn: "borrow:help-full"` を書いたが、これは preset 暗黙 default (`default: false`、= `default_fn: "set:false"` の糖衣) と明示 default_fn (`"borrow:help-full"`) の**衝突**。
+
+Q7-α+一本化 (mid=28+32) で「`default:value` と `default_fn` の相互排他」を裁定済み。preset 暗黙 default も同じ扱いにするかが本 Q の論点。
+
+### 選択肢
+
+- **候補 (i-1)**: preset 暗黙 default (= 暗黙 `default_fn:"set:false"` 相当) を明示 default_fn 併用は definition-error (`invalid-range`)。ユーザは type:flag と明示 default_fn の合成を書けない = HIP-META-Q5 の 5 直交 type 合成例 (help-all-category / help-show-hidden 等の flag) が書けない、実用性欠く
+- **候補 (i-2、統括推し)**: **明示 default_fn が preset 暗黙 default を置換する規則を DR-076 準拠で追加**。「preset 暗黙 default_fn + 明示 default_fn が併記された場合、明示が置換」の規則。kuu 思想「明示 > 暗黙」と整合、DR-076 の枠 (プリセット属性展開) に「明示による置換」機構を追加
+- 候補 (ii): 例の型を変えて回避 (`type: "bool"` + 明示 `long: [":set:true"]` 等、DR-076 の preset を使わない)。finding §2.3 の合成例だけの問題として先送り、preset 上書きの spec 追加は保留
+
+### 統括推し
+
+**候補 (i-2) 明示置換**、理由:
+1. kuu 思想「明示 > 暗黙」と整合 (DR-098 §5 の値源ラダー明示優位と同型)
+2. HIP-META-Q5 の 5 直交 type 合成例 (`--help-all` = flag、`default_fn: "borrow"` で連鎖) が自然に書ける
+3. DR-076 の枠内に規則追加で完結、大規模設計変更不要
+
+**候補 (ii)** は finding §2.3 例だけの回避で、実運用で flag preset + default_fn 併用の需要 (verbose 系、strict 系、theme 系等の集約 flag) が繰り返し発生する見込み = spec 側の裁定が必要
+
+### 参照
+
+- DR-076 (プリセット属性展開の枠)
+- DR-098 §5 (値源ラダー明示序列、「明示 > 暗黙」の思想)
+- HIP-META-Q7-α+一本化 (default:value と default_fn の相互排他裁定 mid=28+32)
+- HIP-META-Q5 (5 直交 type 合成例が flag preset を使う)
+- finding §2.3 (合成例、統括で書き直し要)
+
 ## HIP-META-Q7: default_fn の descriptor 軸と失敗意味論 (dr113-review 指摘 Critical 1 + Major 5)
 
 ### 背景説明

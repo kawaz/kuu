@@ -48,9 +48,9 @@
 
 ## 2. 3 種 DSL の fn 化マッピング
 
-### 2.1 variant DSL effect の fn 化
+### 2.1 variant DSL effect の fn 化 (dr114-draft worker 指摘反映、update 追加)
 
-現 variant DSL (DESIGN §7.4 の effect 4 種):
+現 variant DSL (DESIGN §7.4 + DR-077 の effect 5 種、統括 finding 初版は update 脱落 = 4 種と誤記):
 
 | variant effect | 現形 | fn 化 (universal fn 呼び出し) |
 |---|---|---|
@@ -59,6 +59,7 @@
 | `default` (default に戻す、committed=true) | `":default"` | **`fn:"default"` を呼ぶ**、default 席の default_fn を呼び出す (default 席参照) |
 | `unset` (default に戻す、committed=false) | `":unset"` | **`fn:"unset"` を呼ぶ**、cell を unset に |
 | `empty` (配列/Map を空に) | `":empty"` | **`fn:"empty"` を呼ぶ**、配列/Map を空に |
+| **`update` (DR-077 確定、count 正規形の変種、old に transform を適用)** | `":update:<transform>"` (count の increment 等) | **`fn:"update"` を呼ぶ**、args = [transform]。ctx (EffectCtx) から old value を取得、transform を適用して cell に書く。DR-077 の意味論をそのまま universal fn に移す |
 
 **帰結**: variant DSL の effect 部分は universal fn 呼び出しに集約。**`long: [":set:X"]` は `long: [":fn:set:X"]` の糖衣** (`:` の 2 個目が fn 名、それ以降が args) と読める。ただし DSL 書式は現行 `:set:X` のまま維持 (糖衣、破壊的でない)。
 
@@ -76,17 +77,18 @@
 
 **帰結**: filter DSL は既に universal fn 呼び出しに近い形。「fn を pipeline の各段で適用」の意味論。DR-107 の `role: "filter"` 軸をそのまま universal fn の specialization として扱う (統合後は `role` に filter / default_fn / effect などが並ぶ、または `role: "fn"` に統一して `fn_kind` サブ軸で分ける)。
 
-### 2.3 default_fn DSL の完成形
+### 2.3 default_fn DSL の完成形 (訂正 2026-07-20、dr114-draft worker 指摘反映)
 
-Q7-α+一本化 (mid=28+32) 確定の形:
+**訂正**: 統括初版で「env/inherit も default_fn の糖衣」と拡張書きしたが、kawaz mid=28 原意 (`default:"X"` の default_fn 糖衣化) を超えた過剰解釈で DR-031 の値源ラダー (env > config > inherit > default) と衝突。**default 席のみ default_fn 経由に一本化**、env/inherit ラダー席は既存機構を維持:
 
-| 糖衣 (wire form 不変) | universal fn 呼び出し |
+| 糖衣 (wire form 不変) | 展開 |
 |---|---|
-| `default: value` | `default_fn: "set:<value>"` = `fn:"set"`, args=[value] |
-| `env: "VAR"` | `default_fn: "env:VAR"` = `fn:"env"`, args=[VAR] |
-| `inherit: true` | `default_fn: "inherit"` = `fn:"inherit"`, args=[] |
-| `inherit: {"from": "other"}` | `default_fn: "inherit:other"` = `fn:"inherit"`, args=[other] |
-| `default_fn: "fn:args"` (明示) | そのまま |
+| `default: value` | `default_fn: "set:<value>"` = `fn:"set"`, args=[value] (default 席の値供給、Q8=A 統合で variant DSL の set と座が同じ = 別名不要) |
+| `default_fn: "fn:args"` (明示) | そのまま (default 席、任意の fn を呼ぶ) |
+| `env: "VAR"` | **既存の env ラダー席**、default_fn の糖衣**ではない** (DR-031 の env 値源機構、precedence は default 席より上) |
+| `inherit: true` | **既存の inherit ラダー席**、default_fn の糖衣**ではない** (DR-031 の inherit 値源機構) |
+
+**DR-088 kawaz 裁定原文「env 指定があるってことは env から遅延解決する default_fn が設定されてるようなもん」の解釈**: 「env 席の値供給も default_fn 的な機構で説明できる」の**概念的な比喩**、実装として「env 席と default 席を同じ機構に統合する」意ではない (統括の過剰解釈)。DR-031 のラダー機構は維持、default 席の実装だけが cell_fn (default_fn) の対象。
 
 ### 2.4 long DSL への default_fn 引き込み (kawaz mid=29 提案)
 
