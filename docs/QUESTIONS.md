@@ -6,6 +6,45 @@
 > チャットでは「VF-Q 待ち」のようにラベルだけで参照する。回答はラベル + 選択肢記号 (例「VF-b で」) だけで通じる。
 > 参照パスは本リポ (spec) 相対。kuu.mbt 側は「kuu.mbt の <path>」と表記する。
 
+## HIP-META-Q12: lowered invocation node の JSON 表記 (canonical 形)
+
+**背景**: DR-114 で update effect 削除 → cell_fns fn 呼び出しに統合。lowering 断面 (`fixtures/lowering/count/bare-increment.json` の greedy 面 effect) が旧 `{op:"update", transform:"increment"}` から cell_fns incr fn 呼び出しに書き変わる。schema (`schema/fixture.schema.json` の lower `expect`) は `type:object` で語彙は runner 関心、DR-114 にも lowered node JSON 表記の規定なし。schema-p1b worker が A/B/C 全 ACCEPT を実測、canonical 一意判定不能で発明禁止条件により停止 → 統括で裁定要求と判定。
+
+**論点**: lowering 断面の cell_fns fn 呼び出しの canonical JSON 表記は?
+
+- **候補 A** (schema-p1b worker 推し): `{"fn": "incr", "args": []}` — DR 共通背骨 name+args 最小忠実、fn descriptor invocation の kuu 標準表記と対称
+- **候補 B**: `{"op": "call_fn", "fn": "incr", "args": []}` — op 明示で他 effect 形との位相を揃える
+- **候補 C**: greedy 面の effect は cell operation の直接表現、fn 呼び出しはメタ層で分離 (`{op:"set", source:{fn:"incr"}}` 等)
+- **候補 D** (schema-p1 + dr114-draft 追記): 「LOWERING + fixture.schema の invocation carrier を DR-114 に追記して先に確定してから fixture 化」= 発明でなく規範化。**統括推し = D** (fixture 側の暫定形で cross-check 効かない、DR に carrier 表記を規範化してから fixture が従うのが順序として正)
+
+**3 teammate 一致判定 (schema-p1 + dr114-draft + schema-p1b)**: incr は runtime `ctx.old` 依存で lowering 時点 `op:set operand` 確定不能、`op:call` / `{fn:incr}` も DR に無い発明、P2 で canonical invocation carrier を先に設計・確定してから fixture 更新、現時点は保留が正 (裁定違反リスク)。DR-114 §2/§7/§12/Phase U-2 いずれも lowered 具体 JSON 未規定、fixture.schema の lower expect は緩い object で validation の型判別不能。
+
+**参照**:
+- `docs/decisions/DR-114-universal-fn-integration.md` (universal fn 統合、fn ABI 定義)
+- `schema/fixture.schema.json` (lower expect の greedy 面、type:object)
+- `fixtures/lowering/count/bare-increment.json` (現状 = 旧 DR-077 表記、Q12 待ち保留)
+- `fixtures/count-parse/basic.json` (fn 発火の結果 = `op:"set", operand:N` を規範化、こちらは Q12 と独立で先行修正可)
+
+**波及**: 裁定後、`fixtures/lowering/count/bare-increment.json` を canonical 表記で書き直し + DR-114 に lowered node 表記の節を追記 (発明でなく規範化として)。
+
+**回答形式**: `Q12=D` 等。裁定後の想定作業 (D の場合): dr114-draft (前 team teammate、reachable) に DR-114 canonical invocation carrier 表記の追記委譲 → land → schema-p1 (or schema-p1b) に `fixtures/lowering/count/bare-increment.json` 再作成委譲 → P1 完全 clean で land。
+
+## HIP-META-Q12-α: bare-increment.json の Q12 待ち中の扱い
+
+**背景**: 現行 `fixtures/lowering/count/bare-increment.json` は `:update:increment` (Q11 で削除済み) を規範化。放置すると fixture validation で unknown-vocab FAIL 発生、P1 完全 clean を阻害。Q12 裁定まで暫定対応が必要。
+
+**論点**:
+
+- **候補 α = abandon (削除)** (統括推し): fixture を削除、Q12 land 後に canonical 表記で新規作成。理由 = 存在=規範化、規範化不能なら存在させない、明示削除で穴を可視化
+- **候補 β = 暫定形で保持**: `{effect: null}` 等の逃げ表記で validation を通す
+- **候補 γ = そのまま保持 + fixture skip 機構**: kuu runner に skip 機構があれば skip タグ付け
+
+**回答形式**: `Q12-α=α` 等。α の場合、schema-p1b が先行 commit で削除、Q12 land 後に再作成。
+
+
+
+
+
 > **⚠ 2026-07-19 HIP-META-Q バッチ裁定 (mid=14, mid=15, mid=18, mid=23)**:
 > - **meta-Q1 = a**: help_installer が必要、DR-112 §1 撤回、設計プランから立て直し。実装ロールバック計画へ
 > - **meta-Q2**: order 関連 / display_name / value_name / help_on_failure 齟齬なし承認。**help_epilog = a 採用** (mid=15 の "epilog のことか、理解。ok" で確定)
