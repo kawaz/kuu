@@ -9,12 +9,4 @@
 
 (現在、裁定待ちの質問はありません)
 
-## 👺 API-Q2: 公開面の残り命名 3 点 (audit 保留分)
-
-**背景**: API 監査 (2026-07-20) の改修 17 commits で Critical/Major は消化済み。命名裁定が欲しい小粒だけ保留していた分。
-
-- **(a) `RVal` の改名**: result 射影の値型 (`Scalar/Array/Object` を持つ)。R が何か名前から読めない。候補: `ResultValue` (素直) / `ResultShape` / 現状維持。**統括推し = `ResultValue`**
-- **(b) `Cand` → `Candidate`、`CandMeta` → `CandidateMeta`、`TermHint::Cont` → `Continue`**: 補完 API の省略名を展開。**統括推し = 展開する** (補完は公開契約の顔、省略の節約価値なし)
-- **(c) `Node::DdSat` / `CmdSat` / `DdMatchSat` の "Sat" 語**: satisfied の略。raw 契約層 (拡張実装者向け) だが読めない。候補: `DdSatisfied` 等へ展開 / 現状維持 (raw 層は許容)。**統括推し = 展開** (拡張実装者も第三者)
-
-**回答形式**: `API-Q2=(a)ResultValue,(b)yes,(c)yes` 等、部分採用可。
+(現在、裁定待ちの質問はありません)
