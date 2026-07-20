@@ -7,6 +7,39 @@
 > チャットでは「👺 XX-Q1 の裁定お願いします」形式でラベル参照する。回答はラベル + 選択肢記号 (例「Q13=a」) だけで通じる。
 > 参照パスは本リポ (spec) 相対。kuu.mbt 側は「kuu.mbt の <path>」と表記する。
 
-(現在、裁定待ちの質問はありません)
+## 👺 API-Q2b: 補完 API の省略名展開 (説明付き再提示)
 
-(現在、裁定待ちの質問はありません)
+**裁定済み分**: API-Q2(a) = `RVal` → `ResultValue` (実施中)、(c) = `Sat` → `Satisfied` 展開 (実施中)。本 Q は (b) のみ。
+
+### 背景説明 (何の話か)
+
+kuu.mbt の**補完 (completion) API** の公開型の名前の話。シェル補完 (tab 補完) の候補を返す仕組みで、kuu.mbt の `complete()` (front door) が候補の配列を返す。その候補 1 個を表す型が現在 **`Cand`** という省略名になっている:
+
+```
+pub fn complete(AtomicAST, Array[String], ...) -> Array[@engine.Cand]
+
+pub(all) struct Cand {          // ← 候補 1 個。Candidate の略
+  spelling : String              //    補完候補の綴り (例 "--verbose")
+  is_value : Bool
+  term : TermHint                // ← 候補の後に word 境界が来るかのヒント
+  meta : CandMeta                // ← is_alias / hidden / deprecated の表示メタ
+  ...
+}
+
+pub(all) enum TermHint {
+  WordEnd                        // 候補確定で単語が終わる (スペースを足してよい)
+  Cont                           // ← Continue の略。候補の続きがある (例 "--log-" の先)
+}
+```
+
+### 論点
+
+この 3 つの省略名を展開するか:
+- `Cand` → `Candidate`
+- `CandMeta` → `CandidateMeta`
+- `TermHint::Cont` → `Continue`
+
+- **展開する (統括推し)**: 補完 API は拡張実装者・多言語移植者が読む公開契約の顔。`Cand` は文脈があれば読めるが、mbti 単体では何の略か判別根拠がない。省略で節約できる文字数に価値がない
+- **現状維持**: 使用頻度が高い型なので短い方がコードが読みやすい、という立場もある
+
+**回答形式**: `API-Q2b=展開` / `API-Q2b=維持` / 個別指定 (例「Cand は維持、Cont だけ展開」)。
