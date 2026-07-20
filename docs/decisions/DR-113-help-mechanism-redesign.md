@@ -32,9 +32,8 @@ help_query(definition, {
 - `path` は選択スコープ。省略時はルート
 - `depth` は既定 `"scope"`、全層再帰は `"all"`。数値 depth は持たない
 - `category_mode` の既定は `"default"`
-  - `"default"`: renderer が採る通常の category 表示用 model
-  - `"all"`: category で絞らず全 entry と全グループ宣言 entry を返す
-  - `{"named": name}`: `help_group_name` が name の entry と当該グループ宣言 entry に絞る
+  - `"default"` / `"all"`: model の entry 集合は同一 (全 entry + 全グループ宣言 entry)。値は renderer への表示 policy 指示であり、model 素材を変えない (hidden が meta として model に載り renderer が表示選択するのと同じ構図。HIP-META-Q13=a 2026-07-20)
+  - `{"named": name}`: `help_group_name` が name の entry と当該グループ宣言 entry に絞る (これだけが model 素材を絞る)
 - 読む層は全 installer の宣言層寄与を適用し終えた宣言層。global / alias / inheritable の宣言的コピーを含み、lowered 産物は読まない
 
 不在 path / named category は help query 固有の failure envelope で返す。
