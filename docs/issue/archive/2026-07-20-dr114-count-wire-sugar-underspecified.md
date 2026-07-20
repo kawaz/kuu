@@ -1,6 +1,6 @@
 ---
 title: DR-114 に count preset の wire 糖衣規則 (long:true → [":incr"]) が未規定
-status: open
+status: resolved
 category: design
 created: 2026-07-20T15:29:33+09:00
 last_read:
@@ -9,10 +9,10 @@ wip_entered:
 blocked_entered:
 pending_entered:
 discarded_entered:
-resolved_entered:
+resolved_entered: 2026-07-20T17:24:49+09:00
 discard_reason:
 pending_reason:
-close_reason:
+close_reason: ["dr/DR-114","implemented"]
 blocked_by:
 origin: docs-fn-p2 worker
 ---
