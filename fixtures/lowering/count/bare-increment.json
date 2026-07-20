@@ -1,0 +1,18 @@
+{
+  "why": "count preset の `long:true` は canonical 展開で `cell_fns` の `incr` fn 呼び出しへ lower する (DR-114 §2)。lowered fn invocation は `{fn:\"<name>\", args:[<arg>...]}` carrier で表し、引数なしの `incr` は `{fn:\"incr\", args:[]}` となる。runtime では発火時の `FnCtx.old` に 1 を加えた Value を返し、その Value が通常の set operand として cell へ適用される (DR-114 §7、fixtures/count-parse/basic.json)。fixtures/lowering/flag/bare-true.json が固定する flag preset の固定値供給と同型に、count preset も variant DSL の canonical `cell_fns` 呼び出しへ合流する。",
+  "query": "lower",
+  "definition": {
+    "options": [
+      {"name": "verbose", "type": "count", "long": true}
+    ]
+  },
+  "installers": ["long"],
+  "expect": {
+    "greedy": [
+      {"exact": "--verbose", "link": "verbose", "effect": {"fn": "incr", "args": []}}
+    ],
+    "entities": {
+      "verbose": {"type": "number", "default": 0}
+    }
+  }
+}
