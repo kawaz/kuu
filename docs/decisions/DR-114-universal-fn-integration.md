@@ -162,6 +162,15 @@ lowering 断面の 3 形を区別する。
 
 fn descriptor が `Value` を返した場合、その値を通常の set operand として cell に適用する。`Sentinel` を返した場合は §2 の対応 operation を適用する。上例の `incr` は発火時に `ctx.old + 1` を返し、その `Value` が count cell へ set される。
 
+#### 6.2 count preset の wire 糖衣規則
+
+count preset の long 糖衣は差し替えのみで規範化する (HIP-META-Q14=a 2026-07-20)。
+
+- `{type: "count", long: true}` は、count preset が type-independent の `[":set"]` 糖衣を `[":incr"]` に差し替える。flag preset の `long: true → [":set:true"]` 差し替え (DR-076 §2 規則 1) と同じ機構・対称形
+- 展開は 0-token 発火のみ。主入口も eq_split も立たない
+- 等価: `{type: "count", long: true}` ≡ `{type: "number", default: 0, long: [":incr"]}`
+- 非空明示リストへの補完規則は設けない。count に値形が無く補完対象が存在しないため、明示リストはそのまま各要素を §6 の DSL として解釈する
+
 ### 7. fn ABI は統一 `FnCtx` + mode 判別とする
 
 fn の概念シグネチャを 1 種類に統一する。
