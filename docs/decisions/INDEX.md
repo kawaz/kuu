@@ -117,7 +117,7 @@
 - [DR-058](DR-058-hidden-deprecated.md): hidden / deprecated の挙動 — hidden は help/補完から除外 (受理不変)、deprecated は受理 + ParserContext.warnings (v1 bool のみ、表示はレンダラ)
 - [DR-060](DR-060-completion-query.md): 補完クエリ — 生存 partial 経路 (dead end 除外) の期待集合の和集合、after 整合フィルタ、素材+メタ返却でポリシーは生成器、completer は名前参照で shell 機能へ委譲、責務 4 層
 - [DR-112](DR-112-help-query-and-model.md): Superseded by DR-113 — help installer 不在・独立 help query を中心とした旧設計
-- [DR-113](DR-113-help-mechanism-redesign.md): help 機構の再設計 — help_installer の回収/植え付け/能力提供、5 直交 type、value_structure tree + type_ref + types + origin、DR-114 の cell_fns を使う default_fn、group/order/on_failure/conformance の確定
+- [DR-113](DR-113-help-mechanism-redesign.md): help 機構の再設計 — help_installer の回収/植え付け/能力提供、5 直交 type、value_structure tree + type_ref + types + origin、DR-114 の cell_fns を使う default_fn、group/order/on_failure/conformance の確定 (§1 回収語彙・§8.1 グループ宣言 entry hidden 許可は DR-115 が update)
 - [DR-115](DR-115-canonical-help-renderer.md): canonical help レンダラ — `help_render` 席の 3 段 override (wire 一括 / entry 個別 / API style)、セクション骨格はプレースホルダ文字列テンプレ (置換 + `{{` エスケープのみ・制御構造なし・識別子は閉集合 8 種、移行のバイト互換需要が決め手)、文言内 binding 補間は `{name}` のみ (テンプレ位置 strict / 文言位置寛容の非対称)、グループ宣言 entry の hidden 許可 (DR-113 §8.1 update、category_mode default = 入口注記 / all = 表示、show_hidden と直交)、canonical 既定 = value_structure/types とも auto・origin は separate_section (gh INHERITED 型)、conformance は受理・搬送・model `render` 射影まででテンプレ適用後バイト列は非規範 (render profile 不設置、バイト再現の完全制御は言語側 closure)、completion 表示 policy は completion-ordering issue へ統合
 
 ## conformance / 直列形

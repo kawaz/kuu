@@ -10,11 +10,11 @@ DR-042 の installer 3 役を help 機構へそのまま当てはめる。
 
 | 役 | help_installer の実体 |
 |---|---|
-| 回収 | 表示メタ語彙 `help` / `help_long` / `help_epilog` / `display_name` / `value_name` / `help_group_name` / `help_group_title` / `help_group_description` / `help_group_order` / `help_order` / `help_after` を宣言層から取り込む |
+| 回収 | 表示メタ語彙 `help` / `help_long` / `help_epilog` / `display_name` / `value_name` / `help_group_name` / `help_group_title` / `help_group_description` / `help_group_order` / `help_order` / `help_after` / `help_render` / `help_value_structure_style` (DR-115) を宣言層から取り込む |
 | 植え付け | `type: "help"` / `"help_all_category"` / `"help_category"` / `"help_show_hidden"` / `"help_tree"` の 5 preset を canonical 展開する。各 preset は入口、内部セル link、`cell_fns` による固定値供給、`on_failure` 展開、`help_on_failure` 糖衣、必要な values 制約を持つ |
 | 能力提供 | 宣言層寄与適用後の断面から help model を組む **help_query capability** を提供する |
 
-help_installer は表示メタ語彙、5 個の type 値、`help_on_failure` を所有する。`on_failure` 自体は専用 on_failure installer が所有し、help_installer は糖衣から展開する。
+help_installer は表示メタ語彙、5 個の type 値、`help_on_failure` を所有する。canonical レンダラ指示語彙 `help_render` (一括席) と `help_value_structure_style` (entry 個別席) も help_installer が所有する (DR-115 §1)。`on_failure` 自体は専用 on_failure installer が所有し、help_installer は糖衣から展開する。
 
 表示メタ語彙の unknown-vocab 正当化、グループ・順序語彙の definition-time 検査、5 preset の lowering、help model への射影を一つの装置が担う。表示メタは宣言層に inert 属性として残り、lowered 産物や評価器へ運ばない。
 
@@ -415,11 +415,12 @@ help 系要素が存在しても、name / export_key 経由で発火を観測で
 #### 8.1 グループ宣言
 
 - 通常 entry の `help_group_name` は所属グループ名参照
-- `name` / `id` / `type` / 入口属性を持たず、グループ属性だけを持つ options entry はグループ宣言 entry
+- `name` / `id` / `type` / 入口属性を持たず、グループ属性と `hidden` だけを持つ options entry はグループ宣言 entry (DR-115 §4 が `hidden` 許可を追加)
 - `help_group_title` / `help_group_description` は同じ entry の `help_group_name` に属する
-- model では `{"group": {"name", "title", "description"}}` entry としてフラット列に残す
+- model では group 属性を `group: {name, title, description}` sibling として、`hidden: bool` は entry 直下 sibling として `{"group": {"name", "title", "description"}, "hidden": true}` の形でフラット列に残す (DR-115 §4)
 - 同じグループ名の重複宣言は、設定が同一か否かを問わず definition-error `invalid-range`
 - commands のグループ宣言席は追加しない
+- グループ宣言 entry の `hidden` の canonical 表示意味論 (default = 入口注記のみ / all = 所属 entry 込みで表示 / named = 表示、show_hidden との相互作用) は DR-115 §4 が正本
 
 #### 8.2 順序
 
