@@ -50,3 +50,16 @@
 
 **回答形式**: `API-Q3=推し通り` / バッチ別・項目別の個別指定 (例「バッチ1 は Ext 残置、他は推し通り」)。
 
+## 👺 REND-Q1〜Q7: canonical help レンダラ設計 (バッチ裁定)
+
+**正本**: `docs/findings/2026-07-21-help-renderer-design-plan.md` (設計プラン全体 + 各 Q の詳細節)。以下は索引。
+
+- **👺 REND-Q1: レンダラ指示語彙の座席** — (a) wire 3 段 (一括席 `help_render` + entry 個別 + API override) / (b) 同構造で座席名 `help_display` / (c) wire に載せず API のみ。**推し = a** (kawaz 示唆「config 一括 + 個別併用」の直接具体化、定義ファイルで表示意図が完結) — findings §3
+- **👺 REND-Q2: セクション骨格の指定形** — (a) セクション識別子の配列 (model トップレベルキー由来、picocli 型の宣言的半分) / (b) プレースホルダ文字列テンプレ (clap 型) / (c) v1 は指定不可。**推し = a** (テンプレ言語の沼を回避しつつ並べ替え実需を満たす、識別子発明ゼロ) — §2
+- **👺 REND-Q3: 文言内 binding 補間** — (a) `{name}` 変数参照のみ (エスケープ `{{`、制御構造なし) / (b) 補間なし。**推し = a** (version binding の承認 signal を最小機構で満たし境界を明言) — §5
+- **👺 REND-Q4: category_mode default/all の canonical 差分** — (a) v1 は差分なし (vacuous) / (b) グループ宣言 entry へ `hidden` を許可、default = hidden group 省略・all = 表示 (cargo -Z 型受け皿、DR-113 §8.1 小改訂)。**推し = b** (v1 完備主義、help_all_category を意味ある軸に) — §6.4
+- **👺 REND-Q5: 部品表記の canonical 既定値** — (a) auto (単純 or は 1 行括弧、ネストは詳細形式。types は参照 ≥2 で集約) / (b) 常に詳細 / (c) 常に 1 行。**推し = a** — §6.1-6.2
+- **👺 REND-Q6: origin の canonical 既定表示** — (a) merge (cargo 型) / (b) separate_section (gh INHERITED 型) / (c) omit。**推し = b** (継承の明示と値の表示を両立) — §6.3
+- **👺 REND-Q7: completion 表示 policy の扱い** — (a) 本サイクル除外、completion-ordering issue へ統合 / (b) 含める。**推し = a** — §7
+
+**回答形式**: 「REND 全部推し通り」 / 個別 (例「Q1=a, Q4=a, 他推し通り」)。裁定後 DR 化 → canonical レンダラ実装計画へ。
