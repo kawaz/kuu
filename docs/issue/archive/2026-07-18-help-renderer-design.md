@@ -1,6 +1,6 @@
 ---
 title: 「canonical help レンダラの設計 (層 2) — テンプレ/クロージャ/パーツのレイヤ分類と help_xx config 統合」
-status: open
+status: resolved
 category: design
 created: 2026-07-18T13:45:29+09:00
 last_read:
@@ -9,10 +9,10 @@ wip_entered:
 blocked_entered:
 pending_entered:
 discarded_entered:
-resolved_entered:
+resolved_entered: 2026-07-21T05:50:29+09:00
 discard_reason:
 pending_reason:
-close_reason:
+close_reason: ["dr/DR-115","finding/2026-07-21-help-renderer-design-plan","done:REND-Q1〜Q7裁定完了(1a/2b/3a/4b/5a/6b/7a、kawaz 2026-07-21)、completion表示policyはREND-Q7=aでcompletion-ordering issueへ統合、実装は次フェーズ"]
 blocked_by:
 origin: 自リポ TODO
 ---
