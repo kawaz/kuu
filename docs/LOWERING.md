@@ -127,26 +127,24 @@ exact であり、`value:` だけの literal は入力を検査しない (DESIGN
        直接 fire=true のエントリを植える。
 ```
 
-**count** = number + default:0 + long 綴り合成 (DR-077):
+**count** = number + default:0 + long / short からの `cell_fns.incr` 呼び出し (DR-114 §2 / §6.1 / §7):
 
 ```
 入力:  {name: "verbose", type: "count", long: true, short: "v"}
 展開:  値セルは {name: "verbose", type: "number", default: 0} (実体だけノード)。
-       long は糖衣差し替え + 補完 (DR-077 §3、flag = DR-076 §2 と同じ機構): `long:true` → `[":update:increment"]`。
-       明示リストは非空なら `:update:increment` を補完 (冪等)。absent / false / [] = 入口なし (DR-071 §1 三態同義)。
-出力:  `:update:increment` は 0-token の update 効果 (DR-077 §1) — 発火時に link 先セルの old へ
-       transform `increment` (filters registry の T=>T、DR-077 §2) を適用して書き戻す:
-         {exact: "--verbose", link: "verbose", effect: {op: "update", transform: "increment"}}
-       short は variant を持たず (DR-071 §3)、非消費で同じ update(increment) 効果を持つ entry を
-       short installer が植える (flag の固定 true 供給と同じく型が慣習挙動を担う):
-         {exact: "-v", link: "verbose", effect: {op: "update", transform: "increment"}}
+       long:true は count preset の canonical lowering として、発火時に引数なしの `incr` を呼ぶ entry を植える。
+       short:"v" も発火ごとに同じ `incr` cell fn を呼ぶ。
+出力:  long の lowered full node (DR-114 §6.1):
+         {exact: "--verbose", link: "verbose", effect: {fn: "incr", args: []}}
+       short cluster `-vvv` は `incr` を 3 回呼ぶ
+       (`fixtures/count-parse/basic.json`, case `short-cluster-triple-fire-three`)。
 ```
 
-現在値依存の変換は効果 (発火側、DR-077) の仕事になり、multiple:{accumulator:"increment"} は count から
-退役 (multiple / accumulator は複数「値」の畳み = append / merge 等の本来の関心に純化、DR-036)。env / config
-から来る文字列は number として普通に parse → set される (`VERBOSITY=5` は 5 を set、increment ではない — parser は
-値源非依存の字句層、DR-077 §3)。count の上限は final_filters (in_range 等) で書く (DR-040/DR-102、update の結果にも
-final_filters が通る = DR-077 §1)。
+現在値依存は発火時の cell fn が `FnCtx.old` を読む責務であり、`incr` は old + 1 の `Value` を返す。その `Value` は
+通常の set operand として cell に適用され、`value_filters` / `final_filters` を通る (DR-114 §6.1 / §7)。count の更新に
+accumulator は使わず、multiple / accumulator は複数「値」の畳み (append / merge 等) を担う (DR-036)。env / config
+から来る文字列は number として通常どおり parse → set される (`VERBOSITY=5` は 5 を set する)。count の上限は
+`final_filters` (`in_range` 等) で書く (DR-040 / DR-102)。
 
 **dd** = オプション終了マーカー (canonical 配置は options[]、DR-064):
 

@@ -72,7 +72,7 @@
       "fallibility": "total",
       "invocation": { "encoding": "colon_args", "parameters": [] },
       "reasons": [],
-      "description": "count 要素の update transform (DR-077 §2/§3、0-arg、old+1)。fallibility:total (常に成功) — 数値入力のみ受ける前提 (count 要素の value_filters/update transform として使われる、型不一致は filter-definition bug でありランタイム reason 体系の対象外)。"
+      "description": "number→number の total scalar transform filter。引数なしで入力を 1 増加させ、通常の filters seat から明示参照できる。fallibility:total かつ reasons は空で、runtime reason を持たない。"
     },
     "unique": {
       "name": "unique",
