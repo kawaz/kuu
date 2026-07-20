@@ -200,7 +200,7 @@
         },
         "hidden": {
           "type": "boolean",
-          "description": "表示・補完の既定 policy から除外する構造化メタ。受理は変えず、help model には保持する (DR-058 / DR-113 §7.3)。"
+          "description": "表示・補完の既定 policy から除外する構造化メタ。受理は変えず、help model には保持する (DR-058 / DR-113 §7.3)。グループ宣言 entry (DR-113 §8.1) にも許可され、canonical レンダラでは category_mode 3 分岐 (default = 入口注記のみ / all = 所属 entry 込みで表示 / named = 表示) と接続する (DR-115 §4)。"
         },
         "deprecated": {
           "type": "boolean",
@@ -257,6 +257,33 @@
         "help_after": {
           "type": "string",
           "description": "相対配置 (DR-113 §8.2): 同一スコープ・同一 entries 列内の他要素 name を参照し、その直後に表示配置する。循環は definition-error kind=circular-ref、不在 name 参照は lint warn + fallback (段 1 の結果位置)。help_order との同時指定は definition-error kind=invalid-range。"
+        },
+        "help_render": {
+          "type": "object",
+          "description": "canonical レンダラ指示語彙 (help_installer 所有、DR-115 §1.1)。ルート definition と command 要素の一括席 — 定義者の既定表示様式をキー単位で宣言する。階層継承はキー単位: 子 command は親の実効値を継承し、書いたキーだけ上書きする (DR-014 の config 継承と同じ機構)。実効値 (継承適用後) は help model のトップレベル `render` に射影される (DR-115 §1.4)。command / ルート definition 以外への宣言は definition-error kind=invalid-range。`config` (パース方言) とは別席 — `help_render` は inert 表示メタでパース挙動に影響しない (DR-113 §1 の「宣言層に inert 属性として残り lowered 産物や評価器へ運ばない」)。enum 値域 / template 構文の検査は help_installer が definition-time に行う (§2.4/§5)、本 Schema の構文層検査には載せない (DR-105 §2 の flatten 手前ゲートと同じ位相分割: wire は席・型・open 集合のみ、値語彙 / 構文正規性は installer の関心)。",
+          "properties": {
+            "template": {
+              "type": "string",
+              "description": "セクション骨格のプレースホルダ文字列テンプレ (DR-115 §2)。`{識別子}` の 1 形式のみ、`{{` は literal `{` のエスケープ。制御構造・条件分岐・書式指定は持たない。セクション識別子は閉集合 8 種 (`usage` / `description` / `description_long` / `epilog` / `commands` / `options` / `positionals` / `types`)、それ以外は binding 参照 (§3、render 時解決)。help_installer は definition-time に構文検査する — 未閉 `{` / 空 `{}` / 識別子規則違反は definition-error kind=invalid-range (DR-115 §2.4、strict)。適用後バイト列と template 不在時の既定骨格は非規範 (DR-115 §6.2)。"
+            },
+            "value_structure_style": {
+              "type": "string",
+              "description": "value_structure 表記の様式指定 (DR-115 §5.1)。canonical 語彙 `\"auto\"` (既定、単純な or は 1 行明示括弧・seq/repeat のネスト混在は詳細説明形式) / `\"inline\"` (常に 1 行) / `\"detail\"` (常に詳細説明)。実装間で表示は揃わない (§6 非規範) が、enum 値の受理・搬送は規範 — 値域外は installer の definition-time 検査で definition-error kind=invalid-range (DR-115 §6.1、本 Schema では enum 制約を持たない)。"
+            },
+            "types_style": {
+              "type": "string",
+              "description": "共有 type の集約様式 (DR-115 §5.2)。canonical 語彙 `\"auto\"` (既定、`used_as` 参照回数 ≥ 2 は `{types}` へ集約、1 は inline 展開) / `\"aggregate\"` (常に types へ) / `\"inline\"` (常に inline、types は空)。値域外は installer 検査で definition-error kind=invalid-range (§6.1)。"
+            },
+            "origin_style": {
+              "type": "string",
+              "description": "継承 option の表記様式 (DR-115 §5.3)。canonical 語彙 `\"separate_section\"` (既定、gh INHERITED FLAGS 型) / `\"merge\"` (混在、cargo 型) / `\"reference\"` (案内文のみ、kubectl 型) / `\"omit\"` (出さない)。値域外は installer 検査で definition-error kind=invalid-range (§6.1)。"
+            }
+          },
+          "additionalProperties": false
+        },
+        "help_value_structure_style": {
+          "type": "string",
+          "description": "entry 個別席 (DR-115 §1.2)。当該 entry の value_structure 表記だけを一括席 `help_render.value_structure_style` の実効値から上書きする (canonical 語彙は §5.1 と同一: auto/inline/detail)。値空間を持たない entry への付与は vacuous だが合法 (required の vacuous 前例、DR-047/DR-093 と同じ扱いで lint の領分)。値域外は installer 検査で definition-error kind=invalid-range (§6.1、本 Schema では enum 制約を持たない)。help model の entry 側 `value_structure_style` に射影される (DR-115 §1.4)。"
         },
         "match": {
           "type": "string",

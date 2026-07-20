@@ -86,6 +86,8 @@ wire 正規形のノードが持ちうる全属性。型・既定値・適用対
 | `help_long` | string | なし | 任意ノード (表示メタ) |
 | `help_on_failure` | boolean | preset 依存 | 5 help preset 専用 (`help_show_hidden` は false、他 4 種は true) |
 | `help_order` | number | 宣言 index | options/commands の通常 entry |
+| `help_render` | object ({template?, value_structure_style?, types_style?, origin_style?}) | なし | ルート definition / command 要素 (canonical レンダラ指示、DR-115 §1.1) |
+| `help_value_structure_style` | string (enum: `"auto"` \| `"inline"` \| `"detail"`) | 一括席から継承 | 任意 entry (entry 個別席、DR-115 §1.2) |
 | `hidden` | boolean | false | 任意要素 (表示 policy 用メタ、受理は不変) |
 | `id` | string (`#` 禁止) | name を兼ねる | 全ノード |
 | `inherit` | boolean \| {from:string} | false | 値要素 (inherit ラダー席) |
@@ -453,6 +455,30 @@ definition-error (kind: `invalid-range`)。positional への指定は lint warn 
 ソート結果の位置に留まる)。target はグループ宣言エントリを指せない。
 最小例: `{"alias": "port", "name": "old-port", "deprecated": true, "help_after": "port"}`
 正本: DESIGN §14.6, DR-113 §8.2
+
+**`help_render`**
+型: object。既定: なし (継承がある場合は親の実効値)。適用対象: ルート definition / command 要素。
+意味論: canonical レンダラへの表示様式指示 (一括席、3 段 override の 1 段目)。キーは
+`template` (プレースホルダ文字列テンプレ、置換 + `{{` エスケープのみ・制御構造なし・セクション
+識別子は閉集合 8 種) / `value_structure_style` (`"auto"` \| `"inline"` \| `"detail"`) /
+`types_style` (`"auto"` \| `"aggregate"` \| `"inline"`) / `origin_style` (`"merge"` \|
+`"separate_section"` \| `"reference"` \| `"omit"`)。階層継承はキー単位で、子 command は親の実効値を
+継承し書いたキーだけ上書きする (DR-014 と同機構)。実効値は help model トップレベル `render` へ射影。
+command / ルート definition 以外への宣言、enum 値域外、template 構文不正はいずれも
+definition-error (kind: `invalid-range`)。文言位置 (help / help_long / help_epilog) の
+`{name}` 補間は本語彙とは別 (DR-115 §3、文言位置は寛容)。
+最小例: `{"help_render": {"origin_style": "merge", "value_structure_style": "detail"}}`
+正本: DR-115 §1, §2, §5, DR-113 §1
+
+**`help_value_structure_style`**
+型: string (`"auto"` \| `"inline"` \| `"detail"`)。既定: 一括席 `help_render.value_structure_style` の
+実効値。適用対象: 任意 entry (options / positionals、entry 個別席)。
+意味論: 当該 entry の value_structure 表記だけを一括席の実効値から上書きする。値空間を持たない
+entry への付与は vacuous だが合法 (required の vacuous 前例、DR-047 / DR-093 と同扱いで lint の領分)。
+値域外は definition-error (kind: `invalid-range`)。help model の entry 側 `value_structure_style`
+に射影される。
+最小例: `{"name": "color", "type": "string", "help_value_structure_style": "detail"}`
+正本: DR-115 §1.2, §1.4, §5.1
 
 **`hidden`**
 型: boolean。適用対象: 任意要素。

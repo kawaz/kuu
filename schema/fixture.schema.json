@@ -307,9 +307,25 @@
           "items": { "$ref": "#/$defs/helpPositionalEntry" },
           "description": "value_structure を保持する positional entries。定義順で比較する。"
         },
-        "help_entry": { "type": "string" }
+        "help_entry": { "type": "string" },
+        "render": {
+          "$ref": "#/$defs/helpRender",
+          "description": "canonical レンダラ指示語彙の実効値 (階層継承適用後、DR-115 §1.4)。wire の一括席 `help_render` から model トップレベルへ射影される。継承下では子 command の実効値 = 親 render を親から継承しキー単位で子上書きした結果。"
+        }
       },
       "required": ["outcome"],
+      "additionalProperties": false
+    },
+
+    "helpRender": {
+      "type": "object",
+      "description": "wire `help_render` (DR-115 §1.1) の model 側射影。キーは wire と同一で、値も enum を含めて一致する。conformance の検証対象は受理・搬送・射影までであり、テンプレ適用後のバイト列や既定骨格は非規範 (DR-115 §6)。",
+      "properties": {
+        "template": { "type": "string" },
+        "value_structure_style": { "type": "string", "enum": ["auto", "inline", "detail"] },
+        "types_style": { "type": "string", "enum": ["auto", "aggregate", "inline"] },
+        "origin_style": { "type": "string", "enum": ["merge", "separate_section", "reference", "omit"] }
+      },
       "additionalProperties": false
     },
 
@@ -432,6 +448,11 @@
         "spellings": { "type": "array", "items": { "type": "string" } },
         "alias_spellings": { "type": "array", "items": { "type": "string" } },
         "value_structure": { "$ref": "#/$defs/helpValueStructure" },
+        "value_structure_style": {
+          "type": "string",
+          "enum": ["auto", "inline", "detail"],
+          "description": "wire の entry 個別席 `help_value_structure_style` の射影 (DR-115 §1.2/§1.4)。当該 entry の value_structure 表記だけを一括席 `render.value_structure_style` から上書きする。"
+        },
         "display_name": { "type": "string" },
         "help": { "type": "string" },
         "help_long": { "type": "string" },
@@ -450,6 +471,7 @@
 
     "helpGroupEntry": {
       "type": "object",
+      "description": "group 宣言 entry の射影 (DR-113 §8.1、DR-115 §4)。`hidden` は sibling として並ぶ (group 属性の内側でなく entry 直下)。",
       "properties": {
         "group": {
           "type": "object",
@@ -460,6 +482,10 @@
           },
           "required": ["name"],
           "additionalProperties": false
+        },
+        "hidden": {
+          "type": "boolean",
+          "description": "グループ宣言 entry の hidden (DR-115 §4)。canonical レンダラでは category_mode default = 入口注記のみ / all = 所属 entry 込み表示 / named = 表示 (show_hidden とは独立)。model 素材フィルタはしない (除外はレンダラ policy、DR-113 §4.4 の hidden 構図)。"
         }
       },
       "required": ["group"],
@@ -480,6 +506,11 @@
       "type": "object",
       "properties": {
         "value_structure": { "$ref": "#/$defs/helpValueStructure" },
+        "value_structure_style": {
+          "type": "string",
+          "enum": ["auto", "inline", "detail"],
+          "description": "wire の entry 個別席 `help_value_structure_style` の射影 (DR-115 §1.2/§1.4)。positional にも書け、当該 entry の value_structure 表記だけを一括席から上書きする。"
+        },
         "help": { "type": "string" },
         "help_long": { "type": "string" },
         "hidden": { "type": "boolean" },
