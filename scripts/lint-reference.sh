@@ -3,7 +3,7 @@
 # 網羅しているかを機械検査する。正本はあくまで DESIGN.md / DR / schema であり、
 # 本 lint は「REFERENCE から漏れた語彙」と「REFERENCE にしかない幽霊語彙」の
 # 双方向を検出する (schema に存在しない/DESIGN に規定のない糖衣属性・拡張語彙
-# は対象外 — 検査対象は下記 8 カテゴリの schema 由来語彙のみ)。
+# は対象外 — 検査対象は下記 10 カテゴリの schema 由来語彙のみ)。
 set -euo pipefail
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -101,6 +101,14 @@ jq -r '.filters[].reasons[]' "$descriptors" \
 # 8. type factory が emit しうる reason
 jq -r '.types[].reasons[]' "$descriptors" \
   | check_bidirectional "factory reasons (§7)" "factory-reasons"
+
+# 9. builtin cell fn 名 (builtin-descriptors.json .cell_fns)
+jq -r '.cell_fns | keys[]' "$descriptors" \
+  | check_bidirectional "builtin cell_fns (§6b)" "cell-fns"
+
+# 10. cell fn が emit しうる reason
+jq -r '.cell_fns[].reasons[]' "$descriptors" \
+  | check_bidirectional "cell fn reasons (§7)" "cell-fn-reasons"
 
 echo ""
 if [ "$fail" -ne 0 ]; then
