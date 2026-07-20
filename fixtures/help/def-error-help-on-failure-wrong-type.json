@@ -1,0 +1,14 @@
+{
+  "why": "DR-113 §7.2 により help_on_failure は 5 help preset が on_failure へ展開する糖衣であり、非 help type への指定は definition-error kind=invalid-range となる。",
+  "query": "definition_error",
+  "definition": {"options": [
+    {"name": "verbose", "type": "flag", "long": true, "help_on_failure": true}
+  ]},
+  "cases": [{
+    "id": "non-help-type-rejects-help-on-failure",
+    "why": "DR-113 §7.2 により flag は 5 help preset のいずれでもないため、verbose への help_on_failure 指定を on_failure へ展開せず invalid-range として報告する。",
+    "expect": {"outcome": "definition-error", "errors": [
+      {"element": "verbose", "kind": "invalid-range"}
+    ]}
+  }]
+}

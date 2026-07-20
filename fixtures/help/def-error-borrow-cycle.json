@@ -1,0 +1,16 @@
+{
+  "why": "DR-113 §5 と DR-114 §10-§11 により default_fn borrow の observes option edge は definition-time の依存グラフへ載り、循環は definition-error kind=circular-ref となる。",
+  "query": "definition_error",
+  "definition": {"options": [
+    {"name": "a", "type": "flag", "long": true, "default_fn": "borrow:b"},
+    {"name": "b", "type": "flag", "long": true, "default_fn": "borrow:a"}
+  ]},
+  "cases": [{
+    "id": "mutual-borrow-is-circular-ref",
+    "why": "DR-113 §5/DR-114 §10-§11 により borrow:b は option:b、borrow:a は option:a の concrete observes edge となり、相互依存する a と b の全参加要素を circular-ref として報告する。",
+    "expect": {"outcome": "definition-error", "errors": [
+      {"element": "a", "kind": "circular-ref"},
+      {"element": "b", "kind": "circular-ref"}
+    ]}
+  }]
+}

@@ -1,5 +1,5 @@
 {
-  "why": "DR-113 §1 の named category 選択と query-error を pin する。named は指定グループ宣言 entry と所属 entry だけに model を絞り、不在 named category は help query 固有の absent-category となる。",
+  "why": "DR-113 §1 の category_mode 3 分岐と query-error を pin する。default/all は全 entry と全グループ宣言 entry の同一 model 素材を保ち、named だけが指定グループへ絞る。不在 named category は help query 固有の absent-category となる。",
   "query": "help",
   "definition": {"options": [
     {"help_group_name": "net", "help_group_title": "Network options"},
@@ -15,6 +15,28 @@
       "expect": {"outcome": "help", "command_path": [], "usage": {"has_options": true}, "options": [
         {"group": {"name": "net", "title": "Network options"}},
         {"spellings": ["--port"], "value_structure": {"single": {"value_name": "PORT", "type": "number"}}, "help_group_name": "net", "help": "listen port", "hidden": false, "deprecated": false, "origin": "local"}
+      ]}
+    },
+    {
+      "id": "default-mode-keeps-all-model-material",
+      "why": "DR-113 §1 と HIP-META-Q13=a により category_mode default は全 entry と全グループ宣言 entry を model 素材として保持する。all との差は renderer policy 指示だけであり、hidden な secret も meta 付きで同じ entry 集合に載る。",
+      "category_mode": "default",
+      "expect": {"outcome": "help", "command_path": [], "usage": {"has_options": true}, "options": [
+        {"group": {"name": "net", "title": "Network options"}},
+        {"spellings": ["--port"], "value_structure": {"single": {"value_name": "PORT", "type": "number"}}, "help_group_name": "net", "help": "listen port", "hidden": false, "deprecated": false, "origin": "local"},
+        {"spellings": ["--verbose"], "help": "verbose output", "hidden": false, "deprecated": false, "origin": "local"},
+        {"spellings": ["--secret"], "help": "internal option", "hidden": true, "deprecated": false, "origin": "local"}
+      ]}
+    },
+    {
+      "id": "all-mode-keeps-same-model-material",
+      "why": "DR-113 §1 と HIP-META-Q13=a により category_mode all の model 素材は default と完全同一で、全 entry と全グループ宣言 entry を保持する。値の差は renderer policy 指示だけであり、model の entry 集合を変えない。",
+      "category_mode": "all",
+      "expect": {"outcome": "help", "command_path": [], "usage": {"has_options": true}, "options": [
+        {"group": {"name": "net", "title": "Network options"}},
+        {"spellings": ["--port"], "value_structure": {"single": {"value_name": "PORT", "type": "number"}}, "help_group_name": "net", "help": "listen port", "hidden": false, "deprecated": false, "origin": "local"},
+        {"spellings": ["--verbose"], "help": "verbose output", "hidden": false, "deprecated": false, "origin": "local"},
+        {"spellings": ["--secret"], "help": "internal option", "hidden": true, "deprecated": false, "origin": "local"}
       ]}
     },
     {

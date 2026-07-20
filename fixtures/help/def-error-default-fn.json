@@ -1,0 +1,18 @@
+{
+  "why": "DR-113 §5.4 と DR-114 §11 の default_fn definition-time 失敗分類を固定する。独立した 3 要素で unknown fn、borrow の arity 不足、Sentinel 出力 fn の default 席指定を同時に検査する。",
+  "query": "definition_error",
+  "definition": {"options": [
+    {"name": "unknown-fn", "type": "flag", "long": true, "default_fn": "no_such_fn"},
+    {"name": "missing-source", "type": "flag", "long": true, "default_fn": "borrow"},
+    {"name": "sentinel-default", "type": "flag", "long": true, "default_fn": "unset"}
+  ]},
+  "cases": [{
+    "id": "default-fn-static-failures-classified",
+    "why": "DR-113 §5.4/DR-114 §11 により registry に無い no_such_fn は unknown-vocab、必須 source を欠く borrow は invalid-argument、Sentinel を返す unset の default 席指定は invalid-range となる。3 要素は依存せず各分類を独立に報告する。",
+    "expect": {"outcome": "definition-error", "errors": [
+      {"element": "unknown-fn", "kind": "unknown-vocab"},
+      {"element": "missing-source", "kind": "invalid-argument"},
+      {"element": "sentinel-default", "kind": "invalid-range"}
+    ]}
+  }]
+}

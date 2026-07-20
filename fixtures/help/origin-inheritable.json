@@ -1,0 +1,32 @@
+{
+  "why": "DR-059 §1/§3 の固定 prefix と祖先への宣言的コピーを、DR-113 §1/§4.3/§4.4 の help_query が宣言層から読み取る。子 scope の宣言が祖先 help へ現れる時は定義元 command_path を declared_at に持つ inheritable origin を返す。",
+  "query": "help",
+  "definition": {
+    "name": "prog",
+    "commands": [
+      {
+        "type": "command",
+        "name": "socket",
+        "help": "manage sockets",
+        "options": [
+          {"name": "timeout", "type": "number", "long": true, "inheritable": true, "value_name": "SECONDS", "help": "socket timeout"}
+        ]
+      }
+    ]
+  },
+  "cases": [{
+    "id": "child-inheritable-copies-to-ancestor",
+    "why": "DR-059 §1/§3 により socket scope の inheritable timeout は固定 prefix の --socket-timeout として root へ宣言的コピーされる。DR-113 §1/§4.3/§4.4 により help_query はそのコピーを読み、origin は定義 scope の command_path [prog,socket] を declared_at に保持する。",
+    "expect": {
+      "outcome": "help",
+      "command_path": ["prog"],
+      "usage": {"has_options": true, "has_subcommands": true},
+      "commands": [
+        {"name": "socket", "help": "manage sockets", "hidden": false, "deprecated": false, "origin": "local"}
+      ],
+      "options": [
+        {"spellings": ["--socket-timeout"], "value_structure": {"single": {"value_name": "SECONDS", "type": "number"}}, "help": "socket timeout", "hidden": false, "deprecated": false, "origin": {"kind": "inheritable", "declared_at": ["prog", "socket"]}}
+      ]
+    }
+  }]
+}
