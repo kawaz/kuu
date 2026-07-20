@@ -1,22 +1,13 @@
 {
-  "why": "同一要素への help_order と help_after の同時指定は definition-error kind=invalid-range (DR-112 §6、DESIGN §14.6)。絶対配置 (order) と相対配置 (after) は同一要素で両立しない配置指定の矛盾 — 構文上は書けるが構成として不成立 (DR-082 §2 の invalid-range 分類)。座席違い (通常 entry への help_group_order) も同じ kind で reject される (DR-112 §6) が、本 fixture は同時指定側を pin する。",
+  "why": "DR-113 §8.2 により同一通常 entry への help_order と help_after の併用は definition-error kind=invalid-range となる。絶対順と相対配置の優先規則は設けない。",
   "query": "definition_error",
-  "definition": {
-    "options": [
-      {"name": "a", "type": "flag", "long": true, "help": "target"},
-      {"name": "b", "type": "flag", "long": true, "help_order": 5, "help_after": "a"}
-    ]
-  },
-  "cases": [
-    {
-      "id": "order-and-after-on-same-element-invalid-range",
-      "why": "b が help_order: 5 と help_after: \"a\" を同時に持つ。「order 昇順の絶対位置」と「a の直後」という 2 つの配置要求は一般に矛盾し、優先規則を発明せず定義時に reject する (DR-112 §6)。element は同時指定を宣言した b 自身。a 側は正当な宣言でエラーにならない — errors 全列挙 + 集合比較 (DR-054 §4 / CONFORMANCE §3) により期待 errors が {b} のみであること自体が「a はエラーでない」の pin を兼ねる。args は書かない (静的検査、DR-082 §1)。",
-      "expect": {
-        "outcome": "definition-error",
-        "errors": [
-          {"element": "b", "kind": "invalid-range"}
-        ]
-      }
-    }
-  ]
+  "definition": {"options": [
+    {"name": "a", "type": "flag", "long": true, "help": "target"},
+    {"name": "b", "type": "flag", "long": true, "help_order": 5, "help_after": "a"}
+  ]},
+  "cases": [{
+    "id": "order-and-after-on-same-element-invalid-range",
+    "why": "DR-113 §8.2 により b 自身が絶対順と a の直後という2要求を同時に宣言するため、b だけを invalid-range として報告する。",
+    "expect": {"outcome": "definition-error", "errors": [{"element": "b", "kind": "invalid-range"}]}
+  }]
 }

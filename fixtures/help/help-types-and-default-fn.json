@@ -1,0 +1,40 @@
+{
+  "why": "DR-113 §2/§3 と DR-114 §4/§6 に従い、5 直交 help type と default_fn 合成を一つの合法な definition に共存させる。help query は静的 model を返すため dynamic default_fn 値を default 素材へ射影せず、内部セル発火と伝播は parse/lowering profile に委ねる。",
+  "query": "help",
+  "definition": {
+    "name": "prog",
+    "options": [
+      {"name": "help", "type": "help", "long": true, "help": "basic help"},
+      {"name": "help-category", "type": "help_category", "long": true, "help": "select category"},
+      {"name": "help-full", "type": "flag", "long": true, "help": "full help composition source"},
+      {"name": "help-all", "type": "flag", "long": true, "default_fn": "borrow:help-full", "help": "all category and hidden source"},
+      {"name": "help-tree", "type": "help_tree", "long": true, "default_fn": ["borrow", "help-full"], "help": "show command tree"},
+      {"name": "help-all-category", "type": "help_all_category", "long": true, "default_fn": "borrow:help-all", "help": "show every category"},
+      {"name": "help-show-hidden", "type": "help_show_hidden", "long": true, "default_fn": ["borrow", "help-all"], "help": "show hidden entries"},
+      {"name": "help-computed-mode", "type": "flag", "long": true, "default_fn": ["computed", "help:mode"], "help": "colon-bearing array argument"}
+    ]
+  },
+  "cases": [{
+    "id": "five-types-and-default-fn-are-modelable",
+    "why": "DR-113 §2.3 により help_category は bool 枝と CATEGORY string 枝の or tree を保持する。DR-113 §3/DR-114 §6 の default_fn string/array形は合法だが dynamic default は model に載せない。",
+    "expect": {
+      "outcome": "help",
+      "command_path": ["prog"],
+      "usage": {"has_options": true},
+      "options": [
+        {"spellings": ["--help"], "help": "basic help", "hidden": false, "deprecated": false, "origin": "local"},
+        {"spellings": ["--help-category"], "value_structure": {"or": [
+          {"single": {"type": "bool"}},
+          {"single": {"value_name": "CATEGORY", "type": "string"}}
+        ]}, "help": "select category", "hidden": false, "deprecated": false, "origin": "local"},
+        {"spellings": ["--help-full"], "help": "full help composition source", "hidden": false, "deprecated": false, "origin": "local"},
+        {"spellings": ["--help-all"], "help": "all category and hidden source", "hidden": false, "deprecated": false, "origin": "local"},
+        {"spellings": ["--help-tree"], "help": "show command tree", "hidden": false, "deprecated": false, "origin": "local"},
+        {"spellings": ["--help-all-category"], "help": "show every category", "hidden": false, "deprecated": false, "origin": "local"},
+        {"spellings": ["--help-show-hidden"], "help": "show hidden entries", "hidden": false, "deprecated": false, "origin": "local"},
+        {"spellings": ["--help-computed-mode"], "help": "colon-bearing array argument", "hidden": false, "deprecated": false, "origin": "local"}
+      ],
+      "help_entry": "--help"
+    }
+  }]
+}

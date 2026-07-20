@@ -1,36 +1,27 @@
 {
-  "why": "category 絞りと不在 category の輪郭 (DR-112 §2)。category は §14.6 のグループ名を指し、model の entries を該当グループ所属のもの + 当該グループ宣言エントリに絞る (type:\"help_category\" の発火値を受けてアプリがカテゴリ別 help を組む入口)。存在しないグループ名は不在 path と同じ definition-error kind=absent-ref。",
+  "why": "DR-113 §1 の named category 選択と query-error を pin する。named は指定グループ宣言 entry と所属 entry だけに model を絞り、不在 named category は help query 固有の absent-category となる。",
   "query": "help",
-  "definition": {
-    "options": [
-      {"help_group_name": "net", "help_group_title": "Network options"},
-      {"name": "port", "type": "number", "long": true, "help_group_name": "net", "help": "listen port"},
-      {"name": "verbose", "type": "flag", "long": true, "help": "verbose output"}
-    ]
-  },
+  "definition": {"options": [
+    {"help_group_name": "net", "help_group_title": "Network options"},
+    {"name": "port", "type": "number", "long": true, "value_name": "PORT", "help_group_name": "net", "help": "listen port"},
+    {"name": "verbose", "type": "flag", "long": true, "help": "verbose output"},
+    {"name": "secret", "type": "flag", "long": true, "hidden": true, "help": "internal option"}
+  ]},
   "cases": [
     {
-      "id": "category-filters-to-group-members",
-      "why": "category \"net\" 指定: options はグループ宣言エントリ ({group:{...}}) + net 所属の port のみ。非所属の verbose は落ちる (DR-112 §2「該当グループ所属のもの + 当該グループ宣言エントリに絞る」)。絞りは並べ替え適用後の列からの選別なので相対順は維持。usage 等のスコープレベル素材は絞りの影響を受けない (usage は定義構造の要約であり entries 絞りとは独立)。",
-      "category": "net",
-      "expect": {
-        "outcome": "help",
-        "command_path": [],
-        "usage": {"has_options": true},
-        "options": [
-          {"group": {"name": "net", "title": "Network options"}},
-          {"spellings": ["--port"], "help_group_name": "net", "help": "listen port"}
-        ]
-      }
+      "id": "named-mode-filters-to-selected-group",
+      "why": "DR-113 §1 により category_mode named:net は net のグループ宣言と所属する port だけを返し、非所属の verbose/secret を除外する。",
+      "category_mode": {"named": "net"},
+      "expect": {"outcome": "help", "command_path": [], "usage": {"has_options": true}, "options": [
+        {"group": {"name": "net", "title": "Network options"}},
+        {"spellings": ["--port"], "value_structure": {"single": {"value_name": "PORT", "type": "number"}}, "help_group_name": "net", "help": "listen port", "hidden": false, "deprecated": false, "origin": "local"}
+      ]}
     },
     {
-      "id": "absent-category-is-definition-error",
-      "why": "存在しないグループ名 \"nosuch\" は definition-error kind=absent-ref (DR-112 §2、不在 path と同じ流儀)。定義自体は正当なので parse_definition は成功し、エラーは help query 自身が返す (CONFORMANCE §7)。element はクエリ入力の躓きなので省略。",
-      "category": "nosuch",
-      "expect": {
-        "outcome": "definition-error",
-        "errors": [{"kind": "absent-ref"}]
-      }
+      "id": "absent-named-category-is-query-error",
+      "why": "DR-113 §1/§9 により合法な definition に存在しない named category nosuch は definition-error でなく query-error absent-category を返す。",
+      "category_mode": {"named": "nosuch"},
+      "expect": {"outcome": "query-error", "errors": [{"kind": "absent-category"}]}
     }
   ]
 }

@@ -1,23 +1,14 @@
 {
-  "why": "variant 複数入口の spellings 素材化 (DR-112 §3)。variant DSL (DESIGN §7.3) で 1 要素が複数の long 入口 (--ssl / --no-ssl) を持つとき、help model は spellings に**全 long 入口を列挙**する — variant DSL の解釈は long 属性の値読みで得られ、宣言層読みの範囲内 (lowered 産物の variant 展開を読むのではない)。素材のみの原則: どの入口がどの効果 (set true / set false) かは model に載せない — 効果は宣言 (long 配列) を直接読めば分かり、一覧素材としては綴りの列挙で足りる。",
+  "why": "variant DSL の全入口を同一 option entry の spellings に素材化する。spellings は定義出現順で long 入口を並べ、その後に short 入口を併記する。",
   "query": "help",
-  "definition": {
-    "options": [
-      {"name": "ssl", "type": "flag", "long": [":set", "no:set:false"], "help": "enable TLS"}
-    ]
-  },
-  "cases": [
-    {
-      "id": "variant-entries-all-listed-in-spellings",
-      "why": "long [\":set\", \"no:set:false\"] は主入口 --ssl (flag preset が :set を :set:true に差し替え、LOWERING §A.5) と variant 入口 --no-ssl の 2 入口を生む。spellings は宣言順に [\"--ssl\", \"--no-ssl\"] — variant は独立 entry ではなく同一 entry の綴り素材 (DR-112 §3「variant 入口は spellings に全 long 入口を列挙する形で素材化」)。short 未宣言なので long 入口のみ。",
-      "expect": {
-        "outcome": "help",
-        "command_path": [],
-        "usage": {"has_options": true},
-        "options": [
-          {"spellings": ["--ssl", "--no-ssl"], "help": "enable TLS"}
-        ]
-      }
-    }
-  ]
+  "definition": {"options": [
+    {"name": "ssl", "type": "flag", "long": [":set", "no:set:false"], "short": "s", "help": "enable TLS"}
+  ]},
+  "cases": [{
+    "id": "variant-entries-and-short-listed-in-order",
+    "why": "DR-113 §4.4 の spellings 素材として long 主入口 --ssl、variant --no-ssl を定義出現順で列挙し、その後に short -s を併記する。effect 自体は model に載せない。",
+    "expect": {"outcome": "help", "command_path": [], "usage": {"has_options": true}, "options": [
+      {"spellings": ["--ssl", "--no-ssl", "-s"], "help": "enable TLS", "hidden": false, "deprecated": false, "origin": "local"}
+    ]}
+  }]
 }

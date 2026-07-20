@@ -1,27 +1,18 @@
 {
-  "why": "order 安定ソートの同値規則 (DR-112 §6、DESIGN §14.6 の段 1)。同じ実効 order を持つ entries は元の相対順 = 宣言順を保つ (安定ソート)。この同値規則が「同じインデックスが出た場合は定義順優先で insert-after 的に割り込む」を実現する — 明示 order の衝突は definition-error ではなく、宣言順による決定的なタイブレークで解決される。",
+  "why": "DR-113 §8.2 の段1は実効 order 昇順の安定ソートであり、同値 entry は宣言順を保つ。help model の options はこの結果順を origin と表示素材込みで保持する。",
   "query": "help",
-  "definition": {
-    "options": [
-      {"name": "zeta", "type": "flag", "long": true, "help_order": 100, "help": "declared first"},
-      {"name": "alpha", "type": "flag", "long": true, "help_order": 100, "help": "declared second"},
-      {"name": "head", "type": "flag", "long": true, "help_order": 1, "help": "explicit front"}
-    ]
-  },
-  "cases": [
-    {
-      "id": "equal-order-keeps-declaration-order",
-      "why": "zeta と alpha が同じ help_order 100。安定ソートの同値規則で宣言順 (zeta が先) を保つ — 名前の辞書順 (alpha < zeta) に並べ替えられないことの pin (alphabetical はレンダラ policy であって model の規範ではない、DR-112 §3)。head は order 1 で先頭へ。実効 order は [zeta=100, alpha=100, head=1] → 昇順 [head, zeta, alpha]。",
-      "expect": {
-        "outcome": "help",
-        "command_path": [],
-        "usage": {"has_options": true},
-        "options": [
-          {"spellings": ["--head"], "help": "explicit front"},
-          {"spellings": ["--zeta"], "help": "declared first"},
-          {"spellings": ["--alpha"], "help": "declared second"}
-        ]
-      }
-    }
-  ]
+  "definition": {"options": [
+    {"name": "zeta", "type": "flag", "long": true, "help_order": 100, "help": "declared first"},
+    {"name": "alpha", "type": "flag", "long": true, "help_order": 100, "help": "declared second"},
+    {"name": "head", "type": "flag", "long": true, "help_order": 1, "help": "explicit front"}
+  ]},
+  "cases": [{
+    "id": "equal-order-keeps-declaration-order",
+    "why": "DR-113 §8.2 により head は order 1 で先頭へ移り、order 100 が同値の zeta と alpha は名前順でなく宣言順を保つ。",
+    "expect": {"outcome": "help", "command_path": [], "usage": {"has_options": true}, "options": [
+      {"spellings": ["--head"], "help": "explicit front", "hidden": false, "deprecated": false, "origin": "local"},
+      {"spellings": ["--zeta"], "help": "declared first", "hidden": false, "deprecated": false, "origin": "local"},
+      {"spellings": ["--alpha"], "help": "declared second", "hidden": false, "deprecated": false, "origin": "local"}
+    ]}
+  }]
 }

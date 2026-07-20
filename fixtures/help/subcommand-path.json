@@ -1,5 +1,5 @@
 {
-  "why": "help query の path 選択と global コピーの可視性 (DR-112 §2、DESIGN §15.15)。path はサブコマンドスコープの選択で、help query が読むのは「installer の宣言層寄与を適用し終えた宣言層」— global installer (DESIGN §1.4 / LOWERING §B.6) が子孫 command スコープの宣言層へ足した宣言的コピーを読むから、サブコマンドスコープの help に --help (global コピー) が載る。depth 既定 \"scope\" ではサブコマンドは一覧 entry のみで中身を載せない。不在 path は definition-error kind=absent-ref (DR-112 §2 — 動作可能な定義に対する不正なクエリ入力であり、パース時 failure ではなく definition-error 系の転用、DR-082 の流儀)。",
+  "why": "DR-113 §1/§4.3/§4.4 の path、depth、origin、query-error を固定する。help_query は installer の宣言層寄与後を読み、global option の子孫コピーを origin 付きで返す。depth all は command entry の scope に再帰 model を埋め込む。",
   "query": "help",
   "definition": {
     "name": "prog",
@@ -21,57 +21,110 @@
             ]
           }
         ]
-      }
+      },
+      {"alias": "remote", "type": "command", "name": "r"}
     ]
   },
   "cases": [
     {
       "id": "root-lists-subcommands-one-layer",
-      "why": "ルートスコープ (path 省略): commands セクションに remote が一覧 entry (name + help) として載るが、depth 既定 \"scope\" なので remote の中身 (孫 add) は載せない — 1 層分の要約。usage.has_subcommands が true。options はルート自前の help 入口のみ。",
+      "why": "DR-113 §4.4 により depth 既定 scope では remote を aliases 付き一覧 entry として返すが、子 scope は埋め込まない。root 自身の help entry は local origin である。",
       "expect": {
         "outcome": "help",
         "command_path": ["prog"],
         "usage": {"has_options": true, "has_subcommands": true},
         "commands": [
-          {"name": "remote", "help": "manage remotes"}
+          {"name": "remote", "aliases": ["r"], "help": "manage remotes", "hidden": false, "deprecated": false, "origin": "local"}
         ],
         "options": [
-          {"spellings": ["--help"], "help": "show help"}
+          {"spellings": ["--help"], "help": "show help", "hidden": false, "deprecated": false, "origin": "local"}
         ],
         "help_entry": "--help"
       }
     },
     {
-      "id": "nested-path-selects-scope-and-shows-global-copy",
-      "why": "path [\"remote\", \"add\"] で孫スコープを選択: command_path はルート name + path の連鎖 = [\"prog\", \"remote\", \"add\"]、description は add 要素の help。options には **global コピーの --help** が載る — global installer が add スコープの宣言層へ足した宣言的コピーを help query が読むため (lowered 産物ではなく宣言層寄与、DESIGN §15.15 の「読む層」)。add スコープは自前 options を持たない定義にしてある (自前宣言と installer コピーの相対順は DR-112 が明示 pin していないため、この fixture では順序判断が要らない構成で可視性だけを固定する)。add スコープに subcommand は無いので has_subcommands は default false (省略)。",
+      "id": "nested-path-shows-global-copy-origin",
+      "why": "DR-113 §1/§4.3 により path remote/add は孫 scope を選択する。global help の宣言的コピーは定義元 root の command_path を declared_at に持つ global origin となる。",
       "path": ["remote", "add"],
       "expect": {
         "outcome": "help",
         "command_path": ["prog", "remote", "add"],
-        "usage": {
-          "has_options": true,
-          "positionals": [
-            {"value_name": "URL"}
-          ]
-        },
+        "usage": {"has_options": true, "positionals": [
+          {"value_structure": {"single": {"value_name": "URL", "type": "string"}}}
+        ]},
         "description": "add a remote",
         "options": [
-          {"spellings": ["--help"], "help": "show help"}
+          {"spellings": ["--help"], "help": "show help", "hidden": false, "deprecated": false, "origin": {"kind": "global", "declared_at": ["prog"]}}
         ],
         "positionals": [
-          {"value_name": "URL", "help": "remote url"}
+          {"value_structure": {"single": {"value_name": "URL", "type": "string"}}, "help": "remote url", "hidden": false, "deprecated": false}
         ],
         "help_entry": "--help"
       }
     },
     {
-      "id": "absent-path-is-definition-error",
-      "why": "存在しない path [\"nosuch\"] は definition-error kind=absent-ref (DR-112 §2)。定義自体は正当なので parse_definition は成功する — このエラーは help query 自身が返す (runner 契約 CONFORMANCE §7: query:\"help\" の不在 path case は definition-error を expect する正常系)。element は特定要素に紐付かないクエリ入力の躓きなので省略。",
-      "path": ["nosuch"],
+      "id": "depth-all-embeds-recursive-scopes",
+      "why": "DR-113 §4.4 により depth all は root の command entry に remote scope、その子 command entry に add scope を再帰埋め込みする。各子 scope は global help copy の origin を保持する。",
+      "depth": "all",
       "expect": {
-        "outcome": "definition-error",
-        "errors": [{"kind": "absent-ref"}]
+        "outcome": "help",
+        "command_path": ["prog"],
+        "usage": {"has_options": true, "has_subcommands": true},
+        "commands": [
+          {
+            "name": "remote",
+            "aliases": ["r"],
+            "help": "manage remotes",
+            "hidden": false,
+            "deprecated": false,
+            "origin": "local",
+            "scope": {
+              "outcome": "help",
+              "command_path": ["prog", "remote"],
+              "usage": {"has_options": true, "has_subcommands": true},
+              "description": "manage remotes",
+              "commands": [
+                {
+                  "name": "add",
+                  "help": "add a remote",
+                  "hidden": false,
+                  "deprecated": false,
+                  "origin": "local",
+                  "scope": {
+                    "outcome": "help",
+                    "command_path": ["prog", "remote", "add"],
+                    "usage": {"has_options": true, "positionals": [
+                      {"value_structure": {"single": {"value_name": "URL", "type": "string"}}}
+                    ]},
+                    "description": "add a remote",
+                    "options": [
+                      {"spellings": ["--help"], "help": "show help", "hidden": false, "deprecated": false, "origin": {"kind": "global", "declared_at": ["prog"]}}
+                    ],
+                    "positionals": [
+                      {"value_structure": {"single": {"value_name": "URL", "type": "string"}}, "help": "remote url", "hidden": false, "deprecated": false}
+                    ],
+                    "help_entry": "--help"
+                  }
+                }
+              ],
+              "options": [
+                {"spellings": ["--help"], "help": "show help", "hidden": false, "deprecated": false, "origin": {"kind": "global", "declared_at": ["prog"]}}
+              ],
+              "help_entry": "--help"
+            }
+          }
+        ],
+        "options": [
+          {"spellings": ["--help"], "help": "show help", "hidden": false, "deprecated": false, "origin": "local"}
+        ],
+        "help_entry": "--help"
       }
+    },
+    {
+      "id": "absent-path-is-query-error",
+      "why": "DR-113 §1/§9 により合法な definition に存在しない path nosuch は、definition-error でなく help query 入力の query-error absent-path を返す。",
+      "path": ["nosuch"],
+      "expect": {"outcome": "query-error", "errors": [{"kind": "absent-path"}]}
     }
   ]
 }

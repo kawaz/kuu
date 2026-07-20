@@ -1,0 +1,84 @@
+{
+  "why": "DR-113 §4.1/§4.2 の value_structure tree と共有 types 射影を一つの model で固定する。single / seq / or / repeat / type_ref を保持し、参照箇所の value_name は used_as として集約する。",
+  "query": "help",
+  "definition": {
+    "name": "paint",
+    "help": "paint inputs",
+    "definitions": {"types": {
+      "color_value": {
+        "help": "color name or RGB tuple",
+        "or": [
+          {"type": "string", "value_name": "COLOR_NAME"},
+          {"seq": [
+            {"type": "number", "value_name": "R"},
+            {"type": "number", "value_name": "G"},
+            {"type": "number", "value_name": "B"}
+          ]}
+        ]
+      }
+    }},
+    "options": [
+      {"name": "fg", "type": "color_value", "long": true, "value_name": "COLOR", "display_name": "Foreground color", "help": "foreground color"},
+      {"name": "level-colors", "long": true, "seq": [
+        {"type": "color_value", "value_name": "INFO"},
+        {"type": "color_value", "value_name": "WARN"},
+        {"type": "color_value", "value_name": "DEBUG"}
+      ], "help": "colors by level"},
+      {"name": "size", "long": true, "or": [
+        {"type": "string", "value_name": "NAME"},
+        {"seq": [
+          {"type": "int", "value_name": "WIDTH"},
+          {"type": "int", "value_name": "HEIGHT"}
+        ]}
+      ], "help": "named size or dimensions"}
+    ],
+    "positionals": [
+      {"name": "files", "type": "string", "value_name": "FILE", "repeat": {"min": 1, "max": 3}, "help": "input files"}
+    ]
+  },
+  "cases": [{
+    "id": "tree-types-and-used-as-preserved",
+    "why": "DR-113 §4.1/§4.2 により color_value は or と seq の共有 tree として types に一度載り、参照箇所を定義出現順で COLOR/INFO/WARN/DEBUG の used_as に集約する。size は inline or、files は repeat を保つ。",
+    "expect": {
+      "outcome": "help",
+      "command_path": ["paint"],
+      "usage": {"has_options": true, "positionals": [
+        {"value_structure": {"repeat": {"min": 1, "max": 3, "node": {"single": {"value_name": "FILE", "type": "string"}}}}}
+      ]},
+      "description": "paint inputs",
+      "types": [
+        {
+          "id": "color_value",
+          "value_structure": {"or": [
+            {"single": {"value_name": "COLOR_NAME", "type": "string"}},
+            {"seq": [
+              {"single": {"value_name": "R", "type": "number"}},
+              {"single": {"value_name": "G", "type": "number"}},
+              {"single": {"value_name": "B", "type": "number"}}
+            ]}
+          ]},
+          "help": "color name or RGB tuple",
+          "used_as": ["COLOR", "INFO", "WARN", "DEBUG"]
+        }
+      ],
+      "options": [
+        {"spellings": ["--fg"], "value_structure": {"type_ref": "color_value", "value_name": "COLOR"}, "display_name": "Foreground color", "help": "foreground color", "hidden": false, "deprecated": false, "origin": "local"},
+        {"spellings": ["--level-colors"], "value_structure": {"seq": [
+          {"type_ref": "color_value", "value_name": "INFO"},
+          {"type_ref": "color_value", "value_name": "WARN"},
+          {"type_ref": "color_value", "value_name": "DEBUG"}
+        ]}, "help": "colors by level", "hidden": false, "deprecated": false, "origin": "local"},
+        {"spellings": ["--size"], "value_structure": {"or": [
+          {"single": {"value_name": "NAME", "type": "string"}},
+          {"seq": [
+            {"single": {"value_name": "WIDTH", "type": "int"}},
+            {"single": {"value_name": "HEIGHT", "type": "int"}}
+          ]}
+        ]}, "help": "named size or dimensions", "hidden": false, "deprecated": false, "origin": "local"}
+      ],
+      "positionals": [
+        {"value_structure": {"repeat": {"min": 1, "max": 3, "node": {"single": {"value_name": "FILE", "type": "string"}}}}, "help": "input files", "hidden": false, "deprecated": false}
+      ]
+    }
+  }]
+}

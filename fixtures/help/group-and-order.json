@@ -1,32 +1,24 @@
 {
-  "why": "グループ宣言エントリと order / help_after の合成規則 (DR-112 §5/§6、DESIGN §14.6)。並べ替えは options entries 列 (グループ宣言エントリ込みのフラット列) に対し 2 段で適用される: (1) 実効 order (明示値、無ければ宣言 index) の昇順**安定ソート** — 同値は宣言順を保つ、(2) help_after を持つ entry を取り出し target の直後へ移動。model はグループへの束ねをせず「並べ替え済みフラット列 + 各 entry の help_group_name」を素材として渡す (束ねはレンダラ)。グループ宣言エントリは {group: {name, title, description}} entry として列に残る。",
+  "why": "DR-113 §8 の group 宣言、help_group_order、help_order、help_after を同じフラット options 列で合成する。alias は canonical entry へ併記する別関心なので、順序検証は通常 entry だけで構成する。",
   "query": "help",
-  "definition": {
-    "options": [
-      {"help_group_name": "net", "help_group_title": "Network options", "help_group_description": "socket & TLS"},
-      {"name": "port", "type": "number", "long": true, "help_group_name": "net", "help": "listen port"},
-      {"name": "verbose", "type": "flag", "long": true, "help": "verbose output"},
-      {"name": "help", "type": "help", "long": true, "help_order": 10001, "help": "show help"},
-      {"name": "old-port", "alias": "port", "long": true, "deprecated": true, "help_after": "port", "help": "use --port instead"}
-    ]
-  },
-  "cases": [
-    {
-      "id": "stable-sort-then-after-insertion",
-      "why": "5 宣言のフラット列の並べ替えを結果順で pin する。段 1 (安定ソート): 実効 order は [group-decl=0, port=1, verbose=2, help=10001, old-port=4] (明示は help の 10001 のみ、他は宣言 index)。昇順で [group-decl, port, verbose, old-port, help] — help が明示 order で末尾へ、同値なし = 宣言順維持。段 2 (help_after): old-port (after: port) を取り出し port の直後へ移動 → [group-decl, port, old-port, verbose, help]。alias 要素でも name を持つ独立宣言 (name:\"old-port\") は自分の entry を持てる — alias-and-meta.json の name 無し alias (canonical に併記) と対照的に、name 有り alias は name 由来入口の再導出で独立の見せ方になる (DESIGN §14.5 の継承原理: alias の name で long を再導出 = --old-port)。deprecated:true と help はその entry の素材。グループ宣言エントリは {group:{...}} 形で列頭に残り、port の help_group_name が所属参照として載る。",
-      "expect": {
-        "outcome": "help",
-        "command_path": [],
-        "usage": {"has_options": true},
-        "options": [
-          {"group": {"name": "net", "title": "Network options", "description": "socket & TLS"}},
-          {"spellings": ["--port"], "help_group_name": "net", "help": "listen port"},
-          {"spellings": ["--old-port"], "deprecated": true, "help": "use --port instead"},
-          {"spellings": ["--verbose"], "help": "verbose output"},
-          {"spellings": ["--help"], "help": "show help"}
-        ],
-        "help_entry": "--help"
-      }
-    }
-  ]
+  "definition": {"options": [
+    {"help_group_name": "net", "help_group_title": "Network options", "help_group_description": "socket & TLS", "help_group_order": -20},
+    {"help_group_name": "misc", "help_group_title": "Misc options", "help_group_order": -10},
+    {"name": "port", "type": "number", "long": true, "value_name": "PORT", "help_group_name": "net", "help": "listen port"},
+    {"name": "verbose", "type": "flag", "long": true, "help_group_name": "misc", "help": "verbose output"},
+    {"name": "help", "type": "help", "long": true, "help_order": 10001, "help": "show help"},
+    {"name": "old-port", "type": "flag", "long": true, "deprecated": true, "help_after": "port", "help": "use --port instead"}
+  ]},
+  "cases": [{
+    "id": "group-order-stable-sort-then-after",
+    "why": "DR-113 §8.2 により段1で group order -20/-10 が先頭、help order 10001 が末尾になり、段2で通常 entry old-port が port 直後へ移る。",
+    "expect": {"outcome": "help", "command_path": [], "usage": {"has_options": true}, "options": [
+      {"group": {"name": "net", "title": "Network options", "description": "socket & TLS"}},
+      {"group": {"name": "misc", "title": "Misc options"}},
+      {"spellings": ["--port"], "value_structure": {"single": {"value_name": "PORT", "type": "number"}}, "help_group_name": "net", "help": "listen port", "hidden": false, "deprecated": false, "origin": "local"},
+      {"spellings": ["--old-port"], "help": "use --port instead", "hidden": false, "deprecated": true, "origin": "local"},
+      {"spellings": ["--verbose"], "help_group_name": "misc", "help": "verbose output", "hidden": false, "deprecated": false, "origin": "local"},
+      {"spellings": ["--help"], "help": "show help", "hidden": false, "deprecated": false, "origin": "local"}
+    ], "help_entry": "--help"}
+  }]
 }

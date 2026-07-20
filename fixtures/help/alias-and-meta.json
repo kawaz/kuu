@@ -1,28 +1,19 @@
 {
-  "why": "alias 併記と hidden / deprecated メタの model 射影 (DR-112 §3、DESIGN §14.4/§14.5)。alias は canonical entry の alias_spellings に併記され、独立 entry として一覧されない (DR-057 の「canonical の行に併記」の構造化)。hidden / deprecated はメタとして model に**常に残り**、既定除外はレンダラの policy — model が hidden を落とすと「--help-all で hidden も表示」をレンダラが作れなくなる (complete API の meta.hidden と同型、DR-104)。deprecated の「use X instead」素材は canonical 自動導出なので model 側に追加素材は不要 (DR-058)。",
+  "why": "DR-113 §4.4/§7.3 に従い、name を持たない alias は canonical option の alias_spellings に併記し、hidden / deprecated は renderer policy へ渡す構造素材として model に常に保持する。",
   "query": "help",
-  "definition": {
-    "options": [
-      {"name": "port", "type": "number", "long": true, "short": "p", "help": "listen port"},
-      {"alias": "port", "short": "n"},
-      {"name": "secret", "type": "flag", "long": true, "hidden": true, "help": "internal switch"},
-      {"name": "legacy", "type": "flag", "long": true, "deprecated": true, "help": "old switch"}
-    ]
-  },
-  "cases": [
-    {
-      "id": "alias-merged-hidden-deprecated-kept",
-      "why": "4 宣言 → 3 entries: alias 要素 {alias:\"port\", short:\"n\"} は独立 entry にならず、canonical port の entry に alias_spellings [\"-n\"] として併記される (alias の明示綴り short だけが alias 入口 — name 由来入口の再導出は alias の name が無いので発生しない、DESIGN §14.5 の継承原理)。--secret は hidden:true のまま entry として載る (既定除外はレンダラ)。--legacy は deprecated:true のまま載る。entries 順序は canonical の宣言順 [port, secret, legacy] (alias 宣言は canonical に畳まれるため列に位置を持たない)。command_path はルートに name が無い定義なので空列 (path のみ、今回は path 省略 = ルート)。ルートに help 文字列も help 入口も無いので description / help_entry は省略 (absent)。",
-      "expect": {
-        "outcome": "help",
-        "command_path": [],
-        "usage": {"has_options": true},
-        "options": [
-          {"spellings": ["--port", "-p"], "alias_spellings": ["-n"], "help": "listen port"},
-          {"spellings": ["--secret"], "hidden": true, "help": "internal switch"},
-          {"spellings": ["--legacy"], "deprecated": true, "help": "old switch"}
-        ]
-      }
-    }
-  ]
+  "definition": {"options": [
+    {"name": "port", "type": "number", "long": true, "short": "p", "value_name": "PORT", "help": "listen port"},
+    {"alias": "port", "short": "n"},
+    {"name": "secret", "type": "flag", "long": true, "hidden": true, "help": "internal switch"},
+    {"name": "legacy", "type": "flag", "long": true, "deprecated": true, "help": "old switch"}
+  ]},
+  "cases": [{
+    "id": "alias-merged-hidden-deprecated-kept",
+    "why": "DR-113 §4.4/§7.3 により alias -n は port の alias_spellings に併記される。secret と legacy は model から除外せず hidden:true / deprecated:true を保持する。",
+    "expect": {"outcome": "help", "command_path": [], "usage": {"has_options": true}, "options": [
+      {"spellings": ["--port", "-p"], "alias_spellings": ["-n"], "value_structure": {"single": {"value_name": "PORT", "type": "number"}}, "help": "listen port", "hidden": false, "deprecated": false, "origin": "local"},
+      {"spellings": ["--secret"], "help": "internal switch", "hidden": true, "deprecated": false, "origin": "local"},
+      {"spellings": ["--legacy"], "help": "old switch", "hidden": false, "deprecated": true, "origin": "local"}
+    ]}
+  }]
 }
