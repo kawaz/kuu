@@ -50,16 +50,27 @@
 
 **回答形式**: `API-Q3=推し通り` / バッチ別・項目別の個別指定 (例「バッチ1 は Ext 残置、他は推し通り」)。
 
-## 👺 REND-Q1〜Q7: canonical help レンダラ設計 (バッチ裁定)
+## 👺 REND-Q6: origin (継承由来 entry) の canonical 既定表示 (説明付き再提示)
 
-**正本**: `docs/findings/2026-07-21-help-renderer-design-plan.md` (設計プラン全体 + 各 Q の詳細節)。以下は索引。
+**裁定済み**: REND-Q1=a / Q2=b (テンプレ型、移行需要でバイトレベル制御) / Q3=a / Q4=b / Q5=a / Q7=a。残 = Q6 のみ。
 
-- **👺 REND-Q1: レンダラ指示語彙の座席** — (a) wire 3 段 (一括席 `help_render` + entry 個別 + API override) / (b) 同構造で座席名 `help_display` / (c) wire に載せず API のみ。**推し = a** (kawaz 示唆「config 一括 + 個別併用」の直接具体化、定義ファイルで表示意図が完結) — findings §3
-- **👺 REND-Q2: セクション骨格の指定形** — (a) セクション識別子の配列 (model トップレベルキー由来、picocli 型の宣言的半分) / (b) プレースホルダ文字列テンプレ (clap 型) / (c) v1 は指定不可。**推し = a** (テンプレ言語の沼を回避しつつ並べ替え実需を満たす、識別子発明ゼロ) — §2
-- **👺 REND-Q3: 文言内 binding 補間** — (a) `{name}` 変数参照のみ (エスケープ `{{`、制御構造なし) / (b) 補間なし。**推し = a** (version binding の承認 signal を最小機構で満たし境界を明言) — §5
-- **👺 REND-Q4: category_mode default/all の canonical 差分** — (a) v1 は差分なし (vacuous) / (b) グループ宣言 entry へ `hidden` を許可、default = hidden group 省略・all = 表示 (cargo -Z 型受け皿、DR-113 §8.1 小改訂)。**推し = b** (v1 完備主義、help_all_category を意味ある軸に) — §6.4
-- **👺 REND-Q5: 部品表記の canonical 既定値** — (a) auto (単純 or は 1 行括弧、ネストは詳細形式。types は参照 ≥2 で集約) / (b) 常に詳細 / (c) 常に 1 行。**推し = a** — §6.1-6.2
-- **👺 REND-Q6: origin の canonical 既定表示** — (a) merge (cargo 型) / (b) separate_section (gh INHERITED 型) / (c) omit。**推し = b** (継承の明示と値の表示を両立) — §6.3
-- **👺 REND-Q7: completion 表示 policy の扱い** — (a) 本サイクル除外、completion-ordering issue へ統合 / (b) 含める。**推し = a** — §7
+### 背景説明 (何の話か)
 
-**回答形式**: 「REND 全部推し通り」 / 個別 (例「Q1=a, Q4=a, 他推し通り」)。裁定後 DR 化 → canonical レンダラ実装計画へ。
+help model の各 option/command entry には `origin` (どこで定義されたか) が載っている: `local` (その scope 自身) / `global` (祖先の global 宣言のコピー) / `inheritable` (子の inheritable 宣言が祖先へコピー) / alias 併記。
+
+サブコマンドの help を表示するとき、**親から降ってきた option (global 由来) をどう見せるか**が CLI ごとに流儀が分かれる。実 CLI 実測 (findings 2026-07-19-help-display-order-and-visibility-patterns.md) で 4 方式:
+
+| 方式 | 実例 | 見え方 |
+|---|---|---|
+| **(a) merge** | cargo | 継承 option も通常の Options: に混ぜて表示。由来は出さない |
+| **(b) separate_section** | gh | `INHERITED FLAGS` のような独立見出しで継承分だけ分けて表示 |
+| **(c) reference** | kubectl | 値は出さず「グローバルオプションは --help を見よ」の案内文 1 行のみ |
+| **(d) omit** | rustup / docker | 継承分は一切出さない |
+
+canonical レンダラ (kuu 標準のテキストレンダラ) の**既定値**をどれにするかの裁定。定義側は `origin_style` 語彙 (REND-Q1=a で確定した help_render 席) で明示上書き可能なので、ここで決めるのは「無指定時のデフォルト」だけ。
+
+- **候補 a = merge (cargo 型)**: 驚き最小・出力が一番シンプル。ただし model に origin を載せた設計判断の価値が既定では見えない
+- **候補 b = separate_section (gh 型、統括推し)**: 「継承であることの明示」と「値の表示」を両立する唯一の方式。origin 素材が既定で活きる
+- **候補 c/d**: 情報が欠落するので既定には不向き (明示指定用)
+
+**回答形式**: `REND-Q6=b` 等。
