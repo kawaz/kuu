@@ -1,0 +1,43 @@
+{
+  "why": "DR-115 §4 (DR-113 §8.1 update) のグループ宣言 entry hidden を pin する — wire 席の受理、model への sibling 射影 (`{group:{...}, hidden:true}`)、および category_mode default/all の model 素材不変性 (hidden 素材フィルタはしない、DR-113 §4.4 の hidden 構図)。canonical レンダラの category_mode 3 分岐 (default = 入口注記のみ / all = 所属 entry 込み表示 / named = 表示) の適用は非規範であり、spec は model 搬送のみを検証する。",
+  "query": "help",
+  "definition": {"options": [
+    {"help_group_name": "internal", "help_group_title": "Internal options", "hidden": true},
+    {"help_group_name": "public", "help_group_title": "Public options"},
+    {"name": "port", "type": "number", "long": true, "value_name": "PORT", "help_group_name": "public", "help": "listen port"},
+    {"name": "debug-dump", "type": "flag", "long": true, "help_group_name": "internal", "help": "dump state"}
+  ]},
+  "cases": [
+    {
+      "id": "default-mode-hidden-group-in-model",
+      "why": "DR-115 §4 / DR-113 §4.4 により model 素材はレンダラ policy と分離 — category_mode default でも hidden group 宣言 entry と所属 entry は entry 集合として保持され、hidden meta が sibling として載る。",
+      "category_mode": "default",
+      "expect": {"outcome": "help", "command_path": [], "usage": {"has_options": true}, "options": [
+        {"group": {"name": "internal", "title": "Internal options"}, "hidden": true},
+        {"group": {"name": "public", "title": "Public options"}},
+        {"spellings": ["--port"], "value_structure": {"single": {"value_name": "PORT", "type": "number"}}, "help_group_name": "public", "help": "listen port", "hidden": false, "deprecated": false, "origin": "local"},
+        {"spellings": ["--debug-dump"], "help_group_name": "internal", "help": "dump state", "hidden": false, "deprecated": false, "origin": "local"}
+      ]}
+    },
+    {
+      "id": "all-mode-model-equal-to-default",
+      "why": "DR-115 §4 の spec 側は模様出力を規範化しない (§6) — default と all で model の entry 集合と hidden 射影は完全同一 (差はレンダラの表示 policy)。DR-113 と DR-115 が共通で「model 素材はフィルタしない」を貫く。",
+      "category_mode": "all",
+      "expect": {"outcome": "help", "command_path": [], "usage": {"has_options": true}, "options": [
+        {"group": {"name": "internal", "title": "Internal options"}, "hidden": true},
+        {"group": {"name": "public", "title": "Public options"}},
+        {"spellings": ["--port"], "value_structure": {"single": {"value_name": "PORT", "type": "number"}}, "help_group_name": "public", "help": "listen port", "hidden": false, "deprecated": false, "origin": "local"},
+        {"spellings": ["--debug-dump"], "help_group_name": "internal", "help": "dump state", "hidden": false, "deprecated": false, "origin": "local"}
+      ]}
+    },
+    {
+      "id": "named-mode-hidden-group-selected",
+      "why": "DR-115 §4 により hidden group への named 指定は明示要求で表示扱いになる (canonical policy)。spec 側は素材絞りとして DR-113 §1 の named 挙動を貫き、指定グループ宣言 entry と所属 entry だけを model へ返す。",
+      "category_mode": {"named": "internal"},
+      "expect": {"outcome": "help", "command_path": [], "usage": {"has_options": true}, "options": [
+        {"group": {"name": "internal", "title": "Internal options"}, "hidden": true},
+        {"spellings": ["--debug-dump"], "help_group_name": "internal", "help": "dump state", "hidden": false, "deprecated": false, "origin": "local"}
+      ]}
+    }
+  ]
+}

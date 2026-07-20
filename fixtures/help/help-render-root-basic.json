@@ -1,0 +1,34 @@
+{
+  "why": "DR-115 §1.1/§1.4 の一括席 `help_render` (4 キー) の受理と model トップレベル `render` への射影を pin する。テンプレ文字列は opaque 搬送 (適用後バイトは §6.2 非規範) — enum 3 スタイル + template の全キーが宣言どおり model へ載る。",
+  "query": "help",
+  "definition": {
+    "name": "prog",
+    "help_render": {
+      "template": "{usage}\n\n{description}\n\n{options}\n",
+      "value_structure_style": "detail",
+      "types_style": "aggregate",
+      "origin_style": "merge"
+    },
+    "options": [
+      {"name": "port", "type": "number", "long": true, "value_name": "PORT", "help": "listen port"}
+    ]
+  },
+  "cases": [{
+    "id": "root-render-all-keys-projected",
+    "why": "DR-115 §1.4 により一括席の実効値 (継承なし = 宣言値そのまま) が model トップレベル `render` に射影される。4 キーとも enum 値・template 文字列の opaque 搬送を検証する。",
+    "expect": {
+      "outcome": "help",
+      "command_path": ["prog"],
+      "usage": {"has_options": true},
+      "render": {
+        "template": "{usage}\n\n{description}\n\n{options}\n",
+        "value_structure_style": "detail",
+        "types_style": "aggregate",
+        "origin_style": "merge"
+      },
+      "options": [
+        {"spellings": ["--port"], "value_structure": {"single": {"value_name": "PORT", "type": "number"}}, "help": "listen port", "hidden": false, "deprecated": false, "origin": "local"}
+      ]
+    }
+  }]
+}

@@ -1,0 +1,35 @@
+{
+  "why": "DR-115 §1.2/§1.4 の entry 個別席 `help_value_structure_style` を pin する — 当該 entry の value_structure 表記だけを一括席 (render.value_structure_style) の実効値から上書きする。値空間を持たない entry (flag) への付与も vacuous だが合法 (DR-115 §1.2 の required/DR-093 前例、lint 領分)。",
+  "query": "help",
+  "definition": {
+    "help_render": {
+      "value_structure_style": "auto"
+    },
+    "options": [
+      {"name": "color", "type": "string", "long": true, "value_name": "COLOR", "help_value_structure_style": "detail", "help": "override with detail"},
+      {"name": "verbose", "type": "flag", "long": true, "help_value_structure_style": "inline", "help": "vacuous on flag (§1.2)"}
+    ],
+    "positionals": [
+      {"name": "file", "type": "string", "value_name": "FILE", "help_value_structure_style": "detail", "help": "positional override"}
+    ]
+  },
+  "cases": [{
+    "id": "entry-style-projects-into-model-entry",
+    "why": "DR-115 §1.4 により entry 個別席は当該 entry 側 `value_structure_style` として model へ射影する — 一括席 `render` は auto、color/verbose/file の各 entry がそれぞれ独立の style 上書きを保持する。",
+    "expect": {
+      "outcome": "help",
+      "command_path": [],
+      "usage": {"has_options": true, "positionals": [
+        {"value_structure": {"single": {"value_name": "FILE", "type": "string"}}}
+      ]},
+      "render": {"value_structure_style": "auto"},
+      "options": [
+        {"spellings": ["--color"], "value_structure": {"single": {"value_name": "COLOR", "type": "string"}}, "value_structure_style": "detail", "help": "override with detail", "hidden": false, "deprecated": false, "origin": "local"},
+        {"spellings": ["--verbose"], "value_structure_style": "inline", "help": "vacuous on flag (§1.2)", "hidden": false, "deprecated": false, "origin": "local"}
+      ],
+      "positionals": [
+        {"value_structure": {"single": {"value_name": "FILE", "type": "string"}}, "value_structure_style": "detail", "help": "positional override", "hidden": false, "deprecated": false}
+      ]
+    }
+  }]
+}

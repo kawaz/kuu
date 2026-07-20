@@ -1,0 +1,24 @@
+{
+  "why": "DR-115 §1.1/§2.4/§5 の definition-error を pin する — help_render は (a) command/ルート以外への宣言 (席違い)、(b) template 位置の構文不正 (未閉 `{` / 空 `{}` / 識別子規則違反)、(c) 一括席の enum 値域外 (value_structure_style/types_style/origin_style)、(d) entry 個別席 help_value_structure_style の enum 値域外、のいずれも invalid-range を積む (errors は element + kind の集合比較、DR-082 §1)。テンプレ位置 strict / 文言位置寛容の非対称は DR-115 §2.4 と却下案節に明記。",
+  "query": "definition_error",
+  "definition": {"options": [
+    {"name": "opt-scope-mistake", "type": "flag", "long": true, "help_render": {"value_structure_style": "auto"}},
+    {"name": "opt-bad-value-style", "type": "string", "long": true, "help_render": {"value_structure_style": "sparkle"}},
+    {"name": "opt-bad-entry-style", "type": "flag", "long": true, "help_value_structure_style": "verbose"},
+    {"name": "opt-bad-origin-style", "type": "string", "long": true, "help_render": {"origin_style": "hybrid"}},
+    {"name": "opt-bad-types-style", "type": "flag", "long": true, "help_render": {"types_style": "spread"}},
+    {"name": "opt-bad-template", "type": "flag", "long": true, "help_render": {"template": "{usage}\n{opitons"}}
+  ]},
+  "cases": [{
+    "id": "help-render-invalid-range-collected",
+    "why": "DR-115 §1.1/§1.2/§2.4/§5 と DR-082 §1 の集合比較により、6 種の違反 (席違い / value_structure_style 値域外 / entry 個別席値域外 / origin_style 値域外 / types_style 値域外 / template 構文不正) が独立に invalid-range として積まれる。opt-scope-mistake は席違いが理由で opt-bad-* とは違う軸 (§1.1) だが同 kind に帰着する。",
+    "expect": {"outcome": "definition-error", "errors": [
+      {"element": "opt-scope-mistake", "kind": "invalid-range"},
+      {"element": "opt-bad-value-style", "kind": "invalid-range"},
+      {"element": "opt-bad-entry-style", "kind": "invalid-range"},
+      {"element": "opt-bad-origin-style", "kind": "invalid-range"},
+      {"element": "opt-bad-types-style", "kind": "invalid-range"},
+      {"element": "opt-bad-template", "kind": "invalid-range"}
+    ]}
+  }]
+}

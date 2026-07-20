@@ -1,0 +1,56 @@
+{
+  "why": "DR-115 §1.1 の階層継承 (キー単位) を pin する — 子 command は親の実効値を継承し、書いたキーだけ上書きする (DR-014 の config 継承と同じ機構)。親で 4 キー、子で 1 キーだけ再宣言した場合、子 command scope の model `render` は「親の 3 キー + 子の 1 キー」の合成になる。",
+  "query": "help",
+  "definition": {
+    "name": "prog",
+    "help_render": {
+      "value_structure_style": "inline",
+      "types_style": "aggregate",
+      "origin_style": "separate_section"
+    },
+    "commands": [
+      {
+        "type": "command",
+        "name": "sub",
+        "help": "child",
+        "help_render": {
+          "origin_style": "merge"
+        }
+      }
+    ]
+  },
+  "cases": [
+    {
+      "id": "root-scope-declared-values",
+      "why": "DR-115 §1.1 により継承の親自身の実効値は宣言そのもの。3 キーが宣言どおり `render` へ射影される。",
+      "expect": {
+        "outcome": "help",
+        "command_path": ["prog"],
+        "usage": {"has_subcommands": true},
+        "render": {
+          "value_structure_style": "inline",
+          "types_style": "aggregate",
+          "origin_style": "separate_section"
+        },
+        "commands": [
+          {"name": "sub", "help": "child", "hidden": false, "deprecated": false, "origin": "local"}
+        ]
+      }
+    },
+    {
+      "id": "child-scope-key-wise-override",
+      "why": "DR-115 §1.1 により子 command の実効値は親を継承 + 子で書いたキーだけ上書き。親の value_structure_style/types_style は継承、origin_style は子で上書きされ merge になる。",
+      "path": ["sub"],
+      "expect": {
+        "outcome": "help",
+        "command_path": ["prog", "sub"],
+        "render": {
+          "value_structure_style": "inline",
+          "types_style": "aggregate",
+          "origin_style": "merge"
+        },
+        "description": "child"
+      }
+    }
+  ]
+}

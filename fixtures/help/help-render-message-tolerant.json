@@ -1,0 +1,22 @@
+{
+  "why": "DR-115 §3 の文言位置寛容を pin する — help / help_long / help_epilog の文字列は definition-time 検査対象外。識別子規則違反の brace 列 (`{a,b}` 等) は literal 素通し (散文には `{` が普通に現れるため)、識別子規則に合う `{name}` も文言位置ではセクション展開せず binding 参照として搬送する (補間はレンダラ表示時)。model は文言フィールドを opaque 搬送し、生の brace 列がそのまま entry に載る (文言位置寛容 vs テンプレ位置 strict の非対称、DR-115 §2.4 との対比)。",
+  "query": "help",
+  "definition": {"options": [
+    {"name": "verbose", "type": "flag", "long": true, "help": "toggles {a,b} verbose (literal braces OK)"},
+    {"name": "port", "type": "number", "long": true, "value_name": "PORT", "help": "listen port {name}", "help_long": "See docs/{section}/network.md for details."}
+  ], "help_epilog": "Version {version}. Report bugs to <bugs@example.com>."},
+  "cases": [{
+    "id": "message-position-passes-brace-tokens",
+    "why": "DR-115 §3 により文言中の任意 brace 列は wire 受理・model 搬送とも通り、正常な help outcome を返す (definition-error にならない)。model の help / help_long / epilog フィールドに生文字列がそのまま載ることを検証する。",
+    "expect": {
+      "outcome": "help",
+      "command_path": [],
+      "usage": {"has_options": true},
+      "epilog": "Version {version}. Report bugs to <bugs@example.com>.",
+      "options": [
+        {"spellings": ["--verbose"], "help": "toggles {a,b} verbose (literal braces OK)", "hidden": false, "deprecated": false, "origin": "local"},
+        {"spellings": ["--port"], "value_structure": {"single": {"value_name": "PORT", "type": "number"}}, "help": "listen port {name}", "help_long": "See docs/{section}/network.md for details.", "hidden": false, "deprecated": false, "origin": "local"}
+      ]
+    }
+  }]
+}
