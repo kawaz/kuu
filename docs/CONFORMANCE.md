@@ -83,7 +83,8 @@ spec バンドル自体の v1.0.0 発行条件 (5 プロファイル全 green、
     | `remove` | merge accumulator: operand と等価な要素を全削除 (DR-080 §2) | 除去対象の値 | `fixtures/multiple-parse/merge-splice-remove.json::implicit-at-then-remove-only` |
     | `splice` | merge accumulator: old をその位置に展開 (DR-080 §2) | なし | `fixtures/multiple-parse/merge-basic.json::bare-splice-is-identity` |
   - `operand`: op が要求する場合のみ (set の値 / remove の除去対象)。JSON 表現は canonical 規約 (数値は最短形 `1.0` → `1`、DR-050 §4)
-  - variant/default_fn の cell fn は DR-114 の `Value | Sentinel` を返す。`Value` は通常の `set`、Sentinel は `default` / `unset` / `empty` として effects に射影する。`incr` 等が `ctx.old` から返した新値も `set` として観測し、専用 `update` op は持たない
+  - **variant effect (effect mode)**: cell fn の `Value` 返却は通常の `set`、Sentinel 返却は `default` / `unset` / `empty` として effects に射影する。`incr` 等が `ctx.old` から返した新値も `set` として観測し、専用 `update` op は持たない
+  - **default_fn (default mode)**: default 席は `Value` を返す cell fn だけを受け入れ、Sentinel を返す fn の指定は definition-error `invalid-range`。default 解決は値源ラダー充填なので effects には載せず、値を `result`、由来を `sources` で検証する
   - `source`: 値源タグ (DR-031)。parse fixture では `cli` のみ登場する (下記)
 - **effects に載るのは cli / link 由来のパース時効果のみ** — 値源ラダー充填 (env / config / inherit / default) は完走後の値確定であり args 順の全順序を持たないため、effects には載せない (例: 未発火 flag の `false` は result に現れ、effects には現れない)。ラダー充填の**値**は `result` で、**由来**は `sources` フィールドで検証する (effects への source 拡張は「充填同士の順序が非規範で全順序規約を汚す」ため不採用 — DR-065)
 - **`result` は最終結果オブジェクト** (ラダー充填込みの確定値、DR-051 の absent 規則適用後)。runner は effects / result の両方を検証する

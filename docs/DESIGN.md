@@ -1081,11 +1081,11 @@ help_installer は表示メタの回収、5 preset の植え付け、help_query 
 ### 14.4 visibility / deprecated (DR-058)
 
 ```json
-"hidden": true       // help 一覧・補完候補の両方から除外。受理は不変
+"hidden": true       // help model・補完候補にメタとして残る。既定表示からの除外は policy
 "deprecated": true   // 受理 + 起動時に ParserContext.warnings へ構造化警告。表示・文言はレンダラ
 ```
 
-パース挙動 (CLI からの受理可否) には影響しない。deprecated の値は bool のみ。alias 要素 (§14.5) に付けばその入口限定で、「use <canonical> instead」の素材は alias の指す先から自動導出される。filter の warn (パース中の解釈警告、DR-021) とは別層。「--help-all で hidden も表示」等はレンダラの関心。
+パース挙動 (CLI からの受理可否) には影響しない。deprecated の値は bool のみ。alias 要素 (§14.5) に付けばその入口限定で、「use <canonical> instead」の素材は alias の指す先から自動導出される。filter の warn (パース中の解釈警告、DR-021) とは別層。hidden entry の表示は `help_show_hidden` の内部セルを受けた renderer policy、または他 help type と合成した入口から選ぶ。
 
 ### 14.5 alias (DR-057)
 
@@ -1108,14 +1108,14 @@ help_installer は表示メタの回収、5 preset の植え付け、help_query 
 #### 説明文の座席 — help / help_long / help_epilog
 
 - **`help`** (短、既存) + **`help_long`** (長、新設) の 2 本立て。`-h` / `--help` での出し分けはレンダラ
-- **`help_epilog`** (新設): 選択スコープ要素 (ルート / command) に付く、オプション一覧の後に出す自由テキスト素材 (連絡先・注意事項・例の手書き等)。v1 のセクション拡張席はこの 1 本に絞る (before-help / header 系・構造化 examples は導入しない — 純表示メタで追加互換なため実需が出てから足せる)
-- 3 語彙とも任意要素に付く string。`help_epilog` は葉要素に付いても合法だが model へ射影されるのはスコープ要素のもののみ (葉の epilog は捨てずに保持されるが v1 の model に座席が無い。lint が「射影されない席への指定」を warn できる)
+- **`help_epilog`**: 選択スコープ要素 (ルート / command) に付く、オプション一覧の後に出す自由テキスト素材 (連絡先・注意事項・例の手書き等)
+- `help` / `help_long` は任意要素に付く string、`help_epilog` はスコープ要素に付く string
 - `help` / `help_long` の相互フォールバック (未設定側はもう一方を使う) は model に持ち込まず、レンダラの既定 policy として推奨する (規範ではない — 素材と policy の分離)
 
 #### グループ語彙 — help_group_name とグループ宣言エントリ
 
 1. **既定の表示順は宣言順** (wire form は JSON で宣言順が保存される)
-2. **要素属性 `help_group_name` (string)**: entry が属する表示グループの名前参照。`options[]` / `commands[]` の entries に付く
+2. **要素属性 `help_group_name` (string)**: option entry が属する表示グループの名前参照。`options[]` の entry に付く
 3. **グループ宣言エントリ**: `type` も `name` も無い、グループ属性だけを持つ entry を `options[]` に置ける:
 
    ```json
@@ -1126,7 +1126,7 @@ help_installer は表示メタの回収、5 preset の植え付け、help_query 
 4. **判別規則**: entry が `help_group_name` を持ち、かつ `name` / `id` / `type` / 入口系属性 (long / short / env 等) をいずれも持たない場合にグループ宣言エントリとする。それ以外の `help_group_name` は所属参照
 5. **`help_group_title` / `help_group_description`** は同時に書かれた `help_group_name` に紐付く追加属性。指定なしでも困らない (見出し = グループ名)
 6. **同じグループ名の重複宣言は、設定が同一か否かを問わず definition-error** (kind: `invalid-range`、DR-113 §8.1)
-7. commands のグループ化は v1 では持たない — グループ宣言エントリの座席を `options[]` に限る (必要になれば追加互換で `commands[]` にも開ける)
+7. commands はグループ化せず、`help_group_name` とグループ宣言エントリの座席は `options[]` に限る
 
 #### 順序語彙と合成規則 — 宣言順 / help_order / help_group_order / help_after
 
@@ -1134,7 +1134,7 @@ help_installer は表示メタの回収、5 preset の植え付け、help_query 
 - **`help_group_order` (number)**: グループ宣言エントリの表示順明示 (意味論は help_order と同一、座席で語彙を分ける)。座席違い (通常 entry に help_group_order、グループ宣言エントリに help_order) は definition-error (kind: `invalid-range`)
 - **`help_after` (string)**: 相対配置 — 同一スコープ・同一 entries 列内の他要素 name を参照し、その直後に表示配置する (代表例: 後方にまとめた deprecated alias を canonical の直後に置く)。target はグループ宣言エントリを指せない (name を持たないため)
 
-**合成規則 (決定的)**。並べ替えは `options` / `commands` の各 entries 列 (グループ宣言エントリ込みのフラット列) に対して独立に、次の 2 段で適用する:
+**合成規則 (決定的)**。並べ替えは `options` / `commands` の各 entries 列に独立適用する。`options` はグループ宣言エントリを含むフラット列、`commands` は通常 entry の列として、次の 2 段で処理する:
 
 1. **order による安定ソート**: 各 entry の実効 order = 明示値 (`help_order` / `help_group_order`)、無ければ宣言 index (0-based)。実効 order の昇順で安定ソートする (同じ実効 order の entry は宣言順を保つ = 同値は定義順優先で insert-after 的に割り込む)
 2. **help_after の後処理適用**: `help_after` を持つ entry を段 1 の結果列から取り出し、target の直後へ移動する。規範は結果で定める:
