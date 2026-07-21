@@ -1,6 +1,6 @@
 ---
 title: DR-115 (canonical help レンダラ) を実装完了する
-status: open
+status: resolved
 category: task
 created: 2026-07-21T05:50:29+09:00
 last_read:
@@ -9,10 +9,10 @@ wip_entered:
 blocked_entered:
 pending_entered:
 discarded_entered:
-resolved_entered:
+resolved_entered: 2026-07-21T09:10:18+09:00
 discard_reason:
 pending_reason:
-close_reason:
+close_reason: ["dr/DR-115","implemented","done:kuu-cli main=0ee0adcf/kuu.mbt main=76212140, RIMPL-Q1〜Q6反映済み (repeat 表記は暫定採用)"]
 blocked_by:
 origin: 自リポ TODO
 ---
