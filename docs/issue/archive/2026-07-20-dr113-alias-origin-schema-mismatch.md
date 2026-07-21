@@ -1,6 +1,6 @@
 ---
 title: origin enum の alias 形の出現点が消滅 — DR-113 §4.4 と schema の整理が必要
-status: open
+status: resolved
 category: design
 created: 2026-07-20T15:57:20+09:00
 last_read:
@@ -9,10 +9,10 @@ wip_entered:
 blocked_entered:
 pending_entered:
 discarded_entered:
-resolved_entered:
+resolved_entered: 2026-07-21T09:55:09+09:00
 discard_reason:
 pending_reason:
-close_reason:
+close_reason: ["dr/DR-113#4.3","裁定/GAP-Q2=a","schema/fixture.schema.json helpOrigin から alias 形削除","kuu.mbt HelpOrigin::Alias 削除"]
 blocked_by:
 origin: P2 help fixture レビュー (codex-sol-reviewer)
 ---

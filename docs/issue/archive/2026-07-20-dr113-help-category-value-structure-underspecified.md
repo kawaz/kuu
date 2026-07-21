@@ -1,6 +1,6 @@
 ---
 title: DR-113 に help_category の value_structure 形が未規定
-status: open
+status: resolved
 category: design
 created: 2026-07-20T15:34:02+09:00
 last_read:
@@ -9,10 +9,10 @@ wip_entered:
 blocked_entered:
 pending_entered:
 discarded_entered:
-resolved_entered:
+resolved_entered: 2026-07-21T09:55:09+09:00
 discard_reason:
 pending_reason:
-close_reason:
+close_reason: ["dr/DR-113#2.3","裁定/GAP-Q1-i=承認","help_category の model 射影を or[single{bool}, single{value_name:CATEGORY,string}] で規範化"]
 blocked_by:
 origin: schema-p1b worker
 ---

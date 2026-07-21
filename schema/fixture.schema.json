@@ -401,15 +401,6 @@
           },
           "required": ["kind", "declared_at"],
           "additionalProperties": false
-        },
-        {
-          "type": "object",
-          "properties": {
-            "kind": { "const": "alias" },
-            "of": { "type": "string" }
-          },
-          "required": ["kind", "of"],
-          "additionalProperties": false
         }
       ]
     },

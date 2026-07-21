@@ -1,6 +1,6 @@
 ---
 title: values enum 情報の help model 射影が未規定 + spellings/types/used_as の配列順が DR 未規定
-status: open
+status: resolved
 category: design
 created: 2026-07-20T15:56:10+09:00
 last_read:
@@ -9,10 +9,10 @@ wip_entered:
 blocked_entered:
 pending_entered:
 discarded_entered:
-resolved_entered:
+resolved_entered: 2026-07-21T09:55:09+09:00
 discard_reason:
 pending_reason:
-close_reason:
+close_reason: ["dr/DR-113#4.1","dr/DR-113#4.4","裁定/GAP-Q1-ii/iii=承認","values_enum フィールド明記 + per-field 配列は宣言出現順"]
 blocked_by:
 origin: 自リポ TODO
 ---

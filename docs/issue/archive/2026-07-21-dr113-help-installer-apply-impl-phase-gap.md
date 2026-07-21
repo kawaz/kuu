@@ -1,6 +1,6 @@
 ---
 title: DR-113 §1 の help_installer.apply 記述と実装位相の差を注記
-status: open
+status: resolved
 category: design
 created: 2026-07-21T02:04:48+09:00
 last_read:
@@ -9,10 +9,10 @@ wip_entered:
 blocked_entered:
 pending_entered:
 discarded_entered:
-resolved_entered:
+resolved_entered: 2026-07-21T09:55:09+09:00
 discard_reason:
 pending_reason:
-close_reason:
+close_reason: ["dr/DR-113#1","裁定/波及同乗","canonical expansion は観測等価な実装位相を許す (内部セルの実効化は consumer 出現時) の注記追加"]
 blocked_by:
 origin: 依頼元プロジェクト (kuu.mbt)
 ---

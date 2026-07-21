@@ -224,7 +224,7 @@
         },
         "help_epilog": {
           "type": "string",
-          "description": "オプション一覧の後に出す末尾テキスト素材 (表示メタ、DR-113 §7.1)。選択スコープ要素 (ルート / command) のものが model へ射影される — 葉要素に付いても合法だが v1 の model に座席が無い (lint warn の関心)。"
+          "description": "オプション一覧の後に出す末尾テキスト素材 (表示メタ、DR-113 §7.1)。選択スコープ要素 (ルート / command) に付いたもののみが model へ射影される。"
         },
         "display_name": {
           "type": "string",
