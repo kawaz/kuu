@@ -1,6 +1,6 @@
 ---
 title: kuu.mbt 旧リモート枝 5 本の未回収コンテキスト棚卸し (削除はしない)
-status: wip
+status: resolved
 category: task
 created: 2026-07-14T10:24:59+09:00
 last_read:
@@ -9,10 +9,10 @@ wip_entered: 2026-07-14T10:24:59+09:00
 blocked_entered:
 pending_entered:
 discarded_entered:
-resolved_entered:
+resolved_entered: 2026-07-22T15:44:20+09:00
 discard_reason:
 pending_reason:
-close_reason:
+close_reason: ["finding/mbt-remote-branch-inventory","done:棚卸し完了(ws-audit実測2026-07-21)+3枝削除実行(2026-07-22、gh api)。ast-spec/claude-review-implementation-gLfMA/dependabot npmはast-spec系譜・kuu-v0への完全吸収を実証し削除。kuu-v0は温存(データ保護方針)。sliceは凍結対象でなく現行アクティブ枝と判明。GitHub残枝=kuu-v0/main/slice。"]
 blocked_by:
 origin: kawaz 裁定 (2026-07-14, BR-Q) — 旧枝削除不可、棚卸し先行
 ---
