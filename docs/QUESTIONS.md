@@ -7,13 +7,13 @@
 > チャットでは「👺 XX-Q1 の裁定お願いします」形式でラベル参照する。回答はラベル + 選択肢記号 (例「Q13=a」) だけで通じる。
 > 参照パスは本リポ (spec) 相対。kuu.mbt 側は「kuu.mbt の <path>」と表記する。
 
-## 👺GEN-Q3'〜Q6': 補完生成器 (再構成版 — セルフバイナリ主軸、正本: docs/findings/2026-07-22-completion-generator-plan.md 改稿済み)
+## 👺GEN-Q3x〜Q6x: 補完生成器 (確定骨格版 — 生成 = preset / query = env モード切替)
 
-**裁定済み**: GEN-Q1=a (ブリッジ型 — 呼ぶのは kuu 組み込みアプリ自身のバイナリ)、GEN-Q2=a (zsh/bash/fish)。Q3/Q4 の kuu-cli 前提を kawaz 指摘で棄却し、消費者 2 形態 (A = セルフバイナリ組み込みが本命 / B = kuu-cli の def.json 外部指定は従) + cobra/clap 定石調査で再構成した再提示。
+**確定済み骨格** (kawaz 裁定 3 回反映): 生成 = help 同型の completion_script preset (入口は定義者の自由) / query = KUU_COMPLETE=<shellname> <バイナリ> <words...> の env var モード切替 (引数解釈を玄関で奪う、定義非侵襲)。統括評価: env 方式は stdout 純度規約 + 子プロセス unset 規約で縁を潰せば構造的に最良 (findings 3.4 に規約化済み)。残る裁定 4 問 (正本: docs/findings/2026-07-22-completion-generator-plan.md):
 
-- **👺GEN-Q3': 生成側の標準形** — (a 推し) 形態 A = `<prog> completion <shell>` を多言語共通推奨 (cobra 並び positional)、形態 B = kuu-cli はその def.json 外部指定形 / (b) 推奨を置かず各言語裁量 — findings §2
-- **👺GEN-Q4': 補完時 query 口の方式と契約** — (a 推し) 予約サブコマンド `__kuu_complete --shell <s> --cword <N> -- <word...>` (cobra 型、手で叩けてデバッグ可) + **行指向テキスト応答** (`候補\t説明` + directive 行。初版の JSON envelope は「glue は jq を持たない」現実で棄却)。kuu 独自: words 全量 + cword 渡しで **args_after を捨てない** (cobra はカーソル後を捨てる — after 整合フィルタは kuu の全解決モデルの能力)。契約正本は spec 側 ABI DR / (b) clap 型 env var 起動 (契約 unstable・stdout 事故の縁) — §3
-- **👺GEN-Q5': custom completer 実行不能時の縮退** — (a 推し) 形態 A では問題不存在 (バイナリ内で実クロージャ実行 — 初版 Q5 は静的展開の発想の残滓)。形態 B のみ「候補なし + validate で capability 機械可読報告」、files fallback しない / (b) files fallback — §6
-- **👺GEN-Q6': 置き場所 3 層** — (a 推し) 契約 = spec ABI DR (非 conformance、DR-111 §5 座席の実体化) / shell glue テンプレ = 言語間共有資産 (各言語手書きは shell×言語 drift) / 実装 = 各言語 ux 層 / (b) kuu-cli docs 正本 / (c) glue も言語別 — §5
+- **👺GEN-Q3x: completion_script preset の形** — (a 推し) shell 名必須値の string preset (bool 枝なし)、shell 名値域は spec で閉じない、on_failure 既定 false。入口 long/short/env/サブコマンド形は定義者の自由 — findings 2 節
+- **👺GEN-Q4x: cword (カーソル位置) の受け方** — (a 推し) KUU_COMPLETE_INDEX=<N> の別 env、省略時は行末補完扱い。argv が純粋に words のままで、カーソル後の単語も捨てず after 整合フィルタ (kuu の全解決モデルの能力) が活きる / (b) cobra 型の末尾単語方式 (カーソル後を捨てる = args_after 原理的に不能) — 3.3 節
+- **👺GEN-Q5x: custom completer 実行不能時の縮退** — (a 推し) 形態 A (組み込みバイナリ) では問題不存在。形態 B (kuu-cli の def.json デバッガ) のみ「候補なし + validate で capability 機械可読報告」、files fallback しない — 6 節
+- **👺GEN-Q6x: 正本の置き場所** — (a 推し) preset 語彙 + env プロトコル + 応答行文法 = spec の新 ABI DR (DR-113 対称、DR-111 5 節座席の実体化) / shell glue テンプレ = 言語間共有資産 / 実装 = 各言語 ux 層。付帯: preset 1 種分の conformance 増分が発生 (発題 issue の「spec 増分ゼロ」条件の更新が必要) / (b) 正本を kuu-cli docs に — 5 節
 
-**回答形式**: 「GEN 残り全部推し通り」/ 個別指定。Q6'=a の場合は新規 spec ABI DR の起草へ。
+**回答形式**: 「GEN 残り推し通り」/ 個別指定 (例 Q4x=a)。
