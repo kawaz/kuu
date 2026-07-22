@@ -263,12 +263,14 @@ canonical 実体への別入口参照 (参照ファミリーの 3 人目: `ref` 
 **`multiple`**
 複数値経路のスイッチ。担うのは値の畳み方 (accumulator/collector/separator) のみで、出現回数の
 反復構造は `repeat` が担う。プリセット名 (string) または `{accumulator, collector?, separator?, flatten?}`
-の詳細形。組み込みプリセット: `append` / `merge` / `set` / `map` (DESIGN §6.4)。`flatten` は
+の詳細形。`collector` は引数なし resident 名 (string)、または resident 名を唯一のキーとして canonical
+引数を値に持つ object。`from_entries` の 3 形は `{"from_entries":"entries"}` /
+`{"from_entries":["key","value"]}` / `{"from_entries":"key"}` (DR-044)。`flatten` は
 `accumulator: "append"` 専用のダイヤル (既定 false) — true で発火値が配列ならその要素を 1 段展開
 して積む。他 accumulator への宣言は definition-error kind=invalid-range。
 最小例: `{"name": "tag", "type": "string", "multiple": "append"}` /
-`{"name": "src", "type": "string", "multiple": {"accumulator": "append", "flatten": true}}`
-正本: DESIGN §6.1〜6.4, DR-034/036/105
+`{"name": "src", "type": "string", "multiple": {"accumulator": "append", "collector": {"from_entries": "key"}}}`
+正本: DESIGN §6.1〜6.4, DR-034/036/044/105
 
 **`repeat`**
 構造閉包 (出現回数の反復)。`true` または `{min?, max?, lazy?}`。宣言した要素の結果は max の値に
@@ -670,7 +672,7 @@ xargs 型。最初の非ハイフン operand (utility 名) で発火、そのト
 | `unique` | filter | array | transform | total | (空) | 累積後の配列 (`Acc→Acc`、accum_filters 相) から重複要素を除去 (先勝ち順序保持) |
 | `length_range` | filter | array | preserve | reject | `too_short`, `too_long` | 累積後の配列長の範囲検証 (`Acc→Acc`、accum_filters 相、DR-105) |
 | `unwrap_single` | collector | array | transform | total | (空) | 累積結果 (`T[]→U`、collector 相) — 長さ 1 配列を要素へ再帰的に畳む、0/2+ 個は不変 (`multiple` プリセット `override` の default_collector) |
-| `from_entries` | collector | array | transform | total | (空) | 累積結果 (`T[]→U`、collector 相) — entries 配列形/指名 2 フィールド形/key 昇格形を Map へ変換 (`multiple` プリセット `map` の collector) |
+| `from_entries` | collector | array | transform | total | (空) | 累積結果 (`T[]→U`、collector 相) — entries 配列形/指名 2 フィールド形/key 昇格形を object へ変換。非適合形は total pass-through (DR-044 §2/§3) |
 <!-- kuu-lint:end -->
 
 filter DSL は DR-114 の universal fn specialization で、`"regex_match:..."` と `["regex_match", "..."]` は共通 args decode 後に同一呼び出しとなる。呼び出し時の `FnCtx.mode()` は `"filter"`。runtime 参照を持つ住人は descriptor の `observes` で宣言する。filter pipeline、Reject / Error、物理 registry は `filters` のまま維持する。
@@ -699,7 +701,8 @@ const 固定される (DR-105 §4「構造畳み装置は total」の Schema 強
 | `pattern` | `regex_match` | DSL 唯一引数、host 方言準拠の正規表現。compile 失敗は definition-error (実行時 reason ではない) |
 | `min` | `length_range` | DSL 第 1 引数、下限 (含む)。非負整数限定 (DR-105 §5(a)) |
 | `max` | `length_range` | DSL 第 2 引数、上限 (含む)。非負整数限定 |
-| `key` | `from_entries` | object 形引数、key 昇格用のフィールド名 (3 用法のうち 1 用法の代表引数、DR-044) |
+| `key` | `from_entries` | 指名 2 フィールド用法の key フィールド名、または key 昇格用法の昇格フィールド名 (DR-044) |
+| `value` | `from_entries` | 指名 2 フィールド用法の value フィールド名。`key` と組で指定する (DR-044) |
 <!-- kuu-lint:end -->
 
 これらは descriptor の `invocation.parameters` 宣言 (DR-107 §5) — filter chain の colon-DSL

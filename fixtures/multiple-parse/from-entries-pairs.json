@@ -1,0 +1,33 @@
+{
+  "why": "from_entries の entries 用法を canonical wire `multiple.collector:{from_entries:\"entries\"}` から実食する。累積配列が 2 要素 pair 列でなければ total pass-through とし、空配列も `[]` のまま保持する (DR-044 §2/§3)。1 要素配列を含む厳密境界は ResultValue の入れ子配列を直接構築できる resident wbtest が pin する。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {
+        "name": "entries",
+        "type": "string",
+        "long": true,
+        "multiple": {"accumulator": "append", "collector": {"from_entries": "entries"}}
+      }
+    ]
+  },
+  "cases": [
+    {
+      "id": "non-pair-values-pass-through",
+      "args": ["--entries", "a", "--entries", "b"],
+      "expect": {
+        "outcome": "success",
+        "result": {"entries": ["a", "b"]}
+      }
+    },
+    {
+      "id": "empty-array-passes-through",
+      "args": [],
+      "expect": {
+        "outcome": "success",
+        "effects": [],
+        "result": {"entries": []}
+      }
+    }
+  ]
+}

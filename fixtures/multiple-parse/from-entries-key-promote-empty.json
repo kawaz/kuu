@@ -1,0 +1,29 @@
+{
+  "why": "from_entries の key 昇格用法で row が key フィールドだけを持つ場合、key 除去後の値は空 object `{}` になる。total collector は空 object を欠落や Error に変えない (DR-044 §3)。",
+  "query": "parse",
+  "definition": {
+    "definitions": {
+      "templates": {
+        "entry": {"type": "string", "name": "key"}
+      }
+    },
+    "options": [
+      {
+        "name": "entries",
+        "ref": "entry",
+        "long": true,
+        "multiple": {"accumulator": "append", "collector": {"from_entries": "key"}}
+      }
+    ]
+  },
+  "cases": [
+    {
+      "id": "promoted-only-key-leaves-empty-object",
+      "args": ["--entries", "a"],
+      "expect": {
+        "outcome": "success",
+        "result": {"entries": {"a": {}}}
+      }
+    }
+  ]
+}

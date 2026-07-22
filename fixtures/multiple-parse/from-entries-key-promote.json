@@ -1,0 +1,32 @@
+{
+  "why": "from_entries の key 昇格用法を canonical wire `multiple.collector:{from_entries:\"key\"}` から実食する。非 string number key は決定的な toString (`1`) へ正規化する (DR-044 §2/§3)。bool/array/object key と重複 key の ResultValue 輪郭は resident wbtest が補完する。",
+  "query": "parse",
+  "definition": {
+    "definitions": {
+      "templates": {
+        "entry": {"seq": [
+          {"name": "key", "type": "number"},
+          {"name": "value", "type": "string"}
+        ]}
+      }
+    },
+    "options": [
+      {
+        "name": "entries",
+        "ref": "entry",
+        "long": true,
+        "multiple": {"accumulator": "append", "collector": {"from_entries": "key"}}
+      }
+    ]
+  },
+  "cases": [
+    {
+      "id": "number-key-is-stringified",
+      "args": ["--entries", "1", "x"],
+      "expect": {
+        "outcome": "success",
+        "result": {"entries": {"1": {"value": "x"}}}
+      }
+    }
+  ]
+}

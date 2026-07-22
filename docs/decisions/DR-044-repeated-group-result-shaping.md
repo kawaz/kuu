@@ -19,14 +19,14 @@ object / スカラで規則は分かれない (発火ごとの蓄積 = 添字付
 
 蓄積された配列を object へ変換するのは **`from_entries` collector**。3 用法:
 
-| 用法 | 入力の形 | 挙動 |
-|---|---|---|
-| `from_entries()` | `[[k, v], ...]` (無名 2 要素 seq の配列) | そのまま entries として object 化 |
-| `from_entries({key: "k", value: "v"})` | `[{k, v}, ...]` (named フィールドの object 配列) | 指名 2 フィールドを key / value に |
-| `from_entries({key: "path"})` | object 配列 | key フィールドが昇格・除去され、**残りのオブジェクト全体**が値になる |
+| 用法 | `multiple.collector` の wire canonical | 入力の形 | 挙動 |
+|---|---|---|---|
+| `from_entries()` | `{"from_entries": "entries"}` | `[[k, v], ...]` (無名 2 要素 seq の配列) | そのまま entries として object 化 |
+| `from_entries({key: "k", value: "v"})` | `{"from_entries": ["k", "v"]}` | `[{k, v}, ...]` (named フィールドの object 配列) | 指名 2 フィールドを key / value に |
+| `from_entries({key: "path"})` | `{"from_entries": "path"}` | object 配列 | key フィールドが昇格・除去され、**残りのオブジェクト全体**が値になる |
 
 ```json
-{"name": "upstreams", "multiple": {"preset": "map", "from_entries": {"key": "path"}}, ...}
+{"name": "upstreams", "multiple": {"accumulator": "append", "collector": {"from_entries": "path"}}, ...}
 ```
 
 → `{upstreams: {"/path/to/up1": {sockets: {...}}, "/tmp/foo.sock": {...}}}`
@@ -35,7 +35,18 @@ object / スカラで規則は分かれない (発火ごとの蓄積 = 添字付
 - 表記は DR-034 / DR-036 の既存合成順 (type → multiple → 直接書き) にそのまま乗る。collector は filters registry の住人 (DR-036) であり、新しい registry 区分は作らない
 - 蓄積要素を `[k, v]` (無名 = 配列) と `{k, v}` (named = object) のどちらで作るかは DR-025 / §2.5 の name 有無規則そのもの — from_entries の 3 用法はその両方を受ける
 
-### 3. 例 (authsock-warden)
+### 3. 不適合入力の決定則
+
+`from_entries` は total collector であり、不適合入力を Error / Reject にしない。変換条件を満たさない配列は配列形のまま通し、その子要素へ同じ `from_entries` を再帰適用する。
+
+- entries 用法は、空でなく、全要素がちょうど 2 要素の配列である場合だけ object 化する。1 要素配列を含む入力は配列形のまま通す
+- 指名 2 フィールド用法は、空でなく、全要素が object かつ key/value の両指名フィールドを持つ場合だけ object 化する。いずれかの指名フィールドが欠ければ配列形のまま通す
+- key 昇格用法は、空でなく、全要素が object かつ指名 key フィールドを持つ場合だけ object 化する。昇格後に他フィールドが無ければ、その entry の値は空 object `{}` になる
+- key は string ならその値をそのまま使う。非 string は JSON compact の `toString` へ正規化する: number は `"1"`、bool は `"true"` / `"false"`、null は `"null"`、array / object は空白なし JSON 文字列。変換は決定的で失敗経路を持たない
+- 同一 key の entry は入力順のまま全て保持し、collector 自身では last-wins 等へ畳まない
+- 空配列はどの用法でも空配列 `[]` のまま通す
+
+### 4. 例 (authsock-warden)
 
 ```
 --upstream /path/to/up1 --socket ~/.ssh/up1-s1.sock filter1 filter1 \
@@ -53,7 +64,7 @@ object / スカラで規則は分かれない (発火ごとの蓄積 = 添字付
     {"path": "/tmp/foo-bar.sock", "filters": []}]}]}
 ```
 
-map 形 (各段に `from_entries: {key: "path"}`):
+map 形 (各段の `multiple.collector` に `{"from_entries": "path"}`):
 
 ```json
 {"upstreams": {

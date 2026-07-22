@@ -127,11 +127,12 @@
       "invocation": {
         "encoding": "object_args",
         "parameters": [
-          { "name": "key", "type": "string", "required": false, "description": "key 昇格用のフィールド名 (entries 配列形・指名 2 フィールド形・key 昇格形の 3 用法のうち 1 用法の代表引数、DR-044)。3 用法の完全な形は multiple.collector の object 形宣言から導出する FromEntries spec に依存し、本フィールドは簡略化した宣言 (完全な conformance 検証への昇格は issue descriptor-conformance-promotion-revisit の射程)。" }
+          { "name": "key", "type": "string", "required": false, "description": "指名 2 フィールド用法の key フィールド名、または key 昇格用法の昇格フィールド名 (DR-044)。" },
+          { "name": "value", "type": "string", "required": false, "description": "指名 2 フィールド用法の value フィールド名 (DR-044)。key と組で指定する。" }
         ]
       },
       "reasons": [],
-      "description": "累積結果 (T[]→U、collector 相、DR-036/DR-044) — entries 配列形・指名 2 フィールド形・key 昇格形の 3 用法を一本で覆い Map へ変換する。multiple プリセット `map` の collector (旧 to_map + key_from を置換)。domain:array/output_mode:transform/fallibility:total はいずれも collector 役割の const 固定 (DR-107 §7)。呼び出し規約は filter chain の colon-DSL args とは異なる (multiple.collector の object 形から導出する FromEntries spec を引数に取る、DR-106、codex レビュー #2 M-21 の反映)。"
+      "description": "累積結果 (T[]→U、collector 相、DR-036/DR-044) — entries 配列形・指名 2 フィールド形・key 昇格形の 3 用法を一本で覆い Map へ変換する。domain:array/output_mode:transform/fallibility:total はいずれも collector 役割の const 固定 (DR-107 §7)。呼び出し規約は filter chain の colon-DSL args とは異なり、multiple.collector の object 形に resident 固有引数を載せる。現 descriptor schema の flat parameters は wire 3 形の排他的 union を表現できないため、key/value の意味を最大限宣言する簡略形に留める。完全な機械宣言は issue descriptor-conformance-promotion-revisit の射程。"
     }
   },
 

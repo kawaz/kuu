@@ -93,7 +93,13 @@
               "type": "object",
               "properties": {
                 "accumulator": { "type": "string", "description": "accumulators registry の参照 (DR-036)。" },
-                "collector": { "type": "string", "description": "filters registry の参照、累積後の T[]→U 変換 (DR-036)。省略時は accumulator の default_collector。" },
+                "collector": {
+                  "oneOf": [
+                    { "$ref": "#/$defs/registryIdentifier" },
+                    { "$ref": "#/$defs/collectorCall" }
+                  ],
+                  "description": "累積後の T[]→U 変換 (DR-036/044)。string は filters registry の引数なし collector 参照。object は resident 名を唯一のキー、resident 固有の canonical 引数を値に持つ引数形。省略時は accumulator の default_collector。"
+                },
                 "separator": { "type": "string", "description": "1 トークンを piece 列へ分割する区切り文字列 (DR-034)。" },
                 "flatten": { "type": "boolean", "default": false, "$comment": "この default は「append 選択時の意味既定」であって decode 時の補完値ではない — 存在ベース判定 (DR-105 §2)。宣言の有無自体が意味を持つ属性であり、validation 完了まで absent|false|true の三状態として保持する。DR-063 §4 の『省略 = default 値と等価』は「その要素形に存在する属性」の値比較規約であり、属性の宣言自体が構造不一致になる wrong-seat 判定 (append 以外への flatten 宣言は値を問わず invalid-range) には適用されない (DR-105 §2 明確化 note)。", "description": "`accumulator: \"append\"` 専用ダイヤル (DR-105)。true で発火値が配列なら要素を 1 段展開して積む。**キーの宣言自体** (値が true/false いずれでも) が `append` 以外の accumulator では definition-error kind=invalid-range (DR-105 §2)。" }
               },
@@ -326,6 +332,37 @@
       "type": "object",
       "additionalProperties": { "$ref": "#/$defs/node" },
       "description": "1 区分の名前→定義マップ。定義はテンプレ node、または configurable factory 参照 {name, config} (DR-061 §3) — 後者も name(string)/config(object) を持つ object であり node 形に適合するため同一 $ref で受ける。"
+    },
+
+    "collectorCall": {
+      "type": "object",
+      "description": "引数付き collector 呼び出し。resident 名を唯一のキー、resident 固有の canonical 引数を値に持つ (DR-044)。v1 の引数付き resident は from_entries。",
+      "properties": {
+        "from_entries": { "$ref": "#/$defs/fromEntriesArgs" }
+      },
+      "required": ["from_entries"],
+      "additionalProperties": false
+    },
+
+    "fromEntriesArgs": {
+      "description": "from_entries の 3 用法と 1:1 の canonical 引数: entries 配列形 / 指名 key-value / key 昇格 (DR-044 §2)。",
+      "oneOf": [
+        { "const": "entries" },
+        {
+          "type": "array",
+          "prefixItems": [
+            { "type": "string" },
+            { "type": "string" }
+          ],
+          "items": false,
+          "minItems": 2,
+          "maxItems": 2
+        },
+        {
+          "type": "string",
+          "not": { "const": "entries" }
+        }
+      ]
     },
 
     "filterChain": {

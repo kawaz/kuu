@@ -1,0 +1,29 @@
+{
+  "why": "from_entries の指名 2 フィールド用法で value フィールドが欠ける row は不適合であり、Error/Reject にせず row 配列全体を total pass-through する (DR-044 §3)。",
+  "query": "parse",
+  "definition": {
+    "definitions": {
+      "templates": {
+        "entry": {"type": "string", "name": "key"}
+      }
+    },
+    "options": [
+      {
+        "name": "entries",
+        "ref": "entry",
+        "long": true,
+        "multiple": {"accumulator": "append", "collector": {"from_entries": ["key", "value"]}}
+      }
+    ]
+  },
+  "cases": [
+    {
+      "id": "missing-named-value-passes-through",
+      "args": ["--entries", "a", "--entries", "b"],
+      "expect": {
+        "outcome": "success",
+        "result": {"entries": [{"key": "a"}, {"key": "b"}]}
+      }
+    }
+  ]
+}

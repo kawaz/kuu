@@ -1,0 +1,32 @@
+{
+  "why": "from_entries の指名 2 フィールド用法を canonical wire `multiple.collector:{from_entries:[\"key\",\"value\"]}` から実食する。各 ref 発火の named row `{key,value}` を object entry へ変換する (DR-044 §2)。",
+  "query": "parse",
+  "definition": {
+    "definitions": {
+      "templates": {
+        "entry": {"seq": [
+          {"name": "key", "type": "string"},
+          {"name": "value", "type": "string"}
+        ]}
+      }
+    },
+    "options": [
+      {
+        "name": "entries",
+        "ref": "entry",
+        "long": true,
+        "multiple": {"accumulator": "append", "collector": {"from_entries": ["key", "value"]}}
+      }
+    ]
+  },
+  "cases": [
+    {
+      "id": "named-key-value-rows-become-object",
+      "args": ["--entries", "a", "1", "--entries", "b", "2"],
+      "expect": {
+        "outcome": "success",
+        "result": {"entries": {"a": "1", "b": "2"}}
+      }
+    }
+  ]
+}
