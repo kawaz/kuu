@@ -7,13 +7,13 @@
 > チャットでは「👺 XX-Q1 の裁定お願いします」形式でラベル参照する。回答はラベル + 選択肢記号 (例「Q13=a」) だけで通じる。
 > 参照パスは本リポ (spec) 相対。kuu.mbt 側は「kuu.mbt の <path>」と表記する。
 
-## 👺GEN-Q1〜Q6: DR-116 補完生成器の実装設計 (正本: docs/findings/2026-07-22-completion-generator-plan.md)
+## 👺GEN-Q3'〜Q6': 補完生成器 (再構成版 — セルフバイナリ主軸、正本: docs/findings/2026-07-22-completion-generator-plan.md 改稿済み)
 
-- **👺GEN-Q1: アーキテクチャ** — (a 推し) ブリッジ型一択: 生成スクリプトは薄い橋で、補完時に kuu バイナリを呼ぶ (cobra 方式)。静的展開型は生存経路計算・after 整合・動的 completer が script へ展開不能で劣化版にしかならない / (b) 静的展開 / (c) 混成 — findings §1
-- **👺GEN-Q2: v1 対象シェル** — (a 推し) zsh + bash + fish の 3 つ (能力 3 象限 = リッチ/中間/順序不可 を初期に踏み、翻訳層の設計が最初から鍛えられる) / (b) zsh のみ先行 — §2.3
-- **👺GEN-Q3: 生成コマンド形** — (a 推し) `kuu completion generate <def.json> --shell <s>` (kuu-cli 既存流儀と一貫) / (b) cobra 風 `kuu completion <shell>` — §2.1
-- **👺GEN-Q4: 補完時 query の契約** — (a 推し) `kuu completion query --cword N -- words...` を新設 (既存 `complete` = 素材口とは別の policy 適用済み envelope 口。raw argv 直渡しで shell に JSON quoting を組ませない) / (b) 既存 complete を拡張 — §3
-- **👺GEN-Q5: 未知の custom completer 名** — (a 推し) builtin マップのみ対応、未知名は候補なし + docs 告知 (files への fallback は型違い候補で無より悪い) / (b) files fallback — §3.5
-- **👺GEN-Q6: 生成器の住処** — (a 推し) kuu-cli lib (DR-115 renderer と同座席、spec/kuu.mbt 増分ゼロを突き合わせ表で裏取り済み) / (b) kuu.mbt に支援 API — §5
+**裁定済み**: GEN-Q1=a (ブリッジ型 — 呼ぶのは kuu 組み込みアプリ自身のバイナリ)、GEN-Q2=a (zsh/bash/fish)。Q3/Q4 の kuu-cli 前提を kawaz 指摘で棄却し、消費者 2 形態 (A = セルフバイナリ組み込みが本命 / B = kuu-cli の def.json 外部指定は従) + cobra/clap 定石調査で再構成した再提示。
 
-**回答形式**: 「GEN 全部推し通り」/ 個別指定。裁定後 kuu-cli 実装 (envelope の正本化は kuu-cli docs 側)。
+- **👺GEN-Q3': 生成側の標準形** — (a 推し) 形態 A = `<prog> completion <shell>` を多言語共通推奨 (cobra 並び positional)、形態 B = kuu-cli はその def.json 外部指定形 / (b) 推奨を置かず各言語裁量 — findings §2
+- **👺GEN-Q4': 補完時 query 口の方式と契約** — (a 推し) 予約サブコマンド `__kuu_complete --shell <s> --cword <N> -- <word...>` (cobra 型、手で叩けてデバッグ可) + **行指向テキスト応答** (`候補\t説明` + directive 行。初版の JSON envelope は「glue は jq を持たない」現実で棄却)。kuu 独自: words 全量 + cword 渡しで **args_after を捨てない** (cobra はカーソル後を捨てる — after 整合フィルタは kuu の全解決モデルの能力)。契約正本は spec 側 ABI DR / (b) clap 型 env var 起動 (契約 unstable・stdout 事故の縁) — §3
+- **👺GEN-Q5': custom completer 実行不能時の縮退** — (a 推し) 形態 A では問題不存在 (バイナリ内で実クロージャ実行 — 初版 Q5 は静的展開の発想の残滓)。形態 B のみ「候補なし + validate で capability 機械可読報告」、files fallback しない / (b) files fallback — §6
+- **👺GEN-Q6': 置き場所 3 層** — (a 推し) 契約 = spec ABI DR (非 conformance、DR-111 §5 座席の実体化) / shell glue テンプレ = 言語間共有資産 (各言語手書きは shell×言語 drift) / 実装 = 各言語 ux 層 / (b) kuu-cli docs 正本 / (c) glue も言語別 — §5
+
+**回答形式**: 「GEN 残り全部推し通り」/ 個別指定。Q6'=a の場合は新規 spec ABI DR の起草へ。
