@@ -58,4 +58,5 @@ DR-035 の対称性を無傷に保てるが、頂上キーが増える。definit
 - DR-032 (ref/link の解決順 — §3 が「name を指す」を精密化) / DR-035 (definitions の区分 — §2 が templates を追加)
 - DR-046 §4 (内部 id) / DR-057 (参照ファミリー) / DR-054 (absent-ref / zero-progress)
 - DR-028 (type as reference — type 側の解決順、本 DR の対比相手)
+- DR-104 §2 (ref template 越しの complete origin: trigger は参照元要素名、値位置は template 内部 leaf 名)
 - 蒸留 1:1 audit: docs/findings/2026-07-09-distill-1to1-coverage-audit.md 漏れ #1/#2

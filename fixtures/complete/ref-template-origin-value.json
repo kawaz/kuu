@@ -1,0 +1,32 @@
+{
+  "why": "ref template 越しの値位置候補 origin と 6 フィールド identity の負側境界 (DR-104 §2 明確化 (iv) / §3、MISC-Q1=a): trigger 消費後は template 内部で実際に値を受け取る leaf 名が origin になる。同じ type の 2 leaf を同時に pending にして、spelling/is_value/type/term/meta が一致しても origin だけが異なれば dedup されないことを単一フィールド差で pin する。",
+  "query": "complete",
+  "definition": {
+    "config": {"long_eq_sep": "deny"},
+    "definitions": {
+      "templates": {
+        "item_value": {"or": [
+          {"type": "string", "name": "primary"},
+          {"type": "string", "name": "secondary"}
+        ]}
+      }
+    },
+    "options": [
+      {"name": "item", "ref": "item_value", "long": true}
+    ]
+  },
+  "cases": [
+    {
+      "id": "value-origin-is-template-leaf-name",
+      "why": "args_before: [`--item`] で参照元 option の trigger は消費済みとなり、template の or 2 枝がともに string 値待ちになる。値位置候補の origin は参照元名 `item` ではなく、実際の値セルである内部 leaf 名 `primary` / `secondary`。2 候補は spelling 省略値・is_value・type・term・meta が同一で origin だけが異なるため、DR-104 §3 の 6 フィールド完全一致を満たさず dedup されない。",
+      "args_before": ["--item"],
+      "expect": {
+        "outcome": "complete",
+        "candidates": [
+          {"is_value": true, "type": "string", "origin": "primary", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}},
+          {"is_value": true, "type": "string", "origin": "secondary", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}}
+        ]
+      }
+    }
+  ]
+}

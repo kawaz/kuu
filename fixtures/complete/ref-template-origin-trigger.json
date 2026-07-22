@@ -1,0 +1,28 @@
+{
+  "why": "ref template 越しの trigger 候補 origin (DR-104 §2 明確化 (iv)、MISC-Q1=a): option の入口綴りは template 内部 leaf ではなく参照元要素が宣言するため、trigger candidate の origin は参照元要素名になる。template の leaf 名は値位置候補の消費点だけを表し、入口候補へは伝播しない。",
+  "query": "complete",
+  "definition": {
+    "config": {"long_eq_sep": "deny"},
+    "definitions": {
+      "templates": {
+        "item_value": {"type": "string", "name": "payload"}
+      }
+    },
+    "options": [
+      {"name": "item", "ref": "item_value", "long": true}
+    ]
+  },
+  "cases": [
+    {
+      "id": "trigger-origin-is-referrer-name",
+      "why": "args_before 空では long option の入口 `--item` が次の消費点に立つ。入口を宣言した要素は参照元 option `item` なので origin は `item`。template 内部 leaf `payload` は `--item` 消費後の値位置を表す名前であり、この trigger candidate の origin にはならない。`long_eq_sep:\"deny\"` により eq-split の `term:cont` 候補を止め、space form の入口 1 件だけに単離する。",
+      "args_before": [],
+      "expect": {
+        "outcome": "complete",
+        "candidates": [
+          {"spelling": "--item", "is_value": false, "origin": "item", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}}
+        ]
+      }
+    }
+  ]
+}
