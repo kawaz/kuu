@@ -25,7 +25,7 @@ origin: 自リポ TODO
 
 ## 背景
 
-元 issue: `docs/issue/2026-07-18-completion-ordering-and-lazy-candidates.md` (completion-ordering-and-lazy-candidates、現状 status=open、archive 未移動)。
+元 issue: `docs/issue/archive/2026-07-18-completion-ordering-and-lazy-candidates.md` (DR-116 への昇華により resolved)。
 
 DR-116 §「波及」(末尾節) は以下を実装課題として明示している:
 
