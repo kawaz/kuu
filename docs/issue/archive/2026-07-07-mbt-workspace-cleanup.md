@@ -1,6 +1,6 @@
 ---
 title: kuu.mbt 旧実装系 workspace / origin 残存枝の廃止検討
-status: open
+status: resolved
 category: task
 created: 2026-07-07T13:04:13+09:00
 last_read:
@@ -9,10 +9,10 @@ wip_entered:
 blocked_entered:
 pending_entered:
 discarded_entered:
-resolved_entered:
+resolved_entered: 2026-07-22T15:24:41+09:00
 discard_reason:
 pending_reason:
-close_reason:
+close_reason: ["done:workspace forget (refactor/review/parts-arggen) 実施済み、2026-07-21 棚卸し実測で物理削除済みを確認 (issue TODO の「未実施」は古い記述だった)","done:origin 残存枝 3 本 (ast-spec / claude/review-implementation-gLfMA / dependabot npm) を現系譜への完全吸収 (未回収 diff 0) 実証の上 2026-07-22 gh api で削除、GitHub 残枝は kuu-v0/main/slice のみ","done:孤立 default workspace も forget","done:kuu-v0 bookmark とローカル ws (ast-spec/divfix/main/slice) は温存方針どおり不変"]
 blocked_by:
 origin: 参照実装立ち上げ (2026-07-07 kawaz 裁定 ⑥) の掃除項目
 ---
