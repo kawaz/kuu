@@ -1,6 +1,6 @@
 ---
 title: from_entries の輪郭検証 — 不適合入力の結果と wire 直列形
-status: open
+status: resolved
 category: design
 created: 2026-07-14T21:22:33+09:00
 last_read:
@@ -9,10 +9,10 @@ wip_entered:
 blocked_entered:
 pending_entered:
 discarded_entered:
-resolved_entered:
+resolved_entered: 2026-07-22T15:54:15+09:00
 discard_reason:
 pending_reason:
-close_reason:
+close_reason: ["dr/DR-044:implemented", "done:MISC-Q2 裁定を wire schema・descriptor/REFERENCE・multiple-parse fixtures と kuu.mbt 実装へ反映し、mismatch 0 / skip 0 で検証した"]
 blocked_by:
 origin: 自リポ TODO (codex #3 レビュー由来)
 ---
