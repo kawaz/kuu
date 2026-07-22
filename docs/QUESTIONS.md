@@ -9,7 +9,7 @@
 
 ## 👺GEN-Q3x〜Q6x: 補完生成器 (確定骨格版 — 生成 = preset / query = env モード切替)
 
-**確定済み骨格** (kawaz 裁定 3 回反映): 生成 = help 同型の completion_script preset (入口は定義者の自由) / query = KUU_COMPLETE=<shellname> <バイナリ> <words...> の env var モード切替 (引数解釈を玄関で奪う、定義非侵襲)。統括評価: env 方式は stdout 純度規約 + 子プロセス unset 規約で縁を潰せば構造的に最良 (findings 3.4 に規約化済み)。残る裁定 4 問 (正本: docs/findings/2026-07-22-completion-generator-plan.md):
+**確定済み骨格** (kawaz 裁定 4 回反映): 生成 = help 同型の completion_script preset (入口は定義者の自由) / query = `KUU_COMPLETE=<UUID> <バイナリ> <UUID> <SHELL> <words...>` の UUID 二箇所一致モード切替 (env 継承だけでは発火しない = kuu 製コマンドを completer 内で呼んでも安全)。残る裁定 4 問 (正本: docs/findings/2026-07-22-completion-generator-plan.md):
 
 - **👺GEN-Q3x: completion_script preset の形** — (a 推し) shell 名必須値の string preset (bool 枝なし)、shell 名値域は spec で閉じない、on_failure 既定 false。入口 long/short/env/サブコマンド形は定義者の自由 — findings 2 節
 - **👺GEN-Q4x: cword (カーソル位置) の受け方** — (a 推し) KUU_COMPLETE_INDEX=<N> の別 env、省略時は行末補完扱い。argv が純粋に words のままで、カーソル後の単語も捨てず after 整合フィルタ (kuu の全解決モデルの能力) が活きる / (b) cobra 型の末尾単語方式 (カーソル後を捨てる = args_after 原理的に不能) — 3.3 節
