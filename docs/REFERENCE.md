@@ -264,7 +264,7 @@ canonical 実体への別入口参照 (参照ファミリーの 3 人目: `ref` 
 複数値経路のスイッチ。担うのは値の畳み方 (accumulator/collector/separator) のみで、出現回数の
 反復構造は `repeat` が担う。プリセット名 (string) または `{accumulator, collector?, separator?, flatten?}`
 の詳細形。`collector` は引数なし resident 名 (string)、または resident 名を唯一のキーとして canonical
-引数を値に持つ object。`from_entries` の 3 形は `{"from_entries":"entries"}` /
+引数を値に持つ object。`from_entries` は bare string では指定できず、3 形は `{"from_entries":"entries"}` /
 `{"from_entries":["key","value"]}` / `{"from_entries":"key"}` (DR-044)。`flatten` は
 `accumulator: "append"` 専用のダイヤル (既定 false) — true で発火値が配列ならその要素を 1 段展開
 して積む。他 accumulator への宣言は definition-error kind=invalid-range。

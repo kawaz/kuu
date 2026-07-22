@@ -439,23 +439,26 @@ unfold は現在の背骨に留まるため、反復間の greedy 割り込み (
 
 **規則**: multiple installer は `multiple` を回収し、要素の値セルに pipeline (separator → accumulator →
 collector、DR-034 / DR-036) を構成する (env と同型の席・能力宣言型 installer、構造は足さない)。`multiple` を文字列
-で書けば multiple registry からプリセットを引き (append / merge / set / map)、オブジェクト `{preset?, separator?,
-accumulator?, collector?, ...}` で書けば preset を先に適用してから各フィールドで個別に上書きする。多重発火・separator
-分割片が生む値列を畳むのが責務であり、出現回数・位置の制約は持たない (回数は repeat、位置は greedy の軸)。
+で書けば multiple registry からプリセットを引き、オブジェクト `{separator?, accumulator?, collector?, flatten?}` で
+書けば各部品を直接指定する。collector は引数なし resident 名 (string)、または resident 名を唯一のキーとして resident
+固有の canonical 引数を値に持つ object。多重発火・separator 分割片が生む値列を畳むのが責務であり、出現回数・位置の
+制約は持たない (回数は repeat、位置は greedy の軸)。
 
 反復グループの結果整形 (DR-044): 発火ごとに蓄積される要素は既定で **配列** になる (name スコープなら配列オブジェクト、
 scalar なら配列スカラ)。map 形にするには `from_entries` collector を使う。3 用法があり、蓄積要素の作り (無名 = 配列 /
 named = object) に応じて使い分ける:
 
 ```
-入力:  {name: "upstreams", multiple: {preset: "map", from_entries: {key: "path"}}, ...}
+入力:  {name: "upstreams", multiple: {accumulator: "append", collector: {from_entries: "path"}}, ...}
 
-from_entries()                        // [[k, v], ...] (無名 2 要素 seq の配列) → そのまま object 化
-from_entries({key: "k", value: "v"})  // [{k, v}, ...] (named フィールドの object 配列) → 指名 2 フィールドを key/value に
-from_entries({key: "path"})           // object 配列 → key フィールドが昇格・除去され、残りのオブジェクト全体が値
+{from_entries: "entries"}      // [[k, v], ...] (無名 2 要素 seq の配列) → そのまま object 化
+{from_entries: ["k", "v"]}    // [{k, v}, ...] (named フィールドの object 配列) → 指名 2 フィールドを key/value に
+{from_entries: "path"}         // object 配列 → key フィールドが昇格・除去され、残りのオブジェクト全体が値
 
 規則:  from_entries は反復グループ (name スコープ) ごとに付与し、入れ子の各段が独立に配列 / map を選べる。
-       collector は filters registry の住人であり、新しい registry 区分は作らない (DR-036)。
+       bare string collector: "from_entries" は invalid-argument。"entries" は entries 用法 sentinel 専用で、
+       key 昇格用法のフィールド名としては表現できない。collector は filters registry の住人であり、
+       新しい registry 区分は作らない (DR-036)。
 ```
 
 **由来**: DR-043, DR-034, DR-036, DR-044

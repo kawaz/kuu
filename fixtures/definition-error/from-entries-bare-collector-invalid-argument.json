@@ -1,0 +1,23 @@
+{
+  "why": "from_entries は resident 固有引数が用法を決める collector であり、bare string `collector:\"from_entries\"` は canonical 3 形のどれにも属さない。registry に Entries resident が登録されていても暗黙 default として受理せず、definition-time invalid-argument に倒す (DR-044 §2)。",
+  "query": "definition_error",
+  "definition": {
+    "options": [
+      {
+        "name": "entries",
+        "type": "string",
+        "long": true,
+        "multiple": {"accumulator": "append", "collector": "from_entries"}
+      }
+    ]
+  },
+  "cases": [
+    {
+      "id": "bare-from-entries-requires-canonical-argument-form",
+      "expect": {
+        "outcome": "definition-error",
+        "errors": [{"element": "entries", "kind": "invalid-argument"}]
+      }
+    }
+  ]
+}

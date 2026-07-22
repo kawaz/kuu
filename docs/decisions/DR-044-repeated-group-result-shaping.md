@@ -25,6 +25,8 @@ object / スカラで規則は分かれない (発火ごとの蓄積 = 添字付
 | `from_entries({key: "k", value: "v"})` | `{"from_entries": ["k", "v"]}` | `[{k, v}, ...]` (named フィールドの object 配列) | 指名 2 フィールドを key / value に |
 | `from_entries({key: "path"})` | `{"from_entries": "path"}` | object 配列 | key フィールドが昇格・除去され、**残りのオブジェクト全体**が値になる |
 
+bare string `collector: "from_entries"` は canonical 形ではなく definition-time `invalid-argument`。`"entries"` は entries 用法を選ぶ sentinel 専用であり、key 昇格用法のフィールド名としては表現できない。同じ `{"from_entries": "entries"}` を書けば常に entries 用法として解釈する。
+
 ```json
 {"name": "upstreams", "multiple": {"accumulator": "append", "collector": {"from_entries": "path"}}, ...}
 ```
