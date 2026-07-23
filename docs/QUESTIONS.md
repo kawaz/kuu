@@ -33,6 +33,12 @@
 - (b) 1 発 API (parse が resolve まで完遂) を正にして 2 相を internal 化
 - (c) 現状維持 + doc 明確化のみ
 
+### REV-Q3 補足 (調査 2026-07-24): Ambiguous の扱いは本 Q の従属変数
+
+- spec は「Ambiguous の構造と提示」まで規定、後続手順 (選んで続行) は未規定。「第一候補採用」は DR-053 §3 (順序は同一性成分でない) と原理矛盾するため選択肢にならない
+- (a) 段階型なら「Ambiguous → 選択 → resolve」の遷移型が必要 = resolve 意味論の裁定が不可分。(b) 1 発 API なら「Ambiguous = 終端 (表示のみ)」と定義でき、追加裁定不要で閉じる
+- どの案でも DR 追記が 1 点必要: 「interpretation ビューは何相まで適用した姿か」— 現 fixture (export-key/collision-default-divergent.json) は値パイプライン適用済み・値源ラダー不完全の中間状態を暗黙採用しており、明文が無い
+
 ## 👺REV-Q4: kuu-cli dogfooding の着手時期
 
 **質問**: kuu-cli が自 argv を手書き parse (main.mbt 自白コメントあり)。kuu を売る CLI の存在意義に関わる。findings B4。CLI 慣習違反群 (help/exit/version 等 H2-H9) は dogfooding で書き直すと二度手間が消える
