@@ -9,13 +9,6 @@
 > - 「説明して」と返されたらチャットで長文説明せず、当該 Q をファイル内で説明付きに書き直して再提示
 > - 参照パスは本リポ (spec) 相対。kuu.mbt 側は「kuu.mbt の <path>」と表記
 
-## 👺AP2-Q2: DR-075 旧裁定「int 値域は実装定義」の supersede 確認
-
-**質問**: AP2-Q1=a (2^53 超過 Error 固定) を成立させるため、M1 実装は旧裁定「int の値域は実装定義 (Int64 実装は 2^53 超を受理してよい)」(kawaz 2026-07-08、DR-075) を **canonical 値域 = 絶対値 2^53 固定に supersede** した。Error 固定 + 移植間の受理域一致からの導出だが、過去の明示裁定の上書きを含むため確認。正本: DR-075 の Superseded 注記 + fixtures/value-typing/int-precision-2pow53.json
-
-- **(a) 推し: supersede を承認** (全実装で受理域が一致 = fixture で pin 可能。厳密値域が要るユーザの逃げ道は自作 type 登録 or string 受け、は旧裁定のまま不変)
-- (b) 「保証下限 2^53 + 実装はより広くてよい」に読み替え (Int64 実装の受理を許すが、移植間で同じ入力の成否が割れ、reject fixture を置けなくなる)
-
 ## 👺AP2-Q3: engine internal 化と拡張 ABI の公開範囲 (sol blocker 1)
 
 **質問**: builtins の公開シグネチャが @engine 型を 75 箇所露出しており、engine 封鎖 (REV-Q1=a) と builtins 公開残置が両立しない。正本: docs/findings/2026-07-24-api-polish-2-plan.md §1.1 / §6
