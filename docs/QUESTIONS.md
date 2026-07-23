@@ -9,29 +9,28 @@
 > - 「説明して」と返されたらチャットで長文説明せず、当該 Q をファイル内で説明付きに書き直して再提示
 > - 参照パスは本リポ (spec) 相対。kuu.mbt 側は「kuu.mbt の <path>」と表記
 
-## 👺REV-Q1: engine パッケージ公開面の封鎖方式
+## 👺REV-Q3: parse/resolve 2 相契約の閉じ方 (説明付き再提示)
 
-**質問**: engine の pub(all) 67 型 (ElementDef/Node/Entity 等) が semver 生存不能 (フィールド/variant 追加が全て破壊変更)。kuu 玄関の戻り値も engine 型を直輸出。v1 後は直せない。正本: docs/findings/2026-07-24-fresh-eyes-adversarial-review.md B1
+### 背景説明: 現在の 3 玄関 (parse / resolve / output) が何をしているか
 
-- **(a) 推し: 玄関で使う型 (Outcome/Candidate/Binding/Warning 等) を kuu package 側の opaque/pub 型に置き換え、engine は internal 化** (破壊変更だが v1 前の今なら無償)
-- (b) engine を明示的 unstable 宣言 (docs で「engine 直 import は semver 保証外」) — 安いが強制力なし
-- (c) pub(all) → pub (構築・全 match を封じる) の一括変換のみ — 中間、玄関直輸出は残る
+kuu.mbt の front door は現在 3 つの関数を直列に呼ぶ規約 (kuu.mbt src/kuu/front_door.mbt):
 
-## 👺REV-Q2: 整数精度 (2^53 問題) の v1 断定
+1. **`parse(ast, args, env, config, tty) -> Outcome`** — argv を読み、どのトークンがどの要素に割り当たったかの **binding 列** を作る。Outcome は Success(bindings) / Failure / Ambiguous の 3 択
+   - **濁りの実態**: 名前は「parse = CLI を読むだけ」だが、実装は collision 昇格判定のために **env/config/tty をここで既に要求し、値源解決 (resolve 相当) を内部で 1 回実行している**
+2. **`resolve(ast, outcome, env, config, tty) -> Outcome`** — Success の bindings に値源ラダー (CLI→env→config→default) を適用して各セルの最終値を確定する。**parse に渡したのと同じ env/config/tty をもう一度渡す** (doc comment 自身が「冗長さはあるが」と自白)。Success 以外 (Failure/Ambiguous) はそのまま素通し
+3. **`output(ast, outcome) -> Json`** — 確定済み bindings を result オブジェクト (JSON) に射影する
 
-**質問**: engine.Value の Number(Double) 一枚で int が 2^53 超で黙って精度落ち。DESIGN §3.3 の「bigxx 型」は実体なし。64-bit ID/offset の移植で穴。findings B2
+**問題**: (i) 利用者は同じ値源を 2 回渡す。(ii) resolve は「任意の Outcome」を受けるので、**resolve を呼び忘れた生 bindings を output に渡してもコンパイルが通る** (値未確定のまま射影される事故が型で防げない)。(iii) Ambiguous を受けた後に何をすべきかが型からも doc からも読めない
 
-- **(a) 推し: v1 は「int の保証精度は 2^53 (IEEE754 倍精度)」と DESIGN/REFERENCE に明記 + 超過値は definition/parse 段で reject または warning** (仕様として正直に閉じる)
-- (b) bigint 経路 (Value に BigInt variant 追加) を v1 で設計 (v1 完備主義に忠実だが波及が wire/fixture/全実装に及ぶ)
-- (c) 明記のみで reject なし (黙って落ちるよりましだが事故は残る)
+### 選択肢
 
-## 👺REV-Q3: parse/resolve 2 相契約の閉じ方
-
-**質問**: parse が内部で resolve 相当を実行し利用者は同じ env/config/tty を二重供給。「Ambiguous の resolve は未定」が doc comment 埋め。findings B3
-
-- **(a) 推し: 段階型で強制 (parse → ParsedOutcome、resolve → ResolvedOutcome、output は ResolvedOutcome のみ受理) + Ambiguous の resolve 意味論を DR で裁定**
-- (b) 1 発 API (parse が resolve まで完遂) を正にして 2 相を internal 化
-- (c) 現状維持 + doc 明確化のみ
+- **(a) 推し: 段階を型で強制する**
+  - parse の戻りを `ParsedOutcome`、resolve の戻りを `ResolvedOutcome` という**別の型**にし、output は `ResolvedOutcome` しか受けない。「resolve を飛ばして output」がコンパイルエラーになる = 誤用が構造的に不可能
+  - 利用者から見える関数は今の 3 つのまま、型が変わるだけ。Ambiguous の resolve 意味論の DR 裁定が同時に必要 (下記補足)
+- **(b) 1 発 API を正にする**
+  - parse が resolve まで完遂して最終 Outcome を返す形に統合 (値源は 1 回渡すだけ)。2 相は internal 化して公開面から消す
+  - Ambiguous は「終端 (表示して終わり)」と定義でき、追加裁定不要で閉じる。「binding 列だけ欲しい」用途 (conformance runner の効果列検査等) には内部 API を残す
+- **(c) 現状維持 + doc 明確化のみ** (型の強制なし、二重供給も残る)
 
 ### REV-Q3 補足 (調査 2026-07-24): Ambiguous の扱いは本 Q の従属変数
 
@@ -39,21 +38,7 @@
 - (a) 段階型なら「Ambiguous → 選択 → resolve」の遷移型が必要 = resolve 意味論の裁定が不可分。(b) 1 発 API なら「Ambiguous = 終端 (表示のみ)」と定義でき、追加裁定不要で閉じる
 - どの案でも DR 追記が 1 点必要: 「interpretation ビューは何相まで適用した姿か」— 現 fixture (export-key/collision-default-divergent.json) は値パイプライン適用済み・値源ラダー不完全の中間状態を暗黙採用しており、明文が無い
 
-## 👺REV-Q4: kuu-cli dogfooding の着手時期
+---
 
-**質問**: kuu-cli が自 argv を手書き parse (main.mbt 自白コメントあり)。kuu を売る CLI の存在意義に関わる。findings B4。CLI 慣習違反群 (help/exit/version 等 H2-H9) は dogfooding で書き直すと二度手間が消える
-
-- **(a) 推し: 次サイクルで dogfooding 書き直しを主タスク化し、H2-H9 の慣習違反はその中で一括解消** (手書き側への逐次 patch は捨て作業になる)
-- (b) H2-H9 を先に手書き側で速修 (公開が近いなら) → dogfooding は後
-- (c) canonical impl 選定 (DR-0001) まで棚上げ
-
-## 👺REV-Q5: API 磨き第 2 サイクルの編成
-
-**質問**: veteran Major 群 (H10 registry 二重供給 / H11 命名割れ Candidate.ty / H12 値源供給 3 様 / H13 builtins 位置引数 / H14 bool flag 罠) を findings §2.2 に台帳化済み。前回の API 磨き (API-Q2/Q3) と同型のサイクルが要る
-
-- **(a) 推し: REV-Q1〜Q3 の裁定後に「API 磨き第 2 サイクル」としてまとめて設計→裁定→実装** (B1 の型置き換えと同じ窓でやると破壊が 1 回で済む)
-- (b) 個別に逐次消化
-- (c) v1 スコープ外へ (veteran は「v1 後では直せない」と明言しており非推奨)
-
-**補足**: 裁定不要の「やるだけリスト」(findings §4: kuu-cli 慣習修正 / validate 配線 / docs quickstart 群) は裁定を待たず着手可能。REV-Q4=a の場合 kuu-cli 分は dogfooding 窓に統合。
+**裁定済み (2026-07-24、REV-Q3 のみ再提示中)**: REV-Q1=a (玄関型を kuu 側 opaque 化、engine internal 化) / REV-Q2=a+回収 (2^53 明記 + reject/warning。**bigint は core に入れず各言語実装側の拡張として個別実装** — 1st party 提供の 3rd ライブラリ的立場で「こう拡張できる」のデモを兼ねる) / REV-Q4=a (dogfooding 主タスク化、H2-H9 はその中で一括解消) / REV-Q5=a (API 磨き第 2 サイクルへ統合、REV-Q1 の型置き換えと同窓で破壊 1 回)
 
