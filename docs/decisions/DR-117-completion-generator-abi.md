@@ -247,7 +247,7 @@ builtin completer は名前を返すだけで実行実体を持たず、glue が
 
 DR-116 §6 の「spec conformance への増分はゼロ」は「DR-116 の policy 採用**だけ**を理由とする増分は無い」の意味であり、本 DR の preset 化 (GEN-Q3'' 裁定) は新しい裁定による正当な増分を生む:
 
-- **増える**: `schema/wire.schema.json` の type 値 `completion_script` の受理、preset の lowering (canonical 展開)、definition-error、内部セル `#completion_script` の観測、`schema/builtin-descriptors.json` の `completers` 区分 (§7)。definition-error の対象は値スロット不正 (shell 名の必須値を供給できない構成 — 値スロットを持たない bool 形の入口だけで組む等) と既存 kind の準用 (同一席の複数宣言等、DR-113 §5.2 と同型) であり、**配置面の座席違いは存在しない** (§2.3 — positional 配置は合法)。fixture は既存の lowering / definition-error profile への追加であり、**新 profile は設けない** (DR-115 §6.1 と同型)。shell 名候補提示の糖衣 (§2.2) の観測は lowering fixture で行う (preset の canonical 展開が値位置へ供給する補完素材として現れる形の詳細は fixture 起票時に確定する)
+- **増える**: `schema/wire.schema.json` の type 値 `completion_script` の受理、preset の lowering (canonical 展開)、definition-error、内部セル `#completion_script` の観測、`schema/builtin-descriptors.json` の `completers` 区分 (§7)。definition-error は既存 kind の準用 (同一 default 席の `default` / `default_fn` 複数宣言、DR-113 §5.2 と同型) を対象とし、**配置面の座席違いは存在しない** (§2.3 — positional 配置は合法)。v1 の入口 DSL は固定 operand も target type に従って string へ decode するため、発火可能だが shell 名 string を供給できない値スロット不正構成は存在せず fixture を持たない。fixture は既存の lowering / definition-error profile への追加であり、**新 profile は設けない** (DR-115 §6.1 と同型)。shell 名候補提示の糖衣 (§2.2) は lowering の `entities` 面で public string 値セルから内部セル `#completion_script` への link と values enum 不在を観測する。候補文字列は実装対応 shell 集合のため fixture pin しない
 - **増えない**: query 側の schema 増分はゼロ — env プロトコル (§3) と応答行文法 (§4) は wire 語彙でなく runtime 挙動の規範であり、fixture pin の対象外 (DR-115 §1.3 の概念シグネチャと同じ位相)。script のバイト列・応答行の内容・候補順・説明文言は fixture pin しない (DR-116 §6 の出力非 pin は不変)。complete query の契約 (DR-104) も不変
 
 #### 8.2 ux 層の検証手段 — product test の必須シナリオ
@@ -338,7 +338,7 @@ DR-116 §2 が順序保持翻訳を常時の規範とするため、per-response
 - **schema/wire.schema.json**: type 値 `completion_script` の受理を追加
 - **schema/builtin-descriptors.json**: `completers` 区分を新設し `files` / `dirs` を収載 (§7)。descriptor.schema.json の envelope 追随を含む
 - **scripts/lint-descriptors.py**: 走査区分に `completers` を追加
-- **fixtures**: lowering profile へ preset の canonical 展開、definition-error profile へ座席違い・値スロット不正の fixture を追加 (既存 profile への追加、新 profile なし)
+- **fixtures**: lowering profile へ preset の canonical 展開、definition-error profile へ同一 default 席の複数宣言 fixture を追加 (既存 profile への追加、新 profile なし)。v1 の入口 DSL では値スロット不正構成が存在しないことは §8.1 の分担に従う
 - **docs/DESIGN.md / LOWERING.md**: `completion_script` preset・内部セル・orchestration の記述を追加
 - **glue script テンプレ + shell 別翻訳表**: 本 DR の行文法にのみ依存する言語非依存の共有資産として 1 箇所で管理する (置き場所 — spec リポ内 `templates/` か別配布か — は実装着手時の判断)。shell 別翻訳表 (findings §4.3) は Web 調査由来につき、実装サイクルで 3 shell の実機マトリクス検証を行い実装リポ側 findings に記録する
 - **各言語 ux 層 (一番手 MoonBit、DR-109 柱 7)**: 玄関の二箇所一致判定、`completion_query` パイプライン (§5)、`completion_script` 生成、§8.2 の product test シナリオ。MoonBit 実装の座席 (kuu.mbt の ux 層か kuu-cli lib か) は ux 層の座席設計と同時に確定する — help_installer / help_query が kuu.mbt に住み canonical レンダラが kuu-cli に住んだ前例に照らすと、preset と env モードの意味論 = kuu.mbt、行指向応答の組版と glue テンプレ埋め = product 側の分割線が自然だが、確定は ux 設計へ送る

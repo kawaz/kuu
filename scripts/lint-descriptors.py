@@ -2,7 +2,7 @@
 """schema/builtin-descriptors.json の集合レベル整合性を検査する。
 
 schema/descriptor.schema.json は単一 descriptor と envelope (filters/cell_fns/
-types/accumulators/providers の 5 区分マップ) の両方を検証できるが、JSON Schema の表現範囲外の
+types/accumulators/completers/providers の 6 区分マップ) の両方を検証できるが、JSON Schema の表現範囲外の
 semantic 制約 (map key と descriptor.name の一致、output_mode:"preserve" の
 io_type.input == io_type.output、observes template の parameter 存在照合) は本スクリプトが machine-check する
 (codex レビュー #4 A-M11/B-Maj6 が指摘した「envelope 自体を検証する形が無い」
@@ -54,8 +54,8 @@ def main() -> int:
 
     ok = True
 
-    # 1. envelope 検証 (filters/cell_fns/types/accumulators/providers の集合形状
-    #    + 各 descriptor の role 別条件分岐、DR-107 §7 / DR-114 §8)
+    # 1. envelope 検証 (filters/cell_fns/types/accumulators/completers/providers の集合形状
+    #    + 各 descriptor の role 別条件分岐、DR-107 §7 / DR-114 §8 / DR-117 §7)
     resolver = jsonschema.validators.RefResolver.from_schema(schema)
     envelope_schema = schema["$defs"]["envelope"]
     validator = jsonschema.Draft202012Validator(envelope_schema, resolver=resolver)
@@ -65,11 +65,11 @@ def main() -> int:
         for e in errors:
             fail(f"envelope: {'/'.join(str(p) for p in e.path)}: {e.message}")
     else:
-        print("[OK]   envelope shape (filters/cell_fns/types/accumulators/providers, role 別条件分岐)")
+        print("[OK]   envelope shape (filters/cell_fns/types/accumulators/completers/providers, role 別条件分岐)")
 
     # 2. map key と descriptor.name の一致。registry が異なれば同じ bare name は
     #    合法 (DR-114 §8) なので重複検査は section 内に閉じる。
-    sections = ("filters", "cell_fns", "types", "accumulators", "providers")
+    sections = ("filters", "cell_fns", "types", "accumulators", "completers", "providers")
     key_mismatches = []
     descriptor_count = 0
     for section in sections:

@@ -51,6 +51,8 @@ complete(atomic, {
 - **アプリ固有の動的候補**は completer 名 → アプリ提供関数の呼び出しを生成器が配線する。契約: 候補は**素の値文字列** (unquoted の実体) で返し、挿入時のクォートは shell / 生成器が付ける (zsh compadd の自動 quote 等)。**変数展開は kuu の関心外** — kuu は与えられた word 文字列をそのまま照合する
 - クロージャ completer の AtomicAST 表現は引き続き持たない (名前参照のみ。DESIGN §13.9 の未予約から「名前参照は確定」に更新)
 
+> **builtin 収載 note (DR-117 §7):** canonical builtin は `files` / `dirs` の 2 種。`path` は shell 委譲機能の粒度で `files` と差が立たないため収載しない。
+
 ### 5. 責務 4 層 (エンドユーザとアプリ開発者に shell の作法を学ばせない)
 
 ```

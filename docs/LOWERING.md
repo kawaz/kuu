@@ -155,48 +155,33 @@ accumulator は使わず、multiple / accumulator は複数「値」の畳み (a
        構造の lowering は §B.4 (greedy 面の exact 衛星 + 発火で severed 化)。
 ```
 
-**help** = 内部セルへの link + 固定 true 供給 (DR-112 §7):
+**help 系 5 preset** = 内部セルへの link + `cell_fns` 固定値供給 (DR-113 §2/§6):
+
+- `help`: `#help` (bool) へ true
+- `help_all_category`: `#help` と `#help_all_category` へ true
+- `help_category`: `#help` へ true、指定 category string を `#help_category` へ供給
+- `help_show_hidden`: `#help_show_hidden` だけへ true
+- `help_tree`: `#help` と `#help_tree` へ true
+
+各入口要素は name / export_key で result に露出しつつ、`#` 予約 namespace の定義全体で一意な内部セルへ link する。bool 固定値は `cell_fns.set(true)`、`help_category` の値は string 全体セルの last-wins。`help_on_failure` は汎用 `on_failure` へ展開し、既定は `help_show_hidden` だけ false、他 4 種は true。入口の long / short / env は例示であり、preset の配置面は positional を含めて制限しない (DR-117 §2.3)。
+
+**completion_script** = shell 名 string + 内部セル link (DR-117 §2):
 
 ```
-入力:  {name: "help", type: "help", long: true, short: "h"}
-展開:  値セルは help 機構が管理する内部 bool セル (# 予約名前空間の実装細部、DESIGN §14.1) への link。
-       要素自身は flag 同族の糖衣プリセット (DR-076 の枠) として bool を土台に展開され、
-       発火は固定 true 供給 (flag の `:set:true` と同型)。result への露出は要素自身の
-       name (export_key) 経由 — link の既存意味論 (値セル共有、露出は各入口の export_key)。
-       type config 糖衣 `help_on_failure` (bool、既定 true) を同梱し、汎用属性
-       `on_failure` へ全展開する (DR-112 §8) — on_failure installer が失敗時発火マーカー
-       能力を宣言する (構造衛星なし、constraint installer と同型の能力宣言型)。
-出力:  入口部 (long / short 衛星) は §B.1 / B.2 と同型に展開。どのサブコマンドスコープで
-       発火しても同じ内部セルに立つ (global + link の合成 = 内部セルへの合流)。
+入力:  {name: "completions", type: "completion_script", long: true}
+展開:  public 値セル completions は string として #completion_script へ link する。
+       long の値スロットは通常の string 値入口として §B.1 へ流れ、発火値を両者で共有する。
+       values enum は張らず自由入力を維持し、対応 shell 名の候補提示は completion policy が担う。
+       on_failure の既定は false。
+出力:  entities に completions (string, link:#completion_script) と内部セル #completion_script (string)、
+       greedy に --completions の空間形衛星 + eq-split matcher を持つ。
 ```
 
-**help_all** = help と同じ preset 族 (DR-112 §7):
+positional 配置では同じ public 値セルと内部セル link を使い、通常の positional string 消費点として背骨へ載る。`#completion_script` が値を持てば ux 層 runtime が同名 capability を呼ぶ orchestration は DESIGN §15.13 の責務で、lowering 断面は script text を持たない。
 
-```
-入力:  {name: "help_all", type: "help_all", long: true}
-展開:  入口・内部セル link・help_on_failure 同梱まで type:help と同一。異なるのは意図メタのみ
-       (「hidden 込み全表示」の要求をアプリ / レンダラに伝える) — lowering 上の差分は無い。
-```
+**規則**: 各プリセットは値プリミティブ + default + 挙動の束を `type:` で参照する糖衣。flag / count の値・default・累積は上記のとおり確定する。help 系は完走後の表示選択として内部セルを使い、completion_script は必須 shell 名値を内部セルへ供給する。version は専用 type ではなく単なる flag (§14.2)。
 
-**help_category** = string 全体セル + help 内部 bool セルの同時トリガ (DR-112 §7):
-
-```
-入力:  {name: "help_category", type: "help_category", long: true}
-展開:  値セルは string の全体セル 1 つ (内部セルモデルと同型、link 合成)。発火時に help の
-       内部 bool セルへの固定 true 供給 (link + variant) も同梱する — 1 発火で両セルに立つ。
-       help_on_failure 同梱も type:help と同一。values (value-enum、A.4) / variant DSL の
-       固定値 set (`[":set:command"]` 等) がそのまま効く。複数発火は string 全体セルの
-       last-wins (DR-015)。
-```
-
-**規則**: 各プリセットは値プリミティブ + default + 挙動の束を `type:` で参照する糖衣。flag / count の値・default・
-累積は上記のとおり確定する。help 系のパースとの整合は early-exit ではなく**完走後の表示選択** (失敗時アクション、
-DR-048 / DESIGN §15.10) として確定済み — help はパース失敗時 (完全経路 0 本) も候補経路で selected なら発火する。
-失敗時アクションは汎用属性 `on_failure` (DR-112 §8、on_failure installer 所有) で、help 系プリセットが糖衣
-`help_on_failure` として同梱する。version は専用 type ではなく単なる flag (§14.2)、失敗時にも出したい場合は
-`on_failure: true` を opt-in する。
-
-**由来**: DR-028, DR-015, DR-036, DR-112, DESIGN §3.3
+**由来**: DR-028, DR-015, DR-036, DR-113, DR-117, DESIGN §3.3/§15.13
 
 ---
 

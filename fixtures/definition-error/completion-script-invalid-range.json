@@ -1,0 +1,27 @@
+{
+  "why": "DR-117 §8.1 が DR-113 §5.2/DR-114 §4.1 の既存 definition-error kind を準用することを pin する。completion_script は string preset なので default 席を持ち得るが、同じ default 席への default と default_fn の二重宣言は invalid-range となる。v1 の入口 DSL は固定 operand も target string に decode するため、発火可能だが shell 名 string を供給できない値スロット不正構成は存在せず fixture 化しない。",
+  "query": "definition_error",
+  "definition": {
+    "options": [
+      {
+        "name": "completion-default-collision",
+        "type": "completion_script",
+        "long": true,
+        "default": "zsh",
+        "default_fn": "computed:completion_shell"
+      }
+    ]
+  },
+  "cases": [
+    {
+      "id": "completion-default-seat-collision",
+      "why": "completion-default-collision は同一 default 席を default/default_fn で二重宣言するため、既存 kind invalid-range へ帰着する。",
+      "expect": {
+        "outcome": "definition-error",
+        "errors": [
+          {"element": "completion-default-collision", "kind": "invalid-range"}
+        ]
+      }
+    }
+  ]
+}

@@ -58,6 +58,8 @@ canonical 生成器の既定は次のとおり。
 
 この線引きは DR-115 §6.2 と同型である。定義素材の受理・搬送は既存 conformance が担い、適用後の表示品質は生成器 product test が担う。したがって本 DR の採用だけを理由とする spec conformance profile の追加は行わない。
 
+> **DR-117 §8.1 note:** 本節の増分ゼロは本 DR の policy 採用だけを理由とする増分の不在を指す。生成入口 `completion_script` preset の受理・lowering・definition-error と builtin completer 収載は DR-117 が既存 profile 内の増分として規定する。
+
 ## 採用しなかった案
 
 ### candidate wire に順序フィールドを追加する

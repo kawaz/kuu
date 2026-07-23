@@ -1,0 +1,19 @@
+{
+  "why": "DR-117 §2.3 (ABI-Q1=a) の全 preset 配置一般則を completion_script の positional 入口で pin する。shell は通常の positional string 消費点として背骨へ載り、public entity shell が定義全体の内部セル #completion_script へ link するため、値消費 = preset 発火 + shell 名供給が同時に成立する。installer 固有の入口変換は不要なので installers=[] とし、core lowering の positionals/entities 面だけで合法性を観測する。",
+  "query": "lower",
+  "definition": {
+    "positionals": [
+      {"name": "shell", "type": "completion_script"}
+    ]
+  },
+  "installers": [],
+  "expect": {
+    "positionals": [
+      {"ref": "shell", "link": "shell"}
+    ],
+    "entities": {
+      "shell": {"type": "string", "link": "#completion_script"},
+      "#completion_script": {"type": "string"}
+    }
+  }
+}

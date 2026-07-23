@@ -79,22 +79,24 @@ DR-107 §7 マトリクスに以下の行を確定する:
 
 | role | domain | io_type | output_mode | fallibility | invocation | owns/observes | config | 備考 |
 |---|---|---|---|---|---|---|---|---|
-| `completer` | 禁止 | **禁止** | 禁止 | 禁止 | 必須 (`none` 固定、`construction:static` 固定) | 禁止 | 禁止 | `reasons` は常に空。io_type は runtime 問い合わせ ABI 確定時に軸を追加する (下記) |
+| `completer` | 禁止 | **禁止** | 禁止 | 禁止 | 必須 (`none` 固定、`construction:static` 固定) | 禁止 | 禁止 | `reasons` は常に空。DR-117 §8.3 により glue ↔ binary ABI 確定後も io_type を追加しない |
 
 宣言できるのは `name` / `role` / `construction` (`static` 固定) / `invocation` (`{encoding:"none", parameters:[]}` 固定) / `reasons` (`[]` 固定) / `description` のみ:
 
 - **`invocation:"none"` 固定**: completer の呼び出しは要素の `completer: "<名前>"` 名前参照のみで wire 上の DSL args を持たない (DR-060 §4「クロージャ completer の AtomicAST 表現は持たない — 名前参照のみ」)。type_parser/provider の none 固定と同じ導出
-- **`io_type` 禁止 (未確定のまま予約しない)**: completer 関数の**出力**契約は DR-060 §4 が確立済み (「候補は素の値文字列 (unquoted の実体) で返し、挿入時のクォートは shell / 生成器が付ける」= `{"array": "string"}` 相当) だが、**入力** (補完文脈として何を受けるか — word 断片・args 文脈・その両方か) は runtime 問い合わせ ABI (DR-109 骨子柱 6「completion 配布は生成器標準提供 + runtime 問い合わせが第一候補」) が未実体化で決まっていない。入力形を descriptor 側から発明するのは「実例・実需が無い軸の事前予約」([[default-convergence-guard]]、DR-107 §2 が `derived` を棄却したのと同じパターン) — ABI を確定する将来 DR が `io_type` 軸を completer 行に追加する (builtin 住人が現存しないため、禁止 → 必須の変更で壊れる corpus は無い)
+- **`io_type` 禁止**: completer 関数の**出力**契約は DR-060 §4 が確立済み (「候補は素の値文字列 (unquoted の実体) で返し、挿入時のクォートは shell / 生成器が付ける」= `{"array": "string"}` 相当)。DR-117 が確定する runtime 問い合わせ ABI は glue ↔ binary 間の契約であり、形態 A はホスト言語クロージャを直呼びし形態 B は custom completer を実行しないため、completer 関数自体の入力形を descriptor に宣言する実需はない (DR-117 §8.3)。入力形を descriptor 側から発明する「実例・実需が無い軸の事前予約」は行わない
 - **`fallibility`/`output_mode` 禁止・`reasons:[]` 固定**: 補完チャンネルには reason を表面化する経路が無い — completer の失敗は「候補ゼロ」への縮退が唯一の表現であり (補完は素材の提供であって診断ではない、DR-060 §3 の素材とポリシーの分離)、filter の reject/reason 機構とは別の意味論。provider の「`null` 返却は reasons の対象外」(DR-107 §6) と同型の整理
 - **`construction:"static"` 固定**: 標準 completer (files/dirs 等) もアプリ固有 completer も「名前 → 関数」の固定登録であり、`name + config → 実装` の factory 構築の実需が無い。`config` 禁止の帰結
 
-この最小形が DR-109 骨子柱 3 の `$required` (named capability marker) の前提として十分である: export 時の未解決フック検出・import 側の要求 capability 報告に必要なのは **completer 名による同定** (name + role) であり、シグネチャの機械可読化 (io_type) は capability の充足判定ではなく実装生成 (VISION §4) の関心 — 後者は ABI 確定と同時でよい。
+この最小形が DR-109 骨子柱 3 の `$required` (named capability marker) の前提として十分である: export 時の未解決フック検出・import 側の要求 capability 報告に必要なのは **completer 名による同定** (name + role) であり、シグネチャの機械可読化 (io_type) は capability の充足判定ではなく実装生成 (VISION §4) の関心である。
 
-### 6. builtin completer は収載しない — envelope に completers 区分を作らない
+> **DR-117 §8.3 note:** glue ↔ binary ABI の確定後も completer 関数自体の入力形は機械可読宣言を要しないため、`io_type` 禁止と最小 descriptor 形を維持する。
 
-標準 completer (DR-060 §4 の「files / dirs / path 等」) の**名前の閉集合は確定しない**。標準 completer 名 → shell 機能のマッピングは補完生成器 (DR-060 §5 の層 2、kuu プロダクト提供・本仕様の射程外) の関心であり、spec 側で名前集合を先に閉じると生成器層の設計を descriptor 側から拘束する。completers registry の descriptor 語彙 (§5) だけを確定し、住人の収載は生成器設計 (層 2) の DR と同時に行う。
+### 6. builtin completer は `files` / `dirs` を収載する
 
-`schema/builtin-descriptors.json` の envelope には `accumulators` 区分のみ追加し (§3 の 3 住人、required で完備性を強制)、`completers` 区分は住人が生じるまで作らない。
+標準 completer 名の**閉集合は確定しない**。補完生成器の shell 委譲表に実在する最小集合として、DR-117 §7 が `files` / `dirs` の 2 descriptor を確定する。`path` は `files` と shell 委譲粒度で差が立たないため収載しない。
+
+`schema/builtin-descriptors.json` と descriptor envelope は `completers` 区分を持ち、`files` / `dirs` の完備性を required で強制する。拡張 completer の追加は引き続き open である。
 
 ## 採用しなかった案
 
@@ -108,7 +110,7 @@ DR-107 §7 マトリクスに以下の行を確定する:
 
 ### completer の io_type を output のみ宣言する変形形
 
-`io_type` の `input` を省略可にして `output: {"array": "string"}` だけ宣言する案。DR-060 §4 の出力契約は機械可読化できるが、`io_type` の構造 (input/output 両必須、DR-107 §3) を completer だけ崩すことになり、value_type 体系の一様性を壊す。出力契約は §5 の通り description で十分であり、構造の非対称を導入してまで先取りする実需が無い。ABI 確定 DR で input/output を揃えて追加する方が一貫する。不採用。
+`io_type` の `input` を省略可にして `output: {"array": "string"}` だけ宣言する案。DR-060 §4 の出力契約は機械可読化できるが、`io_type` の構造 (input/output 両必須、DR-107 §3) を completer だけ崩すことになり、value_type 体系の一様性を壊す。出力契約は §5 の通り description で十分であり、構造の非対称を導入してまで載せる実需が無い。DR-117 §8.3 の glue ↔ binary ABI も completer 関数自体の input/output 宣言を要求しないため不採用。
 
 ### 標準 completer 名 (files/dirs/path 等) の閉集合を今確定する
 

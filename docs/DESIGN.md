@@ -14,7 +14,7 @@
 - **キー名は snake_case 正規形** (DR-022)、case 変換は pluggable。
 - **暗黙ルールを最小化**: 明示性重視、利用者の知識を信頼。
 - **入力は前処理済み `Array[String]`**: `@file` (レスポンスファイル) の展開や stdin 読込は呼び出し側の責務。kuu は args をトークン列として受け取る。
-- **補完スクリプト生成は本仕様の射程外** (kuu プロダクトとしては標準提供): 各 shell 向け補完関数と登録コマンドの出力 (`app completion bash` 等) は kuu の completion 生成器の責務で、shell ごとの作法はそこに封じる。本仕様が確定するのは生成器の下請け契約 (complete API と候補構造、§15.13) まで (DR-060)。
+- **補完生成はブリッジ型**: 本仕様は complete 素材 API に加え、`completion_script` / `completion_query` capability と glue ↔ binary の ABI を定める。shell ごとの収集・翻訳作法と生成 script のバイト列は canonical 補完生成器の実装関心に封じる (DR-117)。
 - **仕様の成熟度**: 本仕様は垂直スライス実装 (DR-039) との共設計段階にあり、全域で破壊的変更を許容する (ドラフト期)。確定版発行の手続き・条件は DR-068 (lifecycle) / DR-069 (準拠プロファイル) / DR-108 (spec リリースプロセス) が定める — ドラフト期の間も `VERSION` ファイルによる `0.x.y` バージョンを発行する (GitHub Release は prerelease、DR-108 §2)。
 
 ### 0.2 4層アーキテクチャ
@@ -276,12 +276,13 @@ exact 照合は **codepoint 単位・正規化なし** (NFC は方言)。path / 
 
 bytes / binary 型は組み込みに持たない。必要なら拡張 type (registry 登録) で提供する。
 
-**糖衣プリセット**: `flag` / `count` / `count_or_set` / `command` / `help` / `help_all_category` / `help_category` / `help_show_hidden` / `help_tree` / `dd` / `tty` 等
+**糖衣プリセット**: `flag` / `count` / `count_or_set` / `command` / `help` / `help_all_category` / `help_category` / `help_show_hidden` / `help_tree` / `completion_script` / `dd` / `tty` 等
 - `flag` = bool + default:false + 起動で true
 - `count` = number + default:0 + 起動時に `cell_fns` の `incr` を呼ぶ (値は取らない — `--verbose=3` は読みが立たず素通し、DR-114 §2/§6.1)
 - `count_or_set` = count + optional 値スロット (repeat {min:0,max:1})。`-v` は `incr`、`-v 3` / `--verbose=3` は `set`。取り分選好は DR-043 が確定する。標準層 (DR-040)
 - `command` = name でスコープを作り、name の完全一致でトリガ
 - help 系 5 preset は help_installer が内部セル link + `cell_fns` 固定値供給へ展開する (§14.1、DR-113)。`help_all_category` (category 絞りなし) / `help_category` (named category) / `help_show_hidden` (hidden 露出の独立軸) / `help_tree` (全 tree) は `help` と直交して合成できる
+- `completion_script` = shell 名を必須値に取る string preset。`#completion_script` へ値を供給して同名 capability を発火する。値域は自由入力で、値位置の候補には実装対応 shell 名を提示する (§15.13、DR-117)
 - `tty` (= `builtin/tty`、DR-099) = bool + 暗黙 default = tty 観測の fold。configurable factory config は `tty_stream` (`"stdin"｜"stdout"｜"stderr"`、必須 — 未指定は definition-error) / `tty_cygwin` (bool、既定 true)。long/short/env 席の宣言可否・multiple・filters・required 充足は素の bool と完全に同一 — preset が同梱するのは暗黙 default のみ (詳細は §12b)
 
 これらは独立の type ではなく、属性プリセットへの名前。version は専用 type ではなく単なる flag。
@@ -933,7 +934,7 @@ inherit ラダー席に祖先 scope chain の参照を宣言する。default / d
 | `env_provider` | 環境変数解決 | `env` (env installer の lookup が利用) |
 | `config_provider` | config ファイル読込 (パス → JSON 同型の階層オブジェクト。フォーマット・探索・マージは provider の関心、DR-050) | `config_key`, `type: "config_file"` (config installer の lookup が利用) |
 | `tty_provider` | tty 判定値解決 (stream → `{terminal, cygwin}` \| null、ambient probe は provider 実装に閉じる、DR-099) | `builtin/tty` factory の config `tty_stream` (`types` registry 経由、`tty` installer は持たない) |
-| `completers` | 補完候補の供給名 (標準 files/dirs 等は生成器が shell 機能へマップ、DR-060) | `completer` |
+| `completers` | 補完候補の供給名。builtin `files` / `dirs` は生成器が shell 機能へマップ (DR-117 §7) | `completer` |
 | `installers` | 特殊語彙の展開装置 (糖衣展開 + 実行時能力の植え付け、DR-042) | `long`, `short`, `env`, `type:"dd"`, `commands[]`, `global`, `inherit`, `repeat`, `multiple`, `config_key`, `requires` / `exclusive_group` / `conflicts_with`, `alias` 等の特殊語彙 |
 
 installer / registry 住人は自身を説明する **descriptor** を持つ (DR-061/107/114)。`role` / `construction` / `io_type` / `fallibility` / `invocation` / `reasons` 等の直交軸を使う。installer の `owns` は宣言語彙の排他所有を表し、所有集合の和が unknown-vocab 判定と completeness 検査の入力になる。
@@ -1309,9 +1310,15 @@ complete(atomic, {args_before, args_after?, word_before?, word_after?}) → cand
 - `args_before` (カーソル前のトークン列、必須) / `args_after` (カーソル後のトークン列、optional)。`word_before`/`word_after` (カーソル単語の前半/後半) は v1 未使用可のまま予約 (DR-104、参照実装未着手)
 - `args_after` が**非空**なら、exact かつ term:word_end の候補に限り「候補採用後に args_after も消費して完全経路に到達できる」もので絞る (after 整合フィルタ — 全解決モデルならではの精度)。値位置候補・term:cont の候補はユーザ入力を発明できないため対象外で無条件に生存する。この完全経路判定は遅延述語 (制約、§15.9) を含む — DR-047 の「遅延述語は完全経路の成立条件」の一様適用 (DR-104 §5)。`args_after` の省略と明示的な空配列供給は同値 (length ベース判定、どちらも非発火)
 - **`args_before` のみの補完 (行末補完) では遅延述語は候補生存判定に一切不参加**: dead end 判定は parse 相、制約評価は resolve 相という相区分を固定する (DR-104 §5)。排他制約の相手が committed 済みでも、その候補は普通に返る — 実行時に選んでしまえば `exclusive_group_violated` 等の reason つきエラーで教える方針 (早期に隠すより打たせて教える UX 判断)
-- 候補 = exact 綴り (メタ: canonical/alias・hidden・deprecated・終端ヒント word_end/continue) + 値位置の型情報 / completer 名。**素材とメタのみ返し、絞り込みポリシー (tab-tab 切替等)・置換・着地は生成器と shell の領分**。候補の同一性は `spelling`/`is_value`/`ty`/`origin`/`term`/`meta` の完全一致 (`path` は同一性に関与しない、DR-104 §3)
-- 標準 completer (files/dirs 等) は生成器が shell 既存機能へマップ (クォート・変数展開は shell の責任領域)。動的候補は素の値文字列で返しクォートは shell/生成器
+- 候補 = exact 綴り (メタ: canonical/alias・hidden・deprecated・終端ヒント word_end/continue) + 値位置の型情報 / completer 名。**素材とメタのみ返し、絞り込みポリシー (tab-tab 切替等)・置換・着地は生成器と shell の領分**。候補の同一性は `spelling`/`is_value`/`type`/`origin`/`term`/`meta` の完全一致 (`path` は同一性に関与しない、DR-104 §3)
+- builtin completer `files` / `dirs` は生成器が shell 既存機能へマップ (クォート・変数展開は shell の責任領域)。動的候補は素の値文字列で返しクォートは shell/生成器
 - 責務 4 層: complete API (本仕様) / completion 生成器 (標準提供、shell 作法を封じる) / アプリ開発者 (サブコマンドに繋ぐだけ) / エンドユーザ (source するだけ)
+
+#### `completion_script` preset と生成器 ABI (DR-117)
+
+`type: "completion_script"` は shell 名を必須値に取る string preset で、内部セル `#completion_script` へ発火値を供給する。long / short / env / positional を含む配置面を制限せず、値スロットが成立する入口で使う。値域は自由入力のまま閉じず、値位置の補完候補として生成器が対応する shell 名を提示する。`on_failure` の既定は false。
+
+`#completion_script` が値を持てば ux 層 runtime は `completion_script(definition, {shell, program_name?})` capability を呼び、script text を stdout へ出す。補完時は glue が UUID 二箇所一致の env 入口で `completion_query(definition, {shell, words, cword?})` を呼ぶ。query の env/argv プロトコル・行指向応答は runtime 規範で、conformance fixture は preset の受理・lowering・definition-error のみを pin する。
 
 ### 15.14 準拠プロファイル (DR-069)
 

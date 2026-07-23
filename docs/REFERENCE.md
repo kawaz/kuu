@@ -534,6 +534,7 @@ DR-095 射程外)、それ以外の type は本表が唯一のカタログにな
 | `help_category` | 糖衣プリセット | `#help` + string の `#help_category`。bool 枝との出し分けは `or`、複数指定は last-wins | DESIGN §14.1, DR-113 §2.3 |
 | `help_show_hidden` | 糖衣プリセット | `#help_show_hidden` だけを立てる独立軸。単独では表示要求にならず、`help_on_failure` 既定 false | DESIGN §14.1, DR-113 §2.4 |
 | `help_tree` | 糖衣プリセット | `#help` + `#help_tree`。capability 入力を `depth:"all"` にする | DESIGN §14.1, DR-113 §2.5 |
+| `completion_script` | 糖衣プリセット | 必須の shell 名 string を `#completion_script` へ供給し、completion_script capability を発火する。値域は自由入力、候補は実装対応 shell 名 | DESIGN §15.13, DR-117 §2 |
 | `dd` | 糖衣プリセット | greedy 面のトリガ兼消費者 (`--`)。§2.2「dd 専用」参照 | DESIGN §3.3, DR-064/090 |
 | `tty` (`builtin/tty`) | 糖衣プリセット / factory | bool を土台に、暗黙 default = tty 観測の fold | DESIGN §3.3, §12b, DR-099 |
 | `config_file` | 特殊 type | config ファイルパスの配線宣言 | DESIGN §14.3, DR-050 |
@@ -740,6 +741,23 @@ construction=factory の `config` キー宣言 (デプロイ時の方言設定) 
 `Value` 返却は effect mode では通常の set operand、default mode では default 値になる。`Sentinel` は `use_default` / unset / empty の cell operation で、default 席には指定できない。colon-string と 1 段 array of string は同じ name + args に decode される。
 
 正本: DESIGN §7/§11.4/§13.1, DR-114, `schema/builtin-descriptors.json`
+
+---
+
+## 6c. builtin completer カタログ
+
+`completers` は値位置の補完を名前参照で供給する registry。builtin 住人は実行実体を持たず、canonical 補完生成器が shell 既存機能へ翻訳する。
+
+<!-- kuu-lint:vocab completers -->
+| completer | role | invocation | 意味論 |
+|---|---|---|---|
+| `files` | completer | none | ファイルとディレクトリの一般補完を shell 既存機能へ委譲 |
+| `dirs` | completer | none | ディレクトリのみの補完を shell 既存機能へ委譲 |
+<!-- kuu-lint:end -->
+
+両 descriptor は `construction:"static"`、`reasons:[]` で、`io_type` を宣言しない。`path` は `files` と shell 委譲粒度で同義になるため builtin には収載しない。builtin 集合は拡張 completer の追加を閉じない。
+
+正本: DESIGN §13.1/§15.13, DR-111 §5, DR-117 §7/§8.3, `schema/builtin-descriptors.json`
 
 ---
 

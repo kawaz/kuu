@@ -1,0 +1,25 @@
+{
+  "why": "DR-117 §2/§8.1 の completion_script preset canonical 展開を option 入口で pin する。public entity completions は string 値セルとして内部セル #completion_script へ link し、long installer は通常の値 option と同じ空間形衛星 + eq-split matcher を作る。内部 link が completion policy に shell 名候補提示の席を与える一方、entities に values enum を持たないことで受理値域は自由入力のまま閉じない。候補文字列そのものは実装対応 shell 集合であり lowering 断面の規範語彙ではないため pin しない。on_failure 既定 false は属性不在として表す。断面は DR-063 §3 の既存 5 面構造だけを使い、新しい面を設けない。",
+  "query": "lower",
+  "definition": {
+    "options": [
+      {"name": "completions", "type": "completion_script", "long": true}
+    ]
+  },
+  "installers": ["long"],
+  "expect": {
+    "greedy": [
+      {
+        "seq": [
+          {"exact": "--completions"},
+          {"ref": "completions", "link": "completions"}
+        ]
+      },
+      {"matcher": "eq_split", "entries": {"--completions": "completions"}}
+    ],
+    "entities": {
+      "completions": {"type": "string", "link": "#completion_script"},
+      "#completion_script": {"type": "string"}
+    }
+  }
+}

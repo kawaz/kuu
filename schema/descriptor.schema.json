@@ -502,7 +502,7 @@
           }
         },
         {
-          "description": "role:\"completer\" — named capability marker としての最小形 (DR-111 §5、DR-109 骨子柱 3 の $required の前提)。invocation が必須 (none 固定 — 要素の completer:\"<名前>\" 名前参照のみで wire 上の DSL args を持たない、DR-060 §4)、construction は static 固定。io_type は runtime 問い合わせ ABI (DR-109 骨子柱 6) 確定まで禁止 — 入力形 (補完文脈) を descriptor 側から発明しない (ABI 確定 DR が軸を追加する)。output 契約 (素の値文字列の列、DR-060 §4) は description で記す。reasons は常に空 — 補完チャンネルに reason を表面化する経路が無く、失敗は候補ゼロへの縮退が唯一の表現 (DR-111 §5)。output_mode/fallibility/domain/owns/observes/config は禁止。",
+          "description": "role:\"completer\" — named capability marker としての最小形 (DR-111 §5、DR-117 §7/§8.3)。invocation が必須 (none 固定 — 要素の completer:\"<名前>\" 名前参照のみで wire 上の DSL args を持たない、DR-060 §4)、construction は static 固定。DR-117 が確定した glue ↔ binary ABI は completer 関数自体の入力形を宣言しないため io_type は禁止のまま維持する。output 契約 (素の値文字列の列、DR-060 §4) は description で記す。reasons は常に空 — 補完チャンネルに reason を表面化する経路が無く、失敗は候補ゼロへの縮退が唯一の表現 (DR-111 §5)。output_mode/fallibility/domain/owns/observes/config は禁止。",
           "if": { "properties": { "role": { "const": "completer" } } },
           "then": {
             "required": ["invocation"],
@@ -533,7 +533,7 @@
 
     "envelope": {
       "type": "object",
-      "description": "schema/builtin-descriptors.json のトップレベル形状 (DR-095 §3/§4、DR-107 §6、DR-111 §3、DR-114 §8) — filters/cell_fns/types/accumulators/providers の 5 区分マップを検証する集合レベルの schema (codex レビュー #4 A-M11/B-Maj6、旧版はこの envelope 自体を検証する手段が無く descriptor.schema.json を builtin-descriptors.json のルートへ直接適用すると shape 不一致で失敗していた)。`filters` 配下は role:\"filter\"|\"collector\" のいずれか (DR-036「collectors registry は新設しない、filters で代替」)、`cell_fns` 配下は role:\"fn\" 固定 + canonical 10 住人の完備性を強制、`types` 配下は role:\"type_parser\" 固定、`accumulators` 配下は role:\"accumulator\" 固定 + 3 住人 (append/merge/kv_map、参照実装の registry 登録全員、DR-111 §3) の完備性を強制、`providers` 配下は role:\"provider\" 固定 + 3 スロット (env_provider/config_provider/tty_provider) の完備性を強制する。completers 区分は住人が生じるまで作らない (DR-111 §6 — 標準 completer 名の集合は補完生成器層の関心)。map key と各 descriptor.name の一致、bare/canonical 名の重複検査は JSON Schema の表現範囲外 (プロパティ名と値の中身を突き合わせる標準機構が無い) — `scripts/lint-descriptors.py` が semantic lint として検査する。",
+      "description": "schema/builtin-descriptors.json のトップレベル形状 (DR-095 §3/§4、DR-107 §6、DR-111 §3、DR-114 §8、DR-117 §7) — filters/cell_fns/types/accumulators/completers/providers の 6 区分マップを検証する集合レベルの schema。`filters` 配下は role:\"filter\"|\"collector\" のいずれか (DR-036「collectors registry は新設しない、filters で代替」)、`cell_fns` 配下は role:\"fn\" 固定 + canonical 10 住人の完備性を強制、`types` 配下は role:\"type_parser\" 固定、`accumulators` 配下は role:\"accumulator\" 固定 + 3 住人 (append/merge/kv_map、DR-111 §3) の完備性を強制、`completers` 配下は role:\"completer\" 固定 + builtin 2 住人 (files/dirs、DR-117 §7) の完備性を強制、`providers` 配下は role:\"provider\" 固定 + 3 スロット (env_provider/config_provider/tty_provider) の完備性を強制する。map key と各 descriptor.name の一致、bare/canonical 名の重複検査は JSON Schema の表現範囲外 (プロパティ名と値の中身を突き合わせる標準機構が無い) — `scripts/lint-descriptors.py` が semantic lint として検査する。",
       "properties": {
         "$comment": { "type": "string" },
         "$schema-ref": { "type": "string" },
@@ -576,6 +576,17 @@
           },
           "required": ["append", "merge", "kv_map"]
         },
+        "completers": {
+          "type": "object",
+          "description": "補完生成器が shell 既存機能へ委譲する builtin completer (DR-117 §7)。",
+          "additionalProperties": {
+            "allOf": [
+              { "$ref": "#/$defs/descriptor" },
+              { "properties": { "role": { "const": "completer" } } }
+            ]
+          },
+          "required": ["files", "dirs"]
+        },
         "providers": {
           "type": "object",
           "additionalProperties": {
@@ -587,7 +598,7 @@
           "required": ["env_provider", "config_provider", "tty_provider"]
         }
       },
-      "required": ["filters", "cell_fns", "types", "accumulators", "providers"],
+      "required": ["filters", "cell_fns", "types", "accumulators", "completers", "providers"],
       "additionalProperties": false
     }
   }

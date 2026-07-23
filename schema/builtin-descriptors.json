@@ -1,5 +1,5 @@
 {
-  "$comment": "kuu builtin registry 住人の宣言集合 — 各エントリは schema/descriptor.schema.json に適合する。正本は docs/decisions/DR-095-builtin-descriptor-reasons.md (§3 filters / §4 factories) + DR-107-descriptor-orthogonal-axes.md (role/construction/io_type/output_mode/fallibility/invocation の直交軸) + DR-114-universal-fn-integration.md (cell_fns / fn role / observes / tagged Sentinel)。DR-095 §射程外の通り、installer 発生源 (missing_operand 等) と constraint 系 reason (required_violated 等) は本ファイルの対象外 — 前者はエンジン構造の発生源で installer descriptor 側の宣言軸が未実体化、後者は constraint installer (DR-047/055) 側で別途宣言が必要 (いずれも本 issue の射程外)。トップレベル区分名 (filters/cell_fns/types/accumulators/providers) は DESIGN §13.1 の registry 区分名 (呼ばれるフィールド名の単位) を踏襲し、descriptor の `role` (DR-107) とは独立 — `types` registry 住人は `role:\"type_parser\"` を持つ (registry 区分名と role は別軸)。accumulators 区分は DR-111 §3 で新設 (append/merge/kv_map の 3 住人 = 参照実装の registry 登録全員、increment は DR-077 の宿題決着で除外、override は概念モデル上の名前で registry 住人ではない)。completers 区分は住人が生じるまで作らない (DR-111 §6)。",
+  "$comment": "kuu builtin registry 住人の宣言集合 — 各エントリは schema/descriptor.schema.json に適合する。正本は docs/decisions/DR-095-builtin-descriptor-reasons.md (§3 filters / §4 factories) + DR-107-descriptor-orthogonal-axes.md (role/construction/io_type/output_mode/fallibility/invocation の直交軸) + DR-114-universal-fn-integration.md (cell_fns / fn role / observes / tagged Sentinel) + DR-117-completion-generator-abi.md (§7 completers)。DR-095 §射程外の通り、installer 発生源 (missing_operand 等) と constraint 系 reason (required_violated 等) は本ファイルの対象外 — 前者はエンジン構造の発生源で installer descriptor 側の宣言軸が未実体化、後者は constraint installer (DR-047/055) 側で別途宣言が必要。トップレベル区分名 (filters/cell_fns/types/accumulators/completers/providers) は DESIGN §13.1 の registry 区分名 (呼ばれるフィールド名の単位) を踏襲し、descriptor の `role` (DR-107) とは独立 — `types` registry 住人は `role:\"type_parser\"` を持つ (registry 区分名と role は別軸)。accumulators 区分は append/merge/kv_map の 3 住人 (DR-111 §3)、completers 区分は shell 委譲表に対応する files/dirs の 2 住人 (DR-117 §7) を収載する。",
   "$schema-ref": "descriptor.schema.json",
 
   "filters": {
@@ -381,6 +381,25 @@
       "invocation": { "encoding": "object_args", "parameters": [] },
       "reasons": [],
       "description": "piece `k=v` を最初の `=` で分割し Map へ畳む累積 (DR-091 §2)。重複キーは last-wins (DR-015 のあと勝ち規約)。`=` を含まない piece の reject は matcher 手前ゲート (accumulator 到達前の構造検査、kv resident の node 層) であり accumulator 自体の fallibility とは別軸 (DR-105 §4 が明記) — fallibility:total は畳み相に失敗経路が無いことを表す。input が {\"array\":\"string\"} なのは piece が常に k=v 形の生文字列であるため (separator 分割を必要としない「1 token = 1 piece」、DR-091 §2)。"
+    }
+  },
+
+  "completers": {
+    "files": {
+      "name": "files",
+      "role": "completer",
+      "construction": "static",
+      "invocation": { "encoding": "none", "parameters": [] },
+      "reasons": [],
+      "description": "ファイルとディレクトリの一般補完を shell 既存機能へ委譲する builtin completer (DR-117 §7)。生成器は completion_query 応答の :shell_action files を zsh _files / bash compgen -f / fish の対応機構へ翻訳する。completer 関数自体の io_type は宣言しない (DR-117 §8.3)。"
+    },
+    "dirs": {
+      "name": "dirs",
+      "role": "completer",
+      "construction": "static",
+      "invocation": { "encoding": "none", "parameters": [] },
+      "reasons": [],
+      "description": "ディレクトリのみの補完を shell 既存機能へ委譲する builtin completer (DR-117 §7)。生成器は completion_query 応答の :shell_action dirs を zsh _files -/ / bash compgen -d / fish の対応機構へ翻訳する。completer 関数自体の io_type は宣言しない (DR-117 §8.3)。"
     }
   },
 
