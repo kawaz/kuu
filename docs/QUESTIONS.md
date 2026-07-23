@@ -9,4 +9,12 @@
 > - 「説明して」と返されたらチャットで長文説明せず、当該 Q をファイル内で説明付きに書き直して再提示
 > - 参照パスは本リポ (spec) 相対。kuu.mbt 側は「kuu.mbt の <path>」と表記
 
-(現在、裁定待ちはありません)
+## 👺COMPQ-Q1: 同一 spelling で term 違いの候補を行応答でどう畳むか
+
+**質問**: 素材 (DR-104 §3、fixtures/complete/eq-split-cont.json case `word-end-and-cont-coexist-same-origin`) は `--port × WordEnd` と `--port × Continue` の 2 件併存を pin する。これを行応答 (DR-117 §4/§5) に落とす段の畳み方が未規定 (規範 gap)。現実装は 2 行 emit で、shell 補完に同一 flag が 2 回出る (実機検証で発見)。正本: docs/issue/2026-07-23-completion-query-duplicate-candidates.md
+
+- **(a) 推し: Continue 側 (nospace) に統合して 1 行 emit**
+  - eq-split 併存の意味は「値を続けて書ける」で shell UX 上 nospace が実態。同一 origin 派生なので統合で失う情報は無い。DR-117 §5 policy 段に merge 規則を追記、fixture 増分ゼロ (§8.1 の分担どおり)
+- (b) WordEnd 優先で 1 行 emit (nospace なし — eq-split の nospace hint を失い挿入 UX 劣化)
+- (c) 素材通り 2 行 emit 維持、glue で吸収 (glue 3 種で扱いが割れ shell 間 drift = DR-117 §5 の思想に反する)
+
