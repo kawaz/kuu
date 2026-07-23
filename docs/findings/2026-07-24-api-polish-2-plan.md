@@ -383,7 +383,8 @@ H10-H13 は玄関型の同窓破壊に同乗。
 
 - AP2-Q2 は別トピック (DR-075 supersede の確認、統括起票) で消費済み — 本書の Q は Q3 から
 
-- **AP2-Q3: engine internal 化と拡張 ABI の公開範囲** (sol blocker 1、詳細 §1.1)
+- **AP2-Q3: 裁定済み (kawaz 2026-07-24) = b: 拡張 ABI package を本サイクルで設計・切り出す**。当初推し a は「後送りの押し付け + v1 を急ぐ前提混じり」の指摘で棄却。bigint 拡張 (REV-Q2 の言語側回収) をテストケースに、custom completer / 自作 type 登録も顧客として設計する。多言語スパイク findings §4 が設計入力
+  - (旧 a 案: 本サイクルで閉じる — 棄却)
   - a. **外部拡張面も本サイクルで閉じる** (**推し** — builtins も internal 化、v1 公開面は
     kuu 玄関のみ。拡張 ABI は bigint 拡張 (REV-Q2) を最初の顧客として別サイクルで設計して
     開ける。理由: 拡張 ABI の線引きは Registry / Ext trait / descriptor / Node 構築子に跨る
@@ -393,7 +394,8 @@ H10-H13 は玄関型の同窓破壊に同乗。
     今必要になり、Node 級の巨大 pub(all) が公開面に残って B1 の縮小幅が減る)
   - 参照: §1.1 / §1.2a、builtins pkg.generated.mbti の @engine 参照 75 箇所 (機械カウント)
 
-- **AP2-Q4: Interpretation / bindings ハンドルの AST provenance** (sol blocker 2、詳細 §1.2b)
+- **AP2-Q4: 裁定済み (kawaz 2026-07-24) = b: 契約ベース (ast 引数維持)**。a (AST 束縛ハンドル) は「呼んだ先の結果補償までライブラリが抱える責務越境 (env/xargs の構図)」で棄却。ast と産物の対応維持は呼び出し側の責務として doc 契約化。identity 検証の有無は実装コストを見て軽い方に倒す (検証なし契約のみも可)。言語側の型レベル強化 (Rust generative brand 等) は各実装の任意工夫 — MoonBit は不可能と実機確定済み (rank-2/existential 無し、2026-07-24 調査)
+  - (旧 a 案: AST 束縛ハンドル — 責務越境で棄却)
   - a. **AST-束縛ハンドル** (**推し** — parse 産物が AtomicAST 参照を内包し、`interp.view()` /
     `interp.resolve(...)` / `output(resolved)` から ast 引数が消え、別 definition との
     取り違えが構文的に不可能。DR-118 の概念シグネチャとは矛盾しない — atomic の供給形は

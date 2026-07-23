@@ -9,24 +9,4 @@
 > - 「説明して」と返されたらチャットで長文説明せず、当該 Q をファイル内で説明付きに書き直して再提示
 > - 参照パスは本リポ (spec) 相対。kuu.mbt 側は「kuu.mbt の <path>」と表記
 
-## 👺AP2-Q3 (再提案): 拡張 ABI を本サイクルで設計する (b 変更)
-
-**経緯**: 当初推し a (本サイクルは閉じて別サイクルで開ける) に「後のセッションへの押し付けでは」の指摘。v1 公開を急がない前提では a の利点 (破壊窓の縮小) は薄く、顧客が 3 つ見えている (bigint / custom completer / 自作 type)。**b (拡張 ABI package を本サイクルで設計・切り出し、bigint 拡張をテストケースに) へ変更を再提案**。多言語スパイクの発見 (findings 2026-07-24-multilang-spike-findings.md §4) も設計入力に使える
-
-- **(b) 再提案: 拡張 ABI package を本サイクルで設計する**
-- (a) 旧推し: 本サイクルは閉じる (棄却方向 — 上記経緯)
-
-## 👺SPK-Q1: variant DSL の op トークン綴りと EBNF の確定 (v1 前必須)
-
-**質問**: variant DSL (`long: [":set","no:unset","reset:default"]` 等) の op トークン綴りが「D9 と要調整」の仮置きのまま fixture に入っており、EBNF が無いため他言語実装が書けない (TS スパイクが unset-ladder / default-source-model をスコープ外にした主因)。findings 多言語スパイク §2 S4
-
-- **(a) 推し: 現行綴りを正として確定し、EBNF を DESIGN に明文化** (fixture は既にこの綴りで pin 済み、変えると fixture 波及)
-- (b) D9 の再設計とセットで綴りを見直す (波及大、v1 前の別サイクル化)
-
-## 👺SPK-Q2: conformance の細部規範 3 点の確定
-
-**質問**: 多言語スパイクで露呈した規範の穴 3 点 (findings §2)。いずれも「実装judgment で埋めた」箇所で、実装間乖離の種
-
-- **(a) 推し: 3 点まとめて spec 側で確定する** — (1) failure errors の同一 4-tuple dedupe 規則 (推奨: dedupe する)、(2) 未発火 flag の false の sources 語彙 (推奨: `default`)、(3) 予約語彙 (sources/warnings/effects/result) を entity name に使う場合の扱い (推奨: 禁止せず wire 構造で区別可能なことを明文化)
-- (b) 個別に裁定 (分割が必要な深い論点があれば)
-
+(現在、裁定待ちはありません)
