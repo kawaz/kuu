@@ -290,6 +290,10 @@ descriptor 宣言と実装実体の整合を conformance で機械検証する q
 - export JSON への descriptor 同梱の wire 形式 (issue `from-entries-nonconforming-input-wire-form` の射程)
 - `default` の lexical-scope 借用構想 (issue `default-lexical-scope-borrow`、DAX-Q2 の派生論点)
 
+## role enum への node / matcher 追加
+
+> **更新 (DR-119、2026-07-24): §1 の role enum に `node` / `matcher` を追加する。** §1 の「matcher 等の内部装置は role に載せない」は、判定器 (「独立実装者が host 言語で実装しうる runtime callable ABI を持つ住人」) の当時の適用結果であり、DR-119 が node / matcher の公開拡張 ABI を確定したことで同じ判定器の適用結果が変わった (線引き自体は不変)。両 role の宣言軸 (invocation none 固定 / owns 禁止 / io_type 禁止) は DR-119 §8 が正本。
+
 ## 関連
 
 - docs/findings/2026-07-15-descriptor-axes-design-recon.md (3 案比較・DAX-Q 抽出の正本)
