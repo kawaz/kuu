@@ -74,7 +74,13 @@ kuu-cli: H2 (exit code) / H3 (help→stdout) / H4 (subcmd --help) / H5 (--versio
 kuu.mbt: H1 (validate 実装の検査範囲拡充 — spec の definition-error 検査を validate 経路に配線)
 docs: H15-H19 (quickstart 3 本 / Layout 表整理 / 内外分離 / kuu.mbt README 増強 / $schema 導線)
 
-## 5. 裁定が要る分岐 → docs/QUESTIONS.md の REV-Q バッチ参照
+## 5. 裁定結果 (kawaz 2026-07-24、全問裁定済み)
+
+- **REV-Q1=a**: 玄関型 (Outcome/Candidate/Binding/Warning 等) を kuu package 側の opaque/pub 型へ置き換え、engine は internal 化
+- **REV-Q2=a+回収**: v1 は「int の保証精度は 2^53」を DESIGN/REFERENCE に明記 + 超過値は reject/warning。**bigint は core に入れず各言語実装側の拡張として個別実装** (1st party 提供の 3rd ライブラリ的立場で、拡張機構のデモを兼ねる)
+- **REV-Q3=a**: 段階型で強制 (parse → ParsedOutcome / resolve → ResolvedOutcome / output は ResolvedOutcome のみ受理) + Ambiguous の resolve 意味論と「interpretation ビューは何相まで適用した姿か」を DR で裁定
+- **REV-Q4=a**: kuu-cli dogfooding 書き直しを主タスク化、H2-H9 の慣習違反はその中で一括解消
+- **REV-Q5=a**: API 磨き第 2 サイクルとして REV-Q1/Q3 の型置き換えと同窓で実施 (破壊 1 回)
 
 B1 (engine 封鎖の方式) / B2 (int 精度の断定 or bigint) / B3 (parse/resolve 契約) / B4 (dogfooding の着手時期) /
 H10-H14 の API 変更群 (まとめて API 磨き第 2 サイクルとするか)。
