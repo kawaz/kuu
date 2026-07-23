@@ -257,7 +257,7 @@ H10-H13 は玄関型の同窓破壊に同乗。
 
 ## 6. AP2-Q バッチ素案 (裁定が要る分岐)
 
-- **AP2-Q1: 2^53 超過整数 (string 源) の既定挙動** — REV-Q2 裁定文の「reject/warning」が未収束
+- **AP2-Q1: 裁定済み (kawaz 2026-07-24) = a: Error 固定**。超過は常に parse エラー、warning 続行 opt-in は設けない
   - a. reason `integer_precision_exceeded` の Error (reject) 固定 (**推し** — DR-075 の
     値空間 Error 系と一貫、warning 続行は丸め値の黙認になり「黙って精度が落ちる」の再発)
   - b. Error 既定 + int_round 同様の config 軸で「warning + 丸め続行」を opt-in
