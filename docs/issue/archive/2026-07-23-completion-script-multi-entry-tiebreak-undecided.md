@@ -1,6 +1,6 @@
 ---
 title: completion_script 複数入口の同時発火時の内部セル勝者順が未裁定
-status: open
+status: resolved
 category: design
 created: 2026-07-23T17:15:32+09:00
 last_read:
@@ -9,10 +9,10 @@ wip_entered:
 blocked_entered:
 pending_entered:
 discarded_entered:
-resolved_entered:
+resolved_entered: 2026-07-23T23:22:15+09:00
 discard_reason:
 pending_reason:
-close_reason:
+close_reason: ["dr/DR-117","implemented"]
 blocked_by:
 origin: 自リポ TODO
 ---
