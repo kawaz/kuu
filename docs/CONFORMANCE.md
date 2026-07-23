@@ -142,7 +142,7 @@ spec バンドル自体の v1.0.0 発行条件 (5 プロファイル全 green、
 - **構造等価** (DR-063 §4): key 順序非規範、フィールド省略 = default 値と等価。byte 一致は要求しない
 - effects は配列順込みの完全一致 (順序が同一性成分)
 - result は構造等価
-- interpretations は集合比較 (各解釈は構造等価、**列挙順は非規範**) — 完全経路間に優先がない (DR-038) ため順序は同一性成分でない (effects の順序規範性と対照的、errors と同じ集合扱い)。重複解釈の dedup 可否は「解釈の同一性」定義に従属し本書では定めない (DR-053 §3)。claimants を持つ解釈は `{result, claimants}` の組を 1 単位として構造等価で突き合わせる (DR-073) — claimants がその解釈と束ねられているため集合比較が順序に依存しない
+- interpretations は集合比較 (各解釈は構造等価、**列挙順は非規範**) — 完全経路間に優先がない (DR-038) ため順序は同一性成分でない (effects の順序規範性と対照的、errors と同じ集合扱い)。重複解釈の dedup 可否は「解釈の同一性」定義に従属し本書では定めない (DR-053 §3)。claimants を持つ解釈は `{result, claimants}` の組を 1 単位として構造等価で突き合わせる (DR-073) — claimants がその解釈と束ねられているため集合比較が順序に依存しない。各解釈のビューは **parse 相 + DR-118 §3 の 3 規則** (Default-source scalar 除外 / claimants 席の default 残置 / 空 accumulator 配列の保持) を適用した姿 — 値源ラダー (resolve 相) は適用しない (DR-118)
 - errors は集合比較 (`query:"parse"` の failure outcome: element, args_pos, kind, reason の組。**reason は fixture 側に書かれている要素でのみ比較対象** (§2 の optional 検証)、message は常に無視)
 - `query:"definition_error"` の errors は element + kind の組の集合比較 (`args_pos`/`reason` は definition-error 構造に存在しない、DR-082 §1)。message/hint は比較しない
 - universal fn の colon-string と 1 段 array of string は同じ `name + args` へ decode してから比較する。wire 表現の違いは呼び出しの同一性成分ではない (DR-114 §6)

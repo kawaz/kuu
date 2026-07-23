@@ -517,7 +517,7 @@ DR-095 射程外)、それ以外の type は本表が唯一のカタログにな
 |---|---|---|---|
 | `string` | 値プリミティブ | 任意バイト列受理、検証は filters opt-in | DESIGN §3.3 |
 | `number` | 値プリミティブ | 汎用数値 (整数・小数)。canonical 寛容 10 進字句 | DESIGN §3.3, DR-074 |
-| `int` | 値プリミティブ | number 字句 + 値空間判定で整数のみ受理 (`int_round`) | DESIGN §3.3, DR-075 |
+| `int` | 値プリミティブ | number 字句 + 値空間判定で整数のみ受理 (`int_round`)。保証精度は 2^53 — string 源で超過する整数値は Error (`int_out_of_range`)、任意精度は言語実装側の拡張 type の関心 | DESIGN §3.3, DR-075 |
 | `float` | 値プリミティブ | number + inf 受理の別名 (number 自体は inf 非受理) | DESIGN §3.3, DR-074 |
 | `bool` | 値プリミティブ | true/false 語彙 (`builtin/bool_parser`) | DESIGN §3.3, DR-074 |
 | `path` | 値プリミティブ | バイト列受理、検証は filters opt-in | DESIGN §3.3 |

@@ -308,7 +308,7 @@
         "int_round": { "value_type": "string", "enum": ["floor", "ceil", "trunc", "away", "half_floor", "half_ceil", "half_trunc", "half_away", "half_even", "error"], "default": "error", "description": "非整数値の丸めモード 10 種 (DR-075 §2)。canonical default は error。" }
       },
       "reasons": ["not_a_number", "not_an_integer", "int_out_of_range"],
-      "description": "int の値空間判定 value_parser (DR-075 §1、DR-094 §9 案 A の新名 — 旧名 kuu_int_parser)。not_a_number = number として全く読めない入力。not_an_integer = 非整数値かつ int_round=error のときのみ emit (丸めモードでは丸めて成功するため emit しない、DR-075 §6 が reasons 宣言として明文)。int_out_of_range = 整数値だが host 実装の値域を超える (DR-075「int の値域は実装定義」節)。"
+      "description": "int の値空間判定 value_parser (DR-075 §1、DR-094 §9 案 A の新名 — 旧名 kuu_int_parser)。not_a_number = number として全く読めない入力。not_an_integer = 非整数値かつ int_round=error のときのみ emit (丸めモードでは丸めて成功するため emit しない、DR-075 §6 が reasons 宣言として明文)。int_out_of_range = 整数値だが canonical 値域 (絶対値 2^53 inclusive、AP2-Q1=a で固定 — DESIGN §3.3「整数の保証精度」、旧「実装定義」規定は superseded) を超える。"
     },
     "builtin/bool_parser": {
       "name": "builtin/bool_parser",

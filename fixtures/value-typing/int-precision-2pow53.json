@@ -1,0 +1,47 @@
+{
+  "why": "整数の保証精度 2^53 の境界 pin (AP2-Q1=a、DESIGN §3.3「整数の保証精度」/ DR-075「int の値域は実装定義」の下限固定): int の保証範囲は絶対値 2^53 まで (inclusive)、string 源で超過する整数値は silent な精度劣化を許さず Error (reason=int_out_of_range)。検証は string 源 (CLI トークン) 経由に限る — config の JSON native number 源は decode 時点で binary64 化済みで超過検出が原理的に保証対象外 (DR-050 §4 の string/native 非対称)。2^53 = 9007199254740992 は binary64 で正確に表現可能なので受理、2^53+1 = 9007199254740993 は表現不能 (最近接偶数 2^53 へ落ちる) ので Error。positional v(int) 1 本で境界の両側と負側を固定する。",
+  "query": "parse",
+  "definition": {
+    "positionals": [{ "name": "v", "type": "int" }]
+  },
+  "cases": [
+    {
+      "id": "at-2pow53-accepted",
+      "why": "境界値そのもの (2^53 = 9007199254740992) は保証範囲内 (inclusive、DESIGN §3.3「絶対値 2^53 まで」): binary64 で正確に表現できる整数値なので受理。result は最短形の整数。",
+      "args": ["9007199254740992"],
+      "expect": {
+        "outcome": "success",
+        "effects": [{ "entity": "v", "op": "set", "operand": 9007199254740992, "source": "cli" }],
+        "result": { "v": 9007199254740992 }
+      }
+    },
+    {
+      "id": "above-2pow53-rejected",
+      "why": "2^53+1 = 9007199254740993 は binary64 で表現不能 (丸めると 2^53 に落ちて精度が黙って劣化する) — silent 劣化の禁止により Error (element=v / args_pos=0 / kind=parse / reason=int_out_of_range、DR-075 / DR-095 の既存 reason 語彙)。string 源は binary64 非経由の厳密判定 (DR-050 §4) なので超過は検出可能かつ検出必須。値域が 2^53 より広い実装 (Int64 等) でもこの値自体は表現可能だが、spec の保証面は 2^53 であり fixture は保証面の外縁を pin する — 広い値域の実装がこれを受理すると本 case で mismatch になる点は意図的 (言語移植間で挙動が割れる領域を canonical fixture の面から外さず、保証面ちょうどの挙動に揃える)。",
+      "args": ["9007199254740993"],
+      "expect": {
+        "outcome": "failure",
+        "errors": [{ "element": "v", "args_pos": 0, "kind": "parse", "reason": "int_out_of_range" }]
+      }
+    },
+    {
+      "id": "negative-at-2pow53-accepted",
+      "why": "負側境界 -2^53 も絶対値で対称に保証範囲内: binary64 の整数表現力は符号対称なので -9007199254740992 は正確に表現でき受理。",
+      "args": ["-9007199254740992"],
+      "expect": {
+        "outcome": "success",
+        "effects": [{ "entity": "v", "op": "set", "operand": -9007199254740992, "source": "cli" }],
+        "result": { "v": -9007199254740992 }
+      }
+    },
+    {
+      "id": "negative-above-2pow53-rejected",
+      "why": "負側超過 -(2^53+1) も対称に Error (int_out_of_range): 絶対値判定なので正側 above-2pow53-rejected と同じ帰結。",
+      "args": ["-9007199254740993"],
+      "expect": {
+        "outcome": "failure",
+        "errors": [{ "element": "v", "args_pos": 0, "kind": "parse", "reason": "int_out_of_range" }]
+      }
+    }
+  ]
+}

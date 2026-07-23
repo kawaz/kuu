@@ -122,6 +122,8 @@ M2 (int の String parse が構文判定か値空間判定か) と int_round は
 
 ## int の値域は実装定義 (kawaz 裁定 2026-07-08)
 
+> **Superseded (AP2-Q1=a、kawaz 裁定 2026-07-24): 本節の「値域は実装定義」は canonical 値域の絶対値 2^53 (inclusive) 固定に置き換わる (DESIGN §3.3「整数の保証精度」)。** string 源で 2^53 を超える整数値は host の表現力に関わらず Error (reason `int_out_of_range` — 本節が導入した reason はそのまま使う)。「実装定義」のままだと Int64 実装が超過を受理でき、Error 固定 (AP2-Q1=a) と移植間の受理域一致が成立しないための帰結。silent wrap / 精度劣化の禁止という本節の趣旨は不変。境界 pin は `fixtures/value-typing/int-precision-2pow53.json`。
+
 int が表現できる**値域** (magnitude の上限) は kuu では固定せず**実装定義** (参照実装なら Int64、host 言語の整数幅に従う) とする。言語移植間で値域に差異が出ることは許容する。ここで「値域」は **その実装の整数表現が正確に表せる範囲** を指す — 例えば JS の素の number を使う実装なら 2^53 (safe integer 境界) が値域であり、それを超えて精度が劣化した値を返すのは silent wrap と同罪で不可 (Error にする)。
 
 - 値域を超えた入力 (整数「値」としては読めるが host 幅に収まらない、例 `"1e300"`・Int64 実装での `"9223372036854775808"`) は **silent wrap ではなく Error** — reason は `int_out_of_range` (DR-066 §3 に追加)
