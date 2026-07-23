@@ -82,9 +82,6 @@ docs: H15-H19 (quickstart 3 本 / Layout 表整理 / 内外分離 / kuu.mbt READ
 - **REV-Q4=a**: kuu-cli dogfooding 書き直しを主タスク化、H2-H9 の慣習違反はその中で一括解消
 - **REV-Q5=a**: API 磨き第 2 サイクルとして REV-Q1/Q3 の型置き換えと同窓で実施 (破壊 1 回)
 
-B1 (engine 封鎖の方式) / B2 (int 精度の断定 or bigint) / B3 (parse/resolve 契約) / B4 (dogfooding の着手時期) /
-H10-H14 の API 変更群 (まとめて API 磨き第 2 サイクルとするか)。
-
 ## 6. 評価されている点 (指摘とバランスを取る事実)
 
 - conformance fixture + why + DR 遡及の三点セットは「clap/cobra に無い本物の優位」(veteran)
@@ -95,5 +92,5 @@ H10-H14 の API 変更群 (まとめて API 磨き第 2 サイクルとするか
 ## 関連
 
 - 4 ペルソナの原報告はセッション内 (要旨は本書に統合済み)。再現用実出力は各指摘の根拠欄
-- docs/QUESTIONS.md REV-Q バッチ (裁定待ち)
+- 裁定は §5 に記録済み (QUESTIONS.md からは削除済み)
 - 前回同種レビュー: 公開 API 磨きサイクル (docs/journal/2026-07-21-renderer-and-api-polish-cycle.md)
