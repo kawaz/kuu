@@ -1,6 +1,6 @@
 ---
 title: completion_query が同一 insert の候補を通常版/nospace 版で重複 emit する
-status: open
+status: resolved
 category: design
 created: 2026-07-23T23:02:27+09:00
 last_read: 2026-07-23T23:38:18+09:00
@@ -9,10 +9,10 @@ wip_entered:
 blocked_entered:
 pending_entered:
 discarded_entered:
-resolved_entered:
+resolved_entered: 2026-07-24T00:15:00+09:00
 discard_reason:
 pending_reason:
-close_reason:
+close_reason: ["dr/DR-0117","implemented","done:CI green"]
 blocked_by:
 origin: shell-matrix (自リポ実機検証)
 ---
@@ -36,8 +36,8 @@ bug (= 同一 insert は 1 行に統合すべき) なのかが未裁定。
 ## 受け入れ条件
 
 - [x] DR-117 §4 の候補行文法を確認し、重複 emit の扱いを明文化する (下記裁定で対応)
-- [ ] 仕様として不正なら kuu.mbt M1 (completion_query) を修正
-- [ ] 仕様として正なら glue 側の重複排除責務を明記する
+- [x] 仕様として不正なら kuu.mbt M1 (completion_query) を修正 (c47578df、受理/definition-error/reconciliation/merge + wbtest 13 本)
+- [x] 仕様として正なら glue 側の重複排除責務を明記する (binary 側で 1 行化、glue の重複排除は不要と確定)
 
 ## 裁定 (COMPQ-Q1, 2026-07-23)
 
