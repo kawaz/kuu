@@ -5,9 +5,11 @@
 > → blocker 2 回目 (engine の `ElementDef.ty : &TypeExt` 等により internal→extension import
 > が必須で、trait の internal 型参照と循環) で §8 第 2 版 (3 層 + InstallerExt bridge) に
 > 再改訂 → blocker 3 回目 (第 2 版の bridge 合成が extension↔internal の package cycle、
-> M2c 指摘 + 合成 probe 実験 11 で確定) で **§8 第 3 版 (現行: 3 層 + trait 8 本全部層分割 +
-> snapshot 変換 adapter は internal 側) に再々改訂**。§2 の型リストは §8.2/§8.3 の層割当が
-> 正 (§2.1 の配置注記と §4「Node opaque 再輸出」は superseded)。
+> M2c 指摘 + 合成 probe 実験 11 で確定) で §8 第 3 版 (3 層 + trait 8 本全部層分割 +
+> snapshot 変換 adapter は internal 側) に再々改訂 → **停止条件発火 (plant 語彙 = Node
+> 再発明、M2c 2026-07-24) で §8.8 第 4 版: v1 公開拡張 ABI を 3 顧客面に絞り、node /
+> installer residents は internal 配置の canonical 資材とする (AP2-Q5 裁定素材)**。
+> §2 の型リストは §8.3 + §8.8 の層割当が正。
 
 > 由来: API 磨き第 2 サイクル プラン (`docs/findings/2026-07-24-api-polish-2-plan.md`) §1.1 /
 > §5 M2b、AP2-Q3=b 裁定 (拡張 ABI package を本サイクルで設計)。本書が M2c (骨格破壊) の入力。
@@ -364,7 +366,100 @@ lowering 内部実装であり ABI に現れない。MatcherExt の Ctx / TypeEx
       internal import 拒否を確認 + `moon test` 全 green
 - [ ] 統括報告: BuilderView の観測 getter + plant 語彙の最終集合 (builtins 15 本書き直しの結果)。plant 語彙が Node 再発明に膨らむ場合は実装を止めて設計持ち帰り
 
-### 8.7 probe の再現手順 (実出力の保全)
+### 8.8 第 4 版 — 停止条件発火 (plant 語彙 = Node 再発明) の解決: v1 拡張 ABI は 3 顧客面に絞る
+
+> 発火の事実確認 (M2c 中間状態の実物、kuu.mbt working copy): 公開 arg factory 14 本は
+> `@engine.Node` を返し (builtins/node_residents.mbt L122-955、NodeExt impl 59 箇所)、
+> installer 本体 (inst_long 等) は既に internal/engine/lowering.mbt へ移動済み。builtins に
+> 残る Node 依存は node_residents.mbt (14) + installer_residents.mbt の ElementDef 2 箇所。
+> BuilderView の plant で factory 戻り値 (Node) を運ぼうとすると abi に Node 相当の座席が
+> 要る = 停止条件どおり。
+
+#### 8.8.1 原因の切り分け — 「拡張作者の面」と「canonical 資材の面」の混同
+
+行き詰まりの根は「builtins 全体を拡張作者と同じ立場に置く」目標設定にある。builtins の
+中身は 2 種に分かれる:
+
+- **(A) 拡張作者と同じ立場で書ける面**: type residents / completer / accumulator /
+  collector / matcher 構築 / filter descriptor / cell_fns / entity_ext — grep 実測で
+  **Node 参照ゼロ** (builtins 14 ファイル中 11 ファイルが該当。node_residents 14 /
+  installer_residents 2 / lexicon 1 参照のみが例外)
+- **(B) engine の open node 契約 (DR-110 §3-2) に乗る評価能力の提供面**: node residents
+  (値プリミティブの読み/parse を NodeExt::eval で登録、DR-110 §4「値プリミティブ型は
+  open node 契約に乗る拡張 node」) と installer residents (Definition/ElementDef を読む
+  lowering 参加者)。これらは**評価器の内部座標 (Ctx/Branch/Binding/Resume/Node) を
+  シグネチャに持つ trait の実装**であり、wire に現れない評価器 ABI の住人
+
+DR-110 の「builtins は公開 extension interface のみ使用」は (B) を含む全面要求だが、
+(B) の interface (NodeExt / installer の lowering 面) は §2.1 で既に「v1 拡張 ABI の
+射程外」と裁定済み (NodeExt internal 残置)。**(B) を v1 の公開 ABI に含めない以上、
+(B) の住人が internal 配置になるのは矛盾ではなく整合** — 「公開 interface のみ使用」の
+検証可能形 (任意の 1 住人を 3rd party 差し替え可能) は、(B) については「internal 内の
+NodeExt/installer 契約に対する差し替え可能性」として **engine のコード分離 (禁止事項 1:
+語彙の直書き分岐なし) で担保**され続ける。層の物理配置 (public package か internal か) は
+差し替え可能性の operative definition に含まれない。
+
+#### 8.8.2 第 4 版の配置
+
+- **builtins を 2 分割**:
+  - `src/builtins/` (public、import = abi + extension のみ): (A) 面 — type/completer/
+    accumulator/collector/matcher/filter/cell_fns/entity_ext。**ここが「拡張作者と同じ
+    書き方」の対称性の証明** (moon.pkg に internal が無いままコンパイルが通る)
+  - `src/internal/residents/` (internal、import = abi + extension + internal/engine):
+    (B) 面 — node_residents + installer_residents (+ lexicon の ElementDef 依存部)。
+    canonical 資材として evaluator 型に直接触る
+- **arg factory 14 本は公開面から消す** (team-lead 検討方向 2 の実測裏付け: production の
+  呼び出し元は internal の lowering と kuu 玄関の registry 組成のみ — wire decode 経由で
+  しか使われず、外部利用者が Node を手組みする正当な経路は v1 に存在しない。wbtest の
+  利用は package 内なので影響なし)
+- **BuilderView の plant 語彙は「installer が wire から decode した宣言を置く」面に限定**
+  — Node を運ばない。もっとも v1 では公開 installer 拡張自体を提供しないため (下記)、
+  BuilderView / InstallerExt の extension 公開も**取り下げ**、installer 契約は internal に
+  残す (現行の InstallerExt そのまま、書き換え不要)
+- **extension の公開 trait は v1 = 5 本**: TypeExt / CompleterExt / AccumulatorExt /
+  CollectorExt / EntityExt (+ CapabilityExt、descriptor/FnCtx/config 担体は §2 のまま)。
+  MatcherExt / InstallerExt / NodeExt は internal (evaluator 内部座標を運ぶ trait 群 —
+  「メソッドが abi+extension の型だけで書ける trait だけを公開する」判定則が 3 版の
+  hybrid 判定則を置き換える最終形)。TypeExt の evaluator 接続は「type resident の
+  parse_token を internal の値スロット node が呼ぶ」向きなので TypeExt 自体は
+  abi 型のみpremise で公開可能 (実験 9/11 で green の形)
+
+#### 8.8.3 3 顧客への影響 = ゼロ、対称性の論点 (Q 化素材)
+
+§6 の 3 顧客 (bigint / custom completer / 自作 type) は全て (A) 面 = **v1 公開 5 trait で
+変わらず書ける** (installer / matcher / node 拡張は 3 顧客のいずれも要さない)。
+
+**ただし公開 ABI の範囲が変わるため AP2-Q5 として裁定を仰ぐ** (「builtin と同じ書き方で
+自作できる」対称性が (B) 面で消える):
+
+- **AP2-Q5: v1 公開拡張 ABI の範囲**
+  - a. **(A) 面の 5 trait + descriptor 面のみ公開** (**推し** — 3 顧客が全部書ける実証済み
+    範囲。installer / matcher / node の拡張 ABI は評価器内部座標の安定化が前提で、開くなら
+    その安定化 DR とセット。AP2-Q3=b の「拡張 ABI package を本サイクルで設計」は (A) 面で
+    充足 — bigint/custom completer/自作 type が裁定文の名指し顧客であり、installer 拡張は
+    顧客に居ない。閉→開は非破壊の非対称も再適用)
+  - b. installer / matcher も v1 で公開 (BuilderView 窓 + plant 語彙の設計を完遂する —
+    plant 語彙の Node 再発明問題に正面から答える必要があり、破壊窓がさらに延びる。
+    canonical installer 13 種と同等の表現力を初版から保証する負担)
+  - 参照: 本節、DR-110 §3-2/§4 (値プリミティブ = open node 契約の住人)、§6 (3 顧客検証)
+
+#### 8.8.4 M2c checklist 差分 (第 3 版 §8.6 への上書き)
+
+- [ ] builtins 2 分割: node_residents / installer_residents (+ lexicon の ElementDef 部) を
+      `src/internal/residents/` へ。残り 11 ファイルは `src/builtins/` (import = abi +
+      extension のみ) — **中間変更の大半 (abi/extension/internal の移動) はそのまま生きる**
+- [ ] arg factory 14 本 + effect_mark/deprecation_mark/failure_mark/node_resident_name を
+      公開面から除去 (internal/residents 居住、玄関 registry 組成と lowering だけが呼ぶ)
+- [ ] extension から InstallerExt / MatcherExt / BuilderView 案を撤去 (internal 残置)。
+      公開 trait = TypeExt / CompleterExt / AccumulatorExt / CollectorExt / EntityExt /
+      CapabilityExt。Registry の register_installer / register_matcher / register_node は
+      internal 側の組成 API へ分離 (公開 Registry には (A) 面の register だけ残す)
+- [ ] 完了判定: `src/builtins/moon.pkg` に internal 参照なし (対称性の機械証明は (A) 面で
+      成立) + 外部 probe で 3 顧客が公開面だけで書けること + moon test 全 green
+- [ ] AP2-Q5 の裁定を待ってから extension の公開 trait 面を fix (a なら上記どおり、
+      b なら BuilderView 設計を §8.4 の停止条件込みで再開)
+
+### 8.9 probe の再現手順 (実出力の保全)
 
 probe プロジェクトは scratchpad (session-local) のため、判断根拠の実出力を残す:
 
