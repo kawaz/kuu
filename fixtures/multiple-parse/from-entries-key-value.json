@@ -22,6 +22,7 @@
   "cases": [
     {
       "id": "named-key-value-rows-become-object",
+      "why": "DR-044 §2 の指名 2 フィールド用法により、各 row の key/value フィールドを object entry の key と value へ写す。",
       "args": ["--entries", "a", "1", "--entries", "b", "2"],
       "expect": {
         "outcome": "success",

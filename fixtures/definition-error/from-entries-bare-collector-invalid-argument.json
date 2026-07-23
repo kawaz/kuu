@@ -14,6 +14,7 @@
   "cases": [
     {
       "id": "bare-from-entries-requires-canonical-argument-form",
+      "why": "DR-044 §2 は from_entries の 3 canonical 引数形だけを定め、bare string は必須引数を欠くため definition-time invalid-argument とする。wire schema は構文として受理し、意味論検査がこの outcome を返す。",
       "expect": {
         "outcome": "definition-error",
         "errors": [{"element": "entries", "kind": "invalid-argument"}]

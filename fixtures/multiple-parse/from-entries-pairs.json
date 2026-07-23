@@ -14,6 +14,7 @@
   "cases": [
     {
       "id": "non-pair-values-pass-through",
+      "why": "DR-044 §3 の entries 用法は全要素が 2 要素配列の時だけ object 化するため、scalar 列は total pass-through で配列のまま残る。",
       "args": ["--entries", "a", "--entries", "b"],
       "expect": {
         "outcome": "success",
@@ -22,6 +23,7 @@
     },
     {
       "id": "empty-array-passes-through",
+      "why": "DR-044 §3 は空配列を全用法で `[]` のまま通すため、entries 用法でも空 object へ変換しない。",
       "args": [],
       "expect": {
         "outcome": "success",

@@ -19,6 +19,7 @@
   "cases": [
     {
       "id": "missing-named-value-passes-through",
+      "why": "DR-044 §3 の total collector 規則により、指名 value フィールドを欠く row が一つでもあれば object 化せず配列形をそのまま通す。",
       "args": ["--entries", "a", "--entries", "b"],
       "expect": {
         "outcome": "success",

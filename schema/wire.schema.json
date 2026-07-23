@@ -95,15 +95,10 @@
                 "accumulator": { "type": "string", "description": "accumulators registry の参照 (DR-036)。" },
                 "collector": {
                   "oneOf": [
-                    {
-                      "allOf": [
-                        { "$ref": "#/$defs/registryIdentifier" },
-                        { "not": { "const": "from_entries" } }
-                      ]
-                    },
+                    { "$ref": "#/$defs/registryIdentifier" },
                     { "$ref": "#/$defs/collectorCall" }
                   ],
-                  "description": "累積後の T[]→U 変換 (DR-036/044)。string は filters registry の引数なし collector 参照 (`from_entries` は引数必須のため除外)。object は resident 名を唯一のキー、resident 固有の canonical 引数を値に持つ引数形。省略時は accumulator の default_collector。"
+                  "description": "累積後の T[]→U 変換 (DR-036/044)。string は filters registry の引数なし collector 参照。`from_entries` の bare string は構文上受理した後、必須引数を欠くため definition-time invalid-argument とする (DR-044 §2)。object は resident 名を唯一のキー、resident 固有の canonical 引数を値に持つ引数形。省略時は accumulator の default_collector。"
                 },
                 "separator": { "type": "string", "description": "1 トークンを piece 列へ分割する区切り文字列 (DR-034)。" },
                 "flatten": { "type": "boolean", "default": false, "$comment": "この default は「append 選択時の意味既定」であって decode 時の補完値ではない — 存在ベース判定 (DR-105 §2)。宣言の有無自体が意味を持つ属性であり、validation 完了まで absent|false|true の三状態として保持する。DR-063 §4 の『省略 = default 値と等価』は「その要素形に存在する属性」の値比較規約であり、属性の宣言自体が構造不一致になる wrong-seat 判定 (append 以外への flatten 宣言は値を問わず invalid-range) には適用されない (DR-105 §2 明確化 note)。", "description": "`accumulator: \"append\"` 専用ダイヤル (DR-105)。true で発火値が配列なら要素を 1 段展開して積む。**キーの宣言自体** (値が true/false いずれでも) が `append` 以外の accumulator では definition-error kind=invalid-range (DR-105 §2)。" }

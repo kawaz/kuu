@@ -19,6 +19,7 @@
   "cases": [
     {
       "id": "promoted-only-key-leaves-empty-object",
+      "why": "DR-044 §3 の key 昇格決定則により、唯一の key フィールドを除去した残りは欠落でなく空 object `{}` になる。",
       "args": ["--entries", "a"],
       "expect": {
         "outcome": "success",
