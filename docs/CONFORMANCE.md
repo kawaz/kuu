@@ -165,6 +165,29 @@ spec バンドル自体の v1.0.0 発行条件 (5 プロファイル全 green、
 
 - `query:"help"` (§5) の成功 help model は、`options` / `commands` / `positionals` の entries が**順序込み比較** (並べ替え適用後の定義順保存が規範 — DESIGN §14.6/§15.15)。`value_structure` / `types` / `origin` を含むその他のフィールドは構造等価。query-error の `errors` は kind の集合比較で、`absent-path` / `absent-category` を definition-error と別 outcome のまま比較する
 
+**outcome 別まとめ (runner 実装者向け)** — 上記の各フィールド規約を outcome ごとに引ける形にした索引 (規範は上記の各項が正、本表は要約):
+
+| outcome (`query`) | フィールド | 比較 | opt-in / 常時 |
+|---|---|---|---|
+| `success` | `result` | 構造等価 | 常時 |
+| `success` | `effects` | 配列順込み完全一致 (順序が同一性成分) | 常時 |
+| `success` | `sources` | 構造等価 | 常時 |
+| `success` | `warnings` | 集合比較 (element)、`kind` は fixture 側にある要素のみ比較 | opt-in per-element |
+| `failure` | `errors` | 集合比較 (`element`/`args_pos`/`kind` の組)、`reason` は fixture 側にある要素のみ比較、`message` は常に無視 | opt-in per-element (`reason`) |
+| `failure` | `fired_action` | 構造等価 | fixture 側にある時のみ (opt-in) |
+| `failure` | `help_entry` | 構造等価 | opt-in |
+| `failure` | `tried_triggers` | 集合比較 (順序非規範) | opt-in |
+| `ambiguous` | `interpretations` | 集合比較 (各解釈は構造等価、**列挙順は非規範**)。各解釈のビューは parse 相 + DR-118 §3 の 3 規則を適用した姿 (値源ラダー非適用) | 常時 |
+| `ambiguous` | `claimants` | 各解釈と束ねて 1 単位で構造等価比較 | 露出キー衝突の解釈にのみ (DR-073) |
+| `ambiguous` | `help_entry` | 構造等価 | opt-in |
+| `definition_error` | `errors` | 集合比較 (`element` + `kind` の組)、`args_pos`/`reason`/`message`/`hint` は比較しない | 常時 |
+| `complete` | `candidates` | 順序非依存の multiset 比較 (§3 の 6 フィールド identity、`meta` は必須検証、`completer` は opt-in) | 常時 (§3 の詳細参照) |
+| `help` (成功) | `options`/`commands`/`positionals` entries | 順序込み比較 (並べ替え適用後の定義順保存) | 常時 |
+| `help` (成功) | それ以外 (`value_structure`/`types`/`origin` 等) | 構造等価 | 常時 |
+| `help` (query-error) | `errors` | `kind` の集合比較 | 常時 |
+
+*凡例*: 「集合比較」= 順序非規範、`identity` フィールドの組で一対一対応。「順序込み一致」= 配列インデックス順が同一性の成分。「構造等価」は本節冒頭の一般規約 (key 順序非規範、フィールド省略 = default 値と等価)。「opt-in per-element」= fixture 側に当該フィールドが書かれた時のみ比較対象。
+
 ## 4. 補完クエリ (`query: "complete"`、DR-104)
 
 `query: "complete"` の fixture は、`definition` に対する `args_before` (必須) / `args_after` (optional) を入力に `candidates` の期待集合を検証する。`word_before`/`word_after` (カーソル単語内の前後半) は v1 未使用可のまま予約されており fixture では書かない (DR-104 §1)。**case オブジェクトに `word_before`/`word_after` が書かれていた場合、runner は fixture 不備として明示的に reject する** (silent ignore はしない、codex レビュー #2 m-4 の反映)。**本節は §2 の 6 op 表 (`effects[].op`) とは独立の語彙体系である** — complete は値セルへの副作用を持たない候補集合クエリであり、6 op 表と混同しない (COMP-Q5)。
