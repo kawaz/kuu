@@ -91,6 +91,7 @@ wire 正規形のノードが持ちうる全属性。型・既定値・適用対
 | `hidden` | boolean | false | 任意要素 (表示 policy 用メタ、受理は不変) |
 | `id` | string (`#` 禁止) | name を兼ねる | 全ノード |
 | `inherit` | boolean \| {from:string} | false | 値要素 (inherit ラダー席) |
+| `insert_form` | string (`"space"` \| `"eq"`) | `"space"` | `type:"completion_script"` 要素 (DR-117 §2.6) |
 | `inheritable` | boolean | false | 値要素 |
 | `link` | string | なし | 任意ノード |
 | `long` | boolean \| array[longItem] | false (`[]`) | option 要素 |

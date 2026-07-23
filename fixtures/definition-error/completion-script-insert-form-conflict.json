@@ -1,0 +1,39 @@
+{
+  "why": "DR-117 §2.6/§8.1 が同一 definition 内の複数 completion_script 入口間での insert_form 明示値食い違いを definition-error kind=invalid-range へ準用することを pin する。挿入形は definition 全体で 1 つの応答 policy (どの入口で発火したかに依存させない、§2.6) なので、\"space\" と \"eq\" の明示併存は解決不能。省略と明示の混在は明示値が勝つため対象外 (本 fixture は明示 vs 明示の食い違いに閉じる)。errors は両入口へ独立に積まれる (DR-082 §1 の集合比較、help-render-invalid-range の複数 element 集約と同型 — どちらの入口を訂正しても解消しうるため両者に error を持たせる)。新 kind は設けない。",
+  "query": "definition_error",
+  "definition": {
+    "options": [
+      {
+        "name": "completions-long",
+        "type": "completion_script",
+        "long": true,
+        "insert_form": "space"
+      }
+    ],
+    "commands": [
+      {
+        "name": "completion",
+        "positionals": [
+          {
+            "name": "completions-sub",
+            "type": "completion_script",
+            "insert_form": "eq"
+          }
+        ]
+      }
+    ]
+  },
+  "cases": [
+    {
+      "id": "completion-script-insert-form-multi-entry-conflict",
+      "why": "long option 入口 completions-long が insert_form=\"space\" を、サブコマンド positional 入口 completions-sub が \"eq\" を明示宣言しており、definition 全体で 1 つの応答 policy を要求する §2.6 の invariant を破っている。errors は両入口へ invalid-range として積まれる。",
+      "expect": {
+        "outcome": "definition-error",
+        "errors": [
+          {"element": "completions-long", "kind": "invalid-range"},
+          {"element": "completions-sub", "kind": "invalid-range"}
+        ]
+      }
+    }
+  ]
+}

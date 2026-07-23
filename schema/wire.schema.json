@@ -220,6 +220,10 @@
           "type": "boolean",
           "description": "help_installer の 5 preset が on_failure へ展開する糖衣属性 (DR-113 §7.2)。既定は help/help_all_category/help_category/help_tree で true、help_show_hidden で false。help type 以外への宣言は definition-error kind=invalid-range。"
         },
+        "insert_form": {
+          "type": "string",
+          "description": "completion_script preset 要素の挿入形ダイヤル (DR-117 §2.6)。canonical 語彙は `\"space\"` (既定 — 挿入は spelling そのまま、nospace なし) / `\"eq\"` (挿入は `spelling + \"=\"`、nospace 付き) の 2 値。同一 spelling の word_end / cont 併存ペア (DR-104 §3 / DR-117 §5 の merge 規則) をどちら側へ畳むかを定義者が指定する。値は preset 発火時でなく `completion_query` の policy 段 (DR-117 §5) が definition から読む静的属性であり、shell 名のような発火時値スロットではない。値域外は installer 検査で definition-error kind=invalid-range (DR-117 §2.6/§8.1 の enum 逸脱、本 Schema では enum 制約を持たない — help_render の値語彙検査分割と同型)。同一 definition 内に複数の completion_script 入口がある場合、明示値どうしの食い違いは definition-error kind=invalid-range (§2.6)。completion_script type 以外への宣言も同 kind。"
+        },
         "help": {
           "type": "string",
           "description": "短い説明文言 (表示メタ、help_installer 所有、DR-046 §3 / DR-113 §7.1)。宣言層の inert 属性 — パース挙動に影響せず、help query (DESIGN §15.15) が参照で読む。type:\"help\" (プリセット参照) とは別概念。"

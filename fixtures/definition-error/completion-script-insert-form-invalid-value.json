@@ -1,0 +1,26 @@
+{
+  "why": "DR-117 §2.6/§8.1 が completion_script preset 要素の insert_form パラメータの enum 逸脱を既存 kind invalid-range へ準用することを pin する。canonical 語彙は \"space\" (既定) / \"eq\" の 2 値のみで、未知値は definition-error。本 Schema は insert_form の enum 制約を持たない (help_render 系の値語彙検査分割と同型 — 語彙は installer が持つ) ため、runtime の parse_definition がこの失敗を invalid-range として観測することを pin する。新 kind は設けない。",
+  "query": "definition_error",
+  "definition": {
+    "options": [
+      {
+        "name": "completions-bad-form",
+        "type": "completion_script",
+        "long": true,
+        "insert_form": "dash"
+      }
+    ]
+  },
+  "cases": [
+    {
+      "id": "completion-script-insert-form-enum-violation",
+      "why": "completions-bad-form の insert_form は canonical 語彙 (\"space\" / \"eq\") 外の \"dash\" を宣言しているため、既存 kind invalid-range へ帰着する。",
+      "expect": {
+        "outcome": "definition-error",
+        "errors": [
+          {"element": "completions-bad-form", "kind": "invalid-range"}
+        ]
+      }
+    }
+  ]
+}
