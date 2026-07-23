@@ -35,6 +35,31 @@ bug (= 同一 insert は 1 行に統合すべき) なのかが未裁定。
 
 ## 受け入れ条件
 
-- [ ] DR-117 §4 の候補行文法を確認し、重複 emit の扱いを明文化する
+- [x] DR-117 §4 の候補行文法を確認し、重複 emit の扱いを明文化する (下記裁定で対応)
 - [ ] 仕様として不正なら kuu.mbt M1 (completion_query) を修正
 - [ ] 仕様として正なら glue 側の重複排除責務を明記する
+
+## 裁定 (COMPQ-Q1, 2026-07-23)
+
+kawaz 裁定:
+
+1. **素材段** (DR-104 §3 の word_end/cont 2 件併存) は正。変更なし。
+2. **行応答 policy 段** (DR-117 §5) に新設: 同一 spelling・term 違いのペアは
+   1 行へ統合する merge 規則。既定は space 形 (word_end 側、nospace なし。
+   業界優勢 + bash `COMP_WORDBREAKS` 回避のため)。
+3. **completion_script preset** に `insert_form: "space"|"eq"` パラメータを
+   新設 (既定 `"space"`)。DR-117 §2.6。`"eq"` で cobra 互換の eq 形
+   (`--flag=` + nospace) へ切替可能。
+
+### DR-117 反映箇所
+
+- §2.6 (新設): `insert_form` パラメータ
+- §5: merge 規則
+- §4.1: 注記追加
+- §8.1: 増分
+- 採用しなかった案 2 件
+- 波及 fixtures
+
+### 残タスク
+
+kuu.mbt M1 での merge 規則 + `insert_form` の実装 (受け入れ条件の残り 2 項目)。
