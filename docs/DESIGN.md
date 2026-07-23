@@ -567,6 +567,22 @@ separator も §6.2 のパイプライン内にのみ存在する部品であり
 
 colon-string と 1 段の array of string は意味論的に等価で、同じ列で混在できる。array は colon を含む引数をエスケープ規則なしで表すための形であり、array of array は受け入れない。
 
+**colon-string の EBNF** (SPK-Q1=a、kawaz 裁定 2026-07-24 — fixture が pin 済みの現行綴りを正とする確定。独立実装が DSL パーサをこの文法から書ける):
+
+```ebnf
+variant     = prefix , ":" , fn-name , { ":" , arg } ;
+prefix      = { name-char } ;             (* 空可 — 空 prefix = 主入口 --<name> *)
+fn-name     = name-char , { name-char } ; (* cell_fns registry の fn 名。bare 名は builtin ns の糖衣 (DR-094)、ns 付きは "ext/incr" 等の registry キーそのまま *)
+arg         = { arg-char } ;              (* 空可。型解釈は fn の parameter 宣言 (DR-114) に従う *)
+name-char   = ? ":" を除く任意の文字 ? ;
+arg-char    = ? ":" を除く任意の文字 ? ;
+```
+
+- 分割は **単純な `:` 区切り** (エスケープ規則を持たない)。`:` を含む prefix / fn 名 / arg を書きたい場合は array 形を使う — colon-string 側に quote や `\:` を導入しない (エスケープ文法の沼を array 形の存在で回避する、DR-114 §6 の 2 形等価の設計理由そのもの)
+- 最初の部品が prefix、2 個目が fn 名、3 個目以降が args — 部品数 1 (`"no"` 等、`:` なし) は variant として不正 (definition-error `invalid-range`)。fn 名は空にできない
+- op トークンの綴り例 (全て cell_fns の builtin 住人名、§7.4 の表と同一語彙): `":set"` (主入口・値スロット)、`"no:set:false"` (--no-X で false を set)、`"no:unset"` (--no-X でラダー開放)、`"reset:default"` (--reset-X で default 選択)、`"clear:empty"` (--clear-X で空化)。**op トークン = cell_fns の fn 名**であり、DSL 専用の op 語彙は存在しない — `unset`/`default`/`empty` の綴りは §7.4 の builtin fn 名がそのまま正本
+- 生成される variant 入口の綴りは `--<prefix>-<name>` (prefix 非空時) / `--<name>` (prefix 空時)。pin: `fixtures/value-sources/unset-ladder.json` (`no:unset` → `--no-color`、`reset:default` → `--reset-color`)、`fixtures/value-sources/default-source-model.json` (`default:default` / `unset:unset`)、`fixtures/lowering/long/variant.json` (`no:set:false`)
+
 ```json
 {
   "long": [
@@ -875,7 +891,7 @@ inherit ラダー席に祖先 scope chain の参照を宣言する。default / d
 
 `default` 席で何を返すかは型ごとの解決規則にも委ねられる。`tty` preset 型は tty 観測の fold を優先し宣言 default へフォールバックする独自規則を持つ (DR-099、§12b)。ラダー自体はこの型依存を意識しない 5 段固定のままであり、tty のための専用席は持たない。
 
-**`sources` 射影 — 値 provenance と操作 provenance の分離** (DR-081): 結果オブジェクトの `sources` フィールド (§0.3、DR-031) が投影するのは「その値セルを最終的に確定させた**主体**がどの席か」= **操作 provenance** であり、「セルに座っている値の**内容**がもともとどの席から来たか」= **値 provenance** ではない。両者は同一ではなく、default 席の書き換えモデル (DR-081) を通すと分離が顕在化する: env 供給は「下位席として env が最終的に勝つ」のではなく、node の宣言 default 値そのものを env 値で書き換える (書き換え後の default_source は `env` を指す)。したがって CLI から default op variant (例: `--reset-to-default`) を発火して書き換え済み default 値を明示 set した場合、`sources` は `cli` になる (値の内容が env 由来であっても、確定主体は cli の default op である)。同様に unset op は committed=false のまま残すため、`sources` は書き換え済み default の由来 (env 供給ありなら `env`) を指す (確定主体が存在しないので値の由来席にフォールバックする)。値の由来と確定主体が同一の 5 段ラダー通常経路 (§11.4 の 1〜5) では両者は一致し、cell 操作 (default / unset / empty 等の `cell_fns` 呼び出し、DR-114 §4) を跨ぐ場合にのみ分離する。cell 操作の発火列自体は `effects` (順序規範、CONFORMANCE §3) 側で観測する — 操作の来歴は `effects[].source`、確定後の値の由来は `result[].sources` に、という 2 面射影として並ぶ。
+**`sources` 射影 — 値 provenance と操作 provenance の分離** (DR-081): 結果オブジェクトの `sources` フィールド (§0.3、DR-031) が投影するのは「その値セルを最終的に確定させた**主体**がどの席か」= **操作 provenance** であり、「セルに座っている値の**内容**がもともとどの席から来たか」= **値 provenance** ではない。両者は同一ではなく、default 席の書き換えモデル (DR-081) を通すと分離が顕在化する: env 供給は「下位席として env が最終的に勝つ」のではなく、node の宣言 default 値そのものを env 値で書き換える (書き換え後の default_source は `env` を指す)。したがって CLI から default op variant (例: `--reset-to-default`) を発火して書き換え済み default 値を明示 set した場合、`sources` は `cli` になる (値の内容が env 由来であっても、確定主体は cli の default op である)。同様に unset op は committed=false のまま残すため、`sources` は書き換え済み default の由来 (env 供給ありなら `env`) を指す (確定主体が存在しないので値の由来席にフォールバックする)。値の由来と確定主体が同一の 5 段ラダー通常経路 (§11.4 の 1〜5) では両者は一致し、cell 操作 (default / unset / empty 等の `cell_fns` 呼び出し、DR-114 §4) を跨ぐ場合にのみ分離する。**未発火要素の sources は `default`** (SPK-Q2=a): flag / count のような default 同梱要素が一度も発火せず宣言 default のまま結果に現れる場合 (未発火 flag の `false` 等)、sources は `default` を指す — 上位席の供給も cell 操作も無い「ラダー最下段で確定した」通常経路であり、専用の語彙 (`unfired` 等) は設けない。cell 操作の発火列自体は `effects` (順序規範、CONFORMANCE §3) 側で観測する — 操作の来歴は `effects[].source`、確定後の値の由来は `result[].sources` に、という 2 面射影として並ぶ。
 
 ---
 

@@ -89,6 +89,7 @@ spec バンドル自体の v1.0.0 発行条件 (5 プロファイル全 green、
 - **effects に載るのは cli / link 由来のパース時効果のみ** — 値源ラダー充填 (env / config / inherit / default) は完走後の値確定であり args 順の全順序を持たないため、effects には載せない (例: 未発火 flag の `false` は result に現れ、effects には現れない)。ラダー充填の**値**は `result` で、**由来**は `sources` フィールドで検証する (effects への source 拡張は「充填同士の順序が非規範で全順序規約を汚す」ため不採用 — DR-065)
 - **`result` は最終結果オブジェクト** (ラダー充填込みの確定値、DR-051 の absent 規則適用後)。runner は effects / result の両方を検証する
 - **`sources` (optional)**: entity → 値源タグ (`cli` / `env` / `config` / `inherit` / `tty` / `default`) のマップ。最終値の由来 (ParserContext の source メタ、DR-031) を検証する — 値源系 fixture で使用。effects が cli / link 効果のみである規約は不変 (ラダー充填の順序を effects に持ち込まず、由来の検証は本フィールドが担う)。**キーは scope-path 修飾** (root 直下は `"ttl"`、入れ子 scope 内のセルは `"sub.ttl"`) — 同名セルが複数 scope に存在するケース (inheritable の祖先 write-target 等) の一意化
+- **report 直下のフィールド名 (`result` / `effects` / `sources` / `warnings` 等) は entity name として予約しない** (SPK-Q2=a): `{"name": "sources"}` のような要素宣言は合法で、definition-error にしない。衝突が起きない構造的根拠 — entity の値は常に `result` **の中の**キーとして現れ (`result.sources`)、report 直下のフィールドとは階層が異なる。`sources` / `warnings` マップのキーも entity name (scope-path 修飾) 側の名前空間であり、report envelope のフィールド名空間とは交差しない。実装が flat な連想構造で report を組む場合の衝突は実装バグであって仕様の禁則対象ではない
 - **`warnings` (optional)**: 起動された deprecated 入口 (DR-058 §2) が積む構造化警告の配列、各要素 `{element, kind}`。`element` は canonical セル参照 (どの入口が deprecated かでなく代替すべき canonical、DR-058 §2)、`kind` は機械可読識別子 (v1 は `"deprecated"`)。ParserContext (DR-016) の warnings — DR-058 §2 による拡張フィールド — の projection であり、effects が cli / link 効果のみである規約は不変 (deprecated 警告はパース成功後の利用推奨であって args 順の効果ではない、filter warn とは別層)。比較は element の集合比較 (順序非規範)、`kind` は fixture 側に書かれた要素でのみ比較する (`errors.reason` と同じ optional 検証、§3)
 
 ### failure
@@ -143,7 +144,7 @@ spec バンドル自体の v1.0.0 発行条件 (5 プロファイル全 green、
 - effects は配列順込みの完全一致 (順序が同一性成分)
 - result は構造等価
 - interpretations は集合比較 (各解釈は構造等価、**列挙順は非規範**) — 完全経路間に優先がない (DR-038) ため順序は同一性成分でない (effects の順序規範性と対照的、errors と同じ集合扱い)。重複解釈の dedup 可否は「解釈の同一性」定義に従属し本書では定めない (DR-053 §3)。claimants を持つ解釈は `{result, claimants}` の組を 1 単位として構造等価で突き合わせる (DR-073) — claimants がその解釈と束ねられているため集合比較が順序に依存しない。各解釈のビューは **parse 相 + DR-118 §3 の 3 規則** (Default-source scalar 除外 / claimants 席の default 残置 / 空 accumulator 配列の保持) を適用した姿 — 値源ラダー (resolve 相) は適用しない (DR-118)
-- errors は集合比較 (`query:"parse"` の failure outcome: element, args_pos, kind, reason の組。**reason は fixture 側に書かれている要素でのみ比較対象** (§2 の optional 検証)、message は常に無視)
+- errors は集合比較 (`query:"parse"` の failure outcome: element, args_pos, kind, reason の組。**reason は fixture 側に書かれている要素でのみ比較対象** (§2 の optional 検証)、message は常に無視)。**同一 4-tuple (element, args_pos, kind, reason) の error は 1 件に dedupe する** (SPK-Q2=a) — DR-053 §2 の「全保持」は診断材料としての経路網羅 (別候補経路の別の躓きを捨てない) の規定であり、複数経路がたまたま同一 4-tuple の躓きに合流した場合の多重度は診断情報を持たない。producer は同一 4-tuple を重複出力してはならず、比較は dedupe 後の集合同士で行う (message の違いは同一性に影響しない — message は比較対象外)
 - `query:"definition_error"` の errors は element + kind の組の集合比較 (`args_pos`/`reason` は definition-error 構造に存在しない、DR-082 §1)。message/hint は比較しない
 - universal fn の colon-string と 1 段 array of string は同じ `name + args` へ decode してから比較する。wire 表現の違いは呼び出しの同一性成分ではない (DR-114 §6)
 - warnings は集合比較 (element の組。**kind は fixture 側に書かれている要素でのみ比較対象** (§2 の optional 検証))
