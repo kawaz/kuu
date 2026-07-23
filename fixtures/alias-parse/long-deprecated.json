@@ -24,7 +24,7 @@
     },
     {
       "id": "deprecated-long-entry-eq-split-warns",
-      "why": "eq-split 入口 --legacy-port=80: DR-058 §2 は入口の発火経路 (space form / eq-split / short cluster) を区別しない一般規定 (統括裁定 2026-07-15)。deprecated-long-entry-warns の space form (--legacy-port 80) と全く同じ port セルへ束縛し (effect entity port、値・source とも同一)、同じ deprecation 警告 {element:\"port\", kind:\"deprecated\"} を積む — eq-split という別 matcher (matcher.mbt run_eq_split) を経由しても warning 契約が変わらないことの固定 (参照実装で eq-split 経路のみ warning marker を欠落させていた Major bug の修正を pin する、codex レビュー発覚・kuu.mbt 側で `LongEntry.depr` 配線の fix 済み)。",
+      "why": "eq-split 入口 --legacy-port=80: DR-058 §2 は入口の発火経路 (space form / eq-split / short cluster) を区別しない一般規定 (統括裁定 2026-07-15)。deprecated-long-entry-warns の space form (--legacy-port 80) と全く同じ port セルへ束縛し (effect entity port、値・source とも同一)、同じ deprecation 警告 {element:\"port\", kind:\"deprecated\"} を積む — eq-split という別 matcher (別の読み経路) を経由しても warning 契約が変わらないことの固定 (以前 eq-split 経路のみ warning marker を欠落させていた bug の再発防止として pin する)。",
       "args": ["--legacy-port=80"],
       "expect": {
         "outcome": "success",

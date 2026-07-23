@@ -1,5 +1,5 @@
 {
-  "why": "short_combine:false の管掌範囲は複数 short オプションを 1 トークンへ束ねるクラスタ読み (`-ab` = `-a -b`) の禁止のみで、単独発火と値付着 (`-p80`) には無傷 (DR-014「-abc の結合許可」+ DR-041 line 77「値付着制限は short_combine と独立な別方言パラメータ」の例示、DESIGN §7.2 scope config `short_combine`、issue scope-config-object-gap 解釈A team-lead 裁定 2026-07-11)。値付着そのものの可否をダイヤルする軸は別キー `short_attached_value` (DR-096 §2、既定 \"allow\" で本 fixture の全 case はその既定を暗黙前提にする) — short_combine と short_attached_value は直交する 2 軸であることは fixtures/matcher-readings/short-attached-value.json が別途固定する。動機の実例は gcc/clang の `-O2`/`-Wall` 型 (短縮値付着はするがクラスタリングはしない) — kawaz 追認 2026-07-12 (docs/issue/2026-07-11-config-derived-rulings-short-combine-eqsep.md 裁定 1)。kuu.mbt 実装は `Matcher::ShortCombine` の `combine` パラメータで表現され (node.mbt)、`walk_short` (matcher.mbt) は複数 entry の同時結合に至る 2 継続点 (flag/bool/count/none の次文字読み継続、値付着の残余文字への継続) だけを combine:false でゲートする — 単独文字での termination (`-a`) と値付着がトークン残余を全消費して終わる場合 (`-p80`) はゲート対象外でそのまま完走する。加えて config は要素単位でも上書き可能 (DESIGN §7.2「子要素は親の config を継承、上書き可能」、DR-049 §4 の env_prefix:\"\" 例と同機構) — スコープ既定 short_combine:false の下で c/d だけ要素 config で short_combine:true に戻すと、installer の `short_group` pair-key 化 (short_prefix, short_combine の組) により c/d は combine:true 専用の別 ShortCombine matcher に分離され、その matcher 内でのみクラスタ読みが復活する。",
+  "why": "short_combine:false の管掌範囲は複数 short オプションを 1 トークンへ束ねるクラスタ読み (`-ab` = `-a -b`) の禁止のみで、単独発火と値付着 (`-p80`) には無傷 (DR-014「-abc の結合許可」+ DR-041 line 77「値付着制限は short_combine と独立な別方言パラメータ」の例示、DESIGN §7.2 scope config `short_combine`、issue scope-config-object-gap 解釈A team-lead 裁定 2026-07-11)。値付着そのものの可否をダイヤルする軸は別キー `short_attached_value` (DR-096 §2、既定 \"allow\" で本 fixture の全 case はその既定を暗黙前提にする) — short_combine と short_attached_value は直交する 2 軸であることは fixtures/matcher-readings/short-attached-value.json が別途固定する。動機の実例は gcc/clang の `-O2`/`-Wall` 型 (短縮値付着はするがクラスタリングはしない) — kawaz 追認 2026-07-12 (docs/issue/2026-07-11-config-derived-rulings-short-combine-eqsep.md 裁定 1)。short cluster 読みは複数 entry の同時結合に至る 2 継続点 (flag/bool/count/none の次文字読み継続、値付着の残余文字への継続) だけを combine:false でゲートする — 単独文字での termination (`-a`) と値付着がトークン残余を全消費して終わる場合 (`-p80`) はゲート対象外でそのまま完走する。加えて config は要素単位でも上書き可能 (DESIGN §7.2「子要素は親の config を継承、上書き可能」、DR-049 §4 の env_prefix:\"\" 例と同機構) — スコープ既定 short_combine:false の下で c/d だけ要素 config で short_combine:true に戻すと、`(short_prefix, short_combine)` の組ごとに short entry が別グループに分かれる規則により c/d は combine:true 専用の別 short cluster 読みへ分離され、その読み内でのみクラスタ結合が復活する。",
   "query": "parse",
   "definition": {
     "config": {"short_combine": false},
@@ -14,7 +14,7 @@
   "cases": [
     {
       "id": "cluster-withheld",
-      "why": "複数 short flag の同時クラスタ結合が短所 combine:false で禁じられる本体ケース: `-ab` は a を読んだ後 `combine || 残り文字なし` の継続条件を満たさない (a の後にまだ b が残っている) ため、この読み筋はそこで打ち切られ完成しない。他に開始点はなく (`walk_short` は body 先頭からの 1 本のみ)、a/b いずれの ShortCombine matcher (scope 既定 combine:false 側) もこのトークンに完全経路を作れない。定義に positional 等の受け皿もないため、`-ab` はどの matcher にも読まれず残余トークンとして unexpected_token で failure に落ちる (DR-041 §5「prefix ガードなし — 素通しで matcher が候補を作らない場合、読みゼロのまま positional へフォールスルーし、それも無ければ unexpected_token」、value-sources/require-equal-separator.json の対称パターンと同型)。",
+      "why": "複数 short flag の同時クラスタ結合が短所 combine:false で禁じられる本体ケース: `-ab` は a を読んだ後 `combine || 残り文字なし` の継続条件を満たさない (a の後にまだ b が残っている) ため、この読み筋はそこで打ち切られ完成しない。他に開始点はなく (short cluster 読みは body 先頭からの 1 本のみ)、a/b いずれの short cluster 読み (scope 既定 combine:false 側) もこのトークンに完全経路を作れない。定義に positional 等の受け皿もないため、`-ab` はどの matcher にも読まれず残余トークンとして unexpected_token で failure に落ちる (DR-041 §5「prefix ガードなし — 素通しで matcher が候補を作らない場合、読みゼロのまま positional へフォールスルーし、それも無ければ unexpected_token」、value-sources/require-equal-separator.json の対称パターンと同型)。",
       "args": ["-ab"],
       "expect": {
         "outcome": "failure",
@@ -47,7 +47,7 @@
     },
     {
       "id": "element-override-cluster-fires",
-      "why": "要素単位 config override でスコープ既定を局所的に打ち消せることの固定: c/d は自身の `config: {short_combine: true}` によりスコープ既定 (false) を上書きし、combine:true 専用の ShortCombine matcher (short_prefix, short_combine の組が同じ entry だけを束ねる pair-key 化) に属する。この matcher 内では通常の複数 entry クラスタ読みが復活するため `-cd` は c=true, d=true の 1 完全経路で success する — scope config は『子要素が上書き可能』(DESIGN §7.2) という一般則がこの管掌範囲の細部にも及ぶことの実演。",
+      "why": "要素単位 config override でスコープ既定を局所的に打ち消せることの固定: c/d は自身の `config: {short_combine: true}` によりスコープ既定 (false) を上書きし、combine:true 専用の short cluster 読み (`(short_prefix, short_combine)` が同じ entry だけを束ねる) に属する。この読み内では通常の複数 entry クラスタ結合が復活するため `-cd` は c=true, d=true の 1 完全経路で success する — scope config は『子要素が上書き可能』(DESIGN §7.2) という一般則がこの管掌範囲の細部にも及ぶことの実演。",
       "args": ["-cd"],
       "expect": {
         "outcome": "success",
