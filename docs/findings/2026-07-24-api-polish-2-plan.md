@@ -55,10 +55,10 @@ ElementDef / Branch / Ctx...) は含めない。多言語スパイク findings
 | variant \ 玄関 | resolve | resolve_interpretation | output | warnings | help | complete / completion 系 |
 |---|---|---|---|---|---|---|
 | Parsed Success(binds) | ✓ (binds を渡す) | — (型不一致) | ✗ (型で拒否 — DR-118 §1) | ✓ | n/a (help は AtomicAST 起点) | n/a (同左) |
-| Parsed Failure | — (終端。型で渡せない) | — | ✗ | ✓ (deprecated 警告は failure でも出る) | n/a | n/a |
-| Parsed Ambiguous | — | ✓ (interp を 1 つ選ぶ) | ✗ (ビューは output_of_interpretation(ast, interp) 経由) | ✓ | n/a | n/a |
+| Parsed Failure | — (終端。型で渡せない) | — | ✗ | ✗ (DR-058 DEP-Q2=a: failure に warnings は出さない — 内部蓄積は自由だが最終エラーなら捨てる。resolve 相転落含む全 failure 経路に適用、fixtures/alias-parse/deprecated.json の失敗 case で pin 済み) | n/a | n/a |
+| Parsed Ambiguous | — | ✓ (interp を 1 つ選ぶ) | ✗ (ビューは output_of_interpretation(ast, interp) 経由) | ✗ (同上 — warnings は Success のみ) | n/a | n/a |
 | Resolved Success(binds) | — | — | ✓ (唯一の受理) | ✓ | n/a | n/a |
-| Resolved Failure | — | — | ✗ | ✓ | n/a | n/a |
+| Resolved Failure | — | — | ✗ | ✗ (同上 — resolve 相転落も failure 経路) | n/a | n/a |
 
 「—」= 型システム上その組み合わせの API が存在しない。help / complete / completion_query 系は
 outcome を受けず AtomicAST 起点なので遷移表の対象外 (`dispatch_completion_script` のみ
