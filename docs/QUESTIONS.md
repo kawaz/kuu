@@ -9,34 +9,25 @@
 > - 「説明して」と返されたらチャットで長文説明せず、当該 Q をファイル内で説明付きに書き直して再提示
 > - 参照パスは本リポ (spec) 相対。kuu.mbt 側は「kuu.mbt の <path>」と表記
 
-## 👺DOG-Q4α: help_on_empty — 命名と発火条件の意味論
+## 👺DOG-Q4γ: 「引数ゼロ = help」に宣言席は要るか (前提を差し戻して再提示)
 
-「引数なし = help 表示 + exit 0」の宣言席 (findings `2026-07-24-dogfooding-d1-expressiveness.md` F5、kawaz 示唆: help_on_failure と対称の糖衣)。
+### 背景説明 (kawaz 指摘 2026-07-24「対称って何？公開API的にどうなってる？」への整理)
 
-**命名** (素材 5-1):
-- (a) `help_on_empty` — help_on_failure との対称が最強、省略形なし
-- (b) `help_on_no_input` / `help_on_bare_invocation` — 冗長 or 日本人に遠い
+旧 Q4α/β は「help_on_failure と対称の新糖衣を設計する」前提で書いたが、**公開 API の実物を確認するとその前提が弱かった**。help がユーザに届く経路は 2 本あり対称ではない:
 
-**「引数ゼロ」の発火条件** (素材 5-3、本丸):
-- (A) 完全経路 0 消費で成立した時 — `cli --verbose` は消費ありなので発火**しない**
-- (B) positional/subcommand 席が 0 消費で成立した時 — global option だけの `cli --verbose` も「やる仕事の指定が無い」ので発火**する**
-- (C) on_failure (DR-048) の判定機構に「起点 dead end」として乗せる — ただし引数ゼロは**成功** (完全経路成立) なので DR-048 の「完全経路 0 本」前提と矛盾し、意味論的に無理筋
+1. **成功時**: `ParsedOutcome::Success(bindings)` → アプリが result の `help` キー (`{help: true}`) を見て自分で help_query → renderHelp する定型パターン (DR-113 §2 orchestration、DESIGN §14.1)。kuu は help を**出さない** — 素材 (help model) を返すだけ
+2. **失敗時**: `ParsedOutcome::Failure(ParseFailure)` の `fired_action: "help"` を見てアプリが renderHelp。`on_failure` / `help_on_failure` は**この失敗経路だけ**の機構 (DR-048)
 
-- **統括推し: (a) + (B)** — 直観 (「引数なしで help を見たい」= 仕事の指定が無い状態) は B。ただし B は「positional/subcommand 席」の判定を lowered 5 面 (DR-063 §3) のどの面で数えるかの明文化が 1 段必要 (裁定後の設計作業として引き受ける)
+つまり「引数ゼロで help を出す」は今の API で既に組める:
 
-## 👺DOG-Q4β: help_on_empty — 所有・機構・スコープ・既定値
+- **経路 X (成功のまま)**: 引数ゼロは plain success (`{help: false}`)。アプリが「仕事の指定が無い」(subcommand キー不在) を見て renderHelp + exit 0 — dispatch の 1 分岐、spec 増分ゼロ
+- **経路 Y (failure に倒す)**: root の subcommand 席を `required` にすると引数ゼロは完全経路 0 本 = failure。既存 `help_on_failure` が発火し `fired_action:"help"` が返る — spec 増分ゼロ、ただし **exit code は失敗系** になる (help 表示自体は出る)
 
-**所有 + 発火機構** (素材 5-2/5-6、連動するので 1 択に統合):
-- (a) help_installer が所有し、on_failure とは**別機構** (on_empty_expansion) で展開 — 「引数ゼロは成功であって failure ではない」ため。empty 発火時は success 経路のまま #help を立て、アプリは exit 0 に自然に倒れる
-- (b) 汎用 on_empty 属性を先に語彙化し help_on_empty はその糖衣 (on_failure/help_on_failure の 2 層と同型) — 対称性は美しいが、汎用側の user が現状居ない
-- **統括推し: (a)** — DR-113 §7.2 の 2 層構成 (汎用 on_failure + 糖衣) の対称は「failure が汎用概念だから」成立している。empty は help 以外の用途が見えておらず、糖衣 1 層で足りる。必要が出たら 2 層化は後から互換に切り出せる
+残る実質論点は 1 点だけ: **「引数ゼロ → help」を『成功 + exit 0』にしたいとき、アプリに書かせず定義だけで完結させたいか**。
 
-**スコープ全体への一括指定** (素材 5-4):
-- (a) scope `config` キーとして昇格 (例: `config: {"help_on_empty": true}`) — DR-014/096 の継承機構 (node の config フィールド、chain 継承・子で上書き) に乗る。cli-design-preferences の「トップ・子・孫の全レベルで共通」要件への最短経路
-- (b) node 属性のみ、config 昇格しない
-- **統括推し: 条件付き (a)** — ただし **DR-014 との緊張あり**: DR-014 は「help / version は config に含めない (どんな引数で起動するかは type の関心)」を kawaz 裁定で明記している。当時の対象は help の**入口** (起動綴り) であり、help_on_empty は入口でなく**発火 policy のダイヤル** (long_eq_sep 等の表面ダイヤルと同族) なので DR-014 の射程外と読める — が、この読み替えで進めてよいかも本 Q の裁定対象。読み替え NG なら (b) に落ちる。注記: findings 素材の「installer の config パラメータ」表記は不正確で、DR-014/096 の継承機構は **node の config フィールド** が正
+### 選択肢
 
-**既定値** (素材 5-5):
-- (a) 既定 true (help_on_failure と同じ)
-- (b) 既定 false — 明示宣言を要求
-- **統括推し: (b)** — help_on_failure の既定 true は「失敗時にヒント」という保守的選択だから許される。empty 既定 true は daemon 型 / REPL 型 CLI (`myd` 単独起動 = 主機能) を事故らせる。「書きたい時にちゃんと書ける」が要件であり「暗黙に効く」ことではない
+- (a) **宣言席は不要** — 経路 X (アプリ定型) を canonical パターンとして docs (DESIGN §14.1 か CONFORMANCE 周辺) に例示を 1 段落足すだけ。kuu-cli D2 もこの形で書く
+- (b) **宣言席は不要 + 経路 Y を推奨形として文書化** — 「引数ゼロ = usage error (失敗系 exit)」で良い流儀の CLI 向け。exit 0 が欲しいアプリは経路 X
+- (c) **宣言席が要る** — 「定義だけ読めば『引数なしで help が出る CLI』だと分かる」宣言性に価値を置く。この場合のみ旧 Q4α/β の各論 (命名 help_on_empty / 発火条件 = positional・subcommand 席 0 消費 / help_installer 所有・on_failure と別機構 / config 昇格は DR-014 緊張あり / 既定 false) が生きる — 各論の統括推しは旧版 (git log の f0172d72) 参照
+- **統括推し: (a)** — 発火条件の意味論 (「引数ゼロとは何か」= 旧 Q4α の本丸) は結局アプリの関心 (どの result を「仕事なし」と見るか) と同型で、宣言席に持ち上げても定義語彙が 1 個増えるだけで判定の難しさは消えない。dogfooding の実例 (kuu-cli) が 1 分岐で済むことを実証してから、複数アプリで頻出したら (c) を再検討する方が v1 完備主義とも両立する (「必要なものは今設計し切る」— 今は必要の証拠が 1 例も無い)
