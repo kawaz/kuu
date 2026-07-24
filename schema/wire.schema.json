@@ -15,6 +15,10 @@
         { "not": { "required": ["exact", "seq"] } }
       ],
       "properties": {
+        "$schema": {
+          "type": "string",
+          "description": "JSON Schema エコシステム慣習の annotation キー (エディタ支援目的、DR-068 §4)。**トップレベル definition 直下のみ inert として受理**し、パース挙動には影響しない — 語彙層 (DR-054/067 の unknown-vocab) の例外として top-level $schema を許容する。要素レベル (子ノード上) に置いた場合は unknown-vocab の対象のまま (要素レベルに置くこと自体が定義の書き損じの公算が高く、annotation として意味を持たない)。本 Schema は node が再帰的な単一形のため properties に載せるが、位置制限 (top-level only) の強制は parse_definition が担う。"
+        },
         "name": {
           "type": "string",
           "minLength": 1,

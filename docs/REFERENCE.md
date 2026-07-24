@@ -58,6 +58,7 @@ wire 正規形のノードが持ちうる全属性。型・既定値・適用対
 <!-- kuu-lint:vocab node-properties -->
 | キー | 型 | 既定値 | 適用対象 |
 |---|---|---|---|
+| `$schema` | string | なし | トップレベル definition 直下のみ (JSON Schema エコシステム annotation、inert、DR-068 §4) |
 | `accum_filters` | filterChain (array \| {prepend?,append?}) | 空 | accum 要素専用 (`multiple`/`repeat`/`separator` のいずれか、DR-102) |
 | `alias` | string | なし | 独立要素 (canonical への別入口) |
 | `commands` | array[node] | なし | 任意ノード |

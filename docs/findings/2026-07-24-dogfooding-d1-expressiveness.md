@@ -51,7 +51,105 @@ kuu-cli 自身の定義を wire 形で 1 本書き切る dogfooding は、初日
   「引数なし = help」は宣言的 CLI 定義の看板要件で、アプリ側分岐に逃がすと
   help 機構 (DR-113) を宣言層に持った意味が薄れる。
 
-### F7 (整合バグ): README が勧める `$schema` 行を parse_definition が拒否する
+#### 再設計素材 (DOG-Q4 再提示、kawaz 示唆 2026-07-24)
+
+kawaz 示唆: **「パース失敗 = help トリガー (help_on_failure) と同様に、引数なしも help に倒せる糖衣。
+個別サブコマンドで指定しても、config でスコープ全体に効かせても良い」**。
+つまり DR-113 §7.2 の `help_on_failure` (help_installer の 5 preset が既定 true で on_failure へ展開する糖衣)
+と**対称**な形の「引数ゼロ発火糖衣」を設計する。以下、DOG-Q4 の再提示素材 (QUESTIONS 転記可能な粒度、
+命名・所有・発火機構・スコープ昇格・既定値の 5 論点):
+
+##### 素材 5-1: 命名 (省略形回避)
+
+- 候補 A: `help_on_empty` — help_on_failure との対称性が最強、意味が読める
+- 候補 B: `help_on_no_input` — no_input の 3 語がやや冗長だが「引数ゼロ」を明示できる
+- 候補 C: `help_on_bare_invocation` — bare (裸呼び) は英語 CLI corpus で使われる語だが日本人には遠い
+- 推し: A `help_on_empty` — 対称命名 (help_on_failure ↔ help_on_empty) が定義者の直観に最も乗る、
+  「省略形は使わない」規約 (feedback-no-abbreviations) にも触れない (empty は完全形)
+
+##### 素材 5-2: 所有 installer
+
+- 候補 A: help_installer が所有 — help_on_failure と同じ屋根、DR-113 §7.2 の 5 preset の展開先を
+  「on_failure」から「on_failure と on_empty の 2 経路」に拡張
+- 候補 B: 独立の on_empty installer を立てる — 汎用に「引数ゼロで発火」する能力を語彙化し、
+  help_on_empty はその上の糖衣とする (on_failure と on_failure 汎用属性の関係と同型)
+- 推し: A — 現状 on_failure も汎用属性 (DR-113 §7.2) と help 糖衣の 2 層構成、
+  同じパターンを踏襲すると DR 追記が最小、on_empty 汎用属性は現時点では users が居ない (YAGNI)
+
+##### 素材 5-3: 「引数ゼロ」の正確な定義 (発火判定の意味論、本丸)
+
+「引数なし」を宣言的 CLI として厳密に定義する必要がある — サブコマンド scope で
+「引数ゼロ」とは何か:
+
+- 候補 A: **完全経路 0 消費で成立した時** に発火 — 背骨が何も消費せず完全経路 (DR-041) を
+  成立させたケース。global option だけ与えられた場合 (例: `cli --verbose`) は verbose を消費
+  しているため「引数ゼロではない」= 発火しない
+- 候補 B: **positional/subcommand 席が 0 消費で成立した時** に発火 — global option は
+  消費に数えず、positional / subcommand 席が空 (背骨進行ゼロ) を条件とする。
+  `cli --verbose` は help 発火する
+- 候補 C: **候補経路が完全経路 0 本かつ dead end が起点位置 (0 消費) の時** に発火 —
+  on_failure (DR-048) と同じ判定機構に乗せる、ただし「起点 dead end」= 引数ゼロと再定義
+- 推し: **B** — 頻出要件 (「引数なしで help 出す」) の直観は positional/subcommand 席の
+  空を指す。global option だけ与えた `cli --verbose` は「verbose の副作用は起きたが、
+  やる仕事の指定が無い」状態 = help を見たい場面。ただし B は「positional/subcommand 席」を
+  scope 内でどう識別するかの明文化が要る (options installer が生やす greedy 面 vs
+  positionals/commands 面の区別 — DR-063 §3)
+
+##### 素材 5-4: config 昇格 (スコープ全体)
+
+DR-096 の config 軸 (installer の config パラメータ) との整合:
+
+- 候補 A: help_installer の config キーとして昇格 (例: `help_installer.config.on_empty_default: true`) —
+  スコープ chain 上で継承 (DR-014)、子 command は書けば上書き
+- 候補 B: node 属性でのみ指定可能、config 昇格しない — 「引数なし = help」は入口 (root / 個別
+  command) ごとに宣言する属性であり、chain 継承の意味が薄い
+- 推し: A — cli-design-preferences で示された「トップ・子・孫の全レベルで共通」要件に応える
+  最短経路が config 継承。書かない command には親の default が効く形が UX に合う
+
+##### 素材 5-5: 既定値
+
+- 候補 A: 既定 `true` (help_on_failure と同じ) — 引数なしで help が出るのが CLI の常識、
+  定義者が「引数なしを別扱いしたい」時だけ false に落とす
+- 候補 B: 既定 `false` — 「引数なし成功で help 表示」は non-trivial な UX 選択なので明示宣言を要求
+- 推し: **B** — kawaz の cli-design-preferences は「頻出要件」と書いているが、これは
+  「書きたい時にちゃんと書ける」ことが要件であり「暗黙に効く」ことではない。help_on_failure が
+  既定 true なのは「失敗時にヒントを見せる」が保守的な選択 (害が小さい)、一方 `help_on_empty` 既定 true は
+  「daemon 型 CLI (`myd` で常駐起動)」「REPL 起動型」等の場面で予期せぬ help 表示になり得る
+  (= 「引数なし = 主機能起動」を意図した CLI が事故る)。明示宣言を要求する方が安全
+
+##### 素材 5-6: on_failure 機構との共通化可否
+
+kawaz 示唆の「help_on_failure と同様に」を機構レベルで実装する時:
+
+- 候補 A: **共通化する** — 汎用 on_failure 属性 (DR-113 §7.2) の判定に「引数ゼロ成功」も 1 条件として
+  足し、help_on_empty はその糖衣とする。実装は on_failure の failure-set に「empty-invocation」を
+  仮想 failure として加える (完全経路 0 消費成功を failure と再定義するのは意味論的に無理筋)
+- 候補 B: **別機構** — 「引数なしは failure ではない」ため、on_failure とは別の発火経路を立てる。
+  help_installer は on_failure_expansion と on_empty_expansion の 2 経路の展開責務を持つ
+- 推し: **B** — 意味論的に「成功 (完全経路成立) だが引数ゼロ」と「失敗 (完全経路 0 本)」は別現象。
+  同じ判定機構に混ぜると result 生成 (DR-048 の on_failure 発火は result.status に影響) の意味論が
+  混濁する。別機構にして「empty 発火時は success 経路のまま #help を立てて exit 0」を明確化する
+
+##### 未解決 (裁定でなく調査/設計を要する)
+
+- 素材 5-3 の推し B (positional/subcommand 席の空を条件とする) は「5 面構造 (DR-063 §3) の
+  どの面の何を数えるか」の実装細部が要る — parse_definition 側で lowering 後にどう判定するか、
+  fixture 化までに 1 段の解析が必要
+- 素材 5-4 の config 昇格の canonical キー名 (`on_empty_default` / `help_on_empty_default` 等) は
+  素材 5-1 の命名裁定後に決める
+
+
+### F7 (整合バグ → **裁定済み DOG-Q3=a**): README が勧める `$schema` 行を parse_definition が拒否する
+
+> **裁定 (DOG-Q3=a, 2026-07-24)**: (a) `$schema` を宣言層の inert 属性として語彙に正式追加。
+> spec 反映: wire.schema.json の node.properties に `$schema` (string, inert annotation) を追加、
+> DR-068 §4 に「語彙層の例外 (top-level `$schema` は inert 受理、要素レベルは unknown-vocab)」を追記、
+> baseline lowering fixture `with-schema-annotation.json` で top-level 受理側を pin。
+> 位置制限 (top-level only) の強制は parse_definition の実装課題として kuu.mbt 側で追従が必要
+> (要素レベル拒否側 fixture の起票は将来 definition-error 領分)。
+> 実運用の URI 発行: v1 公開後、gh-pages にバージョンディレクトリ付き schema 置き場
+> (`https://kawaz.github.io/kuu/schema/v1/wire.schema.json` 形) を設ける (kawaz 示唆 2026-07-24)。
+
 
 - **現象**: def.json 先頭の `"$schema": "https://.../wire.schema.json"` を
   parse_definition が未知キーとして拒否。definition.sh は

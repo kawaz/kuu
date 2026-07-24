@@ -1,0 +1,27 @@
+{
+  "why": "top-level `$schema` annotation の inert 受理を pin する境界断面 (DR-068 §4「語彙層の例外」)。単一 positional x (string) を installers=[] で lowering する no-installers.json と同型の最小断面に、definition のトップレベル直下に `$schema` 文字列を 1 本足しただけの構図 — 期待値 (positionals / entities) は no-installers と完全一致であることが「$schema は inert (パース挙動に影響しない)」の実測固定。定義背景: JSON Schema エコシステム慣習の annotation キー (エディタ補完・validator 明示指定) を definition の先頭に書けるようにする要件 (findings 2026-07-24-dogfooding-d1-expressiveness.md F7 = DOG-Q3=a の裁定)。語彙層 (DR-054/067 の unknown-vocab) の例外として top-level のみ受理し、要素レベル (子ノード上) の `$schema` は unknown-vocab のまま拒否する — 位置制限の判定は parse_definition の関心であり、本 fixture は top-level 受理側 (positive) のみを pin する (要素レベル拒否側は将来 definition-error fixture を別途起票)。断面表記は DR-063 §3、比較は緩比較 (LOWERING §C.5 / DR-070 §2)。",
+  "query": "lower",
+  "definition": {
+    "$schema": "https://kuu.kawaz.org/schema/wire.schema.json",
+    "positionals": [
+      {
+        "name": "x",
+        "type": "string"
+      }
+    ]
+  },
+  "installers": [],
+  "expect": {
+    "positionals": [
+      {
+        "ref": "x",
+        "link": "x"
+      }
+    ],
+    "entities": {
+      "x": {
+        "type": "string"
+      }
+    }
+  }
+}
