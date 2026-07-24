@@ -9,4 +9,18 @@
 > - 「説明して」と返されたらチャットで長文説明せず、当該 Q をファイル内で説明付きに書き直して再提示
 > - 参照パスは本リポ (spec) 相対。kuu.mbt 側は「kuu.mbt の <path>」と表記
 
-(現在、裁定待ちはありません — AP2-Q5 は「Node/Ctx の公開形を設計する」方向で再定式化され設計作業中)
+## 👺DOG-Q1: --version の正式席 (dogfooding D1 前提)
+
+**質問**: kuu-cli に `--version` を付ける (敵対的レビュー H5) にあたり、kuu 側の正式な席をどうするか。正本: docs/findings/2026-07-24-kuu-cli-dogfooding-plan.md §6
+
+- (a) `version` preset を新設 (help preset と対称。「バージョン表示」という頻出パターンを一級化)
+- **(b) 推し: 汎用 fail-action 属性で表現** (version は「発火したら文字列を出して終了」の一般形の一例 — preset 増殖を抑え、既存 failure-action 機構の自然な拡張)
+- (c) help 流用の恒久化 (意味論が濁る)
+
+## 👺DOG-Q2: kuu help の --format 既定 (D3 まで遅延可)
+
+**質問**: `kuu help` サブコマンドの --format 既定を text (canonical renderer) にするか json のままか。findings §6
+
+- **(a) 推し: text へ切替** (人間が打つ help の既定は人間向け。json は --format json で明示)
+- (b) json 維持 (JSON in/out のブランド一貫)
+
