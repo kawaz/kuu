@@ -1,5 +1,5 @@
 {
-  "why": "全消費も一意性も課さない (DR-060 §1、DR-104): 生存 partial 経路の和集合を取るのが complete の意味論であり、既に完全経路 (KTop Accept) に到達している状態でも、まだ打てる greedy 面のトリガは併存する候補として返る。参照実装 complete_wbtest.mbt「既に完全でも続きの候補は出る」テストの wire form 版 — complete は DR-038 の全消費契約の別モードではなく期待集合の収集そのものなので、Accept と併存する Pending がそのまま候補になる。",
+  "why": "全消費も一意性も課さない (DR-060 §1、DR-104): 生存 partial 経路の和集合を取るのが complete の意味論であり、既に完全経路 (KTop Accept) に到達している状態でも、まだ打てる greedy 面のトリガは併存する候補として返る。参照実装の内部テスト「既に完全でも続きの候補は出る」の wire form 版 — complete は DR-038 の全消費契約の別モードではなく期待集合の収集そのものなので、Accept と併存する Pending がそのまま候補になる。",
   "query": "complete",
   "definition": {
     "options": [

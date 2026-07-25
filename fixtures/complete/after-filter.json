@@ -1,5 +1,5 @@
 {
-  "why": "after 整合フィルタ (DR-060 §2、DR-104 §5): args_after が与えられると、候補採用後に args_after も消費して完全経路に到達できる経路が 1 本以上あるものだけに絞る。参照実装 complete_wbtest.mbt「after 整合フィルタは後続と矛盾する WordEnd 綴りを落とす」テストの wire form 版。値位置候補と term:cont の候補はユーザ入力を発明できないため無条件で通る (v1 の設計限界、DR-060 §2)。",
+  "why": "after 整合フィルタ (DR-060 §2、DR-104 §5): args_after が与えられると、候補採用後に args_after も消費して完全経路に到達できる経路が 1 本以上あるものだけに絞る。参照実装の内部テスト「after 整合フィルタは後続と矛盾する term:word_end 候補を落とす」の wire form 版。値位置候補と term:cont の候補はユーザ入力を発明できないため無条件で通る (v1 の設計限界、DR-060 §2)。",
   "query": "complete",
   "definition": {
     "config": {"long_eq_sep": "deny"},
@@ -40,7 +40,7 @@
     },
     {
       "id": "empty-after-array-same-as-omitted",
-      "why": "args_after を明示的に空配列 `[]` で供給 (省略ではない) — no-after-both-triggers-survive (省略) と全く同じ expect になることを固定する。省略と明示的な空配列供給は同値 (length ベース判定、参照実装 `outcome.mbt` の `after.length() == 0` 分岐、DR-104 §5 明確化 note)。presence (フィールドの有無) では判定しない — codex レビュー #2 M-1 の反映。",
+      "why": "args_after を明示的に空配列 `[]` で供給 (省略ではない) — no-after-both-triggers-survive (省略) と全く同じ expect になることを固定する。省略と明示的な空配列供給は同値 (args_after の長さ 0 を見る length ベース判定、DR-104 §5 明確化 note)。presence (フィールドの有無) では判定しない — codex レビュー #2 M-1 の反映。",
       "args_before": [],
       "args_after": [],
       "expect": {

@@ -1,5 +1,5 @@
 {
-  "why": "DR-097 の parse/complete モード分岐 (issue の最優先要求、`docs/findings/2026-07-13-complete-fixture-recon.md` A8): 同一 definition・同一トークン列でも、args 終端で値スロットが Pending になる読みは parse モードでは viable 扱いされず先食い抑制が働かない (= `fixtures/matcher-readings/long-empty-prefix-typed.json::unparsable-both-fall-through` が pin 済みの素通し解放挙動) のに対し、complete モードでは同じ Pending が viable 扱いされ先食い抑制が働く (参照実装 `eval.mbt` の `has_viable`: `Pending(_, _) => if in_complete(ctx) { return true }`)。definition は同 fixture の bare long トリガ (`long_prefix: \"\"`) 構造をそのまま流用するが、`long_eq_sep:\"deny\"` (DR-096 §1) を追加して eq-split matcher の生成を止める — 既定 \"allow\" だと height の eq-split 由来候補 (term:cont) も同時に出て、本 fixture の焦点 (Pending の parse/complete モード分岐) が薄まるノイズになる (`basic-boundary.json` と同じ関心分離)。",
+  "why": "DR-097 の parse/complete モード分岐 (issue の最優先要求、`docs/findings/2026-07-13-complete-fixture-recon.md` A8): 同一 definition・同一トークン列でも、args 終端で値スロットが Pending になる読みは parse モードでは viable 扱いされず先食い抑制が働かない (= `fixtures/matcher-readings/long-empty-prefix-typed.json::unparsable-both-fall-through` が pin 済みの素通し解放挙動) のに対し、complete モードでは同じ Pending が viable 扱いされ先食い抑制が働く (DR-097 の parse 相限定判定に対する complete 相の例外分岐)。definition は同 fixture の bare long トリガ (`long_prefix: \"\"`) 構造をそのまま流用するが、`long_eq_sep:\"deny\"` (DR-096 §1) を追加して eq-split matcher の生成を止める — 既定 \"allow\" だと height の eq-split 由来候補 (term:cont) も同時に出て、本 fixture の焦点 (Pending の parse/complete モード分岐) が薄まるノイズになる (`basic-boundary.json` と同じ関心分離)。",
   "query": "complete",
   "definition": {
     "config": {
@@ -38,7 +38,7 @@
     },
     {
       "id": "pending-value-slot-viable-in-complete-mode-only",
-      "why": "args_before: [\"height\"]: parse モードなら args 終端で height の値スロットが飢える (missing_operand) ため『読みゼロ』扱いで先食み抑制が働かず、rest への素通し枝が生きる (unparsable-both-fall-through が固定する挙動)。しかし complete モードでは `has_viable` がこの同じ Pending を viable 扱いする (DR-097 の parse 相限定判定に対する complete 相の唯一の例外分岐) ため、height の読みが『読める』と判定され先食みが効く — rest への素通し枝は生成されず、height の値スロット候補 (型 number、由来 height) のみが和集合に残る。unfired-both-trigger-and-rest-candidate との対比: 同じ 2 要素の定義でも、args_before が height を 1 個消費した瞬間に候補集合が『両方』から『height の値スロットのみ』へ切り替わる。",
+      "why": "args_before: [\"height\"]: parse モードなら args 終端で height の値スロットが飢える (missing_operand) ため『読みゼロ』扱いで先食み抑制が働かず、rest への素通し枝が生きる (unparsable-both-fall-through が固定する挙動)。しかし complete モードでは viability 判定がこの同じ Pending を viable 扱いする (DR-097 の parse 相限定判定に対する complete 相の唯一の例外分岐) ため、height の読みが『読める』と判定され先食みが効く — rest への素通し枝は生成されず、height の値スロット候補 (型 number、由来 height) のみが和集合に残る。unfired-both-trigger-and-rest-candidate との対比: 同じ 2 要素の定義でも、args_before が height を 1 個消費した瞬間に候補集合が『両方』から『height の値スロットのみ』へ切り替わる。",
       "args_before": ["height"],
       "expect": {
         "outcome": "complete",

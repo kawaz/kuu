@@ -9,7 +9,7 @@
   "cases": [
     {
       "id": "unparseable-string-default-is-parse-failure",
-      "why": "`n` の宣言 default は JSON string \"abc\" — DR-102 §5 により piece_filters (未宣言なので素通し) → parse の全段を通るが、\"abc\" は number の canonical lexer (DR-074) で構文不一致のため parse_number が失敗する (value.mbt `config_to_value` の `(CStr(s), TNum)` アーム、reason=not_a_number)。CLI 未発火 (args:[]) の宣言 default 由来の失敗はどの args トークンにも帰属しないため args_pos=args.length=0 (CONFORMANCE §3「env/config 由来の値の失敗、args:[] なら 0」の default 版)。kind=parse (value_parser の型照合失敗、CONFORMANCE §3)。",
+      "why": "`n` の宣言 default は JSON string \"abc\" — DR-102 §5 により piece_filters (未宣言なので素通し) → parse の全段を通るが、\"abc\" は number の canonical lexer (DR-074) で構文不一致のため parse_number が失敗する (string 値を number 型セルへ入れる経路、reason=not_a_number)。CLI 未発火 (args:[]) の宣言 default 由来の失敗はどの args トークンにも帰属しないため args_pos=args.length=0 (CONFORMANCE §3「env/config 由来の値の失敗、args:[] なら 0」の default 版)。kind=parse (value_parser の型照合失敗、CONFORMANCE §3)。",
       "args": [],
       "expect": {
         "outcome": "failure",

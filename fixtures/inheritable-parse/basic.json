@@ -41,7 +41,7 @@
     },
     {
       "id": "sub-default-fallback",
-      "why": "default 落ち: どこにも書込みなし。root の write-target は default 無し → 値源ラダー枯渇で absent (root に ttl キー無し, DR-051 §1)。sub に素で入場すると sub の ttl は cli/env/config/inherit いずれも供給なし → 自身の default 60 に落ちる (source=default, DR-031 default 席)。inheritable 非 flag セルの default は parse-tree 射影 (build_result) では出ず値源ラダー完走で確定するため (result.mbt: 非 flag は inherit 席等でラダー依存)、result=ladder-filled でのみ 60 が現れる。effects 空 (cli 発火なし)。sources で sub.ttl=default を固定 (absent fixture の port=default と同型)。",
+      "why": "default 落ち: どこにも書込みなし。root の write-target は default 無し → 値源ラダー枯渇で absent (root に ttl キー無し, DR-051 §1)。sub に素で入場すると sub の ttl は cli/env/config/inherit いずれも供給なし → 自身の default 60 に落ちる (source=default, DR-031 default 席)。inheritable 非 flag セルの default は parse-tree 射影では出ず値源ラダー完走で確定するため (非 flag は inherit 席等で値源ラダーに依存する)、result=ladder-filled でのみ 60 が現れる。effects 空 (cli 発火なし)。sources で sub.ttl=default を固定 (absent fixture の port=default と同型)。",
       "args": ["sub"],
       "expect": {
         "outcome": "success",

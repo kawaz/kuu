@@ -1,5 +1,5 @@
 {
-  "why": "command スコープ境界の補完輪郭 (DR-060 §1、DR-104): サブコマンドは親 greedy 面のトリガ衛星であり、その名前を消費すると子スコープの新しい背骨に入る (DR-041 §4、親の greedy はそこへ届かない)。子スコープの中身は入力が進むまで候補に混ざらない — 参照実装 complete_wbtest.mbt「コマンド名 (CmdSat) は境界で綴り候補になる」テストの wire form 版。definition は fixtures/command-scope/subcommand.json の子スコープ構造 (positional のみの最小形) を流用する。",
+  "why": "command スコープ境界の補完輪郭 (DR-060 §1、DR-104): サブコマンドは親 greedy 面のトリガ衛星であり、その名前を消費すると子スコープの新しい背骨に入る (DR-041 §4、親の greedy はそこへ届かない)。子スコープの中身は入力が進むまで候補に混ざらない — 参照実装の内部テスト「コマンド名トリガは境界で綴り候補になる」の wire form 版。definition は fixtures/command-scope/subcommand.json の子スコープ構造 (positional のみの最小形) を流用する。",
   "query": "complete",
   "definition": {
     "commands": [

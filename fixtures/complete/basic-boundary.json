@@ -1,5 +1,5 @@
 {
-  "why": "complete の基本輪郭 (DR-060 §1、DR-104): カーソル前のトークン列を消費できた生存 partial 経路の次消費点で読めるものの和集合。トリガ境界 (単語頭) では greedy 面の matcher トリガ綴りがそのまま候補になり、トリガ消費直後の値スロット飢餓点では型+由来を持つ値候補が返る。参照実装 complete_wbtest.mbt の同名テスト2本 (AtomicAST 直接構築、`Seq([Exact(\"--port\"), NumArg])` の space-form 単体) の wire form 版 — `long_eq_sep:\"deny\"` (DR-096 §1) で eq-split matcher の生成を止め、space form のみの経路にして wbtest の最小構成と 1:1 対応させる (既定 \"allow\" だと eq-split 由来の追加候補 (term:cont) も同時に出るため、matcher 元綴りの輪郭は別 fixture の関心)。",
+  "why": "complete の基本輪郭 (DR-060 §1、DR-104): カーソル前のトークン列を消費できた生存 partial 経路の次消費点で読めるものの和集合。トリガ境界 (単語頭) では greedy 面の matcher トリガ綴りがそのまま候補になり、トリガ消費直後の値スロット飢餓点では型+由来を持つ値候補が返る。参照実装の内部テスト 2 本 (AtomicAST 直接構築、`{seq: [{exact: \"--port\"}, number 値スロット]}` の space-form 単体) の wire form 版 — `long_eq_sep:\"deny\"` (DR-096 §1) で eq-split matcher の生成を止め、space form のみの経路にして参照実装の内部テストの最小構成と 1:1 対応させる (既定 \"allow\" だと eq-split 由来の追加候補 (term:cont) も同時に出るため、matcher 元綴りの輪郭は別 fixture の関心)。",
   "query": "complete",
   "definition": {
     "config": {"long_eq_sep": "deny"},

@@ -1,5 +1,5 @@
 {
-  "why": "dead end 除外 (DR-060 §1、DR-104): 値照合まで含めて成立しなくなった読みは候補集合から完全に除外される。参照実装 complete_wbtest.mbt「dead end (途中失敗の経路) は候補を出さない」テストの wire form 版 — もう成立しない解釈の候補はノイズなので、Held (parse なら held Error) だけが残る消費点では候補集合は空になる。",
+  "why": "dead end 除外 (DR-060 §1、DR-104): 値照合まで含めて成立しなくなった読みは候補集合から完全に除外される。参照実装の内部テスト「dead end (途中失敗の経路) は候補を出さない」の wire form 版 — もう成立しない解釈の候補はノイズなので、Held (parse なら held Error) だけが残る消費点では候補集合は空になる。",
   "query": "complete",
   "definition": {
     "config": {"long_eq_sep": "deny"},

@@ -1,5 +1,5 @@
 {
-  "why": "exclusive_group を positional に付与できる (DR-012 / DR-055 / DR-047 指定述語)。positional (宣言席) × option (同 group 参加) の mixed で構成し、席の組合せを問わず group メンバー数 committed が最大 1 で許容されることを固定する — engine の CExclusive 評価 (eval.mbt) は group ラベル別に committed 数を数えるだけで option/positional を区別しない。error の element は group ラベル (DR-063 §3 の element/group 二形、requires/conflicts が宣言元要素名に紐付くのと対)。option 版 (exclusive.json) の対 = 宣言席が異なるだけで観測意味論は同一 (option-only 限定は decode 実装上の穴、codex レビュー M-3)。",
+  "why": "exclusive_group を positional に付与できる (DR-012 / DR-055 / DR-047 指定述語)。positional (宣言席) × option (同 group 参加) の mixed で構成し、席の組合せを問わず group メンバー数 committed が最大 1 で許容されることを固定する — engine の exclusive_group 評価は group ラベル別に committed 数を数えるだけで option/positional を区別しない。error の element は group ラベル (DR-063 §3 の element/group 二形、requires/conflicts が宣言元要素名に紐付くのと対)。option 版 (exclusive.json) の対 = 宣言席が異なるだけで観測意味論は同一 (option-only 限定は decode 実装上の穴、codex レビュー M-3)。",
   "query": "parse",
   "definition": {
     "positionals": [
