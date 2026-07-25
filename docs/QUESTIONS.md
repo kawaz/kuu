@@ -9,7 +9,42 @@
 > - 「説明して」と返されたらチャットで長文説明せず、当該 Q をファイル内で説明付きに書き直して再提示
 > - 参照パスは本リポ (spec) 相対。kuu.mbt 側は「kuu.mbt の <path>」と表記
 
-## 👺EXK-Q1: 結果スコープ内で同じ露出キーを名乗る「同名の別要素」をどう扱うか
+## 👺EXK-Q4: EXK-Q1 裁定 (definition-error) の射程 — DR-073 の runtime ambiguous をどこまで置き換えるか
+
+### 裁定済みの前提 (kawaz 2026-07-25)
+
+> EXK-Q1 = (a)。同スコープ同名 export で別入口は **link** で勝手にやれば良い。link なしで別セルを同スコープ同名露出は**定義エラー**。別タイプを同スコープ同名露出に相乗りは **or** でできる。この場合露出キーに対応するセルは **or 席**でありそこに複数タイプが相乗りするのは問題ないし、露出キーに対する値セル 1 つも崩れない。
+
+正当な用途 (同一セルへの複数入口 = link / 複数タイプの相乗り = or) は既存語彙で表現でき、残る「link なしの別セル同名露出」に正当な用途は無い、という筋。これは受け入れる。
+
+### 確認したいこと: 「同名」の射程
+
+この規則を **export_key 経由で別名が同じキーに解決する場合**にも適用するかで、改訂範囲が大きく変わる。既存 fixture `fixtures/export-key/collision.json` が該当する:
+
+```json
+{"options": [{"name":"a","type":"flag","long":true,"export_key":"x"},
+             {"name":"b","type":"flag","long":true,"export_key":"x","env":"B"}]}
+```
+- case `co-exposure-collision` (`--a --b`) → **ambiguous** を pin
+- case `single-exposure-ok` (`--a` のみ) → **success** を pin
+
+別名・別セル・link なし・or でもないので、裁定の文言をそのまま当てると **definition-error** になり、`single-exposure-ok` も「定義自体が違法」で success でなくなる。
+
+### 選択肢
+
+- (a) **狭い読み: 素の name が同じ場合だけ definition-error** — 今回発見した `option x` + `positional x` / `option x` + `command x` が対象。export_key 経由で衝突する場合は従来どおり DR-073 の runtime ambiguous。`collision.json` は無傷。DESIGN §15.5 / §15.6 / DR-021 も無傷
+- (b) **広い読み: 露出キーが同じ別セルは全部 definition-error** — export_key 経由も含む。DR-073 の claimants 機構は「or / link で書かなかった定義を許さない」方針に置き換わり存在意義が縮む。`collision.json` の期待値変更 + DESIGN §15.5 / §15.6 / DR-021 の改訂が要る
+- **統括推し: (a)** — 同スコープでも**排他的にしか発火しない** 2 要素 (`exclusive_group` で縛った等) は実際には共露出しないので、静的に弾くと表現力を削る。DR-021 の「定義時に潰さず、解決できる限り許す」はこの層のための規定と読める。一方 (a) が対象とする「素の同名」は、link でも or でもなく**名前の偶然の一致**で暗黙合流する形なので、正当な用途が本当に無い
+
+### EXK-Q2=(a) 裁定との整合 (実質 (a) で決まっている可能性)
+
+EXK-Q2 = (a) が裁定済み (= runtime の衝突検出を command にも広げ、DR-073 §2 の担体を拡張する) である以上、本 Q で (b) を採ると **Q2 で広げた runtime 機構が使われる場面が消える** (すべて静的に弾かれるため)。したがって Q2=(a) は **Q4=(a) 狭い読みと組でしか整合しない**。異論が無ければ (a) 確定として進める。
+
+### (a) を採る場合に決めたいこと
+
+「素の name が同じ」の判定は **export_key 適用前**の name で行う、という理解でよいか (= `{name:"x"}` と `{name:"x", export_key:"y"}` は別キーに露出するので衝突ではない、逆に `{name:"a", export_key:"x"}` と `{name:"b", export_key:"x"}` は同名ではないので (a) の対象外)。
+
+## EXK-Q1 (裁定済み: definition-error): 結果スコープ内で同じ露出キーを名乗る「同名の別要素」をどう扱うか
 
 ### 背景説明
 
@@ -34,7 +69,7 @@ args: --x foo
 - (c) **claimants の値を修飾する** (`"option:x"` / `"command:x"`、または `id` 軸 (DR-046) を必須の一意識別子に昇格) — (b) の縮退を回避できるが wire / CONFORMANCE / 全実装 / 全 fixture に波及
 - **統括推し: (a)** — 名前の偶然の一致による**暗黙の link 合流**は DR-029 (link = 明示 opt-in の値同期) が認めていない挙動で、現状は「書いた覚えのない link」が起きている。DR-021 の「reject しない」は「一部入力で驚くだけの構造」が対象で、本件は**値が消える**ので DR-054 の「lowering が構成できない = Error」側に寄せて良いと考える。ただし DR-021 との擦れは明文化が要る
 
-## 👺EXK-Q2: scope 生成要素 (command) を露出キー衝突の検出対象に含めるか
+## EXK-Q2 (裁定済み: (a) 検出を広げる + DR-073 §2 改訂): scope 生成要素 (command) を露出キー衝突の検出対象に含めるか
 
 ### 背景説明
 
