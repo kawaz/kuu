@@ -11,7 +11,7 @@ active な issue の一覧。close 済みは archive/ にあり、ここには�
 | 2026-07-15 | design | idea | [default-lexical-scope-borrow](./2026-07-15-default-lexical-scope-borrow.md) | default の lexical-scope 借用構想、repeat 行内 default を外側要素から明示借用 (実需 corpus 待ち) |
 | 2026-07-15 | design | idea | [descriptor-conformance-promotion-revisit](./2026-07-15-descriptor-conformance-promotion-revisit.md) | descriptor 検証の conformance 昇格の再検討 (DAX-Q6 先送り分、独自フィルタ実装ラップ or 2言語目着手で再検討) |
 | 2026-07-23 | task | idea | [help-category-link-last-wins](./2026-07-23-help-category-link-last-wins.md) | M5 で #help_category 内部セルの link 配線実装時は at_pos ベース last-wins を使う (completion.mbt L42-72 pattern 再利用、宣言順 push 由来の bug class 回避) |
-| 2026-07-25 | bug | open | [expose-key-collision-option-command-silent-loss](./2026-07-25-expose-key-collision-option-command-silent-loss.md) | 露出キー衝突検出が option × command で効かず command が値を silent に上書きする (DR-073) |
+| 2026-07-25 | bug | open | [expose-key-collision-option-command-silent-loss](./2026-07-25-expose-key-collision-option-command-silent-loss.md) | 露出キー衝突検出が option × command で効かず ambiguous に昇格しない (command が黙って勝つ、DR-073) |
 | 2026-07-25 | design | open | [bash-completion-comp-line-point-relex](./2026-07-25-bash-completion-comp-line-point-relex.md) | bash 補完 glue の words 再結合、COMP_WORDS ベースでは空白情報が失われる残存ギャップ (H9 follow-up) |
 | 2026-07-25 | design | open | [raw-tail-capture-after-positional](./2026-07-25-raw-tail-capture-after-positional.md) | 最初の positional 充足後を丸ごと raw で取る境界を宣言できない (docker run/kubectl exec 型) |
 | 2026-07-25 | design | open | [closed-enum-open-form-completion-gap](./2026-07-25-closed-enum-open-form-completion-gap.md) | closed enum + 開放形の混在値 (default|all|named:X) が補完候補として提示できない |
