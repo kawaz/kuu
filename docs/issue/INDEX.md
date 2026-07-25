@@ -16,7 +16,6 @@ active な issue の一覧。close 済みは archive/ にあり、ここには�
 | 2026-07-25 | design | open | [raw-tail-capture-after-positional](./2026-07-25-raw-tail-capture-after-positional.md) | 最初の positional 充足後を丸ごと raw で取る境界を宣言できない (docker run/kubectl exec 型) |
 | 2026-07-25 | design | open | [closed-enum-open-form-completion-gap](./2026-07-25-closed-enum-open-form-completion-gap.md) | closed enum + 開放形の混在値 (default|all|named:X) が補完候補として提示できない |
 | 2026-07-25 | design | open | [fixture-envelope-shared-runner](./2026-07-25-fixture-envelope-shared-runner.md) | fixture envelope を第三者が再利用できる共通 runner/runbook 資産が無い |
-| 2026-07-24 | task | open | [fixture-why-installer-filename-sanitize](./2026-07-24-fixture-why-installer-filename-sanitize.md) | fixture why の実装ファイル名参照 (installer.mbt/eval.mbt/kuu.mbt) 残りサニタイズ、約 30 ファイル |
 | 2026-07-22 | task | open | [dr-116-completion-generator-implementation](./2026-07-22-dr-116-completion-generator-implementation.md) | DR-116 (canonical 補完生成器の既定 policy) の実装 — 生成器・product test 未実装 |
 
 <!--
