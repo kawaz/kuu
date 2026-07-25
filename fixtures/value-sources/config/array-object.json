@@ -1,5 +1,5 @@
 {
-  "why": "config の構造値: 配列は multiple セルの piece 列へ、入れ子オブジェクトは絶対 config_key で同型ナビ (DR-050 §4)。config の配列値 [a,b] は multiple 要素 tag の 2 piece として供給され (各 piece は §4 で型付け)、結果は配列 [a,b] になる。入れ子オブジェクト (server.port) は絶対 config_key [server,port] でルートから辿る (lookup レベルの同型対応)。config 由来値は effects 非掲載、multiple 由来のリストと単値をまとめて result/sources で検証。config_file 要素はインフラで結果非掲載。蒸留元 slice phase20:173 (array → multiple pieces; object → 同型 navigation)。config 入力表記は config/ladder.json 注記と同じ。",
+  "why": "config の構造値: 配列は multiple セルの piece 列へ、入れ子オブジェクトは絶対 config_key で同型ナビ (DR-050 §4)。config の配列値 [a,b] は multiple 要素 tag の 2 piece として供給され (各 piece は §4 で型付け)、結果は配列 [a,b] になる。入れ子オブジェクト (server.port) は絶対 config_key [server,port] でルートから辿る (lookup レベルの同型対応)。config 由来値は effects 非掲載、multiple 由来のリストと単値をまとめて result/sources で検証。config_file 要素はインフラで結果非掲載。config 入力表記は config/ladder.json 注記と同じ。",
   "query": "parse",
   "definition": {
     "options": [

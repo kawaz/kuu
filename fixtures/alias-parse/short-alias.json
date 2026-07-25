@@ -1,5 +1,5 @@
 {
-  "why": "alias (DR-057) の別入口 = link + 表示帰属の最小輪郭 (short 綴りの入口)。alias は参照ファミリー 3 人目 (ref=構造継承 / link=値同期 / alias=別入口)。canonical `port` (short -p) に short-only alias `{alias:\"port\", short:\"n\"}` を貼ると、-n は port セルへの 2 本目の入口になる (link 同型、DR-057 §2)。効果は canonical 実体セルへ流れ (entity=port)、結果キーも canonical のみ — alias は結果スコープを作らない (DR-057 §2、DR-052)。どの入口が発火したかは ParserContext の selected_names 側の関心で result 形には出ない。同一セルへの複数入口発火は最終効果があと勝ちで確定する (DR-015)。effects は cli 由来のパース時効果のみ・配列順=適用順が同一性成分 (CONFORMANCE §2, DR-038/045)。蒸留元: slice phase26 test 1 (short alias binds canonical cell)。port の型は slice TNum に対応する number (整数 80/90 はいずれの数値型でも同一挙動)。",
+  "why": "alias (DR-057) の別入口 = link + 表示帰属の最小輪郭 (short 綴りの入口)。alias は参照ファミリー 3 人目 (ref=構造継承 / link=値同期 / alias=別入口)。canonical `port` (short -p) に short-only alias `{alias:\"port\", short:\"n\"}` を貼ると、-n は port セルへの 2 本目の入口になる (link 同型、DR-057 §2)。効果は canonical 実体セルへ流れ (entity=port)、結果キーも canonical のみ — alias は結果スコープを作らない (DR-057 §2、DR-052)。どの入口が発火したかは ParserContext の selected_names 側の関心で result 形には出ない。同一セルへの複数入口発火は最終効果があと勝ちで確定する (DR-015)。effects は cli 由来のパース時効果のみ・配列順=適用順が同一性成分 (CONFORMANCE §2, DR-038/045)。port の型は slice TNum に対応する number (整数 80/90 はいずれの数値型でも同一挙動)。",
   "query": "parse",
   "definition": {
     "options": [

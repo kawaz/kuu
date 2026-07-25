@@ -1,5 +1,5 @@
 {
-  "why": "DR-047 §5 明確化 (kawaz 裁定 2026-07-09): requires の目的語が bool 型 (flag) の場合、充足条件は「値の有無」でなく「解決後の値が true」(値源不問)。alias 同一トリガ 2 経路 (a に requires:[c]、c はフラグ) で、c 未指定なら a 経路が bool-target requires 違反で完全経路から除外され b 1 本 success (制約フィルタは全完全経路収集後の後段適用 = 遅延述語、eval 層は値源を知らない)。c を CLI/env どちらで与えても両経路生存で ambiguous:2。issue 2026-07-09-constraint-path-filtering-gap の根治確認 (蒸留 1:1 audit 漏れ #6 = slice phase25:171 の代替輪郭も兼ねる)。",
+  "why": "DR-047 §5 明確化 (kawaz 裁定 2026-07-09): requires の目的語が bool 型 (flag) の場合、充足条件は「値の有無」でなく「解決後の値が true」(値源不問)。alias 同一トリガ 2 経路 (a に requires:[c]、c はフラグ) で、c 未指定なら a 経路が bool-target requires 違反で完全経路から除外され b 1 本 success (制約フィルタは全完全経路収集後の後段適用 = 遅延述語、eval 層は値源を知らない)。c を CLI/env どちらで与えても両経路生存で ambiguous:2。issue 2026-07-09-constraint-path-filtering-gap の根治確認。",
   "query": "parse",
   "definition": {
     "options": [

@@ -1,5 +1,5 @@
 {
-  "why": "主入口 long の name 由来トリガ生成 (DR-071 + LOWERING §B.1): wire form の `long: true` は主入口記法 (糖衣 = variant 配列 [\":set\"]) で、要素の name から `--<name>` トリガを 1 本生成する。ここでは name=`v` の flag が `--v` を植える。DR-071 二形 (long は true | variant 配列) のうち true 側 = 主入口ありの輪郭を parse 観測で固定する。未発火時は flag の preset default false が result に現れる (LOWERING §A.5 / DR-051 §2) — この false は cli 効果ではないので effects には載らず result のみ (CONFORMANCE §2 の「未発火 flag の false は result 側」)。slice phase29 gap2 (`:set` 主入口記述子 → 名前由来 --<name>) の parse 断面。",
+  "why": "主入口 long の name 由来トリガ生成 (DR-071 + LOWERING §B.1): wire form の `long: true` は主入口記法 (糖衣 = variant 配列 [\":set\"]) で、要素の name から `--<name>` トリガを 1 本生成する。ここでは name=`v` の flag が `--v` を植える。DR-071 二形 (long は true | variant 配列) のうち true 側 = 主入口ありの輪郭を parse 観測で固定する。未発火時は flag の preset default false が result に現れる (LOWERING §A.5 / DR-051 §2) — この false は cli 効果ではないので effects には載らず result のみ (CONFORMANCE §2 の「未発火 flag の false は result 側」)。",
   "query": "parse",
   "definition": {
     "options": [

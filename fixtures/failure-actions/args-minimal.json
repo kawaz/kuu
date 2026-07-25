@@ -1,5 +1,5 @@
 {
-  "why": "複数の失敗時アクションが selected されたとき、args 消費位置が最小のもの (先勝ち) が発火する (DR-048 §4、効果列 = DR-045 の args 順)。fired_action は発火要素の name (DR-053 §2)。表現上の注意: 本来 help と version は別種の失敗時アクションだが、wire form には現状 type:\"help\" プリセットしか無く、非 help の失敗時アクションを宣言する手段 (type:\"version\" プリセット or 汎用 fail-action 属性フィールド) が未予約。ここでは version を name のみ変えた type:\"help\" 要素として置き、先勝ち (args 最小) の選択規則自体を固定する — 検証しているのは選択機構であり、アクション種別ラベルは wire 拡張確定までの暫定 (蒸留台帳 §4-2)。",
+  "why": "複数の失敗時アクションが selected されたとき、args 消費位置が最小のもの (先勝ち) が発火する (DR-048 §4、効果列 = DR-045 の args 順)。fired_action は発火要素の name (DR-053 §2)。表現上の注意: 本来 help と version は別種の失敗時アクションだが、wire form には現状 type:\"help\" プリセットしか無く、非 help の失敗時アクションを宣言する手段 (type:\"version\" プリセット or 汎用 fail-action 属性フィールド) が未予約。ここでは version を name のみ変えた type:\"help\" 要素として置き、先勝ち (args 最小) の選択規則自体を固定する — 検証しているのは選択機構であり、アクション種別ラベルは wire 拡張確定までの暫定。",
   "query": "parse",
   "definition": {
     "options": [

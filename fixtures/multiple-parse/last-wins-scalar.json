@@ -1,5 +1,5 @@
 {
-  "why": "append.json の対照: accumulator を持たない (multiple 無し) scalar 値オプションは複数発火でも last-wins (DR-015) であってリストにならない。--name を 2 度発火すると効果列には 2 個の set が適用順で全保持される (効果列は畳まれない、primary oracle・順序は同一性成分 DR-038/045) が、scalar セルの最終 result は最後の値。これで append.json のリスト形が『反復そのもの』でなく『accumulator』由来であることが証明される (反復は両者で同じ、差は accumulator の有無)。effects は cli 効果のみ・配列順 = 適用順。蒸留元 slice phase7 (non-accumulator last-wins contrast)。",
+  "why": "append.json の対照: accumulator を持たない (multiple 無し) scalar 値オプションは複数発火でも last-wins (DR-015) であってリストにならない。--name を 2 度発火すると効果列には 2 個の set が適用順で全保持される (効果列は畳まれない、primary oracle・順序は同一性成分 DR-038/045) が、scalar セルの最終 result は最後の値。これで append.json のリスト形が『反復そのもの』でなく『accumulator』由来であることが証明される (反復は両者で同じ、差は accumulator の有無)。effects は cli 効果のみ・配列順 = 適用順。",
   "query": "parse",
   "definition": {
     "options": [

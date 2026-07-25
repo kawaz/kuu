@@ -1,5 +1,5 @@
 {
-  "why": "『required (必須) positional は success の中では絶対に absent にならない』(DR-051 §2c) を固定する。必須 positional はトークンを消費しなければならず、消費できなければ完全経路が 1 本も成立しない (DR-047 値充足 / DR-038)。ゆえに parse が success する限り必ず値を持つ = success 結果で absent になることはあり得ない。値が無い場合は absent ではなく『経路不成立 = failure』に倒れる。これは §2a (default 持ち) / §2b (反復系 []) と並ぶ『absent にならない 3 族』の三番目で、absent が『値源ラダーを回した非反復・非必須・非 default 要素』に限られる輪郭を裏から定義する。失敗の kind は parse (経路構築の失敗であって、明示 required 属性の遅延述語 constraint とは層が違う、DR-065 §3): 構造的必須の不成立は reason=missing_operand。蒸留元: slice phase21 第11弾 §2c (未指定 → `fail:missing operand for file`、`x` 指定 → `ok{file=x}`)。",
+  "why": "『required (必須) positional は success の中では絶対に absent にならない』(DR-051 §2c) を固定する。必須 positional はトークンを消費しなければならず、消費できなければ完全経路が 1 本も成立しない (DR-047 値充足 / DR-038)。ゆえに parse が success する限り必ず値を持つ = success 結果で absent になることはあり得ない。値が無い場合は absent ではなく『経路不成立 = failure』に倒れる。これは §2a (default 持ち) / §2b (反復系 []) と並ぶ『absent にならない 3 族』の三番目で、absent が『値源ラダーを回した非反復・非必須・非 default 要素』に限られる輪郭を裏から定義する。失敗の kind は parse (経路構築の失敗であって、明示 required 属性の遅延述語 constraint とは層が違う、DR-065 §3): 構造的必須の不成立は reason=missing_operand。",
   "query": "parse",
   "definition": {
     "positionals": [

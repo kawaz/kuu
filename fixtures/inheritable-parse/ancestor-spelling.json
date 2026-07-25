@@ -1,5 +1,5 @@
 {
-  "why": "inheritable の祖先綴りは『定義スコープ名を prefix した固定綴り』で、深さで伸びない (DR-059 §1、採用しなかった案: 深さ毎に延長)。3 段 root > mid > sub で ttl を sub に inheritable 宣言すると、root と mid の両祖先へ同一の入口 --sub-ttl (prefix=定義スコープ sub) がコピーされる — root で --mid-sub-ttl のように中間名を積まない。この file は (1) root レベルで --sub-ttl が効く、(2) mid レベルでも同じ --sub-ttl が効く (深さ非依存)、(3) 中間名を積んだ --mid-sub-ttl は綴りとして存在せず失敗、を固定する。逆方向コピーは add-if-absent + 不動点反復で全祖先へ多段伝播する (global の逆, DR-042)。蒸留元: slice phase27 §2。result は各祖先スコープの write-target 値 (cli 由来)。",
+  "why": "inheritable の祖先綴りは『定義スコープ名を prefix した固定綴り』で、深さで伸びない (DR-059 §1、採用しなかった案: 深さ毎に延長)。3 段 root > mid > sub で ttl を sub に inheritable 宣言すると、root と mid の両祖先へ同一の入口 --sub-ttl (prefix=定義スコープ sub) がコピーされる — root で --mid-sub-ttl のように中間名を積まない。この file は (1) root レベルで --sub-ttl が効く、(2) mid レベルでも同じ --sub-ttl が効く (深さ非依存)、(3) 中間名を積んだ --mid-sub-ttl は綴りとして存在せず失敗、を固定する。逆方向コピーは add-if-absent + 不動点反復で全祖先へ多段伝播する (global の逆, DR-042)。result は各祖先スコープの write-target 値 (cli 由来)。",
   "query": "parse",
   "definition": {
     "commands": [

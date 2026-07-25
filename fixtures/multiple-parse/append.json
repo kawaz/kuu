@@ -1,5 +1,5 @@
 {
-  "why": "multiple option の append 累積 (DR-034/036/043): `multiple:\"append\"` を持つ値オプションの複数発火は last-wins scalar でなくリストに畳まれる。各発火は 1 個の set 効果 (DR-045 set 縮退形)、accumulator \"append\" (DR-036 accumulators registry の住人) が同一 entity の効果列を配列に fold する。リストの形はセルの属性であって発火回数由来ではない — 1 回発火でも要素 1 件のリスト、0 回発火でも `[]` (DR-044 uniform array: accumulate セルは fire 0 回でも absent にならず home level で `[]` を描く)。scalar last-wins との対比は last-wins-scalar.json。effects は cli 由来のパース時効果のみ・配列順 = 適用順 (効果列は同一性成分 DR-038/045)、result は fold 後の確定値。蒸留元 slice phase7 (multiple append)。",
+  "why": "multiple option の append 累積 (DR-034/036/043): `multiple:\"append\"` を持つ値オプションの複数発火は last-wins scalar でなくリストに畳まれる。各発火は 1 個の set 効果 (DR-045 set 縮退形)、accumulator \"append\" (DR-036 accumulators registry の住人) が同一 entity の効果列を配列に fold する。リストの形はセルの属性であって発火回数由来ではない — 1 回発火でも要素 1 件のリスト、0 回発火でも `[]` (DR-044 uniform array: accumulate セルは fire 0 回でも absent にならず home level で `[]` を描く)。scalar last-wins との対比は last-wins-scalar.json。effects は cli 由来のパース時効果のみ・配列順 = 適用順 (効果列は同一性成分 DR-038/045)、result は fold 後の確定値。",
   "query": "parse",
   "definition": {
     "options": [

@@ -1,5 +1,5 @@
 {
-  "why": "name 由来主入口トリガの綴り正規化 (DR-022 + DR-071): name は snake_case が正規形 (AST キー / 結果キーの軸、DR-022)。主入口 `long: true` が name から導出するトリガは CLI 慣習に合わせ kebab-case に変換される (`dry_run` → `--dry-run`)。生成されるトリガは kebab 綴りのみで、snake 綴りの `--dry_run` は植わらない。よって『name=snake / トリガ=kebab / 結果キー=snake』の 3 軸分離を parse 観測で固定する。slice phase29 gap2 (DR-022 snake→kebab lowering) の断面。",
+  "why": "name 由来主入口トリガの綴り正規化 (DR-022 + DR-071): name は snake_case が正規形 (AST キー / 結果キーの軸、DR-022)。主入口 `long: true` が name から導出するトリガは CLI 慣習に合わせ kebab-case に変換される (`dry_run` → `--dry-run`)。生成されるトリガは kebab 綴りのみで、snake 綴りの `--dry_run` は植わらない。よって『name=snake / トリガ=kebab / 結果キー=snake』の 3 軸分離を parse 観測で固定する。",
   "query": "parse",
   "definition": {
     "options": [

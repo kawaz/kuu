@@ -1,5 +1,5 @@
 {
-  "why": "multiple の collector 属性 (DR-036): unwrap_single は「累積後の最終値が長さ 1 配列なら要素へ畳む」opt-in collector — multiple: {accumulator:\"append\", collector:\"unwrap_single\"} で宣言する (座席は multiple の属性、実体は filters registry から引く = DR-036)。0/1/2+ 発火の 3 ケースで unwrap_single の輪郭 (0/2+ は不変、1 のみ畳む) を固定する。参照実装プロトタイプの同名テスト (positional optional 版) の option/multiple 版相当 (蒸留 1:1 audit 漏れ #3 の解消)。",
+  "why": "multiple の collector 属性 (DR-036): unwrap_single は「累積後の最終値が長さ 1 配列なら要素へ畳む」opt-in collector — multiple: {accumulator:\"append\", collector:\"unwrap_single\"} で宣言する (座席は multiple の属性、実体は filters registry から引く = DR-036)。0/1/2+ 発火の 3 ケースで unwrap_single の輪郭 (0/2+ は不変、1 のみ畳む) を固定する。",
   "query": "parse",
   "definition": {
     "options": [

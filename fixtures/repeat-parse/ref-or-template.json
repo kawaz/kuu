@@ -1,5 +1,5 @@
 {
-  "why": "definitions.templates + ref (DR-078 §1): hlcolors := color+ (color は or [3 数値 seq | 文字列] の共有消費文法 template)。repeat の対象要素は形を問わない (DR-043) — ref head でも or 構造でも同じ反復規則に乗る。純文字列の繰り返しは colorname 枝のみが成立する一義 parse、数値 3 個は rgb 枝 1 反復 vs colorname 枝 3 反復が構造的に異なる完全経路として両立し ambiguous (DR-038)。参照実装プロトタイプの同等テスト相当 (蒸留 1:1 audit 漏れ #1)。result は hlcolors の値セルを T[] (T = or 枝の row 形) へ写像する: or の各枝は name 付き要素からなり、露出規則 (DESIGN §2.4) で最も浅い name 層が colorname 単体または r/g/b 3 兄弟になる — colorname 枝の row は {colorname: string}、rgb 枝の row は name 持ち子が並ぶので kv {r,g,b} (DESIGN §2.5)。テンプレ内要素名 (colorname/r/g/b) は row の中に留まり hlcolors の外側 (result トップレベル) には出ない。ambiguous な場合は完全経路ごとの result ビューを interpretations に列挙する (DR-053 §3)。",
+  "why": "definitions.templates + ref (DR-078 §1): hlcolors := color+ (color は or [3 数値 seq | 文字列] の共有消費文法 template)。repeat の対象要素は形を問わない (DR-043) — ref head でも or 構造でも同じ反復規則に乗る。純文字列の繰り返しは colorname 枝のみが成立する一義 parse、数値 3 個は rgb 枝 1 反復 vs colorname 枝 3 反復が構造的に異なる完全経路として両立し ambiguous (DR-038)。result は hlcolors の値セルを T[] (T = or 枝の row 形) へ写像する: or の各枝は name 付き要素からなり、露出規則 (DESIGN §2.4) で最も浅い name 層が colorname 単体または r/g/b 3 兄弟になる — colorname 枝の row は {colorname: string}、rgb 枝の row は name 持ち子が並ぶので kv {r,g,b} (DESIGN §2.5)。テンプレ内要素名 (colorname/r/g/b) は row の中に留まり hlcolors の外側 (result トップレベル) には出ない。ambiguous な場合は完全経路ごとの result ビューを interpretations に列挙する (DR-053 §3)。",
   "query": "parse",
   "definition": {
     "definitions": {
@@ -30,7 +30,7 @@
     },
     {
       "id": "rgb-vs-3-names-ambiguous",
-      "why": "1 回発火・rgb 枝 (3 トークン消費) vs 3 回発火・colorname 枝 (1 トークンずつ) が構造的に異なる完全経路として両立し ambiguous (DR-038 — or 分岐差は取り分選好では畳めない。取り分選好の非侵食性 = 蒸留 1:1 audit 漏れ #2 も本 case が pin)。2 経路それぞれの result ビューは or 枝の型で分岐する: rgb 経路は number 型の r/g/b 3 兄弟が並ぶので row は kv {r,g,b} (DESIGN §2.5)、値は number に変換された 255/0/0。colorname 経路は string 型 colorname が 3 回発火するので hlcolors は 3 要素の row 配列、各値は string のまま \"255\"/\"0\"/\"0\" (型変換されない)。interpretations は各完全経路の result ビューを列挙する (DR-053 §3、列挙順は非規範)。",
+      "why": "1 回発火・rgb 枝 (3 トークン消費) vs 3 回発火・colorname 枝 (1 トークンずつ) が構造的に異なる完全経路として両立し ambiguous (DR-038 — or 分岐差は取り分選好では畳めない)。2 経路それぞれの result ビューは or 枝の型で分岐する: rgb 経路は number 型の r/g/b 3 兄弟が並ぶので row は kv {r,g,b} (DESIGN §2.5)、値は number に変換された 255/0/0。colorname 経路は string 型 colorname が 3 回発火するので hlcolors は 3 要素の row 配列、各値は string のまま \"255\"/\"0\"/\"0\" (型変換されない)。interpretations は各完全経路の result ビューを列挙する (DR-053 §3、列挙順は非規範)。",
       "args": ["255", "0", "0"],
       "expect": {
         "outcome": "ambiguous",

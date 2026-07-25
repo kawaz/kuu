@@ -1,5 +1,5 @@
 {
-  "why": "presence marker (DR-051 §3): スコープ生成要素 (command) が『選ばれた (selected)』なら、たとえ子が全て absent でも値は空オブジェクト {} になる — スコープ生成 = 値の発生であり、反復系の [] (repeat-empty.json) と同型の『形が先に在る』原理。選ばれなければ (unselected) absent (キー消失、DR-051 §1)。子 port を default なし number にすることで、serve 入場時に子が 1 つも発火せず全 absent でも serve キーは {} で present になる面を crisp に切り出す (flag を子に置くと preset default false, DR-051 §2 が混ざって {} が観測できないため、あえて値オプションのみ)。root スコープは常に selected なので、serve 未選択時の全体は空 root = {} (serve キー無し = serve が absent)。蒸留元: slice phase22 第12弾 §3 presence marker (`serve` → `{serve:{}}`、`[]` → `{}`)。export-key 領域 (D12) とクロスするが、ここでは export_key 無指定の素の command で『selected {} vs unselected absent』のみを固定する。",
+  "why": "presence marker (DR-051 §3): スコープ生成要素 (command) が『選ばれた (selected)』なら、たとえ子が全て absent でも値は空オブジェクト {} になる — スコープ生成 = 値の発生であり、反復系の [] (repeat-empty.json) と同型の『形が先に在る』原理。選ばれなければ (unselected) absent (キー消失、DR-051 §1)。子 port を default なし number にすることで、serve 入場時に子が 1 つも発火せず全 absent でも serve キーは {} で present になる面を crisp に切り出す (flag を子に置くと preset default false, DR-051 §2 が混ざって {} が観測できないため、あえて値オプションのみ)。root スコープは常に selected なので、serve 未選択時の全体は空 root = {} (serve キー無し = serve が absent)。export-key 領域 (D12) とクロスするが、ここでは export_key 無指定の素の command で『selected {} vs unselected absent』のみを固定する。",
   "query": "parse",
   "definition": {
     "commands": [
