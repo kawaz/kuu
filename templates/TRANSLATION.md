@@ -86,6 +86,18 @@ DR-117 §4 の行文法要素を各 shell の native 機構へ写す対応。
 - **bash `COMP_WORDBREAKS` 分割の再結合 (H9)**: 修正前は `local -a words=("${COMP_WORDS[@]}")` で素の COMP_WORDS を binary へ渡すだけの骨格で、`--flag=value` や `http://x` が `[--flag, =, value]` / `[http, :, //x]` に割れたまま転送されていた (DR-117 §3.4 末尾 規範違反)。修正で glue 内に inline の再結合ループを追加: `COMP_WORDBREAKS` から空白系を除いた集合を分割 char セットとし、走査中に「単一の分割 char (`=` `:` 等)」を見つけたら直前 word に連結して in_break フラグを立て、直後の非空 word も継続連結する。cword も元 `COMP_CWORD` の指す word が再結合後どの index に落ちるかを追跡して変換。末尾空白の空 word は独立 word として保持し「カーソルの新しい位置」を表現。実機マトリクス: bash 5.3.9 / bash 3.2.57 × 5 ケース (通常空白 / `--flag=value` / `http://x` / 末尾 `=` 空白なし / 末尾空白) を mock binary + literal 置換後 glue の source 経由で end-to-end 検証、10/10 全通過 (2026-07-25)
 - **bash L72 跡地 TODO 削除**: 「compopt 可用性判定を機能検出で書き直す」TODO 行を削除。直下が既に `if compopt +o filenames >/dev/null 2>&1; then compopt -o nosort ...` の機能検出実装になっており、TODO は跡地だった (`[[no-historical-noise]]` 適用)
 
+### 既知の限界: COMP_WORDS ベース再結合は空白情報を保持しない (bash)
+
+上記 H9 修正で採用した「COMP_WORDS を後処理で再結合する」方式は、bash-completion 系の定石 (`_get_comp_words_by_ref` 相当) に倣った実装だが、**COMP_WORDS が空白情報を落とす**ことに由来する原理的な粗さを持つ。統括側監査 (2026-07-25) で明記された既知ギャップ:
+
+- **現象**: `COMP_WORDS` は shell 側で COMP_WORDBREAKS 分割済みの token 列で、隣接 token 間に空白があったかどうかを区別できない。すなわち
+  - ユーザが `myapp foo:bar` と打った場合 → COMP_WORDS = `[myapp, foo, :, bar]`
+  - ユーザが `myapp foo : bar` と**空白付きで**打った場合 → COMP_WORDS = `[myapp, foo, :, bar]` (同一)
+  再結合は両方を `foo:bar` に畳むため、後者では DR-117 §3.4 の words 契約 (「shell が見ている行の全量トークン列」) から乖離する
+- **影響範囲**: `:` `=` `;` `@` `<` `>` `|` `&` `(` を**単独引数として空白区切りで**渡すような CLI の**補完面**のみ (実行時 parse は shell 経由で正しく分割されるため影響なし)。稀なユースケース (これらの char を positional として単独で受ける設計自体が unusual)。DR-117 §3.4 「words[cword] の prefix 絞り」も、こうした単独引数の途中を編集する場面自体が非典型
+- **忠実な解**: `COMP_LINE` (現在行の文字列全量) + `COMP_POINT` (カーソル byte offset) から glue 内で bash tokenizer を自前再現し、空白位置を保った words を組み立てる (bash-completion 系の一部拡張・argcomplete 等が採用)
+- **今回採らなかった理由**: (1) 補完は best-effort が業界標準 (影響ある稀ケースで多少粗くても parse は壊れない)、(2) COMP_WORDS ベース再結合は bash-completion 系の定石で 90% 以上のケースをカバー、(3) COMP_LINE 再字句解析は quoting / escape / expansion の bash 仕様を forge することになり実装リスクとメンテコストが跳ね上がる (bash 3.2 / 5.x 差も広がる)。忠実解への昇格は別 issue として起票済み
+
 ## 参照
 
 - `docs/decisions/DR-117-completion-generator-abi.md` §4 (行文法), §7 (builtin completer)
