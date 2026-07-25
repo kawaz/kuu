@@ -1,0 +1,24 @@
+{
+  "why": "**要素数によって構造を変えない**ことの pin。子が 1 個でも `seq` の結果は配列であり、単独値へ畳まない — 定義が `seq` なら結果は配列、配列でない値が欲しければ利用者が `seq` を使わずに定義する、という分担であって、kuu 側が要素数を見て構造を作り替えるのは越権 (kawaz 裁定 2026-07-25)。子の個数で結果の型が変わると言語バインディングの型導出 (DESIGN §2.6) が静的に決まらなくなる。畳みたい利用者には `multiple` の collector (`unwrap_single`、DESIGN §6.3) が別途ある。対照は 2 子版の `option-anonymous-children-array.json`、結果キーを持つ子の場合は `option-named-children-kv.json` (kv へ畳む、DR-120)。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {
+        "name": "pair",
+        "long": true,
+        "seq": [{ "type": "string" }]
+      }
+    ]
+  },
+  "cases": [
+    {
+      "id": "single-anonymous-child-stays-an-array",
+      "why": "`--pair /a`: 子が 1 個でも結果は 1 要素の配列。`{pair: \"/a\"}` への縮退は起きない。",
+      "args": ["--pair", "/a"],
+      "expect": {
+        "outcome": "success",
+        "result": { "pair": ["/a"] }
+      }
+    }
+  ]
+}

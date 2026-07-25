@@ -122,3 +122,8 @@ DR-034 でこれらは `pieceProcessor` / `separator` / `accumulator` / `collect
 > 同一 positional 列に上限なしの multiple が複数あると、取り分の経路が一意に決まらず ambiguous になりうる。
 
 これは定義として書けてしまうが実行時 ambiguous。静的バリデータが「上限なし multiple が列内に複数 → 潜在 ambiguous」を warn できる。
+
+> **更新 (2026-07-26)**: 表中の `seq` の「単独要素なら単独」は撤回された。**要素数によらず常に配列**である
+> (kawaz 裁定: 利用者が `seq` と書いたなら結果は配列。配列でない値が欲しければ `seq` を使わずに定義する話であって、
+> kuu が要素数を見て構造を作り替えるのは越権)。結果キーを持つ子が 1 つでもあれば代わりに 1 個の kv になる (DR-120)。
+> 現役の規定は DESIGN §5.1、pin は `fixtures/seq-parse/`。
