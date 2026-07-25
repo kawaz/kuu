@@ -111,7 +111,13 @@ Q1(c) (claimants の値を修飾 / `id` 軸を一意識別子に昇格) を採�
 
 `ResultValue::Object` が同名キーを 2 エントリ持てるのは **実装都合であって spec 規定ではない**。spec は result を「キーが一意な JSON object」としてモデル化している (DR-063 §4「JSON object は unordered」/ CONFORMANCE §3 の key ベース対応付け / DESIGN §2.4「結果キー」は集合の語彙)。そして重複キー result を JSON へ落とす規則も**無い** — DR-109 §2 が要求する「fixture expect と厳密同形」は、fixture が JSON object リテラルである以上**充足不能**。つまりこの断面は「fixture が未整備」ではなく「**通る expect が書けない = 到達してはいけない状態**」。なお kuu.mbt の conformance runner (`render_rval_sorted`) は dedup せずソートするので、fixture を書けば必ず mismatch する (盲目ではないが緑にする書き方が無い)。
 
-## 👺EXK-Q3: help_query の `path` 導出規則を spec に書くか、どこまで書くか
+## EXK-Q3 (裁定済み: (a) 写像表に 1 行足す): help_query の `path` 導出規則を spec に書くか、どこまで書くか
+
+> **裁定 (kawaz 2026-07-25)**: (a)。「多分内部的には help は command パスと対応する感じになるはず」。
+> 写像表に「`path` = パースが選択した最深の command scope」を足すところまでとし、導出手段は縛らない。
+> 統括推しだった (b) (ParserContext の selected 経由を推奨として明記) の動機は「result のキー経由は
+> 露出キー衝突に巻き込まれる」だったが、**EXK-Q1 の裁定 (同名別セルは definition-error) により
+> アプリが同名キーで取り違える状況自体が発生しなくなる**ため、(a) で筋が通る。
 
 ### 背景説明
 
