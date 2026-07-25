@@ -1070,7 +1070,7 @@ help_installer は表示メタの回収、5 preset の植え付け、help_query 
 
 入口発火時の固定値供給には `cell_fns` の `set` を使う。help type の連動は target 側の `default_fn: "borrow:<source>"` で表し、help_installer は preset が管理する各内部セルへ同じ default placeholder を植え付ける。
 
-内部セルから表示 orchestration への写像は、`#help_category` が値を持てば `category_mode:{"named":value}`、`#help_all_category` が true なら `category_mode:"all"`、どちらもなければ `category_mode:"default"`。`#help_tree` は `depth:"all"`、それ以外は `"scope"`。`#help_show_hidden` は model 取得条件ではなく renderer policy 入力になる。
+内部セルから表示 orchestration への写像は、`#help_category` が値を持てば `category_mode:{"named":value}`、`#help_all_category` が true なら `category_mode:"all"`、どちらもなければ `category_mode:"default"`。`#help_tree` は `depth:"all"`、それ以外は `"scope"`。`#help_show_hidden` は model 取得条件ではなく renderer policy 入力になる。`path` は内部セル由来ではなく **パースが選択した最深の command scope** で決まる (`prog --help sub --help` なら sub、ルートのみなら省略)。導出手段は縛らない (EXK-Q3)。
 
 **lint warn の条件**: help 系要素が存在しても、name / export_key 経由で発火を観測できる要素が一つも無い構成だけを warn する。どの help type でも自身に露出があれば warn しない。
 
@@ -1376,7 +1376,7 @@ help_query(definition, {
 - query-error は合法な definition に対する capability 入力の失敗であり、definition-error と位相を混ぜない
 - capability が読むのは全 installer の宣言層寄与を適用し終えた宣言層。global / alias / inheritable の宣言的コピーを含み、lowered 産物は読まない
 
-help type 発火後のアプリ orchestration は §14.1 の内部セルを capability 入力へ写す。`#help` が立てば capability を呼び、`#help_category` / `#help_all_category` から `category_mode`、`#help_tree` から `depth` を決める。`#help_show_hidden` は model 取得条件を変えず renderer policy へ渡す。
+help type 発火後のアプリ orchestration は §14.1 の内部セルを capability 入力へ写す。`#help` が立てば capability を呼び、`#help_category` / `#help_all_category` から `category_mode`、`#help_tree` から `depth` を決める。`#help_show_hidden` は model 取得条件を変えず renderer policy へ渡す。`path` だけは内部セルに対応物を持たず、**パースが選択した最深の command scope** から決まる (EXK-Q3、§14.1) — 内部セルは「help が発火したか」の 1 実体 (どの scope の入口から発火しても同じセルへ合流) であって「どの scope の help か」を保持しないため。導出手段 (ParserContext の選択情報を読む / 結果を辿る等) は縛らない。
 
 **help model** は表示文言でなく、レンダラが policy を選ぶための構造素材を完全に保持する:
 
