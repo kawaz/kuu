@@ -53,11 +53,28 @@ spec 側の根拠 (worker が全文書走査で確認、commands を除外する
 - DESIGN §2.6 / DR-052 §3 「結果キーを持つスコープ生成要素 (**command 含む**) は、選ばれたら子が全部 absent でも空 kv `{}` を持つ」= 選択 = 値の発生 = 露出
 - DESIGN §15.5 / DR-073 §1 は「**相異なる 2 要素**が同一入力で共露出」としか書かず要素種別を限定していない
 
+### 決定的な前提: DR-073 の担体モデルに command の席が構造的に無い
+
+2 つの規定が正面からぶつかっている (逐語確認済み):
+
+- **DR-073 §2**: claimants の値は「**実体 entity の name**」。「実体 entity の name が解釈間で一意な識別子になる」
+- **DR-063 §3**: 「**command は親 entities に実体を持たない**」(スコープ名はトリガ衛星の exact 綴りとして配置で表現される。結果オブジェクトの `{serve: {}}` presence は実行時 result builder の関心)
+
+⇒ **command は entity ではないので claimants の値になれない**。ギャップ B は「実装の拾い漏らし」ではなく **spec の担体モデルに最初から席が無い**。したがって (a) は実装修正だけでは spec 準拠にならず、**DR-073 §2 の「実体 entity」を「結果キーを占有する要素」へ広げる改訂が必須**。
+
 ### 選択肢
 
-- (a) **検出を広げる** — binding の scope セグメント由来の claim を登録する (~30-40 行)。ただし `apply_export_keys` のセグメント解決 (`Null` の畳み込みによるパス算術、`#k` インデックスの素通し) を完全にミラーしないと path がズレる。`promote_collision_ambiguous_from` の drop 判定も拡張が要る
-- (b) **spec 側で commands を衝突対象から除外する** — 除外を書くだけでは終わらず、同じキーに bool と scope object が来たときの **result マージ規則**を新規規定する必要がある。結果キーの静的型が入力依存で `bool | object` になり DESIGN §2.6 の型導出が破綻する。DESIGN §2.4 とも正面から矛盾する
-- **統括推し: (a)**。worker も同意見で (b) は不採用推奨。既存 fixture への影響はゼロ、**壊れるのは kuu-cli 自身の定義のみ** (global `--help` option と `help` command が両方キー `help`。ambiguous になるのは `kuu help --help` / `kuu --help help` の 2 形だけで、定義側に `export_key` を 1 行足せば解消。副産物として kuu-cli の走査回避コードが不要になる)
+- (a) **検出を広げる + DR-073 §2 を改訂** — binding の scope セグメント由来の claim を登録 (実装 ~30-40 行、ただし `apply_export_keys` のセグメント解決 (`Null` 畳み込みのパス算術、`#k` 素通し) を完全にミラーしないと path がズレる)。加えて上記 DR 改訂
+- (b) **spec 側で commands を衝突対象から除外する** — **改訂が 3 箇所に増える**。重複キー result を合法化する方向なので: ① DR-063 §4 (「JSON object は unordered」= キー一意前提) ② CONFORMANCE §3 に重複キーの比較規約を新設 (fixture の JSON object リテラルでは**書けない形**をどう expect するかの発明が要る) ③ DR-109 §2 (envelope は fixture expect と厳密一致) の緩和。加えて結果キーの静的型が入力依存で `bool | object` になり DESIGN §2.6 の型導出が破綻、DESIGN §2.4 とも矛盾
+- **統括推し: (a)**。worker も同意見で (b) は不採用推奨。(a)/(c) なら ambiguous に落ちて**重複キー result 自体が生成されない**ので上記 3 箇所は無傷。既存 fixture への影響はゼロ、**壊れるのは kuu-cli 自身の定義のみ** (global `--help` option と `help` command が両方キー `help`。ambiguous になるのは `kuu help --help` / `kuu --help help` の 2 形だけで、定義側に `export_key` を 1 行足せば解消。副産物として kuu-cli の走査回避コードが不要になる)
+
+### EXK-Q1 との結合 (裁定時に一緒に見てほしい点)
+
+Q1(c) (claimants の値を修飾 / `id` 軸を一意識別子に昇格) を採るなら、**Q2(a) の担体拡張は同じ改訂に乗る** — DR-073 §2 の改訂 1 本で両方が片付く。Q1(a)+Q2(a) だと改訂は「definition-error 規定」と「担体拡張」の 2 本になる。Q1(c) は wire / 全実装 / 全 fixture 波及でコストが高いので、**改訂本数 vs 波及範囲**のトレードオフとして裁定してほしい。
+
+### 補足: 重複キー result の spec 上の位置づけ (調査結果)
+
+`ResultValue::Object` が同名キーを 2 エントリ持てるのは **実装都合であって spec 規定ではない**。spec は result を「キーが一意な JSON object」としてモデル化している (DR-063 §4「JSON object は unordered」/ CONFORMANCE §3 の key ベース対応付け / DESIGN §2.4「結果キー」は集合の語彙)。そして重複キー result を JSON へ落とす規則も**無い** — DR-109 §2 が要求する「fixture expect と厳密同形」は、fixture が JSON object リテラルである以上**充足不能**。つまりこの断面は「fixture が未整備」ではなく「**通る expect が書けない = 到達してはいけない状態**」。なお kuu.mbt の conformance runner (`render_rval_sorted`) は dedup せずソートするので、fixture を書けば必ず mismatch する (盲目ではないが緑にする書き方が無い)。
 
 ## 👺EXK-Q3: help_query の `path` 導出規則を spec に書くか、どこまで書くか
 
@@ -73,4 +90,5 @@ kawaz 整理 (2026-07-25): 「パース後の help 機構の発火フラグと�
 
 - (a) **写像表に 1 行足すだけ** — 「`path` = パースが選択した最深の command scope」。導出手段はアプリの自由
 - (b) **導出手段まで書く** — 加えて「result のキーを辿るのではなく ParserContext の selected 情報から取る」を推奨として明記。**result 経由は露出キー衝突に巻き込まれる**が ParserContext 経由なら結果キーの綴りと independent なので、kuu-cli が踏んだ事故を構造的に防げる
-- **統括推し: (b)** — EXK-Q1/Q2 をどう裁いても、result のキーは「表示のための射影」であって scope 判定の一次情報ではない。一次情報を指す規定にしておけば、衝突裁定の結果に依存しない
+- **統括推し: (b)** — EXK-Q1/Q2 をどう裁いても、result のキーは「表示のための射影」であって scope 判定の一次情報ではない。一次情報を指す規定にしておけば、衝突裁定の結果に依存しない。**spec 側の裏付け**: DR-063 §3 が「結果オブジェクトの `{serve: {}}` presence は実行時 result builder の関心」と述べており、「result のキーは scope 判定の一次情報ではない」は元々の spec の立場。(b) はそれを明文化するだけで新しい制約を課さない
+- **未確認事項** (裁定前に確認が要る): ParserContext の `selected` に相当する構造が spec 上どこまで確定しているか。DESIGN §0.3 は「absent 要素のメタ (committed / selected / source) は ParserContext から引ける」とだけ書き、`selected` の型・粒度・scope path の表現形は追えていない。(b) を採るならここの規定有無の確認が必要
