@@ -17,7 +17,6 @@ active な issue の一覧。close 済みは archive/ にあり、ここには�
 | 2026-07-25 | design | open | [closed-enum-open-form-completion-gap](./2026-07-25-closed-enum-open-form-completion-gap.md) | closed enum + 開放形の混在値 (default|all|named:X) が補完候補として提示できない |
 | 2026-07-25 | design | open | [fixture-envelope-shared-runner](./2026-07-25-fixture-envelope-shared-runner.md) | fixture envelope を第三者が再利用できる共通 runner/runbook 資産が無い |
 | 2026-07-22 | task | open | [dr-116-completion-generator-implementation](./2026-07-22-dr-116-completion-generator-implementation.md) | DR-116 (canonical 補完生成器の既定 policy) の実装 — 生成器・product test 未実装 |
-| 2026-07-25 | docs | open | [fixture-why-slice-poc-origin-note-cleanup](./2026-07-25-fixture-why-slice-poc-origin-note-cleanup.md) | fixture why に残る slice PoC 由来注記 (65 ファイル) を一括処理する、方針裁定要 |
 | 2026-07-25 | docs | open | [dr-body-implementation-specific-names-cleanup](./2026-07-25-dr-body-implementation-specific-names-cleanup.md) | DR-057/076/078/105/106 本文に残る実装固有名 (kuu.mbt/installer.mbt/slice PoC) の整理 |
 
 <!--
