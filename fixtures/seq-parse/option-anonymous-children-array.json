@@ -1,5 +1,5 @@
 {
-  "why": "対照 (`option-named-children-kv.json` の裏面): 結果キーを持つ子が 1 つも無い seq は DESIGN §5.1 の「子の値の配列」のまま — kv 畳み込みは「結果キーを持つ子が並ぶとき」の規則 (DESIGN §2.5) であって seq という構造そのものの性質ではない。この配列形が DR-052 §2 の『seq 文脈では値が親の配列要素として残る (配列の形は変わらない)』が指す面であり、DR-044 §2 の from_entries entries 用法 (`[[k,v],...]`) が乗る座でもある。",
+  "why": "対照 (`option-named-children-kv.json` の裏面): 結果キーを持つ子が 1 つも無い seq は DESIGN §5.1 の「子の値の配列」のまま — kv 畳み込みは「結果キーを持つ子が並ぶとき」の規則 (DESIGN §2.5) であって seq という構造そのものの性質ではない。この配列形が DR-052 §2 の『seq 文脈では値が親の配列要素として残る (配列の形は変わらない)』が指す面であり、DR-044 §2 の from_entries entries 用法 (`[[k,v],...]`) が乗る座でもある。 なお配列であることは要素数が可変という意味ではない — 宣言した子の数がそのまま消費点の数であり、足りなければその消費点が `missing_operand` で失敗する (DESIGN §15.1 の全消費契約、同型の pin は `repeat-parse/group-trailing-positional.json :: single-token-both-unsatisfiable`)。2 個目を任意にしたいなら利用者が `optional` で書く。",
   "query": "parse",
   "definition": {
     "options": [
@@ -21,22 +21,6 @@
       "expect": {
         "outcome": "success",
         "result": {"pair": ["/a", "1"]}
-      }
-    },
-    {
-      "id": "short-of-declared-children-is-an-error",
-      "why": "`--pair /a`: **配列だからといって要素数が可変になるわけではない**。宣言した子の数は消費点の数であり、足りなければその消費点が `missing_operand` で失敗する (DESIGN §15.1 の全消費契約)。2 個目を任意にしたいなら利用者が `optional` (= repeat {min:0,max:1}、DR-043) で明示的に書く — kuu が要素数を見て後半を勝手に省略可能にすることはない。`option-anonymous-single-child-array.json` の「1 子の定義に 1 トークン → 1 要素配列」と対にして読むこと (**定義の子の数**で決まるのであって、与えたトークン数で配列長が伸縮するのではない)。",
-      "args": ["--pair", "/a"],
-      "expect": {
-        "outcome": "failure",
-        "errors": [
-          {
-            "args_pos": 2,
-            "kind": "parse",
-            "reason": "missing_operand",
-            "path": ["pair", "#1"]
-          }
-        ]
       }
     }
   ]
