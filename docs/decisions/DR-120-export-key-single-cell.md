@@ -79,7 +79,43 @@ mapped 経由 (`export_key` 明示) だったかを区別しない (EXK-Q4)。
 - **粒度**: 衝突に関与する要素ごとに 1 件 (`element` = 当該要素) を全列挙する (DR-054 §4 の全列挙
   原則。比較は `(element, kind)` の集合なので、衝突グループ単位の代表 1 件にすると衝突相手が
   expect から読めなくなる)
-- **hint**: link / or / `export_key` による分離のいずれへ寄せるかを示す (DESIGN §13.5 の「次の手」型)
+- **hint**: DESIGN §13.5 の「次の手」型。**どの手段を提示するかは衝突要素の値空間で決まる** (下記)
+
+#### hint は値空間で link / or を出し分ける
+
+hint が提示する解決手段は、§2 の 3 手段対応表をそのまま利用者へ返す形にする:
+
+| 衝突した値セルの値空間 | 提示する手段 | 読み取る意図 |
+|---|---|---|
+| 一致する | `link` | 同じ値を複数の入口から設定したい (入口 N : セル 1) |
+| 一致しない | `or` | 1 つの結果キーに複数のタイプを相乗りさせたい (セル 1 : 枝 N) |
+
+- 3 要素以上の衝突では、**全要素の値空間が一致する場合にのみ** link 側とする
+- どちらの場合も「そもそも別のキーにしたい」ための `export_key` 分離を副次の道として添えてよい。
+  型からは判別できないので出し分けの条件には使わない
+
+**値空間の判定基準**: type 参照名の綴りではなく、**type プリセット展開後 (LOWERING §A.5) の値セルの型**で
+見る。`flag` と `bool` は §A.5 で同じ bool セルへ落ちるので一致、`count` と `number` も共に number セルなので
+一致する — 後者は DR-029 が canonical な link 例として挙げた `-vvv` (count) と `--log-level N` (number) その
+ものであり、綴りで判定すると本来 link が正解の組に or を勧めることになる。link が成立する条件は
+「合流先のセルが 1 つの値空間を持つ」ことであって、入口のパース方法が同じであることではない。
+
+**文言は規範にしない**。規範化するのは「どの手段を提示するか」= 素材までで、綴り方はレンダラ / 実装の
+関心に置く。根拠は 3 つ:
+
+- DR-054 §射程外が「各 Error message の文言はレンダラ / DX の関心、hint の必須性のみ規定」と既に線を
+  引いている
+- fixture の比較単位は `(element, kind)` の集合で message / hint を比較しない (DR-082 §1) ため、文言を
+  規範化しても conformance で検証できない = 実効を持たない規範になる
+- 「素材はフィールド、文言はレンダラ」は kuu の既定線 (DR-053 / DR-113 §1)
+
+**文言の水準** (規範ではなく、利用者の語彙で書くことの例示): hint は定義に書く語 (`link` / `or` /
+`export_key`) と直し方を示し、内部語彙 (値セル / 実体 / 宣言層 / claimants) は出さない。
+
+- 値空間が一致: 「`--json` と `--yaml` が同じ結果キー `format` を作っています。同じ値を両方から
+  設定したいなら、片方に `link: "json"` を書いてください」
+- 値空間が不一致: 「`--color` (文字列) と `--color` (数値 3 つ) が同じ結果キー `color` を作っています。
+  1 つのキーで両方の書き方を受けたいなら、`color` を 1 つにまとめて `or` で 2 つの形を並べてください」
 
 ### 6. 検査は構造的で、経路の到達可能性を見ない
 
@@ -256,7 +292,8 @@ DESIGN §2.6 の型導出が破綻する。
 ## 射程外
 
 - lint / diagnose の出力形式・チャネル (DR-054 §射程外と同じ)
-- error message の文言 (hint の必須性のみ規定)
+- error message / hint の**文言** — 提示する手段の選択規則は §5 で規範化するが、綴り方はレンダラ /
+  実装の関心 (DR-054 §射程外の継承)
 - 綴り (トリガ literal) 軸の重複検査 — 静的 warn + 実行時 ambiguous のまま (§7)
 - 本 DR で到達不能になる既存規定 (UX-Q7R / EXP-Q1 の共露出 cell 規定、DR-118 §3 規則 2 など) の
   最終的な去就 — 波及の棚卸しとして列挙するに留め、各 DR の改訂は後続判断
@@ -308,8 +345,8 @@ DESIGN §2.6 の型導出が破綻する。
 ### 実装
 
 - **kuu.mbt** — `parse_definition` に `export-key-collision` 検査を追加 (宣言層寄与適用後の面で
-  結果スコープごとに露出キーを集計)、claimants 機構と衝突の実行時検出を撤去、conformance runner の
-  ambiguous 比較から claimants を落とす
+  結果スコープごとに露出キーを集計)、hint は衝突要素の値空間で link / or を出し分ける (§5)、
+  claimants 機構と衝突の実行時検出を撤去、conformance runner の ambiguous 比較から claimants を落とす
 - **kuu-cli 自身の定義** — global `--help` option と `help` command が root スコープでキー `help` を
   占有しており definition-error になる。どちらかに `export_key` を割る (副産物として走査回避コードが不要になる)
 - **issue** — `docs/issue/2026-07-25-expose-key-collision-option-command-silent-loss.md` は本 DR で解消
@@ -322,7 +359,9 @@ DESIGN §2.6 の型導出が破綻する。
 - DR-029 (link = 値同期、1 実体 : N 参照) / DR-057 (alias — 結果キーは canonical のみ) / DR-030
   (実体だけノード) — 正当な書き方の供給元 (§2)
 - DR-052 (結果キー軸の一本化 — 露出キーの解決規則、command の presence marker) / DR-046 (名前の軸分解)
-- DR-054 (definition-error の境界基準 — Error / warn の線引きと kind 列挙、§5/§6)
+- DR-054 (definition-error の境界基準 — Error / warn の線引き・kind 列挙・hint の座席と文言の射程外、§5/§6)
+- DR-082 §1 (definition_error fixture — 比較単位は `(element, kind)`、message / hint は非比較。hint の
+  文言を規範化しない根拠、§5) / LOWERING §A.5 (type プリセット展開 — 値空間判定の基準、§5)
 - DR-063 §4 (JSON object は unordered = キー一意前提) / DR-053 (パース結末の構造)
 - DR-064 §5 (dd は値セルを持たない — 非参加の根拠、§4)
 - DR-059 §5 / DESIGN §11.3 (inheritable の祖先 write-target — 参加の根拠、§4)

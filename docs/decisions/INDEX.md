@@ -37,7 +37,7 @@
 - [DR-033](DR-033-lexical-scope-equals-name-scope.md): lexical スコープ = name が作るスコープ
 - [DR-046](DR-046-name-axes-decomposition.md): name の軸分解 — id / 結果キー / value_name / display_name の目的別軸、name はデフォルト供給源 (nameless への ref/link が可能に)
 - [DR-052](DR-052-export-key-unification.md): 結果キー軸の一本化 — export_key: string | null (export bool 廃止)、null = nameless 同化の透過 (値は流れる)、選ばれた name スコープは空でも `{}`
-- [DR-120](DR-120-export-key-single-cell.md): 露出キーに対応する値セルはちょうど 1 つ (EXK-Q1〜Q4) — 1 結果スコープで同一露出キーへ解決する別セルが 2 つ以上ある定義は definition-error `export-key-collision` (DR-021 の実行時検査 / DR-073 の claimants 担体を置換)。判定は export_key 適用後の解決キー文字列で行い identity / mapped を区別しない、スコープ生成要素 (command 含む) も結果キーを占有する要素として参加、link / alias 参照ノード・dd・export_key null は非参加。検査は構造的で経路の到達可能性を見ない (or の別枝・排他 command・exclusive_group 兄弟も対象)。正当な用途は link (入口 N : セル 1) と or 席 (セル 1 : 枝 N) で書け、綴り軸の重複は従来どおり warn + 実行時 ambiguous のまま
+- [DR-120](DR-120-export-key-single-cell.md): 露出キーに対応する値セルはちょうど 1 つ (EXK-Q1〜Q4) — 1 結果スコープで同一露出キーへ解決する別セルが 2 つ以上ある定義は definition-error `export-key-collision` (DR-021 の実行時検査 / DR-073 の claimants 担体を置換)。判定は export_key 適用後の解決キー文字列で行い identity / mapped を区別しない、スコープ生成要素 (command 含む) も結果キーを占有する要素として参加、link / alias 参照ノード・dd・export_key null は非参加。検査は構造的で経路の到達可能性を見ない (or の別枝・排他 command・exclusive_group 兄弟も対象)。正当な用途は link (入口 N : セル 1) と or 席 (セル 1 : 枝 N) で書け、綴り軸の重複は従来どおり warn + 実行時 ambiguous のまま。hint は衝突要素の値空間で出し分ける (一致 → link / 不一致 → or) — 判定は type プリセット展開後の値セルの型で綴りでは見ない (count と number は一致 = DR-029 の canonical link 例)、規範化するのは提示する手段までで文言はレンダラの関心 (DR-082 §1 で hint は非比較)
 
 ## 配置 / options / positionals / commands
 
