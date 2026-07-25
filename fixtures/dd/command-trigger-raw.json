@@ -1,0 +1,50 @@
+{
+  "why": "command 子スコープ内の dd 発火後は継続全体が背骨なしの raw 域であり、子スコープが閉じても祖先 command の greedy トリガを再発火させないことを固定する (DR-041 §4「dd 継続は背骨なし (一体消費、getopt 同型)」/ DESIGN §15.8、DR-090 §1 の severed 後 greedy 面 off)。dd が捕捉済み親 continuation の severed を伝播し損ねると、子 scope の閉じ際に親の greedy 面が復活し raw 域先頭が command トリガとして再解釈される (= 実測された ambiguous 2 本)。dogfooding (kuu-cli 自身の parse サブコマンドに自分自身の argv を食わせる形) で顕在化した断面で、既存 fixtures/dd/ は raw token と command trigger の同綴りを pin していなかった。",
+  "query": "parse",
+  "definition": {
+    "commands": [
+      {
+        "name": "run",
+        "type": "command",
+        "options": [
+          { "name": "flag_a", "type": "flag", "long": true },
+          { "name": "--", "type": "dd" }
+        ],
+        "positionals": [
+          { "name": "definition", "type": "string", "required": true },
+          { "name": "args", "type": "string", "repeat": { "min": 0 } }
+        ]
+      }
+    ]
+  },
+  "cases": [
+    {
+      "id": "same-command-spelling-after-dd-stays-raw",
+      "why": "最初の run で子 scope に入り、-- 以降の run/FILE2/--/z は dd の内部継続として全て raw。2 個目の run は祖先 command トリガを再発火せず args の先頭要素、2 個目の -- も dd を再発火せず args のリテラル要素になる。",
+      "args": ["run", "--flag-a", "FILE", "--", "run", "FILE2", "--", "z"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          { "entity": "flag_a", "op": "set", "operand": true, "source": "cli" },
+          {
+            "entity": "definition",
+            "op": "set",
+            "operand": "FILE",
+            "source": "cli"
+          },
+          { "entity": "args", "op": "set", "operand": "run", "source": "cli" },
+          { "entity": "args", "op": "set", "operand": "FILE2", "source": "cli" },
+          { "entity": "args", "op": "set", "operand": "--", "source": "cli" },
+          { "entity": "args", "op": "set", "operand": "z", "source": "cli" }
+        ],
+        "result": {
+          "run": {
+            "flag_a": true,
+            "definition": "FILE",
+            "args": ["run", "FILE2", "--", "z"]
+          }
+        }
+      }
+    }
+  ]
+}
