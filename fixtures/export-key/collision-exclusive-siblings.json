@@ -1,0 +1,23 @@
+{
+  "why": "検査は構造的で、経路の到達可能性を見ない (DR-120 §6): 同一結果スコープに同じ露出キーの別セルがあれば、それらが実行時に同時に露出しうるかを問わず error になる。`exclusive_group` で縛った兄弟は「定義上ありえても実用時点では同時に使われない」構成の最たるもので、旧規範 (DR-021) が実行時 ambiguous に委ねる根拠にしていた形 — DR-120 はここを逆転させ、静的に弾く。到達可能性の判定は経路解析であり DR-054 §2 が Error 層から明示的に外している層なので、構造カウント (DESIGN §2.4 の露出規則を回すだけ) で閉じる側に倒す。排他 2 枝から同じキーを埋めたい設計は 1 セルを or 席にするか共有実体へ link することで表現でき、表現力は失われない (§6)。",
+  "query": "definition_error",
+  "definition": {
+    "options": [
+      {"name": "json", "type": "flag", "long": true, "export_key": "format", "exclusive_group": ["fmt"]},
+      {"name": "yaml", "type": "flag", "long": true, "export_key": "format", "exclusive_group": ["fmt"]}
+    ]
+  },
+  "cases": [
+    {
+      "id": "exclusive-siblings-still-collide",
+      "why": "`--json` と `--yaml` は同じ exclusive_group `fmt` に属し、制約層が同時発火を禁じている (DR-047) ため露出キー `format` へ実際に共露出することはありえない。それでも 2 つの別セルが同じ露出キーへ解決する構造そのものが違法なので definition-error — 制約グラフの意味を読んで error を抑制する実装 (= 到達可能性を見る実装) をここが落とす。",
+      "expect": {
+        "outcome": "definition-error",
+        "errors": [
+          {"element": "json", "kind": "export-key-collision"},
+          {"element": "yaml", "kind": "export-key-collision"}
+        ]
+      }
+    }
+  ]
+}

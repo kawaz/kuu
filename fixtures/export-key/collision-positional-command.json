@@ -1,0 +1,30 @@
+{
+  "why": "collision-option-command.json の対 (DR-120 §4): 参加条件は「露出キーを持ち値セルを持つ」ことであって、その要素が option 面か positional 面か (DR-018 の配置による役割決定) には依らない。command 側は export_key 明示 (mapped 解決) で positional の identity キーへ寄せた組にしており、§3 の「解決経路の種類を区別しない」がスコープ生成要素にも同じく効くこと、および element が別名なので errors の 2 件が衝突相手の対として読めることを併せて固定する。",
+  "query": "definition_error",
+  "definition": {
+    "positionals": [
+      {"name": "target", "type": "string"}
+    ],
+    "commands": [
+      {
+        "type": "command",
+        "name": "build",
+        "export_key": "target",
+        "options": [{"name": "fast", "type": "flag", "long": true}]
+      }
+    ]
+  },
+  "cases": [
+    {
+      "id": "positional-and-command-share-key",
+      "why": "positional `target` (identity 解決で露出キー \"target\") と command `build` (export_key: \"target\" で mapped 解決) が root 結果スコープで同じキーを名乗る → definition-error。command 配下の `fast` は別スコープ (build スコープ) の住人なので検査対象外 — errors がちょうど {target, build} の 2 件であることが結果スコープ境界の pin も兼ねる (DR-120 §7「スコープ階層が違えば対象外」)。",
+      "expect": {
+        "outcome": "definition-error",
+        "errors": [
+          {"element": "target", "kind": "export-key-collision"},
+          {"element": "build", "kind": "export-key-collision"}
+        ]
+      }
+    }
+  ]
+}

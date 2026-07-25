@@ -1,10 +1,10 @@
 {
-  "why": "DR-104 §3 明確化 note: 6 フィールド完全一致 (spelling/is_value/ty/origin/term/meta) だが completer が食い違う値位置候補の merge 規則を pin する。build/build という同名の 2 つの独立 command 定義がそれぞれ独自の target positional (completer 違い) を持つ — 参照実装は completer なしへ畳む。completer-merge-match.json (一致時に保持) と対。同名 sibling command は path 表現 (scope 名の列) で区別できない (DR-067 §1 が合法化する同名重複の兄弟版) ため、実装は Entity 収集時点で衝突検出する形になっている。",
+  "why": "DR-104 §3 明確化 note: 6 フィールド完全一致 (spelling/is_value/ty/origin/term/meta) だが completer が食い違う値位置候補の merge 規則を pin する。build/build という同名の 2 つの独立 command 定義がそれぞれ独自の target positional (completer 違い) を持つ — 参照実装は completer なしへ畳む。completer-merge-match.json (一致時に保持) と対。同名 sibling command は path 表現 (scope 名の列) で区別できない (DR-067 §1 が合法化する同名重複の兄弟版) ため、実装は Entity 収集時点で衝突検出する形になっている。同名 sibling command は結果キー軸では相異なる export_key を割って DR-120 §1 を満たす (name はトリガ綴りを保つ、DR-052 §2) — 検証したいのは綴り軸の重複であり結果キーの重複ではない。",
   "query": "complete",
   "definition": {
     "commands": [
-      {"type": "command", "name": "build", "positionals": [{"name": "target", "type": "string", "completer": "files"}]},
-      {"type": "command", "name": "build", "positionals": [{"name": "target", "type": "string", "completer": "urls"}]}
+      {"type": "command", "name": "build", "export_key": "build_files", "positionals": [{"name": "target", "type": "string", "completer": "files"}]},
+      {"type": "command", "name": "build", "export_key": "build_urls", "positionals": [{"name": "target", "type": "string", "completer": "urls"}]}
     ]
   },
   "cases": [

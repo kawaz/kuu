@@ -1,0 +1,29 @@
+{
+  "why": "スコープ生成要素 (command) も露出キーを占有する 1 セルとして検査に参加する (DR-120 §4): スコープ生成は値の発生であり、選ばれたら子が全部 absent でも空 kv {} を持つ (DESIGN §2.6 / DR-052 §3)。option と command が同じ結果キーを名乗る組は、旧規範では検出の入力空間そのものに command が居らず (command は entity ではない、DR-063 §3) option の値が黙って消える経路になっていた — DR-120 の由来 issue が実測したギャップ。綴り (トリガ literal) 軸では `--check` と `check` は別物で衝突しない (DR-120 §7: 綴り軸は本 DR の対象外) が、結果キー軸では両者とも `check` を名乗るので違法。相異なる export_key を割れば両立する。",
+  "query": "definition_error",
+  "definition": {
+    "options": [
+      {"name": "check", "type": "flag", "long": true}
+    ],
+    "commands": [
+      {
+        "type": "command",
+        "name": "check",
+        "options": [{"name": "deep", "type": "flag", "long": true}]
+      }
+    ]
+  },
+  "cases": [
+    {
+      "id": "option-and-command-share-key",
+      "why": "option `check` (identity 解決で露出キー \"check\") と command `check` (同じく identity 解決、presence marker として結果キー \"check\" を占有) が root 結果スコープで同じキーを名乗る → definition-error。errors は衝突に関与する 2 要素へ 1 件ずつ (§5 粒度) — element はどちらも \"check\" なので、集合比較は「同一 element の 2 件」をちょうど要求する (1 件へ畳む実装を落とす)。",
+      "expect": {
+        "outcome": "definition-error",
+        "errors": [
+          {"element": "check", "kind": "export-key-collision"},
+          {"element": "check", "kind": "export-key-collision"}
+        ]
+      }
+    }
+  ]
+}

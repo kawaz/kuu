@@ -626,7 +626,7 @@
         "interpretations": {
           "type": "array",
           "items": {
-            "description": "全解釈の 1 要素。結果オブジェクト形のビュー直書き、または claimants 付き `{result, claimants}` の組 (DR-073)。",
+            "description": "全解釈の 1 要素 — 結果オブジェクト形のビュー直書き。ambiguous は構造的に複数の完全経路が立つ場合に限られる (DR-038) ため、解釈は結果ビューだけで区別できる。",
             "type": "object"
           },
           "description": "全解釈の列挙 (集合比較、列挙順は非規範、CONFORMANCE §2/§3)。実例上 outcome のみで interpretations を省略する簡略形も存在する (fixtures/constraints-parse/requires-bool-target.json — 「ambiguous になること」だけを固定し解釈の中身は検証しない意図、CONFORMANCE §3 のフィールド省略規約の拡張運用) — required にしない。"
@@ -678,9 +678,10 @@
                   "circular-ref",
                   "zero-progress",
                   "config-cycle",
-                  "invalid-argument"
+                  "invalid-argument",
+                  "export-key-collision"
                 ],
-                "description": "DR-054 §4 の kind 列挙 (DR-085 訂正で invalid-argument 追加)。"
+                "description": "DR-054 §4 の kind 列挙 (DR-085 訂正で invalid-argument 追加、DR-120 §5 で export-key-collision 追加)。"
               }
             },
             "required": ["kind"],

@@ -1,0 +1,37 @@
+{
+  "why": "単一実体 + export_key の resolve 相検証層 (DR-120 §波及「失われる pin と退避先」): 旧 collision.json が衝突定義に相乗りさせて持っていた 2 つの pin — (1) 射影後キーの下で sources が値源を示す = resolve 相を実行しない実装を落とす検証層、(2) 未発火 flag は absent にならず preset default false を持ち sources は default (DR-051 §2 / LOWERING §A.5) — を、衝突と無関係な単一実体の定義へ移したもの。export_key は結果キー軸の指定であって値源ラダーにも preset default 同梱にも関与しない (DR-052 §1、rename.json の『パース不変・結果キーのみ変化』の flag 版)。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {"name": "verbose", "type": "flag", "long": true, "export_key": "v"}
+    ]
+  },
+  "cases": [
+    {
+      "id": "unfired-preset-default-source",
+      "why": "args 空: flag は preset が default false を同梱する (DR-051 §2) ので absent にならず、結果 cell は default の false で埋まる。射影後キー v の下で result {v:false} / sources {v:\"default\"}。effects は空 (default は発火ではない)。",
+      "args": [],
+      "env": {},
+      "expect": {
+        "outcome": "success",
+        "effects": [],
+        "result": {"v": false},
+        "sources": {"v": "default"}
+      }
+    },
+    {
+      "id": "fired-cli-source",
+      "why": "`--verbose`: 値セル verbose が cli 発火で true を得る (effects の entity は射影前の cell name)。result / sources はともに射影後キー v の下に現れ、sources {v:\"cli\"} が resolve 相の実行とその由来を示す — sources を持たない expect では resolve 相を実行しない実装も green になれる穴が残る。",
+      "args": ["--verbose"],
+      "env": {},
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "verbose", "op": "set", "operand": true, "source": "cli"}
+        ],
+        "result": {"v": true},
+        "sources": {"v": "cli"}
+      }
+    }
+  ]
+}

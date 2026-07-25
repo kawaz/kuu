@@ -1,25 +1,25 @@
 {
-  "why": "after 整合フィルタは `Success`/`Ambiguous` なら残し `Failure` なら除外する (DR-104 §5) — `Ambiguous` を成功側として扱うのは `Success` とは独立した設計判断であり、`fixtures/complete/after-filter.json` の 10 ケースは全て `Success`/`Failure` の対立のみで `Ambiguous` 生存を検証しない (codex レビュー #2 M-10 の反映、統括検証 2026-07-14)。export_key 衝突 (DESIGN §15.5、`fixtures/export-key/collision.json` の parse 輪郭を流用) を使い、候補採用後の完全経路が ambiguous に解決するケースでもその候補が生存することを固定する。",
+  "why": "after 整合フィルタは `Success`/`Ambiguous` なら残し `Failure` なら除外する (DR-104 §5) — `Ambiguous` を成功側として扱うのは `Success` とは独立した設計判断であり、`fixtures/complete/after-filter.json` の 10 ケースは全て `Success`/`Failure` の対立のみで `Ambiguous` 生存を検証しない (codex レビュー #2 M-10 の反映、統括検証 2026-07-14)。Ambiguous の供給源には構造的 ambiguity (short cluster の分割点、DR-041 §3 / DR-038、`matcher-readings/cluster-split-string.json` と同じ輪郭) を使う — 露出キー衝突は DR-120 で definition-error になり ambiguous を供給しなくなったため、供給源を構造側へ差し替えた (検証意図そのものは本 DR と無関係で維持が必要)。",
   "query": "complete",
   "definition": {
     "options": [
       {"name": "c", "type": "flag", "long": true},
-      {"name": "a", "type": "flag", "long": true, "export_key": "x"},
-      {"name": "b", "type": "flag", "long": true, "export_key": "x"}
+      {"name": "s", "type": "string", "short": "s"},
+      {"name": "x", "type": "flag", "short": "x"}
     ]
   },
   "cases": [
     {
       "id": "ambiguous-completion-still-survives-after-filter",
-      "why": "args_before 空、args_after: [\"--b\"]。候補 --c を採用すると経路 [\"--c\",\"--b\"] は b のみ発火し export_key x への衝突なしで Success — 生存する。候補 --a を採用すると経路 [\"--a\",\"--b\"] は a と b が両方発火し export_key x へ共露出、DESIGN §15.5 の実行時衝突検査により Ambiguous になる — それでも DR-104 §5「Success/Ambiguous なら残す」により --a は候補から除外されない。候補 --b を採用すると経路 [\"--b\",\"--b\"] は非 multiple flag の冪等な重複発火 (last-wins、M-8 由来の意味論) で b のみ発火 (a は未発火) → Success — 生存する。3 候補とも生存するが、--a のみが Ambiguous 経由での生存であることが、Success 分岐のみ実装した誤り (Ambiguous を落とす実装) を検出する。",
+      "why": "args_before 空、args_after: [\"-sax\"]。`-sax` は (A) s が残余 `ax` を丸取りする読みと (B) s が `a` を取り末尾 `x` が flag 発火する読みの 2 経路がともに全消費で完成するため、候補を採用した後の完全経路が Ambiguous になる (DR-038)。それでも DR-104 §5「Success/Ambiguous なら残す」により候補は除外されない。Ambiguous を落とす実装 (Success 分岐のみ書いた実装) は候補の消失として現れる。",
       "args_before": [],
-      "args_after": ["--b"],
+      "args_after": ["-sax"],
       "expect": {
         "outcome": "complete",
         "candidates": [
           {"spelling": "--c", "is_value": false, "origin": "c", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}},
-          {"spelling": "--a", "is_value": false, "origin": "a", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}},
-          {"spelling": "--b", "is_value": false, "origin": "b", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}}
+          {"spelling": "-s", "is_value": false, "origin": "s", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}},
+          {"spelling": "-x", "is_value": false, "origin": "x", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}}
         ]
       }
     }

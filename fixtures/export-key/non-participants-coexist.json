@@ -1,0 +1,32 @@
+{
+  "why": "露出キーを占有しない要素 (DR-120 §4「占有しない」列) は、同じ綴り・同じキーの周りに何本並んでも definition-error を起こさない — 過剰検出しない側の pin。3 軸を 1 定義に同居させる: (1) alias 要素は値が canonical の実体セルへ流れ自前のセルを持たない (DR-057「結果キーは canonical のみ」) ので、canonical と同名の entry-copy が宣言層に増えても衝突しない、(2) `export_key: null` の要素は結果キー軸を持たない透過要素 (DR-052 §2) なので、その name と同じ文字列を他要素が export_key に取っても衝突しない (name を露出キーとみなす素朴な実装をここが落とす)、(3) dd は値セルも子も持たない (DR-064 §5) ので `export_key` を書いても結果に何も現れず、他要素のキーと同綴りでも衝突しない。定義が受理されて parse が走ることそのものが pin であり、reject されると decode 段で skip されて skip 台帳の UNEXPECTED SKIP として落ちる。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {"name": "keep", "type": "flag", "long": true},
+      {"alias": "keep", "name": "retain"},
+      {"name": "loud", "type": "flag", "long": true, "export_key": null},
+      {"name": "quiet", "type": "flag", "long": true, "export_key": "loud"},
+      {"name": "--", "type": "dd", "export_key": "keep"}
+    ],
+    "positionals": [
+      {"name": "rest", "type": "string"}
+    ]
+  },
+  "cases": [
+    {
+      "id": "non-participants-coexist",
+      "why": "`--retain --quiet -- -v`: alias entry `--retain` は canonical `keep` のセルへ発火し (effects の entity は canonical name)、`quiet` は export_key `loud` へ射影される。透過要素 `loud` は結果に現れず、dd の `export_key: \"keep\"` は無効のまま (dd/export-key-inert.json と同型)、`--` 以降は severed で positional `rest` が生の `-v` を受ける。result のキーは keep / loud / rest の 3 つ。",
+      "args": ["--retain", "--quiet", "--", "-v"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "keep", "op": "set", "operand": true, "source": "cli"},
+          {"entity": "quiet", "op": "set", "operand": true, "source": "cli"},
+          {"entity": "rest", "op": "set", "operand": "-v", "source": "cli"}
+        ],
+        "result": {"keep": true, "loud": true, "rest": "-v"}
+      }
+    }
+  ]
+}

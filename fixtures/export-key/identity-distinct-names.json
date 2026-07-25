@@ -1,0 +1,25 @@
+{
+  "why": "DR-120 §1 の検査が過剰検出しない側の対照 (collision-identity.json の対): export_key 未指定同士 (identity 解決) でも name が異なれば解決後の露出キーも異なるので、値セルは 2 つでもキーは 2 つ = 不変則を破らない。検査基準が「解決後の露出キー文字列の一致」であって「解決経路が identity かどうか」ではないこと (DR-120 §3) を、definition が受理されて parse が走ることそのもので固定する — 定義が reject されると本 fixture は decode 段で skip され、skip 台帳の UNEXPECTED SKIP として落ちる。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {"name": "p", "type": "string", "long": true},
+      {"name": "q", "type": "string", "long": true}
+    ]
+  },
+  "cases": [
+    {
+      "id": "distinct-names-no-collision",
+      "why": "`--p vp --q vq`: p・q はともに identity 解決だが露出キーは p / q で異なる。定義は受理され両方が結果に載る。",
+      "args": ["--p", "vp", "--q", "vq"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "p", "op": "set", "operand": "vp", "source": "cli"},
+          {"entity": "q", "op": "set", "operand": "vq", "source": "cli"}
+        ],
+        "result": {"p": "vp", "q": "vq"}
+      }
+    }
+  ]
+}
