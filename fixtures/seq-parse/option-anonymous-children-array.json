@@ -22,6 +22,22 @@
         "outcome": "success",
         "result": {"pair": ["/a", "1"]}
       }
+    },
+    {
+      "id": "short-of-declared-children-is-an-error",
+      "why": "`--pair /a`: **配列だからといって要素数が可変になるわけではない**。宣言した子の数は消費点の数であり、足りなければその消費点が `missing_operand` で失敗する (DESIGN §15.1 の全消費契約)。2 個目を任意にしたいなら利用者が `optional` (= repeat {min:0,max:1}、DR-043) で明示的に書く — kuu が要素数を見て後半を勝手に省略可能にすることはない。`option-anonymous-single-child-array.json` の「1 子の定義に 1 トークン → 1 要素配列」と対にして読むこと (**定義の子の数**で決まるのであって、与えたトークン数で配列長が伸縮するのではない)。",
+      "args": ["--pair", "/a"],
+      "expect": {
+        "outcome": "failure",
+        "errors": [
+          {
+            "args_pos": 2,
+            "kind": "parse",
+            "reason": "missing_operand",
+            "path": ["pair", "#1"]
+          }
+        ]
+      }
     }
   ]
 }
