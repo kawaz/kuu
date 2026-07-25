@@ -4,14 +4,14 @@
 
 ## パース意味論
 
-- [DR-021](DR-021-longest-match-and-ambiguous.md): 露出キー一意性検査は実行時、静的バリデータは warn のみ — パース成功条件は updated by DR-038 (完全経路一意性に再定義)
+- [DR-021](DR-021-longest-match-and-ambiguous.md): 露出キー一意性検査は実行時、静的バリデータは warn のみ — パース成功条件は updated by DR-038 (完全経路一意性に再定義)、露出キー一意性検査は superseded by DR-120 (definition-error へ)
 - [DR-037](DR-037-filter-reject-error-and-branch-resolution.md): filter の Reject/Error 区別、解けた枝の数による結末分類
 - [DR-038](DR-038-parse-semantics-path-uniqueness.md): パース意味論の確定 — 「完全経路の一意性」を契約に、長い経路を優先する規則は持たない、実装契約は bounded path-search
 - [DR-041](DR-041-token-reading-semantics.md): トークン読みの意味論 — 読みは枝 (多重 Accept)、greedy は面で優先 (先食い)、prefix ガード非採用、dashdash は再スコープ化
 - [DR-048](DR-048-failure-time-action.md): 失敗時アクション — early-exit は持たない (完走後の表示選択)、汎用属性 + type:help 同梱、衝突は argv 位置の先勝ち、候補経路は dead end 込み、ambiguous では非発火 (誘導行で補完)
 - [DR-053](DR-053-parse-outcome-structure.md): パース結末の構造 — outcome 3 値 discriminated union、errors 全保持 + primary は argv 最深、ambiguous は全解釈列挙 (結果オブジェクト形)、help_entry / tried_triggers はフィールドで文言はレンダラ
 - [DR-054](DR-054-parse-definition-failure.md): parse_definition の失敗挙動 — 構成不能/全入力破壊 = Error・一部入力の驚き = warn の境界基準、v1 Error は構文/値域/参照検査まで、定義エラーは全列挙 + hint
-- [DR-073](DR-073-export-key-collision-carrier.md): export-key 衝突の担体 — ambiguous 維持 + 解釈ごとの optional claimants 面 (露出キー → 占有実体 entity)、識別子は entity (値/source では区別不能)、fixture は {result, claimants} の組で集合比較 (順序非依存)、独立 outcome / 値オブジェクト化 / failure 化を不採用、lint は別綴り co-export に link 提案
+- [DR-073](DR-073-export-key-collision-carrier.md): export-key 衝突の担体 — ambiguous 維持 + 解釈ごとの optional claimants 面 (露出キー → 占有実体 entity)、識別子は entity (値/source では区別不能)、fixture は {result, claimants} の組で集合比較 (順序非依存)、独立 outcome / 値オブジェクト化 / failure 化を不採用、lint は別綴り co-export に link 提案 — **superseded by DR-120** (衝突が definition-error になり claimants を生む outcome が消滅、link 提案は error hint へ吸収)
 - [DR-097](DR-097-greedy-reading-viability.md): 先食い・早閉じ抑制の「読める」の精密化 — DR-041 §4 の述語はトリガ一致でなく読みの成立 (その greedy 読みを経由する完全経路の存在) を指す、成立しない読みは読みゼロと同じ扱いで素通し枝が生き他ルートが通れば held Error は捨てられる (DR-037 適用)、早閉じ抑制にも同じ述語を共有し及ぶ、typo マスク受容は DR-041 §5 の既定トレードオフの一貫適用
 
 ## 2層 AST / 構造プリミティブ
@@ -37,6 +37,7 @@
 - [DR-033](DR-033-lexical-scope-equals-name-scope.md): lexical スコープ = name が作るスコープ
 - [DR-046](DR-046-name-axes-decomposition.md): name の軸分解 — id / 結果キー / value_name / display_name の目的別軸、name はデフォルト供給源 (nameless への ref/link が可能に)
 - [DR-052](DR-052-export-key-unification.md): 結果キー軸の一本化 — export_key: string | null (export bool 廃止)、null = nameless 同化の透過 (値は流れる)、選ばれた name スコープは空でも `{}`
+- [DR-120](DR-120-export-key-single-cell.md): 露出キーに対応する値セルはちょうど 1 つ (EXK-Q1〜Q4) — 1 結果スコープで同一露出キーへ解決する別セルが 2 つ以上ある定義は definition-error `export-key-collision` (DR-021 の実行時検査 / DR-073 の claimants 担体を置換)。判定は export_key 適用後の解決キー文字列で行い identity / mapped を区別しない、スコープ生成要素 (command 含む) も結果キーを占有する要素として参加、link / alias 参照ノード・dd・export_key null は非参加。検査は構造的で経路の到達可能性を見ない (or の別枝・排他 command・exclusive_group 兄弟も対象)。正当な用途は link (入口 N : セル 1) と or 席 (セル 1 : 枝 N) で書け、綴り軸の重複は従来どおり warn + 実行時 ambiguous のまま
 
 ## 配置 / options / positionals / commands
 

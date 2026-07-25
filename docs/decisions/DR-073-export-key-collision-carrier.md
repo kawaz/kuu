@@ -1,5 +1,15 @@
 # DR-073: export-key 衝突の担体 — ambiguous 維持 + 解釈ごとの optional claimants 面
 
+**Status: Superseded by DR-120 (2026-07-25)**
+
+> DR-120 が「1 結果スコープの 1 露出キーに対応する値セルはちょうど 1 つ」を規範とし、それを満たさない
+> 定義を definition-error `export-key-collision` にしたため、本 DR が担体を設計した実行時衝突
+> (露出キー衝突による ambiguous) は到達不能になった。§1〜§3 の claimants 面はそれを生む outcome を
+> 失い、§4 の「lint は link 提案止まり」は「唯一の書き方」へ格上げされて definition-error の hint に
+> 吸収され、§5 の「衝突 = ambiguous のオントロジー継続」は逆転した。全条項の逐条対応は DR-120 §8。
+> なお本 DR が独立 outcome `"collision"` を退けた論拠 (3-outcome union を壊さない) は DR-120 下でも
+> 保たれる — 衝突は outcome の話ですらなくなり definition-error 側へ移った。
+
 > 由来: issue `2026-07-05-distill-spec-gaps` の論点 7。`fixtures/export-key/collision.json` の co-exposure-collision case で両解釈が `{x:true}` に退化し ambiguous 期待が弱かった (露出キー衝突時の interpretations 表現が未詰め)。衝突解釈を何で区別するかを確定する (kawaz 裁定 2026-07-06)。
 
 ## 決定
@@ -59,7 +69,8 @@ parse は成功している (完全経路が立っている) のに failure に�
 ## 関連
 
 - DR-053 (パース結末の構造 — interpretations の結果オブジェクト形ビュー、§3 骨格温存。本 DR は claimants 面を追加) / docs/CONFORMANCE.md §2 ambiguous・§3 (現役仕様の正本)
-- DR-021 (露出キー一意性検査は実行時、衝突 = ambiguous のオントロジー — §5 で継続)
+- DR-120 (露出キーに値セル 1 つ — 本 DR 全体の supersede 元、逐条対応は DR-120 §8)
+- DR-021 (露出キー一意性検査は実行時、衝突 = ambiguous のオントロジー — §5 で継続。DR-120 で逆転)
 - DR-038 (完全経路の一意性・優先なし — interpretations 集合比較 / 順序非依存性の根拠、§3)
 - DR-052 (結果キー軸の一本化 — export_key、実体セルは 1 値 1 つ / 識別子に entity を使う根拠、§2)
 - DR-029 (link = 値同期、1 実体:N 参照) / DR-030 (実体ノード) — link/alias が入口を実体へ束ねる (§2/§4)
