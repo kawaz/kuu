@@ -1,0 +1,28 @@
+{
+  "why": "DR-044 §2 の from_entries **entries 用法** (`[[k,v],...]` = 無名 2 要素 seq の配列 → object) を、その入力形を実際に作れる唯一の書き口である『結果キーを持たない子の inline seq × multiple:append』から実食する。既存の `multiple-parse/from-entries-pairs.json` は scalar 累積の total pass-through 側 (変換条件を満たさない入力) しか踏んでおらず、entries 用法が実際に object 化する経路は未 pin。名前付き子版 (`{k,v}` の object 配列 → 指名 2 フィールド用法) は `multiple-parse/from-entries-key-value.json`。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {
+        "name": "entries",
+        "long": true,
+        "multiple": {"accumulator": "append", "collector": {"from_entries": "entries"}},
+        "seq": [
+          {"type": "string"},
+          {"type": "string"}
+        ]
+      }
+    ]
+  },
+  "cases": [
+    {
+      "id": "two-element-seq-rows-become-object",
+      "why": "`--entries a 1 --entries b 2`: 各発火が無名 2 要素の配列 `[\"a\",\"1\"]` / `[\"b\",\"2\"]` を作り、append が `[[\"a\",\"1\"],[\"b\",\"2\"]]` へ積む。collector が全要素ちょうど 2 要素の配列であることを確認して entries として object 化する (DR-044 §3 の entries 用法の適合条件)。",
+      "args": ["--entries", "a", "1", "--entries", "b", "2"],
+      "expect": {
+        "outcome": "success",
+        "result": {"entries": {"a": "1", "b": "2"}}
+      }
+    }
+  ]
+}

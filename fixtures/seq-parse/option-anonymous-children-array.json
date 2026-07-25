@@ -1,0 +1,27 @@
+{
+  "why": "対照 (`option-named-children-kv.json` の裏面): 結果キーを持つ子が 1 つも無い seq は DESIGN §5.1 の「子の値の配列」のまま — kv 畳み込みは「結果キーを持つ子が並ぶとき」の規則 (DESIGN §2.5) であって seq という構造そのものの性質ではない。この配列形が DR-052 §2 の『seq 文脈では値が親の配列要素として残る (配列の形は変わらない)』が指す面であり、DR-044 §2 の from_entries entries 用法 (`[[k,v],...]`) が乗る座でもある。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {
+        "name": "pair",
+        "long": true,
+        "seq": [
+          {"type": "string"},
+          {"type": "string"}
+        ]
+      }
+    ]
+  },
+  "cases": [
+    {
+      "id": "anonymous-children-stay-an-array",
+      "why": "`--pair /a 1`: 子はどちらも結果キーを持たないので、値は 2 要素の配列としてそのまま `pair` の値になる。要素は裸の値であってキー付き object ではない。",
+      "args": ["--pair", "/a", "1"],
+      "expect": {
+        "outcome": "success",
+        "result": {"pair": ["/a", "1"]}
+      }
+    }
+  ]
+}
