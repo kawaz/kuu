@@ -59,7 +59,7 @@ DR-117 §4 の行文法要素を各 shell の native 機構へ写す対応。
 | shell | words | cword | status | 備考 |
 |---|---|---|---|---|
 | zsh | `$words` | `$CURRENT` (1-origin) | 実機確認済 (zsh 5.9.1) | glue で `CURRENT-1` に変換して `KUU_COMPLETE_INDEX` へ。mock binary 経由の end-to-end で query 到達を確認 |
-| bash | `COMP_WORDS` | `COMP_CWORD` (0-origin) | 実機確認済 (bash 5.3.9, 3.2.57) | 単純ケースでは `--flag=value` 分割問題は未発生 (mock で `myapp --` パターン検証)。`COMP_WORDBREAKS` による分割の再結合ロジックは未実装 = TODO (DR-117 §3.4 末尾)。glue 骨格は素の `COMP_WORDS` を渡す状態 |
+| bash | `COMP_WORDS` (再結合後) | `COMP_CWORD` (再結合後 index) | 実機確認済 (bash 5.3.9, 3.2.57) | `COMP_WORDBREAKS` (default `" \t\n\"'@><=;|&(:"`) で `--flag=value` → `[--flag, =, value]`、`http://x` → `[http, :, //x]` のように割れる。glue は「単一 break char は前の word に連結し、後続の非空白 word も継続連結」する後処理で words を再結合してから binary へ渡す (bash-completion `_get_comp_words_by_ref` と同分担、DR-117 §3.4 末尾規範)。cword も再結合後の index に変換 (元 `COMP_CWORD` 位置の word が落ちる集約先を追跡)。実機検証: mock binary + literal 置換後の glue を source して 5 ケース × 2 bash version = 10 判定を実施、全通過を確認 (2026-07-25) |
 | fish | `commandline -oc` + `-ct` | `count(commandline -oc)` | 実機確認済 (fish 4.8.1) | `-oc` (カーソル位置より前の完了済みトークン) + `-ct` (現在編集中トークン) の結合で全量 words を、`-oc` の count で cword を得る。実機で末尾空白 (`myapp foo bar <TAB>` → cword=3) と中間トークン (`myapp foo ba<TAB>` → cword=2) 双方が正しくなることを mock binary 経由で確認。素の `commandline -o` は末尾空白時に empty current-token を含めない (実測、cword=2 の欠陥に繋がる) ため使用しない |
 
 ## 未知 directive / 未知フラグ
@@ -80,6 +80,11 @@ DR-117 §4 の行文法要素を各 shell の native 機構へ写す対応。
 
 - **fish cword 算出 bug**: 修正前は `commandline -o` (完了済みトークン列) をそのまま words とし、`cword = count(words) - 1` としていた。末尾空白ケース (`myapp foo bar <TAB>`) では `commandline -o` に empty current-token が含まれず count=3 → cword=2 (最終確定トークン "bar" を指す)、DR-117 §3.4 の期待値 3 (空の新規位置) と齟齬。修正で `commandline -oc` (カーソル前完了済み) + `commandline -ct` (現在編集中) の結合を採用: `words = cut_toks + cur_tok`、`cword = count(cut_toks)`。実機再検証で末尾空白 → cword=3、中間トークン `myapp foo ba<TAB>` → cword=2 の双方が正しくなることを確認 (templates/completion.fish)
 - **fish nospace 縮退の記述精度**: 修正前の TRANSLATION.md fish/nospace 備考には「fish は既定で `--flag=` の後ろに空白を入れない挙動がある」とだけ書かれ、一般候補への per-candidate nospace が同じ経路で実現するかのような読み方が可能だった。実機で「一般候補の unique match は必ず末尾空白挿入」「`--flag=` 形候補のみ `=` 直後の空白 native 抑制」を分離観測、両者を明示区別する記述に更新
+
+## 検証中に判明した glue 修正 (2026-07-25 bash 再結合)
+
+- **bash `COMP_WORDBREAKS` 分割の再結合 (H9)**: 修正前は `local -a words=("${COMP_WORDS[@]}")` で素の COMP_WORDS を binary へ渡すだけの骨格で、`--flag=value` や `http://x` が `[--flag, =, value]` / `[http, :, //x]` に割れたまま転送されていた (DR-117 §3.4 末尾 規範違反)。修正で glue 内に inline の再結合ループを追加: `COMP_WORDBREAKS` から空白系を除いた集合を分割 char セットとし、走査中に「単一の分割 char (`=` `:` 等)」を見つけたら直前 word に連結して in_break フラグを立て、直後の非空 word も継続連結する。cword も元 `COMP_CWORD` の指す word が再結合後どの index に落ちるかを追跡して変換。末尾空白の空 word は独立 word として保持し「カーソルの新しい位置」を表現。実機マトリクス: bash 5.3.9 / bash 3.2.57 × 5 ケース (通常空白 / `--flag=value` / `http://x` / 末尾 `=` 空白なし / 末尾空白) を mock binary + literal 置換後 glue の source 経由で end-to-end 検証、10/10 全通過 (2026-07-25)
+- **bash L72 跡地 TODO 削除**: 「compopt 可用性判定を機能検出で書き直す」TODO 行を削除。直下が既に `if compopt +o filenames >/dev/null 2>&1; then compopt -o nosort ...` の機能検出実装になっており、TODO は跡地だった (`[[no-historical-noise]]` 適用)
 
 ## 参照
 
