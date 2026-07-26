@@ -1,0 +1,66 @@
+{
+  "why": "ambiguous の interpretations ビュー (DR-118 §3) を **command スコープの下**で取る。既存の ambiguous 系 fixture はいずれも command を持たない定義なので、interpretation の席同定が結果スコープ path を正しく降りるかを corpus が固定していなかった。DR-118 §3 規則1 (Default-source scalar 除外) は「その席に非 default の値源があるか」で判定するため、席の同定が path 込みで行われないと、別スコープの同名キーを取り違えて scalar が interpretations から消える。renamed (`export_key: \"pt\"`) と transparent (`export_key: null`) の 2 境界を置くのは、path が rename される場合と落ちる場合で同定が壊れうる方向が違うため — 特に transparent は「command を持つのに結果 path が空」という、path の有無で経路を推測する実装が誤判定する形になる。定義は `path-search/variable-arity-ambiguous.json` の色指定 (3 数値 seq か 1 文字列か) をそのまま command 配下へ移したもので、曖昧性の発生源自体は既存 fixture と同型。",
+  "query": "parse",
+  "definition": {
+    "commands": [
+      {
+        "type": "command",
+        "name": "paint",
+        "export_key": "pt",
+        "options": [
+          {
+            "name": "color",
+            "long": true,
+            "or": [
+              {"seq": [{"type": "number", "name": "r"}, {"type": "number", "name": "g"}, {"type": "number", "name": "b"}]},
+              {"type": "string", "name": "name"}
+            ]
+          }
+        ],
+        "positionals": [{"name": "rest", "type": "string", "repeat": {"min": 0}}]
+      },
+      {
+        "type": "command",
+        "name": "draw",
+        "export_key": null,
+        "options": [
+          {
+            "name": "color",
+            "long": true,
+            "or": [
+              {"seq": [{"type": "number", "name": "r"}, {"type": "number", "name": "g"}, {"type": "number", "name": "b"}]},
+              {"type": "string", "name": "name"}
+            ]
+          }
+        ],
+        "positionals": [{"name": "rest", "type": "string", "repeat": {"min": 0}}]
+      }
+    ]
+  },
+  "cases": [
+    {
+      "id": "renamed-command-scope-keeps-both-readings",
+      "why": "`paint --color 255 0 0`: color の or が「3 数値の seq」と「1 文字列 + 残り 2 つが rest」の 2 通りに読めて ambiguous (variable-arity-ambiguous.json と同型)。両解釈とも command スコープが `pt` へ rename された下に入る — interpretation の席同定が rename 後の path で行われることを固定する。root の `rest` は両解釈とも空 (command 配下の positional が消費するため)。",
+      "args": ["paint", "--color", "255", "0", "0"],
+      "expect": {
+        "outcome": "ambiguous",
+        "interpretations": [
+          {"pt": {"color": {"r": 255, "g": 0, "b": 0}, "rest": []}, "rest": []},
+          {"pt": {"color": {"name": "255"}, "rest": ["0", "0"]}, "rest": []}
+        ]
+      }
+    },
+    {
+      "id": "transparent-command-scope-keeps-both-readings",
+      "why": "`draw --color 255 0 0`: 同じ曖昧性を透過 command (`export_key: null`) の下で起こす。子が root へ昇格するので結果 path は空になり、**command を持つ定義なのに全 path が空**という形になる。path の有無で射影経路を推測する実装 (= flat 射影とみなして key 単独で席を同定する類) はここで別スコープの同名キーを取り違える。両解釈とも paint 側の scalar が消えずに残ることを固定する。",
+      "args": ["draw", "--color", "255", "0", "0"],
+      "expect": {
+        "outcome": "ambiguous",
+        "interpretations": [
+          {"color": {"r": 255, "g": 0, "b": 0}, "rest": []},
+          {"color": {"name": "255"}, "rest": ["0", "0"]}
+        ]
+      }
+    }
+  ]
+}

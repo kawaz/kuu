@@ -1,0 +1,66 @@
+{
+  "why": "`type: \"none\"` のセルが `effects` / `result` / `sources` の **3 面すべて**から消えることを、**結果スコープを作る各構造の下**で固定する (DR-089: none は値を運ばず結果にキーが現れない)。既存の `none-value-space.json` は root 直下の none を pin しているが、内部セルの除外席がスコープを降りる経路 (command 木 / name を持つ seq) は corpus に無かった。除外の照合が結果アドレス軸 (export_key 適用後) で行われないと、scope が rename / 透過されたときに席が一致せず none が漏れる — 2026-07-26 に command scope の rename で実際に漏れていた。command は identity / renamed / transparent の 3 境界を並べる。none は照合消費を行う (トークンを 1 つ取る) 点に注意 — 消費 0 の literal は `value:` / `default:` で書く別の形 (DESIGN §5.2)。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {"name": "pair", "long": true, "seq": [{"name": "touch", "type": "none"}, {"name": "keep", "type": "string"}]}
+    ],
+    "commands": [
+      {"type": "command", "name": "a", "options": [
+        {"name": "mark", "type": "none", "long": true},
+        {"name": "flag", "type": "flag", "long": true}
+      ]},
+      {"type": "command", "name": "b", "export_key": "bb", "options": [
+        {"name": "mark", "type": "none", "long": true},
+        {"name": "flag", "type": "flag", "long": true, "export_key": "f"}
+      ]}
+    ]
+  },
+  "cases": [
+    {
+      "id": "none-in-named-seq-scope",
+      "why": "`--pair x y`: named seq `pair` が 1 段の結果スコープを作り、その中の `touch` (none) は 3 面すべてから消える。`keep` だけが残り、result は `{pair:{keep:\"y\"}}`、sources の path は `[\"pair\"]`。none が照合消費した `x` は result のどこにも現れない (値を運ばないので)。除外の照合が scope path 込みで行われないと、root の同名セルと取り違える。",
+      "args": ["--pair", "x", "y"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "keep", "op": "set", "operand": "y", "source": "cli"}
+        ],
+        "result": {"pair": {"keep": "y"}},
+        "sources": [
+          {"path": ["pair"], "key": "keep", "source": "cli"}
+        ]
+      }
+    },
+    {
+      "id": "none-under-identity-command-scope",
+      "why": "`a --mark --flag`: command `a` は export_key を持たないので結果スコープは identity の `a`。配下の `mark` (none) が 3 面から消え、`flag` だけが `{a:{flag:true}}` に残る。除外席が宣言名のままでも識別できてしまう境界なので、これ単独では rename 経路の漏れを検出できない — 次の case と対で見る。",
+      "args": ["a", "--mark", "--flag"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "flag", "op": "set", "operand": true, "source": "cli"}
+        ],
+        "result": {"a": {"flag": true}},
+        "sources": [
+          {"path": ["a"], "key": "flag", "source": "cli"}
+        ]
+      }
+    },
+    {
+      "id": "none-under-renamed-command-scope",
+      "why": "`b --mark --flag`: command `b` の結果スコープが `bb` へ、配下 `flag` が `f` へ rename される。`mark` (none) は同じく 3 面から消える。**除外席を宣言名 (`b.mark`) のまま照合する実装は、結果側が `bb` を使うため一致せず none を漏らす** — 2026-07-26 に実際に起きた形。scope と cell の両方が rename される断面で、片方だけ射影する実装も落ちる。",
+      "args": ["b", "--mark", "--flag"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "flag", "op": "set", "operand": true, "source": "cli"}
+        ],
+        "result": {"bb": {"f": true}},
+        "sources": [
+          {"path": ["bb"], "key": "f", "source": "cli"}
+        ]
+      }
+    }
+  ]
+}

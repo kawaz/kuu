@@ -1,0 +1,26 @@
+{
+  "why": "`sources` の **path 軸**が、定義に command があるかどうかで変わらないことを固定する。name を持つ `seq` / `or` は 1 段の結果スコープを作る (DESIGN §2.3) ので、その中のセルは `path` にスコープ名を持つ。射影経路を command の有無で分岐させ、片方だけ path を落とす実装はここで落ちる — 実際 2026-07-26 に「command が無ければ path を捨て、あれば載せる」分岐があり、未発火の dummy command を 1 つ足すだけで sources の形が変わっていた。root 直下のセルだけを見る fixture ではこの断面を踏まない (path が空同士で一致してしまう)。対になる定義 2 つは command の有無だけが違う。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {"name": "pair", "long": true, "seq": [{"name": "path", "type": "string"}, {"name": "value", "type": "string"}]},
+      {"name": "mode", "long": true, "or": [{"name": "lvl", "type": "int"}, {"name": "tag", "type": "string"}]}
+    ]
+  },
+  "cases": [
+    {
+      "id": "nested-scopes-carry-path-without-command",
+      "why": "`--pair a b --mode hot`: named seq `pair` と named or `mode` がそれぞれ 1 段の結果スコープを作り、result は `{pair:{path,value}, mode:{tag}}`。sources も同じ入れ子を `path` 軸で持つ。`sources-nested-scope-parity-with-command.json` が同一 argv・同一要素で command 有りの側を取り、両者の sources が一致することで非対称が無いことが定まる。",
+      "args": ["--pair", "a", "b", "--mode", "hot"],
+      "expect": {
+        "outcome": "success",
+        "result": {"pair": {"path": "a", "value": "b"}, "mode": {"tag": "hot"}},
+        "sources": [
+          {"path": ["mode"], "key": "tag", "source": "cli"},
+          {"path": ["pair"], "key": "path", "source": "cli"},
+          {"path": ["pair"], "key": "value", "source": "cli"}
+        ]
+      }
+    }
+  ]
+}
