@@ -51,6 +51,9 @@ result:  {"sub": {"ttl": "30"}}           → sources: {"sub": {"ttl": "env"}}
 - **情報自体は失われない** — `effects` が `op: "unset"` / `op: "empty"` で既に区別を pin している
   (DR-045 §4)。観測経路が消えるわけではなく、担当する面が `sources` から `effects` へ移るだけ
 
+**空コレクションの由来 (明示 `empty` か未発火か) は `effects` の op で観測する** — `sources` は
+値の構造の影であり、要素の無い座に影は無い。
+
 空配列だけタグを許す (`"ports": "cli"` のように座の型と違う形を置く) 案は、shadow tree の
 「値の構造そのまま」が崩れ schema と比較規約に分岐が増えるため不採用。cell 単位のタグを別フィールドで
 併記する案は、本 DR が退けたフラット化 + アドレス語彙の再来なので不採用。
@@ -63,7 +66,19 @@ result:  {"sub": {"ttl": "30"}}           → sources: {"sub": {"ttl": "env"}}
 - nameless `seq` の tuple: 各要素が自分の由来を持つ (`["cli", "const"]`) — DR-121 §3.2 の
   「wrapper に 1 タグ」は shadow tree の縮退表示だった。フラット化を止めたので要素ごとに
   正確に書ける
-- accumulator の各 row / 各要素: その要素を産んだ発火の source
+- accumulator の各 row / 各要素: その要素を産んだ発火の source。**下位席の値を取り込む
+  accumulator では 1 つの配列内で由来が混在する** — merge accumulator (DR-080) が `@` で old を
+  splice した場合、展開された要素は old の由来を保ち、後続の piece は発火経路を持つ:
+
+  ```json
+  定義: {"name":"fields","env":"APP_FIELDS","multiple":{"accumulator":"merge","separator":","}}
+  env APP_FIELDS="ts,ip,method,path,ua" + `--fields -ip,-ua,@,duration,ip`
+  result:  {"fields": ["ts", "method", "path", "duration", "ip"]}
+  sources: {"fields": ["env", "env", "env", "cli", "cli"]}
+  ```
+
+  DR-121 の形は wrapper 1 タグ (`cli`) に潰していたため、env 由来の 3 要素が cli と報告されていた。
+  要素対応で書けるようになったことで、この誤報が消える (`fixtures/multiple-parse/merge-first-firing.json`)
 - named 子: 自分の座のタグ (従来の cell provenance と同じ)
 
 ## 採用しなかった案
