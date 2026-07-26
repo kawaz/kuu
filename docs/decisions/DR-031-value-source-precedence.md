@@ -9,7 +9,7 @@
 2. 環境変数            実行環境の指定
 3. config ファイル     永続設定
 4. inherit (祖先 scope) 上位スコープからの暗黙継承
-5. default / value     最終フォールバック (固定値)
+5. default             最終フォールバック (充填。const = 宣言定数は席でなく初期値、下記「source の記録」)
 ```
 
 「明示的に与えられたものほど優先」が原則。
@@ -35,7 +35,7 @@ source ∈ { cli, link, env, config, inherit, tty, default, const }
 
 (`tty` は DR-098 §6 が観測席として追加したもの。序列は「明示 (cli/link/env/config) > 継承 (inherit) > 観測 (tty) > 宣言既定 (default)」)
 
-(`const` は 2026-07-26 の kawaz 裁定で追加。**const は値セルに最初からいる。default は無い時に埋める** — 消費 0 literal (`value:` / 構造子位置の `default:` 綴り、DESIGN §5.2) は値源ラダーの充填ではなく、セル初期化位相に属す宣言由来の定数。ラダー席ではないので序列に参加しない (上位席が来ればあと勝ち/充填の通常規則で置き換わり、その時の source は勝った側)。発火に付随して現れる literal は「引数の静的写像 (`x → [x, "fallback"]`)」であり、default のような動的な値源 fn とは別物)
+(`const` は 2026-07-26 の kawaz 裁定で追加。**const は値セルに最初からいる。default は無い時に埋める** — 消費 0 literal (`value:` / 構造子位置の `default:` 綴り、DESIGN §5.2) は値源ラダーの充填ではなく、セル初期化位相に属す宣言由来の定数。ラダー席ではないので序列に参加しない (上位席が来ればあと勝ち/充填の通常規則で置き換わり、その時の source は勝った側)。発火に付随して現れる literal は「引数の静的写像 (`x → [x, "fallback"]`)」であり、default のような動的な値源 fn とは別物。**位置を問わない** (CONST-Q1=a、2026-07-26): root 位置の `value:` (DR-030 実体だけノード `{"name":"timeout","value":30}`) も同じ const — 冒頭ラダーの旧表記「5. default / value」は「5. default」となり、value は初期化位相へ移った (DESIGN §11.4 同時改訂)。const は席ではないので、上位席 (env / config 等) の供給や cli 効果は初期値を通常規則どおり上書きする)
 
 結果オブジェクトで「この値はどこから来たか」を引ける。appconfig ストア用途 (DR-030) で、値源を隠蔽しつつ必要なら由来を確認できる。
 

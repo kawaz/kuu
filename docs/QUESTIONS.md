@@ -20,20 +20,7 @@
 
 ## 裁定待ち
 
-### CONST-Q1: root 位置 (option / 実体だけノード) の `value:` の source も `const` か
-
-2026-07-26 の裁定 (「const は値セルに最初からいる。default は無い時に埋める」) を受けて
-**構造子位置**の消費 0 literal は `const` タグに確定した (DR-031 / DR-121 §3.2 / CONFORMANCE 反映済み)。
-残るのは **root 位置**: DESIGN §11.4 のラダー表記は「5. default / **value** (最終フォールバック)」と
-value をラダー 5 段目に置いており (DR-030 実体だけノード `{"name":"timeout","type":"number","value":30}` /
-DESIGN 370 行)、裁定の「const ≠ default」とどちらで読むか。なお root `value:` は実装未対応
-(kuu.mbt issue value-default-unimplemented-root-positions) なので、いま決めても実装追随は後で良い。
-
-- [ ] a: root の `value:` も `const` (「セルに最初からいる」は位置を問わない。DESIGN §11.4 の 5 段目から value を外し「default (最終フォールバック)」だけにし、value は初期化位相と明記)
-- [ ] b: root の `value:` はラダー 5 段目のまま `default` タグ (構造子位置だけ const。位置で読み分け)
-- [ ] c: 保留 (root value 実装時に決める)
-
-統括推し: **a**。「最初からいる vs 無い時に埋める」の区別は位置に依存しない。b は同じ綴りの source が位置で変わり読み手に厳しい。懸念: env/config が value 持ちセルを上書きできるか (できるべき — const は席でなく初期値なので上位席が普通に勝つ) の 1 文を DESIGN に足す必要がある。
+(現在なし)
 
 ## 確認待ち
 

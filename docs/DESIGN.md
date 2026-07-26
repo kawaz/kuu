@@ -882,10 +882,12 @@ inherit ラダー席に祖先 scope chain の参照を宣言する。default / d
 2. 環境変数            (DR-049)
 3. config ファイル     (DR-050、§14.3)
 4. inherit (祖先 scope)
-5. default / value    (最終フォールバック)
+5. default            (最終フォールバック)
 ```
 
 順序は固定 (設定可能にしない、暗黙の罠を避ける)。異なる席は同一要素で共存でき、上位席から順に解決して最初に得た値を採る。
+
+`value:` (消費 0 literal、§5.2) はこのラダーの席ではない — **セル初期化位相の宣言定数**であり、値セルに最初からいる (source タグは `const`、DR-031。default は「無い時に埋める」充填でこれとは別物)。const は席ではないので序列に参加せず、上位席 (env / config 等) の供給や cli 効果は初期値を通常規則どおり上書きする。
 
 **default 席は `cell_fns` 呼び出しへ統一する** (DR-114 §4)。`default: value` は native JSON value を保持する typed internal call `set(value)` の糖衣、明示 `default_fn` は colon-string または 1 段 array of string で fn を指定する。同じ default 席への `default` と `default_fn` の併用は definition-error `invalid-range`。type preset の暗黙 default はユーザの明示 default / default_fn があれば置換される。宣言時には fn 参照を placeholder として置き、上位席の解決後も cell が空なら依存グラフの位相順で呼ぶ (DR-087/088)。
 
