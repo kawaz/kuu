@@ -1,0 +1,75 @@
+{
+  "why": "named group positional の child が持つ値源ラダーは、宣言元の root scope ではなく wrapper row の結果アドレスに属する (DR-025/DR-033 の name scope、DR-121 §3.2 の named child provenance)。xs は repeat:{min:0,max:2} なので 0 fire では [] だけが結果になり、row が存在しない以上 child v の default 席も存在せず root 直下へ v が湧かない。現行の group head は k/v の 2 token を一体で消費するため、default は row の消費 arity を変えない。row が発火して v の token が供給されれば cli が勝ち、child は indexed wrapper path にだけ着席する。",
+  "query": "parse",
+  "definition": {
+    "positionals": [
+      {
+        "name": "xs",
+        "repeat": {"min": 0, "max": 2},
+        "positionals": [
+          {"name": "k", "type": "string"},
+          {"name": "v", "type": "string", "default": "D"}
+        ]
+      }
+    ]
+  },
+  "cases": [
+    {
+      "id": "zero-row-does-not-materialize-child-default",
+      "why": "args 無しでは xs が 0 fire の [] になるだけで child row は存在しない。したがって result に root v は現れず、sources にも v の default 席は現れない。",
+      "args": [],
+      "expect": {
+        "outcome": "success",
+        "effects": [],
+        "result": {"xs": []},
+        "sources": []
+      }
+    },
+    {
+      "id": "partial-row-is-not-a-complete-path",
+      "why": "args `a`: group head は k/v の 2 token を一体で消費するため k だけの partial row は完全経路にならない。child default は row の宣言 scope を決めるが、消費構造を 1 token row へ変えない。",
+      "args": ["a"],
+      "expect": {
+        "outcome": "failure"
+      }
+    },
+    {
+      "id": "one-row-cli-values-stay-under-wrapper",
+      "why": "args `a b`: k/v の両 child が cli から供給され、v の default は発火しない。root v は生えず、両 source は第 0 row 配下にだけ現れる。",
+      "args": ["a", "b"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "k", "op": "set", "operand": "a", "source": "cli"},
+          {"entity": "v", "op": "set", "operand": "b", "source": "cli"}
+        ],
+        "result": {"xs": [{"k": "a", "v": "b"}]},
+        "sources": [
+          {"path": ["xs", "#0"], "key": "k", "source": "cli"},
+          {"path": ["xs", "#0"], "key": "v", "source": "cli"}
+        ]
+      }
+    },
+    {
+      "id": "two-rows-have-independent-child-seats",
+      "why": "args `a b c d`: 2 row が発火し、各 child は #0/#1 の wrapper path に独立して着席する。root v はどちらの row からも生えない。",
+      "args": ["a", "b", "c", "d"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "k", "op": "set", "operand": "a", "source": "cli"},
+          {"entity": "v", "op": "set", "operand": "b", "source": "cli"},
+          {"entity": "k", "op": "set", "operand": "c", "source": "cli"},
+          {"entity": "v", "op": "set", "operand": "d", "source": "cli"}
+        ],
+        "result": {"xs": [{"k": "a", "v": "b"}, {"k": "c", "v": "d"}]},
+        "sources": [
+          {"path": ["xs", "#0"], "key": "k", "source": "cli"},
+          {"path": ["xs", "#0"], "key": "v", "source": "cli"},
+          {"path": ["xs", "#1"], "key": "k", "source": "cli"},
+          {"path": ["xs", "#1"], "key": "v", "source": "cli"}
+        ]
+      }
+    }
+  ]
+}
