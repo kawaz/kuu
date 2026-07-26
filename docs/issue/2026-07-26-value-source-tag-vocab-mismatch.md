@@ -3,7 +3,7 @@ title: 値源タグの語彙が規範文書間で不一致 (link / tty の扱い
 status: open
 category: bug
 created: 2026-07-26T13:48:24+09:00
-last_read:
+last_read: 2026-07-27T03:34:26+09:00
 open_entered: 2026-07-26T13:48:24+09:00
 wip_entered:
 blocked_entered:
