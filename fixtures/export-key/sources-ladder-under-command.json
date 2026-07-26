@@ -1,0 +1,52 @@
+{
+  "why": "`sources` が報告するのは **最終的にその値セルを確定させた席** (操作 provenance、DR-081 / DESIGN §11.4) であり、途中で着席した席ではない。`multiple-parse/unset-env-fallback.json` が command 無しで pin する「unset がラダーを再び開き、下位席 (env → default) が最終値を決める」経路を、**command 木と export_key rename の下で**取り直す。両発火とも `cli` になる case (`sources-under-command.json :: accum-multiple-firings-single-source-entry`) では first-wins でも last-wins でも同じ結果になり、どの席が残るかを判別できない — 本 fixture はその識別力を持つ。キーは射影後の `t` (CONFORMANCE §2「sources のキーは result と同一のキー体系」)。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {
+        "name": "tags",
+        "type": "string",
+        "long": [":set", "reset:unset"],
+        "env": "TAGS",
+        "multiple": {"accumulator": "append", "separator": ","},
+        "export_key": "t"
+      }
+    ],
+    "commands": [
+      {"type": "command", "name": "serve", "export_key": "sv"}
+    ]
+  },
+  "cases": [
+    {
+      "id": "unset-reopens-ladder-under-command",
+      "why": "`--tags a --reset-tags` (env `TAGS=x,y,z` あり): cli で一度 `a` を積んだ後 unset が committed=false へ戻し (DR-045)、ラダーが再び開いて env が最終値を決める。sources は途中の `cli` ではなく **最終確定席の `env`** — first-wins で積む実装はここで `cli` を出して落ちる。キーは射影後の `t`。",
+      "env": {"TAGS": "x,y,z"},
+      "args": ["--tags", "a", "--reset-tags"],
+      "expect": {
+        "outcome": "success",
+        "result": {"t": ["x", "y", "z"]},
+        "sources": {"t": "env"}
+      }
+    },
+    {
+      "id": "unset-with-no-lower-source-falls-to-default",
+      "why": "同じ argv で env 無し: unset がラダーを開いても下位に供給が無いので default 席 (uniform array の `[]`、DR-044) で確定し sources は `default`。上の case と対にすることで、報告される席が「最後に着席した cli」ではなく「ラダーが最終的に解決した席」であることが定まる。",
+      "args": ["--tags", "a", "--reset-tags"],
+      "expect": {
+        "outcome": "success",
+        "result": {"t": []},
+        "sources": {"t": "default"}
+      }
+    },
+    {
+      "id": "cli-alone-keeps-cli",
+      "why": "対照: unset を撃たなければ cli が確定席のまま。上 2 case の `env` / `default` が「unset がラダーを開いた結果」であって「command 木下では常に下位席が勝つ」ではないことを示す。",
+      "args": ["--tags", "a"],
+      "expect": {
+        "outcome": "success",
+        "result": {"t": ["a"]},
+        "sources": {"t": "cli"}
+      }
+    }
+  ]
+}

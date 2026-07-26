@@ -47,7 +47,7 @@
     },
     {
       "id": "unfired-cells-default-under-command",
-      "why": "`serve` のみ: 未発火 flag `verbose` は preset default の `false` を、0 回発火の accum セル `tags` は uniform array の `[]` (DR-044) を result に持つので、どちらも sources に `default` の席を持つ — いずれも射影後キー (`v` / `t`)。選ばれた command の presence marker `sv:{}` (DR-052 §3) は値セルではないので sources に席を持たない (result のキー集合と sources のキー集合が一致しないのはこの marker の分だけ)。配下の `p` は値源なし未発火で absent。",
+      "why": "`serve` のみ: 未発火 flag `verbose` は preset default の `false` を、0 回発火の accum セル `tags` は uniform array の `[]` (DR-044) を result に持つので、どちらも sources に `default` の席を持つ — いずれも射影後キー (`v` / `t`)。選ばれた command の presence marker `sv:{}` (DR-052 §3) は sources に席を持たない — スコープ生成要素は結果キーを占有する 1 セルとして数えられる (DR-120 §4) が、その占有はスコープの存在自体であって値源ラダーが確定する値ではないので報告すべき値源が無い (CONFORMANCE §2)。配下の `p` は値源なし未発火で absent。",
       "args": ["serve"],
       "expect": {
         "outcome": "success",
@@ -58,7 +58,7 @@
     },
     {
       "id": "accum-multiple-firings-single-source-entry",
-      "why": "`--tags a --tags b`: accum セルが 2 回着席しても sources は射影後キー `t` の 1 エントリに畳まれる (last-wins、`rename-multiple.json` が command 無しで pin する形の command 木版)。sources は「キー → 値源タグ」のマップなので同一キーが複数回現れる形は持たない — binding ごとに無条件で積む実装はここで `t` を 2 つ出して落ちる。未発火 flag `verbose` は default 席で確定。",
+      "why": "`--tags a --tags b`: accum セルが 2 回着席しても sources は射影後キー `t` の 1 エントリに畳まれる。sources は「キー → 値源タグ」のマップなので同一キーが複数回現れる形を持たない — binding ごとに無条件で積む実装はここで `t` を 2 つ出して落ちる。両発火とも `cli` なので本 case が pin するのは **dedup されること**だけで、どの発火が残るかは別 case (`unset-reopens-ladder-under-command`) が見る。未発火 flag `verbose` は default 席で確定。",
       "args": ["--tags", "a", "--tags", "b"],
       "expect": {
         "outcome": "success",
