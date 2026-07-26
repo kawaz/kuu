@@ -28,14 +28,15 @@
     },
     {
       "id": "option-alone-keeps-mapped-key",
-      "why": "command を選ばず option だけを撃った場合も露出キーは `ox` のまま。同名 command の存在が option の解決に影響しないことを固定する。",
+      "why": "command を選ばず option だけを撃った場合も露出キーは `ox` のまま。同名 command の存在が option の解決に影響しないことを固定する。sources も射影後キー `ox` の下で由来を示す — 定義に command が存在するだけで sources のキー体系が変わってはならない (CONFORMANCE §2)。effects の entity は射影前の値セル name `x` のままで、結果面 (result / sources) だけが `ox` に写る 2 面射影を 1 case で並べて見せる。",
       "args": ["--x"],
       "expect": {
         "outcome": "success",
         "effects": [
           { "entity": "x", "op": "set", "operand": true, "source": "cli" }
         ],
-        "result": { "ox": true }
+        "result": { "ox": true },
+        "sources": { "ox": "cli" }
       }
     }
   ]

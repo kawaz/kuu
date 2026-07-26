@@ -1,0 +1,74 @@
+{
+  "why": "`sources` のキー体系は `result` と 1:1 で、**定義が command を持つか / その command が発火したかで変わらない** (CONFORMANCE §2「sources のキーは result と同一のキー体系」、DR-052 §1 結果キー軸の一本化、DR-109 §3「消費者が値の出所を機械判別できる」)。消費者が持つのは result のキーなので、生の宣言名で sources を組むと突き合わせ経路が無くなる (宣言名 → 露出キーの写像は消費者へ公開されない)。`rename-flag-default.json` / `rename-multiple.json` は command を持たない定義で射影後キーを pin しているが、射影経路を command の有無で分岐させた実装はそれらを素通りする — 本 fixture はその分岐を落とす検証層。scope ラベル rename (`serve` → `sv`) と配下セル rename (`port` → `p`) の合成を path・key 両軸で見る。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {"name": "verbose", "type": "flag", "long": true, "export_key": "v"},
+      {"name": "tags", "type": "string", "long": true, "multiple": "append", "export_key": "t"}
+    ],
+    "commands": [
+      {
+        "type": "command",
+        "name": "serve",
+        "export_key": "sv",
+        "options": [
+          {"name": "port", "type": "number", "long": true, "export_key": "p"}
+        ]
+      }
+    ]
+  },
+  "cases": [
+    {
+      "id": "command-fired-renamed-path-and-key",
+      "why": "`--verbose serve --port 80`: command が発火し、scope ラベルは `sv` へ、配下の値セルは `p` へ写る。sources の path も `sv`、key も `p` になり result の `{sv:{p:80}}` と構造が一致する。射影前で組むと `serve.port` になって result のどのキーも指さない。effects の entity は射影前の `verbose` / `port` のままで、結果面だけが写る 2 面射影 (DESIGN §11.4)。",
+      "args": ["--verbose", "serve", "--port", "80"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "verbose", "op": "set", "operand": true, "source": "cli"},
+          {"entity": "port", "op": "set", "operand": 80, "source": "cli"}
+        ],
+        "result": {"v": true, "sv": {"p": 80}, "t": []},
+        "sources": {"v": "cli", "t": "default", "sv.p": "cli"}
+      }
+    },
+    {
+      "id": "command-unfired-same-key-system",
+      "why": "`--verbose` のみ (command 未発火): root の値セルは `v` へ写る。**command が発火していなくても定義に command が在るだけでキー体系が変わってはならない** — 射影経路を「command が在るか」で分岐させた実装はここで生名 `verbose` を出して落ちる。未発火 command の scope は result に現れない (DR-051 absent) ので sources にも席が無い。",
+      "args": ["--verbose"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "verbose", "op": "set", "operand": true, "source": "cli"}
+        ],
+        "result": {"v": true, "t": []},
+        "sources": {"v": "cli", "t": "default"}
+      }
+    },
+    {
+      "id": "unfired-cells-default-under-command",
+      "why": "`serve` のみ: 未発火 flag `verbose` は preset default の `false` を、0 回発火の accum セル `tags` は uniform array の `[]` (DR-044) を result に持つので、どちらも sources に `default` の席を持つ — いずれも射影後キー (`v` / `t`)。選ばれた command の presence marker `sv:{}` (DR-052 §3) は値セルではないので sources に席を持たない (result のキー集合と sources のキー集合が一致しないのはこの marker の分だけ)。配下の `p` は値源なし未発火で absent。",
+      "args": ["serve"],
+      "expect": {
+        "outcome": "success",
+        "effects": [],
+        "result": {"v": false, "sv": {}, "t": []},
+        "sources": {"v": "default", "t": "default"}
+      }
+    },
+    {
+      "id": "accum-multiple-firings-single-source-entry",
+      "why": "`--tags a --tags b`: accum セルが 2 回着席しても sources は射影後キー `t` の 1 エントリに畳まれる (last-wins、`rename-multiple.json` が command 無しで pin する形の command 木版)。sources は「キー → 値源タグ」のマップなので同一キーが複数回現れる形は持たない — binding ごとに無条件で積む実装はここで `t` を 2 つ出して落ちる。未発火 flag `verbose` は default 席で確定。",
+      "args": ["--tags", "a", "--tags", "b"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "tags", "op": "set", "operand": "a", "source": "cli"},
+          {"entity": "tags", "op": "set", "operand": "b", "source": "cli"}
+        ],
+        "result": {"t": ["a", "b"], "v": false},
+        "sources": {"t": "cli", "v": "default"}
+      }
+    }
+  ]
+}

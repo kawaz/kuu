@@ -16,14 +16,15 @@
   "cases": [
     {
       "id": "promote-with-child",
-      "why": "`serve --port 80`: serve トークンで command スコープに入場 (綴り軸不変) し port が 80 発火。export_key null なので serve のスコープキーは結果に現れず、子 port が親 (root) へ昇格して result は {port:80} (通常なら {serve:{port:80}})。effects の entity は値セル port。",
+      "why": "`serve --port 80`: serve トークンで command スコープに入場 (綴り軸不変) し port が 80 発火。export_key null なので serve のスコープキーは結果に現れず、子 port が親 (root) へ昇格して result は {port:80} (通常なら {serve:{port:80}})。effects の entity は値セル port。sources も同じ昇格後のキー `port` の下で由来を示す — 透過ラベルは result の path から落ちるので sources の path からも落ちる (CONFORMANCE §2「sources のキーは result と同一のキー体系」)。sources を持つことで、result だけを射影後キーで組み立て sources は生の宣言名で組み立てる実装 (= 両者を突き合わせられない) を落とす。",
       "args": ["serve", "--port", "80"],
       "expect": {
         "outcome": "success",
         "effects": [
           {"entity": "port", "op": "set", "operand": 80, "source": "cli"}
         ],
-        "result": {"port": 80}
+        "result": {"port": 80},
+        "sources": {"port": "cli"}
       }
     },
     {
