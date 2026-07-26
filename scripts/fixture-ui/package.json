@@ -1,0 +1,13 @@
+{
+  "name": "kuu-fixture-ui",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "bun run server.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "//": "実行に依存は不要 (bun 単体で起動する)。@types/bun は typecheck / エディタ補完のためだけなので、`bun install` は任意。",
+  "devDependencies": {
+    "@types/bun": "latest"
+  }
+}

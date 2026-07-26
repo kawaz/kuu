@@ -17,6 +17,15 @@ default: list
 list:
     @just --list --unsorted
 
+# ---------- tools ----------
+
+# fixture 監査 WebUI を起動する (bun serve、ビルド step なし)。
+# fixture も help も都度読むため、fixture を編集したらリロードで即反映される。
+# --hot は UI 自身 (ts/css) の編集も再起動なしで反映する。
+# help 表示に kuu-cli のバイナリを使う (既定は兄弟チェックアウト、KUU_CLI_BIN で上書き可)。
+fixture-ui:
+    bun run --hot scripts/fixture-ui/server.ts
+
 # ---------- gates ----------
 
 # working copy is clean
