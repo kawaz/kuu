@@ -1,6 +1,6 @@
 # DR-121: sources の結果アドレス — structured path と席の単位
 
-Status: Accepted (SRCADDR-Q1=d / Q2-α=a / Q2-β=c、kawaz 2026-07-26)
+Status: Accepted (SRCADDR-Q1=d / Q2-α=a / Q2-β=c / LINKSRC-Q1=a、kawaz 2026-07-26)
 
 ## 1. sources は structured path の配列で表す (Q1=d)
 
@@ -108,7 +108,32 @@ DESIGN §5.1 (seq は子の値の配列) / §5.2 (`value:` は消費しない li
 `schema/wire.schema.json` の node 同型規定 / DR-031 の席分離から導出される。
 したがって「常に全 child が同じ席」を前提にした 1 タグ化は誤報になる。
 
-## 4. effects との軸の違い
+## 4. `link` は独立した値源タグ (LINKSRC-Q1=a)
+
+`link` (他要素の入口から link で飛んできた効果) は `cli` に畳まず、独立したタグとして報告する。
+DR-031 の source 確定ルール (「自分の入口からの効果 = `cli`、link 越しの効果 = `link`。
+両者はラダー同順位で、区別は経路の違いのみ」) と DR-098 §6 の 7 語彙をそのまま採る。
+
+### 4.1 用途
+
+**どの入口から入ったかを消費者が判別するため。** 典型は alias の deprecated ペア:
+canonical 入口と deprecated 入口が link で結ばれていて、どちらから入っても結果は同じだが、
+deprecated な入口を使った場合に警告を出したい。値が同じでも経路が違うので、
+`sources` で区別できないとアプリ側が判定できない。
+
+(spec 内蔵の deprecated 警告は `warnings[].element` が担う (DR-058 §2) が、
+そちらは「どの canonical を使うべきか」を指す宣言面の情報であり、
+「どの経路で入ったか」を値ごとに引く軸ではない。)
+
+### 4.2 実装の現状
+
+参照実装 (kuu.mbt) は `Source` enum に `Link` を持たず `Cli` に畳んでいる
+(`src/abi/value.mbt` の `Cli // CLI explicit / link`)。また `link` 属性自体も parse 面では
+decode されない。**本 DR は spec 側の規範であり、実装追随は別途行う** (kuu.mbt の issue)。
+corpus に `link` を source 値として pin する fixture が 0 件だったため、
+この乖離が長く検出されていなかった。
+
+## 5. effects との軸の違い
 
 `effects[].entity` は**射影前の canonical entity name / id** であり `export_key` を適用しない
 (DR-045: 効果は cell 単位で記録する。entity は値セルであって露出パスではない)。
@@ -124,7 +149,7 @@ result:  {"v":true}                                         ← 露出キー
 sources: [{"path":[],"key":"v","source":"cli"}]            ← 露出キー
 ```
 
-## 5. 波及
+## 6. 波及
 
 - `docs/CONFORMANCE.md` §2 success の `sources` 規定を本 DR の形へ書き換える
 - `schema/fixture.schema.json` の `sources` を object から array へ
@@ -136,3 +161,5 @@ sources: [{"path":[],"key":"v","source":"cli"}]            ← 露出キー
 - 実装 (`OutputView.sources`) は既に `Array[SourceEntry]` なので、wire の組み立てと
   kuu-cli の JSON 出力を追随させる
 - §3.2 の要素 addressing は配列要素 provenance の設計に従うため、その裁定まで実装しない
+- §4 の `link` は参照実装が `Cli` に畳んでいるので追随が要る (`Source` に `Link` を足す /
+  `link` 属性の parse 面 decode)。`link` を source 値として持つ fixture も corpus に無いので追加する
