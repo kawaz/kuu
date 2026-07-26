@@ -1,0 +1,24 @@
+{
+  "why": "枝が 1 本の `or` でも露出構造は 2 本以上と同じ (DR-067 §2「or / seq の children 数は 0 個・1 個とも合法。1 個は単体と等価 (退化)、正規化はしない」) — 枝数は消費文法の選択肢数であって結果キー軸ではない。`or-parse/option-anonymous-branches-value.json` (2 枝) と同じ `{level: <値>}` になることを 1 枝で固定する。枝数で結果形が変わる実装は、or の wrapper を「枝が 1 本なら透過して良い」と特別扱いしている兆候。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {"name": "level", "long": true, "or": [{"type": "int"}]},
+      {"name": "verbose", "type": "flag", "long": true}
+    ]
+  },
+  "cases": [
+    {
+      "id": "single-branch-same-shape-as-multi",
+      "why": "`--level 5 --verbose`: 枝 1 本でも `level` は結果キーとして立つ。2 枝版の sibling-option-coexists と結果形が一致する。",
+      "args": ["--level", "5", "--verbose"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "verbose", "op": "set", "operand": true, "source": "cli"}
+        ],
+        "result": {"level": 5, "verbose": true}
+      }
+    }
+  ]
+}

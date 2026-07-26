@@ -1,0 +1,43 @@
+{
+  "why": "DESIGN §5.3「values は or のショートハンド」の観測的な等価性: `values: [...]` と、その正規形である `or: [{\"exact\": ...}, ...]` (照合消費の exact 枝 = DR-055 の value-enum 形) は同じ結果形を返す。糖衣と正規形で観測挙動が割れないことを 1 つの定義内で並べて固定する (同じ定義に置くことで、露出規則の差ではなく綴り経路の差だけを見ていることが保証される)。構造 or (`{\"type\": ...}` の枝、`or-parse/option-anonymous-branches-value.json`) は値空間そのものを消費する別物 (exact 枝は照合消費で値が枝ごとに確定するのに対し、type 枝は任意のトークンを型で受ける — DESIGN §5.1/§5.2) だが、**親の name が結果キーになる点は 3 経路 (values / or+exact / 構造 or) とも共通**であり、結果スコープの生成は枝の種類でなく name の有無だけで決まる (DESIGN §2.3)。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {"name": "mode", "long": true, "values": ["fast", "slow"]},
+      {
+        "name": "tier",
+        "long": true,
+        "or": [{"exact": "hot"}, {"exact": "cold"}]
+      },
+      {"name": "verbose", "type": "flag", "long": true}
+    ]
+  },
+  "cases": [
+    {
+      "id": "values-and-or-exact-same-shape",
+      "why": "`--mode fast --tier hot`: 糖衣 (values) と正規形 (or + exact) がどちらも親 name をそのまま結果キーにし、選ばれた exact 値を値にする。両者を 1 case で並べることで、片方だけが平坦化するような経路差が無いことを固定する。",
+      "args": ["--mode", "fast", "--tier", "hot"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "mode", "op": "set", "operand": "fast", "source": "cli"},
+          {"entity": "tier", "op": "set", "operand": "hot", "source": "cli"}
+        ],
+        "result": {"mode": "fast", "tier": "hot", "verbose": false}
+      }
+    },
+    {
+      "id": "other-enum-member-same-shape",
+      "why": "`--mode slow --tier cold`: 選ぶ枝を変えても結果構造は不変 (enum の枝は全て同じセルへ着地する、`enum_value_node` の意味論)。",
+      "args": ["--mode", "slow", "--tier", "cold"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "mode", "op": "set", "operand": "slow", "source": "cli"},
+          {"entity": "tier", "op": "set", "operand": "cold", "source": "cli"}
+        ],
+        "result": {"mode": "slow", "tier": "cold", "verbose": false}
+      }
+    }
+  ]
+}

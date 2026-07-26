@@ -1,5 +1,5 @@
 {
-  "why": "structural or (type 付き枝) + required:true の組合せで、値供給時にも required missing になるバグを pin する (参照実装リポの issue `2026-07-13-structural-or-type-branch-required-missing`、at-least-one 表現力調査の副次発見)。required の充足は型委譲 (DR-093 §1): 値空間を持つ要素 (通常の type、int/bool は共に値空間あり) は「最終状態の値の有無」で充足する。or 自体もグループ的必須の表現 (`{\"or\":[...], \"required\":true}`、DESIGN §9.1) であり、DESIGN §15.9 の判定入力テーブルは required を「型委譲の充足」と定義するのみで or の枝が exact (値なし照合) か type 付き (値空間を持つ leaf) かで判定を分岐させる規定は無い — 分岐する理由がないので、or 親の値充足は「どの枝であれ発火して値が確定していること」で判定されるべき。level は int 型の num 枝、bool 型の flag 枝を持ち、\"5\" は int でのみ成立し bool 側は not_a_bool で確実に死ぬ (\"true\" はその逆)、いずれの入力でも or 構造の完全経路はちょうど1本 (DESIGN §15.1) — ambiguous を作らない値選定 (int/string の組合せだと数字文字列がどちらの型にも受理され ambiguous:2 になることを probe で確認済み、int/bool は排他的に死ぬので issue のバグを required 判定に単離できる)。result の露出構造: level (or を直接持つ node) 自身の name は or-leaf-factory-config.json / path-search/variable-arity-ambiguous.json と同型で export に使われず、選ばれた枝の leaf name (num/flag) が直接トップレベルに現れる (or 直下に type 付き枝が来る node の露出は既に fixtures 内で確立済みの実装挙動、実機 probe で確認 — DR-025 の --color 4パターン表の C 型 (or に name + 枝ごとに name → Partial union `color:{rgb}|{name}`) と字面上は食い違って見えるが、これは既存 fixture 群が既に green で pin している確立済みの露出規則であり、本 fixture が新たに指摘する対象ではない。必要なら別途 DR-025 とこの既存確立挙動の整合を issue 化する)。実機確認 (2026-07-13、参照実装で本 fixture を実行): num 枝・flag 枝いずれの値供給でも `fail:required 'level' is missing` (バグそのもの)。value-enum 形 (exact 枝) + required の対照は `fixtures/constraints-parse/required-value-enum-or-branch.json` — 同じ required + or の組合せで exact 枝は正常動作することを実機確認済み (mismatch なし)、structural 形との非対称性がバグの輪郭。",
+  "why": "structural or (type 付き枝) + required:true の組合せで、値供給時にも required missing になるバグを pin する (参照実装リポの issue `2026-07-13-structural-or-type-branch-required-missing`、at-least-one 表現力調査の副次発見)。required の充足は型委譲 (DR-093 §1): 値空間を持つ要素 (通常の type、int/bool は共に値空間あり) は「最終状態の値の有無」で充足する。or 自体もグループ的必須の表現 (`{\"or\":[...], \"required\":true}`、DESIGN §9.1) であり、DESIGN §15.9 の判定入力テーブルは required を「型委譲の充足」と定義するのみで or の枝が exact (値なし照合) か type 付き (値空間を持つ leaf) かで判定を分岐させる規定は無い — 分岐する理由がないので、or 親の値充足は「どの枝であれ発火して値が確定していること」で判定されるべき。level は int 型の num 枝、bool 型の flag 枝を持ち、\"5\" は int でのみ成立し bool 側は not_a_bool で確実に死ぬ (\"true\" はその逆)、いずれの入力でも or 構造の完全経路はちょうど1本 (DESIGN §15.1) — ambiguous を作らない値選定 (int/string の組合せだと数字文字列がどちらの型にも受理され ambiguous:2 になることを probe で確認済み、int/bool は排他的に死ぬので issue のバグを required 判定に単離できる)。result の露出構造: level は name を持つので 1 段の結果スコープを作り (DESIGN §2.3、DR-025「name を持つノード = 結果スコープを作る」)、選ばれた枝の leaf name (num/flag) はその子スコープのキーになる (DESIGN §2.4 の露出規則 — 最も浅い name 層で止め、それより深い name は止めた層が作る子スコープに属する)。これは DR-025 の --color 4 パターン表の C 型 (or に name + 枝ごとに name → Partial union `level:{num}|{flag}`) そのもので、両枝のキーを同時に持つ object にはならない。同型の pin は `fixtures/value-typing/or-leaf-factory-config.json` / `fixtures/path-search/variable-arity-ambiguous.json`、or 露出そのものの正面 pin は `fixtures/or-parse/option-named-branch-leaves-kv.json`。required 判定 (本 fixture の主眼) は値セルの充足を見るのであって露出の段数とは独立 — num/flag という値確定した候補セルが存在するかどうかだけが判定入力 (DESIGN §15.9)。実機確認 (2026-07-13、参照実装で本 fixture を実行): num 枝・flag 枝いずれの値供給でも `fail:required 'level' is missing` (バグそのもの)。value-enum 形 (exact 枝) + required の対照は `fixtures/constraints-parse/required-value-enum-or-branch.json` — 同じ required + or の組合せで exact 枝は正常動作することを実機確認済み (mismatch なし)、structural 形との非対称性がバグの輪郭。",
   "query": "parse",
   "definition": {
     "options": [
@@ -24,7 +24,7 @@
         "effects": [
           {"entity": "num", "op": "set", "operand": 5, "source": "cli"}
         ],
-        "result": {"num": 5}
+        "result": {"level": {"num": 5}}
       }
     },
     {
@@ -36,7 +36,7 @@
         "effects": [
           {"entity": "flag", "op": "set", "operand": true, "source": "cli"}
         ],
-        "result": {"flag": true}
+        "result": {"level": {"flag": true}}
       }
     },
     {

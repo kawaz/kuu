@@ -1,5 +1,5 @@
 {
-  "why": "collision-exclusive-siblings.json の対で、到達可能性を見ない (DR-120 §6) ことを制約層ではなく消費文法の側から固定する。構造 or の枝は互いに排他 (1 発火でどれか 1 枝しか選ばれない、MDR-004 §1) であり、別枝の leaf 同士は実行時に同時露出しえない。それでも構造 or の枝 leaf は親の結果スコープへ平坦に露出する (`required-structural-or-branch.json` の result が {num:5} / {flag:true} と平坦であることが示す通り) ので、別枝の 2 leaf が同じ露出キーを名乗れば同一結果スコープに同キーの別セルが 2 つ立つ構造になり違法。",
+  "why": "collision-exclusive-siblings.json の対で、到達可能性を見ない (DR-120 §6) ことを制約層ではなく消費文法の側から固定する。構造 or の枝は互いに排他 (1 発火でどれか 1 枝しか選ばれない、DESIGN §5.1「or は子から 1 つ選択」) であり、別枝の leaf 同士は実行時に同時露出しえない。それでも 2 枝の leaf は `level` が作る同一の子スコープ (DESIGN §2.3/§2.4、DR-025 C 型の Partial union) に属するので、両者が同じ露出キーを名乗れば同一結果スコープに同キーの別セルが 2 つ立つ構造になり違法 — 排他で「実際には衝突しない」ことは救済にならない (DR-120 §6 の到達可能性非考慮)。",
   "query": "definition_error",
   "definition": {
     "options": [

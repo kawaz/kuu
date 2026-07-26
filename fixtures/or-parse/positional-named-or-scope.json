@@ -1,0 +1,41 @@
+{
+  "why": "positional 直下の `or` も option と同じ規則で露出する (DESIGN §2.3 は配置に依らない — 役割は所属配列で決まる (§1.3) が、結果スコープを決めるのは name の有無だけ)。name を持つ positional の or は 1 段の結果スコープを作り、name の無い匿名 or は従来どおり透過する (`path-search/held-errors-distinct-depth.json` / `-same-depth.json` が匿名側を pin)。**この fixture が pin する退行**: decode 段で positional の or 分岐が宣言 `name` を無条件に捨てると、宣言した結果キーが lowering に届く前に消える。",
+  "query": "parse",
+  "definition": {
+    "positionals": [
+      {
+        "name": "target",
+        "or": [
+          {"type": "int", "name": "port"},
+          {"type": "bool", "name": "auto"}
+        ]
+      }
+    ]
+  },
+  "cases": [
+    {
+      "id": "named-positional-or-creates-scope",
+      "why": "`8080`: int 枝の leaf `port` は `target` の子スコープに入る (option 側 `or-parse/option-named-branch-leaves-kv.json` と同形)。枝は int / bool で値空間が排他なので完全経路ちょうど 1 本 (string 枝を混ぜると任意トークンを両枝が受理して ambiguous:2 になる)。",
+      "args": ["8080"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "port", "op": "set", "operand": 8080, "source": "cli"}
+        ],
+        "result": {"target": {"port": 8080}}
+      }
+    },
+    {
+      "id": "other-branch-same-parent-key",
+      "why": "`true`: bool 枝を通っても親キーは `target` のまま (Partial union、DR-025 C 型)。",
+      "args": ["true"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "auto", "op": "set", "operand": true, "source": "cli"}
+        ],
+        "result": {"target": {"auto": true}}
+      }
+    }
+  ]
+}
