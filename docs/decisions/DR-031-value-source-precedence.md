@@ -30,8 +30,10 @@
 DR-016 の `source: cli/env/default` を、値源の増加に合わせて拡張:
 
 ```
-source ∈ { cli, link, env, config, inherit, default }
+source ∈ { cli, link, env, config, inherit, tty, default }
 ```
+
+(`tty` は DR-098 §6 が観測席として追加したもの。序列は「明示 (cli/link/env/config) > 継承 (inherit) > 観測 (tty) > 宣言既定 (default)」)
 
 結果オブジェクトで「この値はどこから来たか」を引ける。appconfig ストア用途 (DR-030) で、値源を隠蔽しつつ必要なら由来を確認できる。
 

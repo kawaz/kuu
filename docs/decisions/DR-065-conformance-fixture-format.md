@@ -36,7 +36,7 @@ fixture 専用の簡略形は作らない (公理を増やさない — 仕様�
 ```
 
 - **effects (効果列) が判定の正本** (LOWERING §C.5 の主 oracle)。要素は `{entity, op, operand?, source}`、**配列順 = 適用順** (DR-045/063)。operand の JSON 表現は canonical 規約 (数値最短形等、DR-040/050)
-- **`sources` (optional、2026-07-05 拡張)**: entity → 値源タグのマップで最終値の由来 (DR-031 ラダーの決着) を検証する。値源系 fixture の主語彙。ラダー充填を effects に載せる案は「充填同士の順序が非規範で effects の全順序規約を汚す」ため不採用 — 由来はマップ (順序なし) で検証するのが意味論に忠実
+- **`sources` (optional、2026-07-05 拡張)**: **露出キー** → 値源タグのマップで最終値の由来 (DR-031 ラダーの決着) を検証する。キーは export_key 適用後の露出キーであり (DR-052 §1 の結果キー軸)、`effects[].entity` の射影前 cell name とは別の名前空間 — 正本は CONFORMANCE §2 success の `sources` 規定。値源系 fixture の主語彙。ラダー充填を effects に載せる案は「充填同士の順序が非規範で effects の全順序規約を汚す」ため不採用 — 由来はマップ (順序なし) で検証するのが意味論に忠実
 - **result (結果オブジェクト) は可読性のための併記** (効果列から導出可能)。runner は両方検証してよい
 - **エラー message 文字列は比較対象外** — kind / element / argv_pos が仕様、文言はレンダラ (DR-053/054)
 - 比較はすべて構造等価 (DR-063 §4)

@@ -535,7 +535,7 @@
         },
         "sources": {
           "type": "object",
-          "additionalProperties": { "type": "string", "enum": ["cli", "env", "config", "inherit", "tty", "default"] },
+          "additionalProperties": { "type": "string", "enum": ["cli", "link", "env", "config", "inherit", "tty", "default"] },
           "description": "露出キー (export_key 適用後、scope-path 修飾。result と同一のキー体系) → 値源タグ (optional、CONFORMANCE §2)。値源系 fixture で使用。"
         },
         "warnings": {
@@ -651,7 +651,7 @@
           "description": "DR-045 §4 の 4 op (set/default/unset/empty) + DR-080 §2 の merge accumulator piece op の集合演算系 2 種 (remove = 全削除、splice = old 展開。add piece と cell fn の Value 返却は通常の set として現れる)。"
         },
         "operand": { "description": "op が要求する場合のみ (set の値 / remove の除去対象)。JSON 表現は canonical 規約 (数値は最短形、DR-050 §4)。" },
-        "source": { "type": "string", "const": "cli", "description": "parse fixture では cli のみ登場 (CONFORMANCE §2)。" }
+        "source": { "type": "string", "enum": ["cli", "link"], "description": "effects に載るのは cli / link 由来のパース時効果のみ (CONFORMANCE §2)。link は他要素の入口から link で飛んできた効果 (DR-031 の source 確定ルール)。" }
       },
       "required": ["entity", "op", "source"],
       "additionalProperties": true
