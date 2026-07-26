@@ -22,7 +22,9 @@
         "outcome": "success",
         "effects": [],
         "result": {"xs": []},
-        "sources": []
+        "sources": [
+          {"path": [], "key": "xs", "source": "default"}
+        ]
       }
     },
     {
