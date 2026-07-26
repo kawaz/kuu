@@ -534,22 +534,9 @@
           "description": "最終結果オブジェクト (ラダー充填込みの確定値、DR-051 の absent 規則適用後)。構造等価で比較 (§3)。CONFORMANCE §3 のフィールド省略規約により省略ケースが実在する (実例: fixtures/constraints-parse/requires-bool-target.json) — required にしない。"
         },
         "sources": {
-          "type": "array",
-          "description": "最終結果の値源を検証する entry の配列 (optional、CONFORMANCE §2 / DR-121)。順序は非規範 ((path,key,source) の集合として比較)、(path,key) は一意。値源系 fixture で使用。",
-          "items": {
-            "type": "object",
-            "properties": {
-              "path": {
-                "type": "array",
-                "items": { "type": "string" },
-                "description": "root から cell の所有スコープまでの露出キー segment 列 (export_key 適用後)。root 直下の cell は []。export_key:null の scope segment は現れない (子が親へ昇格)。"
-              },
-              "key": { "type": "string", "description": "cell 自身の露出キー (export_key 適用後)。" },
-              "source": { "type": "string", "enum": ["cli", "link", "env", "config", "inherit", "tty", "default", "const"] }
-            },
-            "required": ["path", "key", "source"],
-            "additionalProperties": false
-          }
+          "type": "object",
+          "additionalProperties": { "$ref": "#/$defs/sourceShadow" },
+          "description": "最終結果の値源を検証する shadow tree (optional、CONFORMANCE §2 / DR-122)。`result` と同型で、値の座だけを source タグに置き換えた形。キー集合は `result` の射影 (result に現れないキーは現れず、result にある値の座は必ず対応するタグを持つ)。トップレベルは result 同様 kv。値源系 fixture で使用。"
         },
         "warnings": {
           "type": "array",
@@ -651,6 +638,21 @@
       },
       "required": ["outcome"],
       "additionalProperties": true
+    },
+
+    "sourceTag": {
+      "type": "string",
+      "enum": ["cli", "link", "env", "config", "inherit", "tty", "default", "const"],
+      "description": "値源タグ (DR-031「source の記録」の 8 語彙が正本。DR-098 §6 の tty、2026-07-26 裁定の const を含む)。"
+    },
+
+    "sourceShadow": {
+      "description": "sources shadow tree の 1 座 (DR-122 §1)。スカラー値の座 = タグ、配列 = タグの配列 (要素対応)、kv / scope = タグの kv (キーは result と同じ露出キー)。空配列 [] / 空 kv {} は値の座が無いので置き換えるタグも無い (DR-122 §2)。",
+      "anyOf": [
+        { "$ref": "#/$defs/sourceTag" },
+        { "type": "array", "items": { "$ref": "#/$defs/sourceShadow" } },
+        { "type": "object", "additionalProperties": { "$ref": "#/$defs/sourceShadow" } }
+      ]
     },
 
     "effect": {
