@@ -1,6 +1,6 @@
 ---
 title: 値源タグの語彙が規範文書間で不一致 (link / tty の扱いが文書ごとに違う)
-status: open
+status: resolved
 category: bug
 created: 2026-07-26T13:48:24+09:00
 last_read: 2026-07-27T03:34:26+09:00
@@ -9,10 +9,10 @@ wip_entered:
 blocked_entered:
 pending_entered:
 discarded_entered:
-resolved_entered:
+resolved_entered: 2026-07-27T03:35:46+09:00
 discard_reason:
 pending_reason:
-close_reason:
+close_reason: ["dr/DR-031","dr/DR-121","dr/DR-099","implemented","done:CONFORMANCE §2 が DR-031「source の記録」の8語彙 (cli/link/env/config/inherit/tty/default/const) を正本として参照する形に統一","done:schema/fixture.schema.json の sources enum を8語彙化、effects[].source は CONFORMANCE §2 の規約どおり cli/link の2値","done:link を source として pin する fixture を fixtures/link-parse/ (basic/export-key-address/absent-target) に追加","done:DR-099 の stale なラダー表記を解消"]
 blocked_by:
 origin: 自リポ TODO
 ---
