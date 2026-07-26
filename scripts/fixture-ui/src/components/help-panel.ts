@@ -29,8 +29,9 @@ function render(result: HelpResult): HTMLElement {
 }
 
 /**
- * help は開くまで取りに行かない (fixture を開くたびに 340 回 spawn しても
- * 意味がないので、明示的に開いた時だけ生成する)。
+ * help は既定で開いた状態にする (定義と help を並べて読むのが監査の主目的なので、
+ * 開く操作を挟ませない)。spawn は fixture を開いた 1 件ぶんだけで、一覧の 340 件を
+ * 舐めるわけではない。閉じてから再度開いても取り直さない。
  */
 export function helpPanel(path: string, caseId: string | null = null): HTMLElement {
   const body = el("div", { class: "help-body", text: "読み込み中…" });
@@ -38,12 +39,12 @@ export function helpPanel(path: string, caseId: string | null = null): HTMLEleme
 
   const panel = el(
     "details",
-    { class: "help-panel" },
+    { class: "help-panel", open: "" },
     el("summary", { text: "ヘルプ表示 (kuu-cli)" }),
     body,
   ) as HTMLDetailsElement;
 
-  panel.addEventListener("toggle", () => {
+  const load = () => {
     if (!panel.open || loaded) return;
     loaded = true;
     fetchHelp(path, caseId)
@@ -54,7 +55,12 @@ export function helpPanel(path: string, caseId: string | null = null): HTMLEleme
           el("pre", { class: "help-error", text: e instanceof Error ? e.message : String(e) }),
         );
       });
-  });
+  };
+
+  // open 属性付きで生成すると toggle は発火しないので初回は自分で呼ぶ。
+  // 失敗後に閉じ→開きで再試行できるよう toggle も張っておく。
+  panel.addEventListener("toggle", load);
+  load();
 
   return panel;
 }
