@@ -20,10 +20,7 @@
           {"entity": "a", "op": "set", "operand": true, "source": "cli"}
         ],
         "result": {"a": true, "c": true},
-        "sources": [
-          {"path": [], "key": "a", "source": "cli"},
-          {"path": [], "key": "c", "source": "config"}
-        ]
+        "sources": {"a": "cli", "c": "config"}
       }
     },
     {

@@ -51,10 +51,7 @@
             "ttl": 50
           }
         },
-        "sources": [
-          {"path": [], "key": "ttl", "source": "cli"},
-          {"path": ["up"], "key": "ttl", "source": "inherit"}
-        ]
+        "sources": {"ttl": "cli", "up": {"ttl": "inherit"}}
       }
     },
     {
@@ -72,10 +69,7 @@
             "ttl": 30
           }
         },
-        "sources": [
-          {"path": [], "key": "ttl", "source": "default"},
-          {"path": ["up"], "key": "ttl", "source": "inherit"}
-        ]
+        "sources": {"ttl": "default", "up": {"ttl": "inherit"}}
       }
     },
     {
@@ -102,10 +96,7 @@
             "ttl": 7
           }
         },
-        "sources": [
-          {"path": [], "key": "ttl", "source": "default"},
-          {"path": ["up"], "key": "ttl", "source": "cli"}
-        ]
+        "sources": {"ttl": "default", "up": {"ttl": "cli"}}
       }
     }
   ]

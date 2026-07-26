@@ -15,9 +15,7 @@
         "outcome": "success",
         "effects": [],
         "result": {"seconds": 10},
-        "sources": [
-          {"path": [], "key": "seconds", "source": "default"}
-        ]
+        "sources": {"seconds": "default"}
       }
     },
     {
@@ -30,9 +28,7 @@
           {"entity": "seconds", "op": "set", "operand": 5, "source": "cli"}
         ],
         "result": {"seconds": 5},
-        "sources": [
-          {"path": [], "key": "seconds", "source": "cli"}
-        ]
+        "sources": {"seconds": "cli"}
       }
     }
   ]

@@ -31,11 +31,7 @@
           {"entity": "a", "op": "set", "operand": true, "source": "cli"}
         ],
         "result": {"a": true, "c": true, "c2": false},
-        "sources": [
-          {"path": [], "key": "a", "source": "cli"},
-          {"path": [], "key": "c", "source": "config"},
-          {"path": [], "key": "c2", "source": "default"}
-        ]
+        "sources": {"a": "cli", "c": "config", "c2": "default"}
       }
     },
     {
@@ -61,13 +57,7 @@
           {"entity": "a2", "op": "set", "operand": true, "source": "cli"}
         ],
         "result": {"c2": true, "a": false, "c": false, "sub": {"a2": true, "c2": true}},
-        "sources": [
-          {"path": [], "key": "a", "source": "default"},
-          {"path": [], "key": "c", "source": "default"},
-          {"path": [], "key": "c2", "source": "cli"},
-          {"path": ["sub"], "key": "a2", "source": "cli"},
-          {"path": ["sub"], "key": "c2", "source": "inherit"}
-        ]
+        "sources": {"c2": "cli", "a": "default", "c": "default", "sub": {"a2": "cli", "c2": "inherit"}}
       }
     }
   ]

@@ -16,11 +16,7 @@
       "expect": {
         "outcome": "success",
         "result": {"pair": {"path": "a", "value": "b"}, "mode": {"tag": "hot"}},
-        "sources": [
-          {"path": ["mode"], "key": "tag", "source": "cli"},
-          {"path": ["pair"], "key": "path", "source": "cli"},
-          {"path": ["pair"], "key": "value", "source": "cli"}
-        ]
+        "sources": {"pair": {"path": "cli", "value": "cli"}, "mode": {"tag": "cli"}}
       }
     }
   ]

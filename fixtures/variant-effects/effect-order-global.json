@@ -21,9 +21,7 @@
           {"entity": "out", "op": "set", "operand": "B", "source": "cli"}
         ],
         "result": {"out": "B", "build": {}},
-        "sources": [
-          {"path": [], "key": "out", "source": "cli"}
-        ]
+        "sources": {"out": "cli", "build": {}}
       }
     },
     {
@@ -37,9 +35,7 @@
           {"entity": "out", "op": "set", "operand": "A", "source": "cli"}
         ],
         "result": {"out": "A", "build": {}},
-        "sources": [
-          {"path": [], "key": "out", "source": "cli"}
-        ]
+        "sources": {"out": "cli", "build": {}}
       }
     }
   ]

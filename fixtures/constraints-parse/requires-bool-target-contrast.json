@@ -43,10 +43,7 @@
           "a": true,
           "c": "x"
         },
-        "sources": [
-          {"path": [], "key": "a", "source": "cli"},
-          {"path": [], "key": "c", "source": "env"}
-        ]
+        "sources": {"a": "cli", "c": "env"}
       }
     }
   ]

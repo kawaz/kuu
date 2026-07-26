@@ -23,10 +23,7 @@
           {"entity": "ttl", "op": "set", "operand": 30, "source": "cli"}
         ],
         "result": {"ttl": 30, "sub": {"ttl": 30}},
-        "sources": [
-          {"path": [], "key": "ttl", "source": "cli"},
-          {"path": ["sub"], "key": "ttl", "source": "inherit"}
-        ]
+        "sources": {"ttl": "cli", "sub": {"ttl": "inherit"}}
       }
     },
     {
@@ -39,9 +36,7 @@
           {"entity": "ttl", "op": "set", "operand": 10, "source": "cli"}
         ],
         "result": {"sub": {"ttl": 10}},
-        "sources": [
-          {"path": ["sub"], "key": "ttl", "source": "cli"}
-        ]
+        "sources": {"sub": {"ttl": "cli"}}
       }
     },
     {
@@ -52,9 +47,7 @@
         "outcome": "success",
         "effects": [],
         "result": {"sub": {"ttl": 60}},
-        "sources": [
-          {"path": ["sub"], "key": "ttl", "source": "default"}
-        ]
+        "sources": {"sub": {"ttl": "default"}}
       }
     }
   ]

@@ -27,9 +27,7 @@
           {"entity": "keep", "op": "set", "operand": "y", "source": "cli"}
         ],
         "result": {"pair": {"keep": "y"}},
-        "sources": [
-          {"path": ["pair"], "key": "keep", "source": "cli"}
-        ]
+        "sources": {"pair": {"keep": "cli"}}
       }
     },
     {
@@ -42,9 +40,7 @@
           {"entity": "flag", "op": "set", "operand": true, "source": "cli"}
         ],
         "result": {"a": {"flag": true}},
-        "sources": [
-          {"path": ["a"], "key": "flag", "source": "cli"}
-        ]
+        "sources": {"a": {"flag": "cli"}}
       }
     },
     {
@@ -57,9 +53,7 @@
           {"entity": "flag", "op": "set", "operand": true, "source": "cli"}
         ],
         "result": {"bb": {"f": true}},
-        "sources": [
-          {"path": ["bb"], "key": "f", "source": "cli"}
-        ]
+        "sources": {"bb": {"f": "cli"}}
       }
     }
   ]

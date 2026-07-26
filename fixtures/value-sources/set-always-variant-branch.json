@@ -18,10 +18,7 @@
           {"entity": "color", "op": "set", "operand": "always", "source": "cli"}
         ],
         "result": {"color": "always", "verbose": false},
-        "sources": [
-          {"path": [], "key": "color", "source": "cli"},
-          {"path": [], "key": "verbose", "source": "default"}
-        ]
+        "sources": {"color": "cli", "verbose": "default"}
       }
     },
     {
@@ -34,10 +31,7 @@
           {"entity": "color", "op": "set", "operand": "always", "source": "cli"}
         ],
         "result": {"color": "always", "verbose": false},
-        "sources": [
-          {"path": [], "key": "color", "source": "cli"},
-          {"path": [], "key": "verbose", "source": "default"}
-        ]
+        "sources": {"color": "cli", "verbose": "default"}
       }
     },
     {
@@ -51,10 +45,7 @@
           {"entity": "verbose", "op": "set", "operand": true, "source": "cli"}
         ],
         "result": {"color": "always", "verbose": true},
-        "sources": [
-          {"path": [], "key": "color", "source": "cli"},
-          {"path": [], "key": "verbose", "source": "cli"}
-        ]
+        "sources": {"color": "cli", "verbose": "cli"}
       }
     },
     {

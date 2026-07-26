@@ -1,5 +1,5 @@
 {
-  "why": "named group positional の child が持つ値源ラダーは、宣言元の root scope ではなく wrapper row の結果アドレスに属する (DR-025/DR-033 の name scope、DR-121 §3.2 の named child provenance)。xs は repeat:{min:0,max:2} なので 0 fire では [] だけが結果になり、row が存在しない以上 child v の default 席も存在せず root 直下へ v が湧かない。現行の group head は k/v の 2 token を一体で消費するため、default は row の消費 arity を変えない。row が発火して v の token が供給されれば cli が勝ち、child は wrapper 配下の row にだけ着席する。配列要素の sources addressing 形式は未裁定なので、本 fixture は発火済み row の sources を規範化しない。",
+  "why": "named group positional の child が持つ値源ラダーは、宣言元の root scope ではなく wrapper row の結果アドレスに属する (DR-025/DR-033 の name scope、DR-121 §3.2 の named child provenance)。xs は repeat:{min:0,max:2} なので 0 fire では [] だけが結果になり、row が存在しない以上 child v の default 席も存在せず root 直下へ v が湧かない。現行の group head は k/v の 2 token を一体で消費するため、default は row の消費 arity を変えない。row が発火して v の token が供給されれば cli が勝ち、child は wrapper 配下の row にだけ着席する。sources は `result` と同型の shadow tree (DR-122) なので、発火済み row の各 child の由来も row 配下の同じキーに書ける。",
   "query": "parse",
   "definition": {
     "positionals": [
@@ -16,15 +16,13 @@
   "cases": [
     {
       "id": "zero-row-does-not-materialize-child-default",
-      "why": "args 無しでは xs が 0 fire の [] になるだけで child row は存在しない。したがって result に root v は現れず、sources にも v の default 席は現れない。",
+      "why": "args 無しでは xs が 0 fire の [] になるだけで child row は存在しない。したがって result に root v は現れず、sources も同型の `{xs: []}` — row が無いので child のタグも無い (DR-122 §2)。",
       "args": [],
       "expect": {
         "outcome": "success",
         "effects": [],
         "result": {"xs": []},
-        "sources": [
-          {"path": [], "key": "xs", "source": "default"}
-        ]
+        "sources": {"xs": []}
       }
     },
     {
@@ -37,7 +35,7 @@
     },
     {
       "id": "one-row-cli-values-stay-under-wrapper",
-      "why": "args `a b`: k/v の両 child が cli から供給され、v の default は発火しない。root v は生えず、両値は wrapper 配下の 1 row にだけ現れる。配列要素の sources addressing は未裁定なので result / effects のみを pin する。",
+      "why": "args `a b`: k/v の両 child が cli から供給され、v の default は発火しない。root v は生えず、両値は wrapper 配下の 1 row にだけ現れる。sources も同型に row 1 個の `[{k:cli, v:cli}]` (DR-122 §1)。",
       "args": ["a", "b"],
       "expect": {
         "outcome": "success",
@@ -45,12 +43,13 @@
           {"entity": "k", "op": "set", "operand": "a", "source": "cli"},
           {"entity": "v", "op": "set", "operand": "b", "source": "cli"}
         ],
-        "result": {"xs": [{"k": "a", "v": "b"}]}
+        "result": {"xs": [{"k": "a", "v": "b"}]},
+        "sources": {"xs": [{"k": "cli", "v": "cli"}]}
       }
     },
     {
       "id": "two-rows-have-independent-child-seats",
-      "why": "args `a b c d`: 2 row が発火し、各 child は wrapper 配下の別々の row に着席する。root v はどちらの row からも生えない。配列要素の sources addressing は未裁定なので result / effects のみを pin する。",
+      "why": "args `a b c d`: 2 row が発火し、各 child は wrapper 配下の別々の row に着席する。root v はどちらの row からも生えない。sources も row ごとに独立したタグを持つ (DR-122 §3 の「accumulator の各 row はその要素を産んだ発火の source」) — row の独立性が shadow tree にそのまま写る。",
       "args": ["a", "b", "c", "d"],
       "expect": {
         "outcome": "success",
@@ -60,7 +59,8 @@
           {"entity": "k", "op": "set", "operand": "c", "source": "cli"},
           {"entity": "v", "op": "set", "operand": "d", "source": "cli"}
         ],
-        "result": {"xs": [{"k": "a", "v": "b"}, {"k": "c", "v": "d"}]}
+        "result": {"xs": [{"k": "a", "v": "b"}, {"k": "c", "v": "d"}]},
+        "sources": {"xs": [{"k": "cli", "v": "cli"}, {"k": "cli", "v": "cli"}]}
       }
     }
   ]

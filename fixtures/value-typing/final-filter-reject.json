@@ -14,9 +14,7 @@
       "expect": {
         "outcome": "success",
         "result": {"port": 100},
-        "sources": [
-          {"path": [], "key": "port", "source": "cli"}
-        ]
+        "sources": {"port": "cli"}
       }
     },
     {

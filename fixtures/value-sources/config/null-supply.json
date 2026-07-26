@@ -18,9 +18,7 @@
         "outcome": "success",
         "effects": [],
         "result": {"port": 9},
-        "sources": [
-          {"path": [], "key": "port", "source": "default"}
-        ]
+        "sources": {"port": "default"}
       }
     },
     {
@@ -32,9 +30,7 @@
         "outcome": "success",
         "effects": [],
         "result": {"port": 3000},
-        "sources": [
-          {"path": [], "key": "port", "source": "config"}
-        ]
+        "sources": {"port": "config"}
       }
     }
   ]

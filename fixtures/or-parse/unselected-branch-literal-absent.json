@@ -24,9 +24,7 @@
           {"entity": "fast", "op": "set", "operand": "x", "source": "cli"}
         ],
         "result": {"mode": {"fast": "x"}},
-        "sources": [
-          {"path": ["mode"], "key": "fast", "source": "cli"}
-        ]
+        "sources": {"mode": {"fast": "cli"}}
       }
     },
     {
@@ -37,9 +35,7 @@
         "outcome": "success",
         "effects": [],
         "result": {"mode": {"slow": "d"}},
-        "sources": [
-          {"path": ["mode"], "key": "slow", "source": "const"}
-        ]
+        "sources": {"mode": {"slow": "const"}}
       }
     }
   ]

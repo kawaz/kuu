@@ -25,9 +25,7 @@
         "outcome": "success",
         "effects": [],
         "result": {"use_color": false},
-        "sources": [
-          {"path": [], "key": "use_color", "source": "tty"}
-        ]
+        "sources": {"use_color": "tty"}
       }
     },
     {
@@ -38,9 +36,7 @@
         "outcome": "success",
         "effects": [],
         "result": {"use_color": true},
-        "sources": [
-          {"path": [], "key": "use_color", "source": "default"}
-        ]
+        "sources": {"use_color": "default"}
       }
     },
     {
@@ -54,9 +50,7 @@
           {"entity": "use_color", "op": "set", "operand": false, "source": "cli"}
         ],
         "result": {"use_color": false},
-        "sources": [
-          {"path": [], "key": "use_color", "source": "cli"}
-        ]
+        "sources": {"use_color": "cli"}
       }
     },
     {
@@ -69,9 +63,7 @@
         "outcome": "success",
         "effects": [],
         "result": {"use_color": false},
-        "sources": [
-          {"path": [], "key": "use_color", "source": "env"}
-        ]
+        "sources": {"use_color": "env"}
       }
     },
     {
@@ -83,11 +75,7 @@
         "outcome": "success",
         "effects": [],
         "result": {"use_color": true, "cygwin_dial_on": true, "cygwin_dial_off": false},
-        "sources": [
-          {"path": [], "key": "cygwin_dial_off", "source": "tty"},
-          {"path": [], "key": "cygwin_dial_on", "source": "tty"},
-          {"path": [], "key": "use_color", "source": "default"}
-        ]
+        "sources": {"use_color": "default", "cygwin_dial_on": "tty", "cygwin_dial_off": "tty"}
       }
     }
   ]

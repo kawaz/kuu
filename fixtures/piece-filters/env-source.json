@@ -17,9 +17,7 @@
         "outcome": "success",
         "effects": [],
         "result": {"rescued": 8080},
-        "sources": [
-          {"path": [], "key": "rescued", "source": "env"}
-        ]
+        "sources": {"rescued": "env"}
       }
     },
     {

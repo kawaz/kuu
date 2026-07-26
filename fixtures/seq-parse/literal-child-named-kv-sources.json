@@ -24,10 +24,7 @@
           {"entity": "path", "op": "set", "operand": "x", "source": "cli"}
         ],
         "result": {"pair": {"path": "x", "mode": "fallback"}},
-        "sources": [
-          {"path": ["pair"], "key": "path", "source": "cli"},
-          {"path": ["pair"], "key": "mode", "source": "const"}
-        ]
+        "sources": {"pair": {"path": "cli", "mode": "const"}}
       }
     },
     {
@@ -38,7 +35,7 @@
         "outcome": "success",
         "effects": [],
         "result": {},
-        "sources": []
+        "sources": {}
       }
     }
   ]

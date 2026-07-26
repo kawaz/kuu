@@ -36,9 +36,7 @@
           { "entity": "x", "op": "set", "operand": true, "source": "cli" }
         ],
         "result": { "ox": true },
-        "sources": [
-          {"path": [], "key": "ox", "source": "cli"}
-        ]
+        "sources": {"ox": "cli"}
       }
     }
   ]

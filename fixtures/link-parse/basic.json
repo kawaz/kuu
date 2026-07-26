@@ -18,9 +18,7 @@
           {"entity": "format", "op": "set", "operand": "json", "source": "link"}
         ],
         "result": {"format": "json"},
-        "sources": [
-          {"path": [], "key": "format", "source": "link"}
-        ]
+        "sources": {"format": "link"}
       }
     },
     {
@@ -33,9 +31,7 @@
           {"entity": "format", "op": "set", "operand": "xml", "source": "cli"}
         ],
         "result": {"format": "xml"},
-        "sources": [
-          {"path": [], "key": "format", "source": "cli"}
-        ]
+        "sources": {"format": "cli"}
       }
     },
     {
@@ -46,9 +42,7 @@
         "outcome": "success",
         "effects": [],
         "result": {"format": "text"},
-        "sources": [
-          {"path": [], "key": "format", "source": "default"}
-        ]
+        "sources": {"format": "default"}
       }
     },
     {
@@ -62,9 +56,7 @@
           {"entity": "format", "op": "set", "operand": "json", "source": "link"}
         ],
         "result": {"format": "json"},
-        "sources": [
-          {"path": [], "key": "format", "source": "link"}
-        ]
+        "sources": {"format": "link"}
       }
     },
     {
@@ -78,9 +70,7 @@
           {"entity": "format", "op": "set", "operand": "xml", "source": "cli"}
         ],
         "result": {"format": "xml"},
-        "sources": [
-          {"path": [], "key": "format", "source": "cli"}
-        ]
+        "sources": {"format": "cli"}
       }
     }
   ]

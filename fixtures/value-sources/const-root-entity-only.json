@@ -16,10 +16,7 @@
         "outcome": "success",
         "effects": [],
         "result": {"timeout": 30, "verbose": false},
-        "sources": [
-          {"path": [], "key": "timeout", "source": "const"},
-          {"path": [], "key": "verbose", "source": "default"}
-        ]
+        "sources": {"timeout": "const", "verbose": "default"}
       }
     },
     {
@@ -32,10 +29,7 @@
           {"entity": "verbose", "op": "set", "operand": true, "source": "cli"}
         ],
         "result": {"timeout": 30, "verbose": true},
-        "sources": [
-          {"path": [], "key": "timeout", "source": "const"},
-          {"path": [], "key": "verbose", "source": "cli"}
-        ]
+        "sources": {"timeout": "const", "verbose": "cli"}
       }
     }
   ]

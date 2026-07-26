@@ -18,9 +18,7 @@
           {"entity": "format", "op": "set", "operand": "json", "source": "link"}
         ],
         "result": {"fmt": "json"},
-        "sources": [
-          {"path": [], "key": "fmt", "source": "link"}
-        ]
+        "sources": {"fmt": "link"}
       }
     }
   ]

@@ -16,9 +16,7 @@
         "outcome": "success",
         "effects": [],
         "result": {"fallback": "auto"},
-        "sources": [
-          {"path": [], "key": "fallback", "source": "default"}
-        ]
+        "sources": {"fallback": "default"}
       }
     }
   ]

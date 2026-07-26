@@ -16,9 +16,7 @@
         "outcome": "success",
         "effects": [{"entity": "ssl", "op": "set", "operand": true, "source": "cli"}],
         "result": {"ssl": true},
-        "sources": [
-          {"path": [], "key": "ssl", "source": "cli"}
-        ]
+        "sources": {"ssl": "cli"}
       }
     },
     {
@@ -29,9 +27,7 @@
         "outcome": "success",
         "effects": [{"entity": "ssl", "op": "set", "operand": false, "source": "cli"}],
         "result": {"ssl": false},
-        "sources": [
-          {"path": [], "key": "ssl", "source": "cli"}
-        ]
+        "sources": {"ssl": "cli"}
       }
     },
     {
@@ -42,9 +38,7 @@
         "outcome": "success",
         "effects": [{"entity": "ssl", "op": "set", "operand": true, "source": "cli"}],
         "result": {"ssl": true},
-        "sources": [
-          {"path": [], "key": "ssl", "source": "cli"}
-        ]
+        "sources": {"ssl": "cli"}
       }
     },
     {
@@ -55,9 +49,7 @@
         "outcome": "success",
         "effects": [{"entity": "ssl", "op": "set", "operand": false, "source": "cli"}],
         "result": {"ssl": false},
-        "sources": [
-          {"path": [], "key": "ssl", "source": "cli"}
-        ]
+        "sources": {"ssl": "cli"}
       }
     },
     {
@@ -68,9 +60,7 @@
         "outcome": "success",
         "effects": [],
         "result": {"ssl": true},
-        "sources": [
-          {"path": [], "key": "ssl", "source": "default"}
-        ]
+        "sources": {"ssl": "default"}
       }
     }
   ]

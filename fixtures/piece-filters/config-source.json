@@ -19,9 +19,7 @@
         "outcome": "success",
         "effects": [],
         "result": {"port": 8080},
-        "sources": [
-          {"path": [], "key": "port", "source": "config"}
-        ]
+        "sources": {"port": "config"}
       }
     },
     {

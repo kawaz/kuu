@@ -15,9 +15,7 @@
         "outcome": "success",
         "effects": [{"entity": "mode", "op": "set", "operand": "readonly", "source": "cli"}],
         "result": {"mode": "readonly"},
-        "sources": [
-          {"path": [], "key": "mode", "source": "cli"}
-        ]
+        "sources": {"mode": "cli"}
       }
     },
     {
@@ -28,9 +26,7 @@
         "outcome": "success",
         "effects": [{"entity": "mode", "op": "set", "operand": "fast", "source": "cli"}],
         "result": {"mode": "fast"},
-        "sources": [
-          {"path": [], "key": "mode", "source": "cli"}
-        ]
+        "sources": {"mode": "cli"}
       }
     },
     {
@@ -41,9 +37,7 @@
         "outcome": "success",
         "effects": [],
         "result": {"mode": "auto"},
-        "sources": [
-          {"path": [], "key": "mode", "source": "default"}
-        ]
+        "sources": {"mode": "default"}
       }
     }
   ]

@@ -18,9 +18,7 @@
           {"entity": "keep", "op": "set", "operand": true, "source": "cli"}
         ],
         "result": {"a": {"keep": true}},
-        "sources": [
-          {"path": ["a"], "key": "keep", "source": "cli"}
-        ]
+        "sources": {"a": {"keep": "cli"}}
       }
     },
     {
@@ -33,9 +31,7 @@
           {"entity": "keep", "op": "set", "operand": true, "source": "cli"}
         ],
         "result": {"keep": true},
-        "sources": [
-          {"path": [], "key": "keep", "source": "cli"}
-        ]
+        "sources": {"keep": "cli"}
       }
     },
     {
@@ -46,9 +42,7 @@
         "outcome": "success",
         "effects": [],
         "result": {"keep": false},
-        "sources": [
-          {"path": [], "key": "keep", "source": "default"}
-        ]
+        "sources": {"keep": "default"}
       }
     },
     {
@@ -59,7 +53,7 @@
         "outcome": "success",
         "effects": [],
         "result": {},
-        "sources": []
+        "sources": {}
       }
     }
   ]

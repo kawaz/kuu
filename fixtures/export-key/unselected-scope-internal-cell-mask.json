@@ -27,11 +27,7 @@
           {"entity": "keep", "op": "set", "operand": true, "source": "cli"}
         ],
         "result": {"cfg": "hello", "mark": "world", "a": {"keep": true}},
-        "sources": [
-          {"path": [], "key": "cfg", "source": "cli"},
-          {"path": [], "key": "mark", "source": "cli"},
-          {"path": ["a"], "key": "keep", "source": "cli"}
-        ]
+        "sources": {"cfg": "cli", "mark": "cli", "a": {"keep": "cli"}}
       }
     },
     {
@@ -42,7 +38,7 @@
         "outcome": "success",
         "effects": [],
         "result": {},
-        "sources": []
+        "sources": {}
       }
     }
   ]

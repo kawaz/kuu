@@ -23,9 +23,7 @@
         "outcome": "success",
         "effects": [],
         "result": {"outer": {"mid": false}},
-        "sources": [
-          {"path": ["outer"], "key": "mid", "source": "default"}
-        ]
+        "sources": {"outer": {"mid": "default"}}
       }
     },
     {
@@ -36,10 +34,7 @@
         "outcome": "success",
         "effects": [],
         "result": {"outer": {"mid": false, "deep": false}},
-        "sources": [
-          {"path": ["outer"], "key": "mid", "source": "default"},
-          {"path": ["outer"], "key": "deep", "source": "default"}
-        ]
+        "sources": {"outer": {"mid": "default", "deep": "default"}}
       }
     },
     {
@@ -50,10 +45,7 @@
         "outcome": "success",
         "effects": [],
         "result": {"outer": {"mid": false, "other": {"o": false}}},
-        "sources": [
-          {"path": ["outer"], "key": "mid", "source": "default"},
-          {"path": ["outer", "other"], "key": "o", "source": "default"}
-        ]
+        "sources": {"outer": {"mid": "default", "other": {"o": "default"}}}
       }
     }
   ]

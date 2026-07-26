@@ -18,9 +18,7 @@
           {"entity": "port", "op": "set", "operand": 9090, "source": "cli"}
         ],
         "result": {"port": 9090},
-        "sources": [
-          {"path": [], "key": "port", "source": "cli"}
-        ]
+        "sources": {"port": "cli"}
       }
     },
     {
@@ -32,9 +30,7 @@
         "outcome": "success",
         "effects": [],
         "result": {"port": 8080},
-        "sources": [
-          {"path": [], "key": "port", "source": "env"}
-        ]
+        "sources": {"port": "env"}
       }
     },
     {
@@ -46,9 +42,7 @@
         "outcome": "success",
         "effects": [],
         "result": {"port": 3000},
-        "sources": [
-          {"path": [], "key": "port", "source": "default"}
-        ]
+        "sources": {"port": "default"}
       }
     }
   ]

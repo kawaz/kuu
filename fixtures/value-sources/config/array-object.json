@@ -53,10 +53,7 @@
           ],
           "port": 9000
         },
-        "sources": [
-          {"path": [], "key": "port", "source": "config"},
-          {"path": [], "key": "tag", "source": "config"}
-        ]
+        "sources": {"tag": ["config", "config"], "port": "config"}
       }
     }
   ]

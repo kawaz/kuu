@@ -9,7 +9,7 @@
   "cases": [
     {
       "id": "empty-clears-tail",
-      "why": "empty は末尾で全消し: --tag a --tag b で [a,b] を蓄積後、--clear-tag が empty 効果でコレクションを [] にリセット。効果列 [set a, set b, empty] を適用順に畳むと最終形は空リスト。empty の後にトークンが無いので再蓄積なし。result は空配列 (absent ではない — multiple は 0 要素でも [] で present、DR-051 §2)。sources=cli (empty は CLI 発火の効果)。",
+      "why": "empty は末尾で全消し: --tag a --tag b で [a,b] を蓄積後、--clear-tag が empty 効果でコレクションを [] にリセット。効果列 [set a, set b, empty] を適用順に畳むと最終形は空リスト。empty の後にトークンが無いので再蓄積なし。result は空配列 (absent ではない — multiple は 0 要素でも [] で present、DR-051 §2)。sources は `{tag: []}` — 空配列は値の座を持たないので由来タグを載せない (DR-122 §2.1)。empty が CLI 発火の効果であることは effects の `op:empty` が担う。",
       "args": ["--tag", "a", "--tag", "b", "--clear-tag"],
       "expect": {
         "outcome": "success",
@@ -19,9 +19,7 @@
           {"entity": "tag", "op": "empty", "source": "cli"}
         ],
         "result": {"tag": []},
-        "sources": [
-          {"path": [], "key": "tag", "source": "cli"}
-        ]
+        "sources": {"tag": []}
       }
     },
     {
@@ -36,9 +34,7 @@
           {"entity": "tag", "op": "set", "operand": "c", "source": "cli"}
         ],
         "result": {"tag": ["c"]},
-        "sources": [
-          {"path": [], "key": "tag", "source": "cli"}
-        ]
+        "sources": {"tag": ["cli"]}
       }
     }
   ]
