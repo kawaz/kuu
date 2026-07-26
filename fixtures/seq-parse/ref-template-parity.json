@@ -1,0 +1,50 @@
+{
+  "why": "同じ消費文法を `definitions.templates` へ切り出しても結果形は変わらない (DR-078 §1「inline seq と ref は同じ構造の別の書き口」) — その保証を、既に inline 版が pin されている 2 断面 (`option-named-children-kv.json` の kv 形 / `option-anonymous-children-array.json` の配列形) の ref 版として固定する。実装がこれを踏み外した実例: templates の seq 本体だけが子の消費 head を素で並べており、結果キーを持たない子が全員同じ単一セルへ束ねられて last-wins で 1 個に潰れていた (`--pair /a 1` が `{pair:\"1\"}`)。inline 側だけを pin していても経路差は検出できないため、書き口ごとの断面が要る。`or` を挟んだ書き口 (`{\"or\":[{\"seq\":[...]}]}`) の同型は `or-parse/option-seq-branch-fold.json`。",
+  "query": "parse",
+  "definition": {
+    "definitions": {
+      "templates": {
+        "named_pair": {
+          "seq": [
+            {"name": "path", "type": "string"},
+            {"name": "value", "type": "string"}
+          ]
+        },
+        "anon_pair": {
+          "seq": [
+            {"type": "string"},
+            {"type": "string"}
+          ]
+        }
+      }
+    },
+    "options": [
+      {"name": "named", "long": true, "ref": "named_pair"},
+      {"name": "anon", "long": true, "ref": "anon_pair"}
+    ]
+  },
+  "cases": [
+    {
+      "id": "ref-named-children-fold-into-one-kv",
+      "why": "`--named /a 1`: 結果キーを持つ子が並ぶので値は 1 個の kv — inline 版 (`seq-parse/option-named-children-kv.json :: named-children-fold-into-one-kv`) と同じ形。テンプレへ切り出したことで露出規則 (DESIGN §2.4/§2.5) が変わることはない。",
+      "args": ["--named", "/a", "1"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "path", "op": "set", "operand": "/a", "source": "cli"},
+          {"entity": "value", "op": "set", "operand": "1", "source": "cli"}
+        ],
+        "result": {"named": {"path": "/a", "value": "1"}}
+      }
+    },
+    {
+      "id": "ref-anonymous-children-stay-an-array",
+      "why": "`--anon /a 1`: 結果キーを持つ子が 1 つも無いので値は子の値の配列 — inline 版 (`seq-parse/option-anonymous-children-array.json :: anonymous-children-stay-an-array`) と同じ形。子は独立した消費点であって同じセルの上書き合戦ではないため、2 個目が 1 個目を潰して `\"1\"` になることはない。",
+      "args": ["--anon", "/a", "1"],
+      "expect": {
+        "outcome": "success",
+        "result": {"anon": ["/a", "1"]}
+      }
+    }
+  ]
+}
