@@ -84,29 +84,31 @@ cell** である。構文上の node 種別では判定しない。
               sources=[{"path":[],"key":"mode","source":"cli"}]
 ```
 
-### 3.2 複数値 = tuple の席 (Q2-β=c)
+### 3.2 複数値 = tuple の席 (Q2-β=c、2026-07-26 kawaz 再裁定で適用範囲を精密化)
 
-`seq` の nameless 子が並ぶ場合、結果は **tuple** (積型) であり、**席は N 個**ある。
-1 つの entry に畳むと N 個の由来を 1 つに潰すことになる。
+`seq` の nameless 子が並ぶ場合、結果は **tuple** (積型) である。「席が N 個」という Q2-β=c の
+原理は、**子が独立の値源を持ちうる場合**に効く — その代表は named 子で、各子が自分の結果キーを
+持つため通常の cell provenance (要素ごとの entry) がそのまま書ける。
 
-**要素ごとに entry を持つ。** 要素の addressing 形式は配列要素 provenance の設計に従う
-(`docs/issue/2026-07-26-array-element-provenance-sources-addressing.md`)。
-
-`or` の枝が `seq` を持つ場合 (枝が tuple) も本項の扱いになる。
-
-#### 異なる値源の共存は到達可能
-
-nameless `seq` の子に「CLI 消費 leaf」と「消費 0 の literal」を並べると、
-要素ごとの provenance が `[cli, default]` になる:
+**nameless tuple の wrapper セルは entry 1 件で、source は発火経路 (`cli` / `link`)。**
+消費 0 literal (`value:`、DESIGN §5.2) を含む tuple でも由来は混在しない:
 
 ```json
 {"name":"pair","seq":[{"type":"string"},{"type":"string","value":"fallback"}]}
---pair x → pair=["x","fallback"]、provenance は [cli, default]
+--pair x → pair=["x","fallback"]、sources は pair に cli の 1 entry
 ```
 
-DESIGN §5.1 (seq は子の値の配列) / §5.2 (`value:` は消費しない literal) /
-`schema/wire.schema.json` の node 同型規定 / DR-031 の席分離から導出される。
-したがって「常に全 child が同じ席」を前提にした 1 タグ化は誤報になる。
+literal 成分は独立の値源ではなく、**発火が産出する形の一部** (kawaz: 「pair は x のみから
+決まっている。これは只の x の写像 (`x → [x,"fallback"]`)」— 静的な定数であって、
+default のような動的な値源装置ではない)。未発火なら pair ごと absent であり、literal だけが
+着席することはない。named literal 子は自分の結果キーを持つので、そのセルの source は
+`const` (DR-031 の語彙追加、「const は値セルに最初からいる。default は無い時に埋める」)。
+
+`or` の枝が `seq` を持つ場合 (枝が tuple) も本項の扱いになる。
+
+> 初版の本節は「要素ごとの provenance が `[cli, default]` になる」を到達可能例として挙げ、
+> 配列要素 addressing の裁定に送っていたが、これは誤導出 (literal は値源ラダーを通らない)。
+> nameless 配列内で source が混在する構成は、この例からは生じない。
 
 ## 4. `link` は独立した値源タグ (LINKSRC-Q1=a)
 

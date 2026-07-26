@@ -545,7 +545,7 @@
                 "description": "root から cell の所有スコープまでの露出キー segment 列 (export_key 適用後)。root 直下の cell は []。export_key:null の scope segment は現れない (子が親へ昇格)。"
               },
               "key": { "type": "string", "description": "cell 自身の露出キー (export_key 適用後)。" },
-              "source": { "type": "string", "enum": ["cli", "link", "env", "config", "inherit", "tty", "default"] }
+              "source": { "type": "string", "enum": ["cli", "link", "env", "config", "inherit", "tty", "default", "const"] }
             },
             "required": ["path", "key", "source"],
             "additionalProperties": false

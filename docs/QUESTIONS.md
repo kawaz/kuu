@@ -20,17 +20,20 @@
 
 ## 裁定待ち
 
-### SRCELEM-Q1: 配列要素ごとの provenance を公開するか
+### CONST-Q1: root 位置 (option / 実体だけノード) の `value:` の source も `const` か
 
-[issue](issue/2026-07-26-array-element-provenance-sources-addressing.md) の論点 1。調査順 1 (到達可能例の実在) は完了した — or/seq 子の消費 0 literal の実装により、`{"name":"pair","seq":[{"type":"string"},{"type":"string","value":"fallback"}]}` + `--pair x` → `pair=["x","fallback"]` (要素ごとの由来 = cli と default) が実機で動き、[fixtures/seq-parse/literal-child-zero-consumption.json](../fixtures/seq-parse/literal-child-zero-consumption.json) で pin 済み (DR-121 §3.2 の断面そのもの)。
+2026-07-26 の裁定 (「const は値セルに最初からいる。default は無い時に埋める」) を受けて
+**構造子位置**の消費 0 literal は `const` タグに確定した (DR-031 / DR-121 §3.2 / CONFORMANCE 反映済み)。
+残るのは **root 位置**: DESIGN §11.4 のラダー表記は「5. default / **value** (最終フォールバック)」と
+value をラダー 5 段目に置いており (DR-030 実体だけノード `{"name":"timeout","type":"number","value":30}` /
+DESIGN 370 行)、裁定の「const ≠ default」とどちらで読むか。なお root `value:` は実装未対応
+(kuu.mbt issue value-default-unimplemented-root-positions) なので、いま決めても実装追随は後で良い。
 
-残る判断は「**消費者が要素単位の由来で何をするか**」— 到達可能なだけでは公開理由にならない (issue の調査順 3)。named 子に倒せば cell provenance で書けること ([fixtures/seq-parse/literal-child-named-kv-sources.json](../fixtures/seq-parse/literal-child-named-kv-sources.json) で pin 済み) も判断材料。
+- [ ] a: root の `value:` も `const` (「セルに最初からいる」は位置を問わない。DESIGN §11.4 の 5 段目から value を外し「default (最終フォールバック)」だけにし、value は初期化位相と明記)
+- [ ] b: root の `value:` はラダー 5 段目のまま `default` タグ (構造子位置だけ const。位置で読み分け)
+- [ ] c: 保留 (root value 実装時に決める)
 
-- [ ] a: 公開しない (cell-level provenance で閉じる。nameless 配列は wrapper に 1 タグ。issue close、DR-121 §3.2 の「要素ごと entry」規定は named 子経路に限定する改訂)
-- [ ] b: 公開する (addressing 形式の設計に進む — 形式は次バッチで α/β 分割して諮る)
-- [ ] c: 保留 (実利用からの要求が出るまで現状維持。DR-121 §3.2 は「addressing 裁定待ち」のまま)
-
-統括推し: **a**。根拠: (1) 消費者ユースケースが現状挙がっていない (link の deprecated 警告のような具体用途が無い)、(2) 要素由来を区別したい定義は named 子で書けば cell provenance で足りる (kv 経路、pin 済み)、(3) nameless 子は「結果キー軸を持たない = 透過」(DR-052/DR-120 §4) という既定線と、要素 addressing を持たないことが整合する。懸念: DR-121 §3.2 の「複数値 = 要素ごと entry」(SRCADDR-Q2-β=c) を部分的に狭める改訂になる — β 裁定の「席が N 個」という原理は named 経路では生きるので、全面撤回ではない。
+統括推し: **a**。「最初からいる vs 無い時に埋める」の区別は位置に依存しない。b は同じ綴りの source が位置で変わり読み手に厳しい。懸念: env/config が value 持ちセルを上書きできるか (できるべき — const は席でなく初期値なので上位席が普通に勝つ) の 1 文を DESIGN に足す必要がある。
 
 ## 確認待ち
 
