@@ -20,7 +20,22 @@
 
 ## 裁定待ち
 
-(現在なし)
+### GATEKIND-Q1: 「spec 上合法だが実装が未対応」を機械可読に区別する kind を設けるか
+
+背景: kuu.mbt は ref+link / structural body+link (DR-029 上は合法) を一時 gate で拒否しており、kind は
+`invalid-range` (= [DR-054](decisions/DR-054-parse-definition-failure.md) の「定義が不正」語彙) を流用している。
+message は「not supported by this implementation」だが、**kind だけ見る機械 (conformance 比較・ツール連携) には
+「この定義は違法」と区別が付かない** (ゼロ知識レビュー M6)。
+
+- [ ] a: DR-054 の kind 列挙に `unsupported` (実装制限。spec 合法・当該実装が未対応) を追加する。
+      conformance 上は「この kind を返す実装は当該機能の green を主張できない」の位置づけ
+- [ ] b: kind は増やさず現状維持 (invalid-range 流用)。実装制限は message / docs の人間可読情報に留める
+- [ ] c: kind でなく error object に `unsupported: true` 等の optional フラグを足す
+
+統括推し: **a**。準拠プロファイル (CONFORMANCE §0) が「部分実装」を前提にしている以上、「未対応」を
+第一級の語彙にする方が体系と整合する。b は「kind の嘘」が残る。c は比較規約 ((element, kind) 集合) に
+第 3 軸が入り複雑化する。懸念: kind 列挙は閉集合として全実装が写像しているので、追加は互換影響がある
+(v1 前なので今なら安い)。
 
 ## 確認待ち
 
