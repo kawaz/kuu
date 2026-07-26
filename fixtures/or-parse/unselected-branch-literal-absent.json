@@ -28,6 +28,19 @@
           {"path": ["mode"], "key": "fast", "source": "cli"}
         ]
       }
+    },
+    {
+      "id": "value-absent-selects-const-branch",
+      "why": "`--mode` (値トークンなし): fast 枝は string で消費対象トークンが無く missing_operand で落ちる。slow 枝は or/seq の子位置における `default:` 綴りが `value:` と同じ宣言定数 (const、DESIGN §5.2) であり消費 0 で成立するため、or は slow 枝だけを選ぶ。selected-branch-only-key-present の対偶 — 「未選択なら着席しない」の裏として「選択されれば const で着席する」を pin する。result は `{mode:{slow:\"d\"}}`、sources は slow の 1 件のみで source は `const` (DR-031 の const 語彙)。",
+      "args": ["--mode"],
+      "expect": {
+        "outcome": "success",
+        "effects": [],
+        "result": {"mode": {"slow": "d"}},
+        "sources": [
+          {"path": ["mode"], "key": "slow", "source": "const"}
+        ]
+      }
     }
   ]
 }
