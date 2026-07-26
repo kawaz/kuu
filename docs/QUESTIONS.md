@@ -20,7 +20,17 @@
 
 ## 裁定待ち
 
-(現在なし)
+### SRCELEM-Q1: 配列要素ごとの provenance を公開するか
+
+[issue](issue/2026-07-26-array-element-provenance-sources-addressing.md) の論点 1。調査順 1 (到達可能例の実在) は完了した — or/seq 子の消費 0 literal の実装により、`{"name":"pair","seq":[{"type":"string"},{"type":"string","value":"fallback"}]}` + `--pair x` → `pair=["x","fallback"]` (要素ごとの由来 = cli と default) が実機で動き、[fixtures/seq-parse/literal-child-zero-consumption.json](../fixtures/seq-parse/literal-child-zero-consumption.json) で pin 済み (DR-121 §3.2 の断面そのもの)。
+
+残る判断は「**消費者が要素単位の由来で何をするか**」— 到達可能なだけでは公開理由にならない (issue の調査順 3)。named 子に倒せば cell provenance で書けること ([fixtures/seq-parse/literal-child-named-kv-sources.json](../fixtures/seq-parse/literal-child-named-kv-sources.json) で pin 済み) も判断材料。
+
+- [ ] a: 公開しない (cell-level provenance で閉じる。nameless 配列は wrapper に 1 タグ。issue close、DR-121 §3.2 の「要素ごと entry」規定は named 子経路に限定する改訂)
+- [ ] b: 公開する (addressing 形式の設計に進む — 形式は次バッチで α/β 分割して諮る)
+- [ ] c: 保留 (実利用からの要求が出るまで現状維持。DR-121 §3.2 は「addressing 裁定待ち」のまま)
+
+統括推し: **a**。根拠: (1) 消費者ユースケースが現状挙がっていない (link の deprecated 警告のような具体用途が無い)、(2) 要素由来を区別したい定義は named 子で書けば cell provenance で足りる (kv 経路、pin 済み)、(3) nameless 子は「結果キー軸を持たない = 透過」(DR-052/DR-120 §4) という既定線と、要素 addressing を持たないことが整合する。懸念: DR-121 §3.2 の「複数値 = 要素ごと entry」(SRCADDR-Q2-β=c) を部分的に狭める改訂になる — β 裁定の「席が N 個」という原理は named 経路では生きるので、全面撤回ではない。
 
 ## 確認待ち
 
