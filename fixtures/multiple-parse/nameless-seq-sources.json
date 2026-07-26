@@ -1,0 +1,58 @@
+{
+  "why": "name 付き seq accumulator の子がすべて nameless の場合、各発火の tuple は wrapper の結果アドレスへ畳まれる (DR-121 §3.2)。未発火時だけ DR-044 uniform array の default 席を持ち、1 回以上発火した wrapper は子に独立した結果アドレスが無くても発火経路の source を 1 entry で報告する。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {
+        "name": "pair",
+        "long": true,
+        "multiple": "append",
+        "seq": [
+          {"type": "string"},
+          {"type": "string"}
+        ]
+      }
+    ]
+  },
+  "cases": [
+    {
+      "id": "unfired-wrapper-keeps-default-seat",
+      "why": "0 回発火では result の uniform array `[]` に対応する wrapper 席が default 由来になる。CLI 効果は無い。",
+      "args": [],
+      "expect": {
+        "outcome": "success",
+        "effects": [],
+        "result": {"pair": []},
+        "sources": [
+          {"path": [], "key": "pair", "source": "default"}
+        ]
+      }
+    },
+    {
+      "id": "one-fire-reports-cli-on-wrapper",
+      "why": "`--pair a b` の 1 発火が tuple `[a,b]` を wrapper の accumulator に追加する。nameless 子に独立 entry は作らず、wrapper の 1 entry が発火経路 cli を報告する。",
+      "args": ["--pair", "a", "b"],
+      "expect": {
+        "outcome": "success",
+        "effects": [],
+        "result": {"pair": [["a", "b"]]},
+        "sources": [
+          {"path": [], "key": "pair", "source": "cli"}
+        ]
+      }
+    },
+    {
+      "id": "multiple-fires-keep-cli-on-wrapper",
+      "why": "2 回の発火を append しても値源の席は wrapper の 1 件であり、最終確定 source は発火経路 cli のまま。",
+      "args": ["--pair", "a", "b", "--pair", "c", "d"],
+      "expect": {
+        "outcome": "success",
+        "effects": [],
+        "result": {"pair": [["a", "b"], ["c", "d"]]},
+        "sources": [
+          {"path": [], "key": "pair", "source": "cli"}
+        ]
+      }
+    }
+  ]
+}
