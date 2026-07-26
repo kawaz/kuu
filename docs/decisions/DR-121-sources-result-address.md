@@ -1,6 +1,7 @@
 # DR-121: sources の結果アドレス — structured path と席の単位
 
-Status: Accepted (SRCADDR-Q1=d / Q2-α=a / Q2-β=c / LINKSRC-Q1=a、kawaz 2026-07-26)
+Status: Accepted (SRCADDR-Q1=d / Q2-α=a / Q2-β=c / LINKSRC-Q1=a、kawaz 2026-07-26) —
+**§1 / §2.2 / §3 は DR-122 が置き換え** (§4 / §5 は現役、末尾「Superseded (歴史)」節参照)
 
 ## 1. sources は structured path の配列で表す (Q1=d)
 
@@ -165,3 +166,37 @@ sources: [{"path":[],"key":"v","source":"cli"}]            ← 露出キー
 - §3.2 の nameless tuple wrapper は entry 1 件 (発火経路の source)。named 子は通常の cell provenance で書けるため、配列要素 addressing の新設計は不要になった (2026-07-26 再裁定)
 - §4 の `link` は参照実装が `Cli` に畳んでいるので追随が要る (`Source` に `Link` を足す /
   `link` 属性の parse 面 decode)。`link` を source 値として持つ fixture も corpus に無いので追加する
+
+## Superseded (歴史)
+
+本節は DR-122 (sources は result の shadow tree) との関係を **superseded (覆された部分)** と
+**retained (現役のまま適用される部分)** に分けて明示する。判断内容自体は変更しない。
+
+### Superseded — §1 / §2.2 / §3 (structured path entry を前提とする規定)
+
+> **現役仕様の理解には不要、判断経緯としてのみ残す。**
+
+`sources` の wire 形が structured path entry の配列から **`result` と同型の shadow tree** へ変わった
+(DR-122 §1)。これに伴い以下が置き換わる:
+
+- **§1 全体** (entry 配列の形、`(path, key)` の一意性、順序非規範、連結文字列の禁止) — shadow tree は
+  そもそもフラット化しないので、entry も結果アドレスの符号化も存在しない。§1.1 の「`path` と `key` を
+  結合した文字列を規範面で作らない」という禁則は、結合する動機ごと消える。§1.2 が挙げた `.` 連結の
+  非単射という欠陥は、構造をそのまま写す形では**構造的に発生しない**
+- **§2.2 の accumulator 規定** — 0 回発火 `[]` に `source: "default"` の entry を 1 件持つ規定は廃止。
+  `sources` 側も `[]` になる (「発火していない」ことは空配列そのものが表現しており、タグの捏造は要らない、
+  DR-122 §2)。副作用として、`empty` op (committed=true) で明示的に空にした `[]` と未発火の `[]` が
+  `sources` 上で区別できなくなる — この区別は `effects` の op が担う (DR-122 §2 / CONFORMANCE §2)
+- **§3 の structural aggregate の席論** — 「nameless tuple の wrapper は entry 1 件」(§3.2) は
+  フラット化に由来する**縮退表示**だった。shadow tree では tuple の各要素が自分の由来を持てるので
+  `["cli", "const"]` と正確に書ける (DR-122 §3)。§3.1 の union 席 (`or` の枝が単一値) は、値の座が
+  1 つである以上 shadow tree でもタグ 1 つであり、結論は変わらないが「席」という中間概念を経由しなくなる
+
+### Retained — §4 / §5 は不変で現役
+
+> **以下は覆されていない。**
+
+- **§4 (`link` は独立した値源タグ)** — LINKSRC-Q1=a はタグの**語彙**の裁定であり、タグをどう配置するか
+  (entry 配列 / shadow tree) とは独立。§4.2 の実装追随 (参照実装が `Cli` に畳んでいる) も未解消のまま
+- **§5 (effects との軸の違い)** — `effects[].entity` が宣言名軸、`result` / `sources` が結果アドレス軸
+  である対比は不変。§5 の例に出る `sources` の綴りだけが shadow tree 形 (`{"v": "cli"}`) になる
