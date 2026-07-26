@@ -99,7 +99,7 @@ spec バンドル自体の v1.0.0 発行条件 (5 プロファイル全 green、
   5. 子 result の所有スコープとしてのみ働く **scope generator 自体には entry を作らない**。選択された command / name 付き `or` / `seq` が子を持たず空 object `{}` を作る presence marker (DR-052 §3) も、値源ラダーが確定する値ではないので席を持たない。スコープ生成要素が結果キーを占有する 1 セルとして数えられること (DR-120 §4) とは別の軸
   6. **accumulator cell** は 0 回発火でも uniform array の既定値 `[]` を持つ (DR-044) ので、結果アドレスに `source: "default"` の entry を 1 件作る (DR-031 の default 席 × DR-044 の合成)。1 回以上発火した場合はその cell の最終確定 source を同じ結果アドレスに載せる
 
-  **structural aggregate** (`name` を持つ `seq` / `or` の子が nameless で、値が wrapper の結果アドレスへ畳まれる形) は、畳まれる値の数で扱いが分かれる (DR-121 §3) — 単一値 (`or` の枝 = union 席) は entry 1 件、複数値 (`seq` = tuple、席が N 個) は要素ごとに entry を持つ。要素の addressing 形式は配列要素 provenance の設計に従う。
+  **structural aggregate** (`name` を持つ `seq` / `or` の子が nameless で、値が wrapper の結果アドレスへ畳まれる形) は、単一値 (`or` の枝 = union 席)・複数値 (`seq` = tuple) とも **wrapper の結果アドレスに entry 1 件**で、source は発火経路 (`cli` / `link`) — nameless 子は独立の値源を持たない (消費 0 literal 成分は発火が産出する形の一部、DR-121 §3.2 の 2026-07-26 再裁定)。要素ごとの由来を観測したい定義は子に name を付けて kv 経路 (cell provenance) で書く。
 
   **内部セルは射影しない**: `type: "none"` (DR-089) / `config_file` (DR-050) / dd trigger (DR-064) は `effects` / `result` / `sources` のいずれにも現れない。
 
