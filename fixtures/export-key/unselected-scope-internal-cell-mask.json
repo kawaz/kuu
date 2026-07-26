@@ -1,0 +1,49 @@
+{
+  "why": "内部セル (`type: \"none\"` / `config_file` / dd trigger) は結果から**落とす**対象なので、その席は `(path, key)` の negative list として持たれる。ここで**未選択の透過 command** 配下の内部セルを席に含めてしまうと、透過ラベルが落ちて席が root に着地し、**root に実在する同名の値セルを巻き添えで除外**する。値が消えるので実害が大きく、しかも透過固有 (identity なら席が `([\"c\"], ...)` になり衝突しない) なので気づきにくい。除外の席も「選ばれたスコープの配下」に限る。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {"name": "cfg", "type": "string", "long": true},
+      {"name": "mark", "type": "string", "long": true}
+    ],
+    "commands": [
+      {"type": "command", "name": "a", "options": [{"name": "keep", "type": "flag", "long": true}]},
+      {"type": "command", "name": "c", "export_key": null, "options": [
+        {"name": "cfg", "type": "config_file", "long": true},
+        {"name": "mark", "type": "none", "long": true}
+      ]}
+    ]
+  },
+  "cases": [
+    {
+      "id": "unselected-transparent-internal-cells-do-not-mask-root",
+      "why": "`--cfg hello --mark world a --keep`: 透過 command `c` は選ばれていないので、その配下の `cfg` (config_file) と `mark` (none) は除外席を作らない。root の同名の**値セル** `cfg` / `mark` は普通の文字列として結果に残る。除外席が未選択スコープからも作られると、root の `cfg` と `mark` が両方 result からも sources からも消える。",
+      "args": ["--cfg", "hello", "--mark", "world", "a", "--keep"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "cfg", "op": "set", "operand": "hello", "source": "cli"},
+          {"entity": "mark", "op": "set", "operand": "world", "source": "cli"},
+          {"entity": "keep", "op": "set", "operand": true, "source": "cli"}
+        ],
+        "result": {"cfg": "hello", "mark": "world", "a": {"keep": true}},
+        "sources": [
+          {"path": [], "key": "cfg", "source": "cli"},
+          {"path": [], "key": "mark", "source": "cli"},
+          {"path": ["a"], "key": "keep", "source": "cli"}
+        ]
+      }
+    },
+    {
+      "id": "selected-transparent-internal-cells-still-excluded",
+      "why": "`c --mark`: 透過 command `c` を選んだ場合、その配下の `mark` (none) は従来どおり除外される — 内部セル除外そのものは生きている。選択判定を入れたことで除外を殺していないことを固定する。root の `cfg` / `mark` は発火していないので absent (値源なし、DR-051)。",
+      "args": ["c", "--mark"],
+      "expect": {
+        "outcome": "success",
+        "effects": [],
+        "result": {},
+        "sources": []
+      }
+    }
+  ]
+}
