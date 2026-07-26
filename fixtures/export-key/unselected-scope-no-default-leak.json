@@ -1,0 +1,66 @@
+{
+  "why": "**選ばれていない command の配下セルは、preset default を持っていても結果に現れない** (DR-051 の absent)。flag / bool は「値源ラダーを走らせない射影でも result に出る」扱いを受ける (LOWERING §A.5 / DR-051 §2 — 未発火でも `false` を持つので absent にならない) が、その注入は **選ばれたスコープの配下に限る**。透過 command (`export_key: null`) で顕在化する — 未選択スコープの子が root へ昇格して、選んでもいない command の flag が結果に出てしまう形になる。identity command なら未選択スコープごと消えるので見えないが、根は同じ「選択判定なしにスコープを降りる」ことにある。`sources` 側には出ないので `result` と `sources` の非対称にもなる (DR-121 §2「席を持つのは結果アドレスを持つ値セル」)。",
+  "query": "parse",
+  "definition": {
+    "commands": [
+      {"type": "command", "name": "a", "options": [{"name": "keep", "type": "flag", "long": true}]},
+      {"type": "command", "name": "c", "export_key": null, "options": [{"name": "keep", "type": "flag", "long": true}]}
+    ]
+  },
+  "cases": [
+    {
+      "id": "unselected-transparent-scope-does-not-promote-default",
+      "why": "`a --keep`: command `a` を選び、透過 command `c` は選んでいない。`c` 配下の `keep` は preset default `false` を持つが、`c` が選ばれていないので結果に現れない。透過ラベルは結果 path を落とすので、注入されると root の `keep` として現れ、選んだ `a` の `keep` と並んで 2 つの `keep` が見える形になる (実際に起きていた)。",
+      "args": ["a", "--keep"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "keep", "op": "set", "operand": true, "source": "cli"}
+        ],
+        "result": {"a": {"keep": true}},
+        "sources": [
+          {"path": ["a"], "key": "keep", "source": "cli"}
+        ]
+      }
+    },
+    {
+      "id": "selected-transparent-scope-still-promotes",
+      "why": "`c --keep`: 透過 command を選んだ側は従来どおり昇格する。選択判定を入れても、選ばれたスコープの配下は結果に出る — 対照として置くことで「選択の有無」が分岐条件であることが定まる。",
+      "args": ["c", "--keep"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "keep", "op": "set", "operand": true, "source": "cli"}
+        ],
+        "result": {"keep": true},
+        "sources": [
+          {"path": [], "key": "keep", "source": "cli"}
+        ]
+      }
+    },
+    {
+      "id": "selected-transparent-scope-promotes-unfired-default",
+      "why": "`c` のみ (子未発火): 選ばれた透過スコープの配下は、未発火でも preset default が昇格して現れる。flag が absent にならない規則 (DR-051 §2) は「選ばれたスコープの中で」働く。",
+      "args": ["c"],
+      "expect": {
+        "outcome": "success",
+        "effects": [],
+        "result": {"keep": false},
+        "sources": [
+          {"path": [], "key": "keep", "source": "default"}
+        ]
+      }
+    },
+    {
+      "id": "no-command-selected-yields-empty-result",
+      "why": "引数なし: どの command も選ばれていないので、両方の配下 flag が結果に現れず result は空。選択判定が無い実装はここで透過側の `keep: false` を出す。",
+      "args": [],
+      "expect": {
+        "outcome": "success",
+        "effects": [],
+        "result": {},
+        "sources": []
+      }
+    }
+  ]
+}
