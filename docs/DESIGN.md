@@ -402,6 +402,8 @@ true    → bool として同様
 
 **消費しない literal** は `value:` / `default:` フィールドで書く (`{"type": "number", "value": 30}` は消費 0 の実体だけノード)。消費数は Accept の報告値であり、value の有無から導出しない (DR-041 §3)。
 
+`value:` と `default:` の同一要素での併記は**位置で扱いが分かれる**: or/seq の子 (構造位置) では両綴りとも同じ宣言定数 (`const`、DR-031) なので同義の二重宣言 = definition-error。root 位置 (options[] / positionals[] の entry) では `value:` は初期値 (const)、`default:` はラダー席 (§11.4) で**別位相**なので併記は合法 — ただし const が常にセルを埋めるため default 側は到達不能な死に宣言になる (env が常に供給される環境で default が影になるのと同じラダーの通常挙動。CONST-Q1=a、静的検出は lint の領分)。
+
 ### 5.3 values は or のショートハンド
 
 ```json
