@@ -1,0 +1,42 @@
+{
+  "why": "root 位置 (option 席) の `value:` = DR-030「実体だけノード」の本命形 `{\"name\":\"timeout\",\"type\":\"number\",\"value\":30}` を固定する (CONST-Q1=a、kawaz 裁定 2026-07-26)。入口属性 (long/short/positional 位置) を一切持たないので CLI からは起動されないが、結果には出る — DESIGN §4.5 が謳う appconfig ストア用途そのもの。値源タグは `const` (DR-031 の 8 語彙目、「const は値セルに最初からいる。default は無い時に埋める」) であり、ラダー充填の `default` とは別物: 構造子 child 位置の消費 0 literal (seq-parse/literal-child-named-kv-sources.json) と同じ語彙が root でも使われる (**位置を問わない**、DR-031 の CONST-Q1 節)。const は席ではないので序列に参加しないが、上位席 (env / config / inherit) の供給や cli 効果は初期値を通常規則どおり上書きする (DESIGN §11.4) — その上書き側は const-root-upper-seat-override.json が担う。effects には現れない (CONFORMANCE §2「effects は cli/link 由来のみ」— 宣言定数はユーザ操作ではない)。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {"name": "timeout", "type": "number", "value": 30},
+      {"name": "verbose", "type": "flag", "long": true}
+    ]
+  },
+  "cases": [
+    {
+      "id": "entity-only-const-present-without-firing",
+      "why": "args 空: `timeout` は入口を持たないので発火しようがないが、const は「値セルに最初からいる」ので結果に 30 として現れる (DR-030 の「CLI 引数では起動されないが結果に出る」)。sources は `const`。未発火 flag の `verbose` は対照 — こちらはラダー最下段の宣言 default で確定するので `default` (DR-031 SPK-Q2=a「未発火要素の sources は default」)。同じ「発火していない」でも const と default が別語彙で出ることを 1 case 内で対比する。",
+      "args": [],
+      "expect": {
+        "outcome": "success",
+        "effects": [],
+        "result": {"timeout": 30, "verbose": false},
+        "sources": [
+          {"path": [], "key": "timeout", "source": "const"},
+          {"path": [], "key": "verbose", "source": "default"}
+        ]
+      }
+    },
+    {
+      "id": "const-unaffected-by-sibling-firing",
+      "why": "`--verbose`: 兄弟要素の発火は const セルに何の影響も与えない (const は宣言定数であって、経路探索や効果列と結びついていない)。effects には cli 由来の `verbose` だけが載り、`timeout` は const のまま。",
+      "args": ["--verbose"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "verbose", "op": "set", "operand": true, "source": "cli"}
+        ],
+        "result": {"timeout": 30, "verbose": true},
+        "sources": [
+          {"path": [], "key": "timeout", "source": "const"},
+          {"path": [], "key": "verbose", "source": "cli"}
+        ]
+      }
+    }
+  ]
+}
