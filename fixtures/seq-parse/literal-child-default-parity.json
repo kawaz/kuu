@@ -1,5 +1,5 @@
 {
-  "why": "対照 (`literal-child-zero-consumption.json` の裏面): seq の子が `default:` を持つ (value ではなく) 場合でも結果形は同一。DR-015「value / default を持つ literal は消費 0 が既定」は表記に依らず両方へ効き、構造子位置ではどちらの綴りも宣言定数 (source タグは `const`、DR-031 —「const は値セルに最初からいる。default は無い時に埋める」) として振る舞う。この fixture では中身の値の等価性のみを pin し、source の書き分けは effects (cli/link 限定) に現れないため検証対象にならない。",
+  "why": "対照 (`literal-child-zero-consumption.json` の裏面): seq の子が `default:` を持つ (value ではなく) 場合でも結果形は同一。DR-015「value / default を持つ literal は消費 0 が既定」は表記に依らず両方へ効き、構造子位置ではどちらの綴りも宣言定数 (source タグは `const`、DR-031 —「const は値セルに最初からいる。default は無い時に埋める」) として振る舞う。値の等価性に加えて `sources` も一致することを pin する (nameless 子なので DR-121 §3.2 の nameless tuple 規定が効き、wrapper `pair` に発火経路 `cli` の 1 entry — `value:` 版と完全に同形)。",
   "query": "parse",
   "definition": {
     "options": [
@@ -16,12 +16,15 @@
   "cases": [
     {
       "id": "default-child-same-result-as-value",
-      "why": "`--pair x`: 1 子目が \"x\" を消費、2 子目 (`default:\"fallback\"`) は消費 0 で default 値をそのまま持つ。結果は `literal-child-zero-consumption.json :: trailing-literal-consumes-nothing` の `value:` 版と完全一致 (`[\"x\",\"fallback\"]`) — value / default の書き分けは結果構造に影響しない。",
+      "why": "`--pair x`: 1 子目が \"x\" を消費、2 子目 (`default:\"fallback\"`) は消費 0 で default 値をそのまま持つ。結果は `literal-child-zero-consumption.json :: trailing-literal-consumes-nothing` の `value:` 版と完全一致 (`[\"x\",\"fallback\"]`) — value / default の書き分けは結果構造にも sources にも影響しない (どちらの綴りも構造子位置では同じ宣言定数で、nameless なので wrapper の発火経路 1 entry に畳まれる)。",
       "args": ["--pair", "x"],
       "expect": {
         "outcome": "success",
         "effects": [],
-        "result": {"pair": ["x", "fallback"]}
+        "result": {"pair": ["x", "fallback"]},
+        "sources": [
+          {"path": [], "key": "pair", "source": "cli"}
+        ]
       }
     }
   ]

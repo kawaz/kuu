@@ -1,5 +1,5 @@
 {
-  "why": "seq の子が `value:` を持つ literal (DESIGN §5.2) の場合、DR-015「value / default を持つ literal は消費 0 が既定」/ DR-041 §3「消費数は Accept の報告値であり、value の有無から導出しない」により、その子はトークンを読まず literal 値をそのまま自分の値にする。匿名 (name 無し) の子なので結果キーは持たず、DESIGN §5.1 の「子の値の配列」がそのまま `pair` の値になる (対照: `seq-parse/option-anonymous-children-array.json` の両子とも消費する形)。value 由来の literal は effects (DR-045 の cli/link 限定、CONFORMANCE §2) に現れない — 消費 0 で cli トークンを読んでいない以上、動く余地がない。1 子目が消費してもなお余剰トークンが残る場合は、2 子目が消費しないため引き取り手が無く、DR-041 の先食い規則のもとで完全経路 0 本の失敗になる (DESIGN §15.1)。",
+  "why": "seq の子が `value:` を持つ literal (DESIGN §5.2) の場合、DR-015「value / default を持つ literal は消費 0 が既定」/ DR-041 §3「消費数は Accept の報告値であり、value の有無から導出しない」により、その子はトークンを読まず literal 値をそのまま自分の値にする。匿名 (name 無し) の子なので結果キーは持たず、DESIGN §5.1 の「子の値の配列」がそのまま `pair` の値になる (対照: `seq-parse/option-anonymous-children-array.json` の両子とも消費する形)。value 由来の literal は effects (DR-045 の cli/link 限定、CONFORMANCE §2) に現れない — 消費 0 で cli トークンを読んでいない以上、動く余地がない。sources は wrapper `pair` に **1 entry だけ** 出る (DR-121 §3.2 nameless tuple): 子は匿名で結果キーを持たないので子ごとの entry は存在せず、wrapper セルを確定させたのは発火経路なので source は `cli`。literal 成分は「発火が産出する形の一部」(`x → [x,\"fallback\"]` の静的写像) であり独立の由来を主張しないため、`const` が混ざることはない。1 子目が消費してもなお余剰トークンが残る場合は、2 子目が消費しないため引き取り手が無く、DR-041 の先食い規則のもとで完全経路 0 本の失敗になる (DESIGN §15.1)。",
   "query": "parse",
   "definition": {
     "options": [
@@ -21,7 +21,10 @@
       "expect": {
         "outcome": "success",
         "effects": [],
-        "result": {"pair": ["x", "fallback"]}
+        "result": {"pair": ["x", "fallback"]},
+        "sources": [
+          {"path": [], "key": "pair", "source": "cli"}
+        ]
       }
     },
     {
