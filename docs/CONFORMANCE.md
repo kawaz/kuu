@@ -88,23 +88,27 @@ spec バンドル自体の v1.0.0 発行条件 (5 プロファイル全 green、
   - `source`: 値源タグ (DR-031)。effects に載るのは `cli` / `link` の 2 つだけ (下記。ラダー充填の由来は `sources` 側)
 - **effects に載るのは cli / link 由来のパース時効果のみ** — 値源ラダー充填 (env / config / inherit / default) は完走後の値確定であり args 順の全順序を持たないため、effects には載せない (例: 未発火 flag の `false` は result に現れ、effects には現れない)。ラダー充填の**値**は `result` で、**由来**は `sources` フィールドで検証する (effects への source 拡張は「充填同士の順序が非規範で全順序規約を汚す」ため不採用 — DR-065)。**effects の要素は entity (値セル) 単位** — 結果キーを持たない nameless 子 (DESIGN §2.4 の透過) は entity を持たないため、cli 消費していても effects に現れない (値の着地は result / sources 側で検証する)。消費 0 literal が置く `const` 値も効果ではないため現れない
 - **`result` は最終結果オブジェクト** (ラダー充填込みの確定値、DR-051 の absent 規則適用後)。runner は effects / result の両方を検証する
-- **`sources` (optional)**: 最終結果の値源を検証する **entry の配列** (DR-121)。各 entry は `{"path": [...], "key": "...", "source": "..."}` で、`path` は root から cell の所有スコープまでの露出キー segment 列 (root 直下は `[]`)、`key` は cell 自身の露出キー、`source` は値源タグ (`cli` / `link` / `env` / `config` / `inherit` / `tty` / `default` / `const`、DR-031「source の記録」の 8 語彙が正本 — DR-098 §6 の `tty`、2026-07-26 裁定の `const` を含む)。`const` は消費 0 literal (`value:`、および or/seq の子 (DESIGN §5.1) 位置の `default:` 綴り、DESIGN §5.2) が置いた宣言由来の定数 — 値セルに最初からいる値であり、ラダー充填 (`default`) とは別物。nameless 子の literal が wrapper へ畳まれる場合は wrapper の source は発火経路 (`cli` / `link`) のまま (DR-121 §3.2)。`link` は他要素の入口から link で飛んできた効果が最終値を確定させた場合 (自分の入口からなら `cli`、DR-031 の source 確定ルール) — ラダー同順位で経路の違いのみ。effects が cli / link 効果のみである規約は不変 (ラダー充填の順序を effects に持ち込まず、由来の検証は本フィールドが担う)。
+- **`sources` (optional)**: 最終結果の値源を検証する **`result` と同型の shadow tree** (DR-122)。`result` の構造をそのまま持ち、**値の座だけを値源タグに置き換えた**オブジェクトである。タグの語彙は `cli` / `link` / `env` / `config` / `inherit` / `tty` / `default` / `const` (DR-031「source の記録」の 8 語彙が正本 — DR-098 §6 の `tty`、2026-07-26 裁定の `const` を含む)。`const` は消費 0 literal (`value:`、および or/seq の子 (DESIGN §5.1) 位置の `default:` 綴り、DESIGN §5.2) が置いた宣言由来の定数 — 値セルに最初からいる値であり、ラダー充填 (`default`) とは別物。`link` は他要素の入口から link で飛んできた効果が最終値を確定させた場合 (自分の入口からなら `cli`、DR-031 の source 確定ルール) — ラダー同順位で経路の違いのみ。effects が cli / link 効果のみである規約は不変 (ラダー充填の順序を effects に持ち込まず、由来の検証は本フィールドが担う)。
 
-  各 entry は次の手順で導出する:
+  ```json
+  result:  {"pair": ["x", "fallback"]}      sources: {"pair": ["cli", "const"]}
+  result:  {"xs": [{"k": "a", "v": "b"}]}   sources: {"xs": [{"k": "cli", "v": "cli"}]}
+  result:  {"timeout": 30}                  sources: {"timeout": "const"}
+  result:  {"sub": {"ttl": "30"}}           sources: {"sub": {"ttl": "env"}}
+  ```
 
-  1. `result` のうち、**結果アドレスを持ち、値源ラダー (DR-031) が最終値を確定させた値セル**を列挙する。構文上の node 種別では判定しない。`result` の入れ子構造と露出規則の正本は DESIGN §2.3〜§2.6 / DR-052
-  2. 各 cell について、root から所有スコープまでの **scope path** と cell 自身の **key** を得る。path / key の各 segment は `export_key` 適用後の露出キーであり、`export_key: null` の scope segment は path から除いて子を親へ昇格させる (`fixtures/export-key/command-promote.json`)。cell 自身が `export_key: null` なら結果キー軸を持たないので entry を作らない
-  3. `(path, key)` を cell の**結果アドレス**とする。同じ結果アドレスの entry はちょうど 1 件であり、同一 cell が複数回着席した場合も DR-031 / DR-081 に従って**最終確定 source だけ**を載せる
-  4. entry 配列の**順序は非規範**。比較は `(path, key, source)` の集合として行う。**`path` と `key` を結合した文字列を規範面で作らない** (比較・照合・fixture の canonical form のいずれでも連結形を経由しない、DR-121 §1.1)
-  5. 子 result の所有スコープとしてのみ働く **scope generator 自体には entry を作らない**。選択された command / name 付き `or` / `seq` が子を持たず空 object `{}` を作る presence marker (DR-052 §3) も、値源ラダーが確定する値ではないので席を持たない。スコープ生成要素が結果キーを占有する 1 セルとして数えられること (DR-120 §4) とは別の軸
-  6. **accumulator cell** は 0 回発火でも uniform array の既定値 `[]` を持つ (DR-044) ので、結果アドレスに `source: "default"` の entry を 1 件作る (DR-031 の default 席 × DR-044 の合成)。1 回以上発火した場合はその cell の最終確定 source を同じ結果アドレスに載せる
+  shadow tree は次の規則で構築する:
 
-  **structural aggregate** (`name` を持つ `seq` / `or` の子が nameless で、値が wrapper の結果アドレスへ畳まれる形) は、単一値 (`or` の枝 = union 席)・複数値 (`seq` = tuple) とも **wrapper の結果アドレスに entry 1 件**で、source は発火経路 (`cli` / `link`) — nameless 子は独立の値源を持たない (消費 0 literal 成分は発火が産出する形の一部、DR-121 §3.2 の 2026-07-26 再裁定)。要素ごとの由来を観測したい定義は子に name を付けて kv 経路 (cell provenance) で書く。
+  1. **座の対応** (DR-122 §1) — スカラー値の座はタグ (string)、配列はタグの**配列** (`result` の i 番目の要素の由来が `sources` の i 番目)、kv / scope はタグの kv (キーは `result` と同じ露出キー)。`result` の入れ子構造と露出規則の正本は DESIGN §2.3〜§2.6 / DR-052 であり、`export_key: null` の scope segment が現れない (子が親へ昇格する、`fixtures/export-key/command-promote.json`) 点も `result` と同じ形になる帰結として従う
+  2. **キー集合は `result` の射影** (DR-122 §2) — `result` に現れないキーは `sources` にも現れない (未選択 scope / absent は成立しなかった構造であり、source を語る対象が存在しない)。逆に `result` にある値の座は必ず対応するタグを持つ。scope generator は子 result の所有スコープとして `result` に kv を作るので `sources` にも同じ位置に kv が立つが、**スコープ自体を指すタグは無い** — presence marker の空 kv `{}` (DR-052 §3) は `sources` でも `{}`、accumulator の 0 発火 `[]` (DR-044) は `sources` でも `[]` (値の座が無いので置き換えるタグも無い)
+  3. **タグの決定単位は「値の座」** (DR-122 §3) — 各座のタグは DR-031 の source 確定ルール (最終値を確定させた効果 / 充填の由来) をその座に適用した結果。同一 cell が複数回着席した場合は DR-031 / DR-081 に従って**最終確定 source** を載せる。nameless `seq` の tuple は各要素が自分の由来を持ち (`["cli", "const"]`)、accumulator の各 row / 各要素はその要素を産んだ発火の source を持つ (下位席の値を splice した merge accumulator では `["env", "env", "cli"]` のように混在しうる、`fixtures/multiple-parse/merge-first-firing.json`)
+
+  **空コレクションの由来は表現しない** (DR-122 §2 の帰結) — `[]` / `{}` は値の座を持たないため、「ユーザが明示的に空にした (`empty` op、committed=true)」と「何も来なかった (未発火 / `unset` 後の default 席)」が `sources` 上では同じ `[]` になる。この区別は `effects` の op (`empty` / `unset`) が担う (`fixtures/multiple-parse/filters-cell-ops.json`)。`sources` は値の由来を写す面であって committed 軸を持たない (DR-031「committed/selected との直交性」)。
 
   **内部セルは射影しない**: `type: "none"` (DR-089) / `config_file` (DR-050) / dd trigger (DR-064) は `effects` / `result` / `sources` のいずれにも現れない。
 
-  `effects[].entity` は**射影前の canonical entity name / id** であり `export_key` を適用しない (DR-045: 効果は cell 単位で記録する。entity は値セルであって露出パスではない)。したがって `effects` は宣言名軸、`result` / `sources` は結果アドレス軸であり、同じ cell でも綴りが異なる — `{"name":"verbose","export_key":"v"}` に `--verbose` を与えた場合、`effects[].entity` は `"verbose"`、`result` の key と `sources` の結果アドレスの `key` はともに `"v"` (`fixtures/export-key/rename-flag-default.json`)。
-- **report 直下のフィールド名 (`result` / `effects` / `sources` / `warnings` 等) は entity name として予約しない** (SPK-Q2=a): `{"name": "sources"}` のような要素宣言は合法で、definition-error にしない。衝突が起きない構造的根拠 — entity の値は常に `result` **の中の**キーとして現れ (`result.sources`)、report 直下のフィールドとは階層が異なる。`sources` マップのキー (露出キーの scope-path 修飾) も `warnings[].element` (canonical セル参照、DR-058 §2) も結果面 / 宣言面の名前空間であり、report envelope のフィールド名空間とは交差しない。実装が flat な連想構造で report を組む場合の衝突は実装バグであって仕様の禁則対象ではない
+  `effects[].entity` は**射影前の canonical entity name / id** であり `export_key` を適用しない (DR-045: 効果は cell 単位で記録する。entity は値セルであって露出パスではない)。したがって `effects` は宣言名軸、`result` / `sources` は結果アドレス軸であり、同じ cell でも綴りが異なる — `{"name":"verbose","export_key":"v"}` に `--verbose` を与えた場合、`effects[].entity` は `"verbose"`、`result` / `sources` のキーはともに `"v"` (`fixtures/export-key/rename-flag-default.json`)。
+- **report 直下のフィールド名 (`result` / `effects` / `sources` / `warnings` 等) は entity name として予約しない** (SPK-Q2=a): `{"name": "sources"}` のような要素宣言は合法で、definition-error にしない。衝突が起きない構造的根拠 — entity の値は常に `result` **の中の**キーとして現れ (`result.sources`)、report 直下のフィールドとは階層が異なる。`sources` shadow tree のキー (`result` と同じ露出キー、DR-122) も `warnings[].element` (canonical セル参照、DR-058 §2) も結果面 / 宣言面の名前空間であり、report envelope のフィールド名空間とは交差しない。実装が flat な連想構造で report を組む場合の衝突は実装バグであって仕様の禁則対象ではない
 - **`warnings` (optional)**: 起動された deprecated 入口 (DR-058 §2) が積む構造化警告の配列、各要素 `{element, kind}`。`element` は canonical セル参照 (どの入口が deprecated かでなく代替すべき canonical、DR-058 §2)、`kind` は機械可読識別子 (v1 は `"deprecated"`)。ParserContext (DR-016) の warnings — DR-058 §2 による拡張フィールド — の projection であり、effects が cli / link 効果のみである規約は不変 (deprecated 警告はパース成功後の利用推奨であって args 順の効果ではない、filter warn とは別層)。比較は element の集合比較 (順序非規範)、`kind` は fixture 側に書かれた要素でのみ比較する (`errors.reason` と同じ optional 検証、§3)
 
 ### failure
@@ -158,6 +162,7 @@ spec バンドル自体の v1.0.0 発行条件 (5 プロファイル全 green、
 - **構造等価** (DR-063 §4): key 順序非規範、フィールド省略 = default 値と等価。byte 一致は要求しない
 - effects は配列順込みの完全一致 (順序が同一性成分)
 - result は構造等価
+- `sources` は構造等価 (DR-122) — `result` と同型なので、object のキー順が非規範・配列が要素対応という比較規約は `result` と同じものがそのまま効く。順序の論点は構造が持ち込む (kv は unordered / 配列は添字対応) ため、`sources` 固有の順序規約は持たない
 - interpretations は集合比較 (各解釈は構造等価、**列挙順は非規範**) — 完全経路間に優先がない (DR-038) ため順序は同一性成分でない (effects の順序規範性と対照的、errors と同じ集合扱い)。重複解釈の dedup 可否は「解釈の同一性」定義に従属し本書では定めない (DR-053 §3)。claimants を持つ解釈は `{result, claimants}` の組を 1 単位として構造等価で突き合わせる (DR-073) — claimants がその解釈と束ねられているため集合比較が順序に依存しない。各解釈のビューは **parse 相 + DR-118 §3 の 3 規則** (Default-source scalar 除外 / claimants 席の default 残置 / 空 accumulator 配列の保持) を適用した姿 — 値源ラダー (resolve 相) は適用しない (DR-118)
 - errors は集合比較 (`query:"parse"` の failure outcome: element, args_pos, kind, reason の組。**reason は fixture 側に書かれている要素でのみ比較対象** (§2 の optional 検証)、message は常に無視)。**同一 4-tuple (element, args_pos, kind, reason) の error は 1 件に dedupe する** (SPK-Q2=a) — DR-053 §2 の「全保持」は診断材料としての経路網羅 (別候補経路の別の躓きを捨てない) の規定であり、複数経路がたまたま同一 4-tuple の躓きに合流した場合の多重度は診断情報を持たない。producer は同一 4-tuple を重複出力してはならず、比較は dedupe 後の集合同士で行う (message の違いは同一性に影響しない — message は比較対象外)
 - `query:"definition_error"` の errors は element + kind の組の集合比較 (`args_pos`/`reason` は definition-error 構造に存在しない、DR-082 §1)。message/hint は比較しない
