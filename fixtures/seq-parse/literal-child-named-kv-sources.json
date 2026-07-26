@@ -1,0 +1,34 @@
+{
+  "why": "named 子を持つ seq (DESIGN §2.5 の kv 畳み込み、`option-named-children-kv.json` と同じ露出経路) で、消費 0 の literal 子 (`value:`, DESIGN §5.2 / DR-015) が cli 由来の兄弟と同席する断面。cli 消費した子と value 由来の子は同じ子スコープの結果キーとして同居する (DR-121 §3.2 の cli と default の共存到達可能性)。sources は結果の射影 (CONFORMANCE §2 導出手順 1) なので、cli 子は `source:\"cli\"`、literal 子は DR-031 ラダー最下段 `source:\"default\"` として現れる — 未裁定の nameless 子の要素ごと addressing (DR-121 §6) には触れず、named 子の kv 経路だけで cli/default 共存を cell provenance として pin する。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {
+        "name": "pair",
+        "long": true,
+        "seq": [
+          {"name": "path", "type": "string"},
+          {"name": "mode", "type": "string", "value": "fallback"}
+        ]
+      }
+    ]
+  },
+  "cases": [
+    {
+      "id": "cli-and-literal-siblings-coexist",
+      "why": "`--pair x`: `path` は cli から \"x\" を消費、`mode` は消費 0 の literal で \"fallback\" をそのまま持つ。両方とも named なので DESIGN §2.5 により `pair` の子スコープの結果キーになり `{path:\"x\",mode:\"fallback\"}`。effects には cli 由来の `path` だけが現れ (CONFORMANCE §2「effects は cli/link のみ」)、value 由来の `mode` は現れない。sources は `path` が `cli`、`mode` が `default` — DR-121 §3.2 の共存到達可能性を cell provenance のレベルで固定する。",
+      "args": ["--pair", "x"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "path", "op": "set", "operand": "x", "source": "cli"}
+        ],
+        "result": {"pair": {"path": "x", "mode": "fallback"}},
+        "sources": [
+          {"path": ["pair"], "key": "path", "source": "cli"},
+          {"path": ["pair"], "key": "mode", "source": "default"}
+        ]
+      }
+    }
+  ]
+}
