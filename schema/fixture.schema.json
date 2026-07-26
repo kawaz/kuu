@@ -536,7 +536,7 @@
         "sources": {
           "type": "object",
           "additionalProperties": { "type": "string", "enum": ["cli", "env", "config", "inherit", "tty", "default"] },
-          "description": "entity (scope-path 修飾キー) → 値源タグ (optional、CONFORMANCE §2)。値源系 fixture で使用。"
+          "description": "露出キー (export_key 適用後、scope-path 修飾。result と同一のキー体系) → 値源タグ (optional、CONFORMANCE §2)。値源系 fixture で使用。"
         },
         "warnings": {
           "type": "array",
