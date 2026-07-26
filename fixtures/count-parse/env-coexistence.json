@@ -16,7 +16,9 @@
         "outcome": "success",
         "effects": [],
         "result": {"verbose": 5},
-        "sources": {"verbose": "env"}
+        "sources": [
+          {"path": [], "key": "verbose", "source": "env"}
+        ]
       }
     },
     {
@@ -30,7 +32,9 @@
           {"entity": "verbose", "op": "set", "operand": 1, "source": "cli"}
         ],
         "result": {"verbose": 1},
-        "sources": {"verbose": "cli"}
+        "sources": [
+          {"path": [], "key": "verbose", "source": "cli"}
+        ]
       }
     }
   ]

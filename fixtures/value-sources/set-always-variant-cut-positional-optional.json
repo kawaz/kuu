@@ -20,7 +20,10 @@
           {"entity": "color", "op": "set", "operand": "always", "source": "cli"}
         ],
         "result": {"color": "always", "extra": []},
-        "sources": {"color": "cli", "extra": "default"}
+        "sources": [
+          {"path": [], "key": "color", "source": "cli"},
+          {"path": [], "key": "extra", "source": "default"}
+        ]
       }
     }
   ]

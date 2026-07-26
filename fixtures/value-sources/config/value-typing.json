@@ -20,7 +20,12 @@
         "outcome": "success",
         "effects": [],
         "result": {"name": "hi", "port": 8080, "flag": true, "n": 42},
-        "sources": {"name": "config", "port": "config", "flag": "config", "n": "config"}
+        "sources": [
+          {"path": [], "key": "flag", "source": "config"},
+          {"path": [], "key": "n", "source": "config"},
+          {"path": [], "key": "name", "source": "config"},
+          {"path": [], "key": "port", "source": "config"}
+        ]
       }
     },
     {
@@ -32,7 +37,11 @@
         "outcome": "success",
         "effects": [],
         "result": {"port": 8080, "flag": true, "n": 42},
-        "sources": {"port": "config", "flag": "config", "n": "config"}
+        "sources": [
+          {"path": [], "key": "flag", "source": "config"},
+          {"path": [], "key": "n", "source": "config"},
+          {"path": [], "key": "port", "source": "config"}
+        ]
       }
     },
     {
@@ -44,7 +53,10 @@
         "outcome": "success",
         "effects": [],
         "result": {"name": "1.5", "flag": false},
-        "sources": {"name": "config", "flag": "default"}
+        "sources": [
+          {"path": [], "key": "flag", "source": "default"},
+          {"path": [], "key": "name", "source": "config"}
+        ]
       }
     },
     {
@@ -56,7 +68,10 @@
         "outcome": "success",
         "effects": [],
         "result": {"name": "true", "flag": false},
-        "sources": {"name": "config", "flag": "default"}
+        "sources": [
+          {"path": [], "key": "flag", "source": "default"},
+          {"path": [], "key": "name", "source": "config"}
+        ]
       }
     },
     {
@@ -68,7 +83,11 @@
         "outcome": "success",
         "effects": [],
         "result": {"port": 1.5, "n": 42, "flag": false},
-        "sources": {"port": "config", "n": "config", "flag": "default"}
+        "sources": [
+          {"path": [], "key": "flag", "source": "default"},
+          {"path": [], "key": "n", "source": "config"},
+          {"path": [], "key": "port", "source": "config"}
+        ]
       }
     }
   ]

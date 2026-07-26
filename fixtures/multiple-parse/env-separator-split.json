@@ -18,7 +18,11 @@
         "outcome": "success",
         "effects": [],
         "result": {"tags": ["a", "b", "c"], "ports": [], "trimmed": []},
-        "sources": {"tags": "env", "ports": "default", "trimmed": "default"}
+        "sources": [
+          {"path": [], "key": "ports", "source": "default"},
+          {"path": [], "key": "tags", "source": "env"},
+          {"path": [], "key": "trimmed", "source": "default"}
+        ]
       }
     },
     {
@@ -30,7 +34,11 @@
         "outcome": "success",
         "effects": [],
         "result": {"tags": [], "ports": [5, 7], "trimmed": []},
-        "sources": {"ports": "env", "tags": "default", "trimmed": "default"}
+        "sources": [
+          {"path": [], "key": "ports", "source": "env"},
+          {"path": [], "key": "tags", "source": "default"},
+          {"path": [], "key": "trimmed", "source": "default"}
+        ]
       }
     },
     {
@@ -42,7 +50,11 @@
         "outcome": "success",
         "effects": [],
         "result": {"tags": [], "ports": [], "trimmed": ["a", "b"]},
-        "sources": {"trimmed": "env", "tags": "default", "ports": "default"}
+        "sources": [
+          {"path": [], "key": "ports", "source": "default"},
+          {"path": [], "key": "tags", "source": "default"},
+          {"path": [], "key": "trimmed", "source": "env"}
+        ]
       }
     },
     {

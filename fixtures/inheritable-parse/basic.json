@@ -23,7 +23,9 @@
           {"entity": "ttl", "op": "set", "operand": 30, "source": "cli"}
         ],
         "result": {"sub": {"ttl": 30}},
-        "sources": {"sub.ttl": "cli"}
+        "sources": [
+          {"path": ["sub"], "key": "ttl", "source": "cli"}
+        ]
       }
     },
     {
@@ -36,7 +38,10 @@
           {"entity": "ttl", "op": "set", "operand": 30, "source": "cli"}
         ],
         "result": {"ttl": 30, "sub": {"ttl": 30}},
-        "sources": {"ttl": "cli", "sub.ttl": "inherit"}
+        "sources": [
+          {"path": [], "key": "ttl", "source": "cli"},
+          {"path": ["sub"], "key": "ttl", "source": "inherit"}
+        ]
       }
     },
     {
@@ -47,7 +52,9 @@
         "outcome": "success",
         "effects": [],
         "result": {"sub": {"ttl": 60}},
-        "sources": {"sub.ttl": "default"}
+        "sources": [
+          {"path": ["sub"], "key": "ttl", "source": "default"}
+        ]
       }
     },
     {
@@ -61,7 +68,10 @@
           {"entity": "ttl", "op": "set", "operand": 10, "source": "cli"}
         ],
         "result": {"ttl": 30, "sub": {"ttl": 10}},
-        "sources": {"ttl": "cli", "sub.ttl": "cli"}
+        "sources": [
+          {"path": [], "key": "ttl", "source": "cli"},
+          {"path": ["sub"], "key": "ttl", "source": "cli"}
+        ]
       }
     }
   ]

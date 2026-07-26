@@ -18,7 +18,9 @@
           {"entity": "verbose", "op": "set", "operand": 2, "source": "cli"}
         ],
         "result": {"verbose": 2},
-        "sources": {"verbose": "cli"}
+        "sources": [
+          {"path": [], "key": "verbose", "source": "cli"}
+        ]
       }
     },
     {

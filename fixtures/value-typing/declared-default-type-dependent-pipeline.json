@@ -16,7 +16,10 @@
         "outcome": "success",
         "effects": [],
         "result": {"from_string": 2, "from_native": -5},
-        "sources": {"from_string": "default", "from_native": "default"}
+        "sources": [
+          {"path": [], "key": "from_native", "source": "default"},
+          {"path": [], "key": "from_string", "source": "default"}
+        ]
       }
     }
   ]

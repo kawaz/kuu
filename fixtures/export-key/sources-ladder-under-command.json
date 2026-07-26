@@ -25,7 +25,9 @@
       "expect": {
         "outcome": "success",
         "result": {"t": ["x", "y", "z"]},
-        "sources": {"t": "env"}
+        "sources": [
+          {"path": [], "key": "t", "source": "env"}
+        ]
       }
     },
     {
@@ -35,7 +37,9 @@
       "expect": {
         "outcome": "success",
         "result": {"t": []},
-        "sources": {"t": "default"}
+        "sources": [
+          {"path": [], "key": "t", "source": "default"}
+        ]
       }
     },
     {
@@ -45,7 +49,9 @@
       "expect": {
         "outcome": "success",
         "result": {"t": ["a"]},
-        "sources": {"t": "cli"}
+        "sources": [
+          {"path": [], "key": "t", "source": "cli"}
+        ]
       }
     }
   ]

@@ -14,7 +14,9 @@
       "expect": {
         "outcome": "success",
         "result": {"level": -1.0},
-        "sources": {"level": "cli"}
+        "sources": [
+          {"path": [], "key": "level", "source": "cli"}
+        ]
       }
     },
     {

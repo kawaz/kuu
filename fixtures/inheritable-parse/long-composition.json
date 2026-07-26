@@ -23,7 +23,9 @@
           {"entity": "ttl", "op": "set", "operand": 30, "source": "cli"}
         ],
         "result": {"ttl": 30},
-        "sources": {"ttl": "cli"}
+        "sources": [
+          {"path": [], "key": "ttl", "source": "cli"}
+        ]
       }
     },
     {
@@ -36,7 +38,9 @@
           {"entity": "ttl", "op": "set", "operand": 30, "source": "cli"}
         ],
         "result": {"ttl": 30},
-        "sources": {"ttl": "cli"}
+        "sources": [
+          {"path": [], "key": "ttl", "source": "cli"}
+        ]
       }
     }
   ]

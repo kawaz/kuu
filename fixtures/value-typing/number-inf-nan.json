@@ -14,7 +14,9 @@
       "args": ["--t", "inf"],
       "expect": {
         "outcome": "success",
-        "sources": {"t": "cli"},
+        "sources": [
+          {"path": [], "key": "t", "source": "cli"}
+        ],
         "effects": [{"entity": "t", "op": "set", "operand": "Infinity", "source": "cli"}],
         "result": {"t": "Infinity"}
       }
@@ -25,7 +27,9 @@
       "args": ["--t", "Infinity"],
       "expect": {
         "outcome": "success",
-        "sources": {"t": "cli"},
+        "sources": [
+          {"path": [], "key": "t", "source": "cli"}
+        ],
         "effects": [{"entity": "t", "op": "set", "operand": "Infinity", "source": "cli"}],
         "result": {"t": "Infinity"}
       }
@@ -63,7 +67,9 @@
       "args": ["--t", "-inf"],
       "expect": {
         "outcome": "success",
-        "sources": {"t": "cli"},
+        "sources": [
+          {"path": [], "key": "t", "source": "cli"}
+        ],
         "effects": [{"entity": "t", "op": "set", "operand": "-Infinity", "source": "cli"}],
         "result": {"t": "-Infinity"}
       }
@@ -74,7 +80,9 @@
       "args": ["--t", "+Infinity"],
       "expect": {
         "outcome": "success",
-        "sources": {"t": "cli"},
+        "sources": [
+          {"path": [], "key": "t", "source": "cli"}
+        ],
         "effects": [{"entity": "t", "op": "set", "operand": "Infinity", "source": "cli"}],
         "result": {"t": "Infinity"}
       }

@@ -18,7 +18,9 @@
           {"entity": "color", "op": "unset", "source": "cli"}
         ],
         "result": {"color": "always"},
-        "sources": {"color": "env"}
+        "sources": [
+          {"path": [], "key": "color", "source": "env"}
+        ]
       }
     },
     {
@@ -32,7 +34,9 @@
           {"entity": "color", "op": "set", "operand": "red", "source": "cli"}
         ],
         "result": {"color": "red"},
-        "sources": {"color": "cli"}
+        "sources": [
+          {"path": [], "key": "color", "source": "cli"}
+        ]
       }
     },
     {
@@ -46,7 +50,9 @@
           {"entity": "color", "op": "default", "source": "cli"}
         ],
         "result": {"color": "always"},
-        "sources": {"color": "cli"}
+        "sources": [
+          {"path": [], "key": "color", "source": "cli"}
+        ]
       }
     },
     {
@@ -58,7 +64,9 @@
         "outcome": "success",
         "effects": [],
         "result": {"color": "always"},
-        "sources": {"color": "env"}
+        "sources": [
+          {"path": [], "key": "color", "source": "env"}
+        ]
       }
     }
   ]

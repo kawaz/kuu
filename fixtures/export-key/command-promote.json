@@ -24,7 +24,9 @@
           {"entity": "port", "op": "set", "operand": 80, "source": "cli"}
         ],
         "result": {"port": 80},
-        "sources": {"port": "cli"}
+        "sources": [
+          {"path": [], "key": "port", "source": "cli"}
+        ]
       }
     },
     {

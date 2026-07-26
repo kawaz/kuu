@@ -19,7 +19,10 @@
           {"entity": "ports", "op": "default", "source": "cli"}
         ],
         "result": {"ports": [], "hosts": ["localhost"]},
-        "sources": {"ports": "cli", "hosts": "default"}
+        "sources": [
+          {"path": [], "key": "hosts", "source": "default"},
+          {"path": [], "key": "ports", "source": "cli"}
+        ]
       }
     },
     {
@@ -33,7 +36,10 @@
           {"entity": "ports", "op": "default", "source": "cli"}
         ],
         "result": {"ports": [10, 20], "hosts": ["localhost"]},
-        "sources": {"ports": "cli", "hosts": "default"}
+        "sources": [
+          {"path": [], "key": "hosts", "source": "default"},
+          {"path": [], "key": "ports", "source": "cli"}
+        ]
       }
     },
     {
@@ -47,7 +53,10 @@
           {"entity": "hosts", "op": "default", "source": "cli"}
         ],
         "result": {"hosts": ["localhost"], "ports": []},
-        "sources": {"hosts": "cli", "ports": "default"}
+        "sources": [
+          {"path": [], "key": "hosts", "source": "cli"},
+          {"path": [], "key": "ports", "source": "default"}
+        ]
       }
     }
   ]

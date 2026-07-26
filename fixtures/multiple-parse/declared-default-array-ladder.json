@@ -15,7 +15,9 @@
         "outcome": "success",
         "effects": [],
         "result": {"hosts": ["localhost", "backup"]},
-        "sources": {"hosts": "default"}
+        "sources": [
+          {"path": [], "key": "hosts", "source": "default"}
+        ]
       }
     },
     {
@@ -27,7 +29,9 @@
         "outcome": "success",
         "effects": [],
         "result": {"hosts": ["a", "b", "c"]},
-        "sources": {"hosts": "env"}
+        "sources": [
+          {"path": [], "key": "hosts", "source": "env"}
+        ]
       }
     }
   ]

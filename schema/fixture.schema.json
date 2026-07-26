@@ -534,9 +534,22 @@
           "description": "最終結果オブジェクト (ラダー充填込みの確定値、DR-051 の absent 規則適用後)。構造等価で比較 (§3)。CONFORMANCE §3 のフィールド省略規約により省略ケースが実在する (実例: fixtures/constraints-parse/requires-bool-target.json) — required にしない。"
         },
         "sources": {
-          "type": "object",
-          "additionalProperties": { "type": "string", "enum": ["cli", "link", "env", "config", "inherit", "tty", "default"] },
-          "description": "露出キー (export_key 適用後、scope-path 修飾。result と同一のキー体系) → 値源タグ (optional、CONFORMANCE §2)。値源系 fixture で使用。"
+          "type": "array",
+          "description": "最終結果の値源を検証する entry の配列 (optional、CONFORMANCE §2 / DR-121)。順序は非規範 ((path,key,source) の集合として比較)、(path,key) は一意。値源系 fixture で使用。",
+          "items": {
+            "type": "object",
+            "properties": {
+              "path": {
+                "type": "array",
+                "items": { "type": "string" },
+                "description": "root から cell の所有スコープまでの露出キー segment 列 (export_key 適用後)。root 直下の cell は []。export_key:null の scope segment は現れない (子が親へ昇格)。"
+              },
+              "key": { "type": "string", "description": "cell 自身の露出キー (export_key 適用後)。" },
+              "source": { "type": "string", "enum": ["cli", "link", "env", "config", "inherit", "tty", "default"] }
+            },
+            "required": ["path", "key", "source"],
+            "additionalProperties": false
+          }
         },
         "warnings": {
           "type": "array",

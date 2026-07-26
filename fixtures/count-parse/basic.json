@@ -15,7 +15,9 @@
         "outcome": "success",
         "effects": [],
         "result": {"verbose": 0},
-        "sources": {"verbose": "default"}
+        "sources": [
+          {"path": [], "key": "verbose", "source": "default"}
+        ]
       }
     },
     {
@@ -28,7 +30,9 @@
           {"entity": "verbose", "op": "set", "operand": 1, "source": "cli"}
         ],
         "result": {"verbose": 1},
-        "sources": {"verbose": "cli"}
+        "sources": [
+          {"path": [], "key": "verbose", "source": "cli"}
+        ]
       }
     },
     {
@@ -42,7 +46,9 @@
           {"entity": "verbose", "op": "set", "operand": 2, "source": "cli"}
         ],
         "result": {"verbose": 2},
-        "sources": {"verbose": "cli"}
+        "sources": [
+          {"path": [], "key": "verbose", "source": "cli"}
+        ]
       }
     },
     {
@@ -57,7 +63,9 @@
           {"entity": "verbose", "op": "set", "operand": 3, "source": "cli"}
         ],
         "result": {"verbose": 3},
-        "sources": {"verbose": "cli"}
+        "sources": [
+          {"path": [], "key": "verbose", "source": "cli"}
+        ]
       }
     }
   ]

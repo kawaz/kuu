@@ -27,7 +27,9 @@
           {"entity": "other", "op": "set", "operand": "hello", "source": "cli"}
         ],
         "result": {"other": "hello"},
-        "sources": {"other": "cli"}
+        "sources": [
+          {"path": [], "key": "other", "source": "cli"}
+        ]
       }
     },
     {
@@ -40,7 +42,9 @@
           {"entity": "ttl", "op": "set", "operand": 30, "source": "cli"}
         ],
         "result": {"sub": {"ttl": 30}},
-        "sources": {"sub.ttl": "cli"}
+        "sources": [
+          {"path": ["sub"], "key": "ttl", "source": "cli"}
+        ]
       }
     }
   ]

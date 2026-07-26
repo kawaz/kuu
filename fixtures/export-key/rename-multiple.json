@@ -19,7 +19,9 @@
           {"entity": "tags", "op": "set", "operand": "b", "source": "cli"}
         ],
         "result": {"t": ["a", "b"]},
-        "sources": {"t": "cli"}
+        "sources": [
+          {"path": [], "key": "t", "source": "cli"}
+        ]
       }
     },
     {

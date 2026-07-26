@@ -17,7 +17,9 @@
         "outcome": "success",
         "effects": [],
         "result": {"port": 11},
-        "sources": {"port": "config"}
+        "sources": [
+          {"path": [], "key": "port", "source": "config"}
+        ]
       }
     },
     {
@@ -30,7 +32,9 @@
         "outcome": "success",
         "effects": [],
         "result": {"port": 22},
-        "sources": {"port": "config"}
+        "sources": [
+          {"path": [], "key": "port", "source": "config"}
+        ]
       }
     },
     {
@@ -42,7 +46,9 @@
         "outcome": "success",
         "effects": [],
         "result": {"port": 33},
-        "sources": {"port": "config"}
+        "sources": [
+          {"path": [], "key": "port", "source": "config"}
+        ]
       }
     },
     {
@@ -54,7 +60,9 @@
         "outcome": "success",
         "effects": [],
         "result": {"port": 7},
-        "sources": {"port": "default"}
+        "sources": [
+          {"path": [], "key": "port", "source": "default"}
+        ]
       }
     }
   ]

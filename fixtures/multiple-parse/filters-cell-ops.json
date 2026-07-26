@@ -18,7 +18,9 @@
           {"entity": "ports", "op": "unset", "source": "cli"}
         ],
         "result": {"ports": []},
-        "sources": {"ports": "default"}
+        "sources": [
+          {"path": [], "key": "ports", "source": "default"}
+        ]
       }
     },
     {
@@ -32,7 +34,9 @@
           {"entity": "ports", "op": "set", "operand": 7, "source": "cli"}
         ],
         "result": {"ports": [7]},
-        "sources": {"ports": "cli"}
+        "sources": [
+          {"path": [], "key": "ports", "source": "cli"}
+        ]
       }
     },
     {
@@ -46,7 +50,9 @@
           {"entity": "ports", "op": "empty", "source": "cli"}
         ],
         "result": {"ports": []},
-        "sources": {"ports": "cli"}
+        "sources": [
+          {"path": [], "key": "ports", "source": "cli"}
+        ]
       }
     }
   ]

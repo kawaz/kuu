@@ -16,7 +16,9 @@
         "outcome": "success",
         "effects": [],
         "result": {"port": 5},
-        "sources": {"port": "default"}
+        "sources": [
+          {"path": [], "key": "port", "source": "default"}
+        ]
       }
     },
     {
@@ -29,7 +31,10 @@
           {"entity": "name", "op": "set", "operand": "x", "source": "cli"}
         ],
         "result": {"name": "x", "port": 5},
-        "sources": {"name": "cli", "port": "default"}
+        "sources": [
+          {"path": [], "key": "name", "source": "cli"},
+          {"path": [], "key": "port", "source": "default"}
+        ]
       }
     }
   ]

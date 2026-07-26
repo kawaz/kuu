@@ -18,7 +18,9 @@
           {"entity": "tags", "op": "unset", "source": "cli"}
         ],
         "result": {"tags": ["x", "y", "z"]},
-        "sources": {"tags": "env"}
+        "sources": [
+          {"path": [], "key": "tags", "source": "env"}
+        ]
       }
     },
     {
@@ -33,7 +35,9 @@
           {"entity": "tags", "op": "unset", "source": "cli"}
         ],
         "result": {"tags": ["x", "y", "z"]},
-        "sources": {"tags": "env"}
+        "sources": [
+          {"path": [], "key": "tags", "source": "env"}
+        ]
       }
     },
     {
@@ -46,7 +50,9 @@
           {"entity": "tags", "op": "unset", "source": "cli"}
         ],
         "result": {"tags": []},
-        "sources": {"tags": "default"}
+        "sources": [
+          {"path": [], "key": "tags", "source": "default"}
+        ]
       }
     }
   ]

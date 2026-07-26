@@ -29,7 +29,11 @@
           {"entity": "port", "op": "set", "operand": 80, "source": "cli"}
         ],
         "result": {"v": true, "sv": {"p": 80}, "t": []},
-        "sources": {"v": "cli", "t": "default", "sv.p": "cli"}
+        "sources": [
+          {"path": [], "key": "t", "source": "default"},
+          {"path": [], "key": "v", "source": "cli"},
+          {"path": ["sv"], "key": "p", "source": "cli"}
+        ]
       }
     },
     {
@@ -42,7 +46,10 @@
           {"entity": "verbose", "op": "set", "operand": true, "source": "cli"}
         ],
         "result": {"v": true, "t": []},
-        "sources": {"v": "cli", "t": "default"}
+        "sources": [
+          {"path": [], "key": "t", "source": "default"},
+          {"path": [], "key": "v", "source": "cli"}
+        ]
       }
     },
     {
@@ -53,7 +60,10 @@
         "outcome": "success",
         "effects": [],
         "result": {"v": false, "sv": {}, "t": []},
-        "sources": {"v": "default", "t": "default"}
+        "sources": [
+          {"path": [], "key": "t", "source": "default"},
+          {"path": [], "key": "v", "source": "default"}
+        ]
       }
     },
     {
@@ -67,7 +77,10 @@
           {"entity": "tags", "op": "set", "operand": "b", "source": "cli"}
         ],
         "result": {"t": ["a", "b"], "v": false},
-        "sources": {"t": "cli", "v": "default"}
+        "sources": [
+          {"path": [], "key": "t", "source": "cli"},
+          {"path": [], "key": "v", "source": "default"}
+        ]
       }
     }
   ]

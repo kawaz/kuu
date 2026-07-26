@@ -23,7 +23,10 @@
           {"entity": "fields", "op": "set", "operand": "ip", "source": "cli"}
         ],
         "result": {"fields": ["ts", "method", "path", "duration", "ip"], "tags": []},
-        "sources": {"fields": "cli", "tags": "default"}
+        "sources": [
+          {"path": [], "key": "fields", "source": "cli"},
+          {"path": [], "key": "tags", "source": "default"}
+        ]
       }
     },
     {

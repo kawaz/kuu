@@ -17,7 +17,9 @@
         "outcome": "success",
         "effects": [],
         "result": {"port": 5000},
-        "sources": {"port": "config"}
+        "sources": [
+          {"path": [], "key": "port", "source": "config"}
+        ]
       }
     },
     {
@@ -29,7 +31,9 @@
         "outcome": "success",
         "effects": [],
         "result": {"port": 1},
-        "sources": {"port": "default"}
+        "sources": [
+          {"path": [], "key": "port", "source": "default"}
+        ]
       }
     }
   ]

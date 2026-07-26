@@ -19,7 +19,9 @@
           {"entity": "tag", "op": "empty", "source": "cli"}
         ],
         "result": {"tag": []},
-        "sources": {"tag": "cli"}
+        "sources": [
+          {"path": [], "key": "tag", "source": "cli"}
+        ]
       }
     },
     {
@@ -34,7 +36,9 @@
           {"entity": "tag", "op": "set", "operand": "c", "source": "cli"}
         ],
         "result": {"tag": ["c"]},
-        "sources": {"tag": "cli"}
+        "sources": [
+          {"path": [], "key": "tag", "source": "cli"}
+        ]
       }
     }
   ]

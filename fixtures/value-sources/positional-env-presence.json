@@ -16,7 +16,9 @@
         "outcome": "success",
         "effects": [],
         "result": {"timeout": 30},
-        "sources": {"timeout": "env"}
+        "sources": [
+          {"path": [], "key": "timeout", "source": "env"}
+        ]
       }
     },
     {

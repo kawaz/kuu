@@ -16,7 +16,9 @@
         "outcome": "success",
         "effects": [],
         "result": {"v": false},
-        "sources": {"v": "default"}
+        "sources": [
+          {"path": [], "key": "v", "source": "default"}
+        ]
       }
     },
     {
@@ -30,7 +32,9 @@
           {"entity": "verbose", "op": "set", "operand": true, "source": "cli"}
         ],
         "result": {"v": true},
-        "sources": {"v": "cli"}
+        "sources": [
+          {"path": [], "key": "v", "source": "cli"}
+        ]
       }
     }
   ]
