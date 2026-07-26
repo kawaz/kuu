@@ -1,0 +1,19 @@
+{
+  "why": "link 先が同一スコープに存在しない name を指す構成は definition-error で塞がれる (DR-054 §4 の kind 列挙 `absent-ref`)。link は 1 実体:N 参照の参照側で、実体側の name を辿れなければパース以前の定義検査で弾く (DR-029 の 1 実体:N参照 モデル、実体を持たない link は成立しない)。",
+  "query": "definition_error",
+  "definition": {
+    "options": [
+      {"name": "json", "long": [":set:json"], "link": "nosuch"}
+    ]
+  },
+  "cases": [
+    {
+      "id": "link-target-not-defined",
+      "why": "`json` の link:\"nosuch\" は同一スコープに `nosuch` という name の実体を持たない。link 解決は定義時点の静的検査であり、実行せずとも absent-ref で弾かれる (DR-054 §1 の参照層、DR-078 §『不在は definition-error absent-ref』と同型)。args は書かない (definition-error は定義の静的検査、DR-082 §1)。",
+      "expect": {
+        "outcome": "definition-error",
+        "errors": [{"element": "json", "kind": "absent-ref"}]
+      }
+    }
+  ]
+}
