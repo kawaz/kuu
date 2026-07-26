@@ -32,7 +32,7 @@ preset が同梱するのは**「暗黙 default = tty 観測の fold」だけ**�
 2. 環境変数 (env)
 3. config ファイル
 4. inherit (祖先 scope)
-5. default / value
+5. default
 ```
 
 DR-031 の元の 5 段 (DESIGN §11.4) を復元する。「tty」という独立席はラダーから消える — tty 観測は**特定の型 (builtin/tty) が `default` 席をどう解決するかという、型ごとの解決規則**として吸収される。

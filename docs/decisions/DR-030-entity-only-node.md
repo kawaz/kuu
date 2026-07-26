@@ -23,7 +23,7 @@
 |---|---|---|
 | link のプレースホルダ実体 | `{name:"logLevel", type:number, value:0}` を実体に、-v/--log-level が link | link 経由 |
 | 環境変数専用 | `{name:"apiKey", type:string, env:"API_KEY"}` (入口なし、env だけ) | 環境変数 |
-| ハードコード設定/マジックナンバー | `{name:"timeout", type:number, value:30}` | 固定値 |
+| ハードコード設定/マジックナンバー | `{name:"timeout", type:number, value:30}` | 宣言初期値 (source は `const`。env / config が来れば通常規則で上書きされる、DR-031) |
 | 設定ファイル由来 | `{name:"dbUrl", type:string, config:...}` | 設定ファイル (DR-014) |
 
 > 単に設定ファイルとかアプリ内で使うほぼハードコードのタイムアウト値とかマジックナンバーとかを単にアプリ設定みたいな塊として管理したい、元一式全部詰め込んでパースリザルトを appconfig 的なストアにしたいみたいな用途 (kawaz)

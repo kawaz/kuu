@@ -187,8 +187,10 @@ registry.types.X → warn+string フォールバック`(ユーザ定義が組み
 **`value`**
 非消費の literal 値。入口属性 (long/short/positional 位置) を持たない「実体だけノード」を作る
 (link のプレースホルダ・環境変数専用・ハードコード設定などに使う)。
+source タグは `const` (値セルに最初からいる初期値、DR-031)。ラダーの席ではないので
+env / config / cli の供給は初期値を通常規則どおり上書きする (上書き後の source は勝った席)。
 最小例: `{"name": "timeout", "type": "number", "value": 30}`
-正本: DESIGN §4.5, §5.2
+正本: DESIGN §4.5, §5.2, §11.4 (const)
 
 #### 値源
 
