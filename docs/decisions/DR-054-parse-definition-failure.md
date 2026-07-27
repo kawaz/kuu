@@ -75,6 +75,12 @@ Error 検査は**単純な構文・値域・参照の検査に限る**。制約�
 > **更新: DR-067 (well-formedness 3 層) の参照ラベルの根拠として、DefError の kind 値を正式列挙する: `vocab-intersection` / `unknown-vocab` / `invalid-range` / `absent-ref` / `circular-ref` / `zero-progress` / `config-cycle` (垂直スライス PoC 第 14 弾の実装形と一致)。本 DR の散文記述 (未知の特殊語彙・不正な値域・不在・循環の ref/link・ゼロ進捗再帰・config 循環) との対応は自明。**
 >
 > **更新2 (DR-085 訂正、2026-07-10): `invalid-argument` を追加。** registry 装置 (filter/type 等) に渡した引数の値そのものが不正で、装置側の構築 (compile 等) が失敗するケース (regex_match の pattern compile 失敗が最初の実例、DR-085 §1)。invalid-range (構文上は書けるが構成の組合せとして不成立) とは層が異なる — invalid-argument は単一引数値の内部妥当性、invalid-range は複数属性の組合せの値域外。
+>
+> **更新3 (DR-120 §5): `export-key-collision` を追加。** 1 結果スコープで同一露出キーへ解決する値セルが 2 つ以上ある定義 (DR-120 §1)。schema `definitionErrorExpect` の enum には反映済みで、本列挙と CONFORMANCE §2 の追随がここで揃う。
+>
+> **更新4 (GATEKIND-Q1=a、kawaz 裁定 2026-07-26): `unsupported` を追加。** 定義は spec 上合法だが、当該実装がその組み合わせを未対応として拒否した。既存 8 kind が「定義が不正」を報告するのに対し、`unsupported` だけは**定義は正しく、報告しているのは実装側の制限**という軸の違いを持つ — 同じ定義でも実装が変われば success になる。conformance 上、この kind を返す実装は当該機能の green を主張できない (CONFORMANCE §0.1)。`message` に未対応の範囲、`hint` に代替を書くこと (非規範、§4 の hint 一般化がそのまま効く)。
+>
+> **schema との非対称**: `schema/fixture.schema.json` の definitionErrorExpect の kind enum に `unsupported` は**加えない**。fixture は spec の正解を固定するものであり、正解が「実装が未対応」を期待することは無い — 実装制限は実装ごとに違うので、fixture に書けば別の実装にとって偽の期待になる。`unsupported` は実装が実行時に返す値としてのみ正規であり、fixture の期待値としては非正規、という一方向の語彙である。
 - DR-021 (warn 原則 — 適用層の限定、type フォールバックの例外は不変)
 - DR-053 (結末の union — 同族構造)
 - DR-032 (ref/link 解決 — 不在・循環の検査根拠)

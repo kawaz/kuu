@@ -12,6 +12,8 @@
 | **語彙層** | 全フィールド語彙が登録済み descriptor の所有集合の和に含まれる (DR-061/063) | unknown-vocab Error (DR-054) |
 | **参照層** | ref / link / type / alias の解決可能性、循環・ゼロ進捗の不在 (DR-054 §1) | absent-ref / circular-ref / zero-progress Error |
 
+3 層はいずれも「定義が不正」を判定する。definition-error kind `unsupported` (DR-054 更新4) はこの 3 層のどれにも属さない — 定義は 3 層すべてを満たすが当該実装が未対応、という別軸の申告であり、wire の合法性判定の結果ではない。
+
 JSON Schema (機械可読ファイル) が写像するのは主に構文層。語彙層は descriptor 集合に対して相対的 (登録 installer で変わる)、参照層はグラフ検査であり、いずれも Schema の表現力の外 — parse_definition の検査として実装する。
 
 ### 2. 構文層の invariant (F-042 の 4 項目への回答を含む)

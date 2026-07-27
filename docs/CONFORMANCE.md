@@ -28,6 +28,8 @@ spec バンドル自体の v1.0.0 発行条件 (5 プロファイル全 green、
 4. **mismatches = 0**: `expect` との比較 (§3) が全件一致
 5. **対象 spec commit SHA の固定**: green を主張する時点の参照実装が、どの spec commit (fixture 集合のスナップショット) を対象にしたかを明記する — spec 側が VERSION を bump しても、参照実装が pin を更新するまでは新版の green を主張しない (DR-108 §4)
 
+fixture が期待する outcome の代わりに `kind: "unsupported"` の definition-error を返した case は mismatches に数える (= green を主張できない、DR-054 更新3)。`unsupported` は「定義は spec 上合法だが当該実装が未対応」の申告であり、未対応の申告は準拠の充足ではない。
+
 上記 5 項目を数値・SHA で記録したものが「conformance 証跡」(v1.0.0 発行時は `docs/runbooks/v1-release.md` が証跡ファイルの生成を要求する、DR-108 §3/M-4)。
 
 ## 1. fixture ファイル
@@ -88,7 +90,7 @@ spec バンドル自体の v1.0.0 発行条件 (5 プロファイル全 green、
   - `source`: 値源タグ (DR-031)。effects に載るのは `cli` / `link` の 2 つだけ (下記。ラダー充填の由来は `sources` 側)
 - **effects に載るのは cli / link 由来のパース時効果のみ** — 値源ラダー充填 (env / config / inherit / default) は完走後の値確定であり args 順の全順序を持たないため、effects には載せない (例: 未発火 flag の `false` は result に現れ、effects には現れない)。ラダー充填の**値**は `result` で、**由来**は `sources` フィールドで検証する (effects への source 拡張は「充填同士の順序が非規範で全順序規約を汚す」ため不採用 — DR-065)。**effects の要素は entity (値セル) 単位** — 結果キーを持たない nameless 子 (DESIGN §2.4 の透過) は entity を持たないため、cli 消費していても effects に現れない (値の着地は result / sources 側で検証する)。消費 0 literal が置く `const` 値も効果ではないため現れない
 - **`result` は最終結果オブジェクト** (ラダー充填込みの確定値、DR-051 の absent 規則適用後)。runner は effects / result の両方を検証する
-- **`sources` (optional)**: 最終結果の値源を検証する **`result` と同型の shadow tree** (DR-122)。`result` の構造をそのまま持ち、**値の座だけを値源タグに置き換えた**オブジェクトである。タグの語彙は `cli` / `link` / `env` / `config` / `inherit` / `tty` / `default` / `const` (DR-031「source の記録」の 8 語彙が正本 — DR-098 §6 の `tty`、2026-07-26 裁定の `const` を含む)。`const` は消費 0 literal (`value:`、および or/seq の子 (DESIGN §5.1) 位置の `default:` 綴り、DESIGN §5.2) が置いた宣言由来の定数 — 値セルに最初からいる値であり、ラダー充填 (`default`) とは別物。`link` は他要素の入口から link で飛んできた効果が最終値を確定させた場合 (自分の入口からなら `cli`、DR-031 の source 確定ルール) — ラダー同順位で経路の違いのみ。effects が cli / link 効果のみである規約は不変 (ラダー充填の順序を effects に持ち込まず、由来の検証は本フィールドが担う)。
+- **`sources` (optional)**: 最終結果の値源を検証する **`result` と同型の shadow tree** (DR-122)。`result` の構造をそのまま持ち、**値の座だけを値源タグに置き換えた**オブジェクトである。タグの語彙は `cli` / `link` / `env` / `config` / `inherit` / `tty` / `default` / `const` (DR-031「source の記録」の 8 語彙が正本 — DR-098 §6 の `tty`、2026-07-26 裁定の `const` を含む)。`const` は消費 0 literal (`value:`、位置を問わない、DESIGN §5.2) が置いた宣言由来の定数 — 値セルに最初からいる値であり、ラダー充填 (`default`) とは別物。`default:` は or/seq の子位置でもラダー席なので、その座のタグは `const` ではなく `default` になる (CHILDDEF-Q1=b、DR-031)。`link` は他要素の入口から link で飛んできた効果が最終値を確定させた場合 (自分の入口からなら `cli`、DR-031 の source 確定ルール) — ラダー同順位で経路の違いのみ。effects が cli / link 効果のみである規約は不変 (ラダー充填の順序を effects に持ち込まず、由来の検証は本フィールドが担う)。
 
   ```json
   result:  {"pair": ["x", "fallback"]}      sources: {"pair": ["cli", "const"]}
@@ -152,7 +154,8 @@ spec バンドル自体の v1.0.0 発行条件 (5 プロファイル全 green、
 `query: "definition_error"` は `success`/`failure`/`ambiguous` (DR-053 の実行時 outcome union) とは別レイヤ — `parse_definition()` (定義そのものの静的検査、DR-054 §4) の返値をそのまま転用する。`cases[].args` は書かない (定義の静的検査であり実行しない、DR-082 §1)。
 
 - `errors`: `parse_definition()` が検出した全定義エラーの配列。`element` (該当要素、省略可) と `kind` の組で構成される
-- `kind` の語彙 (DR-054 §4、DR-085 訂正で `invalid-argument` 追加): `vocab-intersection` / `unknown-vocab` / `invalid-range` / `absent-ref` / `circular-ref` / `zero-progress` / `config-cycle` / `invalid-argument`
+- `kind` の語彙 (DR-054 §4、DR-085 訂正で `invalid-argument`、DR-120 §5 で `export-key-collision` 追加): `vocab-intersection` / `unknown-vocab` / `invalid-range` / `absent-ref` / `circular-ref` / `zero-progress` / `config-cycle` / `invalid-argument` / `export-key-collision`
+- `unsupported` (DR-054 更新4) は `parse_definition()` の返値としては正規だが、**fixture の期待値には書けない** — `schema/fixture.schema.json` の kind enum に含めず、上記 9 語彙のみが fixture 側の語彙である。fixture は spec の正解を固定するもので、実装ごとに違う未対応範囲は正解になりえない (§0.1 の green 規範がこの kind を mismatch として扱う)
 - universal fn では registry に無い fn = `unknown-vocab`、arity / argument type 不正 = `invalid-argument`、呼び出し席と出力型の不適合 = `invalid-range`、`observes` 依存循環 = `circular-ref` (DR-114 §11)
 - `absent-source` は参照先不在を表す runtime fn reason であり、definition-error kind には加えない
 - **`message`/`hint` は比較しない** (parse fixture の `errors[].message` と同じ流儀、文言はレンダラの関心)

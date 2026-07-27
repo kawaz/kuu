@@ -107,9 +107,11 @@ default のような動的な値源装置ではない)。未発火なら pair �
 
 `or` の枝が `seq` を持つ場合 (枝が tuple) も本項の扱いになる。
 
-> 初版の本節は「要素ごとの provenance が `[cli, default]` になる」を到達可能例として挙げ、
-> 配列要素 addressing の裁定に送っていたが、これは誤導出 (literal は値源ラダーを通らない)。
-> nameless 配列内で source が混在する構成は、この例からは生じない。
+本節が扱う literal 成分は `value:` の const に限る。`default:` を持つ子は消費 0 literal ではなく
+値源ラダーの席を持つ通常の消費子であり (CHILDDEF-Q1=b、DR-031 / DESIGN §5.2)、トークンを
+得られずに空席のまま完走した座は resolve 相で default が埋める — したがって nameless 配列の
+要素ごと provenance が `["cli", "default"]` になる構成は到達可能である (`value:` 版が
+`["cli", "const"]` になるのと位相が違うだけで、どちらも 1 発火が産む配列内の混在)。
 
 ## 4. `link` は独立した値源タグ (LINKSRC-Q1=a)
 

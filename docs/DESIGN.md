@@ -400,9 +400,18 @@ repeat: true の要素, children: [
 true    → bool として同様
 ```
 
-**消費しない literal** は `value:` / `default:` フィールドで書く (`{"type": "number", "value": 30}` は消費 0 の実体だけノード)。消費数は Accept の報告値であり、value の有無から導出しない (DR-041 §3)。
+**消費しない literal** は `value:` フィールドで書く (`{"type": "number", "value": 30}` は消費 0 の実体だけノード)。消費数は Accept の報告値であり、value の有無から導出しない (DR-041 §3)。
 
-`value:` と `default:` の同一要素での併記は**位置で扱いが分かれる**: or/seq の子 (構造位置) では両綴りとも同じ宣言定数 (`const`、DR-031) なので同義の二重宣言 = definition-error。root 位置 (options[] / positionals[] の entry) では `value:` は初期値 (const)、`default:` はラダー席 (§11.4) で**別位相**なので併記は合法 — ただし const が常にセルを埋めるため default 側は到達不能な死に宣言になる (env が常に供給される環境で default が影になるのと同じラダーの通常挙動。CONST-Q1=a、静的検出は lint の領分)。
+`value:` と `default:` は**位置に依らず別位相**である (CHILDDEF-Q1=b、kawaz 裁定 2026-07-26):
+
+- **`value:` = 消費 0 の宣言定数** (`const`、DR-031)。セル初期化位相に属し、値セルに最初からいる。ラダーの席ではない
+- **`default:` = 値源ラダー (§11.4) の最下段の席**。「無い時に埋める」充填であり、or/seq の子位置でも同じくラダー席である
+
+子セルの席が存在するのは**親が発火して子の座が成立した場合のみ**である。親が未発火なら子は親ごと absent で、着席自体が起きない (`fixtures/or-parse/unselected-branch-literal-absent.json::selected-branch-only-key-present`)。
+
+消費との関係: `default:` を持つ子は消費 0 の literal に**ならない** — 通常どおり消費を試みる子のままで、`default:` が変えるのは「トークンを得られなかった消費点を空席のまま完全経路に含めてよい」という充足判定である (DR-088 §1「宣言された値源 = デフォルトの存在」/ §2 の静的宣言ベース判定が、root positional と同じく子位置にも効く)。空席のまま完走した座は resolve 相で default 席が埋め、source は `default` になる。
+
+`value:` と `default:` の同一要素での併記は**全位置で合法**である (別位相なので二重宣言にならない) — ただし const が常にセルを埋めるため default 席は到達不能な影になる (env が常に供給される環境で default が影になるのと同じラダーの通常挙動。CONST-Q1=a、静的検出は lint の領分)。
 
 ### 5.3 values は or のショートハンド
 

@@ -11,16 +11,17 @@ AST 要素の値の決定は **構造的セマンティクス** (値が tree を
 | `or` | 選ばれた子の値 | 子の値をそのまま伝搬 |
 | `seq` / children sequence | 子の値の配列 (or 単独要素なら単独) | 配列または単独値を親に伝搬 |
 
-消費数は値の発生とは別軸である。**消費数は Accept の報告値であり、value の有無から導出しない** (DR-041 §3): `value` /
-`default` を持つ literal は消費 0 が既定、value を持たない primitive は CLI から 1 トークンを消費する (構造位置の裸
-リテラルの照合消費は DESIGN §5.2 / LOWERING A.1・A.3)。
+消費数は値の発生とは別軸である。**消費数は Accept の報告値であり、value の有無から導出しない** (DR-041 §3): `value`
+を持つ literal は消費 0 が既定、value を持たない primitive は CLI から 1 トークンを消費する (構造位置の裸
+リテラルの照合消費は DESIGN §5.2 / LOWERING A.1・A.3)。`default` は消費数を変えない — 位置に依らず値源ラダーの席
+であり (CHILDDEF-Q1=b、DR-031)、default を持つ子も通常どおり消費を試みる。
 
 構造位置の裸リテラルは照合消費 + 値産出ノードのシュガー (DESIGN §5.2 / LOWERING A.1・A.3):
 - `"red"` → `{"exact": "red"}` (消費 1、値 "red" を産出)
 - `255` → number として照合消費 (値 255 を産出)
 - `true` → bool として同様
 
-非消費の literal (トークンを照合せず値だけ持つ) は `value:` / `default:` フィールド経由でのみ書く。
+非消費の literal (トークンを照合せず値だけ持つ) は `value:` フィールド経由でのみ書く。
 
 ## 経緯
 

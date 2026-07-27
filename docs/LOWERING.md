@@ -64,8 +64,9 @@ literal 値 "x" を産出する (消費 1、DESIGN §5.2)。非消費の literal
 
 **規則**: 構造位置に置かれた裸の数値・bool も、裸文字列 (A.1) と同じく **照合消費 + literal 値産出** ノードへの
 糖衣である (綴り照合の exact に対し、数値・bool は型照合)。配置文脈で展開先は変わらない (DESIGN §5.2)。
-**非消費の literal は value: / default: フィールド経由でのみ書く** — `{type: "number", value: 30}` は消費 0 の
-実体だけノードであり、トークンを照合しない。数値・bool 照合ノードの直列形 (concrete JSON) は exact と同じく
+**非消費の literal は value: フィールド経由でのみ書く** — `{type: "number", value: 30}` は消費 0 の
+実体だけノードであり、トークンを照合しない (`default:` は位置に依らず値源ラダーの席であって消費数を変えない、
+CHILDDEF-Q1=b / DR-031)。数値・bool 照合ノードの直列形 (concrete JSON) は exact と同じく
 DR-063 §3 の断面表記に従う (§C.3)。
 
 **由来**: DR-015, DESIGN §5.2
