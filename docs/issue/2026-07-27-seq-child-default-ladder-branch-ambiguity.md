@@ -38,6 +38,8 @@ CHILDDEF-Q1=b (kawaz 裁定 2026-07-26、DESIGN §5.2 / DR-031) により `defau
 
 - [ ] 上記 2 枝がともに完全経路として成立するか (= ambiguous が正しい帰結か)、それとも seq の順次消費 (DESIGN §5.1「子を順に消費」) が先頭優先を含意して枝 1 だけが成立するのかを裁定する
 - [ ] repeat / optional 実装後は同型の曖昧性がより広い範囲で現れるため、そこでまとめて裁定する選択肢も検討する
+- [ ] トークンが 0 個の場合も同じ論点が立つ: 両子とも空席で埋まるのが 1 通りの完全経路として確定するのか、複数の空席パターンが ambiguous になり得るのか
+- [ ] 3 子以上に一般化した場合の規定 (または「2 子までで十分、3 子以上は別途検討」の明示)
 - [ ] 裁定後は fixture で pin する (seq-parse 配下、`literal-child-default-ladder.json` の隣)
 
 ## 関連
@@ -45,3 +47,4 @@ CHILDDEF-Q1=b (kawaz 裁定 2026-07-26、DESIGN §5.2 / DR-031) により `defau
 - DESIGN §5.2 (value:/default: の 2 位相) / §5.1 (seq は子を順に消費) / §15.1 (完全経路の成功条件)
 - DR-031 (const と default の位相分離、CHILDDEF-Q1=b) / DR-088 §1/§2 (宣言された値源 = デフォルトの存在) / DR-038 (経路同一性は効果列)
 - fixtures/seq-parse/literal-child-default-ladder.json (今回追加、1 本枝に確定する側)
+- 重複起票を統合: docs/issue/archive/2026-07-27-seq-both-default-children-branching-unspecified.md (同一論点、並行 write fork 競合による事故。上記 2 観点は当該 issue から吸収)
