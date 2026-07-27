@@ -164,7 +164,7 @@ sources: [{"path":[],"key":"v","source":"cli"}]            ← 露出キー
   (canonical JSON 1 行を sort する)。`(path, key)` の重複検査を追加する
 - 実装 (`OutputView.sources`) は既に `Array[SourceEntry]` なので、wire の組み立てと
   kuu-cli の JSON 出力を追随させる
-- §3.2 の nameless tuple wrapper は entry 1 件 (発火経路の source)。named 子は通常の cell provenance で書けるため、配列要素 addressing の新設計は不要になった (2026-07-26 再裁定)
+- §3.2 の nameless tuple の sources は shadow tree の要素対応 (DR-122)。配列要素の addressing 語彙の新設計は不要 (フラット化しないため)
 - §4 の `link` は参照実装が `Cli` に畳んでいるので追随が要る (`Source` に `Link` を足す /
   `link` 属性の parse 面 decode)。`link` を source 値として持つ fixture も corpus に無いので追加する
 
