@@ -24,6 +24,7 @@ active な issue の一覧。close 済みは archive/ にあり、ここには�
 | 2026-07-26 | design | open | [warnings-element-export-key-timing](./2026-07-26-warnings-element-export-key-timing.md) | warnings[].element のキー体系が export_key 適用の前後どちらか未規定 (sources 側は明確化済み、DR-058 §2 の canonical 解釈待ち) |
 | 2026-07-26 | task | open | [projection-verification-structural-gaps](./2026-07-26-projection-verification-structural-gaps.md) | 射影 (result/effects/sources) の検証断面に構造的な空白が残っている (P1/P2 の 8 テーマ) |
 | 2026-07-27 | bug | open | [failure-outcome-errors-required-schema-mismatch](./2026-07-27-failure-outcome-errors-required-schema-mismatch.md) | named-group-child-default.json の partial-row-is-not-a-complete-path が failureOutcome required ["outcome","errors"] に違反 (errors 欠落) |
+| 2026-07-27 | design | open | [seq-both-default-children-branching-unspecified](./2026-07-27-seq-both-default-children-branching-unspecified.md) | 両子とも default: を持つ seq の枝の立ち方が未規定 (CHILDDEF-Q1=b の残余断面、literal-child-default-ladder.json は非対称ケースのみ) |
 
 <!--
 雛形メモ (migrate sub-command 用):
