@@ -3,7 +3,7 @@ title: 両子とも default: を持つ seq に 1 トークンだけ与えたと�
 status: idea
 category: design
 created: 2026-07-27T11:03:05+09:00
-last_read:
+last_read: 2026-07-27T11:09:05+09:00
 open_entered:
 wip_entered:
 blocked_entered:
