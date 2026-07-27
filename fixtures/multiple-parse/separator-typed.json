@@ -22,11 +22,10 @@
     },
     {
       "id": "option-separator-piece-parse-rejected",
-      "why": "`--ports 5,abc` は separator で [\"5\",\"abc\"] に分割後、2 piece 目 \"abc\" が number 型 parse に失敗 (not_a_number、DR-066 reason 表) → 全体 failure。1 piece 目 (5) が有効でも部分成功はしない (filters-each.json::one-piece-rejects-whole-not-partial-accumulate と同型の『1 piece の不成立が全体を落とす』構造だが、本 case は filters(段5) の reject でなく type.parse(段4) の reject である点が異なる)。args_pos=1 はトークン `5,abc` 自体の位置 (0-based: --ports=0, `5,abc`=1) — 2 piece とも同一トークン由来のため帰属先は同じ (CONFORMANCE §2 のピース帰属規約)。kind=parse / reason=not_a_number (kind=filter ではない — filters チェインでなく type.parse 段の失敗であることの区別)。",
+      "why": "`option-separator-piece-parse-rejected` は値 resident または piece filter が入力を値空間外と判定する断面。DR-037 Reject として枝は静かに脱落し、完全経路が無いため outcome=failure になるが、Reject の診断は errors と failure-action 候補へ保持しない。",
       "args": ["--ports", "5,abc"],
       "expect": {
-        "outcome": "failure",
-        "errors": [{"element": "ports", "args_pos": 1, "kind": "parse", "reason": "not_a_number"}]
+        "outcome": "failure"
       }
     }
   ]

@@ -39,11 +39,10 @@
     },
     {
       "id": "bare-minus-on-number-element-fails-to-parse",
-      "why": "`--nums -`: piece=[\"-\"] のみ。remove(\"\") を狙う操作だが、operand \"\" は number 型で parse を試みられ (DR-080 §2「operand は要素 type で parse される」)、number の canonical 字句 (DR-074 §1) は空文字を受理しないので not_a_number で reject される — number リストでは remove(\"\") という操作自体が成立しない縁の字句を固定する。args_pos は値トークンの 0-based 位置 (--nums=0, -=1)。",
+      "why": "`bare-minus-on-number-element-fails-to-parse` は値 resident または piece filter が入力を値空間外と判定する断面。DR-037 Reject として枝は静かに脱落し、完全経路が無いため outcome=failure になるが、Reject の診断は errors と failure-action 候補へ保持しない。",
       "args": ["--nums", "-"],
       "expect": {
-        "outcome": "failure",
-        "errors": [{"element": "nums", "args_pos": 1, "kind": "parse", "reason": "not_a_number"}]
+        "outcome": "failure"
       }
     },
     {

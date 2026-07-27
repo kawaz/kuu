@@ -41,11 +41,10 @@
     },
     {
       "id": "vocabulary-outside-still-rejected",
-      "why": "方言 config で語彙を広げても、リスト外の入力 (`maybe`) は従来どおり not_a_bool で failure (DR-074 §3: 受理は確定リスト照合、開いた解釈をしない)。args_pos=1 は値トークンの 0-based 位置。",
+      "why": "`vocabulary-outside-still-rejected` は値 resident または piece filter が入力を値空間外と判定する断面。DR-037 Reject として枝は静かに脱落し、完全経路が無いため outcome=failure になるが、Reject の診断は errors と failure-action 候補へ保持しない。",
       "args": ["--flag", "maybe"],
       "expect": {
-        "outcome": "failure",
-        "errors": [{"element": "flag", "args_pos": 1, "kind": "parse", "reason": "not_a_bool"}]
+        "outcome": "failure"
       }
     }
   ]

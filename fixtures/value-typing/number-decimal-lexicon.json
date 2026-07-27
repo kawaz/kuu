@@ -119,47 +119,42 @@
     },
     {
       "id": "underscore-consecutive-rejected",
-      "why": "桁区切り `_` の連続は Error (DR-074 §7): `1__000` は 2 つ目の `_` の左隣が `_` (桁でない) なので配置規則違反 → failure (element=v / args_pos=0 / kind=parse / reason=not_a_number)。「両隣が桁」を厳密に要求することで、区切りとしての意味を保つ。",
+      "why": "`underscore-consecutive-rejected` は値 resident または piece filter が入力を値空間外と判定する断面。DR-037 Reject として枝は静かに脱落し、完全経路が無いため outcome=failure になるが、Reject の診断は errors と failure-action 候補へ保持しない。",
       "args": ["1__000"],
       "expect": {
-        "outcome": "failure",
-        "errors": [{"element": "v", "args_pos": 0, "kind": "parse", "reason": "not_a_number"}]
+        "outcome": "failure"
       }
     },
     {
       "id": "underscore-leading-rejected",
-      "why": "桁区切り `_` の先頭配置は Error (DR-074 §7): `_1` は先頭 `_` の左隣が存在しない (桁でない) → 配置規則違反で failure (not_a_number)。identifier lexer (Python 等の _leading name) との衝突を排し、number token 全体一致 (§5 anchored) の下で先頭 `_` は数値の一部にならないことを固定。",
+      "why": "`underscore-leading-rejected` は値 resident または piece filter が入力を値空間外と判定する断面。DR-037 Reject として枝は静かに脱落し、完全経路が無いため outcome=failure になるが、Reject の診断は errors と failure-action 候補へ保持しない。",
       "args": ["_1"],
       "expect": {
-        "outcome": "failure",
-        "errors": [{"element": "v", "args_pos": 0, "kind": "parse", "reason": "not_a_number"}]
+        "outcome": "failure"
       }
     },
     {
       "id": "underscore-trailing-rejected",
-      "why": "桁区切り `_` の末尾配置は Error (DR-074 §7): `1_` は末尾 `_` の右隣が存在しない → 配置規則違反で failure (not_a_number)。「区切り」は必ず両側に桁を要求する構造で、末尾に `_` を許すと桁が続くのか終端なのかが構文上曖昧になる。",
+      "why": "`underscore-trailing-rejected` は値 resident または piece filter が入力を値空間外と判定する断面。DR-037 Reject として枝は静かに脱落し、完全経路が無いため outcome=failure になるが、Reject の診断は errors と failure-action 候補へ保持しない。",
       "args": ["1_"],
       "expect": {
-        "outcome": "failure",
-        "errors": [{"element": "v", "args_pos": 0, "kind": "parse", "reason": "not_a_number"}]
+        "outcome": "failure"
       }
     },
     {
       "id": "underscore-adjacent-exponent-rejected",
-      "why": "桁区切り `_` の指数記号隣接は Error (DR-074 §7): `1_e3` は `_` の右隣が `e` (桁でない) → 配置規則違反で failure (not_a_number)。10 進指数 `e` と `_` の間に桁を要求することで、`e` を桁として誤読する余地を排す (hex の `e` は桁だが 0x prefix で切り替わる、§1)。",
+      "why": "`underscore-adjacent-exponent-rejected` は値 resident または piece filter が入力を値空間外と判定する断面。DR-037 Reject として枝は静かに脱落し、完全経路が無いため outcome=failure になるが、Reject の診断は errors と failure-action 候補へ保持しない。",
       "args": ["1_e3"],
       "expect": {
-        "outcome": "failure",
-        "errors": [{"element": "v", "args_pos": 0, "kind": "parse", "reason": "not_a_number"}]
+        "outcome": "failure"
       }
     },
     {
       "id": "underscore-adjacent-dot-rejected",
-      "why": "桁区切り `_` の小数点隣接は Error (DR-074 §7): `1_.5` は `_` の右隣が `.` (桁でない) → 配置規則違反で failure (not_a_number)。integer 部と fraction 部の境界に区切りを置くことは、桁の隣接判定を跨いだ意味を強要するので排す (Rust リテラル文法などと同じ姿勢)。",
+      "why": "`underscore-adjacent-dot-rejected` は値 resident または piece filter が入力を値空間外と判定する断面。DR-037 Reject として枝は静かに脱落し、完全経路が無いため outcome=failure になるが、Reject の診断は errors と failure-action 候補へ保持しない。",
       "args": ["1_.5"],
       "expect": {
-        "outcome": "failure",
-        "errors": [{"element": "v", "args_pos": 0, "kind": "parse", "reason": "not_a_number"}]
+        "outcome": "failure"
       }
     }
   ]

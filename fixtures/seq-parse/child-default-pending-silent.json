@@ -1,0 +1,31 @@
+{
+  "why": "parse mode で child default seat が入力枯渇により空席 fallback したとき、消費読み側の Pending は補完候補ではなく破棄される。後続の構造的不足だけが missing_operand として残る。complete mode で Pending を候補和集合へ残す対極は complete/child-default-pending.json が固定する。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {
+        "name": "pair",
+        "long": true,
+        "seq": [
+          {"name": "v", "type": "string", "default": "D"}
+        ]
+      }
+    ],
+    "positionals": [
+      {"name": "tail", "type": "string"}
+    ]
+  },
+  "cases": [
+    {
+      "id": "fallback-drops-consuming-pending-diagnostic",
+      "why": "`--pair`: v は入力枯渇で default 席へ fallback するため v の missing_operand は生成しない。後続 tail は同じ入力終端で構造的に不足し、tail@1 の missing_operand だけが可視 Error になる。",
+      "args": ["--pair"],
+      "expect": {
+        "outcome": "failure",
+        "errors": [
+          {"element": "tail", "args_pos": 1, "kind": "parse", "reason": "missing_operand"}
+        ]
+      }
+    }
+  ]
+}

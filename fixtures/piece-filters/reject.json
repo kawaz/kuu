@@ -21,11 +21,10 @@
     },
     {
       "id": "non-matching-rejected",
-      "why": "空文字列 `\"\"` は non_empty が parse に届く前に reject する (PIPELINE §『段3 reject』)。string 型は parse (恒等) では空文字を弾けないので、この failure は piece_filters が parse より前に効いている実証点でもある。args_pos=1 は値トークン `\"\"` の 0-based 位置 (piece 帰属の失敗、kind=parse の not_a_number と同じ位置規約) / kind=filter / reason=empty_value (non_empty の宣言 reason、DR-095) で固定する。",
+      "why": "`non-matching-rejected` は値 resident または piece filter が入力を値空間外と判定する断面。DR-037 Reject として枝は静かに脱落し、完全経路が無いため outcome=failure になるが、Reject の診断は errors と failure-action 候補へ保持しない。",
       "args": ["--name", ""],
       "expect": {
-        "outcome": "failure",
-        "errors": [{"element": "name", "args_pos": 1, "kind": "filter", "reason": "empty_value"}]
+        "outcome": "failure"
       }
     }
   ]
