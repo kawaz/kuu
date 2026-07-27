@@ -1,0 +1,37 @@
+{
+  "why": "positional ref template 内の child default も downstream continuation を見て逐次確定する。consume_compound の局所評価へ退行すると consuming と fallback の両枝が立つため、単発 positional ref 経路を独立に固定する。",
+  "query": "parse",
+  "definition": {
+    "definitions": {
+      "templates": {
+        "pair_template": {
+          "seq": [
+            {"name": "k", "type": "string"},
+            {"name": "v", "type": "string", "default": "D"}
+          ]
+        }
+      }
+    },
+    "positionals": [
+      {"name": "pair", "ref": "pair_template"},
+      {"name": "rest", "type": "string", "repeat": {"min": 0}}
+    ]
+  },
+  "cases": [
+    {
+      "id": "positional-ref-child-consumption-preempts-empty-seat",
+      "why": "`a b c`: pair.v が b を消費しても rest が c を消費して完全経路へ届くため、v=D として b,c を rest へ送る空席枝は立たない。",
+      "args": ["a", "b", "c"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "k", "op": "set", "operand": "a", "source": "cli"},
+          {"entity": "v", "op": "set", "operand": "b", "source": "cli"},
+          {"entity": "rest", "op": "set", "operand": "c", "source": "cli"}
+        ],
+        "result": {"pair": {"k": "a", "v": "b"}, "rest": ["c"]},
+        "sources": {"pair": {"k": "cli", "v": "cli"}, "rest": ["cli"]}
+      }
+    }
+  ]
+}

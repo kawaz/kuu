@@ -1,0 +1,35 @@
+{
+  "why": "complete mode の child default seat は、消費読みの値 Pending を捨てず、空席 fallback から到達する downstream 候補と合流する。parse の consume/fallback 確定とは異なり、補完は生存 partial の候補和集合を返す。",
+  "query": "complete",
+  "definition": {
+    "config": {"long_eq_sep": "deny"},
+    "options": [
+      {
+        "name": "pair",
+        "long": true,
+        "seq": [
+          {"name": "a", "type": "string"},
+          {"name": "b", "type": "string", "default": "B"}
+        ]
+      }
+    ],
+    "positionals": [
+      {"name": "tail", "type": "string"}
+    ]
+  },
+  "cases": [
+    {
+      "id": "default-child-value-and-fallback-tail-candidates-survive",
+      "why": "`--pair x` の終端では b の消費値を入力する候補と、b を空席にして tail を入力する候補がともに生存する。ChildDefault が head Pending を破棄すると b 候補だけが消える。",
+      "args_before": ["--pair", "x"],
+      "expect": {
+        "outcome": "complete",
+        "candidates": [
+          {"spelling": "--pair", "is_value": false, "origin": "pair", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}},
+          {"is_value": true, "type": "string", "origin": "b", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}},
+          {"is_value": true, "type": "string", "origin": "tail", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}}
+        ]
+      }
+    }
+  ]
+}
