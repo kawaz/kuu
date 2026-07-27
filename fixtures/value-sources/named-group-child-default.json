@@ -1,5 +1,5 @@
 {
-  "why": "named group positional の child が持つ値源ラダーは、宣言元の root scope ではなく wrapper row の結果アドレスに属する (DR-025/DR-033 の name scope、DR-121 §3.2 の named child provenance)。xs は repeat:{min:0,max:2} なので 0 fire では [] だけが結果になり、row が存在しない以上 child v の default 席も存在せず root 直下へ v が湧かない。row が発火して v の token が無ければ CHILDDEF-Q1=b / DR-088 により v の空席を含む完全経路が成立し、resolve 相で default が充填される。各 row の child seat と sources は独立する。",
+  "why": "named group positional の child が持つ値源ラダーは、宣言元の root scope ではなく wrapper row の結果アドレスに属する (DR-025/DR-033 の name scope、DR-121 §3.2 の named child provenance)。xs は repeat:{min:0,max:2} なので 0 fire では [] だけが結果になり、row が存在しない以上 child v の default 席も存在せず root 直下へ v が湧かない。row が発火して v の token が無ければ DR-088 により v の空席を含む完全経路が成立し、resolve 相で default が充填される。各 row の child seat と sources は独立する。",
   "query": "parse",
   "definition": {
     "positionals": [

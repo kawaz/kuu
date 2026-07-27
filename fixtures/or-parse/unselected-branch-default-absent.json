@@ -1,5 +1,5 @@
 {
-  "why": "or の未選択枝に `default:` (値源ラダーの席、CHILDDEF-Q1=b / DR-031) を持つ子があっても着席しない断面 — 子セルの席が成立するのは親が発火して子の座ができた場合のみで、枝が選ばれなければラダー席ごと存在しない。sources は結果の射影であり (CONFORMANCE §2 導出手順 1)、DR-052 §3 / DR-051 の通り選ばれなかった枝の結果キーは存在しない。string+string+default では CHILDDEF-Q1=b により両枝が同じ token を通常消費でき、DR-038 の優先なし原則から ambiguous になるため、本 fixture は string と int の型照合で枝が排他になる定義を使って着席だけを pin する。",
+  "why": "or の未選択枝に `default:` (値源ラダーの席、DR-031) を持つ子があっても着席しない断面 — 子セルの席が成立するのは親が発火して子の座ができた場合のみで、枝が選ばれなければラダー席ごと存在しない。sources は結果の射影であり (CONFORMANCE §2 導出手順 1)、DR-052 §3 / DR-051 の通り選ばれなかった枝の結果キーは存在しない。string+string+default では DESIGN §5.2 により両枝が同じ token を通常消費でき、DR-038 の優先なし原則から ambiguous になるため、本 fixture は string と int の型照合で枝が排他になる定義を使って着席だけを pin する。",
   "query": "parse",
   "definition": {
     "options": [

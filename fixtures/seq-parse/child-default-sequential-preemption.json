@@ -1,0 +1,35 @@
+{
+  "why": "同一 seq の複数 default seat への先食いは、完全経路集合を事後比較せず、背骨の消費順に逐次適用する。各 seat は、それ以前の seat の確定を前提に、自身の消費が downstream の完全経路へ届くかを判定する。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {
+        "name": "pair",
+        "long": true,
+        "seq": [
+          {"name": "a", "type": "string", "default": "A"},
+          {"name": "b", "type": "string", "default": "B"}
+        ]
+      }
+    ],
+    "positionals": [
+      {"name": "tail", "type": "string"}
+    ]
+  },
+  "cases": [
+    {
+      "id": "earlier-seat-consumes-before-later-seat-falls-back",
+      "why": "`--pair x y`: 先の seat a は x を消費しても downstream 完全経路へ届くため cli で確定する。その確定後、b が y を消費すると tail が飢えるため b は空席 fallback に確定し、tail が y を消費する。",
+      "args": ["--pair", "x", "y"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "a", "op": "set", "operand": "x", "source": "cli"},
+          {"entity": "tail", "op": "set", "operand": "y", "source": "cli"}
+        ],
+        "result": {"pair": {"a": "x", "b": "B"}, "tail": "y"},
+        "sources": {"pair": {"a": "cli", "b": "default"}, "tail": "cli"}
+      }
+    }
+  ]
+}
