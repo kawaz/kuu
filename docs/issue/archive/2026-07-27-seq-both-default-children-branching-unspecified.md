@@ -1,6 +1,6 @@
 ---
 title: 両子とも default: を持つ seq の枝の立ち方が未規定 (CHILDDEF-Q1=b の残余断面)
-status: open
+status: discarded
 category: design
 created: 2026-07-27T11:03:05+09:00
 last_read:
@@ -8,9 +8,9 @@ open_entered: 2026-07-27T11:03:05+09:00
 wip_entered:
 blocked_entered:
 pending_entered:
-discarded_entered:
+discarded_entered: 2026-07-27T11:05:05+09:00
 resolved_entered:
-discard_reason:
+discard_reason: ["duplicate: docs/issue/2026-07-27-seq-child-default-ladder-branch-ambiguity.md — 同一トピック (両子 default: seq の枝分岐未規定)、並行 write fork 競合による重複起票、内容は ambiguity 側 issue に集約"]
 pending_reason:
 close_reason:
 blocked_by:
