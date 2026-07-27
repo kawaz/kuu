@@ -1,0 +1,34 @@
+{
+  "why": "単一 structural or branch の child default でも、同一 seat の CLI 消費読みが完全経路へ届くなら default 空席枝を生成しない。or の別 sibling 間の優先ではなく、1 branch 内の同一 seat に対する DR-041 §4 / DR-097 の先食いである。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {
+        "name": "mode",
+        "long": true,
+        "or": [
+          {"name": "value", "type": "string", "default": "D"}
+        ]
+      }
+    ],
+    "positionals": [
+      {"name": "rest", "type": "string", "repeat": {"min": 0}}
+    ]
+  },
+  "cases": [
+    {
+      "id": "consuming-branch-seat-preempts-default-empty-path",
+      "why": "value が a を消費しても rest=[b] で完全経路へ届くため、value=D として a,b を rest へ送る空席枝は立たない。",
+      "args": ["--mode", "a", "b"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "value", "op": "set", "operand": "a", "source": "cli"},
+          {"entity": "rest", "op": "set", "operand": "b", "source": "cli"}
+        ],
+        "result": {"mode": {"value": "a"}, "rest": ["b"]},
+        "sources": {"mode": {"value": "cli"}, "rest": ["cli"]}
+      }
+    }
+  ]
+}

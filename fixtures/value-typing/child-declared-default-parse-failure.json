@@ -1,0 +1,29 @@
+{
+  "why": "structural child default も root default と同じ型依存 pipeline を通る。内部 seat identity は公開 ParseError.element に漏らさず、宣言上の child 名へ再帰属する。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {
+        "name": "pair",
+        "long": true,
+        "seq": [
+          {"name": "k", "type": "string"},
+          {"name": "n", "type": "number", "default": "abc"}
+        ]
+      }
+    ]
+  },
+  "cases": [
+    {
+      "id": "unparseable-child-default-reports-public-element",
+      "why": "`--pair x` で n は空席になり default abc の number parse が失敗する。args_pos は入力末尾 2、element は内部 seat key でなく n。",
+      "args": ["--pair", "x"],
+      "expect": {
+        "outcome": "failure",
+        "errors": [
+          {"element": "n", "args_pos": 2, "kind": "parse", "reason": "not_a_number"}
+        ]
+      }
+    }
+  ]
+}
