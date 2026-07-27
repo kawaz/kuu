@@ -91,27 +91,26 @@ cell** である。構文上の node 種別では判定しない。
 原理は、**子が独立の値源を持ちうる場合**に効く — その代表は named 子で、各子が自分の結果キーを
 持つため通常の cell provenance (要素ごとの entry) がそのまま書ける。
 
-**nameless tuple の wrapper セルは entry 1 件で、source は発火経路 (`cli` / `link`)。**
-消費 0 literal (`value:`、DESIGN §5.2) を含む tuple でも由来は混在しない:
+nameless tuple の sources は **shadow tree の要素対応** (DR-122 §1/§3) で表す — `result` の
+配列の i 番目の要素の由来が `sources` の同位置のタグになる:
 
 ```json
 {"name":"pair","seq":[{"type":"string"},{"type":"string","value":"fallback"}]}
---pair x → pair=["x","fallback"]、sources は pair に cli の 1 entry
+--pair x → result: {"pair":["x","fallback"]}、sources: {"pair":["cli","const"]}
 ```
 
-literal 成分は独立の値源ではなく、**発火が産出する形の一部** (kawaz: 「pair は x のみから
-決まっている。これは只の x の写像 (`x → [x,"fallback"]`)」— 静的な定数であって、
-default のような動的な値源装置ではない)。未発火なら pair ごと absent であり、literal だけが
-着席することはない。named literal 子は自分の結果キーを持つので、そのセルの source は
-`const` (DR-031 の語彙追加、「const は値セルに最初からいる。default は無い時に埋める」)。
+`value:` の literal 成分は独立の値源装置ではなく発火が産出する定数 (source タグは `const`、
+DR-031 —「const は値セルに最初からいる。default は無い時に埋める」)。未発火なら pair ごと
+absent であり、literal だけが着席することはない。named 子は自分の結果キーを持つので、
+通常の cell provenance (kv の座のタグ) で書ける。
 
 `or` の枝が `seq` を持つ場合 (枝が tuple) も本項の扱いになる。
 
-本節が扱う literal 成分は `value:` の const に限る。`default:` を持つ子は消費 0 literal ではなく
-値源ラダーの席を持つ通常の消費子であり (CHILDDEF-Q1=b、DR-031 / DESIGN §5.2)、トークンを
-得られずに空席のまま完走した座は resolve 相で default が埋める — したがって nameless 配列の
-要素ごと provenance が `["cli", "default"]` になる構成は到達可能である (`value:` 版が
-`["cli", "const"]` になるのと位相が違うだけで、どちらも 1 発火が産む配列内の混在)。
+`default:` を持つ子は消費 0 literal ではなく値源ラダーの席を持つ通常の消費子であり
+(DR-031 / DESIGN §5.2)、トークンを得られずに空席のまま完走した座は resolve 相で default が
+埋める — nameless 配列の要素ごと provenance が `["cli", "default"]` になる構成は到達可能で
+ある (`value:` 版が `["cli", "const"]` になるのと位相が違うだけで、どちらも 1 発火が産む
+配列内の混在であり、shadow tree がそのまま表現する)。
 
 ## 4. `link` は独立した値源タグ (LINKSRC-Q1=a)
 
