@@ -32,26 +32,29 @@
     },
     {
       "id": "inf-on-number-rejected",
-      "why": "`inf-on-number-rejected` は値 resident または piece filter が入力を値空間外と判定する断面。DR-037 Reject として枝は静かに脱落し、完全経路が無いため outcome=failure になるが、Reject の診断は errors と failure-action 候補へ保持しない。",
+      "why": "number は inf を Error (DR-074 §1): `--n inf` は number 型なので拒否 → failure (element=n / args_pos=1 / kind=parse / reason=not_a_number)。args_pos=1 はトークン `inf` の位置 (--n が 0、値が 1)。float との受理域差 (float = number + inf) の境界を number 側で固定。",
       "args": ["--n", "inf"],
       "expect": {
-        "outcome": "failure"
+        "outcome": "failure",
+        "errors": [{"element": "n", "args_pos": 1, "kind": "parse", "reason": "not_a_number"}]
       }
     },
     {
       "id": "nan-on-float-rejected",
-      "why": "`nan-on-float-rejected` は値 resident または piece filter が入力を値空間外と判定する断面。DR-037 Reject として枝は静かに脱落し、完全経路が無いため outcome=failure になるが、Reject の診断は errors と failure-action 候補へ保持しない。",
+      "why": "nan は float でも Error (DR-074 §1): `--t nan` は float でも拒否 → failure (not_a_number)。inf と違い nan は CLI で値用途がなく opt-in も置かない。float が inf を受けるのに nan を受けない非対称を固定。",
       "args": ["--t", "nan"],
       "expect": {
-        "outcome": "failure"
+        "outcome": "failure",
+        "errors": [{"element": "t", "args_pos": 1, "kind": "parse", "reason": "not_a_number"}]
       }
     },
     {
       "id": "nan-on-number-rejected",
-      "why": "`nan-on-number-rejected` は値 resident または piece filter が入力を値空間外と判定する断面。DR-037 Reject として枝は静かに脱落し、完全経路が無いため outcome=failure になるが、Reject の診断は errors と failure-action 候補へ保持しない。",
+      "why": "nan は number でも Error (DR-074 §1): `--n nan` も拒否 → failure (not_a_number)。両型で nan Error を固定 (inf の float 限定受理と対照的に nan は全型拒否)。",
       "args": ["--n", "nan"],
       "expect": {
-        "outcome": "failure"
+        "outcome": "failure",
+        "errors": [{"element": "n", "args_pos": 1, "kind": "parse", "reason": "not_a_number"}]
       }
     },
     {

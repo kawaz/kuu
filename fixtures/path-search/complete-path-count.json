@@ -58,10 +58,11 @@
     },
     {
       "id": "value-parser-reject",
-      "why": "`value-parser-reject` は値 resident または piece filter が入力を値空間外と判定する断面。DR-037 Reject として枝は静かに脱落し、完全経路が無いため outcome=failure になるが、Reject の診断は errors と failure-action 候補へ保持しない。",
+      "why": "完全経路 0 本 — 値パーサ拒否 (DR-038/041 §5)。a=x の後、number positional b が非数値 'abc' を受けて value_parser が拒否する。トークンは全消費されるが b が値を確定できず経路不成立で、保持された DR-037 Error が surface する (汎用「no complete parse」文言ではなく b の実躓き)。kind=parse (型照合の失敗)、reason=not_a_number (DR-066 §3 の value_parser 語彙)。case 3 (missing_operand) と対で「トークンはあるが型が合わない」0 本を固定する。",
       "args": ["x", "abc"],
       "expect": {
-        "outcome": "failure"
+        "outcome": "failure",
+        "errors": [{"element": "b", "args_pos": 1, "kind": "parse", "reason": "not_a_number"}]
       }
     }
   ]

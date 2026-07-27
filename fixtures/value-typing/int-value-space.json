@@ -48,10 +48,11 @@
     },
     {
       "id": "non-number-rejected",
-      "why": "`non-number-rejected` は値 resident または piece filter が入力を値空間外と判定する断面。DR-037 Reject として枝は静かに脱落し、完全経路が無いため outcome=failure になるが、Reject の診断は errors と failure-action 候補へ保持しない。",
+      "why": "number として読めない入力は not_a_number (DR-066 §3): `\"abc\"` は整数性以前に number 構文不一致 → failure (reason=not_a_number)。not_an_integer (number だが非整数) との境界を固定 — int_round のどのモードでも `\"abc\"` は丸めようがなく not_a_number に落ちる (int_round は fractional「値」専用で、非数トークンには到達しない)。",
       "args": ["abc"],
       "expect": {
-        "outcome": "failure"
+        "outcome": "failure",
+        "errors": [{"element": "v", "args_pos": 0, "kind": "parse", "reason": "not_a_number"}]
       }
     },
     {

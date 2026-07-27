@@ -48,10 +48,11 @@
     },
     {
       "id": "no-equals-piece-rejected",
-      "why": "`no-equals-piece-rejected` は値 resident または piece filter が入力を値空間外と判定する断面。DR-037 Reject として枝は静かに脱落し、完全経路が無いため outcome=failure になるが、Reject の診断は errors と failure-action 候補へ保持しない。",
+      "why": "`--define A=1 --define bad`: 2個目の piece \"bad\" は `=` を含まず宣言された k=v 文法を満たさない → reject。DR-091 §2 の明文 (『piece の型 parse 失敗と同じエラー系』) により kind=parse — filter chain の Reject (kind=filter) ではない。reason は組み込み最小語彙 (DR-066 v1 表: not_a_number/not_an_integer) に kv_map 分割失敗の専用語が無いため、reason 未確定として省略し kind までの optional 検証に留める (DR-066 §5: reason は fixture 側が書けば検証、書かなければ kind まで)。args_pos は value トークン \"bad\" の 0-based 位置 (3)。outcome=failure のため成功していない experiments の effects は掲載しない (CONFORMANCE の失敗 fixture 慣習)。",
       "args": ["--define", "A=1", "--define", "bad"],
       "expect": {
-        "outcome": "failure"
+        "outcome": "failure",
+        "errors": [{"element": "define", "args_pos": 3, "kind": "parse"}]
       }
     }
   ]

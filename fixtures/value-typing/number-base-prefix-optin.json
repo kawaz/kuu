@@ -84,26 +84,29 @@
     },
     {
       "id": "hex-underscore-prefix-adjacent-rejected",
-      "why": "`hex-underscore-prefix-adjacent-rejected` は値 resident または piece filter が入力を値空間外と判定する断面。DR-037 Reject として枝は静かに脱落し、完全経路が無いため outcome=failure になるが、Reject の診断は errors と failure-action 候補へ保持しない。",
+      "why": "hex prefix 隣接の `_` は Error (DR-074 §7): `0x_ff` は `_` の左隣が `x` (桁でない、prefix の一部) → 配置規則違反で failure (element=v / args_pos=0 / kind=parse / reason=not_a_number)。prefix と桁の間に区切りを差し込むと、`_` を prefix の一部とみなす読みが生じかねないので排す。10 進の underscore-leading-rejected (`_1`) と同型の判定を hex 側にも一様適用。",
       "args": ["0x_ff"],
       "expect": {
-        "outcome": "failure"
+        "outcome": "failure",
+        "errors": [{"element": "v", "args_pos": 0, "kind": "parse", "reason": "not_a_number"}]
       }
     },
     {
       "id": "octal-with-dot-rejected",
-      "why": "`octal-with-dot-rejected` は値 resident または piece filter が入力を値空間外と判定する断面。DR-037 Reject として枝は静かに脱落し、完全経路が無いため outcome=failure になるが、Reject の診断は errors と failure-action 候補へ保持しない。",
+      "why": "8 進 prefix + 小数点は Error (DR-074 §7): `0o1.5` は opt-in で 8 進整数 prefix を有効化しても、小数点付き (fractional / 指数) は **hex float 限定** で `0o` / `0b` は整数のみ (C / Go / Java と同じ、8 進 float のリテラル文法は存在しない) → failure (element=v / args_pos=0 / kind=parse / reason=not_a_number)。base prefix opt-in の内側で hex と 8/2 進の受理域差を固定。",
       "args": ["0o1.5"],
       "expect": {
-        "outcome": "failure"
+        "outcome": "failure",
+        "errors": [{"element": "v", "args_pos": 0, "kind": "parse", "reason": "not_a_number"}]
       }
     },
     {
       "id": "binary-with-dot-rejected",
-      "why": "`binary-with-dot-rejected` は値 resident または piece filter が入力を値空間外と判定する断面。DR-037 Reject として枝は静かに脱落し、完全経路が無いため outcome=failure になるが、Reject の診断は errors と failure-action 候補へ保持しない。",
+      "why": "2 進 prefix + 小数点は Error (DR-074 §7): `0b1.1` も同様に 2 進 float のリテラル文法が存在しないため、opt-in 有効化下でも failure (not_a_number)。octal-with-dot-rejected と対になり、`0o` / `0b` 共通の『整数のみ』規則を hex の『小数・二進指数付き受理』と分離する境界を固定。",
       "args": ["0b1.1"],
       "expect": {
-        "outcome": "failure"
+        "outcome": "failure",
+        "errors": [{"element": "v", "args_pos": 0, "kind": "parse", "reason": "not_a_number"}]
       }
     }
   ]

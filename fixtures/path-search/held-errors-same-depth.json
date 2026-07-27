@@ -14,10 +14,14 @@
   "cases": [
     {
       "id": "both-paths-fail-same-depth-tie",
-      "why": "`both-paths-fail-same-depth-tie` は値 resident または piece filter が入力を値空間外と判定する断面。DR-037 Reject として枝は静かに脱落し、完全経路が無いため outcome=failure になるが、Reject の診断は errors と failure-action 候補へ保持しない。",
+      "why": "args `x` の 2 解釈がどちらも位置 0 で dead-end → 完全経路 0 本 → failure で両躓きを全保持、同深タイなので両方 primary (DR-053 §2)。解釈 A: number a が 'x'@0 を弾く、解釈 B: number b が 'x'@0 を弾く。args_pos が両者 0 で等しく、最深の絞り込みが起きないため両 Error が等しく primary — 構造としては errors 集合が両方を保持し、primary 抽出 (最大 args_pos = 0 が複数) はレンダラの関心 (CONFORMANCE §2)。kind:parse / reason:not_a_number (DR-066 §3)。",
       "args": ["x"],
       "expect": {
-        "outcome": "failure"
+        "outcome": "failure",
+        "errors": [
+          {"element": "a", "args_pos": 0, "kind": "parse", "reason": "not_a_number"},
+          {"element": "b", "args_pos": 0, "kind": "parse", "reason": "not_a_number"}
+        ]
       }
     },
     {

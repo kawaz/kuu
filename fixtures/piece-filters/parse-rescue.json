@@ -22,10 +22,11 @@
     },
     {
       "id": "untrimmed-parse-rejected",
-      "why": "`untrimmed-parse-rejected` は値 resident または piece filter が入力を値空間外と判定する断面。DR-037 Reject として枝は静かに脱落し、完全経路が無いため outcome=failure になるが、Reject の診断は errors と failure-action 候補へ保持しない。",
+      "why": "piece_filters を持たない bare は `\" 42 \"` をそのまま number parse に渡し、canonical 字句 (DR-074 §1) が空白を受理しないため not_a_number で reject (DR-066 reason 表)。rescued (trimmed-then-parsed) との対比で piece_filters の有無が parse 結果を分ける輪郭を固定する。args_pos=1 は値トークンの 0-based 位置 (kind=parse の既存実例 value-typing/int-round-modes.json::error-mode-fractional-rejected と同じ規約)。",
       "args": ["--bare", " 42 "],
       "expect": {
-        "outcome": "failure"
+        "outcome": "failure",
+        "errors": [{"element": "bare", "args_pos": 1, "kind": "parse", "reason": "not_a_number"}]
       }
     }
   ]

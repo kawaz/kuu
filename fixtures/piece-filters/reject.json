@@ -21,10 +21,11 @@
     },
     {
       "id": "non-matching-rejected",
-      "why": "`non-matching-rejected` は値 resident または piece filter が入力を値空間外と判定する断面。DR-037 Reject として枝は静かに脱落し、完全経路が無いため outcome=failure になるが、Reject の診断は errors と failure-action 候補へ保持しない。",
+      "why": "空文字列は non_empty の ValueSpaceMiss で枝から静かに脱落する。outcome は failure だが DR-037 Reject は診断を保持しないため errors は空。string parse 自体は空文字を受理するので、piece filter が parse 前に働いたことも固定する。",
       "args": ["--name", ""],
       "expect": {
-        "outcome": "failure"
+        "outcome": "failure",
+        "errors": []
       }
     }
   ]

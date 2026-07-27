@@ -19,10 +19,14 @@
   "cases": [
     {
       "id": "both-paths-fail-deepest-primary",
-      "why": "`both-paths-fail-deepest-primary` は値 resident または piece filter が入力を値空間外と判定する断面。DR-037 Reject として枝は静かに脱落し、完全経路が無いため outcome=failure になるが、Reject の診断は errors と failure-action 候補へ保持しない。",
+      "why": "args `x y` の 2 解釈がどちらも dead-end → 完全経路 0 本 → failure で両躓きを全保持 (DR-053 §2)。解釈 A: number a が 'x'@0 を弾く (not_a_number) → a@0。解釈 B: string s が 'x'@0 を食い、number b が 'y'@1 を弾く → b@1。両 held Error が errors に残り、primary は最深 = b@1 (最も進んだ解釈 B の躓き) — primary は構造から導出される (最大 args_pos) ので expect に別フィールドは持たず errors 集合で表現する (CONFORMANCE §2 の failure は errors のみ、表示・primary 抽出はレンダラ)。kind:parse / reason:not_a_number は両者とも number 枝の型照合失敗 (DR-066 §3)。",
       "args": ["x", "y"],
       "expect": {
-        "outcome": "failure"
+        "outcome": "failure",
+        "errors": [
+          {"element": "a", "args_pos": 0, "kind": "parse", "reason": "not_a_number"},
+          {"element": "b", "args_pos": 1, "kind": "parse", "reason": "not_a_number"}
+        ]
       }
     },
     {

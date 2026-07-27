@@ -79,10 +79,11 @@
     },
     {
       "id": "yes-rejected",
-      "why": "`yes-rejected` は値 resident または piece filter が入力を値空間外と判定する断面。DR-037 Reject として枝は静かに脱落し、完全経路が無いため outcome=failure になるが、Reject の診断は errors と failure-action 候補へ保持しない。",
+      "why": "`yes` → Error (DR-074 §3): yes/no/on/off は canonical 外 (Norway problem 回避)。不正 bool 文字列は silent 変換せず Error → failure (element=enabled / args_pos=0 / kind=parse / reason=not_a_bool、DR-066 §3 の bool value_parser 語彙)。yes を受けたいなら bool_true_values に opt-in 追加。",
       "args": ["--enabled=yes"],
       "expect": {
-        "outcome": "failure"
+        "outcome": "failure",
+        "errors": [{"element": "enabled", "args_pos": 0, "kind": "parse", "reason": "not_a_bool"}]
       }
     },
     {
@@ -97,10 +98,11 @@
     },
     {
       "id": "space-form-noncanonical-rejected",
-      "why": "`space-form-noncanonical-rejected` は値 resident または piece filter が入力を値空間外と判定する断面。DR-037 Reject として枝は静かに脱落し、完全経路が無いため outcome=failure になるが、Reject の診断は errors と failure-action 候補へ保持しない。",
+      "why": "space form の canonical 外値 `--enabled yes` → Error (DR-076 §4 + DR-074 §3): 空間形の値スロットも eq 形と同じ canonical 語彙で照合し、外れは not_a_bool。args_pos=1 は値トークン `yes` の位置 (トリガが 0、値が 1)。",
       "args": ["--enabled", "yes"],
       "expect": {
-        "outcome": "failure"
+        "outcome": "failure",
+        "errors": [{"element": "enabled", "args_pos": 1, "kind": "parse", "reason": "not_a_bool"}]
       }
     },
     {
