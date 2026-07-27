@@ -34,7 +34,7 @@ seq 側の例: 定義 `{"seq":[{"type":"string","default":"A"},{"type":"string",
 
 ## or 側の実例 (2026-07-27 実測)
 
-CHILDDEF-Q1=b の fixture 反映時、実装 worker (impl-two-rulings) の指摘で `fixtures/or-parse/unselected-branch-literal-absent.json` の定義がこの断面に該当することが判明した。
+CHILDDEF-Q1=b の fixture 反映時、実装 worker (impl-two-rulings) の指摘で `fixtures/or-parse/unselected-branch-default-absent.json` の定義がこの断面に該当することが判明した。
 
 定義 `{"or":[{"name":"fast","type":"string"},{"name":"slow","type":"string","default":"d"}]}` に `--mode x`:
 
@@ -68,6 +68,6 @@ CHILDDEF-Q1=b の fixture 反映時、実装 worker (impl-two-rulings) の指摘
 - DR-031 (const と default の位相分離、CHILDDEF-Q1=b) / DR-088 §1/§2 (宣言された値源 = デフォルトの存在) / DR-038 (経路同一性は効果列)
 - DR-037 (解けた枝の数による結末分類 — 2 個以上は ambiguous) / DR-041 §4 (先食い・早閉じ抑制、raw 消費と構造照合の層分離)
 - fixtures/seq-parse/literal-child-default-ladder.json (今回追加、1 本枝に確定する側)
-- fixtures/or-parse/unselected-branch-literal-absent.json (型排他化で回避した実例)
+- fixtures/or-parse/unselected-branch-default-absent.json (型排他化で回避した実例)
 - DESIGN §5.2 末尾「帰結: default: 持ちの子は同型の兄弟枝と ambiguous になりうる」(本 issue の条文側の注意書き)
 - 重複起票を統合: docs/issue/archive/2026-07-27-seq-both-default-children-branching-unspecified.md (同一論点、並行 write fork 競合による事故。上記 2 観点は当該 issue から吸収)

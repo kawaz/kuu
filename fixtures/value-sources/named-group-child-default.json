@@ -1,5 +1,5 @@
 {
-  "why": "named group positional の child が持つ値源ラダーは、宣言元の root scope ではなく wrapper row の結果アドレスに属する (DR-025/DR-033 の name scope、DR-121 §3.2 の named child provenance)。xs は repeat:{min:0,max:2} なので 0 fire では [] だけが結果になり、row が存在しない以上 child v の default 席も存在せず root 直下へ v が湧かない。現行の group head は k/v の 2 token を一体で消費するため、default は row の消費 arity を変えない。row が発火して v の token が供給されれば cli が勝ち、child は wrapper 配下の row にだけ着席する。sources は `result` と同型の shadow tree (DR-122) なので、発火済み row の各 child の由来も row 配下の同じキーに書ける。",
+  "why": "named group positional の child が持つ値源ラダーは、宣言元の root scope ではなく wrapper row の結果アドレスに属する (DR-025/DR-033 の name scope、DR-121 §3.2 の named child provenance)。xs は repeat:{min:0,max:2} なので 0 fire では [] だけが結果になり、row が存在しない以上 child v の default 席も存在せず root 直下へ v が湧かない。row が発火して v の token が無ければ CHILDDEF-Q1=b / DR-088 により v の空席を含む完全経路が成立し、resolve 相で default が充填される。各 row の child seat と sources は独立する。",
   "query": "parse",
   "definition": {
     "positionals": [
@@ -26,11 +26,16 @@
       }
     },
     {
-      "id": "partial-row-is-not-a-complete-path",
-      "why": "args `a`: group head は k/v の 2 token を一体で消費するため k だけの partial row は完全経路にならない。child default は row の宣言 scope を決めるが、消費構造を 1 token row へ変えない。",
+      "id": "partial-row-completes-via-default-seat",
+      "why": "args `a`: k が a を消費して row が発火し、v は default 宣言を持つため空席のまま完全経路に含まれる。resolve 相が v=D を充填し、source は default になる。",
       "args": ["a"],
       "expect": {
-        "outcome": "failure"
+        "outcome": "success",
+        "effects": [
+          {"entity": "k", "op": "set", "operand": "a", "source": "cli"}
+        ],
+        "result": {"xs": [{"k": "a", "v": "D"}]},
+        "sources": {"xs": [{"k": "cli", "v": "default"}]}
       }
     },
     {
@@ -49,7 +54,7 @@
     },
     {
       "id": "two-rows-have-independent-child-seats",
-      "why": "args `a b c d`: 2 row が発火し、各 child は wrapper 配下の別々の row に着席する。root v はどちらの row からも生えない。sources も row ごとに独立したタグを持つ (DR-122 §3 の「accumulator の各 row はその要素を産んだ発火の source」) — row の独立性が shadow tree にそのまま写る。",
+      "why": "args `a b c d`: 2 row が発火し、各 child は wrapper 配下の別々の row に着席する。root v はどちらの row からも生えない。sources も row ごとに独立したタグを持つ (DR-122 §3)。",
       "args": ["a", "b", "c", "d"],
       "expect": {
         "outcome": "success",

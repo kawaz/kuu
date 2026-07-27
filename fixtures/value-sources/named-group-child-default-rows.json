@@ -1,0 +1,47 @@
+{
+  "why": "repeated named group の各 firing は独立した child default seat を持つ (DR-121 §3 / DR-122)。2 row が同じ wrapper scope に属しても default occurrence を dedup せず、CLI/default の source を row ごとに保持する。v を int にして string token を Reject させることで row 境界を一意にする。",
+  "query": "parse",
+  "definition": {
+    "positionals": [
+      {
+        "name": "xs",
+        "repeat": {"min": 0, "max": 2},
+        "positionals": [
+          {"name": "k", "type": "string"},
+          {"name": "v", "type": "int", "default": 0}
+        ]
+      }
+    ]
+  },
+  "cases": [
+    {
+      "id": "two-rows-use-independent-default-seats",
+      "why": "a/b は v:int では Reject されるため、それぞれ次 row の k が消費する。各 row の v は独立に default 0 で埋まる。",
+      "args": ["a", "b"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "k", "op": "set", "operand": "a", "source": "cli"},
+          {"entity": "k", "op": "set", "operand": "b", "source": "cli"}
+        ],
+        "result": {"xs": [{"k": "a", "v": 0}, {"k": "b", "v": 0}]},
+        "sources": {"xs": [{"k": "cli", "v": "default"}, {"k": "cli", "v": "default"}]}
+      }
+    },
+    {
+      "id": "cli-and-default-sources-stay-in-their-rows",
+      "why": "1 は row 1 の v が CLI から消費し、row 2 の v だけが default で埋まる。source の row 対応を pin する。",
+      "args": ["a", "1", "b"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "k", "op": "set", "operand": "a", "source": "cli"},
+          {"entity": "v", "op": "set", "operand": 1, "source": "cli"},
+          {"entity": "k", "op": "set", "operand": "b", "source": "cli"}
+        ],
+        "result": {"xs": [{"k": "a", "v": 1}, {"k": "b", "v": 0}]},
+        "sources": {"xs": [{"k": "cli", "v": "cli"}, {"k": "cli", "v": "default"}]}
+      }
+    }
+  ]
+}
