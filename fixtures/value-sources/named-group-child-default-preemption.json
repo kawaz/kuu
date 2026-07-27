@@ -1,0 +1,33 @@
+{
+  "why": "同一 child seat の CLI 消費読みと default 空席読みは DR-041 §4 / DR-097 の先食いと同型に扱う。消費読みが完全経路へ届く限り空席枝は生成せず、downstream failure の場合だけ default fallback を使う。これは repeat の取り分優先や or 枝間優先ではなく、同一 seat の枝生成条件である。",
+  "query": "parse",
+  "definition": {
+    "positionals": [
+      {
+        "name": "xs",
+        "repeat": {"min": 0, "max": 2},
+        "positionals": [
+          {"name": "k", "type": "string"},
+          {"name": "v", "type": "string", "default": "D"}
+        ]
+      }
+    ]
+  },
+  "cases": [
+    {
+      "id": "consuming-seat-preempts-default-when-full-path-exists",
+      "why": "入力 a b c では row 1 の v が b を消費しても row 2 の k=c / v=D で完全経路へ届く。したがって row 1 の v を空席にして b を row 2 へ送る枝は生成されず、一意に [{a,b},{c,D}] となる。",
+      "args": ["a", "b", "c"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "k", "op": "set", "operand": "a", "source": "cli"},
+          {"entity": "v", "op": "set", "operand": "b", "source": "cli"},
+          {"entity": "k", "op": "set", "operand": "c", "source": "cli"}
+        ],
+        "result": {"xs": [{"k": "a", "v": "b"}, {"k": "c", "v": "D"}]},
+        "sources": {"xs": [{"k": "cli", "v": "cli"}, {"k": "cli", "v": "default"}]}
+      }
+    }
+  ]
+}
