@@ -409,7 +409,7 @@ true    → bool として同様
 
 子セルの席が存在するのは**親が発火して子の座が成立した場合のみ**である。親が未発火なら子は親ごと absent で、着席自体が起きない (`fixtures/or-parse/unselected-branch-literal-absent.json::selected-branch-only-key-present`)。
 
-消費との関係: `default:` を持つ子は消費 0 の literal に**ならない** — 通常どおり消費を試みる子のままで、`default:` が変えるのは「トークンを得られなかった消費点を空席のまま完全経路に含めてよい」という充足判定である (DR-088 §1「宣言された値源 = デフォルトの存在」/ §2 の静的宣言ベース判定が、root positional と同じく子位置にも効く)。空席のまま完走した座は resolve 相で default 席が埋め、source は `default` になる。
+消費との関係: `default:` を持つ子は消費 0 の literal に**ならない** — 通常どおり消費を試みる子のままで、`default:` が変えるのは「トークンを得られなかった消費点を空席のまま完全経路に含めてよい」という充足判定である。これは **DR-088** §1「宣言された値源 = デフォルトの存在」/ §2 の静的宣言ベース判定がそのまま子位置に及ぶ帰結で、root positional に `default:` を足すと missing_operand に倒れず完全経路になる規範 (`fixtures/value-sources/positional-default-presence.json`) と同じ規則である — 位置非依存の裁定の下で子位置だけを除外する理由がない。空席のまま完走した座は resolve 相で default 席が埋め、source は `default` になる (`fixtures/seq-parse/literal-child-default-ladder.json`)。トークンが供給されればその子は通常どおり消費し、source は `cli` になる。
 
 `value:` と `default:` の同一要素での併記は**全位置で合法**である (別位相なので二重宣言にならない) — ただし const が常にセルを埋めるため default 席は到達不能な影になる (env が常に供給される環境で default が影になるのと同じラダーの通常挙動。CONST-Q1=a、静的検出は lint の領分)。
 

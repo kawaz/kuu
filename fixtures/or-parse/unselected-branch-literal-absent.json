@@ -1,5 +1,5 @@
 {
-  "why": "or の未選択枝に default (= 消費 0 の literal と同義、DR-015) を持つ子があっても着席しない断面。sources は結果の射影であり (CONFORMANCE §2 導出手順 1)、DR-052 §3 / DR-051 の通り選ばれなかった枝の結果キーはそもそも存在しない (absent) — 存在しない cell に対して sources エントリは立たない。同型は `or-parse/option-named-branch-leaves-kv.json` の Partial union (DR-025 C 型) だが、本 fixture は不選択枝が default を持つ場合でも「default だから着席する」にはならないことを追加で固定する。",
+  "why": "or の未選択枝に `default:` (値源ラダーの席、CHILDDEF-Q1=b / DR-031) を持つ子があっても着席しない断面 — 子セルの席が成立するのは親が発火して子の座ができた場合のみで、枝が選ばれなければラダー席ごと存在しない。sources は結果の射影であり (CONFORMANCE §2 導出手順 1)、DR-052 §3 / DR-051 の通り選ばれなかった枝の結果キーはそもそも存在しない (absent) — 存在しない cell に対して sources エントリは立たない。同型は `or-parse/option-named-branch-leaves-kv.json` の Partial union (DR-025 C 型) だが、本 fixture は不選択枝が default を持つ場合でも「default だから着席する」にはならないことを追加で固定する。",
   "query": "parse",
   "definition": {
     "options": [
@@ -28,14 +28,14 @@
       }
     },
     {
-      "id": "value-absent-selects-const-branch",
-      "why": "`--mode` (値トークンなし): fast 枝は string で消費対象トークンが無く missing_operand で落ちる。slow 枝は or/seq の子位置における `default:` 綴りが `value:` と同じ宣言定数 (const、DESIGN §5.2) であり消費 0 で成立するため、or は slow 枝だけを選ぶ。selected-branch-only-key-present の対偶 — 「未選択なら着席しない」の裏として「選択されれば const で着席する」を pin する。result は `{mode:{slow:\"d\"}}`、sources は slow の 1 件のみで source は `const` (DR-031 の const 語彙)。",
+      "id": "value-absent-selects-default-branch",
+      "why": "`--mode` (値トークンなし): fast 枝は default を持たない消費必須の string で、消費対象トークンが無いため missing_operand で落ちる。slow 枝は `default:` を持つ — CHILDDEF-Q1=b (kawaz 裁定 2026-07-26、DESIGN §5.2 / DR-031) により子位置の `default:` は `value:` の宣言定数ではなく値源ラダーの席であり、DR-088 §1「宣言された値源 = デフォルトの存在」/ §2 の静的宣言ベース判定によって、トークンを得られない消費点を空席のまま完全経路に含められる。したがって成立する枝は slow だけで、or は slow を選ぶ。selected-branch-only-key-present の対偶 — 「未選択なら着席しない」の裏として「default 席を持つ枝は空席のまま選ばれ、resolve 相で埋まる」を pin する。result は `{mode:{slow:\"d\"}}`、sources は slow の 1 件のみで source は `default` (ラダー充填であって `const` ではない)。",
       "args": ["--mode"],
       "expect": {
         "outcome": "success",
         "effects": [],
         "result": {"mode": {"slow": "d"}},
-        "sources": {"mode": {"slow": "const"}}
+        "sources": {"mode": {"slow": "default"}}
       }
     }
   ]

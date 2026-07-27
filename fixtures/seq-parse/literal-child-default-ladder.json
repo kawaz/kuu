@@ -1,0 +1,40 @@
+{
+  "why": "対照 (`literal-child-zero-consumption.json` の裏面): seq の子が `default:` を持つ場合、`value:` 版との **非 parity** を pin する。CHILDDEF-Q1=b (kawaz 裁定 2026-07-26、DESIGN §5.2 / DR-031) により `default:` は位置に依らず値源ラダーの席であり、`value:` の宣言定数 (const、消費 0 literal) とは位相が違う — 子は消費 0 にならず通常どおり消費を試みる。変わるのは充足判定で、DR-088 §1「宣言された値源 = デフォルトの存在」/ §2 の静的宣言ベース判定により、トークンを得られなかった消費点は空席のまま完全経路に含めてよい (root positional で同じ規範を pin した `value-sources/positional-default-presence.json :: no-token-default-fills-path-complete` の子位置版)。この位相差は 2 面で観測できる: (1) `--pair x` は result こそ `value:` 版と同形の `[\"x\",\"fallback\"]` だが、2 要素目の座を埋めたのは resolve 相の default 席なので sources は `[\"cli\",\"const\"]` ではなく `[\"cli\",\"default\"]` (DR-122 §3 の要素対応)、(2) 余剰トークンの受け方が逆になる — `value:` 版は 2 子目が消費 0 で引き取り手が無く failure (`literal-child-zero-consumption.json :: extra-token-has-no-consumer`) だが、default 版は 2 子目が通常消費の子なので余剰を食って success する。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {
+        "name": "pair",
+        "long": true,
+        "seq": [
+          {"type": "string"},
+          {"type": "string", "default": "fallback"}
+        ]
+      }
+    ]
+  },
+  "cases": [
+    {
+      "id": "empty-seat-filled-by-default-ladder",
+      "why": "`--pair x`: 1 子目は default を持たない消費必須の子なので \"x\" を食い、2 子目はトークンが残っていないが default 宣言を持つため DR-088 §1 により空席のまま完全経路に含まれる (missing_operand に倒れない)。枝は 1 本のみ — 1 子目に default が無く省略の余地がないので、\"x\" を 2 子目へ回す経路は成立しない。resolve 相で default 席が \"fallback\" を充填するため result は `value:` 版 (`literal-child-zero-consumption.json :: trailing-literal-consumes-nothing`) と同形の `[\"x\",\"fallback\"]` になるが、**sources は一致しない** — 2 要素目の座を確定させたのはラダー充填なので `default` であり、宣言定数の `const` ではない (CHILDDEF-Q1=b)。effects は空 — 両子とも匿名で entity を持たず、1 子目は cli 消費していても効果列に現れない (CONFORMANCE §2「結果キーを持たない nameless 子は entity を持たないため effects に現れない」)。",
+      "args": ["--pair", "x"],
+      "expect": {
+        "outcome": "success",
+        "effects": [],
+        "result": {"pair": ["x", "fallback"]},
+        "sources": {"pair": ["cli", "default"]}
+      }
+    },
+    {
+      "id": "extra-token-consumed-by-default-child",
+      "why": "(位相差が最も鋭く出る対照) `--pair x y`: `value:` 版の同入力は 2 子目が消費 0 の literal で \"y\" を読めず、引き取り手の無い残余トークンとして failure になる (`literal-child-zero-consumption.json :: extra-token-has-no-consumer`、reason=unexpected_token)。default 版は 2 子目が**通常消費の子**なので \"y\" を消費して完全経路が成立し success `[\"x\",\"y\"]` になる — `default:` が変えるのは「トークンが来なかった時に空席を許すか」だけで、来たトークンの消費は通常どおり行う。cli が供給された座の由来は cli なので sources は `[\"cli\",\"cli\"]` (default はあくまで最終フォールバック、DESIGN §11.4)。effects は両子とも匿名で entity を持たないため空。この 1 入力が value:/default: を「同義の綴り」と扱う実装を落とす。",
+      "args": ["--pair", "x", "y"],
+      "expect": {
+        "outcome": "success",
+        "effects": [],
+        "result": {"pair": ["x", "y"]},
+        "sources": {"pair": ["cli", "cli"]}
+      }
+    }
+  ]
+}
