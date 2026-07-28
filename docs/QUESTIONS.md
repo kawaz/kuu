@@ -18,6 +18,8 @@
 
 </details>
 
+> 🔍 **fixture UI**: [kuu-fixtures.kawaz-mbp16-20211217.kawaz.jp](https://kuu-fixtures.kawaz-mbp16-20211217.kawaz.jp) (tailnet 内限定 / ローカルは [localhost:5757](http://localhost:5757)、`just fixture-ui` で起動)
+
 ## 裁定待ち
 
 ### 👺 REPDEF-Q1: repeat 宣言セルと `default:` の相互作用
