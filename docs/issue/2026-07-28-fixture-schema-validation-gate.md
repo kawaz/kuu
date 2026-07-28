@@ -3,7 +3,7 @@ title: fixtures/ の JSON schema 検証を常設 push gate 化
 status: open
 category: task
 created: 2026-07-28T21:36:43+09:00
-last_read:
+last_read: 2026-07-28T23:37:20+09:00
 open_entered: 2026-07-28T21:36:43+09:00
 wip_entered:
 blocked_entered:
