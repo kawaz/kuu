@@ -99,6 +99,31 @@ P0 (直近スコープで塞いだ 5 テーマ) は本 issue の対象外。残�
 - [ ] P2 の 6〜8 について、塞ぐか「危険度が低いので塞がない」を明示的に判断した記録がある
 - [ ] 同種の空白を再発させないための仕組みが検討されている (次元の直積を機械チェックする lint 等)
 
+## 2026-07-28 洗い直し結果
+
+DR-122 (shadow tree)・DR-123・child repeat fixture 群 land 後の再評価で 8 テーマの判定が確定。
+
+### close 判定
+
+- **テーマ 8** (cell op × nested/renamed): DR-122 §2.1 が sources 側の分岐を仕様から消したため「塞がない」判断で close
+- **テーマ 6** (non-CLI source × renamed nested scope): 単独 file は作らず、テーマ 1〜3 の fixture に non-CLI source を 1 case 混ぜて副産物として埋める方針で close。前提の「link 0」は link-parse/basic.json と export-key-address.json の land で既に古い
+
+### 残存テーマ、着手価値順
+
+1. **テーマ 1** (nested command accumulator): 351 fixture 中 0 件で最優先。テーマ 3 残余 / 6 / 8 の empty op 1 case を同一定義に相乗り
+2. **テーマ 7** (global × export_key): corpus に宣言 0 件。effect-order-global.json に export_key を足した姉妹 file が最短
+3. **テーマ 5** (internal cell × repeat row): DR-122 でブロッカー消滅。none-exclusion-under-scopes の named seq case に repeat を足す形が最小
+4. **テーマ 2** (inheritable): rename 側は導出可能で即 fixture 化可、null 側は QUESTIONS.md INH-Q1 として裁定待ちに起票済み
+5. **テーマ 4** (named or × accumulator): 着手可、0 発火 default は DR-123 の後続 = task #82 マトリクスに合流
+
+### 実施タイミング
+
+fixture 作成は kuu.mbt Phase 2-5 完了後 (conformance が spec fixtures を live に読むため、走行中実装の gate を壊さない)。
+
+### 注記 (旧統計失効)
+
+issue 本文の旧 corpus 統計 (cli 73 等) は DR-121 フラット entry 前提で失効。現行は 80 file / 176 case が sources を持つ。
+
 ## 関連
 
 - `docs/issue/2026-07-26-array-element-provenance-sources-addressing.md` (P1-5 の前提)
