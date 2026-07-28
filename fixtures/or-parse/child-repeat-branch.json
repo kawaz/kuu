@@ -1,0 +1,57 @@
+{
+  "why": "or の枝要素が repeat を持つ配置を固定する。DR-067 §2 は or / seq の children 内の要素が repeat / multiple を持つことを明示的に合法としており、枝選択 (構造の軸) と反復回数 (閉包の取り分の軸) は独立に決まる。両軸が交わったときの outcome の分かれ方が本 fixture の主題: 枝が型で排他なら反復回数まで含めて完全経路は 1 本に定まり success、同じトークンをどちらの枝でも読めるなら構造の異なる完全経路が並んで ambiguous になる (DR-038 — 取り分選好は同一閉包の取り分次元専用で、or 枝違いには効かない、DR-043)。fixtures/repeat-parse/ref-or-template.json が「repeat を持つ ref 要素の中身が or」を pin するのに対し、本 fixture は逆向きの入れ子「or の中身が repeat を持つ枝」を pin する。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {
+        "name": "sel",
+        "long": true,
+        "or": [
+          {"name": "nums", "type": "number", "repeat": {"min": 1}},
+          {"name": "word", "type": "string"}
+        ]
+      }
+    ]
+  },
+  "cases": [
+    {
+      "id": "numeric-branch-repeats-uniquely",
+      "why": "`--sel 1 2`: word 枝 (非 repeat の string) は 1 トークンしか消費せず 2 個目の消費者が居ないため完全経路に届かない。nums 枝だけが 2 反復して全消費でき、枝選択は構造的に一意 (DR-038 の完全経路が 1 本)。選ばれた枝の子 nums は repeat 宣言子なので配列 (DR-044)、値は number へ変換された 1/2。or の親 sel は結果キーを持つ子 (nums) を通すので値が kv になる (DESIGN §2.4/§2.5 — fixtures/or-parse/option-seq-branch-fold.json の single-cell-branch-of-same-or と同じ畳み方)。未選択の word 枝は成立しなかった構造なので result にも sources にも現れない (DR-051 / DR-122 §2)。",
+      "args": ["--sel", "1", "2"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "nums", "op": "set", "operand": 1, "source": "cli"},
+          {"entity": "nums", "op": "set", "operand": 2, "source": "cli"}
+        ],
+        "result": {"sel": {"nums": [1, 2]}},
+        "sources": {"sel": {"nums": ["cli", "cli"]}}
+      }
+    },
+    {
+      "id": "string-branch-excludes-numeric-branch",
+      "why": "`--sel foo`: nums 枝は number 型が foo を値空間外として Reject するため min:1 を満たす反復が 1 度も立たず dead-end (DR-037 の Reject = ValueSpaceMiss、枝は成立しないだけで Error にならない)。word 枝だけが成立し、その子は repeat を宣言していないので scalar のまま (DR-044 は反復宣言子だけを配列にする)。同じ or の 2 枝で「配列になる座」と「scalar のままの座」が分かれること自体の pin。",
+      "args": ["--sel", "foo"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "word", "op": "set", "operand": "foo", "source": "cli"}
+        ],
+        "result": {"sel": {"word": "foo"}},
+        "sources": {"sel": {"word": "cli"}}
+      }
+    },
+    {
+      "id": "single-numeric-token-overlaps-both-branches",
+      "why": "`--sel 5`: 5 は number としても string としても読めるので、nums 枝の 1 反復 (`{nums:[5]}`) と word 枝の 1 消費 (`{word:\"5\"}`) がどちらも全消費の完全経路になる。束縛先の実体が異なり効果列も異なる (entity nums vs word、operand も number 5 vs string \"5\") ため DR-038 の経路同一性は 1 本に合流させず ambiguous。取り分選好 (DR-043) は同一閉包の取り分次元でしか働かないので、repeat 側を優先して畳むことはしない — 「repeat 枝を優先する」規則は存在しない、という否定の pin でもある。interpretations は各完全経路の result ビュー (DR-053 §3、列挙順は非規範)。",
+      "args": ["--sel", "5"],
+      "expect": {
+        "outcome": "ambiguous",
+        "interpretations": [
+          {"sel": {"nums": [5]}},
+          {"sel": {"word": "5"}}
+        ]
+      }
+    }
+  ]
+}
