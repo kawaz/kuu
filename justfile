@@ -42,6 +42,10 @@ lint-reference:
 lint-descriptors:
     uv run --with jsonschema python3 ./scripts/lint-descriptors.py
 
+# fixtures/ 配下の全 conformance fixture が schema/fixture.schema.json (definition 部は wire.schema.json へ委譲) に適合するか検査
+lint-fixtures:
+    uv run --with jsonschema python3 ./scripts/lint-fixtures.py
+
 # fail if the current bookmark / branch is not the default
 [private]
 check-on-default-branch:
@@ -65,8 +69,8 @@ bump-version level="patch": ensure-clean
 
 # ---------- push flow ----------
 
-# push default branch (main) to origin (schema/descriptor lint は常時 gate — VERSION 変更を伴わない日常 push も含む)
-push: check-on-default-branch ensure-clean lint-reference lint-descriptors
+# push default branch (main) to origin (schema/descriptor/fixture lint は常時 gate — VERSION 変更を伴わない日常 push も含む)
+push: check-on-default-branch ensure-clean lint-reference lint-descriptors lint-fixtures
     bump-semver vcs push --branch "$(bump-semver vcs get default-branch)" --jj-bookmark-auto-advance
     cmux-msg notify --self --text "Monitor で 'just watch' を起動して" 2>/dev/null || true
 
