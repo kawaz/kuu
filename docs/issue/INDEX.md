@@ -5,7 +5,6 @@ active な issue の一覧。close 済みは archive/ にあり、ここには�
 | date | category | status | slug | 概要 |
 |---|---|---|---|---|
 | 2026-07-28 | task | open | [fixture-schema-validation-gate](./2026-07-28-fixture-schema-validation-gate.md) | fixtures/ の JSON schema 検証を justfile 常設 recipe 化し push gate に組み込む (現状 lint-reference/lint-descriptors のみで fixtures/ 未検証) |
-| 2026-07-27 | design | idea | [seq-child-default-ladder-branch-ambiguity](./2026-07-27-seq-child-default-ladder-branch-ambiguity.md) | seq/or の default 子が複数の消費候補を生むときの枝の立ち方が未規定 (CHILDDEF-Q1=b 波及、or 側実例あり、pin 保留) |
 | 2026-07-24 | design | idea | [insert-form-positional-group-decode-drop](./2026-07-24-insert-form-positional-group-decode-drop.md) | positional group 上の insert_form 宣言が decode 段で silent drop される spec gap (DR-117 §2.6) |
 | 2026-07-16 | design | idea | [engine-contract-verification-fixture](./2026-07-16-engine-contract-verification-fixture.md) | engine 単体の契約検証 fixture 化 (DR-110 §8 の将来課題)、合成住人による extension interface 準拠検証 |
 | 2026-07-12 | design | idea | [vocab-alias-installer](./2026-07-12-vocab-alias-installer.md) | 語彙の糖衣 alias を Map 一個で追加する installer 構想 (正準語彙は動かさない) |

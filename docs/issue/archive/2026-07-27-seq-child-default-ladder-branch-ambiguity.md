@@ -1,6 +1,6 @@
 ---
 title: seq/or の default 子が複数の消費候補を生むときの枝の立ち方が未規定
-status: idea
+status: resolved
 category: design
 created: 2026-07-27T11:03:05+09:00
 last_read: 2026-07-27T11:09:05+09:00
@@ -9,10 +9,10 @@ wip_entered:
 blocked_entered:
 pending_entered:
 discarded_entered:
-resolved_entered:
+resolved_entered: 2026-07-28T21:42:29+09:00
 discard_reason:
 pending_reason:
-close_reason:
+close_reason: ["design/DESIGN.md§5.2","fixtures/seq-parse/child-default-preemption.json","done"]
 blocked_by:
 origin: CHILDDEF-Q1=b 反映作業中の統括指摘 (2026-07-27)
 ---
