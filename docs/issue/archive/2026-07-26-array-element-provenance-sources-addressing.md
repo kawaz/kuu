@@ -1,6 +1,6 @@
 ---
 title: 配列・反復結果の要素ごとの provenance を sources でどうアドレスするか未規定
-status: open
+status: resolved
 category: design
 created: 2026-07-26T13:39:17+09:00
 last_read: 2026-07-28T21:38:10+09:00
@@ -9,10 +9,10 @@ wip_entered:
 blocked_entered:
 pending_entered:
 discarded_entered:
-resolved_entered:
+resolved_entered: 2026-07-28T21:41:04+09:00
 discard_reason:
 pending_reason:
-close_reason:
+close_reason: ["dr/DR-122","implemented","fixture/seq-parse/child-repeat-basic"]
 blocked_by:
 origin: 自リポ TODO
 ---
