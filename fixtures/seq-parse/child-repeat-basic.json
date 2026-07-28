@@ -1,0 +1,43 @@
+{
+  "why": "seq の子位置に置いた repeat の基本輪郭を固定する。DR-067 §2 は「multiple / repeat の配置制約は持たない (or / seq の children 内の要素が multiple / repeat を持つのは合法)」と明示しており、閉包の意味論 (DR-043) は構造位置と直交する — したがって root positional 列で成立する取り分規則 (greedy 既定・下流失敗での縮小再分割、repeat-parse/backtrack.json) は、そのまま seq の子位置でも成立しなければならない。結果の形は DESIGN §5.1「seq → 子の値の配列。結果キーを持つ子が 1 つでもあれば代わりに 1 個の kv」+ §2.5 により kv であり、repeat 宣言子の座だけが DR-044 の一様配列になる (kv の中に配列が 1 座だけ立つ)。親 pair は repeat を持たないので配列にならない — 「反復を宣言した要素だけが配列」という DR-044 の限定をこの入れ子で確認する。",
+  "query": "parse",
+  "definition": {
+    "positionals": [
+      {
+        "name": "pair",
+        "seq": [
+          {"name": "xs", "type": "string", "repeat": {"min": 1}},
+          {"name": "y", "type": "string"}
+        ]
+      }
+    ]
+  },
+  "cases": [
+    {
+      "id": "greedy-child-yields-tail-to-sibling",
+      "why": "`a b c`: 子 xs は greedy 既定 (DR-043) なのでまず [a,b,c] を掴むが、後続の兄弟 y (非 repeat scalar、消費 1 必須) にトークンが残らず下流失敗 → 取り分を 1 つ縮めて xs=[a,b]、y が c を取り全消費の完全経路が成立する。これは repeat-parse/backtrack.json (root positional 列) と同型の縮小再分割で、DR-043 の確定規則「選好順に取り分を試し最初に完全経路へ到達した取り分で確定」が子位置でも同じく効くことの pin。result は結果キー持ちの子が並ぶ seq なので 1 個の kv (DESIGN §5.1/§2.5) となり、その中で xs の座だけが配列 (DR-044)、y は scalar。effects は確定経路の消費順のみ (探索中に捨てた取り分の効果は現れない、backtrack.json と同じ)。",
+      "args": ["a", "b", "c"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "xs", "op": "set", "operand": "a", "source": "cli"},
+          {"entity": "xs", "op": "set", "operand": "b", "source": "cli"},
+          {"entity": "y", "op": "set", "operand": "c", "source": "cli"}
+        ],
+        "result": {"pair": {"xs": ["a", "b"], "y": "c"}},
+        "sources": {"pair": {"xs": ["cli", "cli"], "y": "cli"}}
+      }
+    },
+    {
+      "id": "min-one-and-sibling-exceed-tokens",
+      "why": "`a` (1 トークン): 完全経路には xs が min:1 で 1 トークン以上 + y が 1 トークンで、最低 2 トークンが要る。xs=[] は自身の min:1 を破るため枝生成されず (DR-043 — min は事後検証でなく枝生成に効く構造制約)、唯一生成される取り分 xs=[a] では y に渡すトークンが尽きる。よって failure、element=y (トークン側の不足)、args_pos=args.length=1 (どのトークンにも帰属しない失敗、CONFORMANCE §2)、reason=missing_operand。repeat-parse/group-trailing-positional.json の single-token-both-unsatisfiable と同型の、閉包の有無に依らないベースライン。",
+      "args": ["a"],
+      "expect": {
+        "outcome": "failure",
+        "errors": [
+          {"element": "y", "args_pos": 1, "kind": "parse", "reason": "missing_operand"}
+        ]
+      }
+    }
+  ]
+}
