@@ -1,0 +1,45 @@
+{
+  "why": "DR-123 §1/§2 の反復セル規則が **child 位置でも同一**であることを固定する (位置非依存)。DR-067 §2 は「multiple / repeat の配置制約は持たない」と明示しており、閉包の意味論 (DR-043) も値源ラダー (DESIGN §11.4) も構造位置と直交する — したがって root positional で成立する `value-sources/repeat-default-ladder.json` の輪郭 (未発火 = 空席 → ラダー → 宣言 default / 発火 = `[]` 初期化 + 畳み込み) は、seq の子位置でもそのまま成立しなければならない。本 fixture は DR-123 の由来そのもの (child 位置の repeat fixture 整備で REPDEF-Q1 として割れた論点) の直接の pin であり、`seq-parse/child-default-ladder.json` (default 持ちの **非反復** 子) と `seq-parse/child-optional-array-shape.json` (default 無しの反復子 → `[]`) の交点にあたる: 反復子 + default 宣言なので 0 発火の結果は `[]` ではなく宣言 default になる。",
+  "query": "parse",
+  "definition": {
+    "positionals": [
+      {
+        "name": "pair",
+        "seq": [
+          {"name": "head", "type": "string"},
+          {"name": "tags", "type": "string", "repeat": {"min": 0}, "default": ["builtin", "fallback"]}
+        ]
+      }
+    ]
+  },
+  "cases": [
+    {
+      "id": "child-zero-fire-takes-declared-default-not-empty",
+      "why": "`a`: head が a を消費し、子 tags は 0 発火。`child-optional-array-shape.json :: zero-fire-is-empty-array-not-absent` は同じ 0 発火で `[]` が出る形だが、そちらは default 宣言を持たない — 差分は宣言 default の有無だけで、結果が `[]` から宣言 default 配列へ変わる。DR-123 §3 の配置換え (「0 発火なら `[]`」はラダー最下段の**暗黙 default** であって独立した結果整形規則ではない) がこの差を導く: 宣言があれば最下段の席をそれが占める (DR-083 §1)。親 pair は repeat / multiple を宣言していないので配列にならず kv のまま (DESIGN §5.1/§2.5、DR-044 の限定)。effects は head の set のみ (default は効果列に載らない)、sources は kv の中で `tags` の座だけ要素対応の配列 `[\"default\",\"default\"]` (DR-122 §1)。",
+      "args": ["a"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "head", "op": "set", "operand": "a", "source": "cli"}
+        ],
+        "result": {"pair": {"head": "a", "tags": ["builtin", "fallback"]}},
+        "sources": {"pair": {"head": "cli", "tags": ["default", "default"]}}
+      }
+    },
+    {
+      "id": "child-fired-cell-skips-ladder",
+      "why": "(対極) `a b c`: head が a を取り、子 tags は greedy 既定 (DR-043) で b, c を反復消費する。初回発火でセルが `[]` に初期化されて accumulator が畳むため (DR-123 §1) ラダーは回らず、宣言 default は結果に現れない。root 版 (`value-sources/repeat-default-ladder.json :: fired-cell-initializes-empty-and-skips-ladder`) と同じ位相が子位置でも成立することの確認。effects は消費順 head(a) → tags(b) → tags(c)、sources は `{head:cli, tags:[cli,cli]}`。",
+      "args": ["a", "b", "c"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "head", "op": "set", "operand": "a", "source": "cli"},
+          {"entity": "tags", "op": "set", "operand": "b", "source": "cli"},
+          {"entity": "tags", "op": "set", "operand": "c", "source": "cli"}
+        ],
+        "result": {"pair": {"head": "a", "tags": ["b", "c"]}},
+        "sources": {"pair": {"head": "cli", "tags": ["cli", "cli"]}}
+      }
+    }
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "why": "DR-123 §4 (`repeat: {min: 1}` + `default:` は 0 発火のまま完全経路) の child 位置版。root 版 (`value-sources/repeat-min1-default-presence.json`) と同じく `min` (消費読み成立時の内部制約、DR-043) と `default:` (DR-088 §1 の presence が与える充足判定) の層の違いを固定するが、子位置では**同じ seq の中に消費必須の兄弟が並ぶ**ため、完全経路の成否が兄弟との取り分と同時に決まる点が root と異なる。`seq-parse/child-default-ladder.json :: empty-seat-filled-by-default-ladder` が非反復子で固定した「トークンを得られなかった消費点を空席のまま完全経路に含めてよい」が、閉包 (しかも `min: 1` の必須段) を持つ子にもそのまま及ぶ。`seq-parse/child-repeat-basic.json :: min-one-and-sibling-exceed-tokens` が対照 — そちらは default 無しの `min: 1` 子で、トークン不足がそのまま failure/missing_operand になる。",
+  "query": "parse",
+  "definition": {
+    "positionals": [
+      {
+        "name": "pair",
+        "seq": [
+          {"name": "head", "type": "string"},
+          {"name": "tags", "type": "string", "repeat": {"min": 1}, "default": ["builtin", "fallback"]}
+        ]
+      }
+    ]
+  },
+  "cases": [
+    {
+      "id": "child-min-one-zero-token-default-fills-path-complete",
+      "why": "`a`: head が唯一のトークンを消費し、`min: 1` の tags には何も残らない。default が無ければ完全経路が立たず failure になる (`child-repeat-basic.json :: min-one-and-sibling-exceed-tokens` の同型入力がその形) が、`default:` 宣言があるため DR-088 §1 の presence で空席のまま完全経路に含まれ (DR-123 §4)、resolve 相でラダー最下段の宣言 default がセル全体を埋める。閉包の `min` は消費読みが成立する場合にのみ効く、が子位置でも同一に効くことの pin。effects は head の set のみ、sources は `{head:cli, tags:[default,default]}`。",
+      "args": ["a"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "head", "op": "set", "operand": "a", "source": "cli"}
+        ],
+        "result": {"pair": {"head": "a", "tags": ["builtin", "fallback"]}},
+        "sources": {"pair": {"head": "cli", "tags": ["default", "default"]}}
+      }
+    },
+    {
+      "id": "child-min-one-consumes-when-tokens-remain",
+      "why": "(消費側) `a b`: head が a、tags が b を 1 回消費して `min: 1` を満たす。DESIGN §5.2 の逐次先食い規則により消費読みが完全経路へ届く限り空席枝は立たない (DR-123 §4) ので、default が消費を押しのけて `[\"builtin\",\"fallback\"]` になることはない。1 回発火でも DR-044 により配列 (`[\"b\"]`)。effects は消費順 head(a) → tags(b)、sources は `{head:cli, tags:[cli]}`。",
+      "args": ["a", "b"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "head", "op": "set", "operand": "a", "source": "cli"},
+          {"entity": "tags", "op": "set", "operand": "b", "source": "cli"}
+        ],
+        "result": {"pair": {"head": "a", "tags": ["b"]}},
+        "sources": {"pair": {"head": "cli", "tags": ["cli"]}}
+      }
+    }
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "why": "root repeat セル × 宣言 default の基準輪郭 (DR-123 §1/§2)。反復セルの `[]` は初期値ではなく初回発火の産物であり、発火しなかったセルは**空席**として通常どおり値源ラダー (DESIGN §11.4) が回る — したがって宣言 default は影にならず到達可能な席である。`fixtures/multiple-parse/declared-default-array-ladder.json` が multiple セルで固定した「未発火はラダー供給、sources=default」(DR-083 §4) の repeat 版であり、DR-123 §2 の『multiple と repeat で規則を分けない』を 2 つの宣言子の間で対照可能にする。対極 (発火側) を同一 definition の 2 case 目に置き、**発火したセルはラダーを回さない**ことを固定する: 初回発火で `[]` が作られ accumulator が畳むので、宣言 default は結果に混ざらない (置換であって merge ではない)。",
+  "query": "parse",
+  "definition": {
+    "positionals": [
+      {"name": "tags", "type": "string", "repeat": {"min": 0}, "default": ["builtin", "fallback"]}
+    ]
+  },
+  "cases": [
+    {
+      "id": "zero-fire-unseated-cell-takes-declared-default",
+      "why": "トークン供給なし: repeat (min:0) は 0 回発火で閉じる (DR-043) が、DR-123 §1 により未発火セルは `[]` を持たず空席のままである。空席なのでラダーが回り (§2)、最下段の default 席に宣言 default 配列 `[\"builtin\",\"fallback\"]` が座っている (§3 — 宣言があれば暗黙 `[]` を置き換える、DR-083 §1) ため、これがセル全体を埋める。`[]` がセルに最初から居る読み (DR-123 の不採用案「影説」) ならここは `[]` になり default が到達不能になるが、本 DR のモデルでは宣言 default が出る。default 配列は分割済み pieces なので 2 要素のまま (separator 非適用、DR-083 §2)。effects 空 (default は cli/link 由来でなく効果列に載らない、CONFORMANCE §2)。sources は要素対応で `[\"default\",\"default\"]` (DR-122 §1、declared-default-array-ladder.json :: unfired-uses-declared-default-array-as-is と同形)。",
+      "args": [],
+      "expect": {
+        "outcome": "success",
+        "effects": [],
+        "result": {"tags": ["builtin", "fallback"]},
+        "sources": {"tags": ["default", "default"]}
+      }
+    },
+    {
+      "id": "fired-cell-initializes-empty-and-skips-ladder",
+      "why": "(対極) `a b`: 初回発火の瞬間にセルが `[]` で初期化され (DR-123 §1)、そこへ append accumulator が a, b を畳む。セルが値を持った以上ラダーは回らず (DR-031 の cli 優先)、宣言 default は結果に現れない — 宣言 default は**未発火時の充填**であって発火値への merge ではない。0 発火 case との差は入力トークンの有無だけで、同じセルが「空席 → ラダー」と「発火 → 器の生成 + 畳み込み」のどちらの位相に入るかを分ける。effects は消費順の set 2 個、sources は `[\"cli\",\"cli\"]`。",
+      "args": ["a", "b"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "tags", "op": "set", "operand": "a", "source": "cli"},
+          {"entity": "tags", "op": "set", "operand": "b", "source": "cli"}
+        ],
+        "result": {"tags": ["a", "b"]},
+        "sources": {"tags": ["cli", "cli"]}
+      }
+    }
+  ]
+}

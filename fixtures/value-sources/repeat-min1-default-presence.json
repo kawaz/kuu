@@ -1,0 +1,35 @@
+{
+  "why": "`repeat: {min: 1}` + `default:` の輪郭 (DR-123 §4)。`min` と `default:` は層が違う — `min` は閉包が**消費読みとして成立するときの**内部制約 (必須段の unroll、DR-043)、`default:` は DR-088 §1「宣言された値源 = デフォルトの存在」が与える『その座を消費で埋めなくても完全経路に含めてよい』という充足判定である。したがって「1 回以上必須」と「無くてもよい」は矛盾せず、意味は**『1 回以上消費する、さもなくば default』**になる (DR-123 の不採用案『min:1 + default を definition-error にする』の否定を実行形で固定する)。`value-sources/positional-default-presence.json` が素の positional で固定した DR-088 の presence が、閉包を持つ要素にもそのまま及ぶことの pin — 素の positional 版では `absent/required-positional.json` の missing_operand との反転だったが、こちらは `min: 1` という**閉包側の必須**が同じく missing_operand に倒れないことを示す。",
+  "query": "parse",
+  "definition": {
+    "positionals": [
+      {"name": "tags", "type": "string", "repeat": {"min": 1}, "default": ["builtin", "fallback"]}
+    ]
+  },
+  "cases": [
+    {
+      "id": "min-one-zero-token-stays-path-complete-and-default-fills",
+      "why": "トークン供給なし: `min: 1` だけを見れば 1 回以上の反復が必要で、default を持たなければ完全経路が立たず missing_operand になる (`repeat-parse/preference-lazy-min0.json :: lazy-min0-shortest-left-empty-input` の ys がその形)。しかし `tags` は `default:` を宣言しているので DR-088 §1 の presence が効き、消費で埋めなくても空席のまま完全経路に含まれる (DR-123 §4) — `min` が効くのは消費読みが成立する場合だけである。0 発火のまま完全経路になった結果、空席をラダーが解決して宣言 default がセル全体を埋める (§2/§3)。effects 空、sources `[\"default\",\"default\"]`。",
+      "args": [],
+      "expect": {
+        "outcome": "success",
+        "effects": [],
+        "result": {"tags": ["builtin", "fallback"]},
+        "sources": {"tags": ["default", "default"]}
+      }
+    },
+    {
+      "id": "min-one-token-supplied-consumes-normally",
+      "why": "(消費側) `a`: トークンがあるので消費読みが完全経路へ届き、DESIGN §5.2 の逐次先食い規則により空席枝は立たない — **default が消費読みを押しのけることはない** (DR-123 §4)。`min: 1` を満たす 1 回発火でセルが `[]` から `[\"a\"]` に畳まれ、宣言 default は現れない。「1 回以上消費する、さもなくば default」の消費側の輪郭であり、default 宣言が充足判定だけを変えて消費そのものは変えない (`seq-parse/child-default-ladder.json :: extra-token-consumed-by-default-child` と同じ位相) ことを固定する。effects は set 1 個、sources `[\"cli\"]`。",
+      "args": ["a"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "tags", "op": "set", "operand": "a", "source": "cli"}
+        ],
+        "result": {"tags": ["a"]},
+        "sources": {"tags": ["cli"]}
+      }
+    }
+  ]
+}

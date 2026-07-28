@@ -1,0 +1,22 @@
+{
+  "why": "反復セルに **scalar の宣言 default** を書いた場合の受理輪郭。DR-083 の波及が decoder に与える規定「scalar JSON → `[v]` 持ち上げ、配列は multiple 要素のみ合法」は反復セルにも及び、scalar default は長さ 1 の piece 列へ持ち上げられて**合法に受理される** — DR-083 §5 の definition-error は「非 multiple のスカラー要素に**配列** default」という逆向きの構造不一致だけを対象としており (`definition-error/scalar-array-default-invalid-range.json`)、その裏返しにあたる反復セル × scalar default は定義エラーにならない。DR-123 §4 末尾の「反復セルの宣言 default は分割済み pieces として与える」は**canonical 表記の推奨**であって受理条件ではない、という位置づけをここで固定する (静的に検出したければ lint の領分)。同じセル形・同じ 0 発火入力で default の**書き方**だけを変えた `repeat-default-ladder.json :: zero-fire-unseated-cell-takes-declared-default` (配列表記) との対で、両表記が同じ供給経路に着地することを示す。",
+  "query": "parse",
+  "definition": {
+    "positionals": [
+      {"name": "tags", "type": "string", "repeat": {"min": 0}, "default": "solo"}
+    ]
+  },
+  "cases": [
+    {
+      "id": "scalar-default-lifts-to-single-piece",
+      "why": "トークン供給なし: repeat (min:0) は 0 発火で閉じ、DR-123 §1 により未発火セルは空席のままラダーが回る (§2)。最下段の default 席には scalar `\"solo\"` が宣言されているが、decoder が長さ 1 の piece 列へ持ち上げる (DR-083 波及) ため、セル全体を埋める値は `[\"solo\"]` になる — scalar のまま結果に出る (`\"solo\"`) ことも、definition-error になることもない。反復セルの結果が入力のカーディナリティに依らず配列である規約 (DR-044) が、default 供給経路でも保たれることの確認でもある。持ち上げ後は 1 piece なので separator は適用されない (宣言 default は分割済み pieces、DR-083 §2 — scalar を「分割前の生文字列」として扱う経路ではない。env 書き換え値が字句層を通るのとは非対称、`multiple-parse/declared-default-array-ladder.json` 参照)。effects 空、sources は要素 1 個に対応して `[\"default\"]` (DR-122 §1)。",
+      "args": [],
+      "expect": {
+        "outcome": "success",
+        "effects": [],
+        "result": {"tags": ["solo"]},
+        "sources": {"tags": ["default"]}
+      }
+    }
+  ]
+}
