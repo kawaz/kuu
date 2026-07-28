@@ -1,0 +1,29 @@
+{
+  "why": "消費 0 の子に無制限 repeat を宣言した定義が zero-progress の definition Error になることを固定する。DR-043 は repeat installer を ref 再帰 cons への lowering と規定し「ゼロ進捗ガード (再帰 1 周で 1 トークン以上消費すること) は静的検査で保証する」と明示する — 再帰の 1 周で 1 トークンも消費しない閉包は上限なしに unfold し続けるため、全入力で壊れる定義 (DR-054 の Error 基準) にあたる。kind は DR-054 §4 / DR-067 §1 の参照層の列挙にある `zero-progress`。本 fixture は消費 0 になる 2 つの形を同一定義に並べ、両方が検出されること (errors は全列挙 + 集合比較、DR-054 §4 / CONFORMANCE §3) を pin する: (a) `value:` = 消費 0 の宣言定数 (DESIGN §5.2「消費しない literal は value: フィールドで書く」、`{\"type\":\"number\",\"value\":30}` は消費 0 の実体だけノード) への repeat、(b) `seq: []` = unit (DR-067 §2「`seq: []` は 0 消費の成功」) への repeat。配置は seq の子と root positional の両方に置いてあり、ゼロ進捗ガードが配置に依らず効くこと (DR-067 §2 の配置直交) も同時に固定する。args は書かない — 定義の静的検査であり実行しない (DR-082 §1)。",
+  "query": "definition_error",
+  "definition": {
+    "positionals": [
+      {
+        "name": "pair",
+        "seq": [
+          {"name": "tick", "type": "number", "value": 30, "repeat": {"min": 0}},
+          {"name": "y", "type": "string"}
+        ]
+      },
+      {"name": "unitrep", "repeat": {"min": 0}, "seq": []}
+    ]
+  },
+  "cases": [
+    {
+      "id": "zero-consumption-children-under-unbounded-repeat",
+      "why": "(a) `tick` は `value: 30` を持つ消費 0 の実体だけノードで、そこに max 無し (= 無制限) の repeat が付いている。cons 再帰へ lowering すると 1 周でトークンを 1 個も消費しないまま再帰尾部へ戻るため停止しない (DR-043 のゼロ進捗ガードが禁じる形) → element=tick、kind=zero-progress。(b) `unitrep` は `seq: []` (unit = 0 消費の成功) に無制限 repeat が付いた形で、同じく 1 周の消費が 0 → element=unitrep、kind=zero-progress。min:0 でも Error になる点が要点 — min は必須段の unroll 数を決めるだけで、停止性を担保するのは 1 周あたりの消費量であり、max 無しの尾部再帰が残る限り min の値は救いにならない (DR-043)。`y` は消費 1 の通常の子で repeat も持たないため Error に現れず、errors の集合が {tick, unitrep} ちょうどであること自体が『消費 0 でも repeat が無ければ Error にならない』の pin を兼ねる。",
+      "expect": {
+        "outcome": "definition-error",
+        "errors": [
+          {"element": "tick", "kind": "zero-progress"},
+          {"element": "unitrep", "kind": "zero-progress"}
+        ]
+      }
+    }
+  ]
+}
