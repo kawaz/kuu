@@ -1,0 +1,60 @@
+{
+  "why": "repeat する positional group の**中の子も** repeat を持つ 2 段入れ子を固定する。DR-044 は「入れ子の各段が独立に配列 / map を選べる」と規定し、DR-067 §2 は配置制約を置かないので、外側 (行の反復) と内側 (行内フィールドの反復) はそれぞれ独立に配列の座を作る: 行の配列の各要素が kv で、その kv の中に内側の配列が入る。fixtures/multiple-parse/ref-repeat-rows-nested.json が `repeat × multiple` の合成で T[][] (発火境界の保存) を pin するのに対し、本 fixture は `repeat × repeat` の入れ子で「行の配列」と「行内の配列」が別々の段に立つことを pin する — 2 段の配列が現れる理由が違う (前者は発火境界、後者は構造の入れ子) ことの対比。取り分は 2 つの閉包が入れ子で並ぶが、内側 nums の型 (number) が行境界を決めるため完全経路は 1 本に定まり、選好 (DR-043) を持ち出すまでもなく一意になる。",
+  "query": "parse",
+  "definition": {
+    "positionals": [
+      {
+        "name": "rows",
+        "repeat": {"min": 1},
+        "positionals": [
+          {"name": "tag", "type": "string"},
+          {"name": "nums", "type": "number", "repeat": {"min": 1}}
+        ]
+      }
+    ]
+  },
+  "cases": [
+    {
+      "id": "two-rows-each-with-inner-array",
+      "why": "`x 1 2 y 3`: 行 1 は tag=x、内側 nums が greedy に [1,2] を取り、次のトークン y は number でないので閉じる。行 2 は tag=y・nums=[3]。他の取り分は全て dead-end — 行 1 の nums を [1] に縮めると行 2 の tag が \"2\" を取り、続く nums が y を number として読めず失敗する (string 型の tag は数字トークンも読めるが、内側 nums の number 制約が行の切れ目を一意にする)。行を 1 つで止めると y 以降が残余になり完全経路にならない。よって result は 2 行の配列で、各行が kv、その中の nums が配列 (DR-044 の各段独立)。effects は消費順に tag/nums が交互に並ぶ。",
+      "args": ["x", "1", "2", "y", "3"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "tag", "op": "set", "operand": "x", "source": "cli"},
+          {"entity": "nums", "op": "set", "operand": 1, "source": "cli"},
+          {"entity": "nums", "op": "set", "operand": 2, "source": "cli"},
+          {"entity": "tag", "op": "set", "operand": "y", "source": "cli"},
+          {"entity": "nums", "op": "set", "operand": 3, "source": "cli"}
+        ],
+        "result": {"rows": [{"tag": "x", "nums": [1, 2]}, {"tag": "y", "nums": [3]}]},
+        "sources": {"rows": [{"tag": "cli", "nums": ["cli", "cli"]}, {"tag": "cli", "nums": ["cli"]}]}
+      }
+    },
+    {
+      "id": "single-row-keeps-both-array-levels",
+      "why": "`x 1`: 行 1 回・内側 1 反復の最小構成でも 2 段の配列は畳まれない — 外側 rows は `[{...}]`、内側 nums は `[1]`。DR-044 の「max の値に依らず配列」「カーディナリティでも形を変えない」が各段に独立に効くことの pin で、1 行なら kv 単体・1 要素なら scalar へ縮退する形にはならない。",
+      "args": ["x", "1"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "tag", "op": "set", "operand": "x", "source": "cli"},
+          {"entity": "nums", "op": "set", "operand": 1, "source": "cli"}
+        ],
+        "result": {"rows": [{"tag": "x", "nums": [1]}]},
+        "sources": {"rows": [{"tag": "cli", "nums": ["cli"]}]}
+      }
+    },
+    {
+      "id": "inner-min-unsatisfied-in-last-row",
+      "why": "`x`: 外側 rows は min:1 なので行を 1 つ立てる必要があり、その行の tag が x を取った後、内側 nums の min:1 を満たすトークンが無い。内側の閉包を 0 反復にする枝は min:1 が禁じる (DR-043 — min は枝生成に効く構造制約) ので取り分は他に無く failure。element=nums (内側の閉包)、args_pos=args.length=1、reason=missing_operand。外側 repeat の min ではなく内側 repeat の min が躓きの帰属先になることの pin。",
+      "args": ["x"],
+      "expect": {
+        "outcome": "failure",
+        "errors": [
+          {"element": "nums", "args_pos": 1, "kind": "parse", "reason": "missing_operand"}
+        ]
+      }
+    }
+  ]
+}
