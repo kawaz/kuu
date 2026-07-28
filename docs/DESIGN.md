@@ -415,6 +415,10 @@ true    → bool として同様
 
 **同一 seat の消費読みと空席読みは DR-041 §4 の先食いと同じ枝生成規則に従い、背骨の消費順に逐次適用する。** 完全経路集合を生成した後の filter ではない。各消費点では、それ以前の seat の確定を前提に次の順で確定する: (1) 型がトークンを認識した消費読みが Error になれば Held として保持し、空席 fallback を立てない、(2) 消費読みから downstream の完全経路へ到達できれば消費で確定して空席枝を立てない、(3) 型または piece filter の Reject・トークン不足・downstream 不達なら空席 fallback で確定する。ここで型 Reject は字句として値空間外の `ValueSpaceMiss`、型 Error は字句認識後の不正である `RecognizedButInvalid` を指す。reason の綴りから位相を推測せず、値を返す type/filter resident が DR-037 の契約として disposition を宣言する。separator piece・発火済み消費・素通し先の required positional のような committed 文脈には代替枝が無いため、`ValueSpaceMiss` も DR-041 §5 に従って Error として表示する。これは完全経路間の優先ではなく、素通し枝を生成する条件の限定なので DR-038 と両立する。例えば `[k:string, v:string default:"D"]` の named group を repeat し、入力が `a b c` なら、v が b を消費しても完全経路へ届くため row 1 は `{k:a,v:b}`、row 2 は `{k:c,v:D}` の 1 読みになる。v を空席にして b を次 row の k へ送る枝は立たない。一方、or の string+string+default は兄弟それぞれが別 seat の消費読みを作るため、この抑制の対象ではなく ambiguous のままである。
 
+**反復セル (repeat / multiple / `optional:` 糖衣) の `[]` は初期値ではなく初回発火の産物である** (DR-123 §1)。反復セルは発火するまで値を持たず (空席)、初めてトリガされた瞬間に `[]` で初期化されてそこへ accumulator が畳む。`value:` の const がセル初期化位相で最初から座っているのとは位相が違い、`[]` は**発火という出来事が作る器**である。したがって発火しなかった反復セルは空席として通常どおり値源ラダー (§11.4) を回り、`default:` は影にならず到達可能な席である (DR-123 §2、DR-083 §1/§4)。明示的に空にしたセル (`empty` op、committed=true) と未発火のセルは同じ `[]` を結果に出しうるが位相が異なり、区別は `effects` の op が担う (DR-122 §2.1)。
+
+閉包を持つ要素への `default:` も同じ規則で効く: **`repeat: {min: 1}` + `default:` は 0 発火のまま完全経路になり、default がセル全体を埋める** (DR-123 §4)。`min` は閉包が消費読みとして成立するときの内部制約 (必須段の unroll、DR-043)、`default:` は DR-088 §1 の presence が与える「その座を消費で埋めなくても完全経路に含めてよい」という充足判定であり、層が違うので矛盾しない (意味は「1 回以上消費する、さもなくば default」)。枝の生成順は前段の逐次先食い規則に従うため、消費読みが完全経路へ届く限り空席枝は立たない。反復セルの宣言 default はセル全体を埋めるので分割済み pieces (配列) で書く (DR-083 §2/§5)。
+
 `value:` と `default:` の同一要素での併記は**全位置で合法**である (別位相なので二重宣言にならない) — ただし const が常にセルを埋めるため default 席は到達不能な影になる (env が常に供給される環境で default が影になるのと同じラダーの通常挙動。CONST-Q1=a、静的検出は lint の領分)。
 
 ### 5.3 values は or のショートハンド
@@ -901,6 +905,8 @@ inherit ラダー席に祖先 scope chain の参照を宣言する。default / d
 ```
 
 順序は固定 (設定可能にしない、暗黙の罠を避ける)。異なる席は同一要素で共存でき、上位席から順に解決して最初に得た値を採る。
+
+**反復セル (repeat / multiple / `optional:` 糖衣) の default 席は、宣言が無ければ暗黙に `[]` を供給する** (DR-123 §3)。「0 発火なら `[]`」は独立した結果整形規則ではなくラダー最下段の中身であり、`default:` の宣言があればその値が席を占める (DR-083 §1)。この配置により「反復系は absent にならない」(DR-051 §2b) は独立規則でなく「default 持ちは absent にならない」(同 §2a) の系になる — 反復セルは default 席が常に埋まっているから absent にならない。`unset` (ラダー開放、DR-045 §2) を撃ったときに下位席が無ければこの最下段まで落ちて `[]` に確定する (`fixtures/multiple-parse/unset-env-fallback.json`)。なお暗黙 default が供給する `[]` には値の座が無いため `sources` にタグは載らない (DR-122 §2) — 後述の「未発火要素の sources は `default`」は値の座を持つセル (未発火 flag の `false` 等) の規則である。
 
 `value:` (消費 0 literal、§5.2) はこのラダーの席ではない — **セル初期化位相の宣言定数**であり、値セルに最初からいる (source タグは `const`、DR-031。default は「無い時に埋める」充填でこれとは別物)。const は席ではないので序列に参加せず、上位席 (env / config 等) の供給や cli 効果は初期値を通常規則どおり上書きする。
 
