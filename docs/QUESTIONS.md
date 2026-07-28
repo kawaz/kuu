@@ -20,7 +20,27 @@
 
 ## 裁定待ち
 
-(現在なし)
+### 👺 REPDEF-Q1: repeat 宣言セルと `default:` の相互作用
+
+Phase 1 (child repeat fixture 先行) で fixture 化を保留した論点。repeat 宣言セルの 0 発火は `[]` (DR-051 §2b) だが、`default:` が同居するときラダーが埋めるのか。
+
+**既存 pin の状況** (裁定材料):
+
+- [fixtures/multiple-parse/declared-default-array-ladder.json](../fixtures/multiple-parse/declared-default-array-ladder.json) — **multiple (accum セル) では未発火時に宣言 default 配列がセル全体を供給** (source=default、DR-083 §4)
+- [fixtures/multiple-parse/unset-env-fallback.json](../fixtures/multiple-parse/unset-env-fallback.json) — ラダー開放 + 下位供給なし → `[]` (= `[]` は「無源 terminal」)
+- [fixtures/value-sources/positional-default-presence.json](../fixtures/value-sources/positional-default-presence.json) — root positional の `default:` は空席のまま完全経路 (DR-088)
+
+**α (供給の有無・形)**:
+
+- [ ] a: **統括推し** — repeat セルも accum セルと同じラダー規則。0 発火 = uncommitted でラダー開放、`default:` がセル全体を供給 (宣言 default は構造化済み値、配列で書く。DR-083 §2 と同じ)。供給が無ければ `[]`。「`[]` が常に居るので default は影」説 (c) は DR-083 §4 の既存 pin と非対称になるため不採用推し
+- [ ] c: default は影 (repeat セルは常に `[]` が先に居る、repeat+default は恒常無意味 = lint 領分)
+
+**β (min との相互作用、α=a のときのみ)**:
+
+- [ ] a: **統括推し** — `repeat:{min:1}` + `default:` の 0 発火も DR-088 の宣言 presence が救って完全経路 (root positional default と同型、位置非依存の系)
+- [ ] b: min は枝生成に効く構造制約 (DR-043) なので救わない → missing_operand (default が効くのは min:0 のみ)
+
+裁定後: 採択形を fixture 化して pin + 必要なら DESIGN §5.2 / DR-083 に追記。
 
 ## 確認待ち
 
