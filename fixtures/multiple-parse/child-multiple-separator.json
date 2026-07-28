@@ -1,0 +1,59 @@
+{
+  "why": "seq の子位置に置いた multiple パイプライン (separator + accumulator) の輪郭を固定する。DR-067 §2 は multiple の配置制約を否定し「multiple は値セルの畳み設定であり構造位置と直交する」と明示するので、root positional で成立する値軸分割の規則 (fixtures/multiple-parse/separator-split.json) と、値軸 × 構造軸の合成規則 (fixtures/multiple-parse/separator-repeat.json) は、子位置でもそのまま成立しなければならない。特に repeat と separator が同じ子に同居した場合、両者は同じ 1 つの値セルへ畳み込まれるので結果は**平坦**なリストになる (DR-034 × DR-043 の 2 軸直交 — separator は 1 トークンを多 piece に、repeat は多トークンを多発火にするだけで、fold 先のセルは 1 つ)。畳んだリストが親 seq の kv の 1 座として収まることが子位置固有の追加輪郭 (DESIGN §5.1/§2.5)。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {
+        "name": "pair",
+        "long": true,
+        "seq": [
+          {"name": "key", "type": "string"},
+          {"name": "vals", "type": "string", "multiple": {"accumulator": "append", "separator": ","}}
+        ]
+      },
+      {
+        "name": "rowsep",
+        "long": true,
+        "seq": [
+          {"name": "label", "type": "string"},
+          {"name": "cells", "type": "string", "repeat": {"min": 1}, "multiple": {"accumulator": "append", "separator": ","}}
+        ]
+      }
+    ]
+  },
+  "cases": [
+    {
+      "id": "child-separator-splits-single-token",
+      "why": "`--pair k a,b,c`: 子 vals は repeat を持たないので 1 トークンだけ消費し (DR-018)、separator が その 1 トークンを 3 piece に割る。各 piece が 1 個の set 効果を生み (DR-045 set 縮退)、append が piece 列をリストに畳む — separator-split.json の split-three-pieces と同じ挙動が子位置で成立する。result は結果キー持ちの子が並ぶ seq なので pair の値が 1 個の kv (DESIGN §5.1/§2.5)、その中で separator セルの vals だけがリスト形になり、key は scalar のまま。sources は要素対応で 3 タグ (DR-122 §1)。",
+      "args": ["--pair", "k", "a,b,c"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "key", "op": "set", "operand": "k", "source": "cli"},
+          {"entity": "vals", "op": "set", "operand": "a", "source": "cli"},
+          {"entity": "vals", "op": "set", "operand": "b", "source": "cli"},
+          {"entity": "vals", "op": "set", "operand": "c", "source": "cli"}
+        ],
+        "result": {"pair": {"key": "k", "vals": ["a", "b", "c"]}},
+        "sources": {"pair": {"key": "cli", "vals": ["cli", "cli", "cli"]}}
+      }
+    },
+    {
+      "id": "child-repeat-times-separator-stays-flat",
+      "why": "`--rowsep L a,b c,d`: 子 cells は repeat で 2 トークンを 2 発火に分け、separator が各発火のトークンを 2 piece に割る。全 4 piece は同じ 1 つの値セルへ append されるので結果は平坦な [a,b,c,d] — 発火ごとにグループ化した [[a,b],[c,d]] にはならない。これは separator-repeat.json の two-tokens-flat と同一の帰結で、scalar piece に対する repeat×separator の fold が子位置でも変わらないことの pin。発火境界が外側配列として残る形 (T[][]) は repeat 持ち要素の**発火値**を multiple が畳む場合の話であり (DR-084 §2、fixtures/multiple-parse/ref-repeat-rows-nested.json)、本 case のように repeat と separator が同一セルの中で合成される場合とは別の合成であることを、同一 fixture 内で対比する。",
+      "args": ["--rowsep", "L", "a,b", "c,d"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "label", "op": "set", "operand": "L", "source": "cli"},
+          {"entity": "cells", "op": "set", "operand": "a", "source": "cli"},
+          {"entity": "cells", "op": "set", "operand": "b", "source": "cli"},
+          {"entity": "cells", "op": "set", "operand": "c", "source": "cli"},
+          {"entity": "cells", "op": "set", "operand": "d", "source": "cli"}
+        ],
+        "result": {"rowsep": {"label": "L", "cells": ["a", "b", "c", "d"]}},
+        "sources": {"rowsep": {"label": "cli", "cells": ["cli", "cli", "cli", "cli"]}}
+      }
+    }
+  ]
+}

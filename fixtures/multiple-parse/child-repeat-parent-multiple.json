@@ -1,0 +1,51 @@
+{
+  "why": "親 option が multiple を持ち、その値構造 (seq) の子が repeat を持つ合成を固定する。2 段の配列が現れるが、由来は段ごとに違う: 外側は multiple の畳み単位 = **発火値**であること (DR-084 §1「multiple の畳み単位は発火値」、DR-034)、内側は子が反復宣言子であること (DR-044) による。ここでの発火値は「結果キー持ちの子が並ぶ seq」なので 1 個の kv (DESIGN §5.1/§2.5) であり、append はその kv を要素として積む — 結果は kv の配列で、各 kv の中に子 repeat の配列が入る。fixtures/multiple-parse/ref-repeat-rows-nested.json が pin する T[][] (repeat を要素**自身**に付け、発火値が row 配列になる形、DR-084 §2) とは、どの段がどの軸から来るかが異なる: あちらは外側 = 発火境界・内側 = 発火内の反復 row、こちらは外側 = 発火境界・内側 = 発火値 kv の中の 1 座。両者を並べることで「配列の段数」でなく「各段の由来」で形が決まることを固定する。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {
+        "name": "rows",
+        "long": true,
+        "multiple": "append",
+        "seq": [
+          {"name": "k", "type": "string"},
+          {"name": "vs", "type": "number", "repeat": {"min": 1}}
+        ]
+      }
+    ]
+  },
+  "cases": [
+    {
+      "id": "two-fires-each-kv-keeps-inner-array",
+      "why": "`--rows a 1 2 --rows b 3`: 1 回目の発火は k=a・vs が greedy に [1,2] を取り、次のトークンが option トリガ `--rows` なので閉じる。2 回目は k=b・vs=[3]。各発火の値は kv `{k, vs}` で、append がそれを 2 件積む。内側の vs は子の repeat 宣言による配列 (DR-044) で、発火をまたいで平坦連結されることはない — multiple は発火値を単位に畳むだけで、発火値の内部構造には触れない (DR-084 §1 / DR-034 と DR-043 の軸分離)。effects は multiple の有無に依らず消費順の set が並ぶ (DR-084 §1「multiple の有無は effects を変えない」)。sources は result と同型の shadow tree で、外側配列の要素対応 × 内側配列の要素対応がそのまま入れ子になる (DR-122 §1)。",
+      "args": ["--rows", "a", "1", "2", "--rows", "b", "3"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "k", "op": "set", "operand": "a", "source": "cli"},
+          {"entity": "vs", "op": "set", "operand": 1, "source": "cli"},
+          {"entity": "vs", "op": "set", "operand": 2, "source": "cli"},
+          {"entity": "k", "op": "set", "operand": "b", "source": "cli"},
+          {"entity": "vs", "op": "set", "operand": 3, "source": "cli"}
+        ],
+        "result": {"rows": [{"k": "a", "vs": [1, 2]}, {"k": "b", "vs": [3]}]},
+        "sources": {"rows": [{"k": "cli", "vs": ["cli", "cli"]}, {"k": "cli", "vs": ["cli"]}]}
+      }
+    },
+    {
+      "id": "single-fire-still-wrapped",
+      "why": "`--rows a 1 2` (1 回発火のみ): append は 1 発火でも要素 1 件のリストへ包む (DR-084 §1「1 発火でも要素 1 件のリスト」、fixtures/multiple-parse/append.json と同じ縮退規則)。よって外側は `[{...}]`、内側は子 repeat の `[1,2]` のまま — 発火が 1 回だから外側を外して kv 単体にする、という縮退はしない。2 発火 case と合わせ、外側の段が発火回数に依らず存在することの pin。",
+      "args": ["--rows", "a", "1", "2"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "k", "op": "set", "operand": "a", "source": "cli"},
+          {"entity": "vs", "op": "set", "operand": 1, "source": "cli"},
+          {"entity": "vs", "op": "set", "operand": 2, "source": "cli"}
+        ],
+        "result": {"rows": [{"k": "a", "vs": [1, 2]}]},
+        "sources": {"rows": [{"k": "cli", "vs": ["cli", "cli"]}]}
+      }
+    }
+  ]
+}
