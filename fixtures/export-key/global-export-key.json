@@ -1,0 +1,68 @@
+{
+  "why": "global セル (DR-042 の親 → 子孫の構造コピー、実体は祖先の 1 セルで子には新設しない) に `export_key` が付いたときの **3 軸交差**を固定する。global は「発火位置のスコープ」と「値が着地するセルのスコープ」がずれる唯一の構造で、子スコープの入口から撃っても効果は root の 1 セルへ合流する (`variant-effects/effect-order-global.json` が identity で pin 済み)。そこへ export_key が乗ると軸が 3 本に割れる — (1) 綴り軸: `--out` / `--trace` は宣言名由来で不変 (DR-052 §2、子スコープのコピー入口でも同綴り)、(2) 宣言名軸: `effects[].entity` は `out` / `trace` のまま (DR-045: 効果は cell 単位で露出パスではない)、(3) 結果アドレス軸: `result` / `sources` のキーはセルの居場所 (= root) に export_key を適用した `o`。子スコープで発火したことは 3 面のどこにも現れない。`export_key: null` の global (`trace`) は結果キー軸を失うので、どのスコープから撃っても result / sources に席を持たない — 値の伝搬は止まらず effects には現れる (`transparent-kv.json` の透過の核心を global 経路で見る形)。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {"name": "out", "type": "string", "long": true, "global": true, "export_key": "o"},
+      {"name": "trace", "type": "flag", "long": true, "global": true, "export_key": null}
+    ],
+    "commands": [
+      {"type": "command", "name": "build", "export_key": "bd"}
+    ]
+  },
+  "cases": [
+    {
+      "id": "root-firing-lands-on-renamed-root-key",
+      "why": "`--out A build`: root 入口で発火し root の `out` セルに着地。結果キーはセルの居場所 (root) に export_key を適用した `o`。選ばれた `build` は renamed presence marker `bd:{}` (DR-052 §3)。未発火の透過 flag `trace` は preset default `false` を持つが結果キー軸が無いので result に現れない (`transparent-kv.json`) — 透過セルは発火の有無に関わらず結果面に席を持たない。sources は result と同型で `{o:\"cli\", bd:{}}`、スコープ自体を指すタグは無い (DR-122 §2)。子スコープ発火との対照ベースライン。",
+      "args": ["--out", "A", "build"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "out", "op": "set", "operand": "A", "source": "cli"}
+        ],
+        "result": {"o": "A", "bd": {}},
+        "sources": {"o": "cli", "bd": {}}
+      }
+    },
+    {
+      "id": "child-copy-firing-lands-on-same-root-key",
+      "why": "`build --out B`: 発火位置は `bd` スコープの中だが、global コピーは実体を新設せず祖先の 1 セルへ同期する (DR-042) ので、値は root の `out` セルに着地し結果キーは前 case と同じ `o` になる。`bd:{}` は空のまま (子に新設セルが無い)。**露出キーの解決に発火位置のスコープ path を使う実装はここで `{bd:{o:\"B\"}}` を吐いて落ちる** — 露出キーはセルの居場所で決まり、発火位置では決まらない。effects の entity は root セルの宣言名 `out`、source は自分の入口からの発火なので `cli` (link ではない、DR-031 の source 確定ルール)。sources の `o` も `cli`。",
+      "args": ["build", "--out", "B"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "out", "op": "set", "operand": "B", "source": "cli"}
+        ],
+        "result": {"o": "B", "bd": {}},
+        "sources": {"o": "cli", "bd": {}}
+      }
+    },
+    {
+      "id": "cross-scope-merge-keeps-single-renamed-key",
+      "why": "`--out A build --out B`: root 入口と子スコープのコピー入口が別トークンで発火し、両効果が root の 1 セルへ合流する (effect-order-global.json::root-then-command-last-wins の rename 版)。効果列 `[out=A, out=B]` の順序があと勝ちを決め (DR-015)、result は `o: \"B\"`。**合流先が 1 セルである以上、露出キーも 1 つ**で、発火回数ぶんのキーが増えたり子スコープ側にも影が立ったりしない。sources は最終値を確定させた発火の由来 1 つ (DR-122 §3、DR-031 の最終確定 source) なので `o: \"cli\"` — 2 発火でも scalar の座はタグ 1 個 (accum の要素対応配列とは別軸)。effects は 2 個とも entity=`out` で消費順に並ぶ。",
+      "args": ["--out", "A", "build", "--out", "B"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "out", "op": "set", "operand": "A", "source": "cli"},
+          {"entity": "out", "op": "set", "operand": "B", "source": "cli"}
+        ],
+        "result": {"o": "B", "bd": {}},
+        "sources": {"o": "cli", "bd": {}}
+      }
+    },
+    {
+      "id": "transparent-global-fires-without-any-result-key",
+      "why": "`build --trace`: 透過 global を子スコープのコピー入口から撃つ。値は root の `trace` セルへ合流するが `export_key: null` なので結果キー軸を持たず、root にも `bd` の下にも席が無い (DR-052 §2 — 「export しない」のではなく名前が無くなるだけ)。effects には entity=`trace` の set が載るので、**値は流れているのに 3 面のうち結果面だけが空**という透過の核心が global 経路でも成り立つ。同時に `out` は未発火・default 無しで absent (DR-051 §1) なので result は `{bd:{}}` だけになる。透過を「発火位置のスコープから消す」と読む実装は root に `trace` を漏らして落ちる。",
+      "args": ["build", "--trace"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "trace", "op": "set", "operand": true, "source": "cli"}
+        ],
+        "result": {"bd": {}},
+        "sources": {"bd": {}}
+      }
+    }
+  ]
+}
