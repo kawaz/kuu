@@ -22,18 +22,7 @@
 
 ## 裁定待ち
 
-### 👺 INH-Q1: inheritable の祖先 write-target への `export_key: null` の効き方
-
-projection gaps 洗い直し (2026-07-28) で浮上。`inheritable: true` の要素は祖先スコープに write-target コピーを持ち (DR-059 §5、name を共有)、[DESIGN §11.3](../docs/DESIGN.md) 末尾は「祖先で書いた値を結果に出さず子孫へ流すだけの『導管のみ』(**per-copy** の export_key opt-out) は現機構に無い」と明記している。未規定なのは、**単一の `export_key` 宣言が宣言スコープと祖先コピーの両方にどう効くか**。
-
-- rename (`export_key: "x"`) は「name 共有ゆえ両スコープ一律」が素直な導出で裁定不要 (fixture 化可能)
-- **`export_key: null` だけが割れる**: 透過は「その結果キー軸を落とす」操作だが、祖先コピーは葉セルなので「子の昇格」が無く、単に結果から消える = その要素は**全スコープで導管化**する
-
-- [ ] a: **統括推し** — null も一律に効く (全コピー一括の導管化)。export_key は要素の属性でありコピーはそれを共有する (rename と同じ系)。§11.3 が否定しているのは per-copy の**差別化**であって、全体 opt-out は「露出しない値の継承チェーン」として意味が立つ
-- [ ] b: inheritable + `export_key: null` は definition-error (露出ゼロの inheritable は書き損じの公算が高い)
-- [ ] c: null は宣言スコープのみに効き、祖先コピーは name で露出 (= per-copy 差異を暗黙に作る — §11.3 の設計方針と衝突するため統括は非推奨)
-
-裁定後: fixture pin (inheritable-parse/ に rename 側と合わせて) + DESIGN §11.3 に 1 文追記。
+(現在なし)
 
 ## 確認待ち
 
