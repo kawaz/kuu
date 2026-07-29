@@ -1,0 +1,88 @@
+{
+  "why": "**非 identity な segment が 2 段連続する** path を固定する。corpus には多段 identity path も 1 段だけの rename / 透過もあるが、rename と透過が続けて現れる形は無かった。露出規則 (DESIGN §2.4 / DR-052 §2〜§3) は「最も浅い結果キー層で止め、それより深い name はその子スコープに属する。`export_key: null` の層は結果キー層と数えない」であり、これは根で 1 回判定する規則ではなく **path を降りながら段ごとに適用する反復**である。1 段の fixture では「透過段を落とした後もその子ノードへ降り続ける」ことを証明できない — 落とした時点で走査を打ち切る実装も、透過段の子を親スコープでなく root へ直接吐く実装も、1 段では区別が付かない。本 fixture は 2 つの chain を並べて両順序を見る: `outer`(rename) → `inner`(透過)、および `alpha`(透過) → `beta`(rename)。`sources` は result と同型の shadow なので同じ段の落ち方をする (DR-122 §1、CONFORMANCE §2「sources のキーは result と同一のキー体系」)。綴り軸 (`outer` / `inner` / `alpha` / `beta` トークンでの入場) は結果キー軸と直交で不変 (DR-052 §2)。",
+  "query": "parse",
+  "definition": {
+    "commands": [
+      {
+        "type": "command",
+        "name": "outer",
+        "export_key": "o",
+        "commands": [
+          {
+            "type": "command",
+            "name": "inner",
+            "export_key": null,
+            "options": [
+              {"name": "port", "type": "number", "long": true}
+            ]
+          }
+        ]
+      },
+      {
+        "type": "command",
+        "name": "alpha",
+        "export_key": null,
+        "commands": [
+          {
+            "type": "command",
+            "name": "beta",
+            "export_key": "b",
+            "options": [
+              {"name": "port", "type": "number", "long": true}
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "cases": [
+    {
+      "id": "rename-then-transparent-promotes-into-renamed-scope",
+      "why": "`outer inner --port 80`: 1 段目は rename されて結果キー `o` を作り、2 段目は透過なので結果キー層に数えられず、その子 `port` が 1 つ上 — **root ではなく `o`** — へ昇格する (DESIGN §2.4)。透過段の子を昇格させる先を「直近の結果キー層」でなく root と誤読した実装は `{port:80}` を吐いて落ちる。`sources` も同じ段構成で `{o:{port:\"cli\"}}`。effects の entity は値セル `port` で、scope の rename / 透過は effects に一切現れない (DR-045: 効果は cell 単位で、露出パスではない)。",
+      "args": ["outer", "inner", "--port", "80"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "port", "op": "set", "operand": 80, "source": "cli"}
+        ],
+        "result": {"o": {"port": 80}},
+        "sources": {"o": {"port": "cli"}}
+      }
+    },
+    {
+      "id": "transparent-then-rename-promotes-renamed-scope-to-root",
+      "why": "`alpha beta --port 80`: 逆配置。1 段目 `alpha` が透過なので結果キー層にならず、2 段目の renamed スコープ `b` が root へ昇格する。**透過段の下にある結果キー層はそのまま生き残る** — 透過を「その subtree ごと結果から消す」と読む実装 (DR-052 が採らなかった完全消滅案) はここで `{}` を吐いて落ちる。昇格するのは透過段の子の結果キー (`b`) であって、さらにその子 (`port`) が root まで持ち上がるわけではない: 結果キー層は 1 段だけ数え直される。",
+      "args": ["alpha", "beta", "--port", "80"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "port", "op": "set", "operand": 80, "source": "cli"}
+        ],
+        "result": {"b": {"port": 80}},
+        "sources": {"b": {"port": "cli"}}
+      }
+    },
+    {
+      "id": "transparent-inner-leaves-only-outer-marker",
+      "why": "`outer inner` のみ (子未発火): `outer` は選ばれた結果キー持ちスコープなので presence marker を持つ (DR-052 §3)。`inner` は選ばれているが透過なので presence marker を持たない (`command-promote.json::promote-empty-child` と同じく、null スコープは marker も昇格キーも生まない)。`port` は値源なし未発火で absent (DR-051 §1)。よって昇格すべき中身が無く `o` は空 kv になる。sources も `{o:{}}` — スコープ自体を指すタグは無く、空 kv に置き換えるタグも無い (DR-122 §2)。**透過段が marker を持たないことと、走査がそこで止まらないことは別**であることを、次の case と対で示す。",
+      "args": ["outer", "inner"],
+      "expect": {
+        "outcome": "success",
+        "effects": [],
+        "result": {"o": {}},
+        "sources": {"o": {}}
+      }
+    },
+    {
+      "id": "transparent-outer-keeps-inner-marker-at-root",
+      "why": "`alpha beta` のみ: 透過段 `alpha` は marker を持たないが、その子 `beta` の presence marker `{}` は結果キー層として生きているので root に `b:{}` として現れる。前 case (透過段が最下段) と合わせて、**透過段は自分のキーを落とすだけで、下の層の露出を止めない**ことを両順序で固定する。透過段に出会った時点で subtree の走査を打ち切る実装はここで空の result を吐いて落ちる。sources は同形の `{b:{}}`。",
+      "args": ["alpha", "beta"],
+      "expect": {
+        "outcome": "success",
+        "effects": [],
+        "result": {"b": {}},
+        "sources": {"b": {}}
+      }
+    }
+  ]
+}
