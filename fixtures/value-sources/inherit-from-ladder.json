@@ -1,0 +1,57 @@
+{
+  "why": "`inherit: {\"from\": \"<name>\"}` の明示参照で「外側スコープからまとめて既定値を与える」定義を書く (DR-124 §2、DESIGN §11.2)。root が通常の option `socket_ttl` (long:true → 綴りは name の kebab 変換で `--socket-ttl`、DR-022 / LOWERING §B.1) を持ち、子コマンド socket の `ttl` が inherit 席でそれを名指しする (自前 default 60)。inherit 席は同名探索がデフォルトだが、from 形は**別 name の祖先要素**を参照できるので、内側の結果キーを `ttl` に保ったまま外側の綴りだけ `--socket-ttl` に分けられる — 外側の入口は外側の定義が自前で持つので、祖先の表面 (help / 補完 / 結果キー) が子孫の宣言で変わることはない。値の序列は通常のラダー cli > env > config > inherit > default (DESIGN §11.4) がそのまま効き、新機構はゼロ。外側セルと内側セルは別実体なので結果の座も別 (外側は root キー `socket_ttl`、内側は `socket.ttl`) で、同時に別のタグ (cli / inherit) を持てる。sources は result と同型の shadow tree (DR-122 §1: 値の座だけをタグに置き換えるので `socket` スコープの kv がそのまま立ち、その中の `ttl` の座がタグを持つ)。inherit 由来値は完走後の値確定なので effects 非掲載、result/sources で検証する (CONFORMANCE §2)。command-scope 領域とクロス (サブコマンド入場・結果ネストは inherit-ladder.json と同型)。\n\nRUNNER GAP の注記: `inherit` の object 形 (`{\"from\": ...}`) は wire schema に定義済み (oneOf の object 分岐) だが、これを使う fixture は本 file が最初で参照実装の decode / 解決経路は未配線の可能性が高い。加えて inherit-ladder.json と同じく、全ツリー args 一発 parse で親の解決値を子の inherit 席へ通す end-to-end 経路自体を要求する。本 fixture は spec 準拠の期待値 (DR-070 §1b) を書き、実装側の from 解決と inherit スレッディングを促す。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {"name": "socket_ttl", "type": "number", "long": true}
+    ],
+    "commands": [
+      {
+        "type": "command",
+        "name": "socket",
+        "options": [
+          {"name": "ttl", "type": "number", "long": true, "inherit": {"from": "socket_ttl"}, "default": 60}
+        ]
+      }
+    ]
+  },
+  "cases": [
+    {
+      "id": "outer-write-inherited",
+      "why": "外側が `--socket-ttl 30` で書き込み → socket 側は未指定 → 内側 ttl は inherit 席が外側の解決値 30 を参照する (@inherit)。`--socket-ttl` は socket トークンより前なので root 背骨で発火し root の `socket_ttl` セルに cli set。外側セルは内側とは別 name の自前 option なので、root 結果に `socket_ttl: 30` が通常の露出規則どおり present。effects は root の cli set のみ (子の inherit は effects 非掲載)。",
+      "args": ["--socket-ttl", "30", "socket"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "socket_ttl", "op": "set", "operand": 30, "source": "cli"}
+        ],
+        "result": {"socket_ttl": 30, "socket": {"ttl": 30}},
+        "sources": {"socket_ttl": "cli", "socket": {"ttl": "inherit"}}
+      }
+    },
+    {
+      "id": "inner-cli-over-inherit",
+      "why": "内側自前の CLI が inherit に勝つ (cli は最上席): socket 入場後の `--ttl 10` は子背骨で発火し子 ttl=10。外側は `--socket-ttl` 未使用で default も持たないので root 結果に `socket_ttl` キーは現れない (DR-051 §1 の absent)。子の inherit 席は cli に負け、参照先が空であることとは無関係に上位席で確定する。effects は子の cli set のみ。",
+      "args": ["socket", "--ttl", "10"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "ttl", "op": "set", "operand": 10, "source": "cli"}
+        ],
+        "result": {"socket": {"ttl": 10}},
+        "sources": {"socket": {"ttl": "cli"}}
+      }
+    },
+    {
+      "id": "own-default-fallback",
+      "why": "どこも書かない → 外側 `socket_ttl` は無値 (default なし) なので inherit 席は値を得られず、内側は自前 default 60 に落ちる (inherit は default の上に座るだけで、参照先が空なら下位席へ素通しする、DESIGN §11.4)。inherit 宣言の存在は経路探索段の充足判定を変えるだけで (DR-088 §1)、実値が無ければ遅延解決後に下位席が埋める。effects 空、root に `socket_ttl` キーは現れない。",
+      "args": ["socket"],
+      "expect": {
+        "outcome": "success",
+        "effects": [],
+        "result": {"socket": {"ttl": 60}},
+        "sources": {"socket": {"ttl": "default"}}
+      }
+    }
+  ]
+}
