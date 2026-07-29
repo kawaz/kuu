@@ -1,5 +1,8 @@
 # DR-113: help 機構の再設計 — help_installer・5 直交 type・構造化 model
 
+> **更新 (DR-124、2026-07-29): entry の `origin` から `{"kind": "inheritable", ...}` が抜けた。**
+> 値域は `"local"` / `{"kind":"global",...}` / `{"kind":"alias",...}` の 3 値。他は不変。
+
 > 由来: kawaz 発題「実装がない奴として help_installer が無くないですか？必要な機能やそれを実現するための語彙や展開方などの設計プランからまず立てる必要があるのでは」(2026-07-17) と、`docs/QUESTIONS.md` の HIP-META-Q1〜Q8 裁定 (2026-07-19)。HIP-META-Q1=a により help_installer を中心に設計し直し、Q4 により `value_structure` tree + `type_ref` + `types`、Q5 により 5 直交 type、Q6〜Q8 により DR-114 の universal fn / `cell_fns` / default_fn 一本化を採用した。下敷きは `docs/findings/2026-07-19-help-mechanism-redesign-v2.md`。本 DR は DR-114 を前提とし、DR-112 を Supersede する。
 
 ## 決定

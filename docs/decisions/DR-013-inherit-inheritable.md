@@ -1,5 +1,11 @@
 # DR-013: inherit (default_value 継承) と inheritable (祖先スコープからの設定)
 
+> **更新 (DR-124、2026-07-29): `inheritable` は廃止された。** 本 DR で現役なのは inherit 側
+> (自身に値がなければ祖先 scope chain で同 name を探す値源ラダー席、位置づけは DR-031) のみ。
+> 以下の本文と例に出てくる `inheritable: true` と祖先スコープでの prefix 付き綴りは仕様から落ちている。
+> 祖先から内側要素の既定値を与える定義は、外側に通常 option を置き内側要素で
+> `inherit: {"from": "<外側要素名>"}` と名指しする (DR-124 §2、DESIGN §11.2)。
+
 ## 決定
 
 階層的な値継承を2つの直交フィールドで表現:

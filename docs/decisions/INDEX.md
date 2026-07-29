@@ -85,8 +85,9 @@
 
 ## 継承
 
-- [DR-013](DR-013-inherit-inheritable.md): inherit / inheritable で階層継承 — prefix 生成は updated by DR-059
-- [DR-059](DR-059-inheritable-prefix.md): inheritable の prefix 生成 — 定義スコープ名 1 個の固定 prefix (全祖先同綴り)、衝突は実行時 ambiguous、別綴りは alias、lowering は global の逆方向コピー
+- [DR-013](DR-013-inherit-inheritable.md): inherit / inheritable で階層継承 — inheritable 側は superseded by DR-124 (廃止)、現役は inherit 席のみ
+- [DR-059](DR-059-inheritable-prefix.md): inheritable の prefix 生成 — 定義スコープ名 1 個の固定 prefix (全祖先同綴り)、衝突は実行時 ambiguous、別綴りは alias、lowering は global の逆方向コピー — **superseded by DR-124** (inheritable 廃止で全条項が対象を失う)
+- [DR-124](DR-124-remove-inheritable.md): inheritable の廃止 — 祖先スコープからの書き込みは「外側スコープの通常 option + 内側要素の `inherit: {"from": ...}`」で書く (kawaz 裁定 2026-07-29)。1 段の実需は既存語彙の合成で閉じ、固有価値は多段チェーンへの入口自動配布のみ。子の宣言が祖先の表面 (help / 補完 / 結果キー) を変える遠隔作用と、未規定のまま積んでいた交差面 (per-copy export_key opt-out / alias × inheritable / world 境界) を仕様から落とす。inherit 席 (DR-031 第 4 席) は不変、global (親→子孫) は片翼で存続 (対称性それ自体は利用者の要求ではない)。DESIGN §11.3 は欠番として空け §11.4 の番号は動かさない
 - [DR-014](DR-014-config-field.md): config フィールドで階層継承可能な設定
 - [DR-031](DR-031-value-source-precedence.md): 値源の優先順位 (CLI/link > env > config > inherit > default、固定) — required の判定入力は updated by DR-047、source 確定ルール (境界条件) を拡張確定
 - [DR-081](DR-081-default-seat-rewrite-and-source.md): default 席書き換えモデル — env/config/inherit は default と default_source (観測用隠し属性) を書き換える、source = committed ? cli : default_source、op=default は「書き換え済み default」を明示 set で source=cli (DR-031 明文の再確認、fixture 実践の由来席読みを覆す)
