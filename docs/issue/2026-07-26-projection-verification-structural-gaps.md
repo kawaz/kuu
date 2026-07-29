@@ -31,7 +31,7 @@ P0 (直近スコープで塞いだ 5 テーマ) は本 issue の対象外。残�
 
 ### 構造次元 (洗い出しに使った軸)
 
-- 結果スコープの生成元: root / command / named seq / named or / repeat row / inheritable の祖先 write-target / global の祖先 cell
+- 結果スコープの生成元: root / command / named seq / named or / repeat row / global の祖先 cell
 - 露出キーの解決: identity / renamed (`export_key:"x"`) / transparent (`export_key:null`) — scope label と cell 自身で別々に効く 2 軸
 - セルの種類: leaf / accumulator (0回/1回/複数回発火) / internal (none, config_file, dd) / presence marker
 - 値源: cli / link / env / config / inherit / tty / default
@@ -48,12 +48,10 @@ P0 (直近スコープで塞いだ 5 テーマ) は本 issue の対象外。残�
 - 危険: `accum_cells` の nested path / 0-fire の default 注入 / binding dedup の 3 分岐が同時に動く
 - 最小: 1 file / 3 cases (0/1/2 fires、renamed command + renamed accum)
 
-### 2. inheritable の祖先 write-target × export_key rename/null
+### 2. (失効) inheritable の祖先 write-target × export_key rename/null
 
-- corpus: inheritable × sources は 5 files / 13 cases だが全て identity exposure。rename/null 交差は 0
-- 危険: cell の宣言 scope と実際に値を占有する祖先 scope が異なる。通常 command の path map とは別の installer 分岐
-- 最小: 1 file / 2〜3 cases (ancestor CLI → child inherit、child CLI override、rename)。transparent (null) は祖先結果から消える意味まで確認が要る
-- 同 issue で global の鏡像を 1 case 足す (global × sources は identity 1 file / 2 cases のみ)
+- DR-124 (2026-07-29) で `inheritable` 語彙が廃止され、本テーマの対象構造 (cell の宣言 scope と値を占有する祖先 scope が異なる installer 分岐) が仕様から消滅した。fixture 追加は不要
+- 同テーマに併記していた global の鏡像 1 case は inheritable と独立に有効だが、`fixtures/export-key/global-export-key.json` (テーマ 7 で追加) が既にカバー済み — global × export_key rename/null × sources を 4 case (root 発火 / 子スコープのコピー入口発火 / 両者の合流あと勝ち / 透過 global) で固定しており、追加不要
 
 ### 3. 多段 scope × 各 segment の rename/null
 
@@ -95,7 +93,7 @@ P0 (直近スコープで塞いだ 5 テーマ) は本 issue の対象外。残�
 
 ## 受け入れ条件
 
-- [ ] P1 の 1〜4 が fixture で塞がれている (5 は array provenance の裁定後)
+- [ ] P1 の 1・3・4 が fixture で塞がれている (2 は DR-124 により失効して close、5 は array provenance の裁定後)
 - [ ] P2 の 6〜8 について、塞ぐか「危険度が低いので塞がない」を明示的に判断した記録がある
 - [ ] 同種の空白を再発させないための仕組みが検討されている (次元の直積を機械チェックする lint 等)
 
@@ -113,8 +111,11 @@ DR-122 (shadow tree)・DR-123・child repeat fixture 群 land 後の再評価で
 1. **テーマ 1** (nested command accumulator): 351 fixture 中 0 件で最優先。テーマ 3 残余 / 6 / 8 の empty op 1 case を同一定義に相乗り
 2. **テーマ 7** (global × export_key): corpus に宣言 0 件。effect-order-global.json に export_key を足した姉妹 file が最短
 3. **テーマ 5** (internal cell × repeat row): DR-122 でブロッカー消滅。none-exclusion-under-scopes の named seq case に repeat を足す形が最小
-4. **テーマ 2** (inheritable): rename 側は導出可能で即 fixture 化可、null 側は QUESTIONS.md INH-Q1 として裁定待ちに起票済み
-5. **テーマ 4** (named or × accumulator): 着手可、0 発火 default は DR-123 の後続 = task #82 マトリクスに合流
+4. **テーマ 4** (named or × accumulator): 着手可、0 発火 default は DR-123 の後続 = task #82 マトリクスに合流
+
+### close 判定 (2026-07-29 追記)
+
+- **テーマ 2** (inheritable): DR-124 で `inheritable` 語彙自体が廃止され、検証対象の断面 (祖先 write-target × export_key rename/null) が仕様から消滅したため close。QUESTIONS.md INH-Q1 も同 DR で解消済み
 
 ### 実施タイミング
 
@@ -128,4 +129,4 @@ issue 本文の旧 corpus 統計 (cli 73 等) は DR-121 フラット entry 前�
 
 - `docs/issue/2026-07-26-array-element-provenance-sources-addressing.md` (P1-5 の前提)
 - `docs/CONFORMANCE.md` §2 success の sources / effects 規定
-- DR-052 (結果キー軸) / DR-089 (type none) / DR-044 (uniform array) / DR-059 §5 (inheritable の write-target)
+- DR-052 (結果キー軸) / DR-089 (type none) / DR-044 (uniform array) / DR-124 (inheritable 廃止、DR-059 §5 の write-target を置換)
