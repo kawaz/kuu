@@ -1,0 +1,52 @@
+{
+  "why": "内部セル (`type: \"none\"`、DR-089) の 3 面除外を **反復行 (row) の中**で固定する。`none-exclusion-under-scopes.json` は結果スコープを作る各構造 (named seq / command) の下の none を pin しているが、そこでは除外席が 1 つの kv に対応する。反復宣言子が入ると result は行の**配列**になり (DR-044)、除外の照合は「どの行の、どのキーか」を要求する — 内部セルの席を結果アドレス軸で持つ実装は、行を跨ぐ添字ぶんだけ座標が増える。行は materialize する (none も照合消費に参加するので行の成立自体には効く) が、行の kv からは none のキーが消える、というのが本 fixture の輪郭。`sources` は result と同型の shadow なので、行の配列も同じ長さの配列になり、各行の kv からも none が消える (DR-122 §1/§2)。none の消費は構造の関心であって値空間とは直交する (DR-089 §1) — seq の子として値スロットに座る本形では 1 トークンを取るが、その値はどこにも残らない (`none-exclusion-under-scopes.json::none-in-named-seq-scope` と同じ配置)。command スコープの下に置くのは、行の添字と scope path が同時に挟まる位置 (`rows.pair[i].keep`) で除外を見るため。露出キー rename との交差は `none-exclusion-in-renamed-repeat-rows.json` が担う。",
+  "query": "parse",
+  "definition": {
+    "commands": [
+      {
+        "type": "command",
+        "name": "rows",
+        "options": [
+          {
+            "name": "pair",
+            "long": true,
+            "repeat": {"min": 1},
+            "seq": [
+              {"name": "touch", "type": "none"},
+              {"name": "keep", "type": "string"}
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "cases": [
+    {
+      "id": "none-cell-absent-from-every-repeat-row",
+      "why": "`rows --pair x a y b`: seq は 1 反復あたり 2 トークンを取る (none の `touch` が 1 つ照合消費し、`keep` が 1 つ値として取る) ので 4 トークンで 2 反復が確定する。反復宣言子 `pair` は配列になり (DR-044)、各行は seq の row 形の kv。`touch` は値空間が空なので行の kv から消え、行は `{keep:...}` だけになる — **行が消えるのではなく、行の中のキーが消える**。none が消費した `x` / `y` は result のどこにも現れない (DR-089 §3: 値の無さはフィールドの不在)。sources は 2 要素の配列で各要素が行の shadow kv、こちらからも `touch` の席が消える。除外席を行の添字なしで 1 度だけ引く実装は、1 行目だけ落として 2 行目に `touch` を残す形で落ちる。effects は消費順の 2 個で entity は宣言名 `keep` (行の添字を持たない — 効果は cell 単位、DR-045)。",
+      "args": ["rows", "--pair", "x", "a", "y", "b"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "keep", "op": "set", "operand": "a", "source": "cli"},
+          {"entity": "keep", "op": "set", "operand": "b", "source": "cli"}
+        ],
+        "result": {"rows": {"pair": [{"keep": "a"}, {"keep": "b"}]}},
+        "sources": {"rows": {"pair": [{"keep": "cli"}, {"keep": "cli"}]}}
+      }
+    },
+    {
+      "id": "single-row-baseline",
+      "why": "`rows --pair x a`: 2 トークンで 1 反復。行が 1 つでも配列形は変わらず `[{keep:\"a\"}]` (DR-044 一様配列 — 配列化は反復宣言の有無で決まり反復回数では決まらない)。前 case と対で、複数行 case の除外が「たまたま 1 回引けた」のではないことを示す下限。sources も 1 要素の配列。",
+      "args": ["rows", "--pair", "x", "a"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "keep", "op": "set", "operand": "a", "source": "cli"}
+        ],
+        "result": {"rows": {"pair": [{"keep": "a"}]}},
+        "sources": {"rows": {"pair": [{"keep": "cli"}]}}
+      }
+    }
+  ]
+}

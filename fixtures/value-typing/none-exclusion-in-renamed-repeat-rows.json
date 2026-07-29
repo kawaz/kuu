@@ -1,0 +1,54 @@
+{
+  "why": "`none-exclusion-in-repeat-rows.json` の rename 交差。内部セル (`type: \"none\"`、DR-089) の除外照合が **結果アドレス軸で行われる**ことを、反復行の添字と 3 段の rename が同時に挟まる位置で固定する — command スコープ `renamed` → `rn`、反復セル `pair` → `p`、行内セル `keep` → `k`。`none-exclusion-under-scopes.json::none-under-renamed-command-scope` が 1 段の kv で捉えた漏れ (除外席を宣言名のまま照合すると結果側の綴りと一致せず none が残る) を、行の添字が挟まる形で再現する。除外は結果面の全 3 面 (`effects` / `result` / `sources`) に及ぶので、rename されるのは result / sources 側だけ、`effects[].entity` は宣言名のまま (CONFORMANCE §2、DR-045)。`export_key` を seq の named 子に付けるのは DR-052 §1 (結果キー軸の指定は name を持つ要素一般) の素直な適用 — seq の named 子は行の kv キーを作る (`none-exclusion-under-scopes.json::none-in-named-seq-scope` の `{pair:{keep:\"y\"}}`) ので、その キーが rename の対象になる。rename を含まない基本形と file を分けてあるのは、この構文面 (seq 枝葉の export_key) が corpus 初出で、decode 段で落ちる実装があると file 単位で検証が丸ごと skip され、rename を含まない行除外の検証まで一緒に失われるため。",
+  "query": "parse",
+  "definition": {
+    "commands": [
+      {
+        "type": "command",
+        "name": "renamed",
+        "export_key": "rn",
+        "options": [
+          {
+            "name": "pair",
+            "long": true,
+            "export_key": "p",
+            "repeat": {"min": 1},
+            "seq": [
+              {"name": "mark", "type": "none"},
+              {"name": "keep", "type": "string", "export_key": "k"}
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "cases": [
+    {
+      "id": "none-excluded-under-renamed-row-scope-and-cell",
+      "why": "`renamed --pair x a y b`: seq は 1 反復 2 トークンなので 2 行が確定する。command スコープが `rn`、反復セルが `p`、行内セルが `k` へ写り、none の `mark` は 3 面から消える。**除外席を宣言名 (`renamed.pair.mark`) のまま照合する実装は、結果側が `rn.p[i]` を使うため一致せず none を漏らす**。scope・反復セル・行内セルの 3 段すべてが同時に写る位置なので、どこか 1 段だけ射影する実装も落ちる。綴り軸は宣言名由来のまま (`--pair` であって `--p` ではない、DR-052 §2 の軸直交)。effects の entity は宣言名 `keep` (export_key `k` は効果面に出ない)。sources は result と同型で、行の配列も行内 kv も同じ rename 後のキーを使う (DR-122 §1)。",
+      "args": ["renamed", "--pair", "x", "a", "y", "b"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "keep", "op": "set", "operand": "a", "source": "cli"},
+          {"entity": "keep", "op": "set", "operand": "b", "source": "cli"}
+        ],
+        "result": {"rn": {"p": [{"k": "a"}, {"k": "b"}]}},
+        "sources": {"rn": {"p": [{"k": "cli"}, {"k": "cli"}]}}
+      }
+    },
+    {
+      "id": "single-renamed-row-baseline",
+      "why": "`renamed --pair x a`: 1 反復のみ。行が 1 つでも配列形と rename 後のキー体系は変わらない (DR-044)。前 case と対で、複数行での除外が添字に依存しないことを示す下限。",
+      "args": ["renamed", "--pair", "x", "a"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "keep", "op": "set", "operand": "a", "source": "cli"}
+        ],
+        "result": {"rn": {"p": [{"k": "a"}]}},
+        "sources": {"rn": {"p": [{"k": "cli"}]}}
+      }
+    }
+  ]
+}
