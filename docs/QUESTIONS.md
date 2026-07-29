@@ -22,15 +22,7 @@
 
 ## 裁定待ち
 
-### 👺 INH2-Q1: inherit (値源ラダー 4 段目) 自体の扱い
-
-inheritable 削除 (DR-124) の際の kawaz コメント「消すんだよね inherit 自体」を受けた確認。今回削除したのは inheritable (子の定義から祖先に**書き込み入口**を生やす、書き方向) のみで、inherit ([DESIGN §11.2](../docs/DESIGN.md)、値源ラダー 4 段目 — 子が祖先の値を default として**読む**) は存置している。「ref+name+defaultborrow で済む」の borrow の実体を統括は `inherit: {"from": ...}` と解釈し、代替 fixture (fixtures/value-sources/inherit-from-ladder.json、spec 先行 pin) を作成済み。
-
-- [ ] a: inherit も丸ごと削除 — ラダーは CLI/env/config/default の 4 段に。祖先値の借用手段は当面なし (将来の明示機構まで)。inherit-ladder / inherit-from-ladder / DR-123 の関連記述も削除対象
-- [ ] b: **統括推し** — 暗黙チェーン (`inherit: true` = 同名祖先の自動探索) だけ削除し、明示 from (`{"from": ...}`) だけ残す。defaultborrow 構想 (issue 2026-07-15、「勝手に増やすより明示宣言」) の方向と一致、暗黙ルール最小化 (§0.1) にも沿う。socket-ttl ユースケースも書ける
-- [ ] c: 両形とも存置 (現状)
-
-裁定後: (a/b なら) DR-124 の追補 or 新 DR + fixture/DESIGN §11.2/DR-031 ラダー段の追随。
+(現在なし)
 
 ## 確認待ち
 
