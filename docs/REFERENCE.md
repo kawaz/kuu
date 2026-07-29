@@ -93,7 +93,6 @@ wire 正規形のノードが持ちうる全属性。型・既定値・適用対
 | `id` | string (`#` 禁止) | name を兼ねる | 全ノード |
 | `inherit` | boolean \| {from:string} | false | 値要素 (inherit ラダー席) |
 | `insert_form` | string (`"space"` \| `"eq"`) | `"space"` | `type:"completion_script"` 要素 (DR-117 §2.6) |
-| `inheritable` | boolean | false | 値要素 |
 | `link` | string | なし | 任意ノード |
 | `long` | boolean \| array[longItem] | false (`[]`) | option 要素 |
 | `match` | string (regex) | なし (未指定 = exact `"--"`) | `type:"dd"` の要素 |
@@ -205,15 +204,12 @@ env / config / cli の供給は初期値を通常規則どおり上書きする 
 正本: DESIGN §11.4, DR-087/088, DR-114 §4/§6
 
 **`inherit`**
-自身に値がなければ祖先 scope chain で同 name を探す値源ラダー第 4 段。default / default_fn は別の下位席なので同一要素で共存できる。同じ default 席への `default` と `default_fn` の併用だけが definition-error `invalid-range`。
-最小例: `{"name": "ttl", "type": "number", "inherit": true, "default": 60}`
+自身に値がなければ祖先 scope chain で同 name を探す値源ラダー第 4 段。`{"from": "<name>"}` 形で
+参照名を明示でき、祖先スコープの通常 option を名指しすれば「外側でまとめて既定値を与える」定義に
+なる (DR-124)。default / default_fn は別の下位席なので同一要素で共存できる。同じ default 席への
+`default` と `default_fn` の併用だけが definition-error `invalid-range`。
+最小例: `{"name": "ttl", "type": "number", "inherit": {"from": "socket_ttl"}, "default": 60}`
 正本: DESIGN §11.2, §11.4, DR-114 §4.1
-
-**`inheritable`**
-祖先スコープからも `--<定義スコープ名>-<name>` の綴りで書き込み可能にする (全祖先で同じ綴り、
-DR-059)。祖先で書いた値はその祖先スコープの結果キーにも露出する。
-最小例: `{"name": "ttl", "type": "number", "inheritable": true, "default": 60}`
-正本: DESIGN §11.3, DR-059
 
 **`env`**
 環境変数名 (値源ラダー第 2 段)。`env_prefix` (§4) があれば自動連結。
@@ -232,9 +228,9 @@ name スコープ階層と同型対応。
 しても値は宣言元セルに書かれ、結果は宣言元スコープのキーに現れる (子スコープは `{}`)。中間
 command が同トリガを shadow すると、それより先の子孫にはコピーが届かない (shadow は subtree
 全体に及ぶ)。中間 command 自身も `global: true` なら、そこから独立に再伝播が始まる (`fixtures/
-command-scope/mid-global-repropagation.json`)。`inheritable` (子孫→祖先方向に書ける) の鏡像対称。
+command-scope/mid-global-repropagation.json`)。
 最小例: `{"name": "verbose", "type": "flag", "long": true, "global": true}`
-正本: DESIGN §11.3 (鏡像対称の記述), §13.1, §14.1〜14.2, DR-042, `fixtures/command-scope/global.json`
+正本: DESIGN §13.1, §14.1〜14.2, DR-042, `fixtures/command-scope/global.json`
 
 #### CLI 起動
 

@@ -130,7 +130,6 @@ option/positional は所属配列で役割が定まるので type フィール�
   "link": "<name>",
   "alias": "<name>",
   "inherit": true,
-  "inheritable": true,
 
   "on_failure": false,
   "help_on_failure": true,
@@ -882,17 +881,20 @@ name を持つノードが結果スコープ = lexical スコープを作る。c
 
 inherit ラダー席に祖先 scope chain の参照を宣言する。default / default_fn は別の下位席なので同一要素で共存でき、上位の inherit が値を返せばそちらが勝つ。`inherit: {"from":"other"}` で参照名を明示できる。
 
-### 11.3 inheritable (祖先スコープからも書ける)
+**祖先スコープからまとめて既定値を与える定義**はこの席で書く (DR-124)。外側スコープに通常の option を宣言し、内側の要素がそれを名指しする:
 
 ```json
-{"name": "ttl", "type": "number", "inheritable": true, "default": 60}
+{
+  "options": [{"name": "socket_ttl", "type": "number", "long": true}],
+  "commands": [
+    {"type": "command", "name": "socket",
+     "options": [{"name": "ttl", "type": "number", "long": true,
+                  "inherit": {"from": "socket_ttl"}, "default": 60}]}
+  ]
+}
 ```
 
-- 自スコープでは `--ttl`
-- 祖先スコープでは `--<定義スコープ名>-ttl` (例: socket 配下なら `--socket-ttl`)。**全祖先で同じ綴り** (深さで変わらない、DR-059)。綴りの衝突は実行時 ambiguous が検出し (§15.1)、別綴りは alias (§14.5) で opt-in
-- 各 scope で書かれた値が、その scope 配下のインスタンスのデフォルトに
-- lowering は inheritable installer が祖先スコープへ prefix 付き入口宣言をコピーする (global の逆方向、祖先の自前宣言優先)。祖先 help での見せ方はレンダラの関心
-- 祖先スコープの write-target セルは要素の name を共有する (DR-059 §5) ため、そこで書かれた値は §2.3 の帰結として**その祖先スコープの結果キーにも露出する** (name が結果スコープを作る)。子孫へは inherit 席経由で流下する。祖先キーと子孫キーは別スコープ・別 provenance (由来は sources で判別、§2.6 / DR-031) であり同名でも重複ではない。global installer (親→子孫、親に書けば親キーに出る) との鏡像対称。祖先で書いた値を結果に出さず子孫へ流すだけの「導管のみ」(per-copy export_key opt-out) は現機構に無く、必要になればフェーズ2 で継続検討
+外側で `--socket-ttl 30` と書けば `socket` 配下の `ttl` は 30 を継承し、`socket --ttl 10` と書けば内側 CLI が勝ち、どちらも無ければ内側の default 60 に落ちる (§11.4 のラダーそのもの)。外側の値は外側スコープの結果キー `socket_ttl` に、内側の値は `socket.ttl` に出る — 別スコープ・別 provenance で、由来は sources で判別できる (§2.6)。祖先側の入口はあくまで祖先の定義が持つので、子孫の宣言が祖先の表面 (help / 補完 / 結果キー) を変えることはない。
 
 ### 11.4 値源の優先順位 (DR-031)
 
@@ -1397,7 +1399,7 @@ help_query(definition, {
 - `depth` は既定 `"scope"`。`"all"` は各 command entry の `scope` に子 model を再帰埋め込みする
 - `category_mode` は既定 `"default"`。`"default"` は renderer が採る通常の category 表示用 model、`"all"` は category で絞らず全 entry と全グループ宣言 entry を返す。`{"named":name}` は指定グループ所属 entry と当該グループ宣言 entry に絞り、不在なら `absent-category` の query-error を返す
 - query-error は合法な definition に対する capability 入力の失敗であり、definition-error と位相を混ぜない
-- capability が読むのは全 installer の宣言層寄与を適用し終えた宣言層。global / alias / inheritable の宣言的コピーを含み、lowered 産物は読まない
+- capability が読むのは全 installer の宣言層寄与を適用し終えた宣言層。global / alias の宣言的コピーを含み、lowered 産物は読まない
 
 help type 発火後のアプリ orchestration は §14.1 の内部セルを capability 入力へ写す。`#help` が立てば capability を呼び、`#help_category` / `#help_all_category` から `category_mode`、`#help_tree` から `depth` を決める。`#help_show_hidden` は model 取得条件を変えず renderer policy へ渡す。`path` だけは内部セルに対応物を持たず、**パースが選択した最深の command scope** から決まる (EXK-Q3、§14.1) — 内部セルは「help が発火したか」の 1 実体 (どの scope の入口から発火しても同じセルへ合流) であって「どの scope の help か」を保持しないため。導出手段 (ParserContext の選択情報を読む / 結果を辿る等) は縛らない。
 
@@ -1487,7 +1489,7 @@ help type 発火後のアプリ orchestration は §14.1 の内部セルを capa
       "multiple": false,
       "hidden": false,
       "deprecated": false,
-      "origin": {"kind": "inheritable", "declared_at": ["prog"]}
+      "origin": {"kind": "global", "declared_at": ["prog"]}
     }
   ],
   "positionals": [
@@ -1509,7 +1511,7 @@ help type 発火後のアプリ orchestration は §14.1 の内部セルを capa
 
 `value_structure` は `single` / `seq` / `or` / `repeat` / `type_ref` の任意ネスト tree で、kuu の値構造を平坦化しない。definitions の共有型はトップレベル `types` に集約し、参照箇所の `value_name` を `used_as` として保持する。
 
-options / commands の `origin` は `"local"`、`{"kind":"global","declared_at":[...]}`、`{"kind":"inheritable","declared_at":[...]}`、`{"kind":"alias","of":"<canonical_name>"}` のいずれか。hidden は model に残し、除外は renderer policy とする。alias は canonical entry の `alias_spellings` / `aliases` に併記する。`default` / `env` / `required` / `multiple` / `deprecated` は注記素材であり、usage は一行文字列を持たない。version 文字列は載せない。
+options / commands の `origin` は `"local"`、`{"kind":"global","declared_at":[...]}`、`{"kind":"alias","of":"<canonical_name>"}` のいずれか。hidden は model に残し、除外は renderer policy とする。alias は canonical entry の `alias_spellings` / `aliases` に併記する。`default` / `env` / `required` / `multiple` / `deprecated` は注記素材であり、usage は一行文字列を持たない。version 文字列は載せない。
 
 `options` / `commands` は §14.6 の並べ替え後の順序、`positionals` は定義順を保存し、conformance は順序込みで比較する。`help` / `help_long` の未設定側は省略し、相互フォールバックは renderer policy に置く。
 
@@ -1530,7 +1532,6 @@ options / commands の `origin` は `"local"`、`{"kind":"global","declared_at":
 | **value_name** | help/usage の値プレースホルダ表示 |
 | **committed** | ユーザが明示指定したか (ParserContext のメタ) |
 | **selected** | この要素のいずれかの入口がマッチしたか |
-| **inheritable** | 祖先 scope からも CLI 上で書ける |
 | **wire form** | 実装間で交換される AtomicAST JSON。宣言層のみ (A 群適用済み + installer 語彙 inert)、lowered 産物は決定的 lowering で再導出 (DR-063) |
 | **reason** | 実行時エラーの機械可読な失敗理由の識別子。kind (層) と message (文言) の間の仕様語彙、発生源が descriptor の reasons で宣言 (DR-066) |
 | **descriptor** | installer / registry 住人の自己記述。role / construction / io_type / fallibility / invocation / reasons 等の直交軸と、role ごとの owns / observes / config を宣言する (DR-061/107/114) |

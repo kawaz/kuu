@@ -396,7 +396,7 @@
         {
           "type": "object",
           "properties": {
-            "kind": { "type": "string", "enum": ["global", "inheritable"] },
+            "kind": { "type": "string", "enum": ["global"] },
             "declared_at": { "type": "array", "items": { "type": "string" } }
           },
           "required": ["kind", "declared_at"],

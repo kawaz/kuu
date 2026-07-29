@@ -194,10 +194,6 @@
           "type": "boolean",
           "description": "global installer 語彙 (DESIGN §1.4)。"
         },
-        "inheritable": {
-          "type": "boolean",
-          "description": "祖先スコープからの書き込み許可 (DESIGN §11.3)。"
-        },
         "exclusive_group": {
           "type": "array",
           "items": { "type": "string" },
