@@ -1,6 +1,6 @@
 ---
 title: borrow 名前解決の遮蔽 (shadowing) 挙動が未 pin
-status: open
+status: resolved
 category: task
 created: 2026-07-31T00:29:08+09:00
 last_read:
@@ -9,10 +9,10 @@ wip_entered:
 blocked_entered:
 pending_entered:
 discarded_entered:
-resolved_entered:
+resolved_entered: 2026-07-31T01:11:14+09:00
 discard_reason:
 pending_reason:
-close_reason:
+close_reason: ["fixture/value-sources/default-fn-borrow-shadowing.json (commit 18424639)","kuu.mbt resolve_wbtest.mbt sibling shadowing unit test (commit 745b8f51, RED verified)","done: conformance decoded=389 mismatches=0 (統括 fresh 確認 2026-07-31)"]
 blocked_by:
 origin: 自リポ TODO
 ---
