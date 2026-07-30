@@ -1,5 +1,5 @@
 {
-  "why": "root 位置の `value:` (const) に対する**上位席の上書き**を固定する (DESIGN §11.4「const は席ではないので序列に参加せず、上位席 (env / config 等) の供給や cli 効果は初期値を通常規則どおり上書きする」、DR-031 CONST-Q1=a)。const-root-entity-only.json が「入口が無く const がそのまま残る」側を固定するのに対し、本 fixture は「入口・env がある時に const がどう退くか」= const の**非**特権性を固定する。上書き後の source は勝った席そのもの (cli / env) であり、const が由来として残ることはない — 「最終値を確定させた効果 / 充填の由来」という DR-031 の source 確定ルールがそのまま適用される。ラダー上の実効位置は `cli > env > config > inherit > const > default`: 上位 4 席は「供給」なので const を上書きし、`default` は「無い時に埋める」充填なので const が居るセルには到達しない (= 同居した default は死に宣言になるが、別位相の宣言なので definition-error にはしない — 常時充足の `required` と同じ lint 領分)。",
+  "why": "root 位置の `value:` (const) に対する**上位席の上書き**を固定する (DESIGN §11.4「const は席ではないので序列に参加せず、上位席 (env / config 等) の供給や cli 効果は初期値を通常規則どおり上書きする」、DR-031 CONST-Q1=a)。const-root-entity-only.json が「入口が無く const がそのまま残る」側を固定するのに対し、本 fixture は「入口・env がある時に const がどう退くか」= const の**非**特権性を固定する。上書き後の source は勝った席そのもの (cli / env) であり、const が由来として残ることはない — 「最終値を確定させた効果 / 充填の由来」という DR-031 の source 確定ルールがそのまま適用される。ラダー上の実効位置は `cli > env > config > const > default`: 上位 3 席は「供給」なので const を上書きし、`default` は「無い時に埋める」充填なので const が居るセルには到達しない (= 同居した default は死に宣言になるが、別位相の宣言なので definition-error にはしない — 常時充足の `required` と同じ lint 領分)。",
   "query": "parse",
   "definition": {
     "options": [

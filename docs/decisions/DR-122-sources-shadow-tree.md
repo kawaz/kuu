@@ -12,7 +12,7 @@
 
 `sources` は **`result` と同じ構造**を持ち、値の座だけを source タグに置き換えたオブジェクトである:
 
-- スカラー値の座 → source タグ (string、DR-031 の 8 語彙)
+- スカラー値の座 → source タグ (string、DR-031 の 7 語彙 — `inherit` は DR-125 が削除、CONFORMANCE §2 が正本)
 - 配列 → タグの配列 (**要素対応**。`result` の i 番目の要素の由来が `sources` の i 番目)
 - kv / scope → タグの kv (キーは `result` と同じ露出キー)
 

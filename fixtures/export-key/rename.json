@@ -21,7 +21,7 @@
     },
     {
       "id": "unfired-absent",
-      "why": "未発火の対照: port は値源 (cli/env/config/inherit/default) を持たず未指定なので absent (DR-051 §1) — 上書きキー alias ごと結果に現れない。export_key は存在時のキー名の指定であって存在自体を作らないことを固定する。",
+      "why": "未発火の対照: port は値源 (cli/env/config/default) を持たず未指定なので absent (DR-051 §1) — 上書きキー alias ごと結果に現れない。export_key は存在時のキー名の指定であって存在自体を作らないことを固定する。",
       "args": [],
       "expect": {
         "outcome": "success",

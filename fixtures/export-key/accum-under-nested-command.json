@@ -24,7 +24,7 @@
   "cases": [
     {
       "id": "zero-fires-empty-accum-at-nested-renamed-path",
-      "why": "`remote add` のみ: 両 command が選ばれ結果スコープは `rm` → `a` の 2 段。accum セル `tags` は 1 度も発火していないので空席のままラダーへ進み、宣言 default が無いため最下段の暗黙 default `[]` が埋める (DR-123 §3)。`[]` は値の座を持たないので sources 側も `[]` でタグは載らない (DR-122 §2)。`url` は env 宣言があるが供給が無く、cli / config / inherit / default のいずれの席も埋まらないので absent (DR-051 §1、`value-sources/positional-env-presence.json::env-unset-no-token-stays-unset-absent` と同型)。effects は空 — 0 発火 accum の `[]` は cli/link 効果ではなくラダー充填だから (CONFORMANCE §2)。0 発火 accum の席を「宣言名で作ってから射影する」実装は、2 段の path のどこかで写し漏らすとこの `{rm:{a:{t:[]}}}` に一致しない。",
+      "why": "`remote add` のみ: 両 command が選ばれ結果スコープは `rm` → `a` の 2 段。accum セル `tags` は 1 度も発火していないので空席のままラダーへ進み、宣言 default が無いため最下段の暗黙 default `[]` が埋める (DR-123 §3)。`[]` は値の座を持たないので sources 側も `[]` でタグは載らない (DR-122 §2)。`url` は env 宣言があるが供給が無く、cli / config / default のいずれの席も埋まらないので absent (DR-051 §1、`value-sources/positional-env-presence.json::env-unset-no-token-stays-unset-absent` と同型)。effects は空 — 0 発火 accum の `[]` は cli/link 効果ではなくラダー充填だから (CONFORMANCE §2)。0 発火 accum の席を「宣言名で作ってから射影する」実装は、2 段の path のどこかで写し漏らすとこの `{rm:{a:{t:[]}}}` に一致しない。",
       "args": ["remote", "add"],
       "expect": {
         "outcome": "success",
