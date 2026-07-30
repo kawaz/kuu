@@ -40,3 +40,9 @@ value-sources/ に以下の対 case を新設して固定するのが望まし�
 
 - [ ] `fixtures/value-sources/` に遮蔽 (shadowing) 挙動を pin する対 case (値なし entity で absent-source / 値ありで自スコープ優先) を新設
 - [ ] DESIGN §2.7 / DR-125 §4 の lexical scope chain 規定に紐づく期待値であることを fixture 内コメントで明示
+
+## 追記 (2026-07-31)
+
+- kuu.mbt 検査 (2026-07-31) が遮蔽判断を独立に支持: DESIGN §2.7 の解決は名前を宣言に束ねる規則なので、内側宣言が外側を遮蔽して absent-source に落ちるのが lexical scoping として正。DR-125 §5「同名祖先の暗黙探索は代替を持たない」とも整合。
+- 追加 case 候補: DR-125 §4 の chain 3 段目「definitions にしか無い名前を borrow」も absent-source として同 fixture で固定すると良い (definitions の宣言は解決値を持たないため)。kuu.mbt 実装 (2026-07-31) は chain 2 段 (現在スコープ → 外側) で止まっており、3 段目を後から実装しようとする事故の防止になる。
+- spec fixture 新設と同時に kuu.mbt 側 `resolve_wbtest` にも遮蔽 case の wbtest を 1 本足すこと。
