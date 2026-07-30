@@ -131,18 +131,6 @@
           "type": "string",
           "description": "環境変数名 (env installer の所有語彙、DESIGN §12 / DR-049)。env_prefix があれば連結される。"
         },
-        "inherit": {
-          "description": "値源ラダーの inherit 席 (DR-031 / DR-114 §4.1)。true は祖先 scope chain から取得し、object 形は参照元を明示する。default/default_fn とは異なる席なので共存できる。",
-          "oneOf": [
-            { "type": "boolean" },
-            {
-              "type": "object",
-              "properties": { "from": { "type": "string" } },
-              "required": ["from"],
-              "additionalProperties": false
-            }
-          ]
-        },
         "repeat": {
           "description": "構造閉包 (repeat installer、DR-043)。true | {min?, max?, lazy?}。",
           "oneOf": [

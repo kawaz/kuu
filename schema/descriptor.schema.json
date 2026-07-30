@@ -555,7 +555,7 @@
               { "properties": { "role": { "const": "fn" } } }
             ]
           },
-          "required": ["set", "default", "unset", "empty", "incr", "borrow", "env", "inherit", "uuid", "computed"]
+          "required": ["set", "default", "unset", "empty", "incr", "borrow", "env", "uuid", "computed"]
         },
         "types": {
           "type": "object",

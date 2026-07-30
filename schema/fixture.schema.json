@@ -642,8 +642,8 @@
 
     "sourceTag": {
       "type": "string",
-      "enum": ["cli", "link", "env", "config", "inherit", "tty", "default", "const"],
-      "description": "値源タグ (DR-031「source の記録」の 8 語彙が正本。DR-098 §6 の tty、2026-07-26 裁定の const を含む)。"
+      "enum": ["cli", "link", "env", "config", "tty", "default", "const"],
+      "description": "値源タグ (DR-031「source の記録」の 7 語彙が正本。DR-098 §6 の tty、2026-07-26 裁定の const、DR-125 の 4 段ラダーを含む)。"
     },
 
     "sourceShadow": {

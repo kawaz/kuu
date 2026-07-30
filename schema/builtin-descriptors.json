@@ -229,22 +229,6 @@
       "reasons": ["absent-source"],
       "description": "明示した環境値を返す cell fn。値源ラダーの env 席とは別の universal fn 呼び出し (DR-114 §2/§4.1/§10)。暫定契約: env(var) → value、参照不在は absent-source。詳細契約は P3 の kuu.mbt 実装時に確定する。"
     },
-    "inherit": {
-      "name": "inherit",
-      "role": "fn",
-      "construction": "static",
-      "io_type": { "output": "value" },
-      "fallibility": "reject",
-      "invocation": {
-        "encoding": "colon_args",
-        "parameters": [
-          { "name": "source", "type": "string", "required": true }
-        ]
-      },
-      "observes": ["option:<source>"],
-      "reasons": ["absent-source"],
-      "description": "祖先 scope の明示 source から値を返す cell fn。wire の inherit ラダー席とは別の universal fn 呼び出し (DR-114 §4.1/§8)。暫定契約: inherit(source) → value、参照不在は absent-source。詳細契約は P3 の kuu.mbt 実装時に確定する。"
-    },
     "uuid": {
       "name": "uuid",
       "role": "fn",
