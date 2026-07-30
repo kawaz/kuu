@@ -1,6 +1,6 @@
 ---
 title: default の lexical-scope 借用構想 (socket-ttl → repeat 行 default 供給)
-status: idea
+status: resolved
 category: design
 created: 2026-07-15T02:24:15+09:00
 last_read:
@@ -9,10 +9,10 @@ wip_entered:
 blocked_entered:
 pending_entered:
 discarded_entered:
-resolved_entered:
+resolved_entered: 2026-07-30T23:17:49+09:00
 discard_reason:
 pending_reason:
-close_reason:
+close_reason: ["dr/DR-125","implemented:default_fn \"borrow:<source>\" (DR-113 §5.3-5.4 / DR-114 §8 の canonical 仕様) で実現済み。inherit 席は DR-125 で廃止、値源ラダーは4段化。祖先スコープの default 借用は外側要素に default を置き内側が default_fn: \"borrow:<source>\" で明示参照する形が正規形 (DR-125 §3)"]
 blocked_by:
 origin: kawaz 発案 (DAX-Q2 裁定の際のコメント, 2026-07-15) — 自リポ TODO
 ---
