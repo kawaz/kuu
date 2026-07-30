@@ -101,7 +101,7 @@ inherit 席の解決規則 (最近祖先の同名実体)、bool 形と object �
   列挙・§13 の installers 表・§15 の共露出判定から `inherit` を除去。**§11.2 と §11.3 は欠番**
   (§11 は 11.1 と 11.4 だけになる) — 節番号は他リポと fixture から引用される安定識別子なので詰めない
   (DR-124 の波及節と同じ方針)
-- **LOWERING**: §B.7 (inherit installer) を削除、§A のラダー順序記述を 4 段に
+- **LOWERING**: §B.7 (inherit installer) を削除、§B.3 (env installer) のラダー順序記述を 4 段に
 - **PIPELINE**: 値源の表から inherit 行、ラダーの mermaid ノードと本文を 4 段に
 - **CONFORMANCE**: §2 の `sources` タグ語彙から `inherit`、effects 非掲載の席列挙から `inherit`
 - **REFERENCE**: 語彙表と `inherit` 属性節、`cell_fns` 表の `inherit` 行、reasons 表の

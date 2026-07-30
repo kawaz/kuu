@@ -3,6 +3,13 @@
 > **更新 (DR-124、2026-07-29): entry の `origin` から `{"kind": "inheritable", ...}` が抜けた。**
 > 値域は `"local"` / `{"kind":"global",...}` / `{"kind":"alias",...}` の 3 値。他は不変。
 
+> **更新 (DR-125、2026-07-29): `inherit` はラダー席としても `cell_fns` の住人としても廃止された。**
+> §5.2 の糖衣表の `inherit` 行と、直後の「env / config / inherit / default の異なる値源席は共存
+> できる」の列挙、Phase U-1 の `builtin-descriptors.json` の住人列挙に残る `inherit` は対象を失って
+> いる。ラダーは CLI/link > env > config > default の 4 段で、席の共存規則そのものは不変。祖先
+> スコープの値を既定値にする定義は default 席の `default_fn: "borrow:<source>"` で書く
+> (DR-125 §3、DESIGN §11.4)。`borrow` は不変 (DR-114 §8 の canonical 住人)。
+
 > 由来: kawaz 発題「実装がない奴として help_installer が無くないですか？必要な機能やそれを実現するための語彙や展開方などの設計プランからまず立てる必要があるのでは」(2026-07-17) と、`docs/QUESTIONS.md` の HIP-META-Q1〜Q8 裁定 (2026-07-19)。HIP-META-Q1=a により help_installer を中心に設計し直し、Q4 により `value_structure` tree + `type_ref` + `types`、Q5 により 5 直交 type、Q6〜Q8 により DR-114 の universal fn / `cell_fns` / default_fn 一本化を採用した。下敷きは `docs/findings/2026-07-19-help-mechanism-redesign-v2.md`。本 DR は DR-114 を前提とし、DR-112 を Supersede する。
 
 ## 決定

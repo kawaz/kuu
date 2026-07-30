@@ -1,5 +1,13 @@
 # DR-110: kuu-core 標準パッケージング — engine / builtins / assembly の 3 層
 
+> **更新 (DR-125、2026-07-29): canonical installer と値源ラダー席から `inherit` が抜けた。**
+> §2 の builtins 行の installer 列挙と §3 の PKG-#11 の席順序 (`cli > env > config > inherit >
+> default`) に残る `inherit` は対象を失っており、現行ラダーは CLI/link > env > config > default の
+> 4 段。「席順序は engine 契約で設定可能にしない」「席内解決に builtin 語彙を要するものは
+> descriptor が解決子を提供する」という 3 層の分界そのものは不変。祖先スコープの値を既定値にする
+> 定義は `default_fn: "borrow:<source>"` で書き、`borrow` は `cell_fns` の住人として builtins に
+> 残る (DR-125 §2/§3、DR-114 §8)。
+
 > 由来: PKG-Q1〜Q4 裁定バッチ (kawaz 2026-07-16、`docs/QUESTIONS.md` 経由)。駆動源は
 > kuu-core 立て直し (UX-Q7R 追記が指摘した「公開面が過剰な core を呼び出し側が各自
 > 組み合わせている」構造、DR-109 §7) と、参照実装 kuu.mbt の境界争点全列挙調査

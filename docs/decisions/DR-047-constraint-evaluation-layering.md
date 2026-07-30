@@ -1,5 +1,11 @@
 # DR-047: 制約評価のレイヤリング — 遅延述語は完全経路の成立条件、required は値充足
 
+> **更新 (DR-125、2026-07-29): 値源席の列挙から `inherit` が抜けた。** §4 の「値源ラダー (DR-031:
+> env / config / inherit / default)」と §5 の bool 目的語の値源不問列挙 (「cli / env / config /
+> inherit / default のどれ経由でも」) はそれぞれ 4 段のラダー (CLI/link > env > config > default)
+> を指す。遅延述語を最終状態に対して評価する決定も、bool 目的語の充足が値源不問である決定も不変
+> — 席が 1 つ減っただけ。
+
 > 由来: findings `2026-06-29-ast-missing-pieces.md` の F-004 (空 argv と required) / F-026 (requires の評価タイミング) / F-027 (exclusive_group の評価タイミング) と、旧実装考古学 (findings `2026-07-03-core-archaeology.md` テーマ 2 — 旧研究の即時/遅延バリデータ分類と投機実行スケッチ)。本セッションの議論で確定。**DR-016 / DR-031 の「required は committed を見る」を覆す**。
 
 ## 決定

@@ -3,6 +3,14 @@
 Status: Accepted (SRCADDR-Q1=d / Q2-α=a / Q2-β=c / LINKSRC-Q1=a、kawaz 2026-07-26) —
 **§1 / §2.2 / §3 は DR-122 が置き換え** (§4 / §5 は現役、末尾「Superseded (歴史)」節参照)
 
+> **更新 (DR-125、2026-07-29): `sources` のタグ語彙から `inherit` が抜けた。** §1 の例の
+> `{"path": ["sub"], "key": "ttl", "source": "inherit"}` と §1.1 の語彙列挙
+> (`cli` / `link` / `env` / `config` / `inherit` / `tty` / `default`) は対象を失っている。
+> 現行の語彙は `cli` / `link` / `env` / `config` / `tty` / `default` / `const` の 7 語彙
+> (CONFORMANCE §2 が正本) — `inherit` が抜けた一方で `const` (消費 0 literal 由来、2026-07-26 裁定)
+> が入っており、旧列挙とは中身が別物である。なお §1 の entry 配列という形自体は DR-122 が
+> `result` 同型の shadow tree へ置き換えている。
+
 ## 1. sources は structured path の配列で表す (Q1=d)
 
 `sources` は「キー → 値源タグ」の flat map をやめ、**結果アドレスを構造として持つ entry の配列**にする:

@@ -5,7 +5,7 @@
 > DR-124 が `inheritable` 語彙そのものを廃止したため、prefix 生成規則 (§1)・衝突と別綴りの逃げ道 (§2)・
 > 逆方向コピーの lowering (§3)・help の見せ方 (§4)・祖先 write-target の結果キー露出 Model Y (§5) は
 > すべて対象を失った。祖先スコープから内側要素の既定値を与える定義は、外側スコープに通常 option を置き
-> 内側要素の inherit 席で `inherit: {"from": "<外側要素名>"}` と名指しする (DR-124 §2、DESIGN §11.2)。
+> 内側要素の default 席で `default_fn: "borrow:<外側要素名>"` と名指しする (DR-125 §3、DESIGN §11.4)。
 
 > 由来: findings `2026-06-29-ast-missing-pieces.md` の F-009。DR-013 が確定を先送りした prefix 生成ルール (案A = 直近親のみ / 案B' = 相対パス全部 / 案A+B' = 衝突時のみ長いパス) の決着。本セッションで確定。
 
