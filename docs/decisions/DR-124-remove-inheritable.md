@@ -4,7 +4,10 @@
 > `default_fn: "borrow:<外側要素名>"` へ移った。** パターンの骨格 — 外側スコープに通常 option を
 > 置き、内側要素がそれを明示参照する — は不変で、既定値だけが内側の `default` から外側の
 > `default` へ移る (両者は同じ default 席なので併用できない、DR-125 §3)。§3 (「inherit は存続する」)
-> は対象を失っており、値源ラダーは 4 段。§1 の inheritable 廃止と §4 以降の根拠は不変。
+> は対象を失っており、値源ラダーは 4 段。§1 の inheritable 廃止と §4 以降の根拠は不変。波及節が
+> 代替として新設した `value-sources/inherit-from-ladder.json` も削除され、同じ役割は
+> `value-sources/default-fn-borrow-ladder.json` (外側 option + `default_fn: "borrow:<外側要素名>"`) が
+> 引き継ぐ。
 
 > 由来: kawaz 裁定 2026-07-29「inheritable いらない。できる方法としては『ref+name+default borrow で済む話』を
 > 使ったサンプルとか fixture にしとけば良い」。dogfooding (authsock-warden 型の socket-ttl) で inheritable の
