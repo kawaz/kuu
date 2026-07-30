@@ -34,7 +34,7 @@ P0 (直近スコープで塞いだ 5 テーマ) は本 issue の対象外。残�
 - 結果スコープの生成元: root / command / named seq / named or / repeat row / global の祖先 cell
 - 露出キーの解決: identity / renamed (`export_key:"x"`) / transparent (`export_key:null`) — scope label と cell 自身で別々に効く 2 軸
 - セルの種類: leaf / accumulator (0回/1回/複数回発火) / internal (none, config_file, dd) / presence marker
-- 値源: cli / link / env / config / inherit / tty / default
+- 値源: cli / link / env / config / tty / default / const
 - 射影相: parse-only interpretation / resolve 済み success
 - 観測面: effects / result / sources (内部セルは 3 面すべての不在が必要)
 - cell op: set / default / unset / empty / remove / splice
@@ -77,7 +77,7 @@ P0 (直近スコープで塞いだ 5 テーマ) は本 issue の対象外。残�
 
 - corpus の source 内訳: cli 73 / default 52 / config 22 / env 18 / inherit 5 / tty 3 / link 0。renamed sources は 5 files / 11 cases だが主に root、child scope rename で確認済みなのは cli のみ
 - 危険度: 低 (射影自体は source 非依存。provider / resolve が source ごとに別 Binding 形を作る実装だけが壊れる)
-- 最小: config または inherit × renamed child を 1 file / 1 case
+- 最小: config × renamed child を 1 file / 1 case (inherit 側は失効: inherit 席は DR-125 (2026-07-29 裁定) で廃止)
 
 ### 7. global の canonical cell × export_key rename/null × effects/sources
 
