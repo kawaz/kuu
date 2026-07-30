@@ -129,7 +129,6 @@ option/positional は所属配列で役割が定まるので type フィール�
   "ref": "<name>",
   "link": "<name>",
   "alias": "<name>",
-  "inherit": true,
 
   "on_failure": false,
   "help_on_failure": true,
@@ -766,7 +765,7 @@ dd (`--`) に `required: true` を付けると「`--` の出現が必須」を�
 目的語の充足判定も required と同じ型委譲の枠 (DR-093) に統一される:
 
 - **値空間を持つ通常型の目的語**: 値の有無 (default 込み)
-- **目的語が bool 型** (flag preset 含む): 解決後の値が true であること (値源不問 — cli / env / config / inherit / default のどれ経由でも true なら充足)。値の有無判定だと、flag preset が同梱する暗黙 default:false (§3.3/LOWERING §A.5) により vacuous に充足してしまうため、この dispatch (「値の有無」でなく「解決後値が true か」) を採る。dispatch 自体は plain bool にも一様に適用されるが、**plain bool は暗黙 default を持たない** — 未発火・値源なしなら他の値型と同様に absent (LOWERING §A.5 の default:false は flag preset 固有の展開、DR-099 §2 の `resolved_default = fold(観測) ?? 宣言 default ?? absent` 終端が同じ教義を preset 型の側から裏づける) (DR-047 明確化 2026-07-09、bool 型の充足定義として DR-093 の型委譲に統合)
+- **目的語が bool 型** (flag preset 含む): 解決後の値が true であること (値源不問 — cli / env / config / default のどれ経由でも true なら充足)。値の有無判定だと、flag preset が同梱する暗黙 default:false (§3.3/LOWERING §A.5) により vacuous に充足してしまうため、この dispatch (「値の有無」でなく「解決後値が true か」) を採る。dispatch 自体は plain bool にも一様に適用されるが、**plain bool は暗黙 default を持たない** — 未発火・値源なしなら他の値型と同様に absent (LOWERING §A.5 の default:false は flag preset 固有の展開、DR-099 §2 の `resolved_default = fold(観測) ?? 宣言 default ?? absent` 終端が同じ教義を preset 型の側から裏づける) (DR-047 明確化 2026-07-09、bool 型の充足定義として DR-093 の型委譲に統合)
 - **目的語が値空間なし** (`type: "none"`、dd 含む): 目的語が発火した (committed) こと (DR-093、DR-089 §4 の definition-error 判定を置換)
 
 **値依存の制約は値の枝への requires 合成で書く** (DR-055、専用の条件 DSL は持たない):
@@ -867,43 +866,19 @@ ref/link と type は指す対象が違うため統合不能。
 
 ---
 
-## 11. スコープと継承
+## 11. スコープと値源
 
 ### 11.1 スコープは name で自動 (DR-025, DR-033)
 
 name を持つノードが結果スコープ = lexical スコープを作る。children の有無は無関係。
 
-### 11.2 inherit (default の取得先)
-
-```json
-{"name": "ttl", "type": "number", "inherit": true}
-```
-
-inherit ラダー席に祖先 scope chain の参照を宣言する。default / default_fn は別の下位席なので同一要素で共存でき、上位の inherit が値を返せばそちらが勝つ。`inherit: {"from":"other"}` で参照名を明示できる。
-
-**祖先スコープからまとめて既定値を与える定義**はこの席で書く (DR-124)。外側スコープに通常の option を宣言し、内側の要素がそれを名指しする:
-
-```json
-{
-  "options": [{"name": "socket_ttl", "type": "number", "long": true}],
-  "commands": [
-    {"type": "command", "name": "socket",
-     "options": [{"name": "ttl", "type": "number", "long": true,
-                  "inherit": {"from": "socket_ttl"}, "default": 60}]}
-  ]
-}
-```
-
-外側で `--socket-ttl 30` と書けば `socket` 配下の `ttl` は 30 を継承し、`socket --ttl 10` と書けば内側 CLI が勝ち、どちらも無ければ内側の default 60 に落ちる (§11.4 のラダーそのもの)。外側の値は外側スコープの結果キー `socket_ttl` に、内側の値は `socket.ttl` に出る — 別スコープ・別 provenance で、由来は sources で判別できる (§2.6)。祖先側の入口はあくまで祖先の定義が持つので、子孫の宣言が祖先の表面 (help / 補完 / 結果キー) を変えることはない。
-
-### 11.4 値源の優先順位 (DR-031)
+### 11.4 値源の優先順位 (DR-031、DR-125)
 
 ```
 1. CLI 明示 / link    (パース時操作、最優先)
 2. 環境変数            (DR-049)
 3. config ファイル     (DR-050、§14.3)
-4. inherit (祖先 scope)
-5. default            (最終フォールバック)
+4. default            (最終フォールバック、default_fn を含む)
 ```
 
 順序は固定 (設定可能にしない、暗黙の罠を避ける)。異なる席は同一要素で共存でき、上位席から順に解決して最初に得た値を採る。
@@ -914,9 +889,31 @@ inherit ラダー席に祖先 scope chain の参照を宣言する。default / d
 
 **default 席は `cell_fns` 呼び出しへ統一する** (DR-114 §4)。`default: value` は native JSON value を保持する typed internal call `set(value)` の糖衣、明示 `default_fn` は colon-string または 1 段 array of string で fn を指定する。同じ default 席への `default` と `default_fn` の併用は definition-error `invalid-range`。type preset の暗黙 default はユーザの明示 default / default_fn があれば置換される。宣言時には fn 参照を placeholder として置き、上位席の解決後も cell が空なら依存グラフの位相順で呼ぶ (DR-087/088)。
 
-`default` 席で何を返すかは型ごとの解決規則にも委ねられる。`tty` preset 型は tty 観測の fold を優先し宣言 default へフォールバックする独自規則を持つ (DR-099、§12b)。ラダー自体はこの型依存を意識しない 5 段固定のままであり、tty のための専用席は持たない。
+**祖先スコープからまとめて既定値を与える定義は `default_fn: "borrow:<source>"` で書く** (DR-125)。既定値は外側の要素に置き、内側は borrow でそれを引く:
 
-**`sources` 射影 — 値 provenance と操作 provenance の分離** (DR-081): 成功 report が `result` と並べて持つ sibling の `sources` フィールド (CONFORMANCE §2、DR-031) が投影するのは「その値セルを最終的に確定させた**主体**がどの席か」= **操作 provenance** であり、「セルに座っている値の**内容**がもともとどの席から来たか」= **値 provenance** ではない。両者は同一ではなく、default 席の書き換えモデル (DR-081) を通すと分離が顕在化する: env 供給は「下位席として env が最終的に勝つ」のではなく、node の宣言 default 値そのものを env 値で書き換える (書き換え後の default_source は `env` を指す)。したがって CLI から default op variant (例: `--reset-to-default`) を発火して書き換え済み default 値を明示 set した場合、`sources` は `cli` になる (値の内容が env 由来であっても、確定主体は cli の default op である)。同様に unset op は committed=false のまま残すため、`sources` は書き換え済み default の由来 (env 供給ありなら `env`) を指す (確定主体が存在しないので値の由来席にフォールバックする)。ただし値が空コレクション (`[]` / `{}`) になる場合は値の座が無く shadow tree にタグが載らない (DR-122 §2.1) — この場合の committed 軸の区別は `effects` の op (`unset` / `empty`) が担う。値の由来と確定主体が同一の 5 段ラダー通常経路 (§11.4 の 1〜5) では両者は一致し、cell 操作 (default / unset / empty 等の `cell_fns` 呼び出し、DR-114 §4) を跨ぐ場合にのみ分離する。**未発火要素の sources は `default`** (SPK-Q2=a): flag / count のような default 同梱要素が一度も発火せず宣言 default のまま結果に現れる場合 (未発火 flag の `false` 等)、sources は `default` を指す — 上位席の供給も cell 操作も無い「ラダー最下段で確定した」通常経路であり、専用の語彙 (`unfired` 等) は設けない。**`value:` 持ちセル (const 初期値) の未発火は `const`** — セルは初期値のまま確定しており default 充填は起きていない (DR-031 の const 追記)。DR-081 の default_source 書き換えモデルは default 席の話であり const 初期値には触れない — env / config が const 持ちセルへ供給する場合は通常の上位席供給としてセル値を置き換え、sources はその席を指す (「書き換え」は経由しない)。cell 操作の発火列自体は `effects` (順序規範、CONFORMANCE §3) 側で観測する — 操作の来歴は `effects[].source`、確定後の値の由来は report 直下の `sources` に、という 2 面射影として並ぶ。`sources` は `result` と同型の shadow tree (値の座だけを source タグに置き換えた形、DR-122) であり、キー体系も `result` と同一 (export_key 適用後の露出キー、CONFORMANCE §2)。`effects[].entity` の射影前 cell name とは別軸である — export_key は結果キー軸の唯一の指定 (DR-052 §1) で、露出キーと値セルは結果スコープ内で 1:1 (DR-120 §1) なので、結果面の射影 (`result` / `sources`) は一様に露出キーで書く。
+```json
+{
+  "options": [
+    {"name": "socket_ttl", "type": "number", "long": true, "default": 60}
+  ],
+  "commands": [
+    {
+      "type": "command", "name": "socket",
+      "options": [
+        {"name": "ttl", "type": "number", "long": true, "default_fn": "borrow:socket_ttl"}
+      ]
+    }
+  ]
+}
+```
+
+外側で `--socket-ttl 30` と書けば `socket` 配下の `ttl` は 30、`socket --ttl 10` なら内側 CLI が勝ち、どちらも無ければ外側の default 60 が borrow 経由で内側に流れる。外側の値は外側スコープの結果キー `socket_ttl` に、内側の値は `socket.ttl` に出る — 別スコープ・別 provenance で、由来は sources で判別できる (§2.6)。祖先側の入口はあくまで祖先の定義が持つので、子孫の宣言が祖先の表面 (help / 補完 / 結果キー) を変えることはない。
+
+`borrow` が受ける `<source>` は ref / link と同じ名前解決規則で解く — 現在スコープ → 外側スコープへ順に → definitions (§2.7、DR-006 / DR-032 / DR-033)。上の例で子コマンド `socket` の中から root の `socket_ttl` に届くのはこの規則による。自分自身を指す `borrow` は definition-error `circular-ref` (DR-114 §10)。`default` と `default_fn` は同じ default 席なので併用できず (上記 `invalid-range`)、既定値の置き場所は外側 1 箇所に決まる。
+
+`default` 席で何を返すかは型ごとの解決規則にも委ねられる。`tty` preset 型は tty 観測の fold を優先し宣言 default へフォールバックする独自規則を持つ (DR-099、§12b)。ラダー自体はこの型依存を意識しない 4 段固定であり、tty のための専用席は持たない。
+
+**`sources` 射影 — 値 provenance と操作 provenance の分離** (DR-081): 成功 report が `result` と並べて持つ sibling の `sources` フィールド (CONFORMANCE §2、DR-031) が投影するのは「その値セルを最終的に確定させた**主体**がどの席か」= **操作 provenance** であり、「セルに座っている値の**内容**がもともとどの席から来たか」= **値 provenance** ではない。両者は同一ではなく、default 席の書き換えモデル (DR-081) を通すと分離が顕在化する: env 供給は「下位席として env が最終的に勝つ」のではなく、node の宣言 default 値そのものを env 値で書き換える (書き換え後の default_source は `env` を指す)。したがって CLI から default op variant (例: `--reset-to-default`) を発火して書き換え済み default 値を明示 set した場合、`sources` は `cli` になる (値の内容が env 由来であっても、確定主体は cli の default op である)。同様に unset op は committed=false のまま残すため、`sources` は書き換え済み default の由来 (env 供給ありなら `env`) を指す (確定主体が存在しないので値の由来席にフォールバックする)。ただし値が空コレクション (`[]` / `{}`) になる場合は値の座が無く shadow tree にタグが載らない (DR-122 §2.1) — この場合の committed 軸の区別は `effects` の op (`unset` / `empty`) が担う。値の由来と確定主体が同一の 4 段ラダー通常経路 (§11.4 の 1〜4) では両者は一致し、cell 操作 (default / unset / empty 等の `cell_fns` 呼び出し、DR-114 §4) を跨ぐ場合にのみ分離する。**未発火要素の sources は `default`** (SPK-Q2=a): flag / count のような default 同梱要素が一度も発火せず宣言 default のまま結果に現れる場合 (未発火 flag の `false` 等)、sources は `default` を指す — 上位席の供給も cell 操作も無い「ラダー最下段で確定した」通常経路であり、専用の語彙 (`unfired` 等) は設けない。**`value:` 持ちセル (const 初期値) の未発火は `const`** — セルは初期値のまま確定しており default 充填は起きていない (DR-031 の const 追記)。DR-081 の default_source 書き換えモデルは default 席の話であり const 初期値には触れない — env / config が const 持ちセルへ供給する場合は通常の上位席供給としてセル値を置き換え、sources はその席を指す (「書き換え」は経由しない)。cell 操作の発火列自体は `effects` (順序規範、CONFORMANCE §3) 側で観測する — 操作の来歴は `effects[].source`、確定後の値の由来は report 直下の `sources` に、という 2 面射影として並ぶ。`sources` は `result` と同型の shadow tree (値の座だけを source タグに置き換えた形、DR-122) であり、キー体系も `result` と同一 (export_key 適用後の露出キー、CONFORMANCE §2)。`effects[].entity` の射影前 cell name とは別軸である — export_key は結果キー軸の唯一の指定 (DR-052 §1) で、露出キーと値セルは結果スコープ内で 1:1 (DR-120 §1) なので、結果面の射影 (`result` / `sources`) は一様に露出キーで書く。
 
 ---
 
@@ -954,7 +951,7 @@ inherit ラダー席に祖先 scope chain の参照を宣言する。default / d
 
 - **preset が同梱するのは「暗黙 default = tty 観測の fold」だけ**。long/short/env 席の宣言可否・multiple・filters・required 充足 (値空間あり判定) は素の bool と完全に同一に振る舞う — bool 以外の型や値なし要素・flag/count プリセットに「tty を付与する」という操作自体が存在しない (`type:` は単一選択のため、DR-098 が必要とした definition-error 3 分類は構文的に発生しない)
 - **configurable factory config**: `tty_stream` (`"stdin"｜"stdout"｜"stderr"`、必須 — 未指定は definition-error kind=`invalid-range`) / `tty_cygwin` (bool、既定 true — cygwin pty を terminal 扱いに含めるダイヤル)
-- **`default` 席の解決規則** (§11.4 のラダーは 5 段固定のまま、この席の中身が型依存): `resolved_default = fold(観測) ?? 宣言 default ?? absent`。`fold(観測) = terminal || (tty_cygwin && cygwin)`。観測が得られる限り宣言 default より優先する (「明示 (CLI/env/config) > 継承 (inherit) > 観測 (tty) > 宣言既定 (default)」という序列は DR-098 §5 のまま維持、実装位置が独立ラダー席から型の解決規則へ移っただけ)
+- **`default` 席の解決規則** (§11.4 のラダーは 4 段固定で、この席の中身が型依存): `resolved_default = fold(観測) ?? 宣言 default ?? absent`。`fold(観測) = terminal || (tty_cygwin && cygwin)`。観測が得られる限り宣言 default より優先する (「明示 (CLI/env/config) > 観測 (tty) > 宣言既定 (default)」という序列は DR-098 §5 / DR-125、tty の実装位置は独立ラダー席ではなく型の解決規則)
 - **source タグ**: 最終値が fold 由来なら `source: "tty"`、宣言 default へフォールバックしたなら `source: "default"` (観測由来 vs 宣言 default 由来の診断区別、`effects` には現れない — 完走後の値確定)
 - **tty_provider** は registry の単一スロット。シグネチャは `(stream: "stdin"|"stdout"|"stderr") → {terminal: bool, cygwin: bool} | null` — null = 提供なし。env_provider (§12) / config_provider (§14.3) と同列 (DR-099。DR-098 の `bool | null` から改訂 — fold の方言 `tty_cygwin` を spec 側の純データ計算として保つため)。このシグネチャの機械可読宣言 (`role:"provider"` descriptor) の正本は `schema/builtin-descriptors.json` の `tty_provider` (DR-107 §6、入出力の enum/struct 精密化は io_type の型体系の外なので description に注記)
 - 供給値 (`terminal`/`cygwin`) は native bool (string でない) なので、fold で計算した値の pieceProcessor 通過は `piece_filters` / `parse` (String→T の相) が型の帰結でスキップされ、`value_filters` / `final_filters` (T→T の相) のみ通過する (DR-050 §4 の config scalar と同じ原理)
@@ -979,7 +976,7 @@ inherit ラダー席に祖先 scope chain の参照を宣言する。default / d
 | `config_provider` | config ファイル読込 (パス → JSON 同型の階層オブジェクト。フォーマット・探索・マージは provider の関心、DR-050) | `config_key`, `type: "config_file"` (config installer の lookup が利用) |
 | `tty_provider` | tty 判定値解決 (stream → `{terminal, cygwin}` \| null、ambient probe は provider 実装に閉じる、DR-099) | `builtin/tty` factory の config `tty_stream` (`types` registry 経由、`tty` installer は持たない) |
 | `completers` | 補完候補の供給名。builtin `files` / `dirs` は生成器が shell 機能へマップ (DR-117 §7) | `completer` |
-| `installers` | 特殊語彙の展開装置 (糖衣展開 + 実行時能力の植え付け、DR-042) | `long`, `short`, `env`, `type:"dd"`, `commands[]`, `global`, `inherit`, `repeat`, `multiple`, `config_key`, `requires` / `exclusive_group` / `conflicts_with`, `alias` 等の特殊語彙 |
+| `installers` | 特殊語彙の展開装置 (糖衣展開 + 実行時能力の植え付け、DR-042) | `long`, `short`, `env`, `type:"dd"`, `commands[]`, `global`, `repeat`, `multiple`, `config_key`, `requires` / `exclusive_group` / `conflicts_with`, `alias` 等の特殊語彙 |
 
 installer / registry 住人は自身を説明する **descriptor** を持つ (DR-061/107/114)。`role` / `construction` / `io_type` / `fallibility` / `invocation` / `reasons` 等の直交軸を使う。installer の `owns` は宣言語彙の排他所有を表し、所有集合の和が unknown-vocab 判定と completeness 検査の入力になる。
 
@@ -1245,7 +1242,7 @@ option と positional の境界をまたぐ複数経路が同じ入力を全消�
 
 衝突の本質は結果キーの provenance (どの実体がキーを占めるか) の曖昧さであって値の相違ではない。値が退化しても (例: 両者 flag で共に `{x:true}`) 各解釈の claimants 面 (露出キー → 占有する実体 entity、DR-073) が解釈を区別する。ambiguous の分類自体は変えず、interpretations に診断可能な担体を添える (§15.12 / DR-073)。
 
-「実際の共露出」に数えるのは発火 (cli / link) と default より上の席の充填 (env / config / inherit) — 上位席の値は意思表示であり、結果 cell が他実体の値で埋まっていても共露出として成立する。未発火実体の default は数えない: default 注入の充填判定は export_key 適用後の結果 cell 単位で行われ (DR-031 追記 note)、cell が埋まっていれば注入自体が起きない。
+「実際の共露出」に数えるのは発火 (cli / link) と default より上の席の充填 (env / config) — 上位席の値は意思表示であり、結果 cell が他実体の値で埋まっていても共露出として成立する。未発火実体の default は数えない: default 注入の充填判定は export_key 適用後の結果 cell 単位で行われ (DR-031 追記 note)、cell が埋まっていれば注入自体が起きない。
 
 露出キーの型不一致は union (嫌うなら export_key で分離、強制せず指針)。
 

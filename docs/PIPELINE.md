@@ -18,16 +18,15 @@
 
 > **由来 DR**: DR-009 (filter chain 3 段) / DR-015 (mutation ledger) / DR-031 (値源ラダー) / DR-045 (効果) / DR-114 (cell fn invocation / `FnCtx.old` / registry 分離)
 
-どの値源から来た文字列も**同じ字句層** (parser + filters、§2) を通る。型付き `Value` を返す `cell_fns` 呼び出しは parser を再通過せず、通常の set operand として値 filter の対象になる。CLI 発火だけが cell operation (§3) を生み、env / config / inherit / default の各席は値を供給する。
+どの値源から来た文字列も**同じ字句層** (parser + filters、§2) を通る。型付き `Value` を返す `cell_fns` 呼び出しは parser を再通過せず、通常の set operand として値 filter の対象になる。CLI 発火だけが cell operation (§3) を生み、env / config / default の各席は値を供給する。
 
-### 1.1 5 つの値源 (入口)
+### 1.1 4 つの値源 (入口)
 
 | 値源 | 入口 | 実体 |
 |---|---|---|
 | **CLI args** | matcher / exact が照合・消費した生文字列、DSL 固定値 (`:set:true` の `true`)、または値スロットを消費しない `{fn,args}` cell fn invocation carrier | `string[] | {fn,args}` |
 | **env** | 環境変数名 → 文字列。count 型の `VERBOSITY=5` も number として parse し、通常の set operand 5 にする | `<env_provider>` |
 | **config** | 文字列値は字句層へ。native number は既に binary64 化 (DR-075 §5 の非対称: string 源は binary64 非経由の厳密判定、native-number 源は JSON 由来 binary64 経由) | `string | native` |
-| **inherit** | `inherit: true` または `inherit: {"from": "other"}` が祖先 option 参照の placeholder を inherit 席へ宣言する。`cell_fns.inherit` の明示 fn 呼び出しとは別のラダー席 (DR-114 §4.1) | `inherit(name)` placeholder |
 | **default** | ラダー最下段。固定値は typed internal `set(value)`、動的値は `Value` を返す `cell_fns` 呼び出しで供給する。`Sentinel` 出力の fn はこの席では definition-error `invalid-range`。type preset も固定値を差す (`flag` = false / `count` = 0) | `<cell_fns>` |
 
 文字列値は出所によらず字句層 (§2) を通って型 `T` になる。`cell_fns` が返す型付き `Value` は通常の set operand として filter pipeline へ入り、`Sentinel` は対応する cell operation になる (DR-114 §2 / §6.1)。
@@ -39,7 +38,7 @@ flowchart TD
   A["a. 発火 (CLI 面のみ)<br/>set 縮退形 / direct op {op} / cell fn {fn,args}"]
   F["b. cell_fns 呼び出し<br/>(args, FnCtx) → Value | Sentinel<br/>Value は通常の set 経路、Sentinel は対応 operation"]
   B["c. mutation ledger の畳み (左→右、あと勝ち、DR-015)<br/>event[] → T + committed"]
-  C["d. 値源ラダー: cli(committed) → env → config → inherit → default<br/>seat 選択 (committed=false = unset なら後段席が上書きできる、DR-031 / DR-045 §2)"]
+  C["d. 値源ラダー: cli(committed) → env → config → default<br/>seat 選択 (committed=false = unset なら後段席が上書きできる、DR-031 / DR-045 §2)"]
   D["e. 結果オブジェクト<br/>entity 名 → ExportKey → JSON"]
   A -- "direct operation" --> B
   A -- "{fn,args}" --> F
@@ -52,7 +51,7 @@ flowchart TD
 - **a. 発火**: lowered 形は、値が確定済みの set 縮退形、`default` / `unset` / `empty` の direct op、または DR-114 §6.1 の `{fn,args}` carrier を使う
 - **b. cell fn 呼び出し**: `cell_fns` から fn を引き、args と統一 `FnCtx` を渡す。`incr` は `ctx.old` を読み old + 1 の `Value` を返す。`Value` は通常の set operand と同じ filter pipeline へ入り、`Sentinel` は対応 operation として ledger に積む。図の Value→ledger 矢印は §2 / §3.2 の通常 set 経路を矢印内に畳んだ表記である
 - **c. mutation ledger の畳み**: あと勝ち (DR-015)。例: `-vv --log-level 5 -v` の発火列は `incr, incr, set, incr`。fn 適用後の ledger event は `set(1), set(2), set(5), set(6)` となり、0 → 1 → 2 → 5 → 6 と畳まれる。効果列順序は同一性成分 (DR-045 §1)
-- **d. 値源ラダー**: cli が committed=true でセルを確定させれば下段は上書きされない。`unset` (committed=false) だけがラダーを開放して env → config → inherit → default が後勝ち可能に
+- **d. 値源ラダー**: cli が committed=true でセルを確定させれば下段は上書きされない。`unset` (committed=false) だけがラダーを開放して env → config → default が後勝ち可能に
 - **e. 結果オブジェクト**: キーは ExportKey map (DR-052 / DR-073)。反復系は 0 発火でも `[]` (DR-051 §2b)、非反復・非必須・値源なし要素の未発火は absent (キー不在、DR-051 §1)
 
 ## 2. 字句層 — filter chain の 7 段
@@ -152,7 +151,7 @@ AST にはクロージャを持たせない — フィールド名と呼び出�
 |---|---|---|---|
 | `types` | `parse: (string) → T` + default filters + config キー | `type:` (configurable factory は `definitions.types` で config 束縛、DR-061) | `string` / `number` / `int` / `float` / `bool` |
 | `filters` | `(args, FnCtx[filter]) → Result<Value, Reason>`。入力は `FilterCtx.input()`。scalar の preserve / transform と ARRAY transform | `piece_filters:` / `value_filters:` / `final_filters:` (scalar) / `accum_filters:` (ARRAY、DR-102)。通常の filter 席から明示参照する | `trim` / `in_range` / `non_empty` / `regex_match` / `increment` / `unique` |
-| `cell_fns` | `(args, FnCtx) → Result<Value | Sentinel, Reason>` | variant / default_fn の universal fn。greedy 面では `{fn,args}` effect carrier、default 席では遅延値供給として呼ぶ (DR-114 §1 / §4 / §6.1) | `set` / `incr` / `borrow` / `env` / `inherit` / `uuid` / `computed` / `default` / `unset` / `empty` |
+| `cell_fns` | `(args, FnCtx) → Result<Value | Sentinel, Reason>` | variant / default_fn の universal fn。greedy 面では `{fn,args}` effect carrier、default 席では遅延値供給として呼ぶ (DR-114 §1 / §4 / §6.1) | `set` / `incr` / `borrow` / `env` / `uuid` / `computed` / `default` / `unset` / `empty` |
 | `accumulators` | `(Acc, T) → Acc` (+ 既定 collector / separator の属性セット) | `multiple.accumulator` | `append` / `merge` |
 | `multiple` | accumulator + collector + separator の糖衣プリセット | `multiple:` の文字列形 | `append` / `merge` / `set` / `map` |
 | `handlers` | command 実行フック | `run` / `action` | — |

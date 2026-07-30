@@ -91,7 +91,6 @@ wire 正規形のノードが持ちうる全属性。型・既定値・適用対
 | `help_value_structure_style` | string (enum: `"auto"` \| `"inline"` \| `"detail"`) | 一括席から継承 | 任意 entry (entry 個別席、DR-115 §1.2) |
 | `hidden` | boolean | false | 任意要素 (表示 policy 用メタ、受理は不変) |
 | `id` | string (`#` 禁止) | name を兼ねる | 全ノード |
-| `inherit` | boolean \| {from:string} | false | 値要素 (inherit ラダー席) |
 | `insert_form` | string (`"space"` \| `"eq"`) | `"space"` | `type:"completion_script"` 要素 (DR-117 §2.6) |
 | `link` | string | なし | 任意ノード |
 | `long` | boolean \| array[longItem] | false (`[]`) | option 要素 |
@@ -199,17 +198,9 @@ env / config / cli の供給は初期値を通常規則どおり上書きする 
 正本: DESIGN §11.4, DR-114 §4
 
 **`default_fn`**
-値源ラダーの default 席を `cell_fns` 呼び出しで遅延実体化する。colon-string (`"borrow:base"`) と 1 段 array of string (`["borrow", "base"]`) は同じ呼び出し。上位席の解決後も cell が空なら `observes` 依存グラフの位相順で呼ばれ、default 席では `Value` を返す fn だけを指定できる。
+値源ラダーの default 席を `cell_fns` 呼び出しで遅延実体化する。colon-string (`"borrow:base"`) と 1 段 array of string (`["borrow", "base"]`) は同じ呼び出し。上位席の解決後も cell が空なら `observes` 依存グラフの位相順で呼ばれ、default 席では `Value` を返す fn だけを指定できる。祖先スコープの値を既定値にする定義は外側に `default` を置き内側で `borrow:<外側要素名>` を引く (DESIGN §11.4、DR-125)。
 最小例: `{"name": "ttl", "type": "number", "default_fn": "borrow:base-ttl"}`
 正本: DESIGN §11.4, DR-087/088, DR-114 §4/§6
-
-**`inherit`**
-自身に値がなければ祖先 scope chain で同 name を探す値源ラダー第 4 段。`{"from": "<name>"}` 形で
-参照名を明示でき、祖先スコープの通常 option を名指しすれば「外側でまとめて既定値を与える」定義に
-なる (DR-124)。default / default_fn は別の下位席なので同一要素で共存できる。同じ default 席への
-`default` と `default_fn` の併用だけが definition-error `invalid-range`。
-最小例: `{"name": "ttl", "type": "number", "inherit": {"from": "socket_ttl"}, "default": 60}`
-正本: DESIGN §11.2, §11.4, DR-114 §4.1
 
 **`env`**
 環境変数名 (値源ラダー第 2 段)。`env_prefix` (§4) があれば自動連結。
@@ -729,9 +720,8 @@ construction=factory の `config` キー宣言 (デプロイ時の方言設定) 
 | `unset` | fn | total | (空) | unset Sentinel を返す effect-mode operation |
 | `empty` | fn | total | (空) | empty Sentinel を返し array / map cell を空にする effect-mode operation |
 | `incr` | fn | total | (空) | `ctx.old` を参照して `old + 1` の number Value を返す。count preset が使用 |
-| `borrow` | fn | reject | `option:<source>` | 他 option の値を返す。decoded source から依存 edge を concrete 化 |
+| `borrow` | fn | reject | `option:<source>` | 他 option の値を返す。`<source>` は lexical scope chain (DESIGN §2.7) で解決し、decoded source から依存 edge を concrete 化 |
 | `env` | fn | reject | `env:<var>` | 明示した環境値を返す。値源ラダーの env 席とは別の fn 呼び出し |
-| `inherit` | fn | reject | `option:<source>` | 祖先 scope の明示 source から値を返す。inherit ラダー席とは別の fn 呼び出し |
 | `uuid` | fn | total | (空) | registry 実装が UUID string を生成して返す |
 | `computed` | fn | reject | `system:<key>` | system key に対応する計算値を返す |
 <!-- kuu-lint:end -->
@@ -829,7 +819,7 @@ cell fn reason は runtime の値取得失敗であり、filter reason や defin
 <!-- kuu-lint:vocab cell-fn-reasons -->
 | reason | cell fn | 意味 |
 |---|---|---|
-| `absent-source` | `borrow`, `env`, `inherit`, `computed` | 宣言した参照先から値を取得できない。default 席では呼び出し元も unset のまま落ち、探索を再演しない |
+| `absent-source` | `borrow`, `env`, `computed` | 宣言した参照先から値を取得できない。default 席では呼び出し元も unset のまま落ち、探索を再演しない |
 <!-- kuu-lint:end -->
 
 `builtin/tty` は `reasons: []` — 本 factory 固有の失敗は definition-error (`tty_stream` 必須違反)

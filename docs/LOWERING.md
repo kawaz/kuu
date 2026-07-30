@@ -275,7 +275,7 @@ short は方言として扱う (DR-041)。曖昧になる定義 (`-cv` 問題) �
 
 **規則**: env installer は `env` を回収し、構造衛星を足さずに、エンジンが所有する値源優先順位ラダー (DR-031) の
 env 席へ lookup を宣言する (不変則④)。lookup は `(value, source)` を返し、ParserContext の source タグを保存する。
-ラダーの順序 (CLI/link → env → config → inherit → default) は installer から動かせない。env_prefix が config に
+ラダーの順序 (CLI/link → env → config → default) は installer から動かせない。env_prefix が config に
 あれば連結する (`MYAPP_PORT`)。env 席の lookup 契約は env_provider = 単一スロット (連結済み key)→string|null、
 pieceProcessor 通過が正本 (DR-049)。
 
@@ -339,22 +339,6 @@ positionals / options の要素として command を直接置いてよい。
 ため、global が置いたコピーを long/short が展開するという見かけの依存は不動点反復で解ける。
 
 **由来**: DR-042
-
-### B.7 inherit installer
-
-```
-所有語彙: inherit 属性
-入力:  {name: "ttl", type: "number", inherit: true}
-出力 (構造出力なし、席宣言のみ):
-  ttl の値セル → 値源ラダー (DR-031) の inherit 席に
-                「最近祖先の同名実体の値セル参照」lookup を宣言
-```
-
-**規則**: inherit installer は `inherit` を回収し、構造衛星を足さずに、値源ラダー (DR-031) の inherit 席へ「最近
-祖先の同名実体の値セルを参照する」lookup を宣言する。inherit は default と排他であり、値は祖先 scope が持つ
-(DESIGN §11.2)。
-
-**由来**: DR-042, DR-031
 
 ### B.8 repeat installer
 
