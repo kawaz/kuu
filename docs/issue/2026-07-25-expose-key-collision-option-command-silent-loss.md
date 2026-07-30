@@ -3,7 +3,7 @@ title: 露出キー衝突が option × command で ambiguous に昇格しない 
 status: open
 category: bug
 created: 2026-07-25T16:52:07+09:00
-last_read:
+last_read: 2026-07-31T00:00:00+09:00
 open_entered: 2026-07-25T16:52:07+09:00
 wip_entered:
 blocked_entered:
