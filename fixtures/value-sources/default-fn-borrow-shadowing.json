@@ -1,0 +1,100 @@
+{
+  "why": "`default_fn: \"borrow:<source>\"` の名前解決が **lexical scope chain の最近傍で止まる** (遮蔽 / shadowing) ことを pin する。`borrow` が受ける `<source>` は ref / link と同じ名前解決規則 — 現在スコープ → 外側スコープへ順に → definitions (DESIGN §2.7、DR-125 §4) — で解くが、この規則は**名前を最近傍の宣言に束ねる**規則であって「値を持つ宣言を探し歩く」規則ではない。したがって借り手と同じスコープに `<source>` と同名の宣言があれば、それが値を持つか否かに関わらず解決先はそれで確定し、外側の同名宣言へは抜けない。default-fn-borrow-ladder.json は borrow が外側へ届く面 (遮蔽が無い場合) を固定しており、本 fixture はその対極 — 内側に同名宣言がある場合に**届かない**面 — を固定する。\n\n判断本質: 遮蔽して止まった先が値を持たなければ fn reason `absent-source` になり、**呼び出し元も unset のまま落ちる** (DR-113 §5.4 の failure semantics 表)。つまり「内側の同名宣言が値を持たない」ことは「外側から値を借りてよい」の合図ではなく、借り手が absent (DR-051 §1、キーごと result から消える) になる合図である。DR-125 §5 が `inherit: true` の同名祖先の暗黙探索を代替なしで落としたのはこの読みと同じ線上にあり、「どこから値が来るか」は定義に書かれた 1 本の参照で決まる。逆に内側の同名宣言が値を持てば borrow はそれを引く — 外側に別の値があっても内側が勝つ。\n\n定義の組み方: 外側 root に `socket_ttl` (default 60) を置き、子コマンド 2 つがそれぞれ**同名の** `socket_ttl` を宣言して遮蔽する — `socket` は値を持たない宣言 (default なし)、`cache` は default 5 を持つ宣言。どちらの子も `ttl` が `default_fn: \"borrow:socket_ttl\"` で同じ綴りの参照を書くので、結果の差は**遮蔽先が値を持つか否か**だけから出る (root の 60 が漏れてくれば遮蔽が壊れていることが即座に分かる)。第 3 の子 `probe` は chain の 3 段目 (definitions) を単独で観測するための scope で、definitions にしか無い名前 `ttl_tmpl` (default 99 を書いた template) を borrow する。root option は `global` でないので子スコープへ入口は伝播せず、子の `--socket-ttl` は子自身のセルだけを撃つ。\n\n検証チャネルは default-fn-borrow-ladder.json と同じ: borrow は独立した値源席ではなく default 席の住人 (DR-114 §8、ラダーは 4 段のまま — DESIGN §11.4) なので借り手側の座のタグは常に `default`、ラダー充填は args 順の全順序を持たず effects には載らない (effects は cli / link 由来のみ、CONFORMANCE §2) ため、値は `result`、由来は `sources` で見る。`effects[].entity` は射影前の cell name なので、遮蔽関係にある同名セルはどちらも `socket_ttl` と書かれる (同名スコープ跨ぎの既存慣行、`command-scope/shadowing-3level-same-name.json`) — どちらのセルが撃たれたかは同 case の `result` のキー位置で判別する。",
+  "query": "parse",
+  "definition": {
+    "definitions": {
+      "templates": {
+        "ttl_tmpl": {"type": "number", "default": 99}
+      }
+    },
+    "options": [
+      {"name": "socket_ttl", "type": "number", "long": true, "default": 60}
+    ],
+    "commands": [
+      {
+        "type": "command",
+        "name": "socket",
+        "options": [
+          {"name": "socket_ttl", "type": "number", "long": true},
+          {"name": "ttl", "type": "number", "long": true, "default_fn": "borrow:socket_ttl"}
+        ]
+      },
+      {
+        "type": "command",
+        "name": "cache",
+        "options": [
+          {"name": "socket_ttl", "type": "number", "long": true, "default": 5},
+          {"name": "ttl", "type": "number", "long": true, "default_fn": "borrow:socket_ttl"}
+        ]
+      },
+      {
+        "type": "command",
+        "name": "probe",
+        "options": [
+          {"name": "tmpl_ttl", "type": "number", "long": true, "default_fn": "borrow:ttl_tmpl"}
+        ]
+      }
+    ]
+  },
+  "cases": [
+    {
+      "id": "inner-valueless-shadows-outer-default",
+      "why": "遮蔽の主題 case: `socket` を素で入場すると、子 `ttl` の default 席が `borrow:socket_ttl` を解決し、chain の 1 段目 (現在スコープ) にある子自身の `socket_ttl` 宣言で止まる (DESIGN §2.7 の「現在スコープ → 外側」— 名前は最近傍の宣言に束ねる)。その宣言は default を持たず CLI / env / config のどの席からも値を得ないので absent (DR-051 §1)、よって borrow は `absent-source` となり呼び出し元の `ttl` も unset のまま落ちる (DR-113 §5.4)。**外側 root の `socket_ttl` が default 60 を持っていても、そこへは抜けない** — これが遮蔽の観測点で、`socket.ttl` が 60 になればこの読みは破れている。子スコープの 2 キーとも absent なので `socket` は空オブジェクト (`command-scope/shadowing-3level-same-name.json` 等と同じ、入場済みで全メンバ absent の scope は `{}`)、`sources` は result と同型の shadow tree (DR-122 §1) なので同じく `{}`。root の `socket_ttl` は自分の default 60 で present。effects は cli 発火が無いので空。outcome は success (absent は失敗ではない、DR-051 §1)。",
+      "args": ["socket"],
+      "expect": {
+        "outcome": "success",
+        "effects": [],
+        "result": {"socket_ttl": 60, "socket": {}},
+        "sources": {"socket_ttl": "default", "socket": {}}
+      }
+    },
+    {
+      "id": "inner-valueless-shadows-outer-cli",
+      "why": "遮蔽が値源に依らないことの固定: 外側で `--socket-ttl 30` を撃っても (socket トークンより前なので root 背骨で発火し root セルへ cli set)、子 `ttl` の borrow は前 case と同じく子自身の `socket_ttl` 宣言で止まるので `absent-source` のまま。default-fn-borrow-ladder.json の outer-cli-borrowed では同じ args の形で内側が 30 を引いたが、あちらは子に同名宣言が無い定義だった — 差は遮蔽宣言の有無だけで、borrow が「外側の値を探しに行く」機能ではないことを示す。root の座は cli で 30、子スコープは空。effects は root セルの cli set 1 件 (entity は射影前 cell name の `socket_ttl`、撃たれたのが root セルであることは result のキー位置で判別する)。",
+      "args": ["--socket-ttl", "30", "socket"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "socket_ttl", "op": "set", "operand": 30, "source": "cli"}
+        ],
+        "result": {"socket_ttl": 30, "socket": {}},
+        "sources": {"socket_ttl": "cli", "socket": {}}
+      }
+    },
+    {
+      "id": "inner-cli-borrowed",
+      "why": "遮蔽先が値を持てばそれを引く (対極その 1、値源 = cli): `socket` 入場後の `--socket-ttl 7` は子背骨で発火し子の `socket_ttl` セルに cli set する (root option は `global` でないので子へ入口は伝播せず、この綴りは子セルだけを撃つ)。子 `ttl` の borrow は同じ 1 段目の宣言に解決し、今度は値 7 を得る — borrow は参照先の**最終解決値**を引くので参照先の値源は問わない (default-fn-borrow-ladder.json の outer-default-borrowed と同じ性質)。root の `socket_ttl` は CLI 未供給なので自分の default 60 で present であり、**60 と 7 が同時に別の座に立つ**ことで遮蔽された 2 セルが別実体であることも同時に固定される。借り手 `ttl` の座のタグは default (borrow は default 席の住人)。",
+      "args": ["socket", "--socket-ttl", "7"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "socket_ttl", "op": "set", "operand": 7, "source": "cli"}
+        ],
+        "result": {"socket_ttl": 60, "socket": {"socket_ttl": 7, "ttl": 7}},
+        "sources": {"socket_ttl": "default", "socket": {"socket_ttl": "cli", "ttl": "default"}}
+      }
+    },
+    {
+      "id": "inner-default-borrowed",
+      "why": "遮蔽先が値を持てばそれを引く (対極その 2、値源 = default): `cache` を素で入場すると子の `socket_ttl` が自分の default 5 で解決し、子 `ttl` の borrow がそれを引いて 5 になる。外側 root の同名セルは default 60 で present なので、`cache.ttl` が 5 か 60 かで「最近傍で止まったか外側へ抜けたか」が一意に読める (DESIGN §2.7 / DR-125 §4)。inner-valueless-shadows-outer-default と本 case の差は遮蔽先の宣言が default を持つか否かだけで、遮蔽そのものは両 case で同じく成立している — 「値が無ければ外側へ抜ける」のではなく「値が無ければ absent-source で落ちる」(DR-113 §5.4) という読みの対を成す。effects は cli 発火なしで空。",
+      "args": ["cache"],
+      "expect": {
+        "outcome": "success",
+        "effects": [],
+        "result": {"socket_ttl": 60, "cache": {"socket_ttl": 5, "ttl": 5}},
+        "sources": {"socket_ttl": "default", "cache": {"socket_ttl": "default", "ttl": "default"}}
+      }
+    },
+    {
+      "id": "definitions-only-source-absent",
+      "why": "chain 3 段目 (definitions) の単独観測: `probe` の `tmpl_ttl` は `borrow:ttl_tmpl` を書き、この名前は現在スコープにも外側スコープにも無く definitions にだけある (DESIGN §2.7 / DR-125 §4 の chain 最終段)。definitions の宣言は**テンプレ node であって値セルではない**ので解決値を持たず、borrow は参照先から値を取得できない = fn reason `absent-source` (REFERENCE の reasons 表: 「宣言した参照先から値を取得できない」) となり、呼び出し元 `tmpl_ttl` も unset のまま落ちる (DR-113 §5.4)。template に書いた `default: 99` は**その template を `ref` / `type` で実体化したノードの default 席**の材料であって、template 自身が 99 という解決値を持つわけではない — したがって `probe.tmpl_ttl` が 99 になればこの読みは破れている。`probe` は唯一のメンバが absent なので空オブジェクト。outcome は success (definition-error ではない — CONFORMANCE §2 の通り `absent-source` は runtime fn reason であり definition-error kind に加えない)。",
+      "args": ["probe"],
+      "expect": {
+        "outcome": "success",
+        "effects": [],
+        "result": {"socket_ttl": 60, "probe": {}},
+        "sources": {"socket_ttl": "default", "probe": {}}
+      }
+    }
+  ]
+}
