@@ -1,5 +1,10 @@
 # DR-098: tty 判定の値源化 — ambient probe を注入 provider にする
 
+> **更新 (DR-125、2026-07-29): §5 の値源席の列挙から `inherit` が抜けた。** ラダーは 4 段
+> (CLI/link > env > config > default)。§5 が立てた序列は「明示 (CLI/env/config) > 観測 (tty) >
+> 宣言既定 (default)」となり、tty はこの序列を保ったまま DR-099 により独立席ではなく型の
+> 解決規則として実装される (DESIGN §12b)。
+
 > 由来: issue `docs/issue/2026-07-07-tty-value-as-injected-source.md` (kawaz/die の stdin 分岐が argv 由来でない ambient probe に依存し、`corpus/real-cli/die.json` でモデル化不能だったギャップ)。issue 記載の kawaz 初期見解 (「評価器の純粋性を守るため、ambient probe でなく env と同様の注入値源としてモデル化が筋」) と、kawaz の着手裁定 (2026-07-12「やっといて」) による。DESIGN §13.9 の既存記述 (「TTY / カラー / interactive: AtomicAST は端末状態を知らない」) との射程調整も本 DR で扱う (統括セッションの精読で発見、裁定は本 DR §5)。
 
 ## 決定
@@ -124,4 +129,4 @@ die.json の 3 分岐 (bare-TTY → help fallback / non-TTY → stdin forward / 
 
 ## Superseded (歴史)
 
-> **更新: DR-099 (tty は型である) により、本 DR の §3 (wire 属性 `tty` による要素への席宣言)・§4 (definition-error 3 分類: 非 bool 型・値なし要素・flag/count プリセットへの付与)・§5 (値源ラダーへの tty 席挿入) が撤回された。tty は要素に付与する属性ではなく `type: "tty"` (builtin/tty) という値型選択そのものへ再モデル化され、値源ラダーは DR-031 の元の 5 段 (DESIGN §11.4) に復元、definition-error の 3 分類は「`type:` が単一選択である」という構文的制約により発生しなくなった (tty と他の型を同一要素に同時に書くこと自体ができない)。本 DR の現役部分: §1 (tty_provider の存在、ただしシグネチャは DR-099 §4 により `(stream) → bool | null` から `(stream) → {terminal, cygwin} | null` へ改訂)・§2 (評価器の純粋性は不変)・§7 (DESIGN §13.9 の TTY 行改訂は DR-099 でも維持、文言自体は無傷)。§6 (source タグ `tty`) は「ラダー独立席の発生条件」としては撤回されるが、タグ語彙 `tty` 自体 (観測由来 vs 宣言 default 由来の診断区別) は DR-099 §2 で維持される。**
+> **更新: DR-099 (tty は型である) により、本 DR の §3 (wire 属性 `tty` による要素への席宣言)・§4 (definition-error 3 分類: 非 bool 型・値なし要素・flag/count プリセットへの付与)・§5 (値源ラダーへの tty 席挿入) が撤回された。tty は要素に付与する属性ではなく `type: "tty"` (builtin/tty) という値型選択そのものへ再モデル化され、値源ラダーは DR-031 のラダー (DESIGN §11.4) に復元、definition-error の 3 分類は「`type:` が単一選択である」という構文的制約により発生しなくなった (tty と他の型を同一要素に同時に書くこと自体ができない)。本 DR の現役部分: §1 (tty_provider の存在、ただしシグネチャは DR-099 §4 により `(stream) → bool | null` から `(stream) → {terminal, cygwin} | null` へ改訂)・§2 (評価器の純粋性は不変)・§7 (DESIGN §13.9 の TTY 行改訂は DR-099 でも維持、文言自体は無傷)。§6 (source タグ `tty`) は「ラダー独立席の発生条件」としては撤回されるが、タグ語彙 `tty` 自体 (観測由来 vs 宣言 default 由来の診断区別) は DR-099 §2 で維持される。**

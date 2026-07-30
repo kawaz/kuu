@@ -1,5 +1,9 @@
 # DR-081: default 席書き換えモデル — source の確定と op=default の意味
 
+> **更新 (DR-125、2026-07-29): 値源席の列挙から `inherit` が抜けた。** default 席を書き換える
+> 上位席は env / config の 2 つで、§1 の「複数席が供給する場合の上書き順」は config → env
+> (env が最終) になる。書き換えモデルと `sources` の 2 面射影そのものは不変。
+
 > 由来: issue default-op-source-tag-contradiction (DR-031 明文「op=default 適用後は cli」と fixture 実践「sources=default」の矛盾、codex レビュー 2026-07-10 検出)。kawaz が color の canonical 例表で裁定 (2026-07-10 チャット) — DR-031 の cli 読みを正としたうえで、「env/config は default 席を書き換える」モデルで values の由来と確定の主体を分離して整理した。
 
 ## 決定

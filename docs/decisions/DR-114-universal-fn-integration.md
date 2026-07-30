@@ -1,5 +1,13 @@
 # DR-114: universal fn 統合 — variant effect・filter・default_fn の共通呼び出し機構
 
+> **更新 (DR-125、2026-07-29): `cell_fns` の住人一覧と値源ラダー席から `inherit` が抜けた。**
+> `borrow` は不変 — `inherit` は descriptor の全軸 (`role` / `io_type` / `fallibility` /
+> `invocation` / `observes` / `reasons`) が `borrow` と一致する重複住人だったため落ちた。以下の
+> §4 の糖衣表・§4.1 の席宣言・§9 の出力型一覧に残る `inherit` の行は対象を失っており、ラダーは
+> CLI/link > env > config > default の 4 段。祖先スコープの値を既定値にする定義は
+> `default_fn: "borrow:<source>"` で書き、`<source>` は §8 の canonical 語彙のまま lexical scope
+> chain で解決する (DR-125 §3/§4)。§10 の `circular-ref` 検査も `borrow` 側で不変。
+
 > 由来: kawaz 発題 (mid=29)「long DSL の `:` 区切り 2 個目以降の仕様は default_fn の descriptor と同じと言えるのでは。long に値源としての default_fn を持って来ることもできそう」と、`docs/QUESTIONS.md` の HIP-META-Q7 / Q8 裁定 (mid=28〜41)。Q8=A により universal fn 統合、Q8-α=a により 1 段限定 array 記法、Q8-γ=i-2 により `filters` + `cell_fns` の 2 registry、Q8-δ により `cell_fns` 命名、Q8-ε と Q7-γ-45=b により統一 `FnCtx` + `mode` 判別 + `observes` 軸を確定した。下敷きは `docs/findings/2026-07-19-universal-fn-integration-plan.md`。DR-113 の default_fn と help type 合成は本 DR を前提とする。
 
 ## 決定

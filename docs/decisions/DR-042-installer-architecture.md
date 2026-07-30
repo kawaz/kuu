@@ -1,7 +1,9 @@
 # DR-042: installer アーキテクチャ — 特殊語彙は装置が持ち込み、5 つの不変則で合成する
 
-> **更新 (DR-124、2026-07-29): canonical installer セットから `inheritable` が抜けた。** 以下の表・
-> 交差リスト・PoC 記録に残る inheritable の行は対象を失っている。他の installer と 5 不変則は不変。
+> **更新 (DR-124 / DR-125、2026-07-29): canonical installer セットから `inheritable` と `inherit` が抜けた。**
+> 以下の表・交差リスト・PoC 記録に残る inheritable / inherit の行は対象を失っている。祖先参照は
+> `default_fn: "borrow:<source>"` (`cell_fns` 住人、installer を持たない) で書く。他の installer と
+> 5 不変則は不変。
 
 > 由来: 本セッションの議論で確定。DR-041 (トークン読みの意味論) と対。findings `2026-06-29-ast-missing-pieces.md` の F-002 / F-003 / F-007 (方向) / F-029 (方向) / F-031 (方向) / F-035 / F-041 (受け皿) に関係する。
 

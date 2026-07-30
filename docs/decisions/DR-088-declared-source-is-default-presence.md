@@ -1,5 +1,9 @@
 # DR-088: 宣言された値源はデフォルトの存在 — 選好述語は静的宣言、最終判定は解決値
 
+> **更新 (DR-125、2026-07-29): 静的「デフォルトあり」判定の列挙から `inherit` 宣言が抜けた。**
+> 判定は「default 属性 ∨ default_fn ∨ env 宣言 ∨ config 席」のいずれかがあるか。祖先参照は
+> `default_fn: "borrow:<source>"` なので default_fn の項が受ける。教義そのものは不変。
+
 > 由来: 遅延述語 (requires の値充足) を解決後の読者に後段化したところ、repeat の取り分選好 (stop/more) から制約が消えて stop 候補が生成されなくなる regression が出た (kuu.mbt REVIEW-D1)。一方で旧来の探索中判定は committed/default 属性しか見ず、env 供給の目的語を誤って違反判定する bug があった。kawaz 裁定 (2026-07-10): 「env 指定があるってことは env から遅延解決する default_fn が設定されてるようなもんでしょう。つまりデフォルトはあるんだから env や config もあればデフォルトがあるってことになるのは当然」「遅延評価でデフォルト解決したらやっぱりありませんでした、になったらそのノードは unset のまま = committed=false に戻されて落ちる」。
 
 ## 決定

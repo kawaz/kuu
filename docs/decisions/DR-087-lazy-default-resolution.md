@@ -1,5 +1,10 @@
 # DR-087: default の遅延解決 — placeholder 設置と依存順の最終実体化
 
+> **更新 (DR-125、2026-07-29): 値源席の列挙から `inherit` が抜けた。** default 席を書き換える
+> 上位席は env / config のみ。§2 の「inherit は祖先 cell の解決値に依存する」は
+> `default_fn: "borrow:<source>"` が担い、同じ位相順則 (参照先 cell の実体化が先) に載る
+> (DR-114 §10 の循環検査も同じ)。遅延解決モデルそのものは不変。
+
 > 由来: bool-requires の config/inherit 対応 (issue bool-requires-config-inherit-gap) の実装中に「制約検査が config 解決済みの値を参照できない」「config_file 解決の再演が要るのでは」という設計混乱が出たのを受けた kawaz 裁定 (2026-07-10)。「デフォルトは全部遅延解決するんだよ。依存順で」「cell に何もないところから始まって全ての解決が済んだけどまだ cell に何もなかった時に入れる値が本来のデフォルト」。
 
 ## 決定

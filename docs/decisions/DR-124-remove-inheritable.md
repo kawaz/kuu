@@ -1,5 +1,11 @@
 # DR-124: inheritable の廃止 — 祖先スコープからの書き込みは外側 option + `inherit: {from}` で書く
 
+> **更新 (DR-125、2026-07-29): §2 の代替パターンの綴りが `inherit: {"from": ...}` から
+> `default_fn: "borrow:<外側要素名>"` へ移った。** パターンの骨格 — 外側スコープに通常 option を
+> 置き、内側要素がそれを明示参照する — は不変で、既定値だけが内側の `default` から外側の
+> `default` へ移る (両者は同じ default 席なので併用できない、DR-125 §3)。§3 (「inherit は存続する」)
+> は対象を失っており、値源ラダーは 4 段。§1 の inheritable 廃止と §4 以降の根拠は不変。
+
 > 由来: kawaz 裁定 2026-07-29「inheritable いらない。できる方法としては『ref+name+default borrow で済む話』を
 > 使ったサンプルとか fixture にしとけば良い」。dogfooding (authsock-warden 型の socket-ttl) で inheritable の
 > 実需を検討した結果、1 段のユースケースは既存語彙で書け、固有価値は多段チェーンの自動化のみと確定した。
