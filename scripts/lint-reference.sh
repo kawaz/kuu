@@ -42,7 +42,10 @@ extract_vocab() {
   ' "$ref"
 }
 
-# $1 = 表示ラベル, $2 = マーカー名, $3 = 期待語彙 (改行区切り、stdin)
+# $1 = 表示ラベル, $2 = マーカー名, 期待語彙 (改行区切り) は stdin。
+# 呼び出しは `jq ... > tmp; check_bidirectional ... < tmp` の 2 段で書く —
+# `jq ... | check_bidirectional ...` だと右辺がサブシェルになり fail=1 が
+# 親に伝播せず、FAIL を表示しながら exit 0 で終わる。
 check_bidirectional() {
   local label="$1" marker="$2"
   local expected actual missing extra
@@ -70,49 +73,49 @@ check_bidirectional() {
 }
 
 # 1. ノード共通属性 (wire.schema.json $defs.node.properties)
-jq -r '.["$defs"].node.properties | keys[]' "$wire_schema" \
-  | check_bidirectional "node properties (§2)" "node-properties"
+jq -r '.["$defs"].node.properties | keys[]' "$wire_schema" > "$tmpdir/node-properties.raw"
+check_bidirectional "node properties (§2)" "node-properties" < "$tmpdir/node-properties.raw"
 
 # 2. scope config ダイヤル (wire.schema.json $defs.node.properties.config.properties)
-jq -r '.["$defs"].node.properties.config.properties | keys[]' "$wire_schema" \
-  | check_bidirectional "scope config keys (§4)" "config-keys"
+jq -r '.["$defs"].node.properties.config.properties | keys[]' "$wire_schema" > "$tmpdir/config-keys.raw"
+check_bidirectional "scope config keys (§4)" "config-keys" < "$tmpdir/config-keys.raw"
 
 # 3. builtin filter 名 (builtin-descriptors.json .filters)
-jq -r '.filters | keys[]' "$descriptors" \
-  | check_bidirectional "builtin filters (§6)" "filters"
+jq -r '.filters | keys[]' "$descriptors" > "$tmpdir/filters.raw"
+check_bidirectional "builtin filters (§6)" "filters" < "$tmpdir/filters.raw"
 
 # 4. builtin type factory 名 (builtin-descriptors.json .types)
-jq -r '.types | keys[]' "$descriptors" \
-  | check_bidirectional "builtin type factories (§3)" "type-factories"
+jq -r '.types | keys[]' "$descriptors" > "$tmpdir/type-factories.raw"
+check_bidirectional "builtin type factories (§3)" "type-factories" < "$tmpdir/type-factories.raw"
 
 # 5. filter の invocation 引数名 (in_range: min/max, regex_match: pattern, DR-107 で
 #    descriptor.config から invocation.parameters へ移動 — DSL 引数の呼び出しごとの意味論宣言)
-jq -r '.filters[] | (.invocation.parameters // []) | .[].name' "$descriptors" \
-  | check_bidirectional "filter invocation parameters (§6)" "filter-config-keys"
+jq -r '.filters[] | (.invocation.parameters // []) | .[].name' "$descriptors" > "$tmpdir/filter-config-keys.raw"
+check_bidirectional "filter invocation parameters (§6)" "filter-config-keys" < "$tmpdir/filter-config-keys.raw"
 
 # 6. type factory の config キー (number_parser/int_parser/bool_parser/tty)
-jq -r '.types[] | (.config // {}) | keys[]' "$descriptors" \
-  | check_bidirectional "factory config keys (§3)" "factory-config-keys"
+jq -r '.types[] | (.config // {}) | keys[]' "$descriptors" > "$tmpdir/factory-config-keys.raw"
+check_bidirectional "factory config keys (§3)" "factory-config-keys" < "$tmpdir/factory-config-keys.raw"
 
 # 7. filter が emit しうる reason
-jq -r '.filters[].reasons[]' "$descriptors" \
-  | check_bidirectional "filter reasons (§7)" "filter-reasons"
+jq -r '.filters[].reasons[]' "$descriptors" > "$tmpdir/filter-reasons.raw"
+check_bidirectional "filter reasons (§7)" "filter-reasons" < "$tmpdir/filter-reasons.raw"
 
 # 8. type factory が emit しうる reason
-jq -r '.types[].reasons[]' "$descriptors" \
-  | check_bidirectional "factory reasons (§7)" "factory-reasons"
+jq -r '.types[].reasons[]' "$descriptors" > "$tmpdir/factory-reasons.raw"
+check_bidirectional "factory reasons (§7)" "factory-reasons" < "$tmpdir/factory-reasons.raw"
 
 # 9. builtin cell fn 名 (builtin-descriptors.json .cell_fns)
-jq -r '.cell_fns | keys[]' "$descriptors" \
-  | check_bidirectional "builtin cell_fns (§6b)" "cell-fns"
+jq -r '.cell_fns | keys[]' "$descriptors" > "$tmpdir/cell-fns.raw"
+check_bidirectional "builtin cell_fns (§6b)" "cell-fns" < "$tmpdir/cell-fns.raw"
 
 # 10. cell fn が emit しうる reason
-jq -r '.cell_fns[].reasons[]' "$descriptors" \
-  | check_bidirectional "cell fn reasons (§7)" "cell-fn-reasons"
+jq -r '.cell_fns[].reasons[]' "$descriptors" > "$tmpdir/cell-fn-reasons.raw"
+check_bidirectional "cell fn reasons (§7)" "cell-fn-reasons" < "$tmpdir/cell-fn-reasons.raw"
 
 # 11. builtin completer 名 (builtin-descriptors.json .completers)
-jq -r '.completers | keys[]' "$descriptors" \
-  | check_bidirectional "builtin completers (§6c)" "completers"
+jq -r '.completers | keys[]' "$descriptors" > "$tmpdir/completers.raw"
+check_bidirectional "builtin completers (§6c)" "completers" < "$tmpdir/completers.raw"
 
 echo ""
 if [ "$fail" -ne 0 ]; then
