@@ -12,7 +12,6 @@ active な issue の一覧。close 済みは archive/ にあり、ここには�
 | 2026-07-14 | design | idea | [argv0-preset-type](./2026-07-14-argv0-preset-type.md) | busybox型 multi-call binary の argv0 分岐は kuu対象外、値注入presetの構想 (需要が出たら) |
 | 2026-07-15 | design | idea | [descriptor-conformance-promotion-revisit](./2026-07-15-descriptor-conformance-promotion-revisit.md) | descriptor 検証の conformance 昇格の再検討 (DAX-Q6 先送り分、独自フィルタ実装ラップ or 2言語目着手で再検討) |
 | 2026-07-23 | task | idea | [help-category-link-last-wins](./2026-07-23-help-category-link-last-wins.md) | M5 で #help_category 内部セルの link 配線実装時は at_pos ベース last-wins を使う (completion.mbt L42-72 pattern 再利用、宣言順 push 由来の bug class 回避) |
-| 2026-07-31 | task | open | [constraints-borrow-default-seat-requires](./2026-07-31-constraints-borrow-default-seat-requires.md) | default 席 (borrow 経由) で true になる bool requires 目的語の充足が未 pin (DR-125 でのカバレッジ後退、stage2 敵対レビュー Minor 3) |
 | 2026-07-31 | task | open | [borrow-shadowing-fixture-gap](./2026-07-31-borrow-shadowing-fixture-gap.md) | borrow 名前解決の遮蔽 (shadowing) 挙動 (最近傍の宣言で止まる) を pin する fixture が corpus に無い |
 | 2026-07-26 | design | open | [parent-type-ignored-lint-warn](./2026-07-26-parent-type-ignored-lint-warn.md) | 親と子の両方が type を持つ or/seq に「親の type は無意味」の lint warn を出す (DR-067 §2/§3.5 は合法規定、静的バリデータ未実装後の追加項目) |
 | 2026-07-25 | bug | open | [expose-key-collision-option-command-silent-loss](./2026-07-25-expose-key-collision-option-command-silent-loss.md) | 露出キー衝突検出が option × command で効かず ambiguous に昇格しない (command が黙って勝つ、DR-073) |
