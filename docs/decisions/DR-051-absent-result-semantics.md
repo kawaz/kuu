@@ -30,6 +30,8 @@ required ∨ default あり ∨ 反復系 → T   (non-optional)
 
 「反復系」は repeat / multiple に加えて **`optional: true` を含む** — optional は `repeat: {min: 0, max: 1}` の糖衣 (DR-043) であり反復系そのものなので、結果は常に配列 (`[]` / `[x]`、DR-044 の一様配列) で T (= 配列型) に落ち、absent にならない。T? に落ちるのは「required なし・default なし・非反復 (optional 糖衣も含まない)」の要素のみ。
 
+> **精密化 (DR-113 §5.4 / DR-114)**: 本項の「default あり」は **native な `default:` 値**を指し、**可謬な `default_fn` (例: `borrow:<source>` — 参照先の最終不在で fn reason `absent-source` となり呼び出し元も unset のまま落ちる) は数えない**。default_fn しか持たない要素は absent になりうるので `T?` に落とす (観測 fixture: `value-sources/default-fn-borrow-ladder.json::borrow-source-absent`)。DR-088 の経路完全性判定 (「宣言された値源」に default_fn を数える) とは別軸 — あちらは探索時の presence、こちらは結果型の保証。
+
 required の「結果に必ず値がある」型保証 (DR-047) はこの導出規則として実を結ぶ。
 
 ### 4. null は kuu の値空間に存在しない
