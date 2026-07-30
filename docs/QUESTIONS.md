@@ -63,6 +63,15 @@
 - [ ] Q6 系: DSL 表層 — `.`/`[`/`]` を含む name はパス起点に書けない (definition-error) / 負 index は発火時点の現在長で確定 / `[int]` のセル空間解釈は「値の座を持つ透過子の並び」
 - [ ] Q7 系: DR-029 追補 — 「name 参照 (セル空間) は定義時に束縛 (fixtures/link-parse/absent-target.json が既に pin)、値構造の降下だけが遅延」の分界文を DR-029 に注記
 
+### 👺 EXKC-Q1: 露出キー衝突 (option × command) を ambiguous に昇格させるか
+
+出所: [issue/2026-07-25-expose-key-collision-option-command-silent-loss.md](issue/2026-07-25-expose-key-collision-option-command-silent-loss.md) (dogfooding D4 発見の bug、裁定点 a/b は同 issue 記載)。
+統括の導出: DESIGN §2.6「command 選択 = 露出 (`{}` kv)」+ DESIGN §15.5 / DR-073「同一露出キーの共露出 = ambiguous」から **(a) 実装バグとして option × command も検出対象** が一意に導かれる (spec に command 除外規定は無い)。実害とされた `kuu help --help` は、kuu-cli が result キー越しに help を判定している経路が原因で、DR-113 help preset (内部セル `#help`、result キー非経由) へ移行すれば衝突ごと消える — (b) で spec 側を歪める必要はないという読み。
+
+- [ ] a: 実装バグ — 衝突検出を option × command へ拡大 + fixture 断面追加。kuu-cli は help preset 移行 (推し)
+- [ ] b: spec 側で commands を衝突検出から除外 + result マージ規則を新設
+- [ ] c: 保留
+
 ## 確認待ち
 
 (現在なし)
