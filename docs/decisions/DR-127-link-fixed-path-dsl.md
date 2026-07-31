@@ -23,11 +23,14 @@ path := name ('.' name | '[' int ']')*
 
 表層の細部 3 点 (LINKPATH-C1 承認分):
 
-- **`.` / `[` / `]` を含む name はパスの起点に書けない** — 区切り文字の escaping を導入せず、
-  そのような name を持つ実体は link パスから参照できない (definition-error)。
+- **`.` / `[` / `]` を含む name はパスに書けない** (起点・中間 segment とも) — 区切り文字の
+  escaping を導入せず、そのような name を持つ実体は link パスから参照できない (definition-error)。
   名前空間を狭める規定ではなく、パス表記が届く範囲の宣言である
-- **負 index は発火時点の現在長で確定する** — `[-1]` は「そのときの最後の要素」であり、
-  定義時に位置が決まる保証は無い。`[int]` の範囲外は解決失敗 (§4)
+- **負 index の「発火時点の現在長で確定」は値空間 segment の規定である** — 配列値の長さは実行時に
+  しか決まらないため。`[-1]` は「そのときの最後の要素」で、範囲外は解決失敗 (§4)。
+  一方**セル空間 segment の `[int]` は定義時静的に決まる** — 透過子の並びは宣言で確定しているので、
+  負 index も範囲外も定義時に判定でき、解決不能は definition-error (`absent-ref` 系、§2.1)。
+  C1 裁定の「発火時現在長」の文言は値空間前提であり、本項はその適用範囲の精密化である
 - **`[int]` のセル空間解釈は「値の座を持つ透過子の並び」の位置** — nameless `seq` の子のうち
   結果に値の座を持つものを順に数える (DESIGN §2.4 の透過、DR-121 §3.2 の tuple)
 
@@ -50,13 +53,17 @@ bare name では lexical 外で見えない対象に、root を lexical 解決�
 セル降下が葉セルに到達してなお segment が残る場合、残余は**そのセルが持つ値の内部構造**を指す
 (`type: "datetime"` が産む `{since, until}` の `since`、配列値の `[0]` 等)。
 
-残余の解決は宣言の有無で 2 通りに分かれる:
+残余の解決は宣言の有無で 2 通りに分かれ、**判定は segment ごとに宣言を辿って適用する**:
 
-- **葉セルの値型が record を宣言している (DR-126)** — 残余の各 segment が宣言フィールドに当たるかは
-  **定義時に決まる**。当たらなければ definition-error `absent-ref` (第 1 相と同じ系)。
-  実行時に残るのは値読みと presence 判定だけである
-- **`map` / `value` 宣言、または宣言が無い** — 従来どおり発火時に枝ローカルの現在値を辿る。
-  解決失敗 (セル未確定 / キー不在 / index 範囲外) はその枝の Reject (§4)
+- **record 宣言が続く限り定義時静的** (DR-126) — 各 segment が宣言フィールドに当たるかは定義時に
+  決まる。当たらなければ definition-error `absent-ref` (第 1 相と同じ系)。実行時に残るのは値読みと
+  presence 判定だけである
+- **`map` / `value` 宣言 (または宣言なし) のフィールドに入った以降は実行時** — その segment から先は
+  従来どおり発火時に枝ローカルの現在値を辿る。解決失敗 (セル未確定 / キー不在 / index 範囲外) は
+  その枝の Reject (§4)
+
+record のフィールドが `{"map": "value"}` を宣言している場合、record 段までのパスは静的に検査され、
+map の内側を指す segment 以降が実行時に落ちる — 静的 / 動的の切替深度は宣言がそのまま決める。
 
 パスは**宣言名軸**である (DR-032 / DR-121 §5) — `export_key` の綴りでは辿らない。
 ただし第 2 相に入った後の segment が指すのは value_parser 産オブジェクトの生キー (record のフィールド名) であり、
@@ -78,6 +85,12 @@ link パスの残余が値空間の座を指すとき、その座への書きが
 |---|---|
 | record (DR-126) | **器 `{}` を auto-vivify** し、当該フィールドに座らせる (`{until: X}` が成立値) |
 | `map` / `value` / 宣言なし | **その枝の Reject** (解決先が未確定) |
+
+vivify が届くのは **record 宣言が続く深さまで**である (§2.2 の切替深度と同じ規則) — record 内の
+`map` フィールドの内側を指す座への書きは、セルに値がありその座が実在すれば書けるが、
+無ければ Reject (map の器は vivify しない — closed でないため生成する器の形が定義時に言えない、
+§根拠の非対称そのまま)。また **vivify は `set` (部分書き) 専用**であり、Value 返し fn (§4.1) は
+現在の座の値 (`ctx.old`) を必要とするため、空の座への適用は解決失敗 = その枝の Reject である。
 
 record での vivify が安全なのは closed record だからである — キー語彙が定義時に閉じているため、
 生成される器がどの形になりうるかが定義時に決まる。`{until: X}` で終わっても
@@ -133,6 +146,15 @@ vivify で組んだ値も parser が産んだ値も、closed record 宣言への
 だけを受け付ける。Sentinel を返す fn (`unset` / `default` / `empty`) の適用は発火時の Reject である。
 器の vivify (§3) はこの語彙の拡張ではない — set が座る前段階の器生成にすぎない。
 
+#### 4.1b 未選択枝のセルへの着地
+
+第 1 相の束縛は名前と宣言の対応であって、対象セルの**枝が選択されるか**は従来どおり消費だけが決める。
+`or` の未選択枝内のセルに link パスで書いた場合、書き自体は通常のセル書きとして成立するが、
+未選択枝のセルの値は結果に表面化しない (`fixtures/or-parse/unselected-branch-default-absent.json` が
+default 持ちセルについて既に pin している一般規則の適用)。**書きが枝の選択を強制することはなく、
+書けないことを理由に枝が Reject されることもない** — 選択は消費構造の関心、値は席の関心という
+既存の分離を保つ。
+
 #### 4.2 完全経路の系 — 裁定は枝ローカルの効果列 fold の後に来る
 
 実装は**裁定の前に、枝ローカルの効果列を fold してパス解決の可否を判定**しなければならない (DR-038)。
@@ -158,11 +180,19 @@ link パス (出力世界) とは交わらない。
   (DR-122 §3) のと同型である。既存 corpus に複合値 leaf の sources を pin した fixture は 0 件のため、
   この裁定による既存 pin の変更は無い
 - **effects**: entry に **structured な `path` フィールド (segment 配列) を optional 追加**する (LINKPATH-Q5=a)。
-  セル着地 (残余が空) の効果は従来どおり `path` を持たず、値残余のある効果だけが持つ。
-  segment は name (string) と index (int) が並ぶ配列で、`entity` は残余の起点となる値セルの canonical name / id である
-  (`effects[].entity` が宣言名軸である DR-121 §5 は不変)。
+  セル着地 (残余が空) の効果は従来どおり `path` を持たず、値残余のある効果だけが持つ —
+  **省略は既定値 `[]` (= セル着地) と等価**であり、CONFORMANCE §3 の一般省略規約 (省略 = default 値)
+  から特例を作らない。segment は name (string) と index (int) が並ぶ配列で、`entity` は残余の起点となる
+  値セルの canonical name / id である (`effects[].entity` が宣言名軸である DR-121 §5 は不変)。
+  **index segment は解決済みの非負 index を載せる** — effects は観測記録であり、字面の `-1` を
+  載せると消費者はどの座か判別できない。sources 側 (位置対応で自然に解決済み) との表現も揃う。
   **path と entity を結合した文字列を規範面で作らない** — 連結が非単射になる問題は
   DR-121 §1.2 が sources について論じたものと同一であり、effects の path にもそのまま効く
+- **nameless 透過子へのセル着地の観測** (`pair[0]`、DR-029 用途 4): nameless 子は自前の entity を
+  持たない (CONFORMANCE §2) が、その座は**最寄りの named 祖先セルの値構造の座** (DR-121 §3.2 の tuple)
+  である。link パスでここに着地した効果は `entity` = named 祖先セル + `path` = 位置 (`entity: "pair",
+  path: [0]`) で観測する — sources の構造分解 (座単位) と同じ統一で、セル空間 / 値空間の segment が
+  path 上で混ざるが、境界は宣言から一意に導けるため区別印は置かない
 
 ### 7. DR-029 への追補 — 何が定義時に束縛され、何が遅延するか
 
@@ -220,14 +250,21 @@ presence は値ごとに変わる (DR-126 §3) ので、presence 判定と値読
 - **schema/fixture.schema.json**: `$defs.effect` の `properties` に `path`
   (`{"type": "array", "items": {"anyOf": [{"type":"string"},{"type":"integer"}]}}`) を optional 追加。
   `required` は `["entity", "op", "source"]` のまま
-- **schema/wire.schema.json**: `link` の記述 (現在 `{"type":"string","minLength":1}` +
-  「解決は参照層 (Schema 対象外)」) を、パス文法を持つ String である旨へ改める。
-  構文検査を Schema の `pattern` に持ち込むかは実装追随時の判断に委ねる (現行どおり参照層で解いてもよい)
+- **schema/wire.schema.json**: `link` の description は既に「固定パス DSL (.name / [int]、DR-029)」を
+  名乗っており文言の残変更は小さい。残る判断は構文検査を Schema の `pattern` に持ち込むか
+  (実装追随時の判断に委ねる — 現行どおり参照層で解いてもよい)
+- **config_key との分界**: `config_key` は link の固定パス DSL の**文法だけを借用**している
+  (DESIGN / REFERENCE の該当節)。本 DR の 2 相意味論・vivify・Reject 規則は config_key には
+  適用されない (config 席の解決は DR-050 の関心) — この分界の注記を DESIGN 側編集時に添える
+- **lint 候補**: record 静的化により「sentinel 返し fn の値残余座への適用」(§4.1) は常に Reject に
+  なることが定義時に分かる — 死に定義として lint の警告対象候補 (definition-error にはしない、
+  DR-126 §5 の null フィールドと同じ整理)
 - **fixtures/link-parse/**: 現行 3 本 (`basic.json` / `absent-target.json` / `export-key-address.json`) は
   すべて第 1 相の pin であり不変。新設が要るのは 7 種 —
   (1) セル降下 (兄弟スコープの子への合流) / (2) 値残余 (不透明複合値のフィールド書き) / (3) 負 index /
   (4) 値残余の absent → 枝 Reject → 他枝が勝つ / (5) 時系列上書き (部分書き→parser 産出、逆順の両方) /
-  (6) sources の座 re-tag (部分書きした座だけ `link`) / (7) effects の `path` 表記
+  (6) sources の座 re-tag (部分書きした座だけ `link`) / (7) effects の `path` 表記 /
+  (8) nameless 透過子への位置指定着地 (`pair[0]`、entity + path の観測面込み — DR-029 用途 4)
 - **DR-121**: §4 (`link` は独立した値源タグ) と §5 (effects は宣言名軸) は本 DR の観測面規定の前提として現役。
   §4.2 が記録する参照実装の乖離 (`Source` enum に `Link` が無い) は、本 DR の追随でも解消対象になる
 - **DR-122**: §3 (タグの決定単位は値の座) を複合値の内部へ一般適用するのが本 DR §6 の sources 規定である。
@@ -274,6 +311,7 @@ value_parser が必ず通るので `final_filters` への依存が減る、と�
 ## 関連
 
 - DR-029 (link の見直し — 固定パス DSL の文法・時系列適用・解決失敗の扱いの正本。§7 が分界を追補)
+- DR-031 (値源の優先順位 — §2.1「値源ラダーのすべてが従来どおり」と link/cli の効果順位の正本)
 - DR-126 (record 型 — 第 2 相の静的化と vivify の前提)
 - DR-032 (ref/link は name 参照、type は型参照 — 第 1 相の鍵空間)
 - DR-033 / DESIGN §2.7 (lexical スコープ chain — root name の解決規則)

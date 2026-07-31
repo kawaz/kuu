@@ -24,6 +24,14 @@
 
 > **LINKPATH-Q1 / Q2 はチャット裁定で確定済み (2026-07-31)**: Q1 = 2 相分解 + **record 型追加による静的化** (descriptor value-type 体系に closed record を新設、DR-107 §3 精密化)。Q2 改 = record 宣言あり → 器 `{}` auto-vivify で部分書き成立 / 宣言なし (map・value) → 枝 Reject の 2 層。record は キー語彙 closed・presence-optional (null 不使用)、乖離 Error は宣言外キー存在 + フィールド値型違いの 2 種、フィールド横断 invariant は final_filters の領分。詳細は research ノート追記 → DR 起草へ。
 
+### 👺 RECP-Q1: record フィールド presence の T 導出 — 宣言信頼か経路保守か
+
+出所: DR-127 敵対レビュー M1 (2026-07-31) — 「指定通り (mid=14/18)」と「経路間の保守側 (mid=16 起点の統括 framing)」が併記され、答えが割れるケースが未調停: 定義片 leaf に `required` / `default` が付いていても、string 形 parser 経路 (部分 range を正規に産む) や organic 部分書き (無橋) では立つ保証が無い。
+
+- [ ] a: **宣言信頼** — `required` 宣言があれば `T` 導出。全経路 (string 形 parser 産出含む) との整合は型作者・定義作者の責任 (乖離検査対象外、lint ヒント候補)。「定義次第」の素直な読み (推し — 導出が型宣言だけで閉じ、利用側定義の事情に依存しない)
+- [ ] b: **経路保守** — 当該フィールドを書かない供給経路が定義上可能なら `T?` へ落とす (導出が定義単位になり、link path 入口の有無で型導出が変わる)
+- [ ] c: 保留
+
 ## 確認待ち
 
 (現在なし)
