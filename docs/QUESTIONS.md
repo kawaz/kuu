@@ -32,6 +32,42 @@
 - [ ] b: **経路保守** — 当該フィールドを書かない供給経路が定義上可能なら `T?` へ落とす (導出が定義単位になり、link path 入口の有無で型導出が変わる)
 - [ ] c: 保留
 
+<details>
+<summary>具体例 (a/b で答えが割れる最小ペア)</summary>
+
+題材の型 (完全形しか受けない版の timerange — string 形なし、2 トークン形のみ):
+
+```json
+type "strict_timerange":
+  input_structure: [
+    {"name": "since", "type": "timestamp", "required": true},
+    {"name": "until", "type": "timestamp", "required": true}
+  ]
+  out: {"record": {"since": "number", "until": "number"}}
+```
+
+**ケース 1 — 素直な利用定義** (`{"name": "tr", "type": "strict_timerange"}` のみ、link path 入口なし):
+供給経路は 2 トークン sub-parse だけで、required により両フィールド必ず立つ。
+→ **a も b も `since: number` / `until: number` (T)。一致、問題なし。**
+
+**ケース 2 — 同じ定義に link path 入口を足す** (`{"name": "until", "link": "tr.until"}` を並置):
+`--until X` 単独の organic 部分書きで `tr = {until: X}` が成立しうる (vivify、無橋 — fragment の
+required は sub-parse 内の消費規則であって organic 経路には効かない)。since が absent の正当値が発生。
+→ **a: `since: number` (T) のまま** — 宣言を信頼。実際には absent になり得るので「T が嘘になる」
+リスクは、「required 宣言の型に link path 部分書き入口を足した定義」の作者責任とし、lint で警告
+(「link 入口が required フィールドの presence 保証を破る」)。
+→ **b: `since: number?` (T?) に落ちる** — 導出器が利用側定義を解析し、since を書かない経路
+(organic) の存在を検出して防衛。**型導出の結果が利用側定義の書き方で変わる**。
+
+**ケース 3 — 本来の timerange (string 形 `-5m..` が部分 range を正規に産む型、mid=16)**:
+型作者はそもそも required を**付けない**のが正しい書き方。
+→ a: 付けなければ両案一致で T?。誤って付けた場合は「string 経路と矛盾する宣言」で、a では嘘 T
+(作者責任 + lint)、b では無視されて T?。
+
+**判断の芯**: 宣言と実挙動の乖離リスクを誰が背負うか — a は型作者 (+lint の支援)、
+b は導出器 (定義解析で防衛、その分導出が型単体で閉じない)。
+</details>
+
 ## 確認待ち
 
 (現在なし)
