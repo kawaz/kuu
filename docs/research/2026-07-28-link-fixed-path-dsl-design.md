@@ -64,7 +64,28 @@ v1 完備主義の下では 1〜4 全部が輪郭に入る。
 - **Q6: DSL 表層の細部** — `.`/`[`/`]` を含む name はパスに書けない (definition-error) / 負 index は発火時点の現在長で確定 / `[int]` のセル空間解釈は「値の座を持つ透過子の並び」
 - **Q7: DR-029 追補の承認** — 「name 参照 (セル空間) は定義時に束縛、値構造の降下だけが遅延」の分界文
 
-## 5. 実装コストの見通し
+## 4b. 追記 (2026-07-31): record 型導入によるチャット裁定 — Q1/Q2 確定、静的化の再設計
+
+kawaz とのチャット議論 (2026-07-31 ccmsg r98 mid=2〜7) で §4 の Q1/Q2 が確定し、案 1 の第 2 相が再設計された。発端は kawaz の指摘「type パーサが descriptor で構造も宣言できる方向に寄れば、棚上げしていた定義時解決ができるのでは」。
+
+### 裁定内容
+
+1. **descriptor value-type 体系に record 型 (固定フィールド) を追加する** (DR-107 §3 の精密化)。DR-107 §3 は「固定フィールド struct は表現できず map<string,value> で近似」と明記していたが、これを覆して record を第一級にする。JSON 表現可能の閉域 (DR-107 §3) は不変 — record は定義域の拡張ではなく精密化。フィールドの値型は同じ value-type 体系で書く (parser 名の ns 参照は持ち込まない)。書けないものは従来どおり map<string,value> / value で近似し実行時に倒す (kawaz mid=3)
+2. **record は closed** (kawaz mid=4): キー語彙が閉じている。理由はリフレクション無し言語での struct 直訳保証。アプリ内部型の持ち込みは不要 — type パーサは JSON 表現まで、翻訳はアプリ側
+3. **フィールドは presence-optional、null 不使用** (kawaz mid=6 の問いへの帰結): kuu 値空間に null は無い (DR-051) ので、ゼロ値 `{until:null, since:null}` ではなく**器 `{}` + 座った座だけキーが立つ**。record 内側にも DR-051 §1 (absent = キー無し) がそのまま降りる。closed = キー語彙の閉域であって全フィールド必須ではない
+4. **宣言と実産出の乖離 = Error** (Reject にしない)。ただし presence-optional の帰結として乖離は 2 種に精密化: (a) 宣言外キーの存在、(b) フィールド値型違い。宣言済みキーの不在は正常。分界文: **「入力 → 値」の失敗は Reject (ユーザの世界、`--serve foo` の not_a_number → バックトラックは不変)、「返した値 vs 自己宣言」の矛盾は Error (実装者の世界、入力で回避不能)**
+5. **Q2 改 — 部分書きは 2 層** (§4-Q2 の「枝 Reject 一択」を書き換え): **record 宣言あり → 器 `{}` の auto-vivify で部分書き成立** (`--until X` 単独で `timerange = {until: X}`、closed record により器生成が定義時に安全)。**宣言なし (map / value) → 従来どおり枝 Reject**。旧導出の「書き手が実体を先に発火させる構造を組む」要件は record 宣言側では不要になる
+6. **フィールド横断 invariant (since<until 検査 / 自動反転等) は final_filters の領分** (kawaz mid=7)。vivify で組み上がった値が value_parser を通らない代償の受け皿
+
+### Q1 の確定形
+
+案 1 (2 相分解) を規範に置く。ただし第 2 相の「パス妥当性」は record 宣言があれば**定義時静的検査** (absent-ref 系 definition-error) に昇格し、実行時に残るのは値読みと presence 判定のみ。map / value 宣言のパスは従来どおり実行時解決。
+
+### 残 Q への波及
+
+- Q4 (sources 座): record のキー presence 意味論と構造分解案が自然に噛み合う (推し強化、裁定は checkbox 継続)
+- Q3 (値残余の操作範囲): vivify 導入後も「set + Value 返し fn のみ」は不変 (器生成は set の前段階であって操作語彙の拡張ではない)
+- 新規の裁定不要事項: record 型の DR は link path DR と分離して起草する (record は補完・help・言語バインディング型導出にも効く独立機能)
 
 - decode: `link` String をパス AST (root + segments) にパース。bare name は segments 空の縮退形で後方差分なし
 - introspection ABI: 「Value に対する get/set (field/index)」で足りる — value_parser への追加要求は「Value を返すこと」以上に増えない
