@@ -59,6 +59,24 @@ sub-parse の結果 (or → union、seq → kv) を value_parser が受けて宣
 - **既存 type (string/number/bool 等) との関係**: 定義片を持たない type は従来どおり 1 トークン消費
   (デフォルトの縮退形)。定義片は opt-in
 
+## 2b. 追記 (2026-07-31 続き): link path 部分書きとの分界 (ccmsg mid=11 + セッション内問答)
+
+- **入力側への部分注入はしない**: link path の書き先は常に**出力 record の座**。「入力が揃うまで
+  パース保留 ([undefined, until] の in 候補バッファ)」という第 3 の状態は作らない — effects 時系列にも
+  ラダーにも席が無く、Reject の発火時点が原因操作から遅延して args_pos 帰属 (DR-037) が壊れるため。
+  sub-parse (入力世界) は CLI トークン消費に閉じ、link path (出力世界) とは交わらない
+- **時系列適用が全ケースを決める** (DR-029、裁定不要の系): `--until X` のみ → vivify で `{until: X}`、
+  パースは起こらない / `--until X --since Y` → 座ごと set 更新 / `--until X --timerange Z` →
+  Z の parser 産出がセル値を丸ごと置換 (部分書きは消える) / 逆順 → parser 産出の上に座だけ更新 /
+  unset → 既存 DR-045 (record 専用規則は不要)
+- **`{until}` だけで終わっても正当値** (kawaz 確認済み): presence-optional closed record の適合値。
+  sources は Q4=a の座単位 (`timerange: {until: "link"}`)、since は absent でキーごと消滅。
+  「since が必要」はアプリ制約の領分 (requires / final_filters)
+- **organic 組み上げ値と parser 産値は無差別** — 保証の対応: parser 産 → 乖離検査 (DR-126 §4) が
+  宣言適合を保証 / link 組み上げ → 宣言外キーへの set は静的パス検査で definition-error、
+  座への set 時に operand が**フィールド宣言型で pieceProcessor を通る** (既存値パイプラインの自然延長)。
+  どちらの経路でも「closed record 宣言に適合する値しかセルに座れない」が成立する
+
 ## 3. 関連
 
 - DR-126 (出力側の record 型 — 本機構の出口の型宣言)
