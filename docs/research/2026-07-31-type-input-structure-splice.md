@@ -94,6 +94,30 @@ sub-parse の結果 (or → union、seq → kv) を value_parser が受けて宣
   timerange 一発でもパースと out 契約が同じ」は、両入口が同じ type を宣言することで成立し、
   合流点が record の out 型になる
 
+## 2c. 追記 (2026-08-01): out.record が型導出の正本 / フィールド型 = type 参照 / type レジストリ継承 (mid=21/22)
+
+- **RECP-Q1 は解消 (前提が誤り)**: input_structure は入力パーサ用であって**型導出に関与しない**。
+  値セルの型は **out.record だけを見る**。presence は out.record の presence-optional のまま (= `T?`)。
+  §2b の「presence は定義片 leaf の宣言から導出」という記録は mid=16 起点の統括 framing で、
+  mid=21 が明示的に覆した — 定義片の required/default から T を導く発想自体を採らない
+- **record フィールドの型は kuu type 参照で書く** (mid=21): `out: {"record": {"since": "timestamp",
+  "until": "timestamp"}}`。number / string / bool も「組み込みで提供される普通の registry type」であり
+  特別な語彙ではない (bool と string しか使わない定義なら number は登録なし = tree-shaking しても
+  動くべき、mid=22)。DR-126 起草時の「フィールド値型に parser 名参照を持ち込まない」は
+  mid=3 の JSON 閉域 (= **値**が JSON 表現可能という制約) をフィールド**語彙**の制約と誤読した
+  統括の発明で、破棄する
+- **sealed scope が閉じるのは ref/link の名前・binding 空間であって type レジストリは継承される**
+  (mid=22): 部分パースは「パーサを派生させて binding をクリアした奴で読む」— type レジストリは
+  派生先に継承される含意だった
+- **型依存**: timerange 型は timestamp 型に依存する — timestamp が type レジストリに未登録なら
+  timerange は使えない (unknown-vocab 系の definition-error)。型は依存グラフを成す
+- **link 注入時のパースはフィールドの type が担う**: `link: "tr.until"` の operand は until 座の
+  型宣言 (`timestamp`) のパーサで文字列パースされてから座る。§2b「set 時 operand がフィールド
+  宣言型の pieceProcessor を通る」の「宣言型」の実体は type 参照 — 入口側の type 宣言でなく
+  **フィールド側の type が正**
+- **JSON 形の導出**: record を読む消費者 (codegen / lint) は各フィールドの type の out を再帰的に
+  辿って JSON 形を得る (timestamp → number)。registry 解決が前提になる
+
 ## 3. 関連
 
 - DR-126 (出力側の record 型 — 本機構の出口の型宣言)
