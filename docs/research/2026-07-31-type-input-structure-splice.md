@@ -146,7 +146,14 @@ kawaz 指示 (mid=23/24) により fable5-high と codex-sol-worker へ**独立�
     descriptor の description は types[].help に写さない (実装者向け自己記述のため)
 13. 補完: 候補 origin は外側値セル entity、type/completer は leaf 宣言由来、内部名は漏らさない
 
-相違 3 点 (裁定は QUESTIONS.md SPL-Q1〜Q3):
+**裁定確定 (2026-08-01 checkbox + mid=26)**: SPL-Q1 = a (constraint 4 種可、sealed 内解決・sub-parse 経路のみ評価)。
+SPL-Q2 = **a + b 両採用** — `builtin/struct` (identity) が splice 機構の pin とユーザ機能を担い、
+`fixture/*` residents が変換系 parser 挙動 (string 形正規化・部分 range・乖離 Error 近傍) の pin を担う
+(役割直交、kawaz「どう思う」→ 統括分担案を承認)。SPL-Q3 = a (descriptor 内型参照は registry のみ —
+DR-126 §1 の解決順文言を修正)。MISC-C1 両承認 (DR-029 追補文は「構造を名乗っていれば」へ一般化 /
+TTYCYG = tty_provider の cygwin 観測削除を確定)。
+
+相違 3 点 (裁定済み、経緯):
 - 定義片内の constraint 4 種 (requires 等) — fable: 可 (sealed 内解決、無橋と同じ型作者責任) / sol: 禁止
 - conformance ビークル — fable: `builtin/struct` (identity parser の configurable factory、ユーザ価値あり) /
   sol: fixture 専用 residents (`fixture/*` ns を CONFORMANCE 宣言)

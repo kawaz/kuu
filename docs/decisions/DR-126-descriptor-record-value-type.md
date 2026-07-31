@@ -26,7 +26,10 @@ value_type :=
 
 **フィールドの型は kuu の type 参照で書く** (kawaz 裁定 2026-08-01)。`{"record": {"since": "timestamp",
 "until": "timestamp"}}` のように、`type` registry / `definitions.types` の住人を DR-094 の ns 付き識別子
-(bare 名は builtin ns の糖衣、解決は definitions → registry の順 = DR-035) で指す。wire の `type:` 属性と
+(bare 名は builtin ns の糖衣) で指す。**解決は registry 空間のみ** — 使用側 definition の
+`definitions.types` には shadow されない (kawaz 裁定 2026-08-01 SPL-Q3=a)。descriptor は registry の
+住人であり、その意味が使用側定義の書き方で変わってはならない (型同一性の保証)。wire の `type:` 属性
+(使用側解決文脈 definitions → registry = DR-035) とは解決空間が違う点に注意しつつ、綴りの鍵空間としては
 同じ鍵空間であり (DR-032「type は型参照」)、record は「このフィールドはどの kuu 型か」を名乗る。
 
 `"number"` / `"string"` / `"bool"` をフィールドに書けるのは、これらが**組み込みで提供される普通の
