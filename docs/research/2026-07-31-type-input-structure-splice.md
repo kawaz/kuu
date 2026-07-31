@@ -76,6 +76,12 @@ sub-parse の結果 (or → union、seq → kv) を value_parser が受けて宣
   宣言適合を保証 / link 組み上げ → 宣言外キーへの set は静的パス検査で definition-error、
   座への set 時に operand が**フィールド宣言型で pieceProcessor を通る** (既存値パイプラインの自然延長)。
   どちらの経路でも「closed record 宣言に適合する値しかセルに座れない」が成立する
+- **フィールド契約の置き場** (mid=12 で確認): timestamp (in: string|number → out: number) のような
+  in 契約が住むのは**入口側** — `--until` 単体入口の `type: timestamp` と、input_structure 定義片の
+  leaf `until` の `type: timestamp`。record 宣言に住むのは out 形 (`{until: "number"}`) だけで、
+  フィールドに parser 名は書かない (DR-126 採用しなかった案 (b) は不変)。「until 単体でも
+  timerange 一発でもパースと out 契約が同じ」は、両入口が同じ type を宣言することで成立し、
+  合流点が record の out 型になる
 
 ## 3. 関連
 
