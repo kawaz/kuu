@@ -24,6 +24,30 @@
 
 > **LINKPATH-Q1 / Q2 はチャット裁定で確定済み (2026-07-31)**: Q1 = 2 相分解 + **record 型追加による静的化** (descriptor value-type 体系に closed record を新設、DR-107 §3 精密化)。Q2 改 = record 宣言あり → 器 `{}` auto-vivify で部分書き成立 / 宣言なし (map・value) → 枝 Reject の 2 層。record は キー語彙 closed・presence-optional (null 不使用)、乖離 Error は宣言外キー存在 + フィールド値型違いの 2 種、フィールド横断 invariant は final_filters の領分。詳細は research ノート追記 → DR 起草へ。
 
+### 👺 SPL-Q1: 定義片内の constraint 4 種 (requires / conflicts_with / exclusive_group / required_group)
+
+二重設計の相違点 (詳細: [research/2026-07-31-type-input-structure-splice.md](research/2026-07-31-type-input-structure-splice.md) §2d)。`required` は両案とも可 (arity 表現に必須)。
+
+- [ ] a: 可 — sealed 内で名前解決し sub-parse 経路のみで評価。string 形 / organic 経路との整合は型作者責任 (定義片 default の無橋と同じ整理) (fable 案、統括推し)
+- [ ] b: 禁止 (`invalid-range`) — 経路差を増やす軸を v1 で持たない (sol 案)
+
+### 👺 SPL-Q2: conformance の検証ビークル
+
+builtin に input_structure 持ち type が無く、fixture は value_parser 実装を注入できない。
+
+- [ ] a: **`builtin/struct` を新設** — config で `input_structure` と out record を受け、sub-parse 産 Value を素通しする identity parser の configurable factory。conformance の参照住人 + 「宣言だけで構造型を作る」ユーザ価値の副産物 (fable 案、統括推し)
+- [ ] b: fixture 専用 residents (`fixture/*` ns) を CONFORMANCE に宣言し全 runner が登録 (sol 案 — builtin を汚さないが test 専用名前空間の維持コスト)
+
+### 👺 SPL-Q3: descriptor 内の型参照 (input_structure leaf / out.record フィールド) の解決空間
+
+- [ ] a: **registry のみ** — 使用側の definitions.types に shadow されない。descriptor (型) の意味が使用側定義に依存しない = 型同一性の保証 (sol 案、統括推し。採用なら DR-126 §1 の「definitions → registry (DR-035)」文言を修正)
+- [ ] b: 使用側解決文脈 (definitions → registry、DR-035 の既存順) — wire の type: と完全対称 (fable 案)
+
+### 👺 MISC-C1: 小確認 2 点 (異議なければ採用)
+
+- [ ] DR-029 追補文の一般化 — LINKPATH-C1 で承認した分界文は「record を宣言していれば」だが、sol レビュー反映で array/union にも静的判定が広がったため「**構造を名乗っていれば**」へ書き換えたい (承認済み文言の変更なので確認)
+- [ ] TTYCYG — tty_provider の cygwin 観測削除 (チャットで賛成評価済み・確定の一言待ちのまま)。チェックで確定扱いにします
+
 ## 確認待ち
 
 (現在なし)

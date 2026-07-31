@@ -118,7 +118,46 @@ sub-parse の結果 (or → union、seq → kv) を value_parser が受けて宣
 - **JSON 形の導出**: record を読む消費者 (codegen / lint) は各フィールドの type の out を再帰的に
   辿って JSON 形を得る (timestamp → number)。registry 解決が前提になる
 
-## 3. 関連
+## 2d. 追記 (2026-08-01): 二重独立設計 (fable / sol) の突き合わせ結果
+
+kawaz 指示 (mid=23/24) により fable5-high と codex-sol-worker へ**独立に**設計させ統括が突き合わせた。
+主要 13 点で両案が独立に同結論へ収束 — 収束点は導出として採用確定 (次の DR-128 起草の正本):
+
+1. 軸名 **`input_structure`**、descriptor トップレベルの optional 軸 (io_type と並ぶ、`type_parser` 限定)
+2. 値は wire 構造語彙の閉じた部分集合 (schema は wire.schema への $ref、語彙制限は定義時検査層)
+3. 定義片なし = 1 トークン string 縮退。暗黙 raw-string 枝は足さない (1 トークン形も欲しければ枝で明示)
+4. **io_type.input の string 固定を撤廃** — 定義片産出形・env string・config 供給形の和を宣言。
+   定義片から導出した産出形が input 宣言域に含まれなければ definition-error `invalid-range`
+   (「宣言 vs 宣言」の定義時静的検査 — DR-126 §4 の runtime Error とは別位相)
+5. splice は lowering 同位相 (template/preset と同じ)。sub-parse は局所で outcome を確定せず
+   消費候補を外側 path-search へ返す — 完全経路 0/1/2+ の最終判定は外側 (DR-038 不変)
+6. sealed scope: lexical chain は定義片 root で終端 (外→内・内→外とも不可視)、内部完結の ref/link 可、
+   **definitions は持てない** (共有構造は registry 型切り出し)、export_key は内部消費専用
+7. 外部界面語彙 (long/short/env/config_key/global/alias/commands/dd/on_failure 等) は
+   definition-error `invalid-range` (wrong-seat 系、inert 許容にしない — 型作者の bug を隠すため)。
+   定義片 leaf のラダーは「CLI 消費 > default」の 2 段
+8. leaf type 未解決 = `unknown-vocab` (wire の warn+string フォールバックと非対称 — 名乗る側の宣言)
+9. ネスト splice 可・深さ上限なし、`input_structure` 経由の型依存循環 = `circular-ref`
+10. repeat / multiple / accumulator は定義片内で可 (既存 lowering 機構そのまま)
+11. 観測面: 定義片内セルは内部セル族 (effects/result/sources 非露出)、外側セルへ 1 set
+    (source は入口どおり)、失敗は原因トークンの args_pos に帰属、errors[].element は外側 entity
+12. help: value_structure へ完全委譲 (or/seq/repeat/single/type_ref への写像 pin、DR-113 §2.3 の一般化)。
+    **types 集約に registry 型も載せる** (id = 解決に使った参照綴り、model 内で衝突しない)。
+    descriptor の description は types[].help に写さない (実装者向け自己記述のため)
+13. 補完: 候補 origin は外側値セル entity、type/completer は leaf 宣言由来、内部名は漏らさない
+
+相違 3 点 (裁定は QUESTIONS.md SPL-Q1〜Q3):
+- 定義片内の constraint 4 種 (requires 等) — fable: 可 (sealed 内解決、無橋と同じ型作者責任) / sol: 禁止
+- conformance ビークル — fable: `builtin/struct` (identity parser の configurable factory、ユーザ価値あり) /
+  sol: fixture 専用 residents (`fixture/*` ns を CONFORMANCE 宣言)
+- descriptor 内型参照の解決空間 — sol: registry のみ (使用側 definitions で shadow されない =
+  descriptor の意味が使用側非依存) / fable: 使用側解決文脈 (definitions → registry、DR-035 対称)。
+  ※ 採用側によっては DR-126 §1 の解決順文言の修正が要る
+
+統括判断で確定した細部: greedy 割り込みは配置の既存規則そのまま (option 値スロット = 一体消費 /
+positional 配置 = 背骨割り込み可 — 新規則ゼロの fable 案。sol の一律一体消費は新規則になるため不採用)。
+default_fn は定義片内で可 (解決は sealed 内で完結、外を指せば absent-ref 静的 — sol の observes 抜け道
+懸念は sealed 解決が塞ぐ)。out.record 側の型参照循環は DR-126 §1 改訂済み (v1 全面禁止) が正。
 
 - DR-126 (出力側の record 型 — 本機構の出口の型宣言)
 - DR-107 §3 (value-type 体系 — tuple 不要になった経緯はこのノート §0)
