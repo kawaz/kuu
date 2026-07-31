@@ -73,6 +73,7 @@
 
 - [DR-007](DR-007-definitions-ref-link.md): definitions 領域、ref (構造継承) と link (値同期) — reorganized by DR-035 (definitions と registry の名前空間統一)
 - [DR-029](DR-029-link-revisited.md): link 見直し (値同期、1実体:N参照、固定パス DSL、遅延解決、失敗=パース失敗)
+- [DR-127](DR-127-link-fixed-path-dsl.md): link 固定パス DSL の実装可能化 (kawaz チャット裁定 2026-07-31、LINKPATH-Q1〜Q7 全確定) — DR-029 が文法と「遅延解決」だけを持ち意味論を欠いていた穴を埋める。パスを**セル空間の接頭辞 + 値空間の残余**の 2 相に分解: 第 1 相は lexical → definitions で root を解き宣言構造で辿れる限りセル降下 (定義時静的、解決不能は `absent-ref`)、残余が空なら bare link と完全同一のセル同期 (ラダー・accumulator 無傷)。第 2 相は葉セルの値内部への降下で、**record 宣言 (DR-126) があればパス妥当性も定義時静的**に昇格し実行時に残るのは値読みと presence 判定のみ (map/value は従来どおり実行時解決)。二相性は「スコープの kv はパース時に存在せず、不透明値の内部にセルは存在しない」という構造の写像であって発明した規則ではない。**部分書きは 2 層** — record なら器 `{}` を auto-vivify (`--until X` 単独で `{until: X}` が成立値、closed record ゆえ器の形が定義時に確定) / 宣言なしなら枝 Reject。vivify 値は value_parser を通らないのでフィールド横断 invariant は final_filters の領分、organic 値は静的パス検査 + set 時のフィールド型 pieceProcessor で二重に保証。定義片 default と organic 部分書きは**無橋** (各経路が自分の既存規則、型導出は保守側)。**入力側への部分注入はしない** (in 候補バッファは効果時系列にもラダーにも席が無く args_pos 帰属が壊れる) — sub-parse は入力世界、link path は出力世界。値残余の座への操作は set + Value 返し fn のみ (Sentinel 返しは発火時 Reject)、時系列適用が組み合わせを全て決める。観測面は sources = 座単位の構造分解 (Q4=a、部分書きした座だけ `link` タグ)、effects = `path` segment 配列の optional 追加 (Q5=a、結合文字列は非単射で不採用)。実装は**裁定前に枝ローカル効果列 fold でパス解決可否を判定**する必要がある (DR-038 の系)。DR-029 へ分界文を追補: 「name 参照は定義時に束縛、値構造の降下だけが遅延」。全遅延・値一元案は effects の cell 単位規範への逆写像が一意にならず棄却
 - [DR-057](DR-057-alias.md): alias — 独立要素の別入口 (参照ファミリー 3 人目: ref/link/alias)、name 導出入口は再導出継承・明示綴りは非継承、結果キーは canonical のみ
 
 ## 制約
