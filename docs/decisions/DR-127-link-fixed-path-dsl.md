@@ -1,11 +1,13 @@
 # DR-127: link 固定パス DSL の実装可能化 — セル空間 / 値空間の 2 相分解、record 宣言による静的化、器の auto-vivify
 
 > 由来: kuu.mbt issue `2026-07-27-link-fixed-path-dsl-unimplemented` を起点にした設計検討 (2026-07-28) と、
-> kawaz チャット裁定 2026-07-31 (ccmsg r98 mid=2〜16)。正本は
+> kawaz チャット裁定 2026-07-31 (ccmsg r98 mid=2〜16) / 2026-08-01 (mid=21/22)。正本は
 > `docs/research/2026-07-28-link-fixed-path-dsl-design.md` (§3 案 1 が採用案、§4b が record 導入後の
-> 確定形、「残 Q への波及」が Q3〜Q7 の裁定) と `docs/research/2026-07-31-type-input-structure-splice.md` §2b
-> (入力側 splice との分界)。DR-029 が定めた固定パス DSL は文法と「遅延解決」の方針だけを持ち、
-> 実装可能な意味論を欠いていた (参照実装は bare name のみ対応)。本 DR はその意味論を与え、
+> 確定形、「残 Q への波及」が Q3〜Q7 の裁定) と
+> `docs/research/2026-07-31-type-input-structure-splice.md` §2b/§2c (入力側 splice との分界、
+> およびフィールド型 = type 参照・型導出の正本が out.record である裁定)。
+> DR-029 が定めた固定パス DSL は文法と「遅延解決」の方針だけを持ち、実装可能な意味論を欠いていた
+> (参照実装は bare name のみ対応)。本 DR はその意味論を与え、
 > 併せて DR-029 の「解決は遅延」に分界の追補を置く。前提 DR は DR-126 (record 型)。
 
 ## 決定
@@ -65,6 +67,10 @@ bare name では lexical 外で見えない対象に、root を lexical 解決�
 record のフィールドが `{"map": "value"}` を宣言している場合、record 段までのパスは静的に検査され、
 map の内側を指す segment 以降が実行時に落ちる — 静的 / 動的の切替深度は宣言がそのまま決める。
 
+フィールドの型は type 参照である (DR-126 §1) ため、静的降下は**型の依存グラフを辿る**形になる —
+segment がフィールドに当たったら、そのフィールドの type の `out` を見て、それが record ならさらに次の
+segment を静的に降ろせる。降りた先が `map` / `value` に落ちた時点で実行時解決へ切り替わる。
+
 パスは**宣言名軸**である (DR-032 / DR-121 §5) — `export_key` の綴りでは辿らない。
 ただし第 2 相に入った後の segment が指すのは value_parser 産オブジェクトの生キー (record のフィールド名) であり、
 宣言名軸とも結果アドレス軸とも別の第 3 の鍵空間になる。これは「不透明値の内部に kuu のセルは存在しない」という
@@ -109,7 +115,8 @@ presence-optional (DR-126 §3) の適合値であり、`since` は absent とし
   部分 presence は parser 産出として普通の値である)
 - **organic 部分書き経路** — vivify するのは器 `{}` だけで、`default` 橋は無い
 
-言語バインディングの型導出は経路間の保守側を採る (全経路で立つと保証できる宣言だけ `T`、素の宣言は `T?`)。
+経路が 3 本あっても**言語バインディングの型導出は `io_type.output` の record 宣言だけを見る** (DR-126 §3) —
+定義片の `default` / `required` は型を動かさず、フィールドは presence-optional のまま `T?` である。
 定義片の `default` と string 経路の整合は型作者の責任であり、DR-126 §4 の乖離検査の対象外である
 (lint ヒントの候補)。
 
@@ -118,9 +125,12 @@ presence-optional (DR-126 §3) の適合値であり、`since` は absent とし
 vivify で組んだ値も parser が産んだ値も、closed record 宣言への適合という一点では無差別に扱う。
 保証の経路が違うだけである:
 
-- **parser 産** — DR-126 §4 の乖離検査 (宣言外キー / フィールド型違いは Error)
+- **parser 産** — DR-126 §4 の乖離検査 (宣言外キー / フィールドの type が名乗る out との値型違いは Error)
 - **link 組み上げ** — 宣言外キーへの set は §2.2 の静的パス検査で definition-error、
-  座への set 時に operand が**フィールド宣言型の pieceProcessor を通る** (既存の値パイプラインの自然な延長)
+  座への set 時に operand が**そのフィールドの type (record 宣言が指す registry の型参照、DR-126 §1) の
+  pieceProcessor を通る** (既存の値パイプラインの自然な延長)。パースを担うのは**フィールド側の type**
+  であって、operand を送り出した入口セルの `type` 宣言ではない — `link: "tr.until"` の operand は
+  `until` 座が名乗る `timestamp` のパーサで読まれてから座る
 
 どちらの経路でも「closed record 宣言に適合する値しかセルに座れない」が成立する。
 
@@ -257,8 +267,7 @@ presence は値ごとに変わる (DR-126 §3) ので、presence 判定と値読
   (DESIGN / REFERENCE の該当節)。本 DR の 2 相意味論・vivify・Reject 規則は config_key には
   適用されない (config 席の解決は DR-050 の関心) — この分界の注記を DESIGN 側編集時に添える
 - **lint 候補**: record 静的化により「sentinel 返し fn の値残余座への適用」(§4.1) は常に Reject に
-  なることが定義時に分かる — 死に定義として lint の警告対象候補 (definition-error にはしない、
-  DR-126 §5 の null フィールドと同じ整理)
+  なることが定義時に分かる — 死に定義として lint の警告対象候補 (definition-error にはしない)
 - **fixtures/link-parse/**: 現行 3 本 (`basic.json` / `absent-target.json` / `export-key-address.json`) は
   すべて第 1 相の pin であり不変。新設が要るのは 7 種 —
   (1) セル降下 (兄弟スコープの子への合流) / (2) 値残余 (不透明複合値のフィールド書き) / (3) 負 index /
@@ -323,4 +332,5 @@ value_parser が必ず通るので `final_filters` への依存が減る、と�
 - DR-121 §4/§5 (`link` タグの独立性・effects の宣言名軸)
 - DR-122 (sources shadow tree — §3 のタグ決定単位を複合値内部へ一般適用)
 - docs/research/2026-07-28-link-fixed-path-dsl-design.md (案の比較と裁定の正本)
-- docs/research/2026-07-31-type-input-structure-splice.md §2b (入力側 splice との分界)
+- docs/research/2026-07-31-type-input-structure-splice.md §2b/§2c (入力側 splice との分界、
+  フィールド型 = type 参照と型導出の正本)

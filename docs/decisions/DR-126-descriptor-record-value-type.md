@@ -1,7 +1,9 @@
-# DR-126: descriptor value-type 体系への record 型追加 — closed record、フィールドは presence-optional、宣言との乖離は Error
+# DR-126: descriptor value-type 体系への record 型追加 — closed record、フィールド型は kuu type 参照、presence-optional、宣言との乖離は Error
 
-> 由来: kawaz チャット裁定 2026-07-31 (ccmsg r98 mid=2〜7)、正本は
-> `docs/research/2026-07-28-link-fixed-path-dsl-design.md` §4b。発端は「type パーサが descriptor で
+> 由来: kawaz チャット裁定 2026-07-31 (ccmsg r98 mid=2〜7) および 2026-08-01 (mid=21/22)、正本は
+> `docs/research/2026-07-28-link-fixed-path-dsl-design.md` §4b と
+> `docs/research/2026-07-31-type-input-structure-splice.md` §2c (フィールド型 = type 参照、
+> 型導出の正本は out.record)。発端は「type パーサが descriptor で
 > 構造も宣言できる方向に寄れば、棚上げしていた (link 固定パスの) 定義時解決ができるのでは」という指摘。
 > DR-107 §3 が「固定フィールドを持つ struct 型は本体系では正確に表現できず map<string,value> で近似する」と
 > 明記した部分の精密化にあたる。record は補完・help・言語バインディングの型導出にも独立に効くため、
@@ -18,13 +20,38 @@ value_type :=
     "string" | "number" | "bool" | "null" | "value"
   | { "array": value_type }
   | { "map": value_type }                                  // map<string, T> (キーは常に string)
-  | { "record": { <field_name>: value_type, ... } }        // 本 DR で追加
+  | { "record": { <field_name>: <type 参照>, ... } }        // 本 DR で追加
   | [value_type, value_type, ...]                          // union (2 要素以上)
 ```
 
-フィールドの値型は**同じ value-type 体系**で書く。`type` registry の parser 名 (`builtin/number_parser` 等、
-DR-094 の ns 付き識別子) をフィールド型に持ち込むことはしない (§「採用しなかった案」(b))。
-record は再帰体系の一員なので、フィールド値型に record / array / map / union をネストできる。
+**フィールドの型は kuu の type 参照で書く** (kawaz 裁定 2026-08-01)。`{"record": {"since": "timestamp",
+"until": "timestamp"}}` のように、`type` registry / `definitions.types` の住人を DR-094 の ns 付き識別子
+(bare 名は builtin ns の糖衣、解決は definitions → registry の順 = DR-035) で指す。wire の `type:` 属性と
+同じ鍵空間であり (DR-032「type は型参照」)、record は「このフィールドはどの kuu 型か」を名乗る。
+
+`"number"` / `"string"` / `"bool"` をフィールドに書けるのは、これらが**組み込みで提供される普通の
+registry type** だからであって、value-type primitive の綴りがそのまま通っているからではない。record の
+フィールド位置に特別扱いの語彙は無い — bool と string しか使わない定義から number 型を tree-shaking で
+落としても、その定義は動くべきである。
+
+この体系には 2 つの語彙が並ぶ。**value_type** は「JSON としてどう表現されるか」を語る軸で、
+`io_type` の primitive / `array` / `map` / union / record タグの宣言に使う。**type 参照**は「kuu の型
+レジストリの住人」を指す軸で、record のフィールドだけがこちらを使う。record 自身は value_type の一員の
+ままなので、`{"array": {"record": {...}}}` のように value_type の内側へネストできる。フィールド側の
+入れ子構造は、参照先 type の out が record / array / map であることによって生じる (下記の再帰導出)。
+
+**型は依存グラフを成す。** `timerange` の record が `timestamp` を参照するなら、`timestamp` が型
+レジストリに解決できない descriptor で `timerange` は使えない — 未登録の type 参照は unknown-vocab 系の
+definition-error である (filter 名未登録を静的 reject する DR-101 と同型)。wire の `type:` 属性が
+未解決時に warn + string フォールバックへ倒す (DR-028、ユーザ定義の前方互換) のとは扱いが異なる —
+record のフィールドは型を名乗る側の宣言であり、解決できない参照を string と読み替えると名乗りが
+別の型を語ることになる。
+
+**JSON 形は再帰導出する。** record を読む消費者 (codegen / lint / 言語バインディング) は、各フィールドの
+type の `out` を再帰的に辿って JSON 形を得る (`timestamp` → `number`)。したがって record の JSON 形を
+知るには registry 解決が前提になる。descriptor を持たない未知 ns の type に当たった消費者は、その
+フィールドを `value` に縮退して読み進めるのが自然な逃げ道である (縮退は消費者側の読みの話であって、
+その descriptor を解決すべき kuu 実装にとって未登録参照が definition-error であることは変わらない)。
 
 フィールド 0 個の record (`{"record": {}}`) は「常に `{}`」という完全に定まった型であり構文上は合法。
 記法上 map / array と同じく object タグ形なので、DR-107 §3 が指摘した bare array union 記法と将来の
@@ -57,12 +84,14 @@ kuu の値空間に `null` は無い (DR-051 §4)。したがって record の�
 「そのキーが現に立っているか」は値ごとに変わる。この 2 つは別の軸である。
 
 言語バインディングの型導出 (DR-051 §3) は record の内側にも同じ形で降りる — 常に立つと保証できない
-フィールドは `T?` に落ちる。**presence の保証は record 側の専用マーカーではなく宣言駆動である**
-(kawaz 裁定 2026-07-31 mid=14/17/18): 型が入力定義片 (`input_structure`、research 2026-07-31) を持つ場合、
-フィールドの presence はその leaf の既存宣言 (`required` / `default` / repeat 系) から DR-051 §3 を
-機械適用して導出する (`required` 付き → `T`、素の宣言 → `T?`)。導出は供給経路間の保守側を採る
-(全経路で立つと保証できる宣言だけ `T`)。宣言する場が無いもの (定義片を持たない provider 系の out record)
-は `T?` が既定である。
+フィールドは `T?` に落ちる。**値セルの型導出の正本は `io_type.output` の record 宣言だけである**
+(kawaz 裁定 2026-08-01)。型が入力定義片 (`input_structure`、research 2026-07-31) を持っていても、定義片は
+CLI トークンの消費文法を語る入力側の機構であって型導出には関与しない — 定義片 leaf の `required` /
+`default` から `T` を導く経路は設けない。したがって record のフィールドは presence-optional のまま、
+型導出では全フィールドが `T?` になる。
+
+「このフィールドは実際には常に立つ」を機械可読に主張する手段は v1 に持たない。実態の注記が要るなら
+`description` の領分である。
 
 ### 4. 宣言と実産出の乖離は Error であって Reject ではない
 
@@ -72,7 +101,7 @@ presence-optional (§3) の帰結として乖離は 2 種に精密化される:
 | 乖離 | 扱い |
 |---|---|
 | (a) 宣言に無いキーが値に存在する | Error |
-| (b) 宣言済みキーの値がフィールド宣言の型と合わない | Error |
+| (b) 宣言済みキーの値が**フィールドの type が名乗る `out`** と合わない | Error |
 | (c) 宣言済みキーが値に存在しない | **正常** (§3 の presence-optional) |
 
 分界文 (本 DR が置く規範):
@@ -104,11 +133,6 @@ Reject と違い Error は保持されて failure report に原因として現�
 キー語彙が実行時にしか決まらない object (ユーザ入力由来のキー、外部データの生 JSON 等) は
 `{"map": "value"}` / `"value"` で宣言する。これは従来どおりで、record の追加は近似の道を塞がない。
 record を名乗った以上は §2/§4 の義務が生じる、というだけの関係である。
-
-補足 (lint 領分): record フィールド型に `"null"` (または null 込み union) を書くことは構文上合法だが、
-type パーサの産出値は kuu 値空間 (DR-051 §4) に閉じ null を含まないため、そのフィールドは充足不能
-(absent しかありえない) — 死に宣言として lint の警告対象 (definition-error にはしない、常時充足
-`required` と同じ整理)。
 
 ## 根拠
 
@@ -147,25 +171,30 @@ null ゼロ値を使えば名乗りが kuu の値空間 (DR-051) と別の空間
 - **value_type の全消費面への開放**: `$defs.value_type` は `io_type` だけでなく
   `invocation.parameters[].type`・factory `config` の型注釈・cell_fns の output-only io_type (DR-114) からも
   共有参照されるため、record はこれら全てで一斉に書けるようになる (意図した帰結 — 体系は 1 つ)
-- **schema/descriptor.schema.json**: `$defs.value_type` の `anyOf` に `{"record": {...}}` 分岐を追加
-  (`additionalProperties` は field 名 → `$ref: value_type` の `patternProperties`/`additionalProperties` 形)。
+- **schema/descriptor.schema.json**: `$defs.value_type` の `anyOf` に `{"record": {...}}` 分岐を追加。
+  フィールド値は value_type への `$ref` ではなく **type 参照の string** (`definitions.types` /
+  registry の ns 付き識別子、wire の `type:` と同じパターン) を受ける `additionalProperties` 形になる。
   同 `$defs` の `description` にある「固定フィールドを持つ struct 型は本体系では正確に表現できず
-  map<string,value> で近似する (DR-107 §6 の provider 例)」の一文を差し替える
+  map<string,value> で近似する (DR-107 §6 の provider 例)」の一文を差し替える。
+  参照先の存在検査は Schema では書けない — 未登録参照の definition-error (§1) は参照層の関心である
 - **schema/builtin-descriptors.json**: `providers.tty_provider` の `io_type.output` が現在
   `[{"map": "value"}, "null"]` で、DR-099 の `{terminal: bool, cygwin: bool}` を近似している。
-  record で正確に書けるようになる (`[{"record": {"terminal": "bool", "cygwin": "bool"}}, "null"]`)。
+  record で正確に書けるようになる (`[{"record": {"terminal": "bool", "cygwin": "bool"}}, "null"]` —
+  ここの `"bool"` は組み込み registry type への参照であり、value_type primitive と同綴りなだけである)。
   `config_provider` の `[{"map": "value"}, "null"]` は真に開いた map なので不変
 - **docs/DESIGN.md §12b**: tty_provider のシグネチャ記述末尾の「入出力の enum/struct 精密化は io_type の
   型体系の外なので description に注記」が record 導入で成立しなくなる (struct 側のみ。enum 精密化は
   引き続き型体系の外)。§13.1 の descriptor 軸の列挙は軸名を並べるだけで型体系の中身を書いていないため変更不要
 - **scripts/lint-descriptors.py**: envelope の JSON Schema 検証は schema 追随で自動的に record を通す。
   semantic 検査のうち `output_mode:"preserve"` ⇒ `io_type.input == io_type.output` の等価判定は
-  現在も JSON 構造比較なので record でもそのまま成立する。record 固有の追加検査は現時点で不要
+  現在も JSON 構造比較なので record でもそのまま成立する。追加が要るのは record フィールドの type 参照が
+  解決するかの検査 (§1 の未登録参照 = definition-error に対応する lint 側の検出)
 - **docs/REFERENCE.md**: value_type 記法の表は REFERENCE に存在しない (§3 は kuu の `type` カタログ、
   §6 の filter カタログは `role`/`domain`/`output_mode`/`fallibility`/`reasons` 列で `io_type` 列を持たない)。
   記法の正本は本 DR + DR-107 §3 + `schema/descriptor.schema.json` のままで、REFERENCE への追記は
   tty_provider を record 化する編集に伴う注記が要るかの確認に留まる
-- **DR-051**: §3 の言語バインディング型導出規則が record の内側にも適用される (§3 の追記対象)。
+- **DR-051**: §3 の言語バインディング型導出規則が record の内側にも適用される (§3 の追記対象) —
+  フィールドの型は参照先 type の `out` を辿って求め、presence は全フィールド `T?` になる。
   §1/§4 (absent とnull 不在) は本 DR が record 内へ引き継ぐだけで不変
 - **link 固定パス DSL (research 2026-07-28 §4b)**: 第 2 相の静的化と器 `{}` の auto-vivify が本 DR の
   record を前提にする。DSL 側の裁定 (Q1 確定形・Q2 の 2 層・vivify で組んだ値が value_parser を通らない
@@ -181,14 +210,25 @@ wire 拡張に強く、type パーサが将来フィールドを増やしても�
 未宣言キーの受け皿を生成物が常に持つ形は、record を導入する目的 (構造をそのまま型にする) を失う。
 フィールドを増やしたいときは宣言を増やせばよく、宣言を古いまま使い続けられることは利点ではない。
 
-### (b) フィールド値型に parser 名 (ns 参照) を許す
+### (b) フィールドを bare value-type だけで書く (type 参照を許さない)
 
-`{"record": {"since": "builtin/datetime_parser"}}` のように `type` registry の住人をフィールド型に
-書けると、「このフィールドは datetime である」といった意味論まで宣言できる。棄却理由は
-JSON 閉域の単純性 (kawaz 裁定 mid=3「フィールドの値型は同じ value-type 体系で書く」)。
-value_type は「JSON としてどう表現されるか」を語る体系であり、parser 名は「文字列をどう解釈したか」を
-語る別軸である。混ぜると value_type の消費者 (生成器・lint・型導出) が registry 解決を要求されるようになり、
-ns 未知の parser 名を持つ descriptor を読めなくなる。意味論の注記が要るなら `description` で足りる。
+`{"record": {"since": "number"}}` のようにフィールドも `io_type` と同じ value-type 体系に閉じれば、
+record の JSON 形が registry 解決なしで読め、体系が 1 本で済む。棄却理由は 3 つある。
+
+第 1 に、**link 注入時のパースの置き場が失われる**。`link: "tr.until"` の operand は文字列として
+座に届き、座る前にパースされる必要がある (DR-127 §3.2)。そのパーサを持つのはフィールドの type であり、
+フィールドが「JSON 形」しか名乗らないと、この経路のパースを担う宣言がどこにも無くなる。入口側
+(`--until` の `type`) は別のセルの宣言であって、link で直接書かれる座には届かない。
+
+第 2 に、**型依存を表現できない**。`timerange` が `timestamp` に依存するという事実が descriptor から
+消え、「このフィールドは timestamp である」は `description` の散文に戻る。record を導入した目的
+(構造を機械可読にする) が半分残されたままになる。
+
+第 3 に、JSON 閉域 (DR-107 §3) の制約は**値**が JSON 表現可能であることの要求であって、フィールドの
+**語彙**を value-type に限る要求ではない。type 参照を書いても、その type の `out` を辿って得られる形は
+JSON の内側に留まる (§1 の再帰導出)。registry 解決を要求する点は棄却理由にならない — descriptor の
+世界では registry 解決は既に前提であり (wire の `type:` / `filter` / `accumulator` すべてが名前参照)、
+descriptor を持たない未知 ns の type は消費者側で `value` に縮退できる。
 
 ### (c) 値の無いフィールドを `null` のゼロ値で埋める
 
@@ -204,6 +244,10 @@ kuu の値空間に `null` は無く、「値が無い」を in-band の null �
 - DR-051 (absent / null — §1 の absent 意味論が record の内側へ降り、§4 が (c) の棄却根拠)
 - DR-037 (filter の Reject / Error — §4 の分界文が本 DR の乖離扱いの上位規範)
 - DR-061 §4 (descriptor は validator ではない — §4 の位置づけとの整合)
-- DR-094 (registry 語彙の namespace — (b) で持ち込まないと決めた parser 名の体系)
+- DR-094 (registry 語彙の namespace — §1 の record フィールドが指す type 参照の識別子体系)
+- DR-032 (ref/link は name 参照、type は型参照 — フィールドの型参照が乗る鍵空間)
 - DR-099 / DESIGN §12b (tty_provider の `{terminal, cygwin}` — 近似が record で解消される実例)
 - docs/research/2026-07-28-link-fixed-path-dsl-design.md §4b (裁定の正本、link path 側の波及)
+- docs/research/2026-07-31-type-input-structure-splice.md §2c (フィールド型 = type 参照・型依存グラフ・
+  型導出の正本が out.record である裁定の正本)
+- DR-127 §3.2 (link 注入時のパースをフィールドの type が担う — (b) 棄却の第 1 理由の行き先)
