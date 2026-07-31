@@ -47,6 +47,11 @@ definition-error である (filter 名未登録を静的 reject する DR-101 �
 record のフィールドは型を名乗る側の宣言であり、解決できない参照を string と読み替えると名乗りが
 別の型を語ることになる。
 
+**このグラフは非循環でなければならない。** record フィールドの type 参照は DR-067 の参照層が検査する
+type edge に含まれ、自己参照 (`Node.out = {"record": {"next": "Node"}}`) を含む循環は definition-error
+`circular-ref` である。再帰型は v1 では許さない — JSON 形の再帰導出 (§1) と codegen が有限で止まることを
+単純に保つためである。
+
 **JSON 形は再帰導出する。** record を読む消費者 (codegen / lint / 言語バインディング) は、各フィールドの
 type の `out` を再帰的に辿って JSON 形を得る (`timestamp` → `number`)。したがって record の JSON 形を
 知るには registry 解決が前提になる。descriptor を持たない未知 ns の type に当たった消費者は、その
