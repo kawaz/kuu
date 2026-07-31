@@ -80,13 +80,30 @@ presence-optional (§3) の帰結として乖離は 2 種に精密化される:
 
 (a)/(b) は descriptor が「実装挙動を変えない宣言」である (DR-061 §4「descriptor は validator ではない」)
 という位置づけと矛盾しない — 宣言が実挙動を変えるのではなく、**宣言と実挙動が食い違ったこと自体が
-実装の不具合として報告される**。検査を常時走らせるか debug 相に限るかは実装の裁量 (射程外)。
+実装の不具合として報告される**。検査は規範である (乖離を検出したら Error)。ただし conformance fixture は
+壊れた builtin parser を注入できないため、この Error の pin は実装側テスト (wbtest 等) の領分になる。
+
+本節の乖離検査は type パーサに限らず、**io_type (または invocation.parameters / config の型注釈) に
+record を名乗る registry 住人一般** (provider / filter / cell_fns / collector) に適用する。Reject 機構を
+持たない住人 (provider は reasons / fallibility を使わない、DR-107 §6) でも Error 側は共通に存在する
+(config_provider の committed パス読込失敗 = Error の前例と同型)。分界文の Reject 側はその住人が
+Reject 機構を持つ場合にのみ意味を持つ。
+
+Error は kuu の失敗意味論どおり held-error の扱いに従う (path-search/held-errors 系) — 他の解釈枝が
+成立すればそちらが選ばれる。§「根拠」の「バグ報告」動機が直接効くのは全枝不成立の場面だが、
+Reject と違い Error は保持されて failure report に原因として現れるので、偽装 (ユーザ入力の失敗への
+見せかけ) は起きない。
 
 ### 5. record で書けないものは従来どおり近似して実行時に倒す
 
 キー語彙が実行時にしか決まらない object (ユーザ入力由来のキー、外部データの生 JSON 等) は
 `{"map": "value"}` / `"value"` で宣言する。これは従来どおりで、record の追加は近似の道を塞がない。
 record を名乗った以上は §2/§4 の義務が生じる、というだけの関係である。
+
+補足 (lint 領分): record フィールド型に `"null"` (または null 込み union) を書くことは構文上合法だが、
+type パーサの産出値は kuu 値空間 (DR-051 §4) に閉じ null を含まないため、そのフィールドは充足不能
+(absent しかありえない) — 死に宣言として lint の警告対象 (definition-error にはしない、常時充足
+`required` と同じ整理)。
 
 ## 根拠
 
@@ -122,6 +139,9 @@ null ゼロ値を使えば名乗りが kuu の値空間 (DR-051) と別の空間
 - **DR-107**: §3 に更新注記を追記 (「固定フィールドを持つ struct 型は本体系では正確に表現できず
   `{"map": "value"}` で近似する」を本 DR が覆す)。§6 の provider 例の同旨記述も同じ注記の射程。
   DR-107 の他の裁定 (固定幅なし・`value` の定義域・union 記法・role 条件分岐) は不変
+- **value_type の全消費面への開放**: `$defs.value_type` は `io_type` だけでなく
+  `invocation.parameters[].type`・factory `config` の型注釈・cell_fns の output-only io_type (DR-114) からも
+  共有参照されるため、record はこれら全てで一斉に書けるようになる (意図した帰結 — 体系は 1 つ)
 - **schema/descriptor.schema.json**: `$defs.value_type` の `anyOf` に `{"record": {...}}` 分岐を追加
   (`additionalProperties` は field 名 → `$ref: value_type` の `patternProperties`/`additionalProperties` 形)。
   同 `$defs` の `description` にある「固定フィールドを持つ struct 型は本体系では正確に表現できず

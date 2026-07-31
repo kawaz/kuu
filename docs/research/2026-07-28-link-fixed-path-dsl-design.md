@@ -83,7 +83,7 @@ kawaz とのチャット議論 (2026-07-31 ccmsg r98 mid=2〜7) で §4 の Q1/Q
 
 ### 残 Q への波及
 
-- Q4 (sources 座): record のキー presence 意味論と構造分解案が自然に噛み合う (推し強化、裁定は checkbox 継続)
+- **Q4 = a 裁定確定 (2026-07-31 checkbox)**: value_parser 産複合値は shadow tree 上で**構造分解** (DR-122 §3「タグの決定単位は値の座」の一般適用)。座ごとにタグ、link 部分書きは当該座のみ `link`。前提確認済み: 既存 corpus に複合値 leaf の sources pin は 0 件 = 波及なし
 - Q3 (値残余の操作範囲): vivify 導入後も「set + Value 返し fn のみ」は不変 (器生成は set の前段階であって操作語彙の拡張ではない)
 - 新規の裁定不要事項: record 型の DR は link path DR と分離して起草する (record は補完・help・言語バインディング型導出にも効く独立機能)
 
