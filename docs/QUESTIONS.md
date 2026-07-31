@@ -22,26 +22,12 @@
 
 ## 裁定待ち
 
-### 👺 LINKPATH-Q1: link 固定パス DSL — 2 相分解を規範に置くか (重心)
-
-下敷き: [research/2026-07-28-link-fixed-path-dsl-design.md](research/2026-07-28-link-fixed-path-dsl-design.md) §3 (案 1-3)、DR-029。
-`link:"timerange.since"` のパスを「セル空間の接頭辞 (定義時静的、宣言構造で降下) + 値空間の残余 (発火時遅延、introspection)」の 2 相に分解する案 1 が推し。effects の cell 単位規範 (CONFORMANCE §3)・DR-122 shadow tree・DR-032 name 参照と無矛盾で、セルに当たる限り既存 link 意味論 (ladder/accumulator/1実体:N参照) が無傷。難点は「同じ綴りでセル同期か値書きかの厚みが変わる」暗黙性 — ただしこれは「スコープ kv はパース時に存在せず、不透明値の内部にセルは無い」という構造的事実の写像 (研究ノート §3 案 1 の難点欄)。
-
-- [ ] a: 案 1 (2 相分解) を規範に置く (推し)
-- [ ] b: 値残余のみに絞る (案 3 系 — v1 完備主義に反するため非推奨)
-- [ ] c: 保留 (追加検討の指示を添えて)
-
-### 👺 LINKPATH-Q2: 値残余の解決先が発火時 absent のときの挙動 (UX 承認)
-
-導出は「その枝の Reject」一択 (DR-029 解決失敗=Reject + DR-037/038 の系、研究ノート §2/§4-Q2)。UX 帰結の承認が要る: `--since` (部分書き) を使うには、同一解釈内で実体 (`--timerange X`) が**先に**発火する構造を書き手が組む、という要件ごと pin する。
-
-- [ ] a: 枝 Reject + 書き手要件ごと pin (推し、導出どおり)
-- [ ] b: 異議あり (方向を添えて)
+> **LINKPATH-Q1 / Q2 はチャット裁定で確定済み (2026-07-31)**: Q1 = 2 相分解 + **record 型追加による静的化** (descriptor value-type 体系に closed record を新設、DR-107 §3 精密化)。Q2 改 = record 宣言あり → 器 `{}` auto-vivify で部分書き成立 / 宣言なし (map・value) → 枝 Reject の 2 層。record は キー語彙 closed・presence-optional (null 不使用)、乖離 Error は宣言外キー存在 + フィールド値型違いの 2 種、フィールド横断 invariant は final_filters の領分。詳細は research ノート追記 → DR 起草へ。
 
 ### 👺 LINKPATH-Q4: value_parser 産の不透明複合値は shadow tree 上で何座か
 
 前提確認済み (2026-07-31 統括実施): sources が構造分解されている fixture は全て**宣言構造由来** (repeat rows / nameless seq tuple / or branch rows) で、value_parser 産複合値・kv-map 合成 map の sources pin は corpus に **0 件** = 白紙で裁定可能 (既存 pin への波及なし)。
-推しは構造分解側 — DR-122 §3「タグの決定単位は値の座」の一般適用。leaf 1 タグ案は link 部分書き (`.since` だけ cli) の由来を表現できない。
+推しは構造分解側 — DR-122 §3「タグの決定単位は値の座」の一般適用。leaf 1 タグ案は link 部分書き (`.since` だけ cli) の由来を表現できない。**record 型のチャット裁定 (キー presence 意味論が record 内へ降りる) とも構造分解側が自然に噛み合い、推しをさらに強める**。
 
 - [ ] a: 構造分解 (座ごとにタグ、部分書きは当該座のみ `link`) (推し)
 - [ ] b: leaf 1 タグ (複合値は 1 座、部分書きで座全体が `link` に化ける)
