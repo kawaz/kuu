@@ -35,9 +35,21 @@ sub-parse の結果 (or → union、seq → kv) を value_parser が受けて宣
 
 ## 2. 未確定の設計課題 (DR 起草前に詰める)
 
-- **help 生成との整合** (kawaz 自身が「ちょいめんどう」と明言、最重要):
-  usage 行に定義片の消費形をどう畳んで見せるか (`--timerange <RANGE | SINCE UNTIL>` 的な合成?
-  value_name との関係、DR-113/DR-115 の help model にどう乗せるか)
+- **help 生成との整合** — 分析済み (2026-07-31、fable5-low 分析を統括が実物裏取り)。
+  **結論: 既存 value_structure 表示への完全委譲で新規範ほぼゼロ**:
+  - 決定的な先例 = `help_category` preset (DR-113 §2.3): 「type descriptor 由来で注入された構造が
+    `value_structure` として help model に射影される」規範が既に存在する。splice はその一般化
+  - 1 行合成 `<RANGE | <SINCE UNTIL>>` は DR-115 §5.1 `value_structure_style: "auto"` の既定挙動として規定済み
+  - sealed scope が閉じるのは ref/link/export_key/result への露出であり、表示メタ (value_name、
+    name からの uppercase 導出) は元々結果非露出 — fragment leaf の name を usage プレースホルダに
+    使うのは既存規範と無矛盾。新概念不要
+  - 「type 側が help 表示文字列を明示する」案は不採用 — DR-113 が「usage 一行文字列を model に含める」を
+    却下済み (素材/policy 分離)。上書き需要は既存語彙 (value_name / help_value_structure_style) で充足
+  - DR 起草時に決める残り: (i) registry 宣言 type を model の `types` 集約に載せるか (id namespace が
+    definitions 側と未規定、v1 は inline 固定でも成立)、(ii) 位相の pin 文言 (help_query の読む断面に
+    input_structure 由来構造が乗る — DR-113 §2.3 と同じ書き方)、(iii) fragment 内 repeat の可否
+    (sealed scope 語彙範囲と連動)、(iv) ネスト splice の model 表現 (type_ref ネストで可能、可否は
+    sealed scope 規則に従属)
 - **補完**: 定義片内の枝・typed leaf の補完候補が外の補完機構にどう合流するか (splice なら
   構造は見えるはずだが、sealed scope の名前が候補 origin にどう出るか)
 - **sealed scope の精密規則**: 定義片内で使える語彙の範囲 (installer 所有語彙はどこまで /
