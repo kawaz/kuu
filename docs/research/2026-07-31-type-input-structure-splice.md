@@ -81,11 +81,12 @@ sub-parse の結果 (or → union、seq → kv) を value_parser が受けて宣
   から DR-051 §3 の既存規則をそのまま機械適用して導出する。`{number, default: 80}` → T /
   required → T / `{string, repeat:{min:0}}` → 配列 T / 素の宣言 → T? / 宣言する場が無いもの
   (定義片を持たない provider 系の out record) → T? が正直な既定。blanket 規則 (全 T? / 全必須) は無い
-- **未決の角: 定義片 leaf の default × organic 部分書き (vivify)** — `until {default: 80}` 宣言の
-  timerange に `--since X` の部分書きだけが来たとき: (i) default が座に降りて `{since: X, until: 80}`
-  (「指定通り」の一貫性最大、ただし定義片セル宣言が出力 record の座の既定値として効く橋が要る —
-  string 形パース経路では定義片セルは発火しないので橋は organic 経路専用) / (ii) default は
-  sub-parse 内でのみ効き organic は `{since: X}` 止まり (default 持ちでも T? に落ちる)。裁定待ち
+- **定義片 default × organic 部分書きは「無橋」で確定** (mid=16 の帰結、2026-07-31): 各経路は自分の
+  既存規則どおり — sub-parse 経路は定義片セルのラダーが普通に回る (default 充填あり) / parser string
+  経路は産出がすべて (timerange の string 形は `-5m..` / `..now+5m` のような部分 range を正規に産む —
+  部分 presence は parser 産出として普通の値) / organic 部分書きは vivify の器 `{}` のみで default 橋なし。
+  型導出は経路間の保守側 (全経路で保証できる宣言だけ T、素宣言 = T?)。定義片 default と string 経路の
+  整合は型作者の責任 (乖離検査の対象外、lint ヒント候補)
 - **フィールド契約の置き場** (mid=12 で確認): timestamp (in: string|number → out: number) のような
   in 契約が住むのは**入口側** — `--until` 単体入口の `type: timestamp` と、input_structure 定義片の
   leaf `until` の `type: timestamp`。record 宣言に住むのは out 形 (`{until: "number"}`) だけで、
