@@ -85,6 +85,8 @@ kawaz とのチャット議論 (2026-07-31 ccmsg r98 mid=2〜7) で §4 の Q1/Q
 
 - **Q4 = a 裁定確定 (2026-07-31 checkbox)**: value_parser 産複合値は shadow tree 上で**構造分解** (DR-122 §3「タグの決定単位は値の座」の一般適用)。座ごとにタグ、link 部分書きは当該座のみ `link`。前提確認済み: 既存 corpus に複合値 leaf の sources pin は 0 件 = 波及なし
 - Q3 (値残余の操作範囲): vivify 導入後も「set + Value 返し fn のみ」は不変 (器生成は set の前段階であって操作語彙の拡張ではない)
+- **Q5 = a 裁定確定 (2026-07-31 checkbox)**: effects entry に structured な `path` フィールド (segment 配列) を optional 追加。結合文字列は DR-121 §1.1 の禁則どおり不採用
+- **C1 (Q3/Q6/Q7 系) 全承認 (2026-07-31 checkbox + 「LINKPATH-C1ok」)**: 値残余の操作 = set + Value 返し fn のみ / DSL 表層 3 点 (パス起点 name の字句制約・負 index は発火時現在長・`[int]` = 値の座を持つ透過子の並び) / DR-029 への分界文追補、いずれも導出どおり採用。**これで LINKPATH の裁定は全て確定 — DR 起草可能**
 - 新規の裁定不要事項: record 型の DR は link path DR と分離して起草する (record は補完・help・言語バインディング型導出にも効く独立機能)
 
 - decode: `link` String をパス AST (root + segments) にパース。bare name は segments 空の縮退形で後方差分なし

@@ -76,6 +76,16 @@ sub-parse の結果 (or → union、seq → kv) を value_parser が受けて宣
   宣言適合を保証 / link 組み上げ → 宣言外キーへの set は静的パス検査で definition-error、
   座への set 時に operand が**フィールド宣言型で pieceProcessor を通る** (既存値パイプラインの自然延長)。
   どちらの経路でも「closed record 宣言に適合する値しかセルに座れない」が成立する
+- **presence 導出は宣言駆動** (mid=14 で裁定、RECFLD-Q1 は reframe で解消): record 専用の presence
+  マーカーは新設せず、フィールドの presence は**定義片 leaf の既存宣言 (default / required / repeat)**
+  から DR-051 §3 の既存規則をそのまま機械適用して導出する。`{number, default: 80}` → T /
+  required → T / `{string, repeat:{min:0}}` → 配列 T / 素の宣言 → T? / 宣言する場が無いもの
+  (定義片を持たない provider 系の out record) → T? が正直な既定。blanket 規則 (全 T? / 全必須) は無い
+- **未決の角: 定義片 leaf の default × organic 部分書き (vivify)** — `until {default: 80}` 宣言の
+  timerange に `--since X` の部分書きだけが来たとき: (i) default が座に降りて `{since: X, until: 80}`
+  (「指定通り」の一貫性最大、ただし定義片セル宣言が出力 record の座の既定値として効く橋が要る —
+  string 形パース経路では定義片セルは発火しないので橋は organic 経路専用) / (ii) default は
+  sub-parse 内でのみ効き organic は `{since: X}` 止まり (default 持ちでも T? に落ちる)。裁定待ち
 - **フィールド契約の置き場** (mid=12 で確認): timestamp (in: string|number → out: number) のような
   in 契約が住むのは**入口側** — `--until` 単体入口の `type: timestamp` と、input_structure 定義片の
   leaf `until` の `type: timestamp`。record 宣言に住むのは out 形 (`{until: "number"}`) だけで、
