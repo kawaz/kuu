@@ -96,10 +96,18 @@ DR-113 §2 / DESIGN §14.1 / §15.15 の内部セル → `help_query` 入力の�
 「result のキーを見る」しかないため、本 issue の衝突がそのまま scope 判定の
 誤りに直結する構造がある (別 issue で起票予定、本 issue の受け入れ条件には含めない)。
 
+## 裁定確定 (2026-08-01、EXK2-Q1=a、kawaz)
+
+**(a) 実装バグとして ambiguous エラー昇格を採用**。option × command の露出キー衝突は
+DESIGN §15.5 / DR-073 の規定どおり ambiguous に昇格させる。回避はユーザ責任
+(export_key の重複回避や link 合流で書き換えれば良い — kawaz mid=27)。
+
+旧 (b) 裁定の記録 (2026-07-31 の checkbox b) は誤チェックだったことが mid=27 で確定。
+
 ## 受け入れ条件
 
-- [ ] (a) か (b) の裁定が下る
-- [ ] (a) 採用時: option × command の衝突検出が実装され、`fixtures/export-key/`
-      に option × command 断面の fixture case が追加される
-- [ ] (b) 採用時: DESIGN / DR に commands 除外規定と result マージ規則が明記され、
-      `kuu help --help` のような実例が矛盾なく扱われることが確認される
+- [x] (a) か (b) の裁定が下る → (a) 採用確定 (上記「裁定確定」参照)
+- [ ] kuu.mbt の衝突検出を option × command へ拡大する
+- [ ] `fixtures/export-key/` に option × command 断面の fixture case を追加する
+- [ ] kuu-cli 自身の `--help`/`help` 衝突は export_key rename か help preset
+      移行で回避する (実装後に発現する ambiguous への対処)
