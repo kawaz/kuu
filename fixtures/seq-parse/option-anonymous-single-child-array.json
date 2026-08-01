@@ -6,7 +6,11 @@
       {
         "name": "pair",
         "long": true,
-        "seq": [{ "type": "string" }]
+        "seq": [
+          {
+            "type": "string"
+          }
+        ]
       }
     ]
   },
@@ -14,10 +18,17 @@
     {
       "id": "single-anonymous-child-stays-an-array",
       "why": "`--pair /a`: 子が 1 個でも結果は 1 要素の配列。`{pair: \"/a\"}` への縮退は起きない。",
-      "args": ["--pair", "/a"],
+      "args": [
+        "--pair",
+        "/a"
+      ],
       "expect": {
         "outcome": "success",
-        "result": { "pair": ["/a"] }
+        "result": {
+          "pair": [
+            "/a"
+          ]
+        }
       }
     }
   ]

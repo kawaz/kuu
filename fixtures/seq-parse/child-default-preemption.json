@@ -7,29 +7,78 @@
         "name": "pair",
         "long": true,
         "seq": [
-          {"name": "k", "type": "string"},
-          {"name": "v", "type": "string", "default": "D"}
+          {
+            "name": "k",
+            "type": "string"
+          },
+          {
+            "name": "v",
+            "type": "string",
+            "default": "D"
+          }
         ]
       }
     ],
     "positionals": [
-      {"name": "rest", "type": "string", "repeat": {"min": 0}}
+      {
+        "name": "rest",
+        "type": "string",
+        "repeat": {
+          "min": 0
+        }
+      }
     ]
   },
   "cases": [
     {
       "id": "consuming-child-preempts-default-empty-path",
       "why": "v が b を消費しても rest=[c] で完全経路へ届くため、v=D として b,c を rest へ送る空席枝は立たない。",
-      "args": ["--pair", "a", "b", "c"],
+      "args": [
+        "--pair",
+        "a",
+        "b",
+        "c"
+      ],
       "expect": {
         "outcome": "success",
         "effects": [
-          {"entity": "k", "op": "set", "operand": "a", "source": "cli"},
-          {"entity": "v", "op": "set", "operand": "b", "source": "cli"},
-          {"entity": "rest", "op": "set", "operand": "c", "source": "cli"}
+          {
+            "entity": "k",
+            "op": "set",
+            "operand": "a",
+            "source": "cli"
+          },
+          {
+            "entity": "v",
+            "op": "set",
+            "operand": "b",
+            "source": "cli"
+          },
+          {
+            "entity": "rest",
+            "op": "set",
+            "operand": "c",
+            "source": "cli"
+          }
         ],
-        "result": {"pair": {"k": "a", "v": "b"}, "rest": ["c"]},
-        "sources": {"pair": {"k": "cli", "v": "cli"}, "rest": ["cli"]}
+        "result": {
+          "pair": {
+            "k": "a",
+            "v": "b"
+          },
+          "rest": [
+            "c"
+          ]
+        },
+        "sources": {
+          "pair": {
+            "k": "cli",
+            "v": "cli"
+          },
+          "rest": [
+            "cli"
+          ]
+        }
       }
     }
   ]

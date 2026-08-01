@@ -7,16 +7,41 @@
         "name": "greedypair",
         "long": true,
         "seq": [
-          {"name": "gxs", "type": "string", "repeat": {"min": 1}},
-          {"name": "gys", "type": "string", "repeat": {"min": 1}}
+          {
+            "name": "gxs",
+            "type": "string",
+            "repeat": {
+              "min": 1
+            }
+          },
+          {
+            "name": "gys",
+            "type": "string",
+            "repeat": {
+              "min": 1
+            }
+          }
         ]
       },
       {
         "name": "lazypair",
         "long": true,
         "seq": [
-          {"name": "lxs", "type": "string", "repeat": {"min": 1, "lazy": true}},
-          {"name": "lys", "type": "string", "repeat": {"min": 1}}
+          {
+            "name": "lxs",
+            "type": "string",
+            "repeat": {
+              "min": 1,
+              "lazy": true
+            }
+          },
+          {
+            "name": "lys",
+            "type": "string",
+            "repeat": {
+              "min": 1
+            }
+          }
         ]
       }
     ]
@@ -24,32 +49,116 @@
   "cases": [
     {
       "id": "greedy-left-takes-longest",
-      "why": "`--greedypair a b c`: 先 (左) の閉包 gxs から最長を試す (DR-043 の左先・最長)。gxs=[a,b,c] は後続 gys の min:1 が満たせず失敗 → 1 つ縮めて gxs=[a,b]、gys=[c] で完全経路。両子とも repeat 宣言なので DR-044 により両方配列、結果キー持ちの子が並ぶ seq なので親 greedypair の値は 1 個の kv (DESIGN §5.1/§2.5)。未発火の lazypair は親ごと absent (DESIGN §5.2「親が未発火なら子は親ごと absent」・DR-051) — 子が反復系でも親未発火なら着席自体が起きないので、`lazypair: {}` や `lazypair: {lxs: []}` にはならない。",
-      "args": ["--greedypair", "a", "b", "c"],
+      "why": "`--greedypair a b c`: 先 (左) の閉包 gxs から最長を試す (DR-043 の左先・最長)。gxs=[a,b,c] は後続 gys の min:1 が満たせず失敗 → 1 つ縮めて gxs=[a,b]、gys=[c] で完全経路。両子とも repeat 宣言なので DR-044 により両方配列、結果キー持ちの子が並ぶ seq なので親 greedypair の値は 1 個の kv (DESIGN §5.1/§2.5)。未発火の lazypair は親ごと null (DESIGN §5.2「親が未発火なら子は親ごと null」・DR-130) — 子が反復系でも親未発火なら着席自体が起きないので、`lazypair: {}` や `lazypair: {lxs: []}` にはならない。",
+      "args": [
+        "--greedypair",
+        "a",
+        "b",
+        "c"
+      ],
       "expect": {
         "outcome": "success",
         "effects": [
-          {"entity": "gxs", "op": "set", "operand": "a", "source": "cli"},
-          {"entity": "gxs", "op": "set", "operand": "b", "source": "cli"},
-          {"entity": "gys", "op": "set", "operand": "c", "source": "cli"}
+          {
+            "entity": "gxs",
+            "op": "set",
+            "operand": "a",
+            "source": "cli"
+          },
+          {
+            "entity": "gxs",
+            "op": "set",
+            "operand": "b",
+            "source": "cli"
+          },
+          {
+            "entity": "gys",
+            "op": "set",
+            "operand": "c",
+            "source": "cli"
+          }
         ],
-        "result": {"greedypair": {"gxs": ["a", "b"], "gys": ["c"]}},
-        "sources": {"greedypair": {"gxs": ["cli", "cli"], "gys": ["cli"]}}
+        "result": {
+          "greedypair": {
+            "gxs": [
+              "a",
+              "b"
+            ],
+            "gys": [
+              "c"
+            ]
+          },
+          "lazypair": null
+        },
+        "sources": {
+          "greedypair": {
+            "gxs": [
+              "cli",
+              "cli"
+            ],
+            "gys": [
+              "cli"
+            ]
+          },
+          "lazypair": null
+        }
       }
     },
     {
       "id": "lazy-left-takes-shortest",
       "why": "`--lazypair a b c`: 先の閉包 lxs が `lazy: true` なので短い取り分から試す。lxs=[a] の時点で後続 lys (greedy 既定・min:1) が [b,c] を取り全消費の完全経路へ到達するため、そこで確定する (DR-043「最初に完全経路へ到達した取り分で確定」)。greedy 版と同一トークン列・同一構造で取り分だけが `[a],[b,c]` へ反転することが、lazy が子位置でも効くことの pin。fixtures/repeat-parse/preference-lazy.json の子位置版。",
-      "args": ["--lazypair", "a", "b", "c"],
+      "args": [
+        "--lazypair",
+        "a",
+        "b",
+        "c"
+      ],
       "expect": {
         "outcome": "success",
         "effects": [
-          {"entity": "lxs", "op": "set", "operand": "a", "source": "cli"},
-          {"entity": "lys", "op": "set", "operand": "b", "source": "cli"},
-          {"entity": "lys", "op": "set", "operand": "c", "source": "cli"}
+          {
+            "entity": "lxs",
+            "op": "set",
+            "operand": "a",
+            "source": "cli"
+          },
+          {
+            "entity": "lys",
+            "op": "set",
+            "operand": "b",
+            "source": "cli"
+          },
+          {
+            "entity": "lys",
+            "op": "set",
+            "operand": "c",
+            "source": "cli"
+          }
         ],
-        "result": {"lazypair": {"lxs": ["a"], "lys": ["b", "c"]}},
-        "sources": {"lazypair": {"lxs": ["cli"], "lys": ["cli", "cli"]}}
+        "result": {
+          "greedypair": null,
+          "lazypair": {
+            "lxs": [
+              "a"
+            ],
+            "lys": [
+              "b",
+              "c"
+            ]
+          }
+        },
+        "sources": {
+          "greedypair": null,
+          "lazypair": {
+            "lxs": [
+              "cli"
+            ],
+            "lys": [
+              "cli",
+              "cli"
+            ]
+          }
+        }
       }
     }
   ]

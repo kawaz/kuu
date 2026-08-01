@@ -1,5 +1,5 @@
 {
-  "why": "inline seq × multiple の畳み単位は**発火 1 回ぶんの行 (row)**: seq が結果キーを持つ子から作る 1 個の kv がそのまま accumulator の入力単位になり (DR-034 §6.2 のパイプライン、DR-044 §1 の一様配列)、発火 1 回あたりの余分な配列階層は付かない。ref-template 版の同型が `multiple-parse/ref-rows-append.json :: two-fires-branch-append` (`{hlcolors:[{colorname:\"red\"},{r,g,b}]}`) — inline `seq` と `ref` で結果形が一致することを、multiple を被せた面でも固定する。0 発火でも `[]` (DR-044 §1 / DR-051 §2)。",
+  "why": "inline seq × multiple の畳み単位は**発火 1 回ぶんの行 (row)**: seq が結果キーを持つ子から作る 1 個の kv がそのまま accumulator の入力単位になり (DR-034 §6.2 のパイプライン、DR-044 §1 の一様配列)、発火 1 回あたりの余分な配列階層は付かない。ref-template 版の同型が `multiple-parse/ref-rows-append.json :: two-fires-branch-append` (`{hlcolors:[{colorname:\"red\"},{r,g,b}]}`) — inline `seq` と `ref` で結果形が一致することを、multiple を被せた面でも固定する。0 発火でも `[]` (DR-044 §1 / DR-130 §1)。",
   "query": "parse",
   "definition": {
     "options": [
@@ -8,8 +8,14 @@
         "long": true,
         "multiple": "append",
         "seq": [
-          {"name": "path", "type": "string"},
-          {"name": "value", "type": "string"}
+          {
+            "name": "path",
+            "type": "string"
+          },
+          {
+            "name": "value",
+            "type": "string"
+          }
         ]
       }
     ]
@@ -18,19 +24,52 @@
     {
       "id": "two-fires-one-kv-row-each",
       "why": "`--pair /a 1 --pair /b 2`: 各発火が seq の 2 トークンを完全消費して 1 行の kv を作り、append がその行を発火順に積む。`[[{path},{value}],[...]]` のような発火あたり 2 段の入れ子にはならない (畳み単位は行であって子ではない)。effects は消費順に 4 件 (DR-045)。",
-      "args": ["--pair", "/a", "1", "--pair", "/b", "2"],
+      "args": [
+        "--pair",
+        "/a",
+        "1",
+        "--pair",
+        "/b",
+        "2"
+      ],
       "expect": {
         "outcome": "success",
         "effects": [
-          {"entity": "path", "op": "set", "operand": "/a", "source": "cli"},
-          {"entity": "value", "op": "set", "operand": "1", "source": "cli"},
-          {"entity": "path", "op": "set", "operand": "/b", "source": "cli"},
-          {"entity": "value", "op": "set", "operand": "2", "source": "cli"}
+          {
+            "entity": "path",
+            "op": "set",
+            "operand": "/a",
+            "source": "cli"
+          },
+          {
+            "entity": "value",
+            "op": "set",
+            "operand": "1",
+            "source": "cli"
+          },
+          {
+            "entity": "path",
+            "op": "set",
+            "operand": "/b",
+            "source": "cli"
+          },
+          {
+            "entity": "value",
+            "op": "set",
+            "operand": "2",
+            "source": "cli"
+          }
         ],
         "result": {
           "pair": [
-            {"path": "/a", "value": "1"},
-            {"path": "/b", "value": "2"}
+            {
+              "path": "/a",
+              "value": "1"
+            },
+            {
+              "path": "/b",
+              "value": "2"
+            }
           ]
         }
       }
@@ -38,24 +77,47 @@
     {
       "id": "single-fire-list",
       "why": "1 発火でも要素 1 件の配列 (scalar / row への unwrap をしない — リスト形はセルの属性であって発火回数由来ではない、DR-044 §1)。multiple 無しの縮退形 (`option-named-children-kv.json` の `{pair:{path,value}}`) との対照点。",
-      "args": ["--pair", "/a", "1"],
+      "args": [
+        "--pair",
+        "/a",
+        "1"
+      ],
       "expect": {
         "outcome": "success",
         "effects": [
-          {"entity": "path", "op": "set", "operand": "/a", "source": "cli"},
-          {"entity": "value", "op": "set", "operand": "1", "source": "cli"}
+          {
+            "entity": "path",
+            "op": "set",
+            "operand": "/a",
+            "source": "cli"
+          },
+          {
+            "entity": "value",
+            "op": "set",
+            "operand": "1",
+            "source": "cli"
+          }
         ],
-        "result": {"pair": [{"path": "/a", "value": "1"}]}
+        "result": {
+          "pair": [
+            {
+              "path": "/a",
+              "value": "1"
+            }
+          ]
+        }
       }
     },
     {
       "id": "zero-fires-empty",
-      "why": "0 発火でも absent にならず `[]` (DR-044 §1 の一様配列 / DR-051 §2)。効果列は空。",
+      "why": "0 発火でも null にならず `[]` (DR-044 §1 の一様配列 / DR-130 §1)。効果列は空。",
       "args": [],
       "expect": {
         "outcome": "success",
         "effects": [],
-        "result": {"pair": []}
+        "result": {
+          "pair": []
+        }
       }
     }
   ]

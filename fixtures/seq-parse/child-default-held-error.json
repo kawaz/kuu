@@ -7,23 +7,47 @@
         "name": "pair",
         "long": true,
         "seq": [
-          {"name": "k", "type": "string"},
-          {"name": "n", "type": "int", "default": 0}
+          {
+            "name": "k",
+            "type": "string"
+          },
+          {
+            "name": "n",
+            "type": "int",
+            "default": 0
+          }
         ]
       }
     ],
     "positionals": [
-      {"name": "rest", "type": "string", "repeat": {"min": 0}}
+      {
+        "name": "rest",
+        "type": "string",
+        "repeat": {
+          "min": 0
+        }
+      }
     ]
   },
   "cases": [
     {
       "id": "held-error-does-not-fall-back-to-default-seat",
       "why": "`--pair x 2.5`: n の int 読みは number として認識した 2.5 を非整数として Held Error にする。rest へ 2.5 を送り n=0 とする空席枝は立たず、not_an_integer が可視 failure になる。",
-      "args": ["--pair", "x", "2.5"],
+      "args": [
+        "--pair",
+        "x",
+        "2.5"
+      ],
       "expect": {
         "outcome": "failure",
-        "errors": [{"element": "n", "args_pos": 2, "kind": "parse", "reason": "not_an_integer"}]
+        "errors": [
+          {
+            "element": "n",
+            "args_pos": 2,
+            "kind": "parse",
+            "reason": "not_an_integer"
+          }
+        ]
       }
     }
   ]

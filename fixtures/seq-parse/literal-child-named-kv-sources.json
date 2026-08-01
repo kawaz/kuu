@@ -7,8 +7,15 @@
         "name": "pair",
         "long": true,
         "seq": [
-          {"name": "path", "type": "string"},
-          {"name": "mode", "type": "string", "value": "fallback"}
+          {
+            "name": "path",
+            "type": "string"
+          },
+          {
+            "name": "mode",
+            "type": "string",
+            "value": "fallback"
+          }
         ]
       }
     ]
@@ -17,25 +24,47 @@
     {
       "id": "cli-and-literal-siblings-coexist",
       "why": "`--pair x`: `path` は cli から \"x\" を消費、`mode` は消費 0 の literal で \"fallback\" をそのまま持つ。両方とも named なので DESIGN §2.5 により `pair` の子スコープの結果キーになり `{path:\"x\",mode:\"fallback\"}`。effects には cli 由来の `path` だけが現れ (CONFORMANCE §2「effects は cli/link のみ」)、const 由来の `mode` は現れない。sources は `path` が `cli`、`mode` が `const` (宣言定数はセルに最初からいる — ラダー充填 `default` とは別物、DR-031)。",
-      "args": ["--pair", "x"],
+      "args": [
+        "--pair",
+        "x"
+      ],
       "expect": {
         "outcome": "success",
         "effects": [
-          {"entity": "path", "op": "set", "operand": "x", "source": "cli"}
+          {
+            "entity": "path",
+            "op": "set",
+            "operand": "x",
+            "source": "cli"
+          }
         ],
-        "result": {"pair": {"path": "x", "mode": "fallback"}},
-        "sources": {"pair": {"path": "cli", "mode": "const"}}
+        "result": {
+          "pair": {
+            "path": "x",
+            "mode": "fallback"
+          }
+        },
+        "sources": {
+          "pair": {
+            "path": "cli",
+            "mode": "const"
+          }
+        }
       }
     },
     {
       "id": "undischarged-no-literal-alone",
-      "why": "`--pair` を全く発火させない (args なし): const は発火に付随するセル初期化位相の宣言定数であり (DESIGN §5.2)、literal 子 `mode` だけが未発火の `pair` から独立して着席することはない (DR-051 の absent、DR-052 §3)。cli-and-literal-siblings-coexist の対偶 — 「named 子でも未発火なら literal だけが着席することはない」を pin する。`pair` ごと結果に現れず、result は `{}`、sources も `[]`。",
+      "why": "`--pair` を全く発火させない (args なし): const は発火に付随するセル初期化位相の宣言定数であり (DESIGN §5.2)、literal 子 `mode` だけが未発火の `pair` から独立して着席することはない (DR-130 の null、DR-052 §3)。cli-and-literal-siblings-coexist の対偶 — 「named 子でも未発火なら literal だけが着席することはない」を pin する。`pair` ごと結果に現れず、result は `{}`、sources も `[]`。",
       "args": [],
       "expect": {
         "outcome": "success",
         "effects": [],
-        "result": {},
-        "sources": {}
+        "result": {
+          "pair": null
+        },
+        "sources": {
+          "pair": null
+        }
       }
     }
   ]

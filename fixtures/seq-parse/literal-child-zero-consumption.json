@@ -7,8 +7,13 @@
         "name": "pair",
         "long": true,
         "seq": [
-          {"type": "string"},
-          {"type": "string", "value": "fallback"}
+          {
+            "type": "string"
+          },
+          {
+            "type": "string",
+            "value": "fallback"
+          }
         ]
       }
     ]
@@ -17,21 +22,44 @@
     {
       "id": "trailing-literal-consumes-nothing",
       "why": "`--pair x`: 1 子目 (無 value の string) が \"x\" を消費し、2 子目 (`value:\"fallback\"` の literal) はトークンを読まず literal 値をそのまま持つ。2 トークン分の子スロットに対し CLI 消費は 1 トークンのみで全消費が成立し (`--pair` 自体と \"x\" で args 完了)、`pair` は `[\"x\",\"fallback\"]`。effects は cli 由来の 1 子目分だけで、2 子目は value 由来のため現れない (CONFORMANCE §2「effects は cli/link のみ」)。",
-      "args": ["--pair", "x"],
+      "args": [
+        "--pair",
+        "x"
+      ],
       "expect": {
         "outcome": "success",
         "effects": [],
-        "result": {"pair": ["x", "fallback"]},
-        "sources": {"pair": ["cli", "const"]}
+        "result": {
+          "pair": [
+            "x",
+            "fallback"
+          ]
+        },
+        "sources": {
+          "pair": [
+            "cli",
+            "const"
+          ]
+        }
       }
     },
     {
       "id": "extra-token-has-no-consumer",
       "why": "`--pair x y`: 1 子目が \"x\" を消費して確定した後、2 子目は消費 0 の literal で \"y\" を読めない。seq 全体は 2 子で閉じており \"y\" を割り当てる後続要素も無いため、\"y\" は消費者の居ない残余トークンとして失敗する (DESIGN §15.1 の全消費契約、`repeat-parse/max-finite.json :: over-max-four` と同型)。element は特定要素に紐付かないスコープレベルの躓きとして省略、args_pos は残余先頭の args index (0-based: `--pair`=0,`x`=1,`y`=2)。",
-      "args": ["--pair", "x", "y"],
+      "args": [
+        "--pair",
+        "x",
+        "y"
+      ],
       "expect": {
         "outcome": "failure",
-        "errors": [{"args_pos": 2, "kind": "parse", "reason": "unexpected_token"}]
+        "errors": [
+          {
+            "args_pos": 2,
+            "kind": "parse",
+            "reason": "unexpected_token"
+          }
+        ]
       }
     }
   ]

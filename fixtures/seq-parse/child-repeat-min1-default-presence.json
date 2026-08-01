@@ -6,8 +6,21 @@
       {
         "name": "pair",
         "seq": [
-          {"name": "head", "type": "string"},
-          {"name": "tags", "type": "string", "repeat": {"min": 1}, "default": ["builtin", "fallback"]}
+          {
+            "name": "head",
+            "type": "string"
+          },
+          {
+            "name": "tags",
+            "type": "string",
+            "repeat": {
+              "min": 1
+            },
+            "default": [
+              "builtin",
+              "fallback"
+            ]
+          }
         ]
       }
     ]
@@ -16,28 +29,78 @@
     {
       "id": "child-min-one-zero-token-default-fills-path-complete",
       "why": "`a`: head が唯一のトークンを消費し、`min: 1` の tags には何も残らない。default が無ければ完全経路が立たず failure になる (`child-repeat-basic.json :: min-one-and-sibling-exceed-tokens` の同型入力がその形) が、`default:` 宣言があるため DR-088 §1 の presence で空席のまま完全経路に含まれ (DR-123 §4)、resolve 相でラダー最下段の宣言 default がセル全体を埋める。閉包の `min` は消費読みが成立する場合にのみ効く、が子位置でも同一に効くことの pin。effects は head の set のみ、sources は `{head:cli, tags:[default,default]}`。",
-      "args": ["a"],
+      "args": [
+        "a"
+      ],
       "expect": {
         "outcome": "success",
         "effects": [
-          {"entity": "head", "op": "set", "operand": "a", "source": "cli"}
+          {
+            "entity": "head",
+            "op": "set",
+            "operand": "a",
+            "source": "cli"
+          }
         ],
-        "result": {"pair": {"head": "a", "tags": ["builtin", "fallback"]}},
-        "sources": {"pair": {"head": "cli", "tags": ["default", "default"]}}
+        "result": {
+          "pair": {
+            "head": "a",
+            "tags": [
+              "builtin",
+              "fallback"
+            ]
+          }
+        },
+        "sources": {
+          "pair": {
+            "head": "cli",
+            "tags": [
+              "default",
+              "default"
+            ]
+          }
+        }
       }
     },
     {
       "id": "child-min-one-consumes-when-tokens-remain",
       "why": "(消費側) `a b`: head が a、tags が b を 1 回消費して `min: 1` を満たす。DESIGN §5.2 の逐次先食い規則により消費読みが完全経路へ届く限り空席枝は立たない (DR-123 §4) ので、default が消費を押しのけて `[\"builtin\",\"fallback\"]` になることはない。1 回発火でも DR-044 により配列 (`[\"b\"]`)。effects は消費順 head(a) → tags(b)、sources は `{head:cli, tags:[cli]}`。",
-      "args": ["a", "b"],
+      "args": [
+        "a",
+        "b"
+      ],
       "expect": {
         "outcome": "success",
         "effects": [
-          {"entity": "head", "op": "set", "operand": "a", "source": "cli"},
-          {"entity": "tags", "op": "set", "operand": "b", "source": "cli"}
+          {
+            "entity": "head",
+            "op": "set",
+            "operand": "a",
+            "source": "cli"
+          },
+          {
+            "entity": "tags",
+            "op": "set",
+            "operand": "b",
+            "source": "cli"
+          }
         ],
-        "result": {"pair": {"head": "a", "tags": ["b"]}},
-        "sources": {"pair": {"head": "cli", "tags": ["cli"]}}
+        "result": {
+          "pair": {
+            "head": "a",
+            "tags": [
+              "b"
+            ]
+          }
+        },
+        "sources": {
+          "pair": {
+            "head": "cli",
+            "tags": [
+              "cli"
+            ]
+          }
+        }
       }
     }
   ]

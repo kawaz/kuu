@@ -7,8 +7,14 @@
         "name": "pair",
         "long": true,
         "seq": [
-          {"name": "path", "type": "string"},
-          {"name": "value", "type": "string"}
+          {
+            "name": "path",
+            "type": "string"
+          },
+          {
+            "name": "value",
+            "type": "string"
+          }
         ]
       }
     ]
@@ -17,27 +23,64 @@
     {
       "id": "named-children-fold-into-one-kv",
       "why": "`--pair /a 1`: seq が 2 トークンを順に消費し、結果キーを持つ子 path / value は `pair` が作る子スコープの結果キーになる (DESIGN §2.4/§2.5)。`[{path:\"/a\"},{value:\"1\"}]` のような子ごとの分割は起きない — seq の子は 1 行の別セルであって反復ではない。effects は消費順に 2 件 (DR-045)。",
-      "args": ["--pair", "/a", "1"],
+      "args": [
+        "--pair",
+        "/a",
+        "1"
+      ],
       "expect": {
         "outcome": "success",
         "effects": [
-          {"entity": "path", "op": "set", "operand": "/a", "source": "cli"},
-          {"entity": "value", "op": "set", "operand": "1", "source": "cli"}
+          {
+            "entity": "path",
+            "op": "set",
+            "operand": "/a",
+            "source": "cli"
+          },
+          {
+            "entity": "value",
+            "op": "set",
+            "operand": "1",
+            "source": "cli"
+          }
         ],
-        "result": {"pair": {"path": "/a", "value": "1"}}
+        "result": {
+          "pair": {
+            "path": "/a",
+            "value": "1"
+          }
+        }
       }
     },
     {
       "id": "eq-form-first-child-same-shape",
       "why": "`--pair=/a 1`: 第 1 子を `=` 分離で受け取っても、変わるのは入口の綴り面 (DESIGN §7.1) だけで露出規則は不変 — 結果は同じ 1 個の kv。",
-      "args": ["--pair=/a", "1"],
+      "args": [
+        "--pair=/a",
+        "1"
+      ],
       "expect": {
         "outcome": "success",
         "effects": [
-          {"entity": "path", "op": "set", "operand": "/a", "source": "cli"},
-          {"entity": "value", "op": "set", "operand": "1", "source": "cli"}
+          {
+            "entity": "path",
+            "op": "set",
+            "operand": "/a",
+            "source": "cli"
+          },
+          {
+            "entity": "value",
+            "op": "set",
+            "operand": "1",
+            "source": "cli"
+          }
         ],
-        "result": {"pair": {"path": "/a", "value": "1"}}
+        "result": {
+          "pair": {
+            "path": "/a",
+            "value": "1"
+          }
+        }
       }
     }
   ]

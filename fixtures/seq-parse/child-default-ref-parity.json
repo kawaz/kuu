@@ -6,33 +6,86 @@
       "templates": {
         "pair_template": {
           "seq": [
-            {"name": "k", "type": "string"},
-            {"name": "v", "type": "string", "default": "D"}
+            {
+              "name": "k",
+              "type": "string"
+            },
+            {
+              "name": "v",
+              "type": "string",
+              "default": "D"
+            }
           ]
         }
       }
     },
     "options": [
-      {"name": "pair", "long": true, "ref": "pair_template"}
+      {
+        "name": "pair",
+        "long": true,
+        "ref": "pair_template"
+      }
     ],
     "positionals": [
-      {"name": "rest", "type": "string", "repeat": {"min": 0}}
+      {
+        "name": "rest",
+        "type": "string",
+        "repeat": {
+          "min": 0
+        }
+      }
     ]
   },
   "cases": [
     {
       "id": "ref-child-default-consumption-preempts-empty-seat",
       "why": "`--pair a b c`: ref 展開内の v が b を消費しても downstream 完全経路へ届くため、v の空席枝は立たない。inline 版 child-default-preemption.json と同じ result/sources/effects になる。",
-      "args": ["--pair", "a", "b", "c"],
+      "args": [
+        "--pair",
+        "a",
+        "b",
+        "c"
+      ],
       "expect": {
         "outcome": "success",
         "effects": [
-          {"entity": "k", "op": "set", "operand": "a", "source": "cli"},
-          {"entity": "v", "op": "set", "operand": "b", "source": "cli"},
-          {"entity": "rest", "op": "set", "operand": "c", "source": "cli"}
+          {
+            "entity": "k",
+            "op": "set",
+            "operand": "a",
+            "source": "cli"
+          },
+          {
+            "entity": "v",
+            "op": "set",
+            "operand": "b",
+            "source": "cli"
+          },
+          {
+            "entity": "rest",
+            "op": "set",
+            "operand": "c",
+            "source": "cli"
+          }
         ],
-        "result": {"pair": {"k": "a", "v": "b"}, "rest": ["c"]},
-        "sources": {"pair": {"k": "cli", "v": "cli"}, "rest": ["cli"]}
+        "result": {
+          "pair": {
+            "k": "a",
+            "v": "b"
+          },
+          "rest": [
+            "c"
+          ]
+        },
+        "sources": {
+          "pair": {
+            "k": "cli",
+            "v": "cli"
+          },
+          "rest": [
+            "cli"
+          ]
+        }
       }
     }
   ]

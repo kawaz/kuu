@@ -7,23 +7,37 @@
         "name": "pair",
         "long": true,
         "seq": [
-          {"name": "v", "type": "string", "default": "D"}
+          {
+            "name": "v",
+            "type": "string",
+            "default": "D"
+          }
         ]
       }
     ],
     "positionals": [
-      {"name": "tail", "type": "string"}
+      {
+        "name": "tail",
+        "type": "string"
+      }
     ]
   },
   "cases": [
     {
       "id": "fallback-drops-consuming-pending-diagnostic",
       "why": "`--pair`: v は入力枯渇で default 席へ fallback するため v の missing_operand は生成しない。後続 tail は同じ入力終端で構造的に不足し、tail@1 の missing_operand だけが可視 Error になる。",
-      "args": ["--pair"],
+      "args": [
+        "--pair"
+      ],
       "expect": {
         "outcome": "failure",
         "errors": [
-          {"element": "tail", "args_pos": 1, "kind": "parse", "reason": "missing_operand"}
+          {
+            "element": "tail",
+            "args_pos": 1,
+            "kind": "parse",
+            "reason": "missing_operand"
+          }
         ]
       }
     }

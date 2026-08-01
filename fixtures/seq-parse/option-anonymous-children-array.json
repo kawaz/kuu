@@ -7,8 +7,12 @@
         "name": "pair",
         "long": true,
         "seq": [
-          {"type": "string"},
-          {"type": "string"}
+          {
+            "type": "string"
+          },
+          {
+            "type": "string"
+          }
         ]
       }
     ]
@@ -17,10 +21,19 @@
     {
       "id": "anonymous-children-stay-an-array",
       "why": "`--pair /a 1`: 子はどちらも結果キーを持たないので、値は 2 要素の配列としてそのまま `pair` の値になる。要素は裸の値であってキー付き object ではない。",
-      "args": ["--pair", "/a", "1"],
+      "args": [
+        "--pair",
+        "/a",
+        "1"
+      ],
       "expect": {
         "outcome": "success",
-        "result": {"pair": ["/a", "1"]}
+        "result": {
+          "pair": [
+            "/a",
+            "1"
+          ]
+        }
       }
     }
   ]

@@ -1,5 +1,5 @@
 {
-  "why": "option 直下の値構造 (seq) の子が repeat を持つ配置を固定する。option の発火は 1 回でも、その値構造の中の閉包が複数トークンを消費できる (DR-043 — 閉包は「構造が書ける場所ならどこでも」書ける、DR-067 §2 で配置制約なし)。同時に、その閉包の取り分が option の外側 (root positional 列) の充足まで含めた**大域の完全経路**で確定することを固定する: DR-043 の確定規則は「大域の全消費経路」(DR-038) を基準にするので、option の値構造という内側スコープに居る閉包でも、下流の root positional が詰まれば取り分を縮める。この境界跨ぎの縮小再分割は、局所的な完成判定で枝刈りする実装が壊れる点そのもの (DR-043「実装が枝刈りのために局所的な完成判定を使う場合、その判定はスコープの消費境界に相対化しないと近似が壊れる」)。0 発火時に `[]` が立つこと (absent にならない、DR-051 §2b / DR-044) も同じ子位置で確認する。",
+  "why": "option 直下の値構造 (seq) の子が repeat を持つ配置を固定する。option の発火は 1 回でも、その値構造の中の閉包が複数トークンを消費できる (DR-043 — 閉包は「構造が書ける場所ならどこでも」書ける、DR-067 §2 で配置制約なし)。同時に、その閉包の取り分が option の外側 (root positional 列) の充足まで含めた**大域の完全経路**で確定することを固定する: DR-043 の確定規則は「大域の全消費経路」(DR-038) を基準にするので、option の値構造という内側スコープに居る閉包でも、下流の root positional が詰まれば取り分を縮める。この境界跨ぎの縮小再分割は、局所的な完成判定で枝刈りする実装が壊れる点そのもの (DR-043「実装が枝刈りのために局所的な完成判定を使う場合、その判定はスコープの消費境界に相対化しないと近似が壊れる」)。0 発火時に `[]` が立つこと (null にならない、DR-130 §1 / DR-044) も同じ子位置で確認する。",
   "query": "parse",
   "definition": {
     "options": [
@@ -7,58 +7,168 @@
         "name": "span",
         "long": true,
         "seq": [
-          {"name": "head", "type": "string"},
-          {"name": "tail", "type": "string", "repeat": {"min": 0}}
+          {
+            "name": "head",
+            "type": "string"
+          },
+          {
+            "name": "tail",
+            "type": "string",
+            "repeat": {
+              "min": 0
+            }
+          }
         ]
       }
     ],
     "positionals": [
-      {"name": "dest", "type": "string"}
+      {
+        "name": "dest",
+        "type": "string"
+      }
     ]
   },
   "cases": [
     {
       "id": "child-repeat-yields-token-to-root-positional",
       "why": "`--span a b c`: head が a を取った後、子 tail は greedy なのでまず [b,c] を掴むが、root positional の dest (非 repeat・消費 1 必須) にトークンが残らず大域の完全経路に届かない → 取り分を縮めて tail=[b]、dest が c を取って全消費が成立する。option の内側の閉包が、option の外側の要素の充足のためにトークンを譲る形 = DR-043 の確定規則が大域基準であることの pin。result は結果キー持ちの子が並ぶ seq なので span の値が 1 個の kv (DESIGN §5.1/§2.5)、その中の tail だけが配列 (DR-044)。dest は root スコープの scalar。",
-      "args": ["--span", "a", "b", "c"],
+      "args": [
+        "--span",
+        "a",
+        "b",
+        "c"
+      ],
       "expect": {
         "outcome": "success",
         "effects": [
-          {"entity": "head", "op": "set", "operand": "a", "source": "cli"},
-          {"entity": "tail", "op": "set", "operand": "b", "source": "cli"},
-          {"entity": "dest", "op": "set", "operand": "c", "source": "cli"}
+          {
+            "entity": "head",
+            "op": "set",
+            "operand": "a",
+            "source": "cli"
+          },
+          {
+            "entity": "tail",
+            "op": "set",
+            "operand": "b",
+            "source": "cli"
+          },
+          {
+            "entity": "dest",
+            "op": "set",
+            "operand": "c",
+            "source": "cli"
+          }
         ],
-        "result": {"span": {"head": "a", "tail": ["b"]}, "dest": "c"},
-        "sources": {"span": {"head": "cli", "tail": ["cli"]}, "dest": "cli"}
+        "result": {
+          "span": {
+            "head": "a",
+            "tail": [
+              "b"
+            ]
+          },
+          "dest": "c"
+        },
+        "sources": {
+          "span": {
+            "head": "cli",
+            "tail": [
+              "cli"
+            ]
+          },
+          "dest": "cli"
+        }
       }
     },
     {
       "id": "child-repeat-zero-fire-empty-array",
-      "why": "`--span a b`: head が a、tail は greedy に [b] を試すが dest が枯渇して不達 → min:0 まで縮めて tail=[] で確定、dest が b を取る。0 発火の tail は absent (キー消失) ではなく空配列 `[]` — 反復系は 0 発火でも形が先に在る (DR-051 §2b / DR-044、fixtures/absent/repeat-empty.json の子位置版)。sources 側も `[]` に対応するタグを持たない (DR-122 §2「要素が無いので要素タグも無い」)。span 自体は発火しているので kv は現れ、その中に空配列の座が立つ — 親未発火の absent (child-repeat-preference.json 参照) との決定的な対照。",
-      "args": ["--span", "a", "b"],
+      "why": "`--span a b`: head が a、tail は greedy に [b] を試すが dest が枯渇して不達 → min:0 まで縮めて tail=[] で確定、dest が b を取る。0 発火の tail は null (キー消失) ではなく空配列 `[]` — 反復系は 0 発火でも形が先に在る (DR-130 §1 / DR-044、fixtures/null-projection/repeat-empty.json の子位置版)。sources 側も `[]` に対応するタグを持たない (DR-122 §2「要素が無いので要素タグも無い」)。span 自体は発火しているので kv は現れ、その中に空配列の座が立つ — 親未発火の null (child-repeat-preference.json 参照) との決定的な対照。",
+      "args": [
+        "--span",
+        "a",
+        "b"
+      ],
       "expect": {
         "outcome": "success",
         "effects": [
-          {"entity": "head", "op": "set", "operand": "a", "source": "cli"},
-          {"entity": "dest", "op": "set", "operand": "b", "source": "cli"}
+          {
+            "entity": "head",
+            "op": "set",
+            "operand": "a",
+            "source": "cli"
+          },
+          {
+            "entity": "dest",
+            "op": "set",
+            "operand": "b",
+            "source": "cli"
+          }
         ],
-        "result": {"span": {"head": "a", "tail": []}, "dest": "b"},
-        "sources": {"span": {"head": "cli", "tail": []}, "dest": "cli"}
+        "result": {
+          "span": {
+            "head": "a",
+            "tail": []
+          },
+          "dest": "b"
+        },
+        "sources": {
+          "span": {
+            "head": "cli",
+            "tail": []
+          },
+          "dest": "cli"
+        }
       }
     },
     {
       "id": "root-positional-consumed-before-option-fires",
       "why": "`x --span a b`: positional 面は多孔質で option トリガが割り込める (DR-041 §4)。dest は root 唯一の positional なので先頭 x を消費し、その後 --span が発火して head=a、tail は残る b を取る。tail=[] にすると b の消費者が居らず完全経路に届かないため、ここでは tail=[b] が唯一の取り分 — 前 2 case と合わせ「tail の取り分は自分より後ろの要素の充足で決まる」ことを、割り込み順を変えても同じ規則で確認する。",
-      "args": ["x", "--span", "a", "b"],
+      "args": [
+        "x",
+        "--span",
+        "a",
+        "b"
+      ],
       "expect": {
         "outcome": "success",
         "effects": [
-          {"entity": "dest", "op": "set", "operand": "x", "source": "cli"},
-          {"entity": "head", "op": "set", "operand": "a", "source": "cli"},
-          {"entity": "tail", "op": "set", "operand": "b", "source": "cli"}
+          {
+            "entity": "dest",
+            "op": "set",
+            "operand": "x",
+            "source": "cli"
+          },
+          {
+            "entity": "head",
+            "op": "set",
+            "operand": "a",
+            "source": "cli"
+          },
+          {
+            "entity": "tail",
+            "op": "set",
+            "operand": "b",
+            "source": "cli"
+          }
         ],
-        "result": {"dest": "x", "span": {"head": "a", "tail": ["b"]}},
-        "sources": {"dest": "cli", "span": {"head": "cli", "tail": ["cli"]}}
+        "result": {
+          "dest": "x",
+          "span": {
+            "head": "a",
+            "tail": [
+              "b"
+            ]
+          }
+        },
+        "sources": {
+          "dest": "cli",
+          "span": {
+            "head": "cli",
+            "tail": [
+              "cli"
+            ]
+          }
+        }
       }
     }
   ]

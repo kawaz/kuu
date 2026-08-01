@@ -7,28 +7,65 @@
         "name": "pair",
         "long": true,
         "seq": [
-          {"name": "a", "type": "string", "default": "A"},
-          {"name": "b", "type": "string", "default": "B"}
+          {
+            "name": "a",
+            "type": "string",
+            "default": "A"
+          },
+          {
+            "name": "b",
+            "type": "string",
+            "default": "B"
+          }
         ]
       }
     ],
     "positionals": [
-      {"name": "tail", "type": "string"}
+      {
+        "name": "tail",
+        "type": "string"
+      }
     ]
   },
   "cases": [
     {
       "id": "earlier-seat-consumes-before-later-seat-falls-back",
       "why": "`--pair x y`: 先の seat a は x を消費しても downstream 完全経路へ届くため cli で確定する。その確定後、b が y を消費すると tail が飢えるため b は空席 fallback に確定し、tail が y を消費する。",
-      "args": ["--pair", "x", "y"],
+      "args": [
+        "--pair",
+        "x",
+        "y"
+      ],
       "expect": {
         "outcome": "success",
         "effects": [
-          {"entity": "a", "op": "set", "operand": "x", "source": "cli"},
-          {"entity": "tail", "op": "set", "operand": "y", "source": "cli"}
+          {
+            "entity": "a",
+            "op": "set",
+            "operand": "x",
+            "source": "cli"
+          },
+          {
+            "entity": "tail",
+            "op": "set",
+            "operand": "y",
+            "source": "cli"
+          }
         ],
-        "result": {"pair": {"a": "x", "b": "B"}, "tail": "y"},
-        "sources": {"pair": {"a": "cli", "b": "default"}, "tail": "cli"}
+        "result": {
+          "pair": {
+            "a": "x",
+            "b": "B"
+          },
+          "tail": "y"
+        },
+        "sources": {
+          "pair": {
+            "a": "cli",
+            "b": "default"
+          },
+          "tail": "cli"
+        }
       }
     }
   ]

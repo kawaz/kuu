@@ -1,54 +1,117 @@
 {
-  "why": "seq の子位置の `optional: true` が「配列」の形を取ることを固定する。`optional: true` は `repeat: {min: 0, max: 1}` の糖衣であり独立概念ではない (DR-043)、したがって DR-044 の「カーディナリティでも形を変えない — repeat / multiple を宣言した要素は max の値に依らず配列になる。`repeat: {min: 0, max: 1}` (= `optional: true` 糖衣) も `[]` / `[x]`。『max=1 なら scalar』の特別化はしない」がそのまま適用される。配置制約は無い (DR-067 §2) ので、root positional で成立するこの規則 (fixtures/absent/repeat-empty.json) は子位置でも同一でなければならない。scalar が欲しければ collector で畳む (DR-044) のであって、optional の座が文脈によって scalar になったり配列になったりはしない。",
+  "why": "seq の子位置の `optional: true` が「配列」の形を取ることを固定する。`optional: true` は `repeat: {min: 0, max: 1}` の糖衣であり独立概念ではない (DR-043)、したがって DR-044 の「カーディナリティでも形を変えない — repeat / multiple を宣言した要素は max の値に依らず配列になる。`repeat: {min: 0, max: 1}` (= `optional: true` 糖衣) も `[]` / `[x]`。『max=1 なら scalar』の特別化はしない」がそのまま適用される。配置制約は無い (DR-067 §2) ので、root positional で成立するこの規則 (fixtures/null-projection/repeat-empty.json) は子位置でも同一でなければならない。scalar が欲しければ collector で畳む (DR-044) のであって、optional の座が文脈によって scalar になったり配列になったりはしない。",
   "query": "parse",
   "definition": {
     "positionals": [
       {
         "name": "pair",
         "seq": [
-          {"name": "head", "type": "string"},
-          {"name": "tail", "type": "string", "optional": true}
+          {
+            "name": "head",
+            "type": "string"
+          },
+          {
+            "name": "tail",
+            "type": "string",
+            "optional": true
+          }
         ]
       }
     ]
   },
   "cases": [
     {
-      "id": "zero-fire-is-empty-array-not-absent",
-      "why": "`a`: head が a を消費し、optional な tail は 0 発火。反復系 (optional 糖衣を含む) は 0 発火でも `[]` が出て absent にならない (DR-051 §2b / DR-044) — `{\"pair\": {\"head\": \"a\"}}` のようにキーが消える形にはならない。sources 側は空配列に値の座が無いので `[]` (DR-122 §2)。親 pair は repeat / multiple を宣言していないので配列にならず kv のまま (DESIGN §5.1/§2.5) — 配列化するのは反復を宣言した座だけ、という DR-044 の限定を同一 result 内で対比する。",
-      "args": ["a"],
+      "id": "zero-fire-is-empty-array-not-null",
+      "why": "`a`: head が a を消費し、optional な tail は 0 発火。反復系 (optional 糖衣を含む) は 0 発火でも `[]` が出て null にならない (DR-130 §1 / DR-044) — `{\"pair\": {\"head\": \"a\"}}` のようにキーが消える形にはならない。sources 側は空配列に値の座が無いので `[]` (DR-122 §2)。親 pair は repeat / multiple を宣言していないので配列にならず kv のまま (DESIGN §5.1/§2.5) — 配列化するのは反復を宣言した座だけ、という DR-044 の限定を同一 result 内で対比する。",
+      "args": [
+        "a"
+      ],
       "expect": {
         "outcome": "success",
         "effects": [
-          {"entity": "head", "op": "set", "operand": "a", "source": "cli"}
+          {
+            "entity": "head",
+            "op": "set",
+            "operand": "a",
+            "source": "cli"
+          }
         ],
-        "result": {"pair": {"head": "a", "tail": []}},
-        "sources": {"pair": {"head": "cli", "tail": []}}
+        "result": {
+          "pair": {
+            "head": "a",
+            "tail": []
+          }
+        },
+        "sources": {
+          "pair": {
+            "head": "cli",
+            "tail": []
+          }
+        }
       }
     },
     {
       "id": "one-fire-is-single-element-array",
       "why": "`a b`: tail が b を 1 個消費するが、結果は scalar `\"b\"` ではなく 1 要素配列 `[\"b\"]` — max:1 でも配列 (DR-044「max の値に依らず配列」)。0 発火の `[]` と合わせ、tail の座の形が入力のカーディナリティで変わらないことを固定する。sources は要素対応で `[\"cli\"]` (DR-122 §1)。",
-      "args": ["a", "b"],
+      "args": [
+        "a",
+        "b"
+      ],
       "expect": {
         "outcome": "success",
         "effects": [
-          {"entity": "head", "op": "set", "operand": "a", "source": "cli"},
-          {"entity": "tail", "op": "set", "operand": "b", "source": "cli"}
+          {
+            "entity": "head",
+            "op": "set",
+            "operand": "a",
+            "source": "cli"
+          },
+          {
+            "entity": "tail",
+            "op": "set",
+            "operand": "b",
+            "source": "cli"
+          }
         ],
-        "result": {"pair": {"head": "a", "tail": ["b"]}},
-        "sources": {"pair": {"head": "cli", "tail": ["cli"]}}
+        "result": {
+          "pair": {
+            "head": "a",
+            "tail": [
+              "b"
+            ]
+          }
+        },
+        "sources": {
+          "pair": {
+            "head": "cli",
+            "tail": [
+              "cli"
+            ]
+          }
+        }
       }
     },
     {
       "id": "beyond-max-one-has-no-consumer",
       "why": "`a b c`: tail は max:1 なので 2 個目の反復枝が生成されず (DR-043 — max は unroll 段数の上限で枝生成に効く)、c を消費できる要素が背骨に残らない。よって全取り分が dead-end で completion 0 本 → failure。errors は**取り分 2 本の躓きを両方保持**する: optional = repeat{min:0,max:1} (DR-043) なので tail の取り分は [b] と [] のちょうど 2 本あり、DR-053 §2「取り分次元の dead-end も全保持に含む — 可変長要素の取り分が全て失敗したとき、各取り分の dead-end での躓きを errors に積む (最深のみ保持ではない)」がそのまま適用される (fixtures/repeat-parse/backtrack.json の no-number-genuine-failure が同型: 2 取り分の dead-end を 2 件とも保持)。(1) greedy 既定の取り分 tail=[b] では c が残余となり args_pos=2、(2) 縮小した取り分 tail=[] では b から先が残余となり args_pos=1。どちらも消費者不在のスコープレベルの躓きなので element 省略・reason=unexpected_token (CONFORMANCE §2、fixtures/multiple-parse/separator-split.json の second-token-fails と同型)。errors は集合比較で順序非規範だが、可読性のため primary (argv 最深 = pos 2) を先頭に置く (backtrack.json と同じ並べ方)。optional が「あってもなくてもよい 1 個」であって無制限反復ではないことの境界。",
-      "args": ["a", "b", "c"],
+      "args": [
+        "a",
+        "b",
+        "c"
+      ],
       "expect": {
         "outcome": "failure",
         "errors": [
-          {"args_pos": 2, "kind": "parse", "reason": "unexpected_token"},
-          {"args_pos": 1, "kind": "parse", "reason": "unexpected_token"}
+          {
+            "args_pos": 2,
+            "kind": "parse",
+            "reason": "unexpected_token"
+          },
+          {
+            "args_pos": 1,
+            "kind": "parse",
+            "reason": "unexpected_token"
+          }
         ]
       }
     }

@@ -6,44 +6,92 @@
       "templates": {
         "named_pair": {
           "seq": [
-            {"name": "path", "type": "string"},
-            {"name": "value", "type": "string"}
+            {
+              "name": "path",
+              "type": "string"
+            },
+            {
+              "name": "value",
+              "type": "string"
+            }
           ]
         },
         "anon_pair": {
           "seq": [
-            {"type": "string"},
-            {"type": "string"}
+            {
+              "type": "string"
+            },
+            {
+              "type": "string"
+            }
           ]
         }
       }
     },
     "options": [
-      {"name": "named", "long": true, "ref": "named_pair"},
-      {"name": "anon", "long": true, "ref": "anon_pair"}
+      {
+        "name": "named",
+        "long": true,
+        "ref": "named_pair"
+      },
+      {
+        "name": "anon",
+        "long": true,
+        "ref": "anon_pair"
+      }
     ]
   },
   "cases": [
     {
       "id": "ref-named-children-fold-into-one-kv",
       "why": "`--named /a 1`: 結果キーを持つ子が並ぶので値は 1 個の kv — inline 版 (`seq-parse/option-named-children-kv.json :: named-children-fold-into-one-kv`) と同じ形。テンプレへ切り出したことで露出規則 (DESIGN §2.4/§2.5) が変わることはない。",
-      "args": ["--named", "/a", "1"],
+      "args": [
+        "--named",
+        "/a",
+        "1"
+      ],
       "expect": {
         "outcome": "success",
         "effects": [
-          {"entity": "path", "op": "set", "operand": "/a", "source": "cli"},
-          {"entity": "value", "op": "set", "operand": "1", "source": "cli"}
+          {
+            "entity": "path",
+            "op": "set",
+            "operand": "/a",
+            "source": "cli"
+          },
+          {
+            "entity": "value",
+            "op": "set",
+            "operand": "1",
+            "source": "cli"
+          }
         ],
-        "result": {"named": {"path": "/a", "value": "1"}}
+        "result": {
+          "named": {
+            "path": "/a",
+            "value": "1"
+          },
+          "anon": null
+        }
       }
     },
     {
       "id": "ref-anonymous-children-stay-an-array",
       "why": "`--anon /a 1`: 結果キーを持つ子が 1 つも無いので値は子の値の配列 — inline 版 (`seq-parse/option-anonymous-children-array.json :: anonymous-children-stay-an-array`) と同じ形。子は独立した消費点であって同じセルの上書き合戦ではないため、2 個目が 1 個目を潰して `\"1\"` になることはない。",
-      "args": ["--anon", "/a", "1"],
+      "args": [
+        "--anon",
+        "/a",
+        "1"
+      ],
       "expect": {
         "outcome": "success",
-        "result": {"anon": ["/a", "1"]}
+        "result": {
+          "named": null,
+          "anon": [
+            "/a",
+            "1"
+          ]
+        }
       }
     }
   ]
