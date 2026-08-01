@@ -1,0 +1,36 @@
+{
+  "why": "null 射影の芯 (DR-130 §1) と『default 持ちは null にならない』(DR-130 §1) を 1 定義の同一結果内で対照する。値源ラダー (cli>env>config>default, DR-031) を回しても値の湧かない非反復要素は、宣言キーを保ったまま値が null になる。対して default は値源なので、ラダーが値を生み source=default になる。name (値源なし) と port (default 持ち) を並べ、未指定時に name=null・port=5 を同時に観測する。effects は cli 由来のパース時効果のみ (CONFORMANCE §2): default 由来の値は effects に載らず、由来は sources で検証する。sources は result と同型で、値を確定させた主体が無い name の座は null になる (DR-130 §5)。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {"name": "name", "type": "string", "long": true},
+      {"name": "port", "type": "number", "long": true, "default": 5}
+    ]
+  },
+  "cases": [
+    {
+      "id": "unspecified-null-baseline",
+      "why": "未指定ベースライン: name は値源ゼロで未供給 → ラダー枯渇で result/sources とも null (DR-130 §1/§5)。port は CLI 未供給でも default 5 が値源として充填され、source=default。effects は空 (cli 発火なし、default は effects 非掲載, CONFORMANCE §2)。",
+      "args": [],
+      "expect": {
+        "outcome": "success",
+        "effects": [],
+        "result": {"name": null, "port": 5},
+        "sources": {"name": null, "port": "default"}
+      }
+    },
+    {
+      "id": "name-supplied-cli",
+      "why": "name を CLI で供給すると null から値 x に転じる: --name x で name セルが発火する。port は依然 default 由来。effects は name の cli set のみ (port の default は非掲載)。sources で cli 源と default 源が同一結果内で共存することを固定する。数値 default は canonical 最短形 5 (DR-050 §4)。",
+      "args": ["--name", "x"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "name", "op": "set", "operand": "x", "source": "cli"}
+        ],
+        "result": {"name": "x", "port": 5},
+        "sources": {"name": "cli", "port": "default"}
+      }
+    }
+  ]
+}

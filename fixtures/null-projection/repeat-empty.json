@@ -1,0 +1,33 @@
+{
+  "why": "反復系は 0 発火でも null にならず空配列 [] を持つ (DR-130 §1、DR-044 uniform array)。反復セルは常に多値の形を持つため、0 発火は空リスト [] になる。optional positional は repeat{min:0,max:1} と同一なので、未発火時も [] になる。これは default 持ち・required と並ぶ『null にならない 3 族』の一つである。",
+  "query": "parse",
+  "definition": {
+    "positionals": [
+      {"name": "xs", "type": "string", "optional": true}
+    ]
+  },
+  "cases": [
+    {
+      "id": "zero-fire-empty-array",
+      "why": "0 発火: optional positional xs はトークンを得ないが、repeat セルの一様形により結果は空配列 []。null ではない — 反復系はラダー最下段の暗黙 default [] を持つ (DR-130 §1、DR-123 §3)。effects は空。",
+      "args": [],
+      "expect": {
+        "outcome": "success",
+        "effects": [],
+        "result": {"xs": []}
+      }
+    },
+    {
+      "id": "one-fire-single",
+      "why": "1 発火: a を 1 個消費 → [a]。0 発火の [] と合わせ、xs が scalar でなく多値セルであることを固定する (DR-044)。effects は xs の cli set 1 件。",
+      "args": ["a"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "xs", "op": "set", "operand": "a", "source": "cli"}
+        ],
+        "result": {"xs": ["a"]}
+      }
+    }
+  ]
+}

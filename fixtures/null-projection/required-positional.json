@@ -1,0 +1,34 @@
+{
+  "why": "required positional は success の中では null にならない (DR-130 §1)。必須 positional はトークンを消費しなければならず、消費できなければ完全経路が成立しない (DR-047 値充足 / DR-038)。値が無い場合は null を持つ success ではなく、経路不成立の failure になる。失敗の kind は parse: 構造的必須の不成立は reason=missing_operand。",
+  "query": "parse",
+  "definition": {
+    "positionals": [
+      {"name": "file", "type": "string"}
+    ]
+  },
+  "cases": [
+    {
+      "id": "missing-required",
+      "why": "未指定: 必須 positional file がトークンを得られず完全経路 0 本 → failure。null 座を持つ success にはならない。kind=parse、reason=missing_operand、args_pos はトークンが尽きて要求した位置 = args.length = 0。element=file。",
+      "args": [],
+      "expect": {
+        "outcome": "failure",
+        "errors": [
+          {"element": "file", "args_pos": 0, "kind": "parse", "reason": "missing_operand"}
+        ]
+      }
+    },
+    {
+      "id": "supplied-present",
+      "why": "指定: x を消費し success。required は値を持つか parse failure の二択で、null という第三状態を取らない。effects は file の cli set。",
+      "args": ["x"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "file", "op": "set", "operand": "x", "source": "cli"}
+        ],
+        "result": {"file": "x"}
+      }
+    }
+  ]
+}

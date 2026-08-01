@@ -1,0 +1,37 @@
+{
+  "why": "command の選択状態を null 射影で固定する (DR-130 §1/§2)。serve が選択されると子スコープが実現し、宣言キー port を全列挙して未供給座を null にする。serve が未選択なら、内側へ再帰せず親レベルの serve 座そのものを null にする。selected の {port:null} と unselected の null が、旧 presence marker を使わず選択状態を区別する。",
+  "query": "parse",
+  "definition": {
+    "commands": [
+      {
+        "type": "command",
+        "name": "serve",
+        "options": [
+          {"name": "port", "type": "number", "long": true}
+        ]
+      }
+    ]
+  },
+  "cases": [
+    {
+      "id": "serve-selected-child-null",
+      "why": "serve を選択すると子スコープが実現する。port は未発火・default なしなので値は null だが、宣言キーは全列挙され result は {serve:{port:null}} になる (DR-130 §1)。effects は空。",
+      "args": ["serve"],
+      "expect": {
+        "outcome": "success",
+        "effects": [],
+        "result": {"serve": {"port": null}}
+      }
+    },
+    {
+      "id": "serve-unselected-null",
+      "why": "serve 未選択: 親スコープの serve 座は null になり、未実現の子スコープ内へは再帰しない (DR-130 §2)。serve は必須ではないため未選択自体は失敗にならない。",
+      "args": [],
+      "expect": {
+        "outcome": "success",
+        "effects": [],
+        "result": {"serve": null}
+      }
+    }
+  ]
+}
