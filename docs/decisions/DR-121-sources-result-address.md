@@ -141,11 +141,8 @@ deprecated な入口を使った場合に警告を出したい。値が同じで
 
 ### 4.2 実装の現状
 
-参照実装 (kuu.mbt) は `Source` enum に `Link` を持たず `Cli` に畳んでいる
-(`src/abi/value.mbt` の `Cli // CLI explicit / link`)。また `link` 属性自体も parse 面では
-decode されない。**本 DR は spec 側の規範であり、実装追随は別途行う** (kuu.mbt の issue)。
-corpus に `link` を source 値として pin する fixture が 0 件だったため、
-この乖離が長く検出されていなかった。
+参照実装 (kuu.mbt) は `Source` enum に `Link` を持ち (`src/abi/value.mbt`)、`link` 属性の
+decode と独立タグとしての emit を実装済み (DR-127 第 1 波で追随、2026-08 確認)。
 
 ## 5. effects との軸の違い
 
@@ -208,6 +205,6 @@ sources: [{"path":[],"key":"v","source":"cli"}]            ← 露出キー
 > **以下は覆されていない。**
 
 - **§4 (`link` は独立した値源タグ)** — LINKSRC-Q1=a はタグの**語彙**の裁定であり、タグをどう配置するか
-  (entry 配列 / shadow tree) とは独立。§4.2 の実装追随 (参照実装が `Cli` に畳んでいる) も未解消のまま
+  (entry 配列 / shadow tree) とは独立。実装追随は §4.2 のとおり完了済み
 - **§5 (effects との軸の違い)** — `effects[].entity` が宣言名軸、`result` / `sources` が結果アドレス軸
   である対比は不変。§5 の例に出る `sources` の綴りだけが shadow tree 形 (`{"v": "cli"}`) になる
