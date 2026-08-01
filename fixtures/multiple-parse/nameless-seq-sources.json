@@ -8,8 +8,12 @@
         "long": true,
         "multiple": "append",
         "seq": [
-          {"type": "string"},
-          {"type": "string"}
+          {
+            "type": "string"
+          },
+          {
+            "type": "string"
+          }
         ]
       }
     ]
@@ -22,30 +26,81 @@
       "expect": {
         "outcome": "success",
         "effects": [],
-        "result": {"pair": []},
-        "sources": {"pair": []}
+        "result": {
+          "pair": []
+        },
+        "sources": {
+          "pair": []
+        }
       }
     },
     {
       "id": "one-fire-reports-cli-on-wrapper",
       "why": "`--pair a b` の 1 発火が tuple `[a,b]` を wrapper の accumulator に追加する。sources は同型の `[[cli, cli]]` — row 1 個・各要素とも cli 発火が確定させた。",
-      "args": ["--pair", "a", "b"],
+      "args": [
+        "--pair",
+        "a",
+        "b"
+      ],
       "expect": {
         "outcome": "success",
         "effects": [],
-        "result": {"pair": [["a", "b"]]},
-        "sources": {"pair": [["cli", "cli"]]}
+        "result": {
+          "pair": [
+            [
+              "a",
+              "b"
+            ]
+          ]
+        },
+        "sources": {
+          "pair": [
+            [
+              "cli",
+              "cli"
+            ]
+          ]
+        }
       }
     },
     {
       "id": "multiple-fires-keep-cli-on-wrapper",
       "why": "2 回の発火を append すると row が 2 個並び、sources も同型に `[[cli, cli], [cli, cli]]` になる。各 row・各要素がそれを産んだ発火の source を持つ (DR-122 §3)。",
-      "args": ["--pair", "a", "b", "--pair", "c", "d"],
+      "args": [
+        "--pair",
+        "a",
+        "b",
+        "--pair",
+        "c",
+        "d"
+      ],
       "expect": {
         "outcome": "success",
         "effects": [],
-        "result": {"pair": [["a", "b"], ["c", "d"]]},
-        "sources": {"pair": [["cli", "cli"], ["cli", "cli"]]}
+        "result": {
+          "pair": [
+            [
+              "a",
+              "b"
+            ],
+            [
+              "c",
+              "d"
+            ]
+          ]
+        },
+        "sources": {
+          "pair": [
+            [
+              "cli",
+              "cli"
+            ],
+            [
+              "cli",
+              "cli"
+            ]
+          ]
+        }
       }
     }
   ]

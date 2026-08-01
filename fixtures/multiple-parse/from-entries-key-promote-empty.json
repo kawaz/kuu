@@ -4,7 +4,10 @@
   "definition": {
     "definitions": {
       "templates": {
-        "entry": {"type": "string", "name": "key"}
+        "entry": {
+          "type": "string",
+          "name": "key"
+        }
       }
     },
     "options": [
@@ -12,7 +15,12 @@
         "name": "entries",
         "ref": "entry",
         "long": true,
-        "multiple": {"accumulator": "append", "collector": {"from_entries": "key"}}
+        "multiple": {
+          "accumulator": "append",
+          "collector": {
+            "from_entries": "key"
+          }
+        }
       }
     ]
   },
@@ -20,10 +28,17 @@
     {
       "id": "promoted-only-key-leaves-empty-object",
       "why": "DR-044 §3 の key 昇格決定則により、唯一の key フィールドを除去した残りは欠落でなく空 object `{}` になる。",
-      "args": ["--entries", "a"],
+      "args": [
+        "--entries",
+        "a"
+      ],
       "expect": {
         "outcome": "success",
-        "result": {"entries": {"a": {}}}
+        "result": {
+          "entries": {
+            "a": {}
+          }
+        }
       }
     }
   ]

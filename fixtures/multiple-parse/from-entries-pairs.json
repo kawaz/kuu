@@ -7,7 +7,12 @@
         "name": "entries",
         "type": "string",
         "long": true,
-        "multiple": {"accumulator": "append", "collector": {"from_entries": "entries"}}
+        "multiple": {
+          "accumulator": "append",
+          "collector": {
+            "from_entries": "entries"
+          }
+        }
       }
     ]
   },
@@ -15,10 +20,20 @@
     {
       "id": "non-pair-values-pass-through",
       "why": "DR-044 §3 の entries 用法は全要素が 2 要素配列の時だけ object 化するため、scalar 列は total pass-through で配列のまま残る。",
-      "args": ["--entries", "a", "--entries", "b"],
+      "args": [
+        "--entries",
+        "a",
+        "--entries",
+        "b"
+      ],
       "expect": {
         "outcome": "success",
-        "result": {"entries": ["a", "b"]}
+        "result": {
+          "entries": [
+            "a",
+            "b"
+          ]
+        }
       }
     },
     {
@@ -28,7 +43,9 @@
       "expect": {
         "outcome": "success",
         "effects": [],
-        "result": {"entries": []}
+        "result": {
+          "entries": []
+        }
       }
     }
   ]

@@ -3,36 +3,95 @@
   "query": "parse",
   "definition": {
     "options": [
-      {"name": "tags", "type": "string", "long": [":set", "reset:unset"], "env": "TAGS", "default": ["builtin", "fallback"], "multiple": {"accumulator": "append", "separator": ","}}
+      {
+        "name": "tags",
+        "type": "string",
+        "long": [
+          ":set",
+          "reset:unset"
+        ],
+        "env": "TAGS",
+        "default": [
+          "builtin",
+          "fallback"
+        ],
+        "multiple": {
+          "accumulator": "append",
+          "separator": ","
+        }
+      }
     ]
   },
   "cases": [
     {
       "id": "unset-falls-to-declared-default-not-empty",
-      "why": "`--tags a --reset-tags`、env 未設定: set(a) が append accumulator に畳まれた後、unset が CLI 席を committed=false に戻してラダーを開放する (DR-045 §2)。env 席は未供給なので最下段の default 席まで落ちるが、そこには宣言 default 配列が座っている (DR-123 §3 / DR-083 §1) ため、`unset-env-fallback.json :: unset-with-no-lower-source-resets-to-empty` の `[]` ではなく `[\"builtin\",\"fallback\"]` に確定する — 両 case の差は宣言 default の有無だけで、暗黙 `[]` と宣言値が同じ席を争っていることを示す。宣言 default 配列は分割済み pieces なので separator は適用されず 2 要素のまま (DR-083 §2)。effects は CLI 発火の set と unset の 2 個 (順序規範、CONFORMANCE §3)。sources は確定主体が居らず値の由来席を指し、書き換えが無いので `[\"default\",\"default\"]` (DESIGN §11.4 の sources 射影)。",
-      "args": ["--tags", "a", "--reset-tags"],
+      "why": "`--tags a --reset-tags`、env 未設定: set(a) が append accumulator に畳まれた後、unset が CLI 席を committed=false に戻してラダーを開放する (DR-045 §2)。env 席は未供給なので最下段の default 席まで落ちるが、そこには宣言 default 配列が座っている (DR-123 §3 / DR-083 §1) ため、`unset-env-fallback.json :: unset-with-no-lower-source-resets-to-empty` の `[]` ではなく `[\"builtin\",\"fallback\"]` に確定する — 両 case の差は宣言 default の有無だけで、暗黙 `[]` と宣言値が同じ席を争っていることを示す。宣言 default 配列は分割済み pieces なので separator は適用されず 2 要素のまま (DR-083 §2)。effects は CLI 発火の `set` と `set(null)` の 2 個 (順序規範、CONFORMANCE §3)。sources は確定主体が居らず値の由来席を指し、書き換えが無いので `[\"default\",\"default\"]` (DESIGN §11.4 の sources 射影)。",
+      "args": [
+        "--tags",
+        "a",
+        "--reset-tags"
+      ],
       "expect": {
         "outcome": "success",
         "effects": [
-          {"entity": "tags", "op": "set", "operand": "a", "source": "cli"},
-          {"entity": "tags", "op": "unset", "source": "cli"}
+          {
+            "entity": "tags",
+            "op": "set",
+            "operand": "a",
+            "source": "cli"
+          },
+          {
+            "entity": "tags",
+            "op": "set",
+            "operand": null,
+            "source": "cli"
+          }
         ],
-        "result": {"tags": ["builtin", "fallback"]},
-        "sources": {"tags": ["default", "default"]}
+        "result": {
+          "tags": [
+            "builtin",
+            "fallback"
+          ]
+        },
+        "sources": {
+          "tags": [
+            "default",
+            "default"
+          ]
+        }
       }
     },
     {
       "id": "unset-falls-to-env-rewritten-default",
-      "why": "(対照) `--reset-tags`、env TAGS=\"x,y\": DR-081 §1 の書き換えモデルにより env 供給は宣言 default 値そのものを書き換えるので、開放先の default 席は既に `[\"x\",\"y\"]` になっている — env 値は生文字列なので separator \",\" で分割されて pieces になる (DR-049 §2、`declared-default-array-ladder.json :: env-rewrites-declared-default-through-separator` と同じ非対称: 宣言側は分割済み、書き換え側は字句層をゼロから通る)。unset は committed=false のまま残すため確定主体が存在せず、sources は書き換え済み default の由来席 `env` を指す (DESIGN §11.4)。1 case 目との差は env 供給の有無だけで、宣言 default が「最下段に固定された値」ではなく**書き換えられうる席の中身**であることを固定する。effects は unset 1 個 (env 由来の値確定は effects 非掲載、CONFORMANCE §2)。",
-      "args": ["--reset-tags"],
-      "env": {"TAGS": "x,y"},
+      "why": "(対照) `--reset-tags`、env TAGS=\"x,y\": DR-081 §1 の書き換えモデルにより env 供給は宣言 default 値そのものを書き換えるので、開放先の default 席は既に `[\"x\",\"y\"]` になっている — env 値は生文字列なので separator \",\" で分割されて pieces になる (DR-049 §2、`declared-default-array-ladder.json :: env-rewrites-declared-default-through-separator` と同じ非対称: 宣言側は分割済み、書き換え側は字句層をゼロから通る)。unset は committed=false のまま残すため確定主体が存在せず、sources は書き換え済み default の由来席 `env` を指す (DESIGN §11.4)。1 case 目との差は env 供給の有無だけで、宣言 default が「最下段に固定された値」ではなく**書き換えられうる席の中身**であることを固定する。effects は `set(null)` 1 個 (env 由来の値確定は effects 非掲載、CONFORMANCE §2)。",
+      "args": [
+        "--reset-tags"
+      ],
+      "env": {
+        "TAGS": "x,y"
+      },
       "expect": {
         "outcome": "success",
         "effects": [
-          {"entity": "tags", "op": "unset", "source": "cli"}
+          {
+            "entity": "tags",
+            "op": "set",
+            "operand": null,
+            "source": "cli"
+          }
         ],
-        "result": {"tags": ["x", "y"]},
-        "sources": {"tags": ["env", "env"]}
+        "result": {
+          "tags": [
+            "x",
+            "y"
+          ]
+        },
+        "sources": {
+          "tags": [
+            "env",
+            "env"
+          ]
+        }
       }
     }
   ]

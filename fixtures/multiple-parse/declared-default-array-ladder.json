@@ -3,7 +3,20 @@
   "query": "parse",
   "definition": {
     "options": [
-      {"name": "hosts", "type": "string", "long": true, "default": ["localhost", "backup"], "multiple": {"accumulator": "append", "separator": ","}, "env": "APP_HOSTS"}
+      {
+        "name": "hosts",
+        "type": "string",
+        "long": true,
+        "default": [
+          "localhost",
+          "backup"
+        ],
+        "multiple": {
+          "accumulator": "append",
+          "separator": ","
+        },
+        "env": "APP_HOSTS"
+      }
     ]
   },
   "cases": [
@@ -14,20 +27,44 @@
       "expect": {
         "outcome": "success",
         "effects": [],
-        "result": {"hosts": ["localhost", "backup"]},
-        "sources": {"hosts": ["default", "default"]}
+        "result": {
+          "hosts": [
+            "localhost",
+            "backup"
+          ]
+        },
+        "sources": {
+          "hosts": [
+            "default",
+            "default"
+          ]
+        }
       }
     },
     {
       "id": "env-rewrites-declared-default-through-separator",
       "why": "未発火、env APP_HOSTS=\"a,b,c\": DR-081 の書き換えモデルにより env 供給が default 値そのものを書き換える。env 値は生文字列 \"a,b,c\" であり、宣言 default 配列 (既に分割済み) とは異なり pieceProcessor (separator 分割、DR-049 §2) をゼロから通って `[\"a\",\"b\",\"c\"]` になる — この書き換え済み値が default になる。source は default_source=env。CLI 未発火なので effects 空 (env 由来の値確定は effects 非掲載、CONFORMANCE §2)。unfired-uses-declared-default-array-as-is との対比で『宣言 default は piece 列として供給・env 書き換えは文字列として字句層を通る』という非対称を固定する。",
       "args": [],
-      "env": {"APP_HOSTS": "a,b,c"},
+      "env": {
+        "APP_HOSTS": "a,b,c"
+      },
       "expect": {
         "outcome": "success",
         "effects": [],
-        "result": {"hosts": ["a", "b", "c"]},
-        "sources": {"hosts": ["env", "env", "env"]}
+        "result": {
+          "hosts": [
+            "a",
+            "b",
+            "c"
+          ]
+        },
+        "sources": {
+          "hosts": [
+            "env",
+            "env",
+            "env"
+          ]
+        }
       }
     }
   ]

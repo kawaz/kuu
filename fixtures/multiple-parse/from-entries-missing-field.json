@@ -4,7 +4,10 @@
   "definition": {
     "definitions": {
       "templates": {
-        "entry": {"type": "string", "name": "key"}
+        "entry": {
+          "type": "string",
+          "name": "key"
+        }
       }
     },
     "options": [
@@ -12,7 +15,15 @@
         "name": "entries",
         "ref": "entry",
         "long": true,
-        "multiple": {"accumulator": "append", "collector": {"from_entries": ["key", "value"]}}
+        "multiple": {
+          "accumulator": "append",
+          "collector": {
+            "from_entries": [
+              "key",
+              "value"
+            ]
+          }
+        }
       }
     ]
   },
@@ -20,10 +31,24 @@
     {
       "id": "missing-named-value-passes-through",
       "why": "DR-044 §3 の total collector 規則により、指名 value フィールドを欠く row が一つでもあれば object 化せず配列形をそのまま通す。",
-      "args": ["--entries", "a", "--entries", "b"],
+      "args": [
+        "--entries",
+        "a",
+        "--entries",
+        "b"
+      ],
       "expect": {
         "outcome": "success",
-        "result": {"entries": [{"key": "a"}, {"key": "b"}]}
+        "result": {
+          "entries": [
+            {
+              "key": "a"
+            },
+            {
+              "key": "b"
+            }
+          ]
+        }
       }
     }
   ]

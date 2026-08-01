@@ -3,30 +3,74 @@
   "query": "parse",
   "definition": {
     "options": [
-      {"name": "define", "type": "string", "long": true, "multiple": {"accumulator": "kv_map"}, "accum_filters": ["length_range:1:2"]}
+      {
+        "name": "define",
+        "type": "string",
+        "long": true,
+        "multiple": {
+          "accumulator": "kv_map"
+        },
+        "accum_filters": [
+          "length_range:1:2"
+        ]
+      }
     ]
   },
   "cases": [
     {
       "id": "two-distinct-keys-within-piece-count-range",
       "why": "`--define A=1 --define B=2`: 2 piece・2 distinct key。length_range:1:2 の上限 (2) ちょうどで通過 → success。result は kv_map の通常の Map 化 {A:\"1\",B:\"2\"} (kv-map.json の two-fires-map-composition と同型の輪郭)。",
-      "args": ["--define", "A=1", "--define", "B=2"],
+      "args": [
+        "--define",
+        "A=1",
+        "--define",
+        "B=2"
+      ],
       "expect": {
         "outcome": "success",
         "effects": [
-          {"entity": "define", "op": "set", "operand": "A=1", "source": "cli"},
-          {"entity": "define", "op": "set", "operand": "B=2", "source": "cli"}
+          {
+            "entity": "define",
+            "op": "set",
+            "operand": "A=1",
+            "source": "cli"
+          },
+          {
+            "entity": "define",
+            "op": "set",
+            "operand": "B=2",
+            "source": "cli"
+          }
         ],
-        "result": {"define": {"A": "1", "B": "2"}}
+        "result": {
+          "define": {
+            "A": "1",
+            "B": "2"
+          }
+        }
       }
     },
     {
       "id": "duplicate-key-piece-count-exceeds-even-though-map-collapses",
       "why": "`--define A=1 --define B=2 --define A=3`: 3 piece だが重複キー (A が 2 回) のため Map に畳めば distinct key は 2 個 (A→\"3\" last-wins、B→\"2\")。`accum_filters` が『Map 形成後の distinct key 数』を見るなら 2 で length_range:1:2 を通過するはずだが、実際は『Map 形成前の生 piece 配列』(3 要素) を見るため上限超過で reject する — accum_filters が accumulator (kv_map の Map 化) より前段にあることの直接実演 (DR-105 §4 明確化 note (d))。reason=too_long、args_pos=6=args.length (accum_filters の reject は特定トークンに帰属しない一括検証、DR-102 §4)。",
-      "args": ["--define", "A=1", "--define", "B=2", "--define", "A=3"],
+      "args": [
+        "--define",
+        "A=1",
+        "--define",
+        "B=2",
+        "--define",
+        "A=3"
+      ],
       "expect": {
         "outcome": "failure",
-        "errors": [{"element": "define", "args_pos": 6, "kind": "filter", "reason": "too_long"}]
+        "errors": [
+          {
+            "element": "define",
+            "args_pos": 6,
+            "kind": "filter",
+            "reason": "too_long"
+          }
+        ]
       }
     }
   ]

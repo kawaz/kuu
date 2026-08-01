@@ -3,21 +3,45 @@
   "query": "parse",
   "definition": {
     "positionals": [
-      {"name": "sizes", "type": "number", "multiple": {"accumulator": "append", "separator": ","}}
+      {
+        "name": "sizes",
+        "type": "number",
+        "multiple": {
+          "accumulator": "append",
+          "separator": ","
+        }
+      }
     ]
   },
   "cases": [
     {
       "id": "positional-separator-number-success",
       "why": "positional 経路でも option 経路 (separator-typed.json::option-separator-number-success) と同一の pieceProcessor を通る: `5,7` (1 トークン) を separator で分割後、各 piece が number parse を経由して 5/7 になる。effects の operand が数値であること = 型 parse 経由の直接証拠。",
-      "args": ["5,7"],
+      "args": [
+        "5,7"
+      ],
       "expect": {
         "outcome": "success",
         "effects": [
-          {"entity": "sizes", "op": "set", "operand": 5, "source": "cli"},
-          {"entity": "sizes", "op": "set", "operand": 7, "source": "cli"}
+          {
+            "entity": "sizes",
+            "op": "set",
+            "operand": 5,
+            "source": "cli"
+          },
+          {
+            "entity": "sizes",
+            "op": "set",
+            "operand": 7,
+            "source": "cli"
+          }
         ],
-        "result": {"sizes": [5, 7]}
+        "result": {
+          "sizes": [
+            5,
+            7
+          ]
+        }
       }
     }
   ]

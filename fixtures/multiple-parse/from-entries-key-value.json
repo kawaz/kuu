@@ -4,10 +4,18 @@
   "definition": {
     "definitions": {
       "templates": {
-        "entry": {"seq": [
-          {"name": "key", "type": "string"},
-          {"name": "value", "type": "string"}
-        ]}
+        "entry": {
+          "seq": [
+            {
+              "name": "key",
+              "type": "string"
+            },
+            {
+              "name": "value",
+              "type": "string"
+            }
+          ]
+        }
       }
     },
     "options": [
@@ -15,7 +23,15 @@
         "name": "entries",
         "ref": "entry",
         "long": true,
-        "multiple": {"accumulator": "append", "collector": {"from_entries": ["key", "value"]}}
+        "multiple": {
+          "accumulator": "append",
+          "collector": {
+            "from_entries": [
+              "key",
+              "value"
+            ]
+          }
+        }
       }
     ]
   },
@@ -23,10 +39,22 @@
     {
       "id": "named-key-value-rows-become-object",
       "why": "DR-044 §2 の指名 2 フィールド用法により、各 row の key/value フィールドを object entry の key と value へ写す。",
-      "args": ["--entries", "a", "1", "--entries", "b", "2"],
+      "args": [
+        "--entries",
+        "a",
+        "1",
+        "--entries",
+        "b",
+        "2"
+      ],
       "expect": {
         "outcome": "success",
-        "result": {"entries": {"a": "1", "b": "2"}}
+        "result": {
+          "entries": {
+            "a": "1",
+            "b": "2"
+          }
+        }
       }
     }
   ]

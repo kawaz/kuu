@@ -3,40 +3,123 @@
   "query": "parse",
   "definition": {
     "options": [
-      {"name": "fields", "type": "string", "long": true, "env": "APP_FIELDS", "multiple": {"accumulator": "merge", "separator": ","}},
-      {"name": "tags", "type": "string", "long": true, "multiple": {"accumulator": "append", "separator": ","}}
+      {
+        "name": "fields",
+        "type": "string",
+        "long": true,
+        "env": "APP_FIELDS",
+        "multiple": {
+          "accumulator": "merge",
+          "separator": ","
+        }
+      },
+      {
+        "name": "tags",
+        "type": "string",
+        "long": true,
+        "multiple": {
+          "accumulator": "append",
+          "separator": ","
+        }
+      }
     ]
   },
   "cases": [
     {
       "id": "first-firing-merges-against-env-supplied-old",
       "why": "`--fields -ip,-ua,@,duration,ip`、env APP_FIELDS=\"ts,ip,method,path,ua\": 初回発火 (下位値源 env あり) なので old = env 値をseparator分割した [ts,ip,method,path,ua] (DR-049 §2 の env 値も pieceProcessor を通る規約 + DR-080 §3 の初回 old = 下位席勝者)。piece=[-ip,-ua,@,duration,ip]: -ip (前置remove、以後の @ splice から ip 除去)、-ua (前置remove、ua 除去)、@ (splice、ip/ua を除いた [ts,method,path])、duration (add→[ts,method,path,duration])、ip (add→[ts,method,path,duration,ip])。結果 `[ts,method,path,duration,ip]` — DR-080 由来の canonical PATH 例そのもの。sources は shadow tree なので要素ごとに由来が並ぶ (DR-122 §3): splice で展開された 3 要素は env 供給の old 由来で `env`、後続の 2 piece は `cli`。env 由来の old 確定は effects に載らない (CONFORMANCE §2) ため、effects は CLI 発火の piece のみ (暗黙 @ は無い、明示 @ のみなので全 piece が実入力)。",
-      "args": ["--fields", "-ip,-ua,@,duration,ip"],
-      "env": {"APP_FIELDS": "ts,ip,method,path,ua"},
+      "args": [
+        "--fields",
+        "-ip,-ua,@,duration,ip"
+      ],
+      "env": {
+        "APP_FIELDS": "ts,ip,method,path,ua"
+      },
       "expect": {
         "outcome": "success",
         "effects": [
-          {"entity": "fields", "op": "remove", "operand": "ip", "source": "cli"},
-          {"entity": "fields", "op": "remove", "operand": "ua", "source": "cli"},
-          {"entity": "fields", "op": "splice", "source": "cli"},
-          {"entity": "fields", "op": "set", "operand": "duration", "source": "cli"},
-          {"entity": "fields", "op": "set", "operand": "ip", "source": "cli"}
+          {
+            "entity": "fields",
+            "op": "remove",
+            "operand": "ip",
+            "source": "cli"
+          },
+          {
+            "entity": "fields",
+            "op": "remove",
+            "operand": "ua",
+            "source": "cli"
+          },
+          {
+            "entity": "fields",
+            "op": "splice",
+            "source": "cli"
+          },
+          {
+            "entity": "fields",
+            "op": "set",
+            "operand": "duration",
+            "source": "cli"
+          },
+          {
+            "entity": "fields",
+            "op": "set",
+            "operand": "ip",
+            "source": "cli"
+          }
         ],
-        "result": {"fields": ["ts", "method", "path", "duration", "ip"], "tags": []},
-        "sources": {"fields": ["env", "env", "env", "cli", "cli"], "tags": []}
+        "result": {
+          "fields": [
+            "ts",
+            "method",
+            "path",
+            "duration",
+            "ip"
+          ],
+          "tags": []
+        },
+        "sources": {
+          "fields": [
+            "env",
+            "env",
+            "env",
+            "cli",
+            "cli"
+          ],
+          "tags": []
+        }
       }
     },
     {
       "id": "marker-vocabulary-inert-without-merge-accumulator",
       "why": "`--tags -a,@`: tags は accumulator=append (merge ではない) を宣言しているため、DR-080 §1『マーカー語彙は accumulator=merge を宣言した要素の CLI 発火 piece 列にのみ適用される』により `-a` と `@` はどちらも literal として扱われる (マーカー解釈が一切効かない)。2 piece とも通常の add として append accumulator に畳まれる。結果 `[\"-a\",\"@\"]` — first-firing-merges-against-env-supplied-old (同じ文字列だが merge 宣言) との対で、マーカー解釈が accumulator の選択に完全に従属することを固定する。",
-      "args": ["--tags", "-a,@"],
+      "args": [
+        "--tags",
+        "-a,@"
+      ],
       "expect": {
         "outcome": "success",
         "effects": [
-          {"entity": "tags", "op": "set", "operand": "-a", "source": "cli"},
-          {"entity": "tags", "op": "set", "operand": "@", "source": "cli"}
+          {
+            "entity": "tags",
+            "op": "set",
+            "operand": "-a",
+            "source": "cli"
+          },
+          {
+            "entity": "tags",
+            "op": "set",
+            "operand": "@",
+            "source": "cli"
+          }
         ],
-        "result": {"fields": [], "tags": ["-a", "@"]}
+        "result": {
+          "fields": [],
+          "tags": [
+            "-a",
+            "@"
+          ]
+        }
       }
     }
   ]

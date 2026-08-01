@@ -3,7 +3,20 @@
   "query": "parse",
   "definition": {
     "options": [
-      {"name": "fields", "type": "string", "long": true, "default": ["-a", "@", "b"], "multiple": {"accumulator": "merge", "separator": ","}}
+      {
+        "name": "fields",
+        "type": "string",
+        "long": true,
+        "default": [
+          "-a",
+          "@",
+          "b"
+        ],
+        "multiple": {
+          "accumulator": "merge",
+          "separator": ","
+        }
+      }
     ]
   },
   "cases": [
@@ -14,23 +27,66 @@
       "expect": {
         "outcome": "success",
         "effects": [],
-        "result": {"fields": ["-a", "@", "b"]},
-        "sources": {"fields": ["default", "default", "default"]}
+        "result": {
+          "fields": [
+            "-a",
+            "@",
+            "b"
+          ]
+        },
+        "sources": {
+          "fields": [
+            "default",
+            "default",
+            "default"
+          ]
+        }
       }
     },
     {
       "id": "first-cli-firing-splices-literal-declared-default",
       "why": "`--fields -x,@,y` (初回 CLI 発火): piece=[-x,@,y]。marker あり (remove, splice) なので merge モード。old = 初回発火の下位席勝者 = 宣言 default 配列 `[\"-a\",\"@\",\"b\"]` (unfired-declared-default-markers-stay-literal と同じ、マーカー不活性で literal のまま保持されている値)。評価: -x (前置remove、operand=\"x\" — old の中に \"x\" という要素は無いので削除対象なし)、@ (splice、old をそのまま展開 → [\"-a\",\"@\",\"b\"])、y (add → [\"-a\",\"@\",\"b\",\"y\"])。結果 `[\"-a\",\"@\",\"b\",\"y\"]` — CLI 発火の `@` が宣言 default (literal のまま保持された \"-a\"/\"@\" を含む) を old として splice する PATH 型ユースケースの完成形。effects は3個 (remove(x), splice, add(y))。sources は要素対応なので splice 展開分の 3 要素が `default`、cli piece の y が `cli` になる (DR-122 §3)。",
-      "args": ["--fields", "-x,@,y"],
+      "args": [
+        "--fields",
+        "-x,@,y"
+      ],
       "expect": {
         "outcome": "success",
         "effects": [
-          {"entity": "fields", "op": "remove", "operand": "x", "source": "cli"},
-          {"entity": "fields", "op": "splice", "source": "cli"},
-          {"entity": "fields", "op": "set", "operand": "y", "source": "cli"}
+          {
+            "entity": "fields",
+            "op": "remove",
+            "operand": "x",
+            "source": "cli"
+          },
+          {
+            "entity": "fields",
+            "op": "splice",
+            "source": "cli"
+          },
+          {
+            "entity": "fields",
+            "op": "set",
+            "operand": "y",
+            "source": "cli"
+          }
         ],
-        "result": {"fields": ["-a", "@", "b", "y"]},
-        "sources": {"fields": ["default", "default", "default", "cli"]}
+        "result": {
+          "fields": [
+            "-a",
+            "@",
+            "b",
+            "y"
+          ]
+        },
+        "sources": {
+          "fields": [
+            "default",
+            "default",
+            "default",
+            "cli"
+          ]
+        }
       }
     }
   ]

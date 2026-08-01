@@ -3,22 +3,56 @@
   "query": "parse",
   "definition": {
     "positionals": [
-      {"name": "tags", "type": "string", "repeat": {"min": 0, "max": 5}, "accum_filters": ["unique"]}
+      {
+        "name": "tags",
+        "type": "string",
+        "repeat": {
+          "min": 0,
+          "max": 5
+        },
+        "accum_filters": [
+          "unique"
+        ]
+      }
     ]
   },
   "cases": [
     {
       "id": "repeat-only-accum-filters-unique-collapses-duplicates",
       "why": "重複含む 3 発火 [a,b,a] を repeat の append accumulator が [a,b,a] に累積、accum_filters `unique` が重複除去して [a,b] を最終結果とする。effects は 3 個の cli set が消費順で全て残る (accum_filters は最終値変換であって効果列自体は畳まない、多重発火の `multiple-parse/accum-filters-before-collector.json::duplicate-fires-collapse-to-scalar-via-accum-filters-then-collector` と同型の観測)。result は unique 済み配列 (collector なしなので配列のまま、`unwrap_single` のような形変換は起きない)。",
-      "args": ["a", "b", "a"],
+      "args": [
+        "a",
+        "b",
+        "a"
+      ],
       "expect": {
         "outcome": "success",
         "effects": [
-          {"entity": "tags", "op": "set", "operand": "a", "source": "cli"},
-          {"entity": "tags", "op": "set", "operand": "b", "source": "cli"},
-          {"entity": "tags", "op": "set", "operand": "a", "source": "cli"}
+          {
+            "entity": "tags",
+            "op": "set",
+            "operand": "a",
+            "source": "cli"
+          },
+          {
+            "entity": "tags",
+            "op": "set",
+            "operand": "b",
+            "source": "cli"
+          },
+          {
+            "entity": "tags",
+            "op": "set",
+            "operand": "a",
+            "source": "cli"
+          }
         ],
-        "result": {"tags": ["a", "b"]}
+        "result": {
+          "tags": [
+            "a",
+            "b"
+          ]
+        }
       }
     }
   ]

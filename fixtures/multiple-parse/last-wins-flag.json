@@ -3,33 +3,61 @@
   "query": "parse",
   "definition": {
     "options": [
-      {"name": "verbose", "type": "flag", "long": true}
+      {
+        "name": "verbose",
+        "type": "flag",
+        "long": true
+      }
     ]
   },
   "cases": [
     {
       "id": "two-fires-idempotent-success",
       "why": "`--verbose --verbose`: 2 回発火しても multiple 宣言が無い flag は last-wins (DR-015) で単一セルに畳まれ、両方とも同じ operand (true) の set。効果列は 2 個の set を適用順で全保持 (順序は同一性成分、DR-038/045) するが、result は scalar 単値 true — 『トリガは 1 回消費されると再露出しない』という直感は値消費トリガにのみ成立し、値を取らないフラグの重複発火は failure にならない冪等な再確認であることを固定する。",
-      "args": ["--verbose", "--verbose"],
+      "args": [
+        "--verbose",
+        "--verbose"
+      ],
       "expect": {
         "outcome": "success",
         "effects": [
-          {"entity": "verbose", "op": "set", "operand": true, "source": "cli"},
-          {"entity": "verbose", "op": "set", "operand": true, "source": "cli"}
+          {
+            "entity": "verbose",
+            "op": "set",
+            "operand": true,
+            "source": "cli"
+          },
+          {
+            "entity": "verbose",
+            "op": "set",
+            "operand": true,
+            "source": "cli"
+          }
         ],
-        "result": {"verbose": true}
+        "result": {
+          "verbose": true
+        }
       }
     },
     {
       "id": "single-fire-baseline",
       "why": "1 回発火の baseline: `--verbose` 単発は result {verbose:true}、effects は set 1 個。two-fires-idempotent-success との対比で、重複発火が failure でも新しい状態でもなく同じ状態への冪等な再確認であることを示す。",
-      "args": ["--verbose"],
+      "args": [
+        "--verbose"
+      ],
       "expect": {
         "outcome": "success",
         "effects": [
-          {"entity": "verbose", "op": "set", "operand": true, "source": "cli"}
+          {
+            "entity": "verbose",
+            "op": "set",
+            "operand": true,
+            "source": "cli"
+          }
         ],
-        "result": {"verbose": true}
+        "result": {
+          "verbose": true
+        }
       }
     }
   ]

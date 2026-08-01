@@ -4,10 +4,18 @@
   "definition": {
     "definitions": {
       "templates": {
-        "entry": {"seq": [
-          {"name": "key", "type": "number"},
-          {"name": "value", "type": "string"}
-        ]}
+        "entry": {
+          "seq": [
+            {
+              "name": "key",
+              "type": "number"
+            },
+            {
+              "name": "value",
+              "type": "string"
+            }
+          ]
+        }
       }
     },
     "options": [
@@ -15,7 +23,12 @@
         "name": "entries",
         "ref": "entry",
         "long": true,
-        "multiple": {"accumulator": "append", "collector": {"from_entries": "key"}}
+        "multiple": {
+          "accumulator": "append",
+          "collector": {
+            "from_entries": "key"
+          }
+        }
       }
     ]
   },
@@ -23,10 +36,20 @@
     {
       "id": "number-key-is-stringified",
       "why": "DR-044 §3 の key 正規化により、非 string number key は JSON compact の決定的な文字列 `\"1\"` へ変換して object key に使う。",
-      "args": ["--entries", "1", "x"],
+      "args": [
+        "--entries",
+        "1",
+        "x"
+      ],
       "expect": {
         "outcome": "success",
-        "result": {"entries": {"1": {"value": "x"}}}
+        "result": {
+          "entries": {
+            "1": {
+              "value": "x"
+            }
+          }
+        }
       }
     }
   ]
