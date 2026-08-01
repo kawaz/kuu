@@ -22,21 +22,7 @@
 
 ## 裁定待ち
 
-### 👺 NULOR-Q1: named 枝 or の null 射影 (NUL-Q3 の裁定が nameless union 前提で覆っていなかった穴)
-
-実例 `{name:"mode", or:[{name:"fast",type:"string"},{name:"slow",type:"int",default:7}]}` — named 枝は入れ子 kv になる (`--mode x` → 現行 `{"mode":{"fast":"x"}}`)。NUL-Q3 の「or はセル単位 1 キー」は枝が値 (union) の場合の話で、named 枝の**内側キー集合**をどうするか未裁定。
-
-- [ ] a: **全枝列挙** — `{"mode":{"fast":"x","slow":null}}`、セル未発火なら `{"mode":null}`。排他は「非選択枝 = null」で表現 (null = 立っていない、の一貫適用。キー集合が常に安定 = 発見性の完遂)。未選択枝の default (slow の 7) は充填しない — 枝の default は選択された枝の中でだけ生きる (既存裁定の null 版) (統括推し)
-- [ ] b: 選択枝のみ (sparse — 現行に近いがキー集合が実行ごとに揺れ、発見性と自己矛盾)
-- [ ] c: 保留 / 別案
-
-### 👺 NUL2-Q1: accum セルの「クリア」と「[] 行供給」の effects 同形問題 (NUL-Q2 の部分修正)
-
-NUL-Q2=a (empty→set 統一) を effects まで貫くと、accumulator セルでは「クリア (旧 empty、セル操作)」と「`[]` の行供給 (値バインド — 行供給の effects はもともと op:set)」が `entity/op/operand/source` 全一致の wire 同形になる (実物確認: effects の op enum に append は無く、区別は empty op が担っていた)。適用先の意味は座 (セル操作 vs accumulator 供給) で違うが、観測面で潰れる。
-
-- [ ] a: **クリアの観測 op として `empty` を温存** — fn は Value fn 化 (DR-131) しつつ、effects 語彙は `set / default / remove / splice / empty` とする (unset だけ消える)。観測の非単射を規範に持ち込まない (DR-121 §1.2 の思想) (統括推し)
-- [ ] b: 同形を容認 (区別が要る消費者は ParserContext を読む)
-- [ ] c: 保留 / 別案
+(現在なし)
 
 ## 確認待ち
 

@@ -1,6 +1,6 @@
 # DR-131: Sentinel を default 1 つへ縮小する — unset は null 返し、empty は空値を返す Value fn
 
-> 由来: kawaz チャット裁定 2026-08-01 (ccmsg r98 mid=32〜40)、NUL-Q2=a で effects の op 語彙も確定。
+> 由来: kawaz チャット裁定 2026-08-01 (ccmsg r98 mid=32〜40)、NUL-Q2=a / NUL2-Q1=a で effects の op 語彙も確定。
 > 正本ノートは `docs/research/2026-08-01-null-projection-inversion.md` §3。
 > **前提は DR-130** — `null` が値空間の住人に昇格したことで、「値を書かない cell 操作」として Sentinel に
 > 追い出されていた `unset` / `empty` が普通の値返し fn として書けるようになる。cell fn の返り値型
@@ -45,9 +45,9 @@ operand へ移る。
 `unset` が「触っていないことにする」(DR-045 §1) 意味論は、`null` が「この文脈に存在するが値が無い」を
 語る値である (DR-130 §1) ことから直に出る。**値が無いのだから commit する対象も無い**。
 
-`empty` が `set([])` になっても committed=true である点 (§3) は、`[]` が null ではない普通の値だから
-そのまま従う — DR-045 が `unset` と `empty` の違いを committed フラグで説明していた区別は、operand の
-違いとして保存される。
+`empty` が返す空値を適用しても committed=true である点 (§3) は、`[]` / `{}` が null ではない普通の値だから
+そのまま従う — DR-045 が `unset` と `empty` の違いを committed フラグで説明していた区別は、適用値が
+null か空値かの違いとして保存される。effects では `empty` の観測 op を温存する (§6)。
 
 この規則から、反復セルへの `set(null)` の帰結が導ける: ラダーが開放されてセルは**空席へ戻り** (DR-123
 §1 の「反復セルは初回発火まで空席」)、下位席が無ければラダー最下段の暗黙 default である `[]` に落ちる
@@ -147,15 +147,16 @@ fn の返り値がどちらの座へ着地するかを決めるのは、その f
 同じ座の区別が §2.1 の `null` にも効く — セル操作の座へ着地した `null` はラダーを開放し、行供給の座へ
 着地した `null` は行を積まない。どちらも `set(null) = unset` の一規則の、座ごとの現れ方である。
 
-> **要裁定 (ラベル未付番)**: 上記はセルへの**適用**の話であり、`effects` の**観測面**には残余がある。
-> §6 でクリアが `{"op":"set","operand":[]}` になると、accumulator セルにおいて「セルを空にした」と
-> 「`[]` という行を 1 つ積んだ」が wire 上で同形になる (`entity` / `op` / `operand` / `source` がすべて
-> 一致する)。現行 op 語彙に行供給専用の op は無く (`append` は accumulator registry の住人名であって
-> `effects[].op` の語彙ではない — op enum は `set` / `default` / `unset` / `empty` / `remove` / `splice`)、
-> 座を観測面へ写す成分も現状は存在しない。`[]` の行供給が実際に到達可能か (`flatten: true` の append、
-> 固定 operand を運ぶ set variant、行供給座の `default_fn: "empty"` 等) の確認を含めて裁定待ちであり、
-> 本 DR はここに規定を置かない。§6 の「観測が失われる箇所は無い」は `unset` / `empty` の対比について
-> 述べたものであり、本項はその範囲外である。
+**effects の観測面では `empty` をクリア専用 op として温存する (NUL2-Q1=a、2026-08-01)**。
+accumulator セルの「セルを空にした」と「`[]` という行を 1 つ積んだ」を、どちらも
+`{"op":"set","operand":[]}` へ写すと `entity` / `op` / `operand` / `source` がすべて一致し、適用の座が
+持つ区別を観測面で復元できない。`append` は accumulator registry の住人名であって `effects[].op` ではなく、
+座を写す別成分も無い。
+
+したがってセル操作の `empty` 発火は従来どおり `{"op":"empty"}`、行供給の `[]` は
+`{"op":"set","operand":[]}` と観測する。fn の返り値型はどちらも Value であり、適用時の配管も §4 の座で
+区別するが、effects 射影だけは非単射を避けるため op を分ける。これは `.` 連結によるアドレス衝突を観測面へ
+持ち込まなかった DR-121 §1.2 と同じ判断である。
 
 ### 5. `default` だけが Sentinel として残る
 
@@ -169,23 +170,23 @@ op=default が意味するのは「現在の (書き換え済みの) default を
 したがって `default` は「**定義注入された cell_fn を拾ってこい**」という指示子であり続ける。Sentinel union
 は実質この 1 住人に縮小する。
 
-### 6. effects の op 語彙は `set` に統一する (NUL-Q2=a)
+### 6. effects の op 語彙から `unset` のみ廃止し、`empty` は温存する (NUL-Q2=a / NUL2-Q1=a)
 
-観測面から `unset` / `empty` の op を廃止し、operand で表す。
+`unset` は operand で表し、クリアは専用の観測 op を保つ。
 
 | 発火 | 旧 (DR-045 §1) | 新 |
 |---|---|---|
 | unset | `{"op":"unset"}` | `{"op":"set","operand":null}` |
-| empty | `{"op":"empty"}` | `{"op":"set","operand":[]}` (target が map なら `{}`) |
+| empty | `{"op":"empty"}` | `{"op":"empty"}` |
 
-CONFORMANCE §2 の op 表は **6 op から 4 op** (`set` / `default` / `remove` / `splice`) へ縮む
+CONFORMANCE §2 の op 表は **6 op から 5 op** (`set` / `default` / `remove` / `splice` / `empty`) へ縮む
 (`remove` / `splice` は merge accumulator の piece op で本 DR の対象外、DR-080 §2)。
 
-**`unset` と `empty` の対比について観測は失われない** — 両者の区別は operand (`null` か `[]` か) が
-担い、committed の区別は §2 の規則で operand から導ける。accumulator セルにおける「クリア」と
-「`[]` の行供給」が wire 上で同形になる点は本項の範囲外であり、§4 に裁定待ちとして分離してある。`fixtures/multiple-parse/filters-cell-ops.json`
-が「両者の最終値はともに `[]` で sources も同形なので、区別を担うのは effects の op である」と書いて
-pin していた対比は、**op ではなく operand が担う対比**として保存される。
+**観測の非単射は生じない** — unset と empty は `set(null)` / `empty` の op で区別でき、accumulator セルの
+クリアと `[]` 行供給も `empty` / `set([])` で区別できる。committed は §2 の規則どおり、適用値が null か
+空値かから導ける。`fixtures/multiple-parse/filters-cell-ops.json` が「両者の最終値はともに `[]` で sources も
+同形なので、区別を担うのは effects の op である」と pin していた対比は、**unset 側だけ `set(null)` へ
+移し、empty 側の op を残す**形で保存される。
 
 同 fixture が pin するもう 1 つの規範 (「値を書かない cell 操作は value_filters を通らないので reject の
 対象にすらならない」) も観測は不変だが、**根拠が変わる**:
@@ -253,7 +254,7 @@ Sentinel は「値を返せない fn のための逃げ道」であって、機�
 
 ### DR
 
-- **DR-045**: §1 の op 表から `unset` / `empty` を削除し 2 op (`set` / `default`) + DR-077 の `update`
+- **DR-045**: §1 の op 表から `unset` のみ削除し 3 op (`set` / `default` / `empty`) + DR-077 の `update`
   の記述へ縮小。§2 の committed の説明を「op が制御する」から「set の operand が `null` かどうかが
   制御する」へ改める (§2)。§旧実装からの継承の「旧 Variation の Reset / Unset が本 DR の default / unset に
   対応する」という考古学の記述は、対応先が `default` / `set(null)` になる
@@ -269,8 +270,8 @@ Sentinel は「値を返せない fn のための逃げ道」であって、機�
 - **DR-081 §2/§3**: op=default の意味 (現在の default を明示 set、committed=true) は不変。§3 の
   「op=unset = uncommitted 化」を `set(null)` の形へ書き換える
 - **DR-077**: `update` op を追加した DR。CONFORMANCE §2 が既に「`incr` 等が `ctx.old` から返した新値も
-  `set` として観測し、専用 `update` op は持たない」と書いており、本 DR の「Value 返しは全部 `set`」と
-  整合する。**DR-045 §更新が `update` を 5 語目の op として記述している食い違いは本 DR の対象外**で、
+  `set` として観測し、専用 `update` op は持たない」と書いており、本 DR の「Value 返しは通常 `set`、
+  ただしクリアは非単射回避のため `empty`」と整合する。**DR-045 §更新が `update` を 5 語目の op として記述している食い違いは本 DR の対象外**で、
   **独立の issue として起票して処理する** (本 DR の op 表改定に混ぜない — 転換とは無関係な既存の不整合で
   あり、同じ commit に載せると本 DR の波及範囲が読めなくなる)
 - **DR-011**: variant DSL の effect 4 種が op 語彙の出所。wire の綴り (`reset:unset` / `no:empty`) は
@@ -278,21 +279,21 @@ Sentinel は「値を返せない fn のための逃げ道」であって、機�
 
 ### docs 本体
 
-- **docs/CONFORMANCE.md §2**: op 表を 6 op から 4 op へ (§6)。「variant effect (effect mode): cell fn の
-  `Value` 返却は通常の `set`、Sentinel 返却は `default` / `unset` / `empty` として effects に射影する」の
-  一文を `default` のみへ。「default_fn (default mode): default 席は `Value` を返す cell fn だけを
+- **docs/CONFORMANCE.md §2**: op 表を 6 op から 5 op へ (§6)。「variant effect (effect mode): cell fn の
+  `Value` 返却は通常の `set`、クリアの `empty` だけは非単射回避のため同名 op、Sentinel 返却は `default`
+  として effects に射影する」へ改定。「default_fn (default mode): default 席は `Value` を返す cell fn だけを
   受け入れ」は文言不変
 - **docs/DESIGN.md §8.3 / docs/PIPELINE.md §2 段 5**: 「unset / default / empty は値を書かないので filter
   chain を通らない」の根拠を、null 素通し (DR-130 §3) と空コレクションに each 相の適用対象が無いこと の
   2 本へ差し替える (§6)。`default` については従来の根拠が残る
 - **docs/CONFORMANCE.md §2 (`sources` の空コレクション)**: 「ユーザが明示的に空にした / 何も来なかった の
-  区別は `effects` の op (`empty` / `unset`) が担う」を **operand (`[]` / `null`) が担う**形へ (§6)
+  区別は `effects` の op (`empty` / `unset`) が担う」を **`empty` / `set(null)` が担う**形へ (§6)
 - **docs/REFERENCE.md**: `cell_fns` 住人一覧の返り値型 (`unset` / `empty` が `Value` 返しへ)
 
 ### schema
 
-- `schema/fixture.schema.json`: `effects[].op` の enum から `unset` / `empty` を削除、`operand` を
-  `null` 許容へ
+- `schema/fixture.schema.json`: `effects[].op` の enum から `unset` のみ削除し、`empty` は温存。
+  `operand` を `null` 許容へ
 - `schema/builtin-descriptors.json`: `cell_fns` の `unset` / `empty` の `io_type.output` を
   tagged `Sentinel` から `Value` (`unset` は `"null"`、`empty` は target 依存) へ
 
@@ -302,7 +303,7 @@ Sentinel は「値を返せない fn のための逃げ道」であって、機�
 いずれも why が op による対比を教義として説明しているため**文面の書き換えが必須**:
 
 - `fixtures/multiple-parse/filters-cell-ops.json` (3 case すべて。unset / empty × accumulator × value_filters の
-  対比が主題で、§6 の「op ではなく operand が対比を担う」「filter 素通りの根拠が 2 本になる」を反映する)
+  対比が主題で、§6 の「unset は `set(null)`、empty は観測 op を温存」「filter 素通りの根拠が 2 本になる」を反映する)
 - `fixtures/variant-effects/empty-clear.json` (2 箇所)
 - `fixtures/export-key/accum-under-nested-command.json` (1 箇所)
 - `fixtures/multiple-parse/default-cell-ops.json` / `fixtures/value-sources/unset-ladder.json` /
@@ -321,7 +322,7 @@ Sentinel は「値を返せない fn のための逃げ道」であって、機�
 - **kuu.mbt**: cell fn の返り値型から `Sentinel::unset` / `Sentinel::empty` を削除し、`unset` は
   `Value::null` を返す住人へ、`empty` は対象セル型から空値を組み立てる住人へ。効果適用側は
   `set` の operand が `null` かで committed を分ける (§2)。effects の serialize と conformance decoder も
-  4 op へ
+  5 op へ
 - **kuu-cli**: 追随のみ
 
 ## 採用しなかった案
@@ -341,14 +342,12 @@ Sentinel union が 1 住人になるなら機構ごと畳めるのではない�
 居る以上、`set(null)` と Sentinel の `unset` が同じ意味を持つ 2 住人として併存し、両者の相互作用を
 規定する義務が生じる。制御の意味は operand から導ける (§2) ので、住人を分ける理由にならない。
 
-### (c) effects の op に `unset` / `empty` を観測語彙として残す (NUL-Q2=b 相当)
+### (c) effects の op に `unset` も観測語彙として残す (NUL-Q2=b 相当)
 
-内部表現は `set(null)` / `set([])` へ統一しつつ、effects への射影では従来の op 名を維持する案。fixture の
-書き換えが要らず、diff が読みやすいという利点がある。棄却理由は、**effects が「値セルへの操作の正本」で
-ある** (CONFORMANCE §2「effects が判定の正本」) 以上、内部で 1 つになった操作を観測面で 2 つに割ると、
-射影規則そのものが新たな規定として必要になること。`op` は操作の種類を語る軸であって committed の軸では
-なく、committed を知りたい消費者は operand から導ける。観測語彙を実体より豊かに保つのは、DR-045 が
-op で語っていた区別への後方互換であって設計上の優位ではない。
+内部表現を `set(null)` へ統一しつつ、effects への射影では `unset` を維持する案。棄却理由は、`set(null)` と
+`unset` の区別は operand から一意に復元でき、観測語彙を分ける意味が無いこと。`empty` の温存 (§4/§6) は
+accumulator セルのクリアと `[]` 行供給が同じ `set([])` へ潰れて復元不能になるためであり、unset には同じ
+非単射が存在しない。
 
 ## 関連
 
@@ -366,5 +365,5 @@ op で語っていた区別への後方互換であって設計上の優位で�
   `ctx.old` を要する fn に精密化される)
 - DR-080 §2 (merge accumulator の `remove` / `splice` — 本 DR の対象外、op 表に残る)
 - DR-125 (`inherit` を `borrow` の重複住人として畳んだ先例 — 根拠の第 1 節と同型)
-- CONFORMANCE §2 (effects の op 表 — §6 で 4 op へ)
+- CONFORMANCE §2 (effects の op 表 — §6 で 5 op へ)
 - docs/research/2026-08-01-null-projection-inversion.md §3 (本 DR の正本ノート、mid=32〜40)

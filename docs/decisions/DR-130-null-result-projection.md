@@ -117,15 +117,12 @@ DR-051 §4 第 3 項の禁止は、根拠を替えて存続する。
 
 | 構造 | 射影 |
 |---|---|
-| `or` 席 | **セル単位で 1 キー**。unset なら `cell: null`。枝ごとのキーを同時列挙することはない (DR-120 §2 の「露出キーに対応する値セルはちょうど 1 つ」の帰結) |
+| nameless 枝の `or` 席 | **セル単位で 1 キー**。unset なら `cell: null`。枝ごとのキーを同時列挙することはない (DR-120 §2 の「露出キーに対応する値セルはちょうど 1 つ」の帰結) |
+| named 枝の `or` 席 (NULOR-Q1=a) | 選択された枝の内側で**全枝キーを列挙**し、非選択枝は `null` にする。例: `{name:"mode", or:[{name:"fast",type:"string"},{name:"slow",type:"int",default:7}]}` に `--mode x` → `{"mode":{"fast":"x","slow":null}}`。セル未発火なら枝を展開せず `{"mode":null}`。未選択枝の default は充填せず、枝の default はその枝が選択された場合だけ生きる |
 | `repeat` の行 | 行の内側の静的宣言キーは null 埋め。tuple の `[null, x]` と同型 |
 | `seq` の nameless tuple | 各座を全列挙、埋まらない座は `null` (§3) |
 | record (DR-126) | **内側も反転** — closed な語彙なので全フィールド列挙 + `null` |
 | 動的キー構造 (`from_entries` / merge accumulator / kv-map / config 由来 map) | **present のみ**。宣言に語彙が無く、出うるキーの集合が静的に定まらない |
-
-> **NULOR-Q1 裁定待ち**: 上表の `or` 席は「枝が名前を持たない (セルを共有する) 場合」の射影である。
-> **枝がそれぞれ名前 / `export_key` を持つ named 枝 or の射影**は未裁定であり、本 DR は規定を置かない。
-> 裁定が下りたら本節に追記する。
 
 #### 4.1 record の補形は射影層で行い、parser の出力は書き換えない
 
@@ -472,4 +469,4 @@ fixture の記述コストを抑え、既存 578 case の書き換えを回避�
 - DESIGN §12b / DR-050 (provider 境界の `| null` と config の JSON null — §9.1 の別軸、値空間へ流入しない)
 - CONFORMANCE §2/§3 (`result` / `sources` の規定と比較規約 — §8 で改定)
 - docs/research/2026-08-01-null-projection-inversion.md (本 DR の正本ノート、NUL-Q1〜Q4 / NUL-C1)
-- DR-131 (Sentinel 縮小 — 本 DR の null を前提に unset / empty を畳む)
+- DR-131 (Sentinel 縮小 — 本 DR の null を前提に unset / empty を Value fn へ畳む。effects は empty op を温存)

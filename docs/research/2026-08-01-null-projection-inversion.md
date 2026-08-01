@@ -25,8 +25,9 @@
 - **NUL-Q1 = b: fixture は逐語で全キーを書く** (runner 自動補完は不採用)。理由 (kawaz mid=40):
   記述コストの恒常増は大した量でなく、全列挙は case 比較がしやすい。初回書き換え ~560 case は
   一度きりの投資
-- **NUL-Q2 = a: effects の op 語彙を set に統一** — unset 発火 = `{"op":"set","operand":null}`、
-  empty 発火 = `{"op":"set","operand":[]}`。op=unset / op=empty の観測語彙は廃止
+- **NUL-Q2 = a + NUL2-Q1 = a: effects の op 語彙から unset のみ廃止** — unset 発火 =
+  `{"op":"set","operand":null}`。empty は空値を返す Value fn 化したうえで、クリアの観測 op
+  `{"op":"empty"}` を温存する。effects 語彙は `set / default / remove / splice / empty`
 - **NUL-Q3 = a (一括)**: or は**セル単位で 1 キー** (unset なら `cell: null`、枝は同時列挙しない —
   DR-120 §2 の帰結) / repeat 行の内側も静的宣言キーは null 埋め (tuple `[null, x]` と同型) /
   **動的キー構造 (from_entries / merge / kv-map / config 由来 map) は present のみ** /
@@ -95,6 +96,14 @@
 - committed の担い手: DR-131 §2 の「set の committed は operand が null かで決まる」(worker 導出) を
   統括承認 — DR-045 §2 の明示制御原則を op から operand へ移す形
 - update op の既存不整合 (DR-045/077 vs CONFORMANCE) は本転換と独立の issue として起票
+- **NULOR-Q1 = a (2026-08-01): named 枝 or は全枝列挙** —
+  `{name:"mode", or:[{name:"fast",type:"string"},{name:"slow",type:"int",default:7}]}` に
+  `--mode x` → `{"mode":{"fast":"x","slow":null}}`。セル未発火なら `{"mode":null}`。排他は
+  非選択枝を `null` にして表し、キー集合を安定させる。未選択枝の default は充填せず、その枝が選択された
+  場合だけ生きる
+- **NUL2-Q1 = a (2026-08-01): クリアの観測 op `empty` を温存** — `empty` fn は対象型の空値を返す
+  Value fn のまま、effects 語彙は `set / default / remove / splice / empty` とする。accumulator セルの
+  「クリア」と「`[]` 行供給」を同じ wire へ潰す非単射を避ける (DR-121 §1.2 と同じ判断)
 
 ## 6. 未決の隣接論点 (本転換に含めない)
 
