@@ -60,7 +60,7 @@ DR-011 で却下済み (Bool 専用で CLI 慣習として薄い)。旧 Variatio
 
 ## 更新
 
-> **DR-077 により op 語彙に `update` を追加 (5 語目)**: 発火時に link 先セルの現在値 old へ transform (filters registry の T=>T エントリ名前参照) を適用して書き戻す 0-token 効果。committed=true、post_filters は結果にも通す。効果が純データ (§3) である原則は不変 — wire に載るのは transform の名前 + args のみ。
+> ~~**DR-077 により op 語彙に `update` を追加 (5 語目)**~~ **→ DR-114 で `update` effect は廃止された。** old 依存のセル変換は `incr` 等の cell fn が `ctx.old` を参照して Value を返す形 (DR-114 §6.1 の `Invoke` lowering) で表現し、観測は通常の `set` (CONFORMANCE §2)。effects の op 語彙に `update` は無い。
 
 ## 関連
 

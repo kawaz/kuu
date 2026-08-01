@@ -1,5 +1,12 @@
 # DR-077: update 効果 — old 依存のセル変換を効果語彙に開き、count を綴り合成の正規形に乗せる
 
+> **更新 (DR-114、2026-07-20): 本 DR の `update` effect は廃止。** old 依存のセル変換は `incr` 等の
+> cell fn が `ctx.old` を参照して Value を返す形で表現し (DR-114 §6.1)、filters transform を
+> effect 側から特殊呼び出しする経路は設けない。観測は通常の `set` (CONFORMANCE §2 が正本、
+> 専用 `update` op は effects 語彙に無い)。count の正規形も fn 綴りへ移行済み。
+> 「old 依存変換を効果の座席で扱う」「実体は registry 名前参照」という本 DR の問題設定と方向は
+> DR-114 が継承している。
+
 > 由来: DR-076 の TODO (count の展開正規形) の議論 (kawaz × Claude、2026-07-09)。「消費時 hook はどこにあるか」の問いから、effect (DR-045) がその座席であることを再確認した上で、inc 固定語の追加案 / set の reducer 化案 / parser の (val, old) => T 化案を経て、「効果語彙に汎用の 1 語 + 変換実体は registry 名前参照」で確定。
 
 ## 決定
