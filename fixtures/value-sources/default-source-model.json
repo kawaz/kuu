@@ -81,7 +81,7 @@
       }
     },
     {
-      "id": "unset-op-uncommits-to-declared-default",
+      "id": "unset-fn-uncommits-to-declared-default",
       "why": "`--unset-color`、env 未設定: unset fn が返す null は effect 面で set(null) として観測され、セル適用時に committed=false へ戻す (DR-045 不変)。env 供給が無いので source = default_source = \"default\"、値は宣言値 \"auto\"。default-op-sets-declared-default-cli-source (case3) との対: 値は同じ auto だが、committed (true/false) と source (cli/default) が異なる。effects は set(null) 1個。",
       "args": [
         "--unset-color"
@@ -149,8 +149,8 @@
       }
     },
     {
-      "id": "unset-op-uncommits-to-env-rewritten-default",
-      "why": "`--unset-color`、env APP_COLOR=none: unset fn が返す null は effect 面で set(null) として観測され、セル適用時に committed=false へ戻す。env が default を \"none\" に書き換えているので default_source=env、source=env。値は none。default-op-sets-env-rewritten-default (case6) との対比が本 fixture の核心: **値はどちらも同じ none (env 書き換え済み default) — 差は committed (unset=false / default=true) と source (unset=env / default=cli) の2軸のみ**。unset-op-uncommits-to-declared-default (case4、env 無し) との対比では、default_source の違いで source が default→env に変わる。",
+      "id": "unset-fn-uncommits-to-env-rewritten-default",
+      "why": "`--unset-color`、env APP_COLOR=none: unset fn が返す null は effect 面で set(null) として観測され、セル適用時に committed=false へ戻す。env が default を \"none\" に書き換えているので default_source=env、source=env。値は none。default-op-sets-env-rewritten-default (case6) との対比が本 fixture の核心: **値はどちらも同じ none (env 書き換え済み default) — 差は committed (unset=false / default=true) と source (unset=env / default=cli) の2軸のみ**。unset-fn-uncommits-to-declared-default (case4、env 無し) との対比では、default_source の違いで source が default→env に変わる。",
       "args": [
         "--unset-color"
       ],
