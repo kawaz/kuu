@@ -5,11 +5,20 @@
     "positionals": [
       {
         "or": [
-          {"type": "number", "name": "a"},
+          {
+            "type": "number",
+            "name": "a"
+          },
           {
             "seq": [
-              {"type": "string", "name": "s"},
-              {"type": "number", "name": "b"}
+              {
+                "type": "string",
+                "name": "s"
+              },
+              {
+                "type": "number",
+                "name": "b"
+              }
             ]
           }
         ]
@@ -20,26 +29,56 @@
     {
       "id": "both-paths-fail-deepest-primary",
       "why": "args `x y` の 2 解釈がどちらも dead-end → 完全経路 0 本 → failure で両躓きを全保持 (DR-053 §2)。解釈 A: number a が 'x'@0 を弾く (not_a_number) → a@0。解釈 B: string s が 'x'@0 を食い、number b が 'y'@1 を弾く → b@1。両 held Error が errors に残り、primary は最深 = b@1 (最も進んだ解釈 B の躓き) — primary は構造から導出される (最大 args_pos) ので expect に別フィールドは持たず errors 集合で表現する (CONFORMANCE §2 の failure は errors のみ、表示・primary 抽出はレンダラ)。kind:parse / reason:not_a_number は両者とも number 枝の型照合失敗 (DR-066 §3)。",
-      "args": ["x", "y"],
+      "args": [
+        "x",
+        "y"
+      ],
       "expect": {
         "outcome": "failure",
         "errors": [
-          {"element": "a", "args_pos": 0, "kind": "parse", "reason": "not_a_number"},
-          {"element": "b", "args_pos": 1, "kind": "parse", "reason": "not_a_number"}
+          {
+            "element": "a",
+            "args_pos": 0,
+            "kind": "parse",
+            "reason": "not_a_number"
+          },
+          {
+            "element": "b",
+            "args_pos": 1,
+            "kind": "parse",
+            "reason": "not_a_number"
+          }
         ]
       }
     },
     {
       "id": "deeper-path-commits",
-      "why": "対照 (case 1 と対): args `x 5` は枝 B が全消費できるので完全経路 1 本 → commit、errors は surface しない (held Error は 0 本失敗のときだけ結末になる、DR-038)。枝 A (number a) は 'x'@0 を弾いて不成立、枝 B は s='x', b=5 で 2 トークン全消費 → success。effects は消費順 s→b (cli 由来)。枝 A の a は未選択なので absent (キー消失、DR-051 §1) で result に現れない。case 1 (0 本 → 両 Error 保持) との境界を固定する。",
-      "args": ["x", "5"],
+      "why": "対照 (case 1 と対): args `x 5` は枝 B が全消費できるので完全経路 1 本 → commit、errors は surface しない (held Error は 0 本失敗のときだけ結末になる、DR-038)。枝 A (number a) は 'x'@0 を弾いて不成立、枝 B は s='x', b=5 で 2 トークン全消費 → success。effects は消費順 s→b (cli 由来)。枝 A の a は未選択なので `a:null` として現れ、静的キー集合 `{a,s,b}` は固定される (DR-130 §4)。case 1 (0 本 → 両 Error 保持) との境界を固定する。",
+      "args": [
+        "x",
+        "5"
+      ],
       "expect": {
         "outcome": "success",
         "effects": [
-          {"entity": "s", "op": "set", "operand": "x", "source": "cli"},
-          {"entity": "b", "op": "set", "operand": 5, "source": "cli"}
+          {
+            "entity": "s",
+            "op": "set",
+            "operand": "x",
+            "source": "cli"
+          },
+          {
+            "entity": "b",
+            "op": "set",
+            "operand": 5,
+            "source": "cli"
+          }
         ],
-        "result": {"s": "x", "b": 5}
+        "result": {
+          "a": null,
+          "s": "x",
+          "b": 5
+        }
       }
     }
   ]
