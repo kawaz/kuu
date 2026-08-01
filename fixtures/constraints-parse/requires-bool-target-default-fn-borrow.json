@@ -122,7 +122,7 @@
       }
     },
     {
-      "id": "borrow-null-source-violates",
+      "id": "borrow-null-requires-violation",
       "why": "(対極その 2) 借り元が値を持たない場合: `outer_opt` は素の `bool` で preset の暗黙 default を持たず (flag preset だけが default:false を同梱する、LOWERING §A.5)、CLI / env / config のどの席からも値を得ないので null (DR-130)。`d` の default 席の `borrow:outer_opt` は null を普通の値として返し、`set(null) = unset` により呼び出し元のラダーを開放する (DR-131 §1/§2) — `d` 自身の flag preset の暗黙 default:false は明示 `default_fn` に置換済み (DESIGN §11.4) なので false へは戻らず、`d` は null になる。したがって bool 目的語の充足条件「解決後の値が true」(DR-047 §5) は値が無い以上成立せず、`b` の requires は違反する。前 case (false が届いて違反) と本 case (何も届かず違反) で、目的語が true になれない 2 通りの経路が同じ error 語彙に落ちることを固定する。`args_pos` は args.length = 2。",
       "args": [
         "probe",
