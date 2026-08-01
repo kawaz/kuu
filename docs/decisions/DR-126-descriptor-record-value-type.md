@@ -190,6 +190,12 @@ null ゼロ値を使えば名乗りが kuu の値空間 (DR-051) と別の空間
   record で正確に書けるようになる (`[{"record": {"terminal": "bool", "cygwin": "bool"}}, "null"]` —
   ここの `"bool"` は組み込み registry type への参照であり、value_type primitive と同綴りなだけである)。
   `config_provider` の `[{"map": "value"}, "null"]` は真に開いた map なので不変
+
+  > **追補 (DR-129 §4、2026-08-01): この record 化は不要になった。** cygwin 観測の削除により
+  > `tty_provider` の出力は `["bool", "null"]` の単一 bool になり、近似すべき struct 自体が無くなった。
+  > record 型の裁定 (§1〜§5) は link 固定パス DSL の静的化・codegen・help という他の消費者を持つため不変で、
+  > `config_provider` の map も不変。builtin descriptor に record の実例が現在いないという事実は、
+  > record を宣言した住人が現れたときに §4 の乖離検査と参照解決が効くこととは独立である。
 - **docs/DESIGN.md §12b**: tty_provider のシグネチャ記述末尾の「入出力の enum/struct 精密化は io_type の
   型体系の外なので description に注記」が record 導入で成立しなくなる (struct 側のみ。enum 精密化は
   引き続き型体系の外)。§13.1 の descriptor 軸の列挙は軸名を並べるだけで型体系の中身を書いていないため変更不要

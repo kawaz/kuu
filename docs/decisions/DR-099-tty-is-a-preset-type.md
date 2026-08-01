@@ -7,6 +7,16 @@
 > は不変。祖先スコープの値を既定値にする定義は `default_fn: "borrow:<source>"` で書く
 > (DR-125 §3、DESIGN §11.4)。
 
+> **更新 (DR-129、2026-08-01): cygwin 観測と `tty_cygwin` ダイヤルは廃止された。** 影響は 4 節に及ぶ。
+> §2 の解決規則は `resolved_default = 観測 ?? 宣言 default ?? absent` になり、`fold(観測) =
+> terminal || (tty_cygwin && cygwin)` という計算自体が無くなる (観測 bool がそのまま `default` 席の
+> 解決値。source タグの `tty` は「観測由来」の意味で不変)。§3 の config キーは `tty_stream` の 1 種のみ
+> (`tty_cygwin` を削除)。§4 のシグネチャは `(stream) → bool | null` へ戻り、fixture 注入形も
+> `"tty": {"stdin": false, ...}` の単一 bool になる。§5 の informative note は依然として参考情報だが、
+> cygwin pty の判定を含めるか否かは provider 実装の内側の裁量になり、kuu が意味を規定するのは
+> 「そのストリームは端末か否か」の bool だけになる。§1 の preset 型としての位置づけ・観測優先の序列・
+> §7 の `tty_stream` 必須違反 (definition-error) は不変。
+
 > 由来: DR-098 (tty 判定の値源化) は kuu.mbt 実装完遂直後 (2026-07-12 `a396d21b`)。実装が固まった直後の見直しで kawaz が同モデルをより単純な形へ裁定 (2026-07-12「tty が何かに付く必要はない。`{type: "tty", name: "tty"}` — セルに最初から isatty が入ってるだけの存在で良い。微調整は tty_ 系 config で」)。DR-098 は tty 判定値を「bool 値要素に付与する wire 属性 + 値源ラダーの新設席」としてモデル化したが、この裁定により「値空間の土台そのものを差し替える preset 型」へ転換する。DR-076 (bool は通常の値型、flag/count が特殊) が既に切り開いていた「特殊性は型/preset 側の展開で吸収し、値型本体を歪めない」という筋を tty にも適用する帰結であり、DR-098 が導入した definition-error 3 分類・multiple×tty の未規定はこの転換で構文的に発生しなくなる (§1)。
 
 ## 決定

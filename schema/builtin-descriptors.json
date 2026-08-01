@@ -319,11 +319,10 @@
       "fallibility": "reject",
       "invocation": { "encoding": "none", "parameters": [] },
       "config": {
-        "tty_stream": { "value_type": "string", "enum": ["stdin", "stdout", "stderr"], "required": true, "description": "tty_provider へ渡すストリーム識別子 (DR-099 §3)。必須 — 未指定 (bare `type: \"tty\"` を含む) は definition-error kind=invalid-range。要素名からの推測はしない (kawaz 裁定 TTY-Q2=(c))。" },
-        "tty_cygwin": { "value_type": "bool", "default": true, "description": "Cygwin/MSYS pty を terminal 扱いに含めるダイヤル (DR-099 §3)。fold = `terminal || (tty_cygwin && cygwin)`。既定 true は kawaz/die DR-0008 の Cygwin pty=TTY 裁定に整合。" }
+        "tty_stream": { "value_type": "string", "enum": ["stdin", "stdout", "stderr"], "required": true, "description": "tty_provider へ渡すストリーム識別子 (DR-099 §3)。必須 — 未指定 (bare `type: \"tty\"` を含む) は definition-error kind=invalid-range。要素名からの推測はしない (kawaz 裁定 TTY-Q2=(c))。" }
       },
       "reasons": ["not_a_bool"],
-      "description": "bool を値空間の土台にする preset 型 (DR-099 §1、DR-076 の flag/count と同族の糖衣プリセット)。DR-099 §1「それ以外のすべて (long/short/env 席の宣言可否、multiple、filters、required 充足) は素の bool と完全に同一に振る舞う」の通り、parse 相 (String→bool) は builtin/bool_parser と完全に同一の経路を通り、canonical bool 語彙外の文字列 (例 `--use-color yesplz`) は通常の bool parse と同じく `not_a_bool` で reject する。reasons の帰属は排他的所有ではないグローバル語彙 (`reasons` フィールドの description 参照) なので、`not_a_bool` を builtin/bool_parser と共有 emit することは compositional exemption を必要としない — 素の bool と完全に同一という DR-099 §1 の主張自体が fallibility:reject を要求する。値の由来 (`terminal || (tty_cygwin && cygwin)` の fold、tty_provider が null なら宣言 default) は値源ラダー §11.4 の `default` 席の型依存解決規則であり、この fold 自体は failure mode を持たない — fallibility:reject は bool parse 相にのみ由来する。"
+      "description": "bool を値空間の土台にする preset 型 (DR-099 §1、DR-076 の flag/count と同族の糖衣プリセット)。DR-099 §1「それ以外のすべて (long/short/env 席の宣言可否、multiple、filters、required 充足) は素の bool と完全に同一に振る舞う」の通り、parse 相 (String→bool) は builtin/bool_parser と完全に同一の経路を通り、canonical bool 語彙外の文字列 (例 `--use-color yesplz`) は通常の bool parse と同じく `not_a_bool` で reject する。reasons の帰属は排他的所有ではないグローバル語彙 (`reasons` フィールドの description 参照) なので、`not_a_bool` を builtin/bool_parser と共有 emit することは compositional exemption を必要としない — 素の bool と完全に同一という DR-099 §1 の主張自体が fallibility:reject を要求する。値の由来 (tty_provider の bool 観測、null なら宣言 default) は値源ラダー §11.4 の `default` 席の型依存解決規則であり、この解決自体は failure mode を持たない — fallibility:reject は bool parse 相にのみ由来する。"
     }
   },
 
@@ -410,10 +409,10 @@
       "name": "tty_provider",
       "role": "provider",
       "construction": "static",
-      "io_type": { "input": "string", "output": [{ "map": "value" }, "null"] },
+      "io_type": { "input": "string", "output": ["bool", "null"] },
       "invocation": { "encoding": "none", "parameters": [] },
       "reasons": [],
-      "description": "tty 判定値解決 (DESIGN §12b、DR-099)。散文シグネチャ `(stream: \"stdin\"|\"stdout\"|\"stderr\") → {terminal: bool, cygwin: bool} | null` の機械可読化 (DR-107 §6) — input は本来 3 値 enum だが io_type の値語彙にリテラル enum 制約が無いため string で近似 (許容値は本 description で明記)。output の固定フィールド struct ({terminal, cygwin}) も map<string,value> で近似 (io_type はフィールド単位の型精密化を持たない、DR-107 §3)。null=提供なし。ambient probe (isatty 呼び出し) は provider 実装の責務に閉じ、評価器はこの純データ返却のみを見る (DR-098 §2、DR-099 でも不変)。registry の単一スロット。"
+      "description": "tty 判定値解決 (DESIGN §12b、DR-099 §4 / DR-129 §1)。散文シグネチャ `(stream: \"stdin\"|\"stdout\"|\"stderr\") → bool | null` の機械可読化 (DR-107 §6) — input は本来 3 値 enum だが io_type の値語彙にリテラル enum 制約が無いため string で近似 (許容値は本 description で明記)。output はそのストリームが端末か否かの bool 単一で、cygwin pty を含めるか等の判定方言は provider 実装の内側の責務 (特殊判定が要るホストは provider ごと差し替える)。null=提供なし。ambient probe (isatty 呼び出し) は provider 実装の責務に閉じ、評価器はこの純データ返却のみを見る (DR-098 §2、DR-099 でも不変)。registry の単一スロット。"
     }
   }
 }

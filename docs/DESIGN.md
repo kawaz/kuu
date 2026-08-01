@@ -282,7 +282,7 @@ bytes / binary 型は組み込みに持たない。必要なら拡張 type (regi
 - `command` = name でスコープを作り、name の完全一致でトリガ
 - help 系 5 preset は help_installer が内部セル link + `cell_fns` 固定値供給へ展開する (§14.1、DR-113)。`help_all_category` (category 絞りなし) / `help_category` (named category) / `help_show_hidden` (hidden 露出の独立軸) / `help_tree` (全 tree) は `help` と直交して合成できる
 - `completion_script` = shell 名を必須値に取る string preset。`#completion_script` へ値を供給して同名 capability を発火する。値域は自由入力で、値位置の候補には実装対応 shell 名を提示する (§15.13、DR-117)
-- `tty` (= `builtin/tty`、DR-099) = bool + 暗黙 default = tty 観測の fold。configurable factory config は `tty_stream` (`"stdin"｜"stdout"｜"stderr"`、必須 — 未指定は definition-error) / `tty_cygwin` (bool、既定 true)。long/short/env 席の宣言可否・multiple・filters・required 充足は素の bool と完全に同一 — preset が同梱するのは暗黙 default のみ (詳細は §12b)
+- `tty` (= `builtin/tty`、DR-099) = bool + 暗黙 default = tty 観測。configurable factory config は `tty_stream` (`"stdin"｜"stdout"｜"stderr"`、必須 — 未指定は definition-error) のみ (DR-129)。long/short/env 席の宣言可否・multiple・filters・required 充足は素の bool と完全に同一 — preset が同梱するのは暗黙 default のみ (詳細は §12b)
 
 これらは独立の type ではなく、属性プリセットへの名前。version は専用 type ではなく単なる flag。
 
@@ -765,7 +765,7 @@ dd (`--`) に `required: true` を付けると「`--` の出現が必須」を�
 目的語の充足判定も required と同じ型委譲の枠 (DR-093) に統一される:
 
 - **値空間を持つ通常型の目的語**: 値の有無 (default 込み)
-- **目的語が bool 型** (flag preset 含む): 解決後の値が true であること (値源不問 — cli / env / config / default のどれ経由でも true なら充足)。値の有無判定だと、flag preset が同梱する暗黙 default:false (§3.3/LOWERING §A.5) により vacuous に充足してしまうため、この dispatch (「値の有無」でなく「解決後値が true か」) を採る。dispatch 自体は plain bool にも一様に適用されるが、**plain bool は暗黙 default を持たない** — 未発火・値源なしなら他の値型と同様に absent (LOWERING §A.5 の default:false は flag preset 固有の展開、DR-099 §2 の `resolved_default = fold(観測) ?? 宣言 default ?? absent` 終端が同じ教義を preset 型の側から裏づける) (DR-047 明確化 2026-07-09、bool 型の充足定義として DR-093 の型委譲に統合)
+- **目的語が bool 型** (flag preset 含む): 解決後の値が true であること (値源不問 — cli / env / config / default のどれ経由でも true なら充足)。値の有無判定だと、flag preset が同梱する暗黙 default:false (§3.3/LOWERING §A.5) により vacuous に充足してしまうため、この dispatch (「値の有無」でなく「解決後値が true か」) を採る。dispatch 自体は plain bool にも一様に適用されるが、**plain bool は暗黙 default を持たない** — 未発火・値源なしなら他の値型と同様に absent (LOWERING §A.5 の default:false は flag preset 固有の展開、DR-099 §2 の `resolved_default = 観測 ?? 宣言 default ?? absent` 終端が同じ教義を preset 型の側から裏づける) (DR-047 明確化 2026-07-09、bool 型の充足定義として DR-093 の型委譲に統合)
 - **目的語が値空間なし** (`type: "none"`、dd 含む): 目的語が発火した (committed) こと (DR-093、DR-089 §4 の definition-error 判定を置換)
 
 **値依存の制約は値の枝への requires 合成で書く** (DR-055、専用の条件 DSL は持たない):
@@ -911,7 +911,7 @@ name を持つノードが結果スコープ = lexical スコープを作る。c
 
 `borrow` が受ける `<source>` は ref / link と同じ名前解決規則で解く — 現在スコープ → 外側スコープへ順に → definitions (§2.7、DR-006 / DR-032 / DR-033)。上の例で子コマンド `socket` の中から root の `socket_ttl` に届くのはこの規則による。自分自身を指す `borrow` は definition-error `circular-ref` (DR-114 §10)。`default` と `default_fn` は同じ default 席なので併用できず (上記 `invalid-range`)、既定値の置き場所は外側 1 箇所に決まる。
 
-`default` 席で何を返すかは型ごとの解決規則にも委ねられる。`tty` preset 型は tty 観測の fold を優先し宣言 default へフォールバックする独自規則を持つ (DR-099、§12b)。ラダー自体はこの型依存を意識しない 4 段固定であり、tty のための専用席は持たない。
+`default` 席で何を返すかは型ごとの解決規則にも委ねられる。`tty` preset 型は tty 観測を優先し宣言 default へフォールバックする独自規則を持つ (DR-099、§12b)。ラダー自体はこの型依存を意識しない 4 段固定であり、tty のための専用席は持たない。
 
 **`sources` 射影 — 値 provenance と操作 provenance の分離** (DR-081): 成功 report が `result` と並べて持つ sibling の `sources` フィールド (CONFORMANCE §2、DR-031) が投影するのは「その値セルを最終的に確定させた**主体**がどの席か」= **操作 provenance** であり、「セルに座っている値の**内容**がもともとどの席から来たか」= **値 provenance** ではない。両者は同一ではなく、default 席の書き換えモデル (DR-081) を通すと分離が顕在化する: env 供給は「下位席として env が最終的に勝つ」のではなく、node の宣言 default 値そのものを env 値で書き換える (書き換え後の default_source は `env` を指す)。したがって CLI から default op variant (例: `--reset-to-default`) を発火して書き換え済み default 値を明示 set した場合、`sources` は `cli` になる (値の内容が env 由来であっても、確定主体は cli の default op である)。同様に unset op は committed=false のまま残すため、`sources` は書き換え済み default の由来 (env 供給ありなら `env`) を指す (確定主体が存在しないので値の由来席にフォールバックする)。ただし値が空コレクション (`[]` / `{}`) になる場合は値の座が無く shadow tree にタグが載らない (DR-122 §2.1) — この場合の committed 軸の区別は `effects` の op (`unset` / `empty`) が担う。値の由来と確定主体が同一の 4 段ラダー通常経路 (§11.4 の 1〜4) では両者は一致し、cell 操作 (default / unset / empty 等の `cell_fns` 呼び出し、DR-114 §4) を跨ぐ場合にのみ分離する。**未発火要素の sources は `default`** (SPK-Q2=a): flag / count のような default 同梱要素が一度も発火せず宣言 default のまま結果に現れる場合 (未発火 flag の `false` 等)、sources は `default` を指す — 上位席の供給も cell 操作も無い「ラダー最下段で確定した」通常経路であり、専用の語彙 (`unfired` 等) は設けない。**`value:` 持ちセル (const 初期値) の未発火は `const`** — セルは初期値のまま確定しており default 充填は起きていない (DR-031 の const 追記)。DR-081 の default_source 書き換えモデルは default 席の話であり const 初期値には触れない — env / config が const 持ちセルへ供給する場合は通常の上位席供給としてセル値を置き換え、sources はその席を指す (「書き換え」は経由しない)。cell 操作の発火列自体は `effects` (順序規範、CONFORMANCE §3) 側で観測する — 操作の来歴は `effects[].source`、確定後の値の由来は report 直下の `sources` に、という 2 面射影として並ぶ。`sources` は `result` と同型の shadow tree (値の座だけを source タグに置き換えた形、DR-122) であり、キー体系も `result` と同一 (export_key 適用後の露出キー、CONFORMANCE §2)。`effects[].entity` の射影前 cell name とは別軸である — export_key は結果キー軸の唯一の指定 (DR-052 §1) で、露出キーと値セルは結果スコープ内で 1:1 (DR-120 §1) なので、結果面の射影 (`result` / `sources`) は一様に露出キーで書く。
 
@@ -949,12 +949,12 @@ name を持つノードが結果スコープ = lexical スコープを作る。c
 }
 ```
 
-- **preset が同梱するのは「暗黙 default = tty 観測の fold」だけ**。long/short/env 席の宣言可否・multiple・filters・required 充足 (値空間あり判定) は素の bool と完全に同一に振る舞う — bool 以外の型や値なし要素・flag/count プリセットに「tty を付与する」という操作自体が存在しない (`type:` は単一選択のため、DR-098 が必要とした definition-error 3 分類は構文的に発生しない)
-- **configurable factory config**: `tty_stream` (`"stdin"｜"stdout"｜"stderr"`、必須 — 未指定は definition-error kind=`invalid-range`) / `tty_cygwin` (bool、既定 true — cygwin pty を terminal 扱いに含めるダイヤル)
-- **`default` 席の解決規則** (§11.4 のラダーは 4 段固定で、この席の中身が型依存): `resolved_default = fold(観測) ?? 宣言 default ?? absent`。`fold(観測) = terminal || (tty_cygwin && cygwin)`。観測が得られる限り宣言 default より優先する (「明示 (CLI/env/config) > 観測 (tty) > 宣言既定 (default)」という序列は DR-098 §5 / DR-125、tty の実装位置は独立ラダー席ではなく型の解決規則)
-- **source タグ**: 最終値が fold 由来なら `source: "tty"`、宣言 default へフォールバックしたなら `source: "default"` (観測由来 vs 宣言 default 由来の診断区別、`effects` には現れない — 完走後の値確定)
-- **tty_provider** は registry の単一スロット。シグネチャは `(stream: "stdin"|"stdout"|"stderr") → {terminal: bool, cygwin: bool} | null` — null = 提供なし。env_provider (§12) / config_provider (§14.3) と同列 (DR-099。DR-098 の `bool | null` から改訂 — fold の方言 `tty_cygwin` を spec 側の純データ計算として保つため)。このシグネチャの機械可読宣言 (`role:"provider"` descriptor) の正本は `schema/builtin-descriptors.json` の `tty_provider` (DR-107 §6、入出力の enum/struct 精密化は io_type の型体系の外なので description に注記)
-- 供給値 (`terminal`/`cygwin`) は native bool (string でない) なので、fold で計算した値の pieceProcessor 通過は `piece_filters` / `parse` (String→T の相) が型の帰結でスキップされ、`value_filters` / `final_filters` (T→T の相) のみ通過する (DR-050 §4 の config scalar と同じ原理)
+- **preset が同梱するのは「暗黙 default = tty 観測」だけ**。long/short/env 席の宣言可否・multiple・filters・required 充足 (値空間あり判定) は素の bool と完全に同一に振る舞う — bool 以外の型や値なし要素・flag/count プリセットに「tty を付与する」という操作自体が存在しない (`type:` は単一選択のため、DR-098 が必要とした definition-error 3 分類は構文的に発生しない)
+- **configurable factory config**: `tty_stream` (`"stdin"｜"stdout"｜"stderr"`、必須 — 未指定は definition-error kind=`invalid-range`) のみ (DR-129 §2)
+- **`default` 席の解決規則** (§11.4 のラダーは 4 段固定で、この席の中身が型依存): `resolved_default = 観測 ?? 宣言 default ?? absent`。観測が得られる限り宣言 default より優先する (「明示 (CLI/env/config) > 観測 (tty) > 宣言既定 (default)」という序列は DR-098 §5 / DR-125、tty の実装位置は独立ラダー席ではなく型の解決規則)
+- **source タグ**: 最終値が観測由来なら `source: "tty"`、宣言 default へフォールバックしたなら `source: "default"` (観測由来 vs 宣言 default 由来の診断区別、`effects` には現れない — 完走後の値確定)
+- **tty_provider** は registry の単一スロット。シグネチャは `(stream: "stdin"|"stdout"|"stderr") → bool | null` — null = 提供なし。env_provider (§12) / config_provider (§14.3) と同列 (DR-099 §4、DR-129 §1)。cygwin pty を端末扱いに含めるか等の判定方言は provider 実装の内側の責務であり、特殊な判定が要るホストは provider ごと差し替える。このシグネチャの機械可読宣言 (`role:"provider"` descriptor) の正本は `schema/builtin-descriptors.json` の `tty_provider` (DR-107 §6、入力の enum 精密化は io_type の型体系の外なので description に注記)
+- 供給値は native bool (string でない) なので、観測値の pieceProcessor 通過は `piece_filters` / `parse` (String→T の相) が型の帰結でスキップされ、`value_filters` / `final_filters` (T→T の相) のみ通過する (DR-050 §4 の config scalar と同じ原理)
 - 評価器の純粋性は不変: パーサ自身が `isatty()` を呼ぶことはなく、ambient probe の実行は provider 実装 (ホスト言語 DX) の責務に閉じる (DR-098 §2、DR-099 でも不変)
 
 ---
@@ -974,7 +974,7 @@ name を持つノードが結果スコープ = lexical スコープを作る。c
 | `multiple` | accumulator+collector+separator の糖衣プリセット | `multiple` (文字列指定時) |
 | `env_provider` | 環境変数解決 | `env` (env installer の lookup が利用) |
 | `config_provider` | config ファイル読込 (パス → JSON 同型の階層オブジェクト。フォーマット・探索・マージは provider の関心、DR-050) | `config_key`, `type: "config_file"` (config installer の lookup が利用) |
-| `tty_provider` | tty 判定値解決 (stream → `{terminal, cygwin}` \| null、ambient probe は provider 実装に閉じる、DR-099) | `builtin/tty` factory の config `tty_stream` (`types` registry 経由、`tty` installer は持たない) |
+| `tty_provider` | tty 判定値解決 (stream → bool \| null、判定方言と ambient probe は provider 実装に閉じる、DR-099 / DR-129) | `builtin/tty` factory の config `tty_stream` (`types` registry 経由、`tty` installer は持たない) |
 | `completers` | 補完候補の供給名。builtin `files` / `dirs` は生成器が shell 機能へマップ (DR-117 §7) | `completer` |
 | `installers` | 特殊語彙の展開装置 (糖衣展開 + 実行時能力の植え付け、DR-042) | `long`, `short`, `env`, `type:"dd"`, `commands[]`, `global`, `repeat`, `multiple`, `config_key`, `requires` / `exclusive_group` / `conflicts_with`, `alias` 等の特殊語彙 |
 
@@ -1565,7 +1565,7 @@ options / commands の `origin` は `"local"`、`{"kind":"global","declared_at":
 | **グループ宣言エントリ** | `options[]` に置く、グループ属性だけを持つ entry。グループの表示順とメタが一箇所で完結する (§14.6、DR-113 §8.1) |
 | **config_provider** | config ファイル読込の registry 単一スロット。(path) → JSON 同型の階層オブジェクト \| null。フォーマットは provider の関心 (DR-050) |
 | **config_key** | config 階層への明示対応 (link の固定パス DSL、ルート絶対)。未指定なら name スコープ階層との同型対応 (DR-050) |
-| **tty_provider** | tty 判定値解決の registry 単一スロット。(stream: "stdin"\|"stdout"\|"stderr") → `{terminal: bool, cygwin: bool}` \| null。`builtin/tty` preset 型 (`type:` 経由) の暗黙 default が fold (`terminal \|\| (tty_cygwin && cygwin)`) して消費する。ambient probe (isatty 呼び出し) は provider 実装に閉じ評価器の純粋性を崩さない (DR-099、DR-098 から signature 改訂) |
+| **tty_provider** | tty 判定値解決の registry 単一スロット。(stream: "stdin"\|"stdout"\|"stderr") → bool \| null。`builtin/tty` preset 型 (`type:` 経由) の暗黙 default がこの観測をそのまま消費する。cygwin pty を含めるか等の判定方言は provider 実装の内側の責務。ambient probe (isatty 呼び出し) は provider 実装に閉じ評価器の純粋性を崩さない (DR-099 §4、DR-129 §1) |
 | **absent** | 値の無い要素は結果オブジェクトにキー自体が出ない (in-band null 不使用)。反復系・default 持ち・required は absent にならない (DR-051) |
 | **export_key** | 結果キー軸の明示指定 (未指定 = name 由来)。null / "" = 結果キー軸なし → nameless 同化の透過。値の伝搬は止まらない (DR-052) |
 | **alias** | canonical 実体への別入口 (参照ファミリー: ref = 構造継承 / link = 値同期 / alias = 別入口)。結果キーは canonical のみ (DR-057) |

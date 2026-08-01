@@ -527,7 +527,7 @@ DR-095 射程外)、それ以外の type は本表が唯一のカタログにな
 | `help_tree` | 糖衣プリセット | `#help` + `#help_tree`。capability 入力を `depth:"all"` にする | DESIGN §14.1, DR-113 §2.5 |
 | `completion_script` | 糖衣プリセット | 必須の shell 名 string を `#completion_script` へ供給し、completion_script capability を発火する。値域は自由入力、候補は実装対応 shell 名 | DESIGN §15.13, DR-117 §2 |
 | `dd` | 糖衣プリセット | greedy 面のトリガ兼消費者 (`--`)。§2.2「dd 専用」参照 | DESIGN §3.3, DR-064/090 |
-| `tty` (`builtin/tty`) | 糖衣プリセット / factory | bool を土台に、暗黙 default = tty 観測の fold | DESIGN §3.3, §12b, DR-099 |
+| `tty` (`builtin/tty`) | 糖衣プリセット / factory | bool を土台に、暗黙 default = tty 観測 | DESIGN §3.3, §12b, DR-099, DR-129 |
 | `config_file` | 特殊 type | config ファイルパスの配線宣言 | DESIGN §14.3, DR-050 |
 
 ### 3.2 configurable factory カタログ
@@ -538,7 +538,7 @@ DR-095 射程外)、それ以外の type は本表が唯一のカタログにな
 | `builtin/number_parser` | factory | number/float 共通の value_parser。構文不一致は全て `not_a_number` |
 | `builtin/int_parser` | factory | int の値空間判定 value_parser (number として読み、値が整数かで判定) |
 | `builtin/bool_parser` | factory | bool の value_parser |
-| `builtin/tty` | factory | bool を値空間の土台にする preset 型 — 暗黙 default = tty 観測の fold (§3.1 の tty 行・DR-099) |
+| `builtin/tty` | factory | bool を値空間の土台にする preset 型 — 暗黙 default = tty 観測 (§3.1 の tty 行・DR-099・DR-129) |
 <!-- kuu-lint:end -->
 
 定義側での参照形は `{"name": "<factory名>", "config": {...}}` (canonical default = factory の
@@ -570,7 +570,6 @@ default config)。`type:` から直接 bare 名で参照する場合は `definit
 | `bool_false_values` | `builtin/bool_parser` | array[string] | `["false","0",""]` | false と解釈する文字列集合 (空文字含む、env の `FLAG=` 対応) |
 | `bool_case_insensitive` | `builtin/bool_parser` | boolean | `true` | 大小無視で照合するか |
 | `tty_stream` | `builtin/tty` | `"stdin"`\|`"stdout"`\|`"stderr"` | **必須** (未指定は definition-error) | `tty_provider` へ渡すストリーム識別子 |
-| `tty_cygwin` | `builtin/tty` | boolean | `true` | Cygwin/MSYS pty を terminal 扱いに含めるダイヤル |
 <!-- kuu-lint:end -->
 
 `int_round` の 10 種: `floor` / `ceil` / `trunc` / `away` / `half_floor` / `half_ceil` /
@@ -581,7 +580,7 @@ default config)。`type:` から直接 bare 名で参照する場合は `definit
 リネームでなく、ユーザランドの語彙糖衣 alias 機構 (vocab_alias installer 構想、
 `docs/issue/2026-07-12-vocab-alias-installer.md`) が対応する。
 
-正本: DESIGN §3.4, DR-074, DR-075, DR-099, DR-100
+正本: DESIGN §3.4, DR-074, DR-075, DR-099, DR-100, DR-129
 
 ---
 
