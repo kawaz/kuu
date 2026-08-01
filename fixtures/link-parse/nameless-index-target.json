@@ -1,0 +1,48 @@
+{
+  "why": "link 固定パスは nameless 透過子を値の座を持つ子だけで数え、位置指定で着地できる (DR-029 用途 4 / DR-127 §1, §6)。type:none は値座を持たないため座標から除外される。nameless 子は自前の effects entity を持たず、最寄りの named 祖先 `pair` と path [0] の組で着地座を表す。固定 tuple の未発火座は DR-130 の全列挙規範により null になる。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {
+        "name": "pair",
+        "long": true,
+        "seq": [
+          {"type": "none"},
+          {"type": "string"},
+          {"type": "string"}
+        ]
+      },
+      {
+        "name": "legacy",
+        "type": "string",
+        "long": true,
+        "link": "pair[0]"
+      }
+    ]
+  },
+  "cases": [
+    {
+      "id": "link-lands-on-first-nameless-seat",
+      "why": "`--legacy x` は pair の第 1 nameless 座へ合流する。effects は entity `pair` と path [0] で座を一意に示し、result / sources は第 1 座を link 値で満たしつつ未発火の第 2 座を null として保つ。",
+      "args": ["--legacy", "x"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {
+            "entity": "pair",
+            "path": [0],
+            "op": "set",
+            "operand": "x",
+            "source": "link"
+          }
+        ],
+        "result": {
+          "pair": ["x", null]
+        },
+        "sources": {
+          "pair": ["link", null]
+        }
+      }
+    }
+  ]
+}

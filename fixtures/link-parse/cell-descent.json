@@ -1,0 +1,52 @@
+{
+  "why": "link 固定パスの第 1 相は root セルを解決した後、宣言構造を辿れる限り子セルへ降下する (DR-127 §2.1)。兄弟入口 legacy から link:\"timerange.since\" で scope 子 since へ合流し、値源ラダー・effects・result・sources は着地した子セルの通常規則を使う。固定 seq の未発火座 until は DR-130 の全列挙規範により null として残る。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {
+        "name": "timerange",
+        "long": true,
+        "seq": [
+          {"name": "since", "type": "string"},
+          {"name": "until", "type": "string"}
+        ]
+      },
+      {
+        "name": "legacy",
+        "type": "string",
+        "long": true,
+        "link": "timerange.since"
+      }
+    ]
+  },
+  "cases": [
+    {
+      "id": "sibling-entry-descends-to-named-child",
+      "why": "`--legacy x` は timerange scope 自体でなく named child `since` に着地する。effects の entity は最寄りの named 着地セル `since`、result / sources は親 scope timerange の下へ射影され、未発火の固定座 until は値・source とも null になる。",
+      "args": ["--legacy", "x"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {
+            "entity": "since",
+            "op": "set",
+            "operand": "x",
+            "source": "link"
+          }
+        ],
+        "result": {
+          "timerange": {
+            "since": "x",
+            "until": null
+          }
+        },
+        "sources": {
+          "timerange": {
+            "since": "link",
+            "until": null
+          }
+        }
+      }
+    }
+  ]
+}
