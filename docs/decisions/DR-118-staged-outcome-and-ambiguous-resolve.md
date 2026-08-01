@@ -1,5 +1,13 @@
 # DR-118: 段階型契約と Ambiguous の resolve 遷移 — parse/resolve の 2 相を型で強制、interpretation ビューは parse 相
 
+> **更新 (DR-120、2026-07-30): claimants 面が無くなり、§3 のビュー確定規則は 2 つになった。** 露出キー
+> 衝突は definition-error `export-key-collision` になり (DR-120 §1)、claimants を生む ambiguous 自体が
+> 到達不能になったため: §3 規則 2 (claimants 席の default 残置) は座席を失い、現行の規則は 1 (Default-source
+> scalar の除外) と 3 (空 accumulator 配列の保持) の 2 つ。§2 の「collision 昇格 (DR-073) 由来の解釈」も
+> 生じない (残る ambiguous は構造的に複数の完全経路が立つ場合のみで、遷移そのものの意味論は不変)。§4 の
+> 論拠 — 比較面には全解釈で一様に計算できる相しか使えない — は claimants に依存せず成立する (解釈ごとに
+> ラダーの注ぎ先が分岐する点が本質)。§射程外の「解釈の同定子」も result による構造指名の設計になる。
+
 > 由来: 敵対的レビュー統合台帳 (`docs/findings/2026-07-24-fresh-eyes-adversarial-review.md`) の
 > B3 (parse/resolve の 2 相契約の濁り) と REV-Q3=a 裁定 (kawaz 2026-07-24: 段階型で強制 +
 > Ambiguous の resolve 意味論と interpretation ビューの適用相を DR で裁定)。設計プランは

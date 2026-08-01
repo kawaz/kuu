@@ -145,9 +145,12 @@ registry.types.X → warn+string フォールバック`(ユーザ定義が組み
 
 **`export_key`**
 結果キー名の明示上書き。`null` または `""` で結果キー軸なし (透過) — name 無しノードと同じ挙動
-になる。
+になる。1 結果スコープで 1 つの露出キーに対応する値セルはちょうど 1 つで、相異なる 2 つ以上の
+値セルが同じ露出キーへ解決する定義は definition-error `export-key-collision` (判定は `export_key`
+適用後の解決キー文字列で、identity 経由と mapped 経由を区別しない)。同じ値セルへ複数の入口を
+生やすなら `link`、1 キーに複数タイプを相乗りさせるなら `or` 席を使う。
 最小例: `{"name": "verbose", "type": "flag", "export_key": "v"}`
-正本: DESIGN §2.4, DR-046/052
+正本: DESIGN §2.4, §15.5, DR-046/052/120
 
 **`completer`**
 `definitions.completers` / `registry.completers` への completer 名参照 (値位置候補の生成器配線)。

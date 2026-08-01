@@ -1,8 +1,8 @@
 # kuu 値パイプライン — filters / effects / registry の全体図
 
 > 本書は値が args / env / config / `cell_fns` から結果オブジェクトに届くまでの処理順・データフロー・各段の入出力型を、
-> DR-009 / DR-010 / DR-015 / DR-031 / DR-036 / DR-045 / DR-052 / DR-061 / DR-066 / DR-073 / DR-074 / DR-075 /
-> DR-076 / DR-102 / DR-114 に散在するパイプライン仕様の説明用集約である。特に cell fn invocation carrier、統一
+> DR-009 / DR-010 / DR-015 / DR-031 / DR-036 / DR-045 / DR-052 / DR-061 / DR-066 / DR-074 / DR-075 /
+> DR-076 / DR-102 / DR-114 / DR-120 に散在するパイプライン仕様の説明用集約である。特に cell fn invocation carrier、統一
 > `FnCtx` (`ctx.old` を含む)、`filters` / `cell_fns` の registry 分離は DR-114 が正本である。改訂は各 DR の波及として
 > 行い、本書だけ書き換えて済ませない。
 > LOWERING.md 冒頭の derived 宣言と同型の位置づけ。
@@ -52,7 +52,7 @@ flowchart TD
 - **b. cell fn 呼び出し**: `cell_fns` から fn を引き、args と統一 `FnCtx` を渡す。`incr` は `ctx.old` を読み old + 1 の `Value` を返す。`Value` は通常の set operand と同じ filter pipeline へ入り、`Sentinel` は対応 operation として ledger に積む。図の Value→ledger 矢印は §2 / §3.2 の通常 set 経路を矢印内に畳んだ表記である
 - **c. mutation ledger の畳み**: あと勝ち (DR-015)。例: `-vv --log-level 5 -v` の発火列は `incr, incr, set, incr`。fn 適用後の ledger event は `set(1), set(2), set(5), set(6)` となり、0 → 1 → 2 → 5 → 6 と畳まれる。効果列順序は同一性成分 (DR-045 §1)
 - **d. 値源ラダー**: cli が committed=true でセルを確定させれば下段は上書きされない。`unset` (committed=false) だけがラダーを開放して env → config → default が後勝ち可能に
-- **e. 結果オブジェクト**: キーは ExportKey map (DR-052 / DR-073)。反復系は 0 発火でも `[]` (DR-051 §2b)、非反復・非必須・値源なし要素の未発火は absent (キー不在、DR-051 §1)
+- **e. 結果オブジェクト**: キーは ExportKey map (DR-052)。1 露出キーに対応する値セルはちょうど 1 つで、複数セルが同じ露出キーへ解決する定義は definition-error (DR-120)。反復系は 0 発火でも `[]` (DR-051 §2b)、非反復・非必須・値源なし要素の未発火は absent (キー不在、DR-051 §1)
 
 ## 2. 字句層 — filter chain の 7 段
 

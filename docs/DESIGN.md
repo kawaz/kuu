@@ -1236,22 +1236,35 @@ option と positional の境界をまたぐ複数経路が同じ入力を全消�
 
 枝内の消費長違いも同様: 短い経路で全消費できれば候補、長い経路でも全消費できればもう1候補、どちらか1本に絞れなければ ambiguous。
 
-### 15.5 露出キーの一意性検査は実行時 (DR-021)
+### 15.5 露出キーに対応する値セルはちょうど 1 つ (DR-120)
 
-定義時に潰さず、入力経路として解決できる限り許す。実際に同一入力で両方が露出して衝突した時のみ ambiguous エラー。
+1 つの結果スコープにおいて、1 つの露出キーに対応する値セルはちょうど 1 つ。相異なる 2 つ以上の値セルが同一結果スコープで同一露出キーへ解決する定義は **definition-error** (kind `export-key-collision`、DR-054 §4) であり、`parse_definition` 本体が検査する。検査面は全 installer の宣言層寄与を適用し終えた宣言層 (§15.15) — 結果キーが決まるのはこの面である。
 
-衝突の本質は結果キーの provenance (どの実体がキーを占めるか) の曖昧さであって値の相違ではない。値が退化しても (例: 両者 flag で共に `{x:true}`) 各解釈の claimants 面 (露出キー → 占有する実体 entity、DR-073) が解釈を区別する。ambiguous の分類自体は変えず、interpretations に診断可能な担体を添える (§15.12 / DR-073)。
+値セルは 1 つでも入口 (long / short / variant / alias / link) は何本あってもよい (DR-029)。判定は `export_key` 適用後の解決キー文字列で行い、その解決が identity 経由 (未指定 → name) か mapped 経由 (`export_key` 明示) かを区別しない。
 
-「実際の共露出」に数えるのは発火 (cli / link) と default より上の席の充填 (env / config) — 上位席の値は意思表示であり、結果 cell が他実体の値で埋まっていても共露出として成立する。未発火実体の default は数えない: default 注入の充填判定は export_key 適用後の結果 cell 単位で行われ (DR-031 追記 note)、cell が埋まっていれば注入自体が起きない。
+検査は構造的で、経路の到達可能性を見ない — `or` の別枝にある兄弟・排他の別 command 配下から昇格露出する子・`exclusive_group` で縛った兄弟も対象になる。露出キーとセルの 1:1 は結果オブジェクトの静的な形の性質 (キー一意な JSON object、DR-063 §4) であり、実行時にどの枝を通ったかとは独立。
 
-露出キーの型不一致は union (嫌うなら export_key で分離、強制せず指針)。
+**露出キーを占有する (検査に参加する)**:
+
+- 露出キーを持ち値セルを持つ要素 — 入口ありの通常要素、入口なしの実体だけノード (DR-030) の双方
+- 露出キーを持つスコープ生成要素 (command を含む) — スコープ生成は値の発生であり、選ばれたら子が全部 absent でも空 kv `{}` を持つ (§2.6)
+
+**占有しない (参加しない)**:
+
+- `link` を持つ参照ノード / `alias` 要素 — 値は canonical の実体セルへ流れ、自前のセルを持たない (DR-029 / DR-057)
+- 結果キー軸を持たない要素 (name 無し / `export_key: null`) — 透過。その子の結果キー持ちが親スコープで参加する (§2.4)
+- 値セルも子も持たない要素 — `dd` がこれに当たる (DR-064 §5)
+- `#` 予約 namespace の内部セル (§14.1) と `definitions` 配下の要素 (§10.4)
+- `global` installer が子孫スコープへ置く入口コピー — 宣言スコープのセルへ合流する入口であり、コピー先スコープに新しいセルを作らない
+
+正当な用途は既存語彙で書ける: 同じ値セルに複数の入口を生やすなら `link` (綴りだけの別名は `alias`)、1 つの露出キーに複数のタイプを相乗りさせるなら名前を `or` 席に載せる (§5.1 / §5.3)。error の hint はこの 2 手段を衝突要素の値空間で出し分ける — 値空間が一致すれば `link`、一致しなければ `or` を提示する。値空間は type プリセット展開後 (LOWERING §A.5) の値セルの型で見る (`flag` と `bool`、`count` と `number` はそれぞれ一致する)。
+
+露出キーの型不一致は union (嫌うなら export_key で分離、強制せず指針) — 適用先は 1 つの or 席の枝同士。スコープ階層が違えば対象外で、別スコープの同キーは衝突ではない。綴り (トリガ literal) 軸は本節の対象外 — 同一スコープのトリガ重複は静的 warn + 実行時 ambiguous (§15.8)。
 
 ### 15.6 静的バリデータは warn のみ、実行場所は開発時 lint (DR-021)
 
 潜在的な問題は静的に検出して warn できるべきだが reject はしない:
 
-- 露出キーが衝突しうる構造 → warn
-- 共露出キーに異なる宣言 default が並ぶ構造 → warn (両者未発火だと実行時 ambiguous になる、DR-031 EXP-Q1 追記 note)
 - 背骨なし内部で無制限の string repeat の後にトリガ付き構造が続く → 丸呑みの潜在を warn
 
 warn はする、reject はしない、の二段構え (利用者を信頼)。実行場所は開発時ツール (kuu linter / §13.7 diagnose) であり、実行時 bundle には同梱しない。停止条件の設計は利用者の設計領域 (kuu は部品・example・lint を提供し、定義の自動補正はしない)。
@@ -1335,7 +1348,7 @@ parse() の返値は `outcome` タグ付きの discriminated union (言語 DX �
 ```
 
 - **errors は全保持の配列** `{element, args_pos, kind: parse|filter|constraint, reason, message}`。primary = args 位置最深 (furthest failure、同深は全て)。表示本数はレンダラの関心。**reason は機械可読な失敗理由の識別子** (DR-066) — kind (層) と message (文言、レンダラ) の間の仕様語彙で、組み込み発生源は必ず emit する。発生源の emit しうる reason は descriptor の `reasons` 宣言 (§13.1) に列挙され、reason → 文言マップがローカライゼーションの実装単位になる
-- **interpretations は全解釈の列挙**、各解釈は結果オブジェクト形のビュー (効果列は詳細モードの関心)。**ビューの適用相は parse 相まで**であり、値源ラダー (resolve 相、§11.4) は適用しない。適用相を確定する 3 規則 (Default-source scalar の除外 / claimants 席の default 残置 / 空 accumulator 配列の保持) は DR-118 §3 の規範による — ラダー適用後の姿が欲しければ解釈を 1 つ選んで `resolve_interpretation` する (DR-118 §2)
+- **interpretations は全解釈の列挙**、各解釈は結果オブジェクト形のビュー (効果列は詳細モードの関心)。**ビューの適用相は parse 相まで**であり、値源ラダー (resolve 相、§11.4) は適用しない。適用相を確定する 2 規則 (Default-source scalar の除外 / 空 accumulator 配列の保持) は DR-118 §3 の規範による — ラダー適用後の姿が欲しければ解釈を 1 つ選んで `resolve_interpretation` する (DR-118 §2)
 - `help_entry` (誘導行の素材、§15.10) / `tried_triggers` (Did you mean の素材、近接マッチは DX 層) はフィールドとして載せ、文言はレンダラ
 - failure への partial ParserContext は optional 予約 (中身の形は別途確定、本節では定めない)
 - 定義時のエラーは §15.11 の definition-error であり、本節の failure (実行時パース失敗) とは別レイヤ

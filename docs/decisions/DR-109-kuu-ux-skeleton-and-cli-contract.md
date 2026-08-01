@@ -1,5 +1,11 @@
 # DR-109: kuu-ux 設計骨子 (7 本柱) と kuu-cli 契約の初期裁定 — UX-Q1〜Q7
 
+> **更新 (DR-120、2026-07-30): §4 の interpretation 骨格から claimants が抜けた。** 露出キー衝突は
+> definition-error `export-key-collision` になり (DR-120 §1)、claimants 面を生む ambiguous が到達不能に
+> なったため、骨格は result ビューのみ (DR-053 §3)。「interpretations に resolve 相を適用しない」という
+> §4 の決定と、UX-Q7 群の「preset default は export_key 共露出に非参加」も同様に共露出構造ごと座席を失う。
+> 適用相の現行規範は DR-118 §3 (2 規則)。
+
 > 由来: kuu-cli PoC (kawaz/kuu-cli、CLI-Q1=b 裁定) の codex レビュー #1 が残した「v1 契約正本化前に決めること 8 項目」と、kuu-ux (VISION §2 層 3) の設計着手 (NEXT-Q1 の c)。輪郭調査 2 本 (`docs/findings/2026-07-16-kuu-ux-internal-survey.md` = 内部材料・v0 考古学 / `docs/findings/2026-07-16-kuu-ux-ecosystem-survey.md` = CLI 生態系 8 系統) と kuu-cli の conformance fail 全数分類 (kuu-cli リポ `docs/findings/2026-07-16-conformance-fail-taxonomy.md`、12 カテゴリ 415 件・分類不能ゼロ) を統合した設計骨子 (`docs/findings/2026-07-16-kuu-ux-design-skeleton.md`) に対する UX-Q1〜Q7 バッチ裁定 (kawaz 2026-07-16、`docs/QUESTIONS.md` 経由)。
 
 ## 決定

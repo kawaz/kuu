@@ -17,7 +17,7 @@
 | **Error** | ゼロ進捗再帰 (repeat unfold の 1 周が 1 トークンも消費しない) | DR-043 |
 | **Error** | config_file 要素自身への config 席 (循環) | DR-050 §5 |
 | **Error** | installer 所有語彙の交差 (registry 登録時) | DR-042 不変則③ |
-| warn | 露出キー衝突の可能性 | DR-021 (実行時 ambiguous で捕まる) |
+| **Error** | 露出キー衝突 (1 結果スコープで同一露出キーへ解決する値セルが 2 つ以上) | DR-120 §1 |
 | warn | 同一スコープの同一トリガ重複 | DR-041 (静的 warn + 実行時 ambiguous) |
 | warn | 丸呑み構造 (option 群 + 上限なし string positional) | DR-021 / DESIGN §15.6 |
 

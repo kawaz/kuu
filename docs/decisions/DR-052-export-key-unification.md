@@ -1,5 +1,11 @@
 # DR-052: 結果キー軸の一本化 — export_key: string | null、export (bool) は廃止
 
+> **更新 (DR-120、2026-07-30): UX-Q7R 追記 note の「共露出構造では複数実体の値が合流する結果 cell」は
+> 到達不能になった。** 相異なる値セルが同一結果スコープで同一露出キーへ解決する定義は definition-error
+> `export-key-collision` (DR-120 §1) なので、結果 cell と実体の値セルは常に 1:1。default 充填判定を
+> export_key 適用後の cell 単位で見る規定自体は残るが、単一実体では観測差を持たない。結果キー軸の
+> 解決規則 (§1〜§3、command の presence marker 含む) は不変で、DR-120 の判定はこの解決後のキー文字列で行う。
+
 > 由来: issue `2026-07-03-export-result-semantics` (DR-046 が射程外にした結果キー軸の表現)。slice PoC 第 4 弾の presence marker 観測 (起動された空コマンドが `{}`) が材料。本セッションの議論で確定。
 
 ## 決定

@@ -141,7 +141,6 @@ fixture が期待する outcome の代わりに `kind: "unsupported"` の defini
 ```
 
 - `interpretations`: 全解釈の列挙、各解釈は結果オブジェクト形のビュー (DR-053)。ビューは解釈の結果オブジェクトを直書きする (result 単独フィールドの省略形、DR-053 §3)
-- **`claimants` (optional、露出キー衝突の解釈区別、DR-073)**: 露出キー衝突 (DESIGN §15.5) による ambiguous では、値が退化して両解釈とも同一ビュー (例: 両者 flag で共に `{x:true}`) になりうるため、解釈ごとに claimants 面 (露出キー → その解釈で当該キーを占める実体 entity の name の写像) を添えて区別する。claimants を持つ解釈は `{"result": <ビュー>, "claimants": {"x": "a"}}` の組で書く (DR-053 §3 の canonical `{result:...}` 形 + `claimants` sibling)。claimants を持たない解釈は従来どおりビュー直書き。**順序非依存**: interpretations は集合比較 (§3) なので claimants をその解釈と同じ要素に束ね、(view, claimants) を 1 単位として突き合わせる — expect 直下の並行配列にすると集合の並べ替えで対応が切れるため採らない (DR-073)
 - **`help_entry` (optional, String)**: failure と同じ意味論 (DR-053 §4) — 定義に help 入口があれば、その綴りを ambiguous にも載せる (誘導行素材)。`tried_triggers` は DR-053 §4 が failure 専用に規定するため ambiguous には無い。**fixture では optional 検証** — 書かれた時のみ比較
 
 ### definition-error (`query: "definition_error"`、DR-082)
@@ -166,7 +165,7 @@ fixture が期待する outcome の代わりに `kind: "unsupported"` の defini
 - effects は配列順込みの完全一致 (順序が同一性成分)
 - result は構造等価
 - `sources` は構造等価 (DR-122) — `result` と同型なので、object のキー順が非規範・配列が要素対応という比較規約は `result` と同じものがそのまま効く。順序の論点は構造が持ち込む (kv は unordered / 配列は添字対応) ため、`sources` 固有の順序規約は持たない
-- interpretations は集合比較 (各解釈は構造等価、**列挙順は非規範**) — 完全経路間に優先がない (DR-038) ため順序は同一性成分でない (effects の順序規範性と対照的、errors と同じ集合扱い)。重複解釈の dedup 可否は「解釈の同一性」定義に従属し本書では定めない (DR-053 §3)。claimants を持つ解釈は `{result, claimants}` の組を 1 単位として構造等価で突き合わせる (DR-073) — claimants がその解釈と束ねられているため集合比較が順序に依存しない。各解釈のビューは **parse 相 + DR-118 §3 の 3 規則** (Default-source scalar 除外 / claimants 席の default 残置 / 空 accumulator 配列の保持) を適用した姿 — 値源ラダー (resolve 相) は適用しない (DR-118)
+- interpretations は集合比較 (各解釈は構造等価、**列挙順は非規範**) — 完全経路間に優先がない (DR-038) ため順序は同一性成分でない (effects の順序規範性と対照的、errors と同じ集合扱い)。重複解釈の dedup 可否は「解釈の同一性」定義に従属し本書では定めない (DR-053 §3)。各解釈のビューは **parse 相 + DR-118 §3 の 2 規則** (Default-source scalar 除外 / 空 accumulator 配列の保持) を適用した姿 — 値源ラダー (resolve 相) は適用しない (DR-118)
 - errors は集合比較 (`query:"parse"` の failure outcome: element, args_pos, kind, reason の組。**reason は fixture 側に書かれている要素でのみ比較対象** (§2 の optional 検証)、message は常に無視)。**同一 4-tuple (element, args_pos, kind, reason) の error は 1 件に dedupe する** (SPK-Q2=a) — DR-053 §2 の「全保持」は診断材料としての経路網羅 (別候補経路の別の躓きを捨てない) の規定であり、複数経路がたまたま同一 4-tuple の躓きに合流した場合の多重度は診断情報を持たない。producer は同一 4-tuple を重複出力してはならず、比較は dedupe 後の集合同士で行う (message の違いは同一性に影響しない — message は比較対象外)
 - `query:"definition_error"` の errors は element + kind の組の集合比較 (`args_pos`/`reason` は definition-error 構造に存在しない、DR-082 §1)。message/hint は比較しない
 - universal fn の colon-string と 1 段 array of string は同じ `name + args` へ decode してから比較する。wire 表現の違いは呼び出しの同一性成分ではない (DR-114 §6)
@@ -201,8 +200,7 @@ fixture が期待する outcome の代わりに `kind: "unsupported"` の defini
 | `failure` | `fired_action` | 構造等価 | fixture 側にある時のみ (opt-in) |
 | `failure` | `help_entry` | 構造等価 | opt-in |
 | `failure` | `tried_triggers` | 集合比較 (順序非規範) | opt-in |
-| `ambiguous` | `interpretations` | 集合比較 (各解釈は構造等価、**列挙順は非規範**)。各解釈のビューは parse 相 + DR-118 §3 の 3 規則を適用した姿 (値源ラダー非適用) | 常時 |
-| `ambiguous` | `claimants` | 各解釈と束ねて 1 単位で構造等価比較 | 露出キー衝突の解釈にのみ (DR-073) |
+| `ambiguous` | `interpretations` | 集合比較 (各解釈は構造等価、**列挙順は非規範**)。各解釈のビューは parse 相 + DR-118 §3 の 2 規則を適用した姿 (値源ラダー非適用) | 常時 |
 | `ambiguous` | `help_entry` | 構造等価 | opt-in |
 | `definition_error` | `errors` | 集合比較 (`element` + `kind` の組)、`args_pos`/`reason`/`message`/`hint` は比較しない | 常時 |
 | `complete` | `candidates` | 順序非依存の multiset 比較 (§3 の 6 フィールド identity、`meta` は必須検証、`completer` は opt-in) | 常時 (§3 の詳細参照) |

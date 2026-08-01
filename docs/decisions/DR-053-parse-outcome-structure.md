@@ -80,7 +80,7 @@ failure に partial な ParserContext (どこまで解釈できたかの部分�
 
 ## interpretation ビューの適用相
 
-> **明確化 (DR-118、2026-07-24): §3 の「結果オブジェクト形のビュー」は parse 相までを適用した姿であり、値源ラダー (resolve 相) は適用しない。** 付随する 3 規則 (Default-source scalar の除外 / claimants 席の default 残置 / 空 accumulator 配列の保持) と、ambiguous からの前進 (`resolve_interpretation` 遷移) は DR-118 §2/§3 が規定する。
+> **明確化 (DR-118、2026-07-24): §3 の「結果オブジェクト形のビュー」は parse 相までを適用した姿であり、値源ラダー (resolve 相) は適用しない。** 付随する 2 規則 (Default-source scalar の除外 / 空 accumulator 配列の保持、DR-120 で claimants 席の規則は座席を失った) と、ambiguous からの前進 (`resolve_interpretation` 遷移) は DR-118 §2/§3 が規定する。
 
 ## 失敗時アクション属性の正式名
 
