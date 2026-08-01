@@ -3,46 +3,76 @@
   "query": "parse",
   "definition": {
     "options": [
-      {"name": "port", "type": "number", "long": true, "env": "PORT", "default": 3000}
+      {
+        "name": "port",
+        "type": "number",
+        "long": true,
+        "env": "PORT",
+        "default": 3000
+      }
     ]
   },
   "cases": [
     {
       "id": "cli-over-env",
       "why": "cli present → cli が勝つ (ラダー最上席)。env に PORT=8080 があっても cli の --port 9090 が優先。effects に cli set が載り、result/sources は cli 由来。env 席は下位なので発火しない。",
-      "args": ["--port", "9090"],
-      "env": {"PORT": "8080"},
+      "args": [
+        "--port",
+        "9090"
+      ],
+      "env": {
+        "PORT": "8080"
+      },
       "expect": {
         "outcome": "success",
         "effects": [
-          {"entity": "port", "op": "set", "operand": 9090, "source": "cli"}
+          {
+            "entity": "port",
+            "op": "set",
+            "operand": 9090,
+            "source": "cli"
+          }
         ],
-        "result": {"port": 9090},
-        "sources": {"port": "cli"}
+        "result": {
+          "port": 9090
+        },
+        "sources": {
+          "port": "cli"
+        }
       }
     },
     {
       "id": "env-over-default",
       "why": "cli なし・env あり → env 席が値を供給し default を上書き。文字列 \"8080\" は number 要素の値パイプラインで 8080 にパースされる (env の pieceProcessor 通過)。env 由来は完走後の値確定なので effects は空、result/sources で由来 env を検証する。",
       "args": [],
-      "env": {"PORT": "8080"},
+      "env": {
+        "PORT": "8080"
+      },
       "expect": {
         "outcome": "success",
         "effects": [],
-        "result": {"port": 8080},
-        "sources": {"port": "env"}
+        "result": {
+          "port": 8080
+        },
+        "sources": {
+          "port": "env"
+        }
       }
     },
     {
       "id": "default-fallback",
-      "why": "cli も env も無い → ラダー最下席の default 3000。default は値源なので result に必ず present (absent にならない、DR-051 §2a)。default 由来も effects 非掲載、sources=default で由来を固定する。",
+      "why": "cli も env も無い → ラダー最下席の default 3000。default は値源なので result に必ず present (null にならない、DR-130 §1)。default 由来も effects 非掲載、sources=default で由来を固定する。",
       "args": [],
       "env": {},
       "expect": {
         "outcome": "success",
         "effects": [],
-        "result": {"port": 3000},
-        "sources": {"port": "default"}
+        "result": {
+          "port": 3000
+        },
+        "sources": {
+          "port": "default"
+        }
       }
     }
   ]

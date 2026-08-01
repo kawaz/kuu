@@ -3,8 +3,16 @@
   "query": "parse",
   "definition": {
     "options": [
-      {"name": "timeout", "type": "number", "value": 30},
-      {"name": "verbose", "type": "flag", "long": true}
+      {
+        "name": "timeout",
+        "type": "number",
+        "value": 30
+      },
+      {
+        "name": "verbose",
+        "type": "flag",
+        "long": true
+      }
     ]
   },
   "cases": [
@@ -15,21 +23,40 @@
       "expect": {
         "outcome": "success",
         "effects": [],
-        "result": {"timeout": 30, "verbose": false},
-        "sources": {"timeout": "const", "verbose": "default"}
+        "result": {
+          "timeout": 30,
+          "verbose": false
+        },
+        "sources": {
+          "timeout": "const",
+          "verbose": "default"
+        }
       }
     },
     {
       "id": "const-unaffected-by-sibling-firing",
       "why": "`--verbose`: 兄弟要素の発火は const セルに何の影響も与えない (const は宣言定数であって、経路探索や効果列と結びついていない)。effects には cli 由来の `verbose` だけが載り、`timeout` は const のまま。",
-      "args": ["--verbose"],
+      "args": [
+        "--verbose"
+      ],
       "expect": {
         "outcome": "success",
         "effects": [
-          {"entity": "verbose", "op": "set", "operand": true, "source": "cli"}
+          {
+            "entity": "verbose",
+            "op": "set",
+            "operand": true,
+            "source": "cli"
+          }
         ],
-        "result": {"timeout": 30, "verbose": true},
-        "sources": {"timeout": "const", "verbose": "cli"}
+        "result": {
+          "timeout": 30,
+          "verbose": true
+        },
+        "sources": {
+          "timeout": "const",
+          "verbose": "cli"
+        }
       }
     }
   ]

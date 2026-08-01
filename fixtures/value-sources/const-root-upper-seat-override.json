@@ -3,7 +3,14 @@
   "query": "parse",
   "definition": {
     "options": [
-      {"name": "port", "type": "number", "long": true, "env": "PORT", "value": 30, "default": 3000}
+      {
+        "name": "port",
+        "type": "number",
+        "long": true,
+        "env": "PORT",
+        "value": 30,
+        "default": 3000
+      }
     ]
   },
   "cases": [
@@ -15,34 +22,58 @@
       "expect": {
         "outcome": "success",
         "effects": [],
-        "result": {"port": 30},
-        "sources": {"port": "const"}
+        "result": {
+          "port": 30
+        },
+        "sources": {
+          "port": "const"
+        }
       }
     },
     {
       "id": "env-overrides-const",
       "why": "env のみ: env 席は const より上位の**供給**なので初期値を上書きする (DESIGN §11.4)。値は env の \"8080\" が number 要素の値パイプラインを通って 8080、source は `env`。env-ladder.json の env-over-default と同型だが、下段に居るのが default ではなく const である点が違う — どちらの下段でも env が勝つ (const が default より強いのはあくまで default に対してだけで、上位席に対する特権ではない)。",
       "args": [],
-      "env": {"PORT": "8080"},
+      "env": {
+        "PORT": "8080"
+      },
       "expect": {
         "outcome": "success",
         "effects": [],
-        "result": {"port": 8080},
-        "sources": {"port": "env"}
+        "result": {
+          "port": 8080
+        },
+        "sources": {
+          "port": "env"
+        }
       }
     },
     {
       "id": "cli-overrides-const-and-env",
       "why": "cli 入口が発火: ラダー最上席の cli が const も env も上書きする。const を持つ要素が入口 (long) を併せ持つのは合法 — const は消費文法に現れないので入口の構造には一切干渉せず、発火すれば通常の あと勝ち規則でそのまま上書きされる。effects に cli set が載る (const 由来の binding は effects に載らない一方、cli は載る)。",
-      "args": ["--port", "9090"],
-      "env": {"PORT": "8080"},
+      "args": [
+        "--port",
+        "9090"
+      ],
+      "env": {
+        "PORT": "8080"
+      },
       "expect": {
         "outcome": "success",
         "effects": [
-          {"entity": "port", "op": "set", "operand": 9090, "source": "cli"}
+          {
+            "entity": "port",
+            "op": "set",
+            "operand": 9090,
+            "source": "cli"
+          }
         ],
-        "result": {"port": 9090},
-        "sources": {"port": "cli"}
+        "result": {
+          "port": 9090
+        },
+        "sources": {
+          "port": "cli"
+        }
       }
     }
   ]

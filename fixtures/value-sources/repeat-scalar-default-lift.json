@@ -3,7 +3,14 @@
   "query": "parse",
   "definition": {
     "positionals": [
-      {"name": "tags", "type": "string", "repeat": {"min": 0}, "default": "solo"}
+      {
+        "name": "tags",
+        "type": "string",
+        "repeat": {
+          "min": 0
+        },
+        "default": "solo"
+      }
     ]
   },
   "cases": [
@@ -14,8 +21,16 @@
       "expect": {
         "outcome": "success",
         "effects": [],
-        "result": {"tags": ["solo"]},
-        "sources": {"tags": ["default"]}
+        "result": {
+          "tags": [
+            "solo"
+          ]
+        },
+        "sources": {
+          "tags": [
+            "default"
+          ]
+        }
       }
     }
   ]

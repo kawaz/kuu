@@ -1,36 +1,73 @@
 {
-  "why": "config の JSON null は『供給なし』でラダーを通過する (DR-050 §4 / DR-051 §4)。null は kuu の値空間に存在しない (in-band null 不採用)。config の `key: null` は何も供給せず、その要素はラダーを下り default があれば default、無ければ absent になる。実値との対照で、null がゼロ値でも空文字でもなく『席を素通り』することを固定する。config 由来値は effects 非掲載、result/sources で検証。config_file 要素はインフラで結果非掲載。\n\n表記注記: config オブジェクト内のネスト null (`{\"port\": null}`) は CNull = 供給なし。case トップの `config` フィールド全体を null にする表記 (config/path.json 参照) は『provider 読込失敗』を表し意味が異なる — ネスト null (値の供給なし) と config 全体 null (ファイル読込不能) を区別する。",
+  "why": "config の JSON null は provider 境界の『供給なし』としてラダーを通過する (DR-050 §4 / DR-130 §9.1)。これは成功 result の値空間で値なしを表す `null` とは別位相で、config null 自体が値として流入するわけではない。下位 default があればその値へ、無ければ結果射影で `null` 座になる。config_file 要素はインフラ要素なので結果キーを占有しない。",
   "query": "parse",
   "definition": {
     "options": [
-      {"name": "config", "type": "config_file", "long": true, "default": "/app.toml"},
-      {"name": "port", "type": "number", "long": true, "config_key": ["port"], "default": 9},
-      {"name": "name", "type": "string", "long": true, "config_key": ["name"]}
+      {
+        "name": "config",
+        "type": "config_file",
+        "long": true,
+        "default": "/app.toml"
+      },
+      {
+        "name": "port",
+        "type": "number",
+        "long": true,
+        "config_key": [
+          "port"
+        ],
+        "default": 9
+      },
+      {
+        "name": "name",
+        "type": "string",
+        "long": true,
+        "config_key": [
+          "name"
+        ]
+      }
     ]
   },
   "cases": [
     {
       "id": "null-passes-through",
-      "why": "config {port:null, name:null} → null は供給なし。port は config 席を素通りして default 9 に落ち (source:default)、name は default なしなので absent (キー消失)。null がラダーを止めず通過することの固定。",
+      "why": "config `{port:null,name:null}` は両席とも供給なし。port は下位 default 9、name は値源が枯渇して結果 / sources とも `null`。provider 境界の null と結果値の null が異なる位相であることを固定する。",
       "args": [],
-      "config": {"port": null, "name": null},
+      "config": {
+        "port": null,
+        "name": null
+      },
       "expect": {
         "outcome": "success",
         "effects": [],
-        "result": {"port": 9},
-        "sources": {"port": "default"}
+        "result": {
+          "port": 9,
+          "name": null
+        },
+        "sources": {
+          "port": "default",
+          "name": null
+        }
       }
     },
     {
       "id": "real-value-supplied",
-      "why": "対照: 実値は config から正常供給。config {port:3000} → port=3000@config。name は未供給 (キー無し) で absent。null (case 1) と実値の差 = 供給の有無。",
+      "why": "実値 port=3000 は config から供給される。name は config にキーがなく値源も無いため、全列挙された結果 / sources の座が `null` になる。",
       "args": [],
-      "config": {"port": 3000},
+      "config": {
+        "port": 3000
+      },
       "expect": {
         "outcome": "success",
         "effects": [],
-        "result": {"port": 3000},
-        "sources": {"port": "config"}
+        "result": {
+          "port": 3000,
+          "name": null
+        },
+        "sources": {
+          "port": "config",
+          "name": null
+        }
       }
     }
   ]

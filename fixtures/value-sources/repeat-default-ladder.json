@@ -3,7 +3,17 @@
   "query": "parse",
   "definition": {
     "positionals": [
-      {"name": "tags", "type": "string", "repeat": {"min": 0}, "default": ["builtin", "fallback"]}
+      {
+        "name": "tags",
+        "type": "string",
+        "repeat": {
+          "min": 0
+        },
+        "default": [
+          "builtin",
+          "fallback"
+        ]
+      }
     ]
   },
   "cases": [
@@ -14,22 +24,55 @@
       "expect": {
         "outcome": "success",
         "effects": [],
-        "result": {"tags": ["builtin", "fallback"]},
-        "sources": {"tags": ["default", "default"]}
+        "result": {
+          "tags": [
+            "builtin",
+            "fallback"
+          ]
+        },
+        "sources": {
+          "tags": [
+            "default",
+            "default"
+          ]
+        }
       }
     },
     {
       "id": "fired-cell-initializes-empty-and-skips-ladder",
       "why": "(対極) `a b`: 初回発火の瞬間にセルが `[]` で初期化され (DR-123 §1)、そこへ append accumulator が a, b を畳む。セルが値を持った以上ラダーは回らず (DR-031 の cli 優先)、宣言 default は結果に現れない — 宣言 default は**未発火時の充填**であって発火値への merge ではない。0 発火 case との差は入力トークンの有無だけで、同じセルが「空席 → ラダー」と「発火 → 器の生成 + 畳み込み」のどちらの位相に入るかを分ける。effects は消費順の set 2 個、sources は `[\"cli\",\"cli\"]`。",
-      "args": ["a", "b"],
+      "args": [
+        "a",
+        "b"
+      ],
       "expect": {
         "outcome": "success",
         "effects": [
-          {"entity": "tags", "op": "set", "operand": "a", "source": "cli"},
-          {"entity": "tags", "op": "set", "operand": "b", "source": "cli"}
+          {
+            "entity": "tags",
+            "op": "set",
+            "operand": "a",
+            "source": "cli"
+          },
+          {
+            "entity": "tags",
+            "op": "set",
+            "operand": "b",
+            "source": "cli"
+          }
         ],
-        "result": {"tags": ["a", "b"]},
-        "sources": {"tags": ["cli", "cli"]}
+        "result": {
+          "tags": [
+            "a",
+            "b"
+          ]
+        },
+        "sources": {
+          "tags": [
+            "cli",
+            "cli"
+          ]
+        }
       }
     }
   ]

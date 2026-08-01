@@ -3,32 +3,51 @@
   "query": "parse",
   "definition": {
     "positionals": [
-      {"name": "seconds", "type": "int", "value": 10}
+      {
+        "name": "seconds",
+        "type": "int",
+        "value": 10
+      }
     ]
   },
   "cases": [
     {
       "id": "no-token-const-fills-path-complete",
-      "why": "トークン供給なし: absent/required-positional.json (値源宣言なしの素の positional → missing_operand) との対。`seconds` は const:10 を宣言しているので DR-088 §1 の「宣言された値源」が立ち、経路探索段でこの消費点は未充足のままでも完全経路に含まれる → missing_operand に倒れず success。結果は const の 10、source は `const`。",
+      "why": "トークン供給なし: null-projection/required-positional.json (値源宣言なしの素の positional → missing_operand) との対。`seconds` は const:10 を宣言しているので DR-088 §1 の「宣言された値源」が立ち、経路探索段でこの消費点は未充足のままでも完全経路に含まれる → missing_operand に倒れず success。結果は const の 10、source は `const`。",
       "args": [],
       "expect": {
         "outcome": "success",
         "effects": [],
-        "result": {"seconds": 10},
-        "sources": {"seconds": "const"}
+        "result": {
+          "seconds": 10
+        },
+        "sources": {
+          "seconds": "const"
+        }
       }
     },
     {
       "id": "token-supplied-overrides-const",
       "why": "(対極) `5`: トークンが供給されれば cli が const を上書きする (DESIGN §11.4「上位席の供給や cli 効果は初期値を通常規則どおり上書きする」)。const 宣言の有無は経路探索段の充足判定を変えるだけで、値が供給された時の優先順位そのものは変えない — positional-default-presence.json の token-supplied-overrides-default と同型。",
-      "args": ["5"],
+      "args": [
+        "5"
+      ],
       "expect": {
         "outcome": "success",
         "effects": [
-          {"entity": "seconds", "op": "set", "operand": 5, "source": "cli"}
+          {
+            "entity": "seconds",
+            "op": "set",
+            "operand": 5,
+            "source": "cli"
+          }
         ],
-        "result": {"seconds": 5},
-        "sources": {"seconds": "cli"}
+        "result": {
+          "seconds": 5
+        },
+        "sources": {
+          "seconds": "cli"
+        }
       }
     }
   ]

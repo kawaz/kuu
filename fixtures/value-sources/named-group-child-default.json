@@ -5,10 +5,20 @@
     "positionals": [
       {
         "name": "xs",
-        "repeat": {"min": 0, "max": 2},
+        "repeat": {
+          "min": 0,
+          "max": 2
+        },
         "positionals": [
-          {"name": "k", "type": "string"},
-          {"name": "v", "type": "string", "default": "D"}
+          {
+            "name": "k",
+            "type": "string"
+          },
+          {
+            "name": "v",
+            "type": "string",
+            "default": "D"
+          }
         ]
       }
     ]
@@ -21,51 +31,150 @@
       "expect": {
         "outcome": "success",
         "effects": [],
-        "result": {"xs": []},
-        "sources": {"xs": []}
+        "result": {
+          "xs": []
+        },
+        "sources": {
+          "xs": []
+        }
       }
     },
     {
       "id": "partial-row-completes-via-default-seat",
       "why": "args `a`: k が a を消費して row が発火し、v は default 宣言を持つため空席のまま完全経路に含まれる。resolve 相が v=D を充填し、source は default になる。",
-      "args": ["a"],
+      "args": [
+        "a"
+      ],
       "expect": {
         "outcome": "success",
         "effects": [
-          {"entity": "k", "op": "set", "operand": "a", "source": "cli"}
+          {
+            "entity": "k",
+            "op": "set",
+            "operand": "a",
+            "source": "cli"
+          }
         ],
-        "result": {"xs": [{"k": "a", "v": "D"}]},
-        "sources": {"xs": [{"k": "cli", "v": "default"}]}
+        "result": {
+          "xs": [
+            {
+              "k": "a",
+              "v": "D"
+            }
+          ]
+        },
+        "sources": {
+          "xs": [
+            {
+              "k": "cli",
+              "v": "default"
+            }
+          ]
+        }
       }
     },
     {
       "id": "one-row-cli-values-stay-under-wrapper",
       "why": "args `a b`: k/v の両 child が cli から供給され、v の default は発火しない。root v は生えず、両値は wrapper 配下の 1 row にだけ現れる。sources も同型に row 1 個の `[{k:cli, v:cli}]` (DR-122 §1)。",
-      "args": ["a", "b"],
+      "args": [
+        "a",
+        "b"
+      ],
       "expect": {
         "outcome": "success",
         "effects": [
-          {"entity": "k", "op": "set", "operand": "a", "source": "cli"},
-          {"entity": "v", "op": "set", "operand": "b", "source": "cli"}
+          {
+            "entity": "k",
+            "op": "set",
+            "operand": "a",
+            "source": "cli"
+          },
+          {
+            "entity": "v",
+            "op": "set",
+            "operand": "b",
+            "source": "cli"
+          }
         ],
-        "result": {"xs": [{"k": "a", "v": "b"}]},
-        "sources": {"xs": [{"k": "cli", "v": "cli"}]}
+        "result": {
+          "xs": [
+            {
+              "k": "a",
+              "v": "b"
+            }
+          ]
+        },
+        "sources": {
+          "xs": [
+            {
+              "k": "cli",
+              "v": "cli"
+            }
+          ]
+        }
       }
     },
     {
       "id": "two-rows-have-independent-child-seats",
       "why": "args `a b c d`: 2 row が発火し、各 child は wrapper 配下の別々の row に着席する。root v はどちらの row からも生えない。sources も row ごとに独立したタグを持つ (DR-122 §3)。",
-      "args": ["a", "b", "c", "d"],
+      "args": [
+        "a",
+        "b",
+        "c",
+        "d"
+      ],
       "expect": {
         "outcome": "success",
         "effects": [
-          {"entity": "k", "op": "set", "operand": "a", "source": "cli"},
-          {"entity": "v", "op": "set", "operand": "b", "source": "cli"},
-          {"entity": "k", "op": "set", "operand": "c", "source": "cli"},
-          {"entity": "v", "op": "set", "operand": "d", "source": "cli"}
+          {
+            "entity": "k",
+            "op": "set",
+            "operand": "a",
+            "source": "cli"
+          },
+          {
+            "entity": "v",
+            "op": "set",
+            "operand": "b",
+            "source": "cli"
+          },
+          {
+            "entity": "k",
+            "op": "set",
+            "operand": "c",
+            "source": "cli"
+          },
+          {
+            "entity": "v",
+            "op": "set",
+            "operand": "d",
+            "source": "cli"
+          }
         ],
-        "result": {"xs": [{"k": "a", "v": "b"}, {"k": "c", "v": "d"}]},
-        "sources": {"xs": [{"k": "cli", "v": "cli"}, {"k": "cli", "v": "cli"}]}
+        "result": {
+          "xs": [
+            {
+              "k": "a",
+              "v": "b"
+            },
+            {
+              "k": "c",
+              "v": "d"
+            }
+          ]
+        },
+        "sources": {
+          "xs": [
+            {
+              "k": "cli",
+              "v": "cli"
+            },
+            {
+              "k": "cli",
+              "v": "cli"
+            }
+          ]
+        }
       }
     }
   ]

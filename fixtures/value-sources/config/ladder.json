@@ -3,48 +3,91 @@
   "query": "parse",
   "definition": {
     "options": [
-      {"name": "config", "type": "config_file", "long": true, "env": "MYAPP_CONFIG", "default": "/app.toml"},
-      {"name": "port", "type": "number", "long": true, "env": "PORT", "config_key": ["port"], "default": 1}
+      {
+        "name": "config",
+        "type": "config_file",
+        "long": true,
+        "env": "MYAPP_CONFIG",
+        "default": "/app.toml"
+      },
+      {
+        "name": "port",
+        "type": "number",
+        "long": true,
+        "env": "PORT",
+        "config_key": [
+          "port"
+        ],
+        "default": 1
+      }
     ]
   },
   "cases": [
     {
       "id": "cli-wins",
       "why": "cli 最上席: --port 9090 が config {port:3000} と env を差し置いて勝つ。effects に cli set、result/sources は cli。config_file 要素はインフラで結果非掲載。",
-      "args": ["--port", "9090"],
-      "config": {"port": 3000},
+      "args": [
+        "--port",
+        "9090"
+      ],
+      "config": {
+        "port": 3000
+      },
       "expect": {
         "outcome": "success",
         "effects": [
-          {"entity": "port", "op": "set", "operand": 9090, "source": "cli"}
+          {
+            "entity": "port",
+            "op": "set",
+            "operand": 9090,
+            "source": "cli"
+          }
         ],
-        "result": {"port": 9090},
-        "sources": {"port": "cli"}
+        "result": {
+          "port": 9090
+        },
+        "sources": {
+          "port": "cli"
+        }
       }
     },
     {
       "id": "env-over-config",
       "why": "cli 無し・env あり → env が config に勝つ (env は config の上席)。PORT=8080 が config {port:3000} を上書き。env 由来は effects 非掲載。",
       "args": [],
-      "env": {"PORT": "8080"},
-      "config": {"port": 3000},
+      "env": {
+        "PORT": "8080"
+      },
+      "config": {
+        "port": 3000
+      },
       "expect": {
         "outcome": "success",
         "effects": [],
-        "result": {"port": 8080},
-        "sources": {"port": "env"}
+        "result": {
+          "port": 8080
+        },
+        "sources": {
+          "port": "env"
+        }
       }
     },
     {
       "id": "config-over-default",
       "why": "cli/env 無し → config 席が供給 (source:config)。config {port:3000} が default 1 を上書き。config 席は env と default の間。",
       "args": [],
-      "config": {"port": 3000},
+      "config": {
+        "port": 3000
+      },
       "expect": {
         "outcome": "success",
         "effects": [],
-        "result": {"port": 3000},
-        "sources": {"port": "config"}
+        "result": {
+          "port": 3000
+        },
+        "sources": {
+          "port": "config"
+        }
       }
     },
     {
@@ -55,8 +98,12 @@
       "expect": {
         "outcome": "success",
         "effects": [],
-        "result": {"port": 1},
-        "sources": {"port": "default"}
+        "result": {
+          "port": 1
+        },
+        "sources": {
+          "port": "default"
+        }
       }
     }
   ]

@@ -1,14 +1,25 @@
 {
-  "why": "tty preset 型の default 席解決規則の骨格 (DR-099、DR-129、DESIGN §12b): DR-098 の「値源ラダーに tty 専用席を挿入する」モデルは撤回され、tty は `type:` で選択する preset 型 (`builtin/tty`) になった。値源ラダー自体は DR-031 のラダー (CLI/env/config/default) に戻り、tty 型固有の挙動は `default` 席の解決規則だけに宿る: `resolved_default = 観測 ?? 宣言 default ?? absent` (DR-129 §3)。観測が得られる限り宣言 default より優先する (DR-098 §5 の優先順位はそのまま、実装位置がラダー席から型の解決規則へ移っただけ)。`use_color` (stdout 監視、cli/env/default の 3 値源と観測の相互比較) の 1 系統で、観測が効く・観測なしで default 落ち・CLI が観測に勝つ・env が観測に勝つ、の 4 輪郭を固定する。tty_provider の fixture 注入形式はそのストリームが端末か否かの bool 単一 `{\"stdout\": false}` (DR-129 §1) — cygwin pty を端末扱いに含めるか等の判定方言は provider 実装の内側の責務なので、spec の観測語彙にも fixture の注入形にも現れない。",
+  "why": "tty preset 型の default 席解決規則の骨格 (DR-099、DR-129、DESIGN §12b): DR-098 の「値源ラダーに tty 専用席を挿入する」モデルは撤回され、tty は `type:` で選択する preset 型 (`builtin/tty`) になった。値源ラダー自体は DR-031 のラダー (CLI/env/config/default) に戻り、tty 型固有の挙動は `default` 席の解決規則だけに宿る: `resolved_default = 観測 ?? 宣言 default ?? null` (DR-129 §3)。観測が得られる限り宣言 default より優先する (DR-098 §5 の優先順位はそのまま、実装位置がラダー席から型の解決規則へ移っただけ)。`use_color` (stdout 監視、cli/env/default の 3 値源と観測の相互比較) の 1 系統で、観測が効く・観測なしで default 落ち・CLI が観測に勝つ・env が観測に勝つ、の 4 輪郭を固定する。tty_provider の fixture 注入形式はそのストリームが端末か否かの bool 単一 `{\"stdout\": false}` (DR-129 §1) — cygwin pty を端末扱いに含めるか等の判定方言は provider 実装の内側の責務なので、spec の観測語彙にも fixture の注入形にも現れない。",
   "query": "parse",
   "definition": {
     "definitions": {
       "types": {
-        "stdout_tty": {"name": "builtin/tty", "config": {"tty_stream": "stdout"}}
+        "stdout_tty": {
+          "name": "builtin/tty",
+          "config": {
+            "tty_stream": "stdout"
+          }
+        }
       }
     },
     "options": [
-      {"name": "use_color", "type": "stdout_tty", "long": true, "env": "CLICOLOR_FORCE", "default": true}
+      {
+        "name": "use_color",
+        "type": "stdout_tty",
+        "long": true,
+        "env": "CLICOLOR_FORCE",
+        "default": true
+      }
     ]
   },
   "cases": [
@@ -16,50 +27,82 @@
       "id": "observation-overrides-default",
       "why": "cli/env 無し、stdout の tty_provider が `false` (端末でない) を供給。宣言 default (true) と異なる値になることで、観測が宣言 default より優先されることを値そのもので示す (旧 tty-ladder.json の tty-fires-alone + tty-over-default を 1 case に統合 — preset 型モデルでは『観測が効く』こと自体に『観測が default に優先する』が構造的に含意されるため、値が同じか異なるかで別 case に分ける必要が薄い)。観測が供給されている以上 false でも source は `tty` (null と false は別、DR-129 §3)。",
       "args": [],
-      "tty": {"stdout": false},
+      "tty": {
+        "stdout": false
+      },
       "expect": {
         "outcome": "success",
         "effects": [],
-        "result": {"use_color": false},
-        "sources": {"use_color": "tty"}
+        "result": {
+          "use_color": false
+        },
+        "sources": {
+          "use_color": "tty"
+        }
       }
     },
     {
       "id": "null-observation-uses-default",
-      "why": "cli/env 無し、tty_provider が stdout について何も供給しない (`tty` フィールド自体を省略 = 提供なし、CONFORMANCE §1 の runner 契約)。観測が null なので `default` 席は宣言 default (true) へフォールバックする — observation-overrides-default (前 case) との対で『観測なし = 宣言 default』『観測あり = 観測優先』の分岐点を固定する。宣言 default も無ければ absent で終端する (DR-129 §3 の `?? absent`、fixtures/value-typing/or-leaf-factory-config.json がこの終端を plain bool の側から引用する)。",
+      "why": "cli/env 無し、tty_provider が stdout について何も供給しない (`tty` フィールド自体を省略 = 提供なし、CONFORMANCE §1 の runner 契約)。観測が null なので `default` 席は宣言 default (true) へフォールバックする — observation-overrides-default (前 case) との対で『観測なし = 宣言 default』『観測あり = 観測優先』の分岐点を固定する。宣言 default も無ければ null で終端する (DR-129 §3 の `?? null`、fixtures/value-typing/or-leaf-factory-config.json がこの終端を plain bool の側から引用する)。",
       "args": [],
       "expect": {
         "outcome": "success",
         "effects": [],
-        "result": {"use_color": true},
-        "sources": {"use_color": "default"}
+        "result": {
+          "use_color": true
+        },
+        "sources": {
+          "use_color": "default"
+        }
       }
     },
     {
       "id": "cli-beats-observation",
       "why": "cli 明示 `--use-color false` があり、stdout の tty_provider は `true` (cli と逆の値) を供給。ラダー最上席の cli が勝つ — 観測 (true) は無視され use_color=false になる。effects に cli set が載り、result/sources は cli 由来 (DR-099 でも DR-031 のラダー最上位は不変)。",
-      "args": ["--use-color", "false"],
-      "tty": {"stdout": true},
+      "args": [
+        "--use-color",
+        "false"
+      ],
+      "tty": {
+        "stdout": true
+      },
       "expect": {
         "outcome": "success",
         "effects": [
-          {"entity": "use_color", "op": "set", "operand": false, "source": "cli"}
+          {
+            "entity": "use_color",
+            "op": "set",
+            "operand": false,
+            "source": "cli"
+          }
         ],
-        "result": {"use_color": false},
-        "sources": {"use_color": "cli"}
+        "result": {
+          "use_color": false
+        },
+        "sources": {
+          "use_color": "cli"
+        }
       }
     },
     {
       "id": "env-beats-observation",
       "why": "cli 無し、env CLICOLOR_FORCE=false、stdout の tty_provider は `true` (env と逆の値) を供給。env がラダーで tty 型の default 解決より上位の席なので env が勝つ — 実世界の CLICOLOR_FORCE (env が tty 自動検出を上書きする慣行) そのものの構図 (DR-098 §5 の根拠を DR-099 でも継承)。観測は無視され use_color=false。effects は空 (env 由来は完走後確定)。",
       "args": [],
-      "env": {"CLICOLOR_FORCE": "false"},
-      "tty": {"stdout": true},
+      "env": {
+        "CLICOLOR_FORCE": "false"
+      },
+      "tty": {
+        "stdout": true
+      },
       "expect": {
         "outcome": "success",
         "effects": [],
-        "result": {"use_color": false},
-        "sources": {"use_color": "env"}
+        "result": {
+          "use_color": false
+        },
+        "sources": {
+          "use_color": "env"
+        }
       }
     }
   ]

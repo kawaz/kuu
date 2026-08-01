@@ -3,46 +3,107 @@
   "query": "parse",
   "definition": {
     "options": [
-      {"name": "config", "type": "config_file", "long": true, "env": "MYAPP_CONFIG", "default": "/default.toml"},
-      {"name": "port", "type": "number", "long": true, "config_key": ["port"], "default": 7}
+      {
+        "name": "config",
+        "type": "config_file",
+        "long": true,
+        "env": "MYAPP_CONFIG",
+        "default": "/default.toml"
+      },
+      {
+        "name": "port",
+        "type": "number",
+        "long": true,
+        "config_key": [
+          "port"
+        ],
+        "default": 7
+      }
     ]
   },
   "cases": [
     {
       "id": "cli-path-wins",
       "why": "cli パスが勝つ: --config /cli.toml が env/default パスを差し置いて選ばれ、provider が /cli.toml に返す {port:11} が読まれる → port=11@config。パス自身のラダーの最上席が cli。",
-      "args": ["--config", "/cli.toml"],
-      "config_files": {"/cli.toml": {"port": 11}, "/env.toml": {"port": 22}, "/default.toml": {"port": 33}},
+      "args": [
+        "--config",
+        "/cli.toml"
+      ],
+      "config_files": {
+        "/cli.toml": {
+          "port": 11
+        },
+        "/env.toml": {
+          "port": 22
+        },
+        "/default.toml": {
+          "port": 33
+        }
+      },
       "expect": {
         "outcome": "success",
         "effects": [],
-        "result": {"port": 11},
-        "sources": {"port": "config"}
+        "result": {
+          "port": 11
+        },
+        "sources": {
+          "port": "config"
+        }
       }
     },
     {
       "id": "env-path-wins",
       "why": "cli 無し・env パス: MYAPP_CONFIG=/env.toml が選ばれ {port:22} → port=22@config。パスラダーの env 席が default パスに勝つ。",
       "args": [],
-      "env": {"MYAPP_CONFIG": "/env.toml"},
-      "config_files": {"/cli.toml": {"port": 11}, "/env.toml": {"port": 22}, "/default.toml": {"port": 33}},
+      "env": {
+        "MYAPP_CONFIG": "/env.toml"
+      },
+      "config_files": {
+        "/cli.toml": {
+          "port": 11
+        },
+        "/env.toml": {
+          "port": 22
+        },
+        "/default.toml": {
+          "port": 33
+        }
+      },
       "expect": {
         "outcome": "success",
         "effects": [],
-        "result": {"port": 22},
-        "sources": {"port": "config"}
+        "result": {
+          "port": 22
+        },
+        "sources": {
+          "port": "config"
+        }
       }
     },
     {
       "id": "default-path-wins",
       "why": "cli/env 無し → default パス /default.toml が選ばれ {port:33} → port=33@config。パス自身も最下席が default。",
       "args": [],
-      "config_files": {"/cli.toml": {"port": 11}, "/env.toml": {"port": 22}, "/default.toml": {"port": 33}},
+      "config_files": {
+        "/cli.toml": {
+          "port": 11
+        },
+        "/env.toml": {
+          "port": 22
+        },
+        "/default.toml": {
+          "port": 33
+        }
+      },
       "expect": {
         "outcome": "success",
         "effects": [],
-        "result": {"port": 33},
-        "sources": {"port": "config"}
+        "result": {
+          "port": 33
+        },
+        "sources": {
+          "port": "config"
+        }
       }
     },
     {
@@ -53,8 +114,12 @@
       "expect": {
         "outcome": "success",
         "effects": [],
-        "result": {"port": 7},
-        "sources": {"port": "default"}
+        "result": {
+          "port": 7
+        },
+        "sources": {
+          "port": "default"
+        }
       }
     }
   ]

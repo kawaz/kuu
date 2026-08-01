@@ -1,18 +1,37 @@
 {
-  "why": "祖先スコープの値を内側要素の既定値にする定義を `default_fn: \"borrow:<source>\"` で書く (DR-125 §3)。既定値は**外側の要素に置き**、内側は borrow でそれを引く — root が通常の option `socket_ttl` (long:true → 綴りは name の kebab 変換で `--socket-ttl`、DR-022 / LOWERING §B.1) を default 60 付きで持ち、子コマンド socket の `ttl` が `default_fn: \"borrow:socket_ttl\"` でそれを名指しする。`borrow` が受ける `<source>` は ref / link と同じ lexical scope chain (現在スコープ → 外側スコープ → definitions、DESIGN §2.7 / DR-125 §4) で解決するので、子スコープの中から root の `socket_ttl` に届く。\n\n判断本質: borrow は**独立した値源席ではなく default 席の住人** (`cell_fns` の universal fn、DR-114 §8) なので、値源ラダーは CLI/link > env > config > default の 4 段のまま増えない。したがって borrow 由来の値の source タグは `default` — `sources` の語彙 7 語 (`cli` / `link` / `env` / `config` / `tty` / `default` / `const`、CONFORMANCE §2 が正本) に borrow 専用のタグは無く、default 席が解決した値である以上タグは `default` になる。ラダー充填は args 順の全順序を持たない完走後の値確定なので effects には載らず (effects は cli / link 由来のみ、CONFORMANCE §2)、値は `result`、由来は `sources` で検証する (env-ladder.json と同じ検証チャネル)。`sources` は result と同型の shadow tree (DR-122 §1) なので `socket` スコープの kv がそのまま立ち、その中の座がタグを持つ。\n\nborrow 先が最終的に値を持たない場合は fn reason `absent-source` となり、**呼び出し元も unset のまま落ちる** (DR-113 §5.4 の failure semantics 表) — 値源ラダーを回しても値の湧かない非反復要素は結果オブジェクトからキーごと消える absent (DR-051 §1) になり、outcome は success のまま。この面を固定するため、default を持たない root の `log_file` とそれを borrow する子の `log` を第 2 の対 (ペア) として並べ、`log_file` 供給あり (borrow が値を運ぶ) と供給なし (両方 absent) を対照する。`socket_ttl` / `ttl` の対は default 60 があるので常に present で、両対の対照が「borrow 先が値を持つか否か」だけで結果が分かれることを示す。\n\nRUNNER GAP の注記: `default_fn: \"borrow:<source>\"` を `query: \"parse\"` で使い、command scope をまたぐ lexical scope chain 解決と DR-087 の遅延解決 (依存グラフの位相順) を end-to-end で通すのは本 file が最初 (既存の borrow 使用は fixtures/help/help-types-and-default-fn.json / fixtures/help/def-error-borrow-cycle.json / fixtures/help/def-error-default-fn.json で、いずれも help / definition-error 側)。参照実装の解決経路は未配線の可能性が高い。本 fixture は spec 準拠の期待値 (DR-070 §1b) を書き、実装側の borrow スレッディングを促す。",
+  "why": "祖先スコープの値を内側要素の既定値にする `default_fn: \"borrow:<source>\"` の値源ラダーを固定する (DR-125 §3)。borrow は default 席の住人なので、値を運べた座の source は `default`、effects には載らない。参照先が値を持たない場合も宣言座は DR-130 により `null` で存在し、borrow はその `null` を返す。DR-131 §1 の `set(null) = unset` により借り手のラダーも開放され、最終 result / sources は双方 `null` になる。専用 failure reason は発生しない。",
   "query": "parse",
   "definition": {
     "options": [
-      {"name": "socket_ttl", "type": "number", "long": true, "default": 60},
-      {"name": "log_file", "type": "string", "long": true}
+      {
+        "name": "socket_ttl",
+        "type": "number",
+        "long": true,
+        "default": 60
+      },
+      {
+        "name": "log_file",
+        "type": "string",
+        "long": true
+      }
     ],
     "commands": [
       {
         "type": "command",
         "name": "socket",
         "options": [
-          {"name": "ttl", "type": "number", "long": true, "default_fn": "borrow:socket_ttl"},
-          {"name": "log", "type": "string", "long": true, "default_fn": "borrow:log_file"}
+          {
+            "name": "ttl",
+            "type": "number",
+            "long": true,
+            "default_fn": "borrow:socket_ttl"
+          },
+          {
+            "name": "log",
+            "type": "string",
+            "long": true,
+            "default_fn": "borrow:log_file"
+          }
         ]
       }
     ]
@@ -20,52 +39,137 @@
   "cases": [
     {
       "id": "outer-cli-borrowed",
-      "why": "外側が `--socket-ttl 30` で書き込み → 内側 socket は未指定 → 子 `ttl` の default 席が `borrow:socket_ttl` を解決し、外側セルの解決値 30 を引く (DR-125 §3 の「外側で `--socket-ttl 30` と書けば内側 `ttl` は 30」)。`--socket-ttl` は socket トークンより前なので root 背骨で発火し root の `socket_ttl` セルに cli set。外側セルと内側セルは別実体なので結果の座も別 (root キー `socket_ttl`、`socket.ttl`) で、同時に別のタグ (cli / default) を持つ。effects は root の cli set のみ (borrow は default 席の充填なので非掲載)。`log_file` は未供給・default なしで absent、それを borrow する `log` も absent-source で落ちるため両キーとも result に現れない (borrow-source-absent が主題)。",
-      "args": ["--socket-ttl", "30", "socket"],
+      "why": "外側 `socket_ttl` を CLI で 30 にすると、子 `ttl` は default 席の borrow で 30 を得る。未供給の `log_file` は `null`、それを借りる `socket.log` も borrow の `null` 返しにより `null`。sources は同型で、値を確定した主体のない両座も `null`。",
+      "args": [
+        "--socket-ttl",
+        "30",
+        "socket"
+      ],
       "expect": {
         "outcome": "success",
         "effects": [
-          {"entity": "socket_ttl", "op": "set", "operand": 30, "source": "cli"}
+          {
+            "entity": "socket_ttl",
+            "op": "set",
+            "operand": 30,
+            "source": "cli"
+          }
         ],
-        "result": {"socket_ttl": 30, "socket": {"ttl": 30}},
-        "sources": {"socket_ttl": "cli", "socket": {"ttl": "default"}}
+        "result": {
+          "socket_ttl": 30,
+          "log_file": null,
+          "socket": {
+            "ttl": 30,
+            "log": null
+          }
+        },
+        "sources": {
+          "socket_ttl": "cli",
+          "log_file": null,
+          "socket": {
+            "ttl": "default",
+            "log": null
+          }
+        }
       }
     },
     {
       "id": "inner-cli-wins",
-      "why": "内側自前の CLI が borrow に勝つ (DR-125 §3 の「`socket --ttl 10` なら内側 CLI が勝ち」): socket 入場後の `--ttl 10` は子背骨で発火し子 `ttl` の cli 席が最上位で確定するので、下位の default 席 (borrow) はそもそも回らない — borrow 先が値を持つかどうかとは無関係。外側 `socket_ttl` は CLI 未供給だが default 60 を持つので root 結果に present (source=default、DR-051 §2a)。effects は子の cli set のみ。`log_file` / `log` は本 case でも未供給で両方 absent。",
-      "args": ["socket", "--ttl", "10"],
+      "why": "子 `ttl` の CLI 値 10 が default 席の borrow より上位で勝つ。外側 `socket_ttl` は default 60。未供給の `log_file` と `socket.log` は全列挙された `null` 座になる (DR-130 §1/§5)。",
+      "args": [
+        "socket",
+        "--ttl",
+        "10"
+      ],
       "expect": {
         "outcome": "success",
         "effects": [
-          {"entity": "ttl", "op": "set", "operand": 10, "source": "cli"}
+          {
+            "entity": "ttl",
+            "op": "set",
+            "operand": 10,
+            "source": "cli"
+          }
         ],
-        "result": {"socket_ttl": 60, "socket": {"ttl": 10}},
-        "sources": {"socket_ttl": "default", "socket": {"ttl": "cli"}}
+        "result": {
+          "socket_ttl": 60,
+          "log_file": null,
+          "socket": {
+            "ttl": 10,
+            "log": null
+          }
+        },
+        "sources": {
+          "socket_ttl": "default",
+          "log_file": null,
+          "socket": {
+            "ttl": "cli",
+            "log": null
+          }
+        }
       }
     },
     {
       "id": "outer-default-borrowed",
       "why": "どちらの席にも CLI が無い → 外側 `socket_ttl` は自分の default 60 で解決し、それを子 `ttl` の borrow が引く (DR-125 §3 の「どちらも無ければ外側の default 60 が borrow 経由で内側に流れる」)。既定値の置き場所が外側 1 箇所に決まる形の pin — `default` と `default_fn` は同じ default 席なので内側に固定 default を併置することはできない (併用は definition-error `invalid-range`、DESIGN §11.4)。同時に、default を持たない `log_file` へ `--log-file /tmp/a` を供給すると borrow は cli 解決値を運ぶことを対照する (borrow は「参照先の**最終解決値**を引く」のであって参照先の値源を選ばない)。両方とも借り手側の座のタグは default (borrow は default 席の住人)。effects は `log_file` の cli set のみ。",
-      "args": ["--log-file", "/tmp/a", "socket"],
+      "args": [
+        "--log-file",
+        "/tmp/a",
+        "socket"
+      ],
       "expect": {
         "outcome": "success",
         "effects": [
-          {"entity": "log_file", "op": "set", "operand": "/tmp/a", "source": "cli"}
+          {
+            "entity": "log_file",
+            "op": "set",
+            "operand": "/tmp/a",
+            "source": "cli"
+          }
         ],
-        "result": {"socket_ttl": 60, "log_file": "/tmp/a", "socket": {"ttl": 60, "log": "/tmp/a"}},
-        "sources": {"socket_ttl": "default", "log_file": "cli", "socket": {"ttl": "default", "log": "default"}}
+        "result": {
+          "socket_ttl": 60,
+          "log_file": "/tmp/a",
+          "socket": {
+            "ttl": 60,
+            "log": "/tmp/a"
+          }
+        },
+        "sources": {
+          "socket_ttl": "default",
+          "log_file": "cli",
+          "socket": {
+            "ttl": "default",
+            "log": "default"
+          }
+        }
       }
     },
     {
-      "id": "borrow-source-absent",
-      "why": "borrow 先が最終的に unset のケース: `log_file` は CLI / env / config / default のどの席からも値を得ないので absent (DR-051 §1、キーごと result から消える)。子 `log` の default 席は `borrow:log_file` を解決しようとして fn reason `absent-source` になり、**呼び出し元も unset のまま落ちる** (DR-113 §5.4) — つまり `log` も absent で result にキーが現れず、outcome は success のまま (definition-error でも parse エラーでもない)。sources は result の射影なので (DR-122 §2)、消えたキーは sources にも現れない。対照として `socket_ttl` / `ttl` の対は default 60 が値を供給するので双方 present。effects は空 (cli 発火なし)。",
-      "args": ["socket"],
+      "id": "borrow-source-null",
+      "why": "`log_file` はどの値源からも値を得ず `null`。子 `log` の borrow はその `null` を普通の値として返し、`set(null) = unset` で借り手も `null` に落ちる (DR-130 §9 / DR-131 §1)。専用 failure reason は発生せず outcome は success、sources も同じ 2 座を `null` で持つ。",
+      "args": [
+        "socket"
+      ],
       "expect": {
         "outcome": "success",
         "effects": [],
-        "result": {"socket_ttl": 60, "socket": {"ttl": 60}},
-        "sources": {"socket_ttl": "default", "socket": {"ttl": "default"}}
+        "result": {
+          "socket_ttl": 60,
+          "log_file": null,
+          "socket": {
+            "ttl": 60,
+            "log": null
+          }
+        },
+        "sources": {
+          "socket_ttl": "default",
+          "log_file": null,
+          "socket": {
+            "ttl": "default",
+            "log": null
+          }
+        }
       }
     }
   ]
