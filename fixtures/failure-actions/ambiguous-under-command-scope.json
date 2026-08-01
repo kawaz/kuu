@@ -40,7 +40,7 @@
   "cases": [
     {
       "id": "renamed-command-scope-keeps-both-readings",
-      "why": "`paint --color 255 0 0`: color の or が「3 数値の seq」と「1 文字列 + 残り 2 つが rest」の 2 通りに読めて ambiguous (variable-arity-ambiguous.json と同型)。両解釈とも command スコープが `pt` へ rename された下に入る — interpretation の席同定が rename 後の path で行われることを固定する。root に positional は宣言されていないので、選ばれていない `draw` 配下の `rest` が漏れ出さないことも同時に見る (透過 command の配下は未選択なら昇格しない、DR-051)。",
+      "why": "`paint --color 255 0 0`: color の or が「3 数値の seq」と「1 文字列 + 残り 2 つが rest」の 2 通りに読めて ambiguous (variable-arity-ambiguous.json と同型)。両解釈とも command スコープが `pt` へ rename された下に入る — interpretation の席同定が rename 後の path で行われることを固定する。root に positional は宣言されていないので、選ばれていない `draw` 配下の `rest` が interpretation へ漏れ出さないことも同時に見る (ambiguous の interpretations は sparse のまま、DR-130 §4.2)。",
       "args": ["paint", "--color", "255", "0", "0"],
       "expect": {
         "outcome": "ambiguous",
