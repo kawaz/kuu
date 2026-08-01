@@ -29,6 +29,30 @@ DR-051 §2 が列挙した「absent にならない条件」は、そのまま�
 
 キーの列挙単位は**実現したスコープ**である。実現していないスコープの内側は §2 が定める。
 
+**値述語における `null` は「値なし」である**。`required` / `required_group` の充足判定 (DR-047 / DR-103)、
+および DR-088 の「解決後に値が無ければ落ちる」判定において、座が `null` であることは**不充足**として
+扱う。キーが立っていることは充足の証拠にならない — 述語が見るのは座の値であって、キーの presence では
+ない。これは DR-051 下で「absent = 不充足」だった観測をそのまま保存する。
+
+### 1b. 「宣言上出うる全キー」の導出面
+
+§1 が言う「宣言上出うるキー」は、DR-120 が既に定めた 2 つの規定の合成であり、本 DR は新しい判定を
+足さない。
+
+- **面**: **全 installer の宣言層寄与を適用し終えた宣言層** (DR-120 §5) — `commands` / `global` /
+  `inheritable` / `alias` の宣言的コピーを含み、**lowered 産物は見ない**。結果キーが決まるのはこの面で
+  あり、露出キー衝突検査 (DR-120) や help_query capability (DESIGN §15.15) が読む面と同一である
+- **どの要素がキーを立てるか**: DR-120 §4 の占有 / 非占有の規則をそのまま使う。占有する = 露出キーを
+  持ち値セルを持つ要素 (入口なしの実体だけノードを含む)、露出キーを持つスコープ生成要素 (command を
+  含む — 1 キーとして数える)、`inheritable` が祖先スコープへ置く write-target。占有しない = `link` /
+  `alias` の参照ノード (値は canonical のセルへ流れる)、結果キー軸を持たない要素 (`export_key: null` は
+  透過し、その子が親スコープで参加する)、値セルも子も持たない `dd` (DR-064 §5)、`#` 予約 namespace の
+  内部セルと `definitions` 配下、`type: "none"` (値空間を持たない = 露出キーを持たない、DR-089)、
+  `global` installer の入口コピー
+
+`build_result` と `source_shadow` は**同一のキー集合**を使う。§5 が要求する result と sources の同型は、
+両者が別々に「出うるキー」を数えないこと (= 本節の導出を 1 か所で共有すること) によって保証される。
+
 ### 2. 未選択の子 command scope は親レベルに `subcmd: null` と出るだけで、再帰は 1 段で止まる
 
 未選択の子 command (および未成立の scope 生成要素) は、親スコープのキーとして `null` を持つ。
@@ -60,9 +84,31 @@ Option monad の `map` と同型で、各住人が null 分岐を持つ必要は
 explicit-null が懸念した「全 type が nullable 化し全域に null 分岐が増える」は、この 1 規則で回避される
 (根拠の第 2 節)。
 
+**素通しの責務は共通 dispatcher が負う**。個々の filter / parser が「まず null を見て早期 return する」
+実装を各自書くのではなく、fn を呼び出す共通の配管が「入力が null なら fn を呼ばずに null を返す」を
+1 か所で実施する。責務を住人側に置くと、拡張 ns の住人が null 分岐を書き忘れた瞬間に規則が破れる
+(= 規範が実装の善意に依存する)。素通しが適用される単位と、null が観測されるまでの順序は DR-131 §2b が
+定める。
+
 この昇格により、**配列の穴が値として表現可能**になる。nameless tuple の部分書きは `[null, 2]` と書ける。
 LNK2-Q1=a (全座が埋まるまで tuple ごと absent) は本転換で obsolete になる — 全座成立判定のロジックは
 そのまま転用し、判定結果の挙動を「tuple ごと落とす」から「埋まらない座を null で埋める」へ差し替える。
+
+#### 3.1 定義側に null リテラルは書けない
+
+null が値空間の住人になっても、**定義 (UsefulAST / wire descriptor) の `default:` / `value:` 席に
+`null` を書くことはできない**。書いた場合は definition-error `invalid-range` (DR-054 §4) である。
+DR-051 §4 第 3 項の禁止は、根拠を替えて存続する。
+
+理由は 2 つある。`null` は「値なし」を語る値なので、`default: null` は「既定値は無い」= **席の省略と
+同義**であり、明示形が別に存在する意味がない。さらに §7 の型導出は「`default` あり → `T`」で分岐する
+ため、`default: null` を許すと「default があるのに座が null になりうる」要素が生まれて導出規則が破れる。
+禁止することで、定義に現れる `default` 席は常に「非 null の値を供給する」と読める。
+
+**`default_fn` が実行時に `null` を返すのは合法**である。これは「この default は今回供給しない」を
+語る通常の値返し (DR-131 §1) であり、座は `null`、`sources` も `null` になる。定義時に書けないのは
+リテラルであって、実行時の返り値ではない — §7 が `default_fn` を「default あり」に数えないのはこの
+可謬性そのものが理由であり、両者は同じ判断の裏表である。
 
 ### 4. 静的宣言キーは全列挙、動的キー構造は present のみ (NUL-Q3)
 
@@ -77,10 +123,40 @@ LNK2-Q1=a (全座が埋まるまで tuple ごと absent) は本転換で obsolet
 | record (DR-126) | **内側も反転** — closed な語彙なので全フィールド列挙 + `null` |
 | 動的キー構造 (`from_entries` / merge accumulator / kv-map / config 由来 map) | **present のみ**。宣言に語彙が無く、出うるキーの集合が静的に定まらない |
 
+> **NULOR-Q1 裁定待ち**: 上表の `or` 席は「枝が名前を持たない (セルを共有する) 場合」の射影である。
+> **枝がそれぞれ名前 / `export_key` を持つ named 枝 or の射影**は未裁定であり、本 DR は規定を置かない。
+> 裁定が下りたら本節に追記する。
+
+#### 4.1 record の補形は射影層で行い、parser の出力は書き換えない
+
 record の反転は DR-126 §3 (「フィールドは presence-optional で `null` 不使用」) の改定である。closed =
 キー語彙の閉域という裁定はむしろ全列挙の前提として効き、「宣言済みフィールドの不在は正常」という
-presence 軸は「宣言済みフィールドの値が null なのは正常」へ読み替わる。DR-126 §4 の乖離 Error 2 種
-(宣言外キーの存在 / フィールドの type が名乗る out との値型違い) は不変である。
+presence 軸は「宣言済みフィールドの値が null なのは正常」へ読み替わる。
+
+ただし**全フィールド列挙は結果射影層の仕事**であり、type パーサ (および record を名乗る registry 住人
+一般) の**出力そのものは書き換えない**。パーサが宣言済みフィールドを 1 つ落として返すのは従来どおり
+正常であり、射影の段でそのフィールドに `null` が補われる。
+
+この分離により **DR-126 §4 の乖離検査は生出力に対して行う**。同 §4 の表 (c) 行「宣言済みキーが値に
+存在しない」は「**正常** — 射影層が `null` を補う」へ改定される (扱いは不変で根拠が替わる)。(a)
+「宣言に無いキーが値に存在する」/ (b)「フィールドの値がその type の名乗る `out` と合わない」の 2 種が
+Error である点は不変である — 補形の前に生出力を見るからこそ、パーサの逸脱が射影に埋もれない。
+
+値空間側の読み (DR-127 の値降下) は物理的な補形を待たずに「**record の宣言済み座で欠落しているものは
+`null` と読む**」で統一する。物理的にキーを立てるのは射影時の 1 回だけだが、論理的にはどの相から見ても
+同じ値が読める。
+
+#### 4.2 `ambiguous` の interpretations は sparse のまま
+
+全キー列挙は **resolve 相の成果物 (`result` / `sources`) に対する規範**である。`ambiguous` outcome の
+`interpretations` は従来どおり **parse 相 + DR-118 §3 の 2 規則を適用した差分ビュー**であり、
+値源ラダーを回さない (DR-118 §3 / DR-109)。**null による全キー列挙は行わない**。
+
+理由は位相である。interpretations が示すのは「どの解釈が、どのトークンをどう食べたか」であり、
+その解釈で**触られた座だけ**が載ることに意味がある (`{"s": "ax"}` と `{"s": "a", "x": true}` の対比が
+そのまま解釈の違いを語る)。ここに未確定の座を `null` で敷き詰めると、解釈間の差分が null の海に
+埋もれて対比が読めなくなる。ラダーを回していない以上、そこに置く `null` は「値が無い」ではなく
+「まだ決めていない」であり、§1 の `null` とは意味が違う。
 
 ### 5. sources も null を持ち、result との同型を保つ (NUL-Q4)
 
@@ -91,9 +167,15 @@ presence 軸は「宣言済みフィールドの値が null なのは正常」�
 result:  {"name": null, "port": 5}      sources: {"name": null, "port": "default"}
 ```
 
-`sources` の `null` は「**その座の値を確定させた主体が存在しない**」を意味する。DR-122 §2 が
-「result に現れないキーは sources にも現れない」と書いた規範は文言としては不変で、result 側のキー集合が
-広がった分だけ sources も広がる。
+`sources` の `null` は「**その座の値を確定させた主体が存在しない**」を意味する。
+
+DR-122 の shadow tree 規範は、本 DR の下では次の 2 文で直接述べられる (「result に現れないキーは
+sources にも現れない」という消去法の言い回しは、absent が消えた以上もはや読み手に何も教えない):
+
+> **`sources` のキー集合は `result` のキー集合と完全に一致する。`result` で `null` の座は `sources`
+> でも `null` である。**
+
+キー集合の導出は §1b が定める 1 か所を共有する。
 
 空コレクションの由来を表現しない規定 (DR-122 §2.1) は不変である — `[]` / `{}` は値の座を持たないので
 置き換えるタグも無く、`null` を置く座も無い。
@@ -119,8 +201,11 @@ required ∨ default あり ∨ 反復系 → T          (不変)
 それ以外                         → T | null   (旧: T?)
 ```
 
-「default あり」が native な `default:` 値を指し可謬な `default_fn` を数えない点 (DR-113 §5.4 / DR-114)、
-「反復系」が `optional: true` 糖衣を含む点 (DR-043 / DR-044) はいずれも不変である。
+「default あり」が native な `default:` 値を指し可謬な `default_fn` を数えない点 (DR-114) は不変で、
+根拠だけが替わる — 従来は「`borrow:<source>` が `absent-source` で落ちうる」ことが可謬性の中身だったが、
+本 DR の下では **`default_fn` は `null` を返しうる** (§3.1) ことがそのまま可謬性である。返り値が `null` の
+default_fn しか持たない要素の座は `null` になるので `T | null` に落ちる。「反復系」が `optional: true`
+糖衣を含む点 (DR-043 / DR-044) も不変である。
 
 record (DR-126) の内側も同じ読み替えで、**全フィールドが `T | null`** になる。「このフィールドは常に立つ」
 を機械可読に主張する手段を v1 が持たない点は変わらない。
@@ -135,24 +220,63 @@ conformance fixture の `expect.result` / `expect.sources` は、**null の座�
 runner が宣言から null を自動補完する方式は採らない。
 
 理由 (kawaz mid=40): 記述コストの恒常増は大した量ではなく、全列挙は case 同士の比較がしやすい。初回の
-書き換え (~560 case) は一度きりの投資である。
+書き換え (~578 case) は一度きりの投資である。
 
 この帰結として **CONFORMANCE §3 の比較規約を改定する**。現行の「フィールド省略 = default 値と等価」を
 `result` / `sources` へそのまま適用すると、キーの省略が「null と等価」に読めて検証が骨抜きになる。
 `result` / `sources` はキー集合込みの完全一致 (省略の読み替えを行わない) とする。`candidates[].meta` を
 「省略時に検証が骨抜きになるため常に書く運用」とした先例 (COMP-Q2) と同じ整理である。
 
+#### 8.1 conformance decoder への要件
+
+比較規約が成り立つには、fixture の JSON を読む側が「キーが無い」と「キーがあって値が `null`」を
+**別の状態として保持できる**必要がある。素朴な「JSON object → map、値が null なら未設定扱い」の
+decode はこの区別を潰すので使えない。要件は 3 つ:
+
+- **`expect.result` / `expect.sources` の decode は missing key と explicit null を区別して保持する**
+  (両者を同じ内部表現へ畳まない)
+- **`result` / `sources` は「省略 = default 値と等価」の一般規約から明示的に除外する** — 他フィールド
+  (`outcome` / `errors.reason` 等) の省略読み替えは従来どおりで、除外はこの 2 フィールドに限る
+- **`effects[].operand` は present-required (値として `null` を許す) の schema 形にする** — `set` の
+  operand は常に書かれ、`null` は「書かれなかった」ではなく「null を operand とする set」を意味する
+  (DR-131 §6)
+
 ### 9. 転換対象でない absent (誤爆注意)
 
 以下は「値が無い」ではなく「**参照先が存在しない**」を指す別概念であり、本 DR の対象外である。機械置換を
 かけてはならない:
 
-- `absent-ref` — 名前解決の失敗 (DR-127 第 1 相、DR-032)
-- `absent-source` — `borrow:<source>` の参照先が最終的に不在 (DR-113 §5.4)
+- `absent-ref` — 名前解決の失敗 (DR-127 第 1 相、DR-032)。**定義時**に名前が引けないことであり、値の
+  有無とは層が違う
 - `absent-path` / `absent-category` — help クエリの照会先不在 (DR-112)
 - `fixtures/link-parse/absent-target.json` — link の参照先不在を pin する fixture
 - DESIGN §2.4 の「absent = 入口なし」系記述 / LOWERING の wire 入力側 presence — 入力側にキーが無いことの
   記述であり、出力射影の話ではない
+
+**`absent-source` はここに含まれない — 本転換で廃止される**。`borrow:<source>` の参照先の座は本 DR の
+下では不在にならず `null` になるので、borrow は `null` を返し `set(null) = unset` が呼び出し元へ伝播
+する (DR-131 §1)。DR-113 §5.4 の「参照先が最終的に不在なら fn reason `absent-source` で呼び出し元も
+unset のまま落ちる」という個別規定は、DR-131 の一般規則に吸収されて消える。NUL-C1 が `absent-source` を
+「転換対象外」と書いたのは**機械置換の誤爆を防ぐ意図**であって意味論を温存する指示ではない (正本ノート
+§5b)。`absent-ref` (定義時の名前解決失敗) と綴りが似ているだけの別物なので、一括置換は依然として禁止で
+ある。
+
+#### 9.1 別軸の `null` (kuu の値空間へ流入しない)
+
+以下の `null` は本 DR の `null` と綴りが同じだけで、住む層が違う:
+
+- **`export_key: null`** — 結果キー軸のメタ (「このノードは結果キーを持たない」の明示、DR-052 §2/§4)。
+  §6 のとおり改名も統合もしない
+- **provider 境界の `| null`** — `tty_provider` の `(stream) → bool | null` (DESIGN §12b / DR-099 /
+  DR-129)、`env_provider` / `config_provider` の lookup 失敗も同型。これは「**その provider は情報を
+  持たない**」を語る Maybe であって、`null` という値の供給ではない。**provider の `null` が kuu の値空間へ
+  `null` として流入することはなく**、供給なしとして値源ラダーの次段へ落ちる (config の JSON null を
+  「供給なし」と読む DR-050 も同じ扱いで、こちらは裁定不変)
+
+この非対称から 1 つ帰結する: **result JSON は config JSON への round-trip 形ではない**。result の
+`"port": null` は「値が無い」を語る出力側の表現であり、同じ JSON を config として食わせると DR-050 の
+「供給なし」として読まれる。両者が同じ綴りで違う意味を持つことは意図的であり、result を設定ファイルへ
+書き戻す用途は v1 の射程にない。
 
 ## 根拠
 
@@ -182,6 +306,17 @@ DR-051 の absent 射影では、result を 1 つ見ても「このコマンド�
 全列挙では、成功 result の 1 つが**そのスコープのスキーマそのもの**を見せる。JSON を目で読む人にとっても、
 codegen にとっても、キー集合が実行ごとに揺れないことが効く。§2 の 1 段停止により、この発見性は
 「実現した経路の宣言幅」というコストで買える。
+
+### 出力量の増加は意図したトレードオフであり、上限は規定しない
+
+本 DR が規範として要求するのは、**O(実現スコープの宣言幅の総和 + closed record の展開幅)** の出力を
+産むことである。absent 射影の「湧いた値だけ」に比べれば出力は増え、それは発見性 (前節) と穴の表現
+(次節) を買うために意図して払うコストである。
+
+規範はここまでで、**出力サイズの上限も、lazy serialization のような実装技法も定めない**。「巨大な宣言で
+result が大きくなりすぎる」問題は §2 の 1 段停止が構造的に抑えており (未選択サブツリーは `null` 1 つに
+畳まれる)、それ以上の抑制が要るかは消費者と実装の事情に属する。conformance が pin するのは値であって
+生成の仕方ではないので、ストリーミング出力や遅延構築を選ぶのは実装の裁量である。
 
 ### 構造で語ると穴が開けられない
 
@@ -220,10 +355,16 @@ tuple ごと落とす」という不自然な規則を置くしかなかった�
   本 DR §1 へ付け替える
 - **DR-081**: op=unset が committed=false へ戻す規定は不変だが、その結果ラダーが枯渇した座の**観測**が
   absent から `null` になる。§4 canonical 例と §波及の fixture 期待値に追随が要る
-- **DR-103**: 未選択 scope の遅延述語不参加は**裁定不変**、根拠の付け替えのみ (本 DR §2)。§1 明確化注記の
+- **DR-103**: 未選択 scope の遅延述語不参加は**裁定不変**、根拠の付け替えのみ (本 DR §2)。§5 明確化注記の
   「DR-051 §3 の unselected scope = absent (キー消失) と整合」の一文を本 DR の `null` 畳みへ差し替える
-- **DR-126 §3**: 「フィールドは presence-optional で `null` は使わない」を反転 — 全フィールド列挙 +
-  `null`、型導出は `T | null` (本 DR §4/§7)。§2 の closed 裁定・§4 の乖離 Error 2 種は不変
+- **DR-126 §3 / §4**: §3 の「フィールドは presence-optional で `null` は使わない」を反転 — 全フィールド
+  列挙 + `null`、型導出は `T | null` (本 DR §4/§7)。§4 の表 (c) 行「宣言済みキーが値に存在しない」は
+  **「正常 — 射影層が `null` を補う」**へ根拠を替える (扱いは不変)。乖離検査が **type パーサの生出力**に
+  対して行われる点を明記する (本 DR §4.1)。§2 の closed 裁定・§4 の乖離 Error 2 種 (a)/(b) は不変
+- **DR-113 §5.4**: 「`borrow:<source>` の参照先が最終的に不在 → fn reason `absent-source`、呼び出し元も
+  unset のまま落ちる」規定を**削除**する。参照先の座は本 DR の下で `null` になるので、borrow は `null` を
+  返し `set(null) = unset` が伝播する (DR-131 §1 に吸収、本 DR §9)。同 §5.4 の「default 席で Sentinel
+  fn を指定」行は DR-131 §7 が別途縮小する
 - **DR-127**: 値残余の座への部分書きが `[null, 2]` / `{until: X, since: null}` を産みうる点を追補。
   §3 の record auto-vivify は「宣言済みだが書かれていないフィールドは null」で閉じる (器の形が定義時に
   確定するという裁定は不変)。§4.1 の Sentinel 返し Reject は DR-131 が別途改定する
@@ -232,9 +373,11 @@ tuple ごと落とす」という不自然な規則を置くしかなかった�
 
 DR-016 (2 層分離) / DR-031 (値源ラダー枯渇時) / DR-044 (一様配列) / DR-045 (unset の committed=false) /
 DR-050 (config の JSON null = 供給なし — **入力側の別軸なので裁定不変**、DR-051 §4 への参照だけ付け替え) /
-DR-087 (default の遅延解決) / DR-088 (宣言された値源 = default の存在、解決後に値が無ければ落ちる) /
-DR-089 (`type: "none"` は結果に現れない — **内部セルは全列挙の対象外**) / DR-093 (required の型委譲) /
-DR-113 §5.4 (`absent-source` は別概念) / DR-114 (FnCtx の `old: Value | absent`) の計 12 本。
+DR-064 §5 (`dd` は値セルも子も持たないので露出キーを占有せず、全列挙の対象外 — 本 DR §1b) /
+DR-087 (default の遅延解決) / DR-088 (宣言された値源 = default の存在、解決後に値が無ければ落ちる。
+`null` 座は不充足として扱う点を本 DR §1 が明示) /
+DR-089 (`type: "none"` は**値空間を持たない = 露出キーを持たない**ので全列挙の対象外、本 DR §1b) /
+DR-093 (required の型委譲) / DR-114 (FnCtx の `old: Value | absent`) の計 11 本。
 
 ### docs 本体 (27 箇所、正本ノート §4 の実測)
 
@@ -244,24 +387,32 @@ DR-113 §5.4 (`absent-source` は別概念) / DR-114 (FnCtx の `old: Value | ab
 - **CONFORMANCE §2**: `result` の説明 (「DR-051 の absent 規則適用後」)、`sources` の shadow tree 説明
   (キー集合が result の射影である点は維持、null 座の追加)、空コレクションの由来の項
 - **CONFORMANCE §3**: 比較規約の改定 (本 DR §8) — `result` / `sources` をキー集合込みの完全一致にし、
-  「省略 = default 値と等価」の一般規約から除外する。outcome 別まとめ表の該当行も追随
-- **DESIGN §2.4** (L545 付近の「absent = 入口なし」) / **LOWERING §122 / §215**: **対象外** — wire 入力側の
-  presence を語る別軸 (本 DR §9)
+  「省略 = default 値と等価」の一般規約から除外する。outcome 別まとめ表の該当行も追随。decode 側の要件は
+  本 DR §8.1
+- **DESIGN §12b**: `tty_provider` の `→ bool | null` を「provider が情報を持たない」の Maybe として
+  読む点を明示し、宣言 default へフォールバックする解決規則の記述にある「absent へ落ちる」
+  (`resolved_default = 観測 ?? 宣言 default ?? absent`) を `null` 形へ更新する (本 DR §9.1)
+- **DESIGN §2.4** (L545 付近の「absent = 入口なし」) / **LOWERING L122 / L215** (行番号): **対象外** —
+  wire 入力側の presence を語る別軸 (本 DR §9)
 
 ### fixture
 
-- `expect.result` を持つ success case **560 件**が逐語全列挙化の対象 (NUL-Q1=b)。ディレクトリ単位で
+件数は 2026-08-01 の実測。**着手時 (サイクル 3) に再集計する**前提で読むこと:
+
+- `expect.result` を持つ success case **578 件**が逐語全列挙化の対象 (NUL-Q1=b)。ディレクトリ単位で
   並列化できるが、`export-key` (43) / `value-typing` (31) は露出規則そのものを pin しているので目視枠
-- `sources` 付き **199 case** (うち result 側にキー欠落があるもの 20) に null 座を追加
-- `why` 文で absent に言及する **87 ファイル / 105 case** は文面の書き換えパスであり、期待値の書き換えとは
+- `sources` 付き **217 case** に null 座を追加
+- `why` 文で absent に言及する **78 ファイル / 107 case** は文面の書き換えパスであり、期待値の書き換えとは
   別に走らせる
-- **`fixtures/absent/` ディレクトリ 4 ファイル**は absent 意味論そのものを pin する専用領域であり、
-  期待値の差し替えでは済まない (`no-source-and-default.json` / `repeat-empty.json` /
-  `required-positional.json` / `selected-scope-empty.json`)。null 射影を pin する領域として書き直す。
-  ディレクトリ名の改称是非は裁定待ち (下記)
-- **対象外** (誤爆注意、本 DR §9): `fixtures/link-parse/absent-target.json` /
-  `fixtures/value-sources/default-fn-borrow-ladder.json` 等の `absent-source` 系 /
-  `fixtures/constraints-parse/requires-bool-target-default-fn-borrow.json`
+- **`fixtures/absent/` ディレクトリ 4 ファイルは `fixtures/null-projection/` へ改称する**。absent 意味論
+  そのものを pin する専用領域なので期待値の差し替えでは済まず (`no-source-and-default.json` /
+  `repeat-empty.json` / `required-positional.json` / `selected-scope-empty.json`)、null 射影を pin する
+  領域として書き直す。ディレクトリ名に `absent` を残すと後続の grep で誤爆源になるため領域名も現行化
+  する。台帳・pin からの参照有無はサイクル 3 で確認する
+- **`fixtures/value-sources/default-fn-borrow-ladder.json::borrow-source-absent` は更新対象**へ移る —
+  `absent-source` の廃止 (本 DR §9 / DR-131 §1) により、期待値が borrow の `null` 返し形になる。
+  `fixtures/constraints-parse/requires-bool-target-default-fn-borrow.json` も同じ経路の追随
+- **対象外** (誤爆注意、本 DR §9): `fixtures/link-parse/absent-target.json` (参照先不在を pin)
 
 ### schema
 
@@ -271,8 +422,10 @@ DR-113 §5.4 (`absent-source` は別概念) / DR-114 (FnCtx の `old: Value | ab
 ### 実装
 
 - **kuu.mbt**: `resolve.mbt` の `build_result` (L580-909) が中心 — 「値があれば入れる」から「宣言キーを
-  歩いて埋まらない座に null を置く」へ反転。`default_cells` 系と `source_shadow` (L1568-1754) が
-  result と同型を保つよう追随。conformance decoder の result / sources 比較も §8 の完全一致へ
+  歩いて埋まらない座に null を置く」へ反転。§1b のキー導出は 1 か所に置き、`build_result` と
+  `source_shadow` (L1568-1754) が同じ集合を読む。`default_cells` 系も追随。conformance decoder は §8.1 の
+  3 要件 (missing key と explicit null の区別保持 / `result`・`sources` の省略読み替え除外 /
+  `operand` の present-required) を満たす形へ
 - **kuu-cli**: dispatch / `as_object` 経路のみで影響は小さい
 
 ## 採用しなかった案
@@ -295,7 +448,7 @@ unset を「null を返す」に畳むには null が fn の返り値として�
 
 ### (c) fixture の null 座を runner が宣言から自動補完する (NUL-Q1=a)
 
-fixture の記述コストを抑え、既存 560 case の書き換えを回避する案。棄却理由は kawaz mid=40 の裁定 —
+fixture の記述コストを抑え、既存 578 case の書き換えを回避する案。棄却理由は kawaz mid=40 の裁定 —
 記述コストの恒常増は大した量ではなく、**全列挙は case 同士の比較がしやすい**。加えて runner が宣言を
 読んで期待値を組み立てると、fixture が pin しているはずの射影規則を runner 側が再実装することになり、
 「fixture は実装から独立した期待値である」という conformance の前提が崩れる。初回書き換えは一度きりの
@@ -305,14 +458,18 @@ fixture の記述コストを抑え、既存 560 case の書き換えを回避�
 
 - DR-051 (**superseded by 本 DR** — absent 射影・null 不在・型導出の元)
 - DR-052 §2/§3/§4 (`export_key: null` の軸メタ / presence marker — §6 で marker を廃止、軸メタは残置)
-- DR-120 §2/§4 (露出キー 1 セル — §4 の or 席射影の根拠、§4 の占有判定に追随)
+- DR-120 §2/§4/§5 (露出キー 1 セル — §4 の or 席射影の根拠、§4 の占有判定と §5 の宣言層の面が §1b の導出元)
 - DR-121 §2 / DR-122 §1/§2 (sources の席と shadow tree — §5 で null 座を持つ)
 - DR-123 §3 (反復セルの暗黙 bottom default `[]` — null にならない族)
-- DR-126 §2/§3/§4 (record — §4 で内側も反転、closed と乖離 Error は不変)
+- DR-126 §2/§3/§4 (record — §4 で内側も反転、§4.1 で補形は射影層のみ、closed と乖離 Error (a)/(b) は不変)
 - DR-127 §3/§4.1 (link 固定パス DSL の部分書き — 穴の表現が値になる)
-- DR-103 §1 (未選択 scope の述語不参加 — 裁定不変、根拠付け替え)
-- DR-047 / DR-088 / DR-113 §5.4 (required の値充足・宣言値源・`absent-source` — null にならない条件と誤爆注意)
+- DR-118 §3 / DR-109 (interpretations は parse 相の差分ビュー — §4.2 で sparse 維持)
+- DR-103 §5 (未選択 scope の述語不参加 — 裁定不変、根拠付け替え)
+- DR-047 / DR-088 (required の値充足・宣言された値源 — `null` 座は不充足、§1)
+- DR-113 §5.4 (`absent-source` — §9 で廃止、DR-131 §1 の一般規則へ吸収)
+- DR-064 §5 / DR-089 (`dd` / `type: "none"` — 露出キーを占有しない = 全列挙の対象外、§1b)
 - DESIGN §2.6 (absent 射影の正本記述 — 全面書き換え対象)
+- DESIGN §12b / DR-050 (provider 境界の `| null` と config の JSON null — §9.1 の別軸、値空間へ流入しない)
 - CONFORMANCE §2/§3 (`result` / `sources` の規定と比較規約 — §8 で改定)
 - docs/research/2026-08-01-null-projection-inversion.md (本 DR の正本ノート、NUL-Q1〜Q4 / NUL-C1)
 - DR-131 (Sentinel 縮小 — 本 DR の null を前提に unset / empty を畳む)
