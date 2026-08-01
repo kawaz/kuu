@@ -1,0 +1,72 @@
+{
+  "why": "requires の主語が cell fn を発火した場合も、制約は評価前の Invoke marker ではなく fn 適用後の committed を見る (DR-055 / DR-131 §2/§2b)。unset は null を返し set(null)=unset となるため、主語を非 committed に戻して requires 自体を不活性化する。対照として通常 set では requires が発火する。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {
+        "name": "source",
+        "type": "flag",
+        "long": [
+          "no:unset"
+        ],
+        "requires": [
+          "target"
+        ]
+      },
+      {
+        "name": "target",
+        "type": "string",
+        "long": true
+      }
+    ]
+  },
+  "cases": [
+    {
+      "id": "unset-source-does-not-activate-requires",
+      "why": "`--source --no-source`: source は一度 committed になった後、unset fn の null 返却で非 committed に戻る。requires は最終状態を見るため不活性で success。target は未供給なので null、source は flag preset default false へ落ちる。",
+      "args": [
+        "--source",
+        "--no-source"
+      ],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {
+            "entity": "source",
+            "op": "set",
+            "operand": true,
+            "source": "cli"
+          },
+          {
+            "entity": "source",
+            "op": "set",
+            "operand": null,
+            "source": "cli"
+          }
+        ],
+        "result": {
+          "source": false,
+          "target": null
+        }
+      }
+    },
+    {
+      "id": "committed-source-still-activates-requires",
+      "why": "対照: `--source` だけなら source は committed のままなので requires が発火し、未供給 target に対して requires_violated となる。pending Invoke の遅延化が通常 set の制約を弱めていないことを固定する。",
+      "args": [
+        "--source"
+      ],
+      "expect": {
+        "outcome": "failure",
+        "errors": [
+          {
+            "element": "source",
+            "args_pos": 1,
+            "kind": "constraint",
+            "reason": "requires_violated"
+          }
+        ]
+      }
+    }
+  ]
+}

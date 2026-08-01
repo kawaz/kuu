@@ -41,7 +41,7 @@
     },
     {
       "id": "none-member-fires-satisfies-group-via-committed",
-      "why": "`--sync`: none 要素 `sync` が発火して committed=true になる — 値空間なしの充足基準 (発火したこと、DR-089 §4/DR-093) により group \"g\" が充足する。`sync` は値を運ばないため result/effects に一切現れない (`none-value-space.json` と同型)。`verbose` は未発火・default なしで null (result にキーなし)。required_group_violated は起きない。",
+      "why": "`--sync`: none 要素 `sync` が発火して committed=true になる — 値空間なしの充足基準 (発火したこと、DR-089 §4/DR-093) により group \"g\" が充足する。`sync` は値空間を持たないため result/effects に一切現れない (`none-value-space.json` と同型)。`verbose` は未発火・default なしなので null。required_group_violated は起きない。",
       "args": [
         "--sync"
       ],
@@ -49,7 +49,6 @@
         "outcome": "success",
         "effects": [],
         "result": {
-          "sync": null,
           "verbose": null
         }
       }
@@ -71,8 +70,7 @@
           }
         ],
         "result": {
-          "verbose": true,
-          "sync": null
+          "verbose": true
         }
       }
     }
