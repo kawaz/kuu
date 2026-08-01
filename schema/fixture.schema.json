@@ -639,9 +639,10 @@
     },
 
     "sourceShadow": {
-      "description": "sources shadow tree の 1 座 (DR-122 §1)。スカラー値の座 = タグ、配列 = タグの配列 (要素対応)、kv / scope = タグの kv (キーは result と同じ露出キー)。空配列 [] / 空 kv {} は値の座が無いので置き換えるタグも無い (DR-122 §2)。",
+      "description": "sources shadow tree の 1 座 (DR-130 §5)。スカラー値の座 = タグ、値を確定させた主体が無い座 = null、配列 = タグ/null の配列 (要素対応)、kv / scope = タグ/null の kv (キーは result と同じ露出キー)。空配列 [] / 空 kv {} は値の座が無いので置き換えるタグも無い (DR-122 §2)。",
       "anyOf": [
         { "$ref": "#/$defs/sourceTag" },
+        { "type": "null" },
         { "type": "array", "items": { "$ref": "#/$defs/sourceShadow" } },
         { "type": "object", "additionalProperties": { "$ref": "#/$defs/sourceShadow" } }
       ]
