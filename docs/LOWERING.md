@@ -227,19 +227,20 @@ set は `value:` の縮退形で書ける:
     {exact: "--no-ssl", value: false, link: "ssl"}]}   // set の縮退形 (literal を沈める)
 ```
 
-非 set の effect は効果記述子 `effect: {op: ...}` で明示する:
+variant は universal fn carrier へ lowering する:
 
 ```
-入力:  {name: "color", long: ["no:unset"]}   (--no-color で color を「触っていない」ことにする)
+入力:  {name: "color", long: ["no:unset"]}   (--no-color で color のラダーを開放する)
 出力 (variant 入口):
-  {exact: "--no-color", link: "color", effect: {op: "unset"}}
+  {exact: "--no-color", link: "color", effect: {fn: "unset", args: []}}
 ```
 
-op 語彙は 4 種で、値セルへの操作と committed は DR-045 の表による: `set` (operand を書く / committed=true) /
-`default` (default へ / committed=true) / `unset` (default へ / committed=false — env 等の後段が上書き可) /
-`empty` (コレクションを空に / committed=true)。通常の値バインドは set の縮退形であり、効果列 (DR-038) の要素は
-一様に (実体, op, operand, source, 順序) となる。args は全て string で CLI 入力と同じ手順を通る (value 型パース・
-filter が variant にも効く)。variant 構造は AtomicAST に残らず exact + 効果記述子に展開される。
+`unset` は `null` を返す Value fn、`empty` は対象型の空値を返す Value fn である。Value は通常の set 経路へ入り、
+`set(null)` だけが committed=false としてラダーを開放する。`default` は唯一残る Sentinel で default placeholder を
+選ぶ。effects の観測語彙は `set` / `default` / `empty` (`remove` / `splice` を含めると全 5 op) で、`unset` 発火は
+`set` + null operand、`empty` 発火は accumulator の行供給との非単射を避けるため `empty` op として観測する
+(DR-130 §3、DR-131 §1〜§6)。args は全て string で CLI 入力と同じ手順を通り、null は共通 dispatcher が filter を
+呼ばず素通しする。variant 構造は AtomicAST に残らず exact + fn carrier に展開される。
 
 **由来**: DR-042, DR-011, DR-015, DR-045
 

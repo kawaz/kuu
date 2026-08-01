@@ -211,9 +211,11 @@ kv (object 的な結果) は専用構造を持たない。**name を持つ子が
 
 混在 (name 持ちと name 無し) も問題ない: name 無しは消えるだけ、kv には name 持ちだけ現れる。
 
-### 2.6 値の無い要素は結果に出ない (absent、DR-051)
+### 2.6 成功 result は宣言キーを全列挙し、値の無い座を null にする (DR-130)
 
-値源ラダー (§11.4) を回しても値が無い要素は、結果オブジェクトに**キー自体が現れない** (in-band の null は使わない)。absent が起きるのは値源を持たない非反復要素のみ — 反復系 (repeat / multiple / `optional: true` 糖衣を含む — optional は repeat {min:0, max:1} なので反復系そのもの) は 0 回発火でも `[]` が出る (§6.1)、flag / count は default を同梱、required 要素は値が無ければ経路不成立 (§9.1)。**結果キーを持つスコープ生成要素 (command 含む) は、選ばれたら子が全部 absent でも空 kv `{}` を持つ** (スコープ生成 = 値の発生、反復系の `[]` と同型)。選ばれなければ absent (DR-052)。言語バインディングの型導出: required / default あり / 反復系 → `T`、それ以外 → `T?`。**null は kuu の値空間に存在しない** — config の JSON null は「供給なし」(DR-050)、明示的な取り消しは unset 効果 (DR-045)。absent 要素のメタ (committed / selected / source) は ParserContext から引ける (§0.3)。
+成功した result の各実現スコープには、全 installer の宣言層寄与を適用し終えた宣言層から導ける露出キーが漏れなく現れる。値源ラダー (§11.4) を回しても値が確定しない座は `null` になる。反復系 (repeat / multiple / `optional: true` 糖衣を含む) は暗黙 default `[]` を持ち (§6.1)、flag / count は default を同梱し、required 要素は値が無ければ経路不成立 (§9.1) なので `null` にならない。未選択の子 command scope は親に `subcmd: null` とだけ現れ、内側を展開しない。選択された scope の内側では同じ全列挙規則を再帰適用する。named 枝の `or` はセル未発火なら親キーが `null`、発火した枝の内側では全枝キーを列挙して非選択枝を `null` にする。動的キー構造だけは実行時に存在するキーのみを載せる。
+
+`null` は kuu の値空間に属し、filter / pieceProcessor / value_parser は共通 dispatcher による null 素通しで呼び出されない。`required` / `required_group` 等の値述語では `null` は不充足である。型導出は required / native default あり / 反復系 → `T`、それ以外 → `T | null`。`default_fn` は実行時に `null` を返しうるため native default ありには数えない。定義の `default:` / `value:` 席へ null リテラルを書くことはできない。config の JSON null と provider の `| null` は「供給なし」を語る入力境界の別軸で、kuu の値空間へ null を供給しない。値セルのメタ (committed / selected / source) は ParserContext から引ける (§0.3)。
 
 ### 2.7 lexical スコープ = name が作るスコープ (DR-033)
 
@@ -405,7 +407,7 @@ true    → bool として同様
 - **`value:` = 消費 0 の宣言定数** (`const`、DR-031)。セル初期化位相に属し、値セルに最初からいる。ラダーの席ではない
 - **`default:` = 値源ラダー (§11.4) の最下段の席**。「無い時に埋める」充填であり、or/seq の子位置でも同じくラダー席である
 
-子セルの席が存在するのは**親が発火して子の座が成立した場合のみ**である。親が未発火なら子は親ごと absent で、着席自体が起きない (`fixtures/or-parse/unselected-branch-default-absent.json`)。
+子セルの席が存在するのは**親が発火して子の座が成立した場合のみ**である。親が未発火なら親の露出キーは `null` になり、子の座は実現しない。named 枝の `or` が発火した場合は選択枝の座だけが成立し、射影時に非選択枝を `null` で補う (DR-130 §4)。
 
 消費との関係: `default:` を持つ子は消費 0 の literal に**ならない** — 通常どおり消費を試みる子のままで、`default:` が変えるのは「トークンを得られなかった消費点を空席のまま完全経路に含めてよい」という充足判定である。これは **DR-088** §1「宣言された値源 = デフォルトの存在」/ §2 の静的宣言ベース判定がそのまま子位置に及ぶ帰結で、root positional に `default:` を足すと missing_operand に倒れず完全経路になる規範 (`fixtures/value-sources/positional-default-presence.json`) と同じ規則である — 位置非依存の裁定の下で子位置だけを除外する理由がない。空席のまま完走した座は resolve 相で default 席が埋め、source は `default` になる (`fixtures/seq-parse/child-default-ladder.json`)。トークンが供給されればその子は通常どおり消費し、source は `cli` になる。
 
@@ -621,14 +623,14 @@ variant DSL の値供給・cell operation は DR-114 の universal fn ABI を使
 |---|---|---|
 | `set` | 引数なし = 値スロット準備 / 1 個以上 = `Value` | 値を cell へ set |
 | `default` | なし / `use_default` Sentinel | default placeholder へ戻す |
-| `unset` | なし / unset Sentinel | cell を unset にする |
-| `empty` | なし / empty Sentinel | 配列 / Map を空にする |
+| `unset` | なし / null `Value` | `set(null)` として cell のラダーを開放する |
+| `empty` | なし / target 型の空 `Value` | 配列 / Map / record を空にする。scalar 等は definition-error `invalid-range` |
 
-4 名は閉じた effect enum ではなく `cell_fns` の builtin 住人である。`incr` / `borrow` / `env` 等の他の cell fn も同じ位置から呼べる。発火時の `FnCtx.mode()` は `"effect"`。fn が `Value` を返せば通常の set operand として適用し、Sentinel なら対応する cell operation を適用する。`update` effect と filters transform の特殊呼び出しは持たない。
+4 名は閉じた effect enum ではなく `cell_fns` の builtin 住人である。`incr` / `borrow` / `env` 等の他の cell fn も同じ位置から呼べる。発火時の `FnCtx.mode()` は `"effect"`。fn が `Value` を返せば通常の set operand として適用し、null は filter を素通しして cell 適用時に committed=false となる。Sentinel 返しは `default` だけである。effects では unset を `set(null)`、empty によるクリアを `empty` として観測する。`update` effect と filters transform の特殊呼び出しは持たない。
 
 ### 7.5 variant は決定的に lowering される
 
-variant 宣言は parse_definition() で greedy 入口へ展開される。lowering 時点で operand が確定する set は `{exact, value, link}`、直接 cell operation は `{exact, link, effect:{op}}`、runtime cell fn 呼び出しは `{exact, link, effect:{fn,args}}` の断面を持つ (§15.7、DR-114 §6.1)。
+variant 宣言は parse_definition() で greedy 入口へ展開される。lowering 時点で operand が確定する set は `{exact, value, link}`、遅延 placeholder を選ぶ `default` は `{exact, link, effect:{op:"default"}}`、runtime cell fn 呼び出しは `{exact, link, effect:{fn,args}}` の断面を持つ (§15.7、DR-114 §6.1、DR-131)。
 
 ---
 
@@ -670,9 +672,9 @@ filter は2箇所に乗る:
 
 **filter 名の未登録は definition-error** (kind=`unknown-vocab`、DR-101): `value_filters` / `piece_filters` / `final_filters` / `accum_filters` の 4 属性に指定された filter 名 (§8.4 DSL の `<name>`、DR-094 の ns 付き識別子 / bare は `builtin` ns の糖衣) が filters registry の descriptor `owns` 集合 (DR-061 / DR-094) に載らない場合、`parse_definition` が静的に reject する (runtime reason `unknown_filter` は持たない)。1 属性 1 registry の対応 (`final_filters` は scalar filter registry T→T、`accum_filters` は ARRAY filter registry Acc→Acc) なので判定は自 registry の owns 集合のみで完結し、層違いの 2 段判定は無い (DR-102 §2)。非 accum 要素への `accum_filters`、accum 要素への `final_filters` はいずれも definition-error kind=`invalid-range` (DR-102 §3)。filter 装置内の失敗 (例: `regex_match` の pattern compile 失敗) は kind=`invalid-argument` (DR-085) で別層。
 
-**cell fn の返り値と `value_filters` (each 相、T→T) の関係**: `value_filters` は cell に書かれる実値に乗る。入口の set operandと、`incr` 等の cell fn が返した `Value` は通常の set operand として対象になる。一方、`unset` / `default` / `empty` の Sentinel は新しい実値を運ばないため、発火に伴って `value_filters` の対象 piece が生じず通らない。リセット操作の発火が reject される事態は起きない。
+**cell fn の返り値と `value_filters` (each 相、T→T) の関係**: `value_filters` は cell に書かれる実値に乗る。入口の set operand と、`incr` / `unset` / `empty` 等の cell fn が返した `Value` は通常の set operand として対象になる。ただし共通 dispatcher は入力が `null` なら chain を呼ばず `null` をそのまま通す。each 相では null 要素だけを個別に素通しし、空コレクションには適用対象の要素が無い。`default` は唯一残る Sentinel で、新しい実値を運ばないため対象 piece が生じない。これらの操作発火が filter に reject される事態は起きない (DR-130 §3、DR-131 §2b/§6)。
 
-本段は発火時 specialization の規定である。`default` / `unset` の発火で書き戻される default 席の値や、開放後に供給される下位席の値がどの chain を通るかは値源席の規定 (DR-049 / DR-050) の管轄で、非 multiple 要素の宣言 default 値も同じ型依存規則に従う (DR-102 §5)。`piece_filters` (String→String) は消費した raw string に乗るため、値トークンを消費しない cell operation の発火には走る場面がない。`final_filters` / `accum_filters` は発火単位でなく確定後の最終値・累積配列に乗るため本規定の対象外。
+本段は発火時 specialization の規定である。`set(null)` によるラダー開放後に供給される下位席の値と、`default` 発火で選択される default 席の値がどの chain を通るかは値源席の規定 (DR-049 / DR-050) の管轄で、非 multiple 要素の宣言 default 値も同じ型依存規則に従う (DR-102 §5)。`piece_filters` (String→String) は消費した raw string に乗るため、値トークンを消費しない cell operation の発火には走る場面がない。`final_filters` / `accum_filters` は発火単位でなく確定後の最終値・累積配列に乗るため本規定の対象外。
 
 ### 8.4 DSL 文法
 
@@ -765,7 +767,7 @@ dd (`--`) に `required: true` を付けると「`--` の出現が必須」を�
 目的語の充足判定も required と同じ型委譲の枠 (DR-093) に統一される:
 
 - **値空間を持つ通常型の目的語**: 値の有無 (default 込み)
-- **目的語が bool 型** (flag preset 含む): 解決後の値が true であること (値源不問 — cli / env / config / default のどれ経由でも true なら充足)。値の有無判定だと、flag preset が同梱する暗黙 default:false (§3.3/LOWERING §A.5) により vacuous に充足してしまうため、この dispatch (「値の有無」でなく「解決後値が true か」) を採る。dispatch 自体は plain bool にも一様に適用されるが、**plain bool は暗黙 default を持たない** — 未発火・値源なしなら他の値型と同様に absent (LOWERING §A.5 の default:false は flag preset 固有の展開、DR-099 §2 の `resolved_default = 観測 ?? 宣言 default ?? absent` 終端が同じ教義を preset 型の側から裏づける) (DR-047 明確化 2026-07-09、bool 型の充足定義として DR-093 の型委譲に統合)
+- **目的語が bool 型** (flag preset 含む): 解決後の値が true であること (値源不問 — cli / env / config / default のどれ経由でも true なら充足)。値の有無判定だと、flag preset が同梱する暗黙 default:false (§3.3/LOWERING §A.5) により vacuous に充足してしまうため、この dispatch (「値の有無」でなく「解決後値が true か」) を採る。dispatch 自体は plain bool にも一様に適用されるが、**plain bool は暗黙 default を持たない** — 未発火・値源なしなら他の値型と同様に `null` で不充足になる (LOWERING §A.5 の default:false は flag preset 固有の展開、provider の提供なしは値空間へ流入せず最終座が `null` になる) (DR-047 / DR-093 / DR-130 §1)
 - **目的語が値空間なし** (`type: "none"`、dd 含む): 目的語が発火した (committed) こと (DR-093、DR-089 §4 の definition-error 判定を置換)
 
 **値依存の制約は値の枝への requires 合成で書く** (DR-055、専用の条件 DSL は持たない):
@@ -883,7 +885,7 @@ name を持つノードが結果スコープ = lexical スコープを作る。c
 
 順序は固定 (設定可能にしない、暗黙の罠を避ける)。異なる席は同一要素で共存でき、上位席から順に解決して最初に得た値を採る。
 
-**反復セル (repeat / multiple / `optional:` 糖衣) の default 席は、宣言が無ければ暗黙に `[]` を供給する** (DR-123 §3)。「0 発火なら `[]`」は独立した結果整形規則ではなくラダー最下段の中身であり、`default:` の宣言があればその値が席を占める (DR-083 §1)。この配置により「反復系は absent にならない」(DR-051 §2b) は独立規則でなく「default 持ちは absent にならない」(同 §2a) の系になる — 反復セルは default 席が常に埋まっているから absent にならない。`unset` (ラダー開放、DR-045 §2) を撃ったときに下位席が無ければこの最下段まで落ちて `[]` に確定する (`fixtures/multiple-parse/unset-env-fallback.json`)。なお暗黙 default が供給する `[]` には値の座が無いため `sources` にタグは載らない (DR-122 §2) — 後述の「未発火要素の sources は `default`」は値の座を持つセル (未発火 flag の `false` 等) の規則である。
+**反復セル (repeat / multiple / `optional:` 糖衣) の default 席は、宣言が無ければ暗黙に `[]` を供給する** (DR-123 §3)。「0 発火なら `[]`」は独立した結果整形規則ではなくラダー最下段の中身であり、`default:` の宣言があればその値が席を占める (DR-083 §1)。反復セルは default 席が常に埋まっているため、成功 result で `null` にならない (DR-130 §1)。`unset` fn が返す `null` を set するとラダーが開放され、下位席が無ければこの最下段まで落ちて `[]` に確定する (`fixtures/multiple-parse/unset-env-fallback.json`、DR-131 §2)。なお暗黙 default が供給する `[]` には値の座が無いため `sources` にタグは載らない (DR-122 §2) — 後述の「未発火要素の sources は `default`」は値の座を持つセル (未発火 flag の `false` 等) の規則である。
 
 `value:` (消費 0 literal、§5.2) はこのラダーの席ではない — **セル初期化位相の宣言定数**であり、値セルに最初からいる (source タグは `const`、DR-031。default は「無い時に埋める」充填でこれとは別物)。const は席ではないので序列に参加せず、上位席 (env / config 等) の供給や cli 効果は初期値を通常規則どおり上書きする。
 
@@ -913,7 +915,7 @@ name を持つノードが結果スコープ = lexical スコープを作る。c
 
 `default` 席で何を返すかは型ごとの解決規則にも委ねられる。`tty` preset 型は tty 観測を優先し宣言 default へフォールバックする独自規則を持つ (DR-099、§12b)。ラダー自体はこの型依存を意識しない 4 段固定であり、tty のための専用席は持たない。
 
-**`sources` 射影 — 値 provenance と操作 provenance の分離** (DR-081): 成功 report が `result` と並べて持つ sibling の `sources` フィールド (CONFORMANCE §2、DR-031) が投影するのは「その値セルを最終的に確定させた**主体**がどの席か」= **操作 provenance** であり、「セルに座っている値の**内容**がもともとどの席から来たか」= **値 provenance** ではない。両者は同一ではなく、default 席の書き換えモデル (DR-081) を通すと分離が顕在化する: env 供給は「下位席として env が最終的に勝つ」のではなく、node の宣言 default 値そのものを env 値で書き換える (書き換え後の default_source は `env` を指す)。したがって CLI から default op variant (例: `--reset-to-default`) を発火して書き換え済み default 値を明示 set した場合、`sources` は `cli` になる (値の内容が env 由来であっても、確定主体は cli の default op である)。同様に unset op は committed=false のまま残すため、`sources` は書き換え済み default の由来 (env 供給ありなら `env`) を指す (確定主体が存在しないので値の由来席にフォールバックする)。ただし値が空コレクション (`[]` / `{}`) になる場合は値の座が無く shadow tree にタグが載らない (DR-122 §2.1) — この場合の committed 軸の区別は `effects` の op (`unset` / `empty`) が担う。値の由来と確定主体が同一の 4 段ラダー通常経路 (§11.4 の 1〜4) では両者は一致し、cell 操作 (default / unset / empty 等の `cell_fns` 呼び出し、DR-114 §4) を跨ぐ場合にのみ分離する。**未発火要素の sources は `default`** (SPK-Q2=a): flag / count のような default 同梱要素が一度も発火せず宣言 default のまま結果に現れる場合 (未発火 flag の `false` 等)、sources は `default` を指す — 上位席の供給も cell 操作も無い「ラダー最下段で確定した」通常経路であり、専用の語彙 (`unfired` 等) は設けない。**`value:` 持ちセル (const 初期値) の未発火は `const`** — セルは初期値のまま確定しており default 充填は起きていない (DR-031 の const 追記)。DR-081 の default_source 書き換えモデルは default 席の話であり const 初期値には触れない — env / config が const 持ちセルへ供給する場合は通常の上位席供給としてセル値を置き換え、sources はその席を指す (「書き換え」は経由しない)。cell 操作の発火列自体は `effects` (順序規範、CONFORMANCE §3) 側で観測する — 操作の来歴は `effects[].source`、確定後の値の由来は report 直下の `sources` に、という 2 面射影として並ぶ。`sources` は `result` と同型の shadow tree (値の座だけを source タグに置き換えた形、DR-122) であり、キー体系も `result` と同一 (export_key 適用後の露出キー、CONFORMANCE §2)。`effects[].entity` の射影前 cell name とは別軸である — export_key は結果キー軸の唯一の指定 (DR-052 §1) で、露出キーと値セルは結果スコープ内で 1:1 (DR-120 §1) なので、結果面の射影 (`result` / `sources`) は一様に露出キーで書く。
+**`sources` 射影 — 値 provenance と操作 provenance の分離** (DR-081): 成功 report が `result` と並べて持つ sibling の `sources` フィールド (CONFORMANCE §2、DR-031) が投影するのは「その値セルを最終的に確定させた**主体**がどの席か」= **操作 provenance** であり、「セルに座っている値の**内容**がもともとどの席から来たか」= **値 provenance** ではない。両者は同一ではなく、default 席の書き換えモデル (DR-081) を通すと分離が顕在化する: env 供給は「下位席として env が最終的に勝つ」のではなく、node の宣言 default 値そのものを env 値で書き換える (書き換え後の default_source は `env` を指す)。したがって CLI から default op variant (例: `--reset-to-default`) を発火して書き換え済み default 値を明示 set した場合、`sources` は `cli` になる (値の内容が env 由来であっても、確定主体は cli の default op である)。`unset` fn の `null` 返しは `set(null)` として観測され、committed=false でラダーを開放する。下位席が値を供給すれば `sources` はその席を指し、供給主体が無ければ `result` / `sources` の座はともに `null` になる。値が空コレクション (`[]` / `{}`) の場合は値の座が無く shadow tree にタグが載らない (DR-122 §2.1) — committed 軸の区別は `effects` の op (`set(null)` / `empty`) が担う。値の由来と確定主体が同一の 4 段ラダー通常経路 (§11.4 の 1〜4) では両者は一致し、cell 操作 (default / unset / empty 等の `cell_fns` 呼び出し、DR-114 §4) を跨ぐ場合にのみ分離する。**未発火要素の sources は `default`** (SPK-Q2=a): flag / count のような default 同梱要素が一度も発火せず宣言 default のまま結果に現れる場合 (未発火 flag の `false` 等)、sources は `default` を指す — 上位席の供給も cell 操作も無い「ラダー最下段で確定した」通常経路であり、専用の語彙 (`unfired` 等) は設けない。**`value:` 持ちセル (const 初期値) の未発火は `const`** — セルは初期値のまま確定しており default 充填は起きていない (DR-031 の const 追記)。DR-081 の default_source 書き換えモデルは default 席の話であり const 初期値には触れない — env / config が const 持ちセルへ供給する場合は通常の上位席供給としてセル値を置き換え、sources はその席を指す (「書き換え」は経由しない)。cell 操作の発火列自体は `effects` (順序規範、CONFORMANCE §3) 側で観測する — 操作の来歴は `effects[].source`、確定後の値の由来は report 直下の `sources` に、という 2 面射影として並ぶ。`sources` は `result` と同じ宣言キー集合を持つ shadow tree (値の座を source タグへ置き換え、`result` が `null` の座は `sources` も `null`) であり、キー体系も `result` と同一 (export_key 適用後の露出キー、CONFORMANCE §2、DR-130 §5)。`effects[].entity` の射影前 cell name とは別軸である — export_key は結果キー軸の唯一の指定 (DR-052 §1) で、露出キーと値セルは結果スコープ内で 1:1 (DR-120 §1) なので、結果面の射影 (`result` / `sources`) は一様に露出キーで書く。
 
 ---
 
@@ -951,7 +953,7 @@ name を持つノードが結果スコープ = lexical スコープを作る。c
 
 - **preset が同梱するのは「暗黙 default = tty 観測」だけ**。long/short/env 席の宣言可否・multiple・filters・required 充足 (値空間あり判定) は素の bool と完全に同一に振る舞う — bool 以外の型や値なし要素・flag/count プリセットに「tty を付与する」という操作自体が存在しない (`type:` は単一選択のため、DR-098 が必要とした definition-error 3 分類は構文的に発生しない)
 - **configurable factory config**: `tty_stream` (`"stdin"｜"stdout"｜"stderr"`、必須 — 未指定は definition-error kind=`invalid-range`) のみ (DR-129 §2)
-- **`default` 席の解決規則** (§11.4 のラダーは 4 段固定で、この席の中身が型依存): `resolved_default = 観測 ?? 宣言 default ?? absent`。観測が得られる限り宣言 default より優先する (「明示 (CLI/env/config) > 観測 (tty) > 宣言既定 (default)」という序列は DR-098 §5 / DR-125、tty の実装位置は独立ラダー席ではなく型の解決規則)
+- **`default` 席の解決規則** (§11.4 のラダーは 4 段固定で、この席の中身が型依存): `resolved_default = 観測 ?? 宣言 default ?? null`。provider の `null` は「情報を持たない」という Maybe であり kuu の値空間へ供給せず、観測も宣言 default も無いときに結果座が `null` になる。観測が得られる限り宣言 default より優先する (「明示 (CLI/env/config) > 観測 (tty) > 宣言既定 (default)」という序列は DR-098 §5 / DR-125、tty の実装位置は独立ラダー席ではなく型の解決規則、DR-130 §9.1)
 - **source タグ**: 最終値が観測由来なら `source: "tty"`、宣言 default へフォールバックしたなら `source: "default"` (観測由来 vs 宣言 default 由来の診断区別、`effects` には現れない — 完走後の値確定)
 - **tty_provider** は registry の単一スロット。シグネチャは `(stream: "stdin"|"stdout"|"stderr") → bool | null` — null = 提供なし。env_provider (§12) / config_provider (§14.3) と同列 (DR-099 §4、DR-129 §1)。cygwin pty を端末扱いに含めるか等の判定方言は provider 実装の内側の責務であり、特殊な判定が要るホストは provider ごと差し替える。このシグネチャの機械可読宣言 (`role:"provider"` descriptor) の正本は `schema/builtin-descriptors.json` の `tty_provider` (DR-107 §6、入力の enum 精密化は io_type の型体系の外なので description に注記)
 - 供給値は native bool (string でない) なので、観測値の pieceProcessor 通過は `piece_filters` / `parse` (String→T の相) が型の帰結でスキップされ、`value_filters` / `final_filters` (T→T の相) のみ通過する (DR-050 §4 の config scalar と同じ原理)
@@ -1247,7 +1249,7 @@ option と positional の境界をまたぐ複数経路が同じ入力を全消�
 **露出キーを占有する (検査に参加する)**:
 
 - 露出キーを持ち値セルを持つ要素 — 入口ありの通常要素、入口なしの実体だけノード (DR-030) の双方
-- 露出キーを持つスコープ生成要素 (command を含む) — スコープ生成は値の発生であり、選ばれたら子が全部 absent でも空 kv `{}` を持つ (§2.6)
+- 露出キーを持つスコープ生成要素 (command を含む) — 未選択なら親スコープで `null`、選択されたら宣言キーを全列挙した kv を持つ (§2.6、DR-130 §1/§2)
 
 **占有しない (参加しない)**:
 
@@ -1275,7 +1277,7 @@ AtomicAST はボトムアップ kuu エンジンのノードグラフを宣言�
 
 - **wire form (実装間交換形) = 宣言層のみ**: A 群糖衣 (LOWERING §A) 適用済み + installer 所有語彙は inert のまま。lowered 産物 (greedy 衛星 / matcher / 席宣言) は載せず、決定的 lowering (DR-042 の不動点) による再導出に委ねる。wire 上の語彙の正当性は登録済み descriptor の所有集合の和で判定する (DR-061、§13.1)
 - **lowered 断面の表記** (lowering 段階別 fixture の期待値用) は 5 面構造 `{greedy, positionals, entities, constraints, templates}` (空面は省略、入れ子 scope も再帰的に同構造) / matcher `{matcher: kind, entries}` / 効果記述子 (§7.4、DR-045)。golden の消費点は ref + link の宣言形で統一。比較は構造骨格 + matcher 種別・エントリ表の緩比較 (LOWERING §C.5)
-- greedy 面 entry の effect は 3 形を区別する (DR-114 §6.1): (1) lowering 時点で operand が確定する set 縮退形 `{exact, value, link}`、(2) 直接 operation `{exact, link, effect:{op:"default"|"unset"|"empty"}}`、(3) runtime cell fn invocation `{exact, link, effect:{fn:"<name>", args:[...]}}`。fn invocation の `args` は arity 0 でも `[]` を持ち、`Value` 返却は通常の set、`Sentinel` 返却は対応 operation として適用する
+- greedy 面 entry の effect は 3 形を区別する (DR-114 §6.1 / DR-131): (1) lowering 時点で operand が確定する set 縮退形 `{exact, value, link}`、(2) `default` の直接 operation `{exact, link, effect:{op:"default"}}`、(3) runtime cell fn invocation `{exact, link, effect:{fn:"<name>", args:[...]}}`。fn invocation の `args` は arity 0 でも `[]` を持ち、`Value` 返却は通常の set、`Sentinel` 返却は `default` operation として適用する。null Value は filter を素通しして cell 適用時にラダーを開放する
 - 比較はすべて構造等価 (key 順序非規範、省略 = default)。byte 一致は要求しない
 
 wire の well-formedness は 3 層 (構文 = DR-067 の invariant / 語彙 = descriptor 所有集合 / 参照 = DR-054 の解決検査) で判定する。JSON Schema と spec バージョンの lifecycle は DR-068 (確定版 v1.0.0 の発行 = 5 プロファイル全 green のフェーズ 3 完了時、それまでドラフト期。§15.14 参照)。
@@ -1547,7 +1549,7 @@ options / commands の `origin` は `"local"`、`{"kind":"global","declared_at":
 | **descriptor** | installer / registry 住人の自己記述。role / construction / io_type / fallibility / invocation / reasons 等の直交軸と、role ごとの owns / observes / config を宣言する (DR-061/107/114) |
 | **observes** | descriptor の観測宣言。installer では宣言語彙の advisory read、fn / filter では runtime の option / env / system 参照を静的依存 edge として宣言する (DR-114 §9〜§10) |
 | **universal fn** | name + string args + 統一 FnCtx で registry 住人を呼ぶ共通機構。variant effect / filter / default_fn は specialization ごとに結果の適用先を保つ (DR-114) |
-| **cell_fns** | default 値供給と発火時 cell operation の fn registry。`set` / `default` / `unset` / `empty` / `incr` / `borrow` 等を持つ (DR-114 §8) |
+| **cell_fns** | default 値供給と発火時 cell operation の fn registry。`set` / `unset` / `empty` / `incr` / `borrow` 等は Value を返し、`default` だけが Sentinel を返す (DR-114 §8、DR-131) |
 | **FnCtx** | universal fn の統一 context。`mode()` で default / effect / filter を判別し、位相固有 context、old、env、system、observes 制限面を提供する (DR-114 §7) |
 | **query-error** | 合法な definition に対する capability 入力の失敗。help_query では `absent-path` / `absent-category` を持ち、definition-error と位相を分ける (DR-113 §1) |
 | **configurable factory** | registry 住人の `{name, config}` 参照形。方言バリエーションを純データ config の差分で表現、canonical default = default config (DR-061) |
@@ -1579,7 +1581,7 @@ options / commands の `origin` は `"local"`、`{"kind":"global","declared_at":
 | **config_provider** | config ファイル読込の registry 単一スロット。(path) → JSON 同型の階層オブジェクト \| null。フォーマットは provider の関心 (DR-050) |
 | **config_key** | config 階層への明示対応 (link の固定パス DSL、ルート絶対)。未指定なら name スコープ階層との同型対応 (DR-050) |
 | **tty_provider** | tty 判定値解決の registry 単一スロット。(stream: "stdin"\|"stdout"\|"stderr") → bool \| null。`builtin/tty` preset 型 (`type:` 経由) の暗黙 default がこの観測をそのまま消費する。cygwin pty を含めるか等の判定方言は provider 実装の内側の責務。ambient probe (isatty 呼び出し) は provider 実装に閉じ評価器の純粋性を崩さない (DR-099 §4、DR-129 §1) |
-| **absent** | 値の無い要素は結果オブジェクトにキー自体が出ない (in-band null 不使用)。反復系・default 持ち・required は absent にならない (DR-051) |
+| **null 座** | 成功 result で宣言キーは常に現れ、値源ラダーで値が確定しない座は `null` になる。値述語では不充足。未選択 scope は親キーの `null` で内側を畳む (DR-130) |
 | **export_key** | 結果キー軸の明示指定 (未指定 = name 由来)。null / "" = 結果キー軸なし → nameless 同化の透過。値の伝搬は止まらない (DR-052) |
 | **alias** | canonical 実体への別入口 (参照ファミリー: ref = 構造継承 / link = 値同期 / alias = 別入口)。結果キーは canonical のみ (DR-057) |
 | **所有 / 参照** | installer が宣言語彙に関わる 2 形。所有 = lowering 責務 (排他)、参照 = advisory read (自由、観測挙動に影響不可) (DR-056) |

@@ -219,7 +219,7 @@ name スコープ階層と同型対応。
 **`global`**
 宣言スコープの要素をコマンド部分木の全子孫スコープの greedy 面へ構造コピーする (不動点反復で
 孫まで多段伝播)。コピーは新セルを作らず祖先 (宣言元) の実体へ link 同期する衛星 — 子内で発火
-しても値は宣言元セルに書かれ、結果は宣言元スコープのキーに現れる (子スコープは `{}`)。中間
+しても値は宣言元セルに書かれ、結果は宣言元スコープのキーに現れる (選択された子スコープは自身の宣言キーを全列挙し、宣言キーが無ければ `{}`)。中間
 command が同トリガを shadow すると、それより先の子孫にはコピーが届かない (shadow は subtree
 全体に及ぶ)。中間 command 自身も `global: true` なら、そこから独立に再伝播が始まる (`fixtures/
 command-scope/mid-global-repropagation.json`)。
@@ -719,8 +719,8 @@ construction=factory の `config` キー宣言 (デプロイ時の方言設定) 
 |---|---|---|---|---|
 | `set` | fn | total | (空) | 1 個以上の logical value を返す。effect mode では通常 set、`default` 糖衣では native JSON value の typed internal call |
 | `default` | fn | total | (空) | `use_default` Sentinel を返し default placeholder へ戻す effect-mode operation |
-| `unset` | fn | total | (空) | unset Sentinel を返す effect-mode operation |
-| `empty` | fn | total | (空) | empty Sentinel を返し array / map cell を空にする effect-mode operation |
+| `unset` | fn | total | (空) | null Value を返す。cell への適用時に `set(null)` としてラダーを開放する |
+| `empty` | fn | total | (空) | target 型の空 Value (`[]` / `{}`) を返す。array / map / record にだけ適用でき、scalar 等は definition-error `invalid-range` |
 | `incr` | fn | total | (空) | `ctx.old` を参照して `old + 1` の number Value を返す。count preset が使用 |
 | `borrow` | fn | reject | `option:<source>` | 他 option の値を返す。`<source>` は lexical scope chain (DESIGN §2.7) で解決し、decoded source から依存 edge を concrete 化 |
 | `env` | fn | reject | `env:<var>` | 明示した環境値を返す。値源ラダーの env 席とは別の fn 呼び出し |
@@ -730,7 +730,7 @@ construction=factory の `config` キー宣言 (デプロイ時の方言設定) 
 
 概念 ABI は `(args: string[], ctx: FnCtx) → Result<Value | Sentinel, Reason>` の 1 種。`ctx.mode()` は `"default" | "effect" | "filter"` を返し、`as_default()` / `as_effect()` / `as_filter()` で位相固有 context を取得する。`ctx.old()` は対象 cell の内在状態であり `observes` edge ではない。外部 option / env / system 参照は descriptor の `observes` に宣言し、concrete edge だけを `ctx.observes()` 経由で読める。
 
-`Value` 返却は effect mode では通常の set operand、default mode では default 値になる。`Sentinel` は `use_default` / unset / empty の cell operation で、default 席には指定できない。colon-string と 1 段 array of string は同じ name + args に decode される。
+`Value` 返却は effect mode では通常の set operand、default mode では default 値になる。null Value は共通 dispatcher が filter を呼ばず素通しし、cell への適用時に committed=false の unset 状態へ変わる。`empty` の空 Value は通常の set として適用するが、effects では accumulator の行供給との非単射を避けるため `empty` op を保つ。`Sentinel` は `use_default` だけで、default 席には指定できない。colon-string と 1 段 array of string は同じ name + args に decode される。
 
 正本: DESIGN §7/§11.4/§13.1, DR-114, `schema/builtin-descriptors.json`
 
@@ -816,12 +816,14 @@ constraint 系は `<属性名>_violated` で機械的に統一されている。
 
 ### 7.6 builtin cell fn が emit する reason
 
-cell fn reason は runtime の値取得失敗であり、filter reason や definition-error kind と混ぜない。
+cell fn reason は runtime の値取得失敗であり、filter reason や definition-error kind と混ぜない。builtin cell fn が emit する v1 reason 語彙は空である。`borrow` の参照先に値が無い場合は null Value を返し、`set(null)` の一般規則で呼び出し元のラダーを開放する (DR-131 §1.1)。
+
+次の表は descriptor schema と同期する予約語彙を含む。`absent-source` は builtin cell fn が emit してはならない。
 
 <!-- kuu-lint:vocab cell-fn-reasons -->
 | reason | cell fn | 意味 |
 |---|---|---|
-| `absent-source` | `borrow`, `env`, `computed` | 宣言した参照先から値を取得できない。default 席では呼び出し元も unset のまま落ち、探索を再演しない |
+| `absent-source` | — | 予約名。値不在は専用 reason でなく null Value で表す |
 <!-- kuu-lint:end -->
 
 `builtin/tty` は `reasons: []` — 本 factory 固有の失敗は definition-error (`tty_stream` 必須違反)

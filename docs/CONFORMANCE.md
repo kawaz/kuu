@@ -56,7 +56,7 @@ fixture が期待する outcome の代わりに `kind: "unsupported"` の defini
 | `cases[].args` | | 前処理済みトークン列、プログラム名 ($0) を含まない (`Array[String]`、DESIGN §0.1)。`query:"parse"` は必須、`query:"definition_error"` は定義の静的検査のみで実行しないため省略 (DR-082 §1) |
 | `cases[].env` | | 値源系 fixture の環境変数供給: key → 値のマップ。runner が env_provider (DR-049) に注入する |
 | `cases[].config` | | config_provider (DR-050) が返す階層オブジェクト。`cases[].config_files` (パス → オブジェクトのマップ) でパス別供給も可 |
-| `cases[].tty` | | 値源系 fixture の tty 判定値供給: stream (`stdin`/`stdout`/`stderr`) → そのストリームが端末か否かの bool 単一のマップ (DR-129 §1)。runner が tty_provider に注入する。省略キーは provider が null (提供なし) を返したものとして扱う。`builtin/tty` preset 型の暗黙 default はこの観測をそのまま消費する (`resolved_default = 観測 ?? 宣言 default ?? absent`、DR-129 §3)。cygwin pty を端末扱いに含めるか等の判定方言は provider 実装の内側の責務なので注入形には現れない |
+| `cases[].tty` | | 値源系 fixture の tty 判定値供給: stream (`stdin`/`stdout`/`stderr`) → そのストリームが端末か否かの bool 単一のマップ (DR-129 §1)。runner が tty_provider に注入する。省略キーは provider が null (提供なし) を返したものとして扱う。この provider 境界の null は kuu の値空間へ流入せず、`builtin/tty` preset 型は `resolved_default = 観測 ?? 宣言 default ?? null` で解決する (DR-129 §3、DR-130 §9.1)。cygwin pty を端末扱いに含めるか等の判定方言は provider 実装の内側の責務なので注入形には現れない |
 | `cases[].path` | | `query:"help"` の選択スコープ。省略 = ルート |
 | `cases[].depth` | | `query:"help"` の `"scope"` / `"all"`。省略 = `"scope"` |
 | `cases[].category_mode` | | `query:"help"` の `"default"` / `"all"` / `{"named":name}`。省略 = `"default"` |
@@ -74,22 +74,21 @@ fixture が期待する outcome の代わりに `kind: "unsupported"` の defini
 
 - **`effects` が判定の正本** (主 oracle、LOWERING §C.5)。要素は `{entity, op, operand?, source}`。**配列順 = 適用順** (効果列の順序は同一性成分、DR-038/045)
   - `entity`: 実体 (値セル) の name / id
-  - `op`: DR-045 §4 の 4 op (`set` / `default` / `unset` / `empty`) + DR-080 §2 の merge accumulator piece op のうち集合演算系 2 種 (`remove` / `splice`。add piece は通常の set として現れる、DR-080 §4)。計 6 op:
+  - `op`: DR-131 §6 の 3 op (`set` / `default` / `empty`) + DR-080 §2 の merge accumulator piece op のうち集合演算系 2 種 (`remove` / `splice`。add piece は通常の set として現れる、DR-080 §4)。計 5 op:
 
     | op | 意味 | operand | 実例 (fixture::case) |
     |---|---|---|---|
-    | `set` | 通常の値バインド。cell fn が `Value` を返した場合もこの形で観測する | 値 | `fixtures/multiple-parse/merge-basic.json::no-marker-overwrites-cell` |
+    | `set` | 通常の値バインド。cell fn が `Value` を返した場合もこの形で観測する。operand が `null` ならラダー開放、committed=false | **必須**。`null` 可 | `fixtures/multiple-parse/merge-basic.json::no-marker-overwrites-cell` |
     | `default` | `use_default` Sentinel による default placeholder 選択、committed=true | なし | `fixtures/multiple-parse/default-cell-ops.json::default-with-no-declared-default-resets-to-empty` |
-    | `unset` | unset Sentinel によるラダー開放、committed=false | なし | `fixtures/multiple-parse/filters-cell-ops.json::unset-after-set-resets-to-empty-without-filter` |
-    | `empty` | empty Sentinel によりコレクションを決定論的に空にする、committed=true | なし | `fixtures/multiple-parse/filters-cell-ops.json::empty-after-set-resets-to-empty-with-cli-source` |
+    | `empty` | `empty` fn が返す空値でセルをクリアしたことを表す観測 op、committed=true | なし | `fixtures/multiple-parse/filters-cell-ops.json::empty-after-set-resets-to-empty-with-cli-source` |
     | `remove` | merge accumulator: operand と等価な要素を全削除 (DR-080 §2) | 除去対象の値 | `fixtures/multiple-parse/merge-splice-remove.json::implicit-at-then-remove-only` |
     | `splice` | merge accumulator: old をその位置に展開 (DR-080 §2) | なし | `fixtures/multiple-parse/merge-basic.json::bare-splice-is-identity` |
-  - `operand`: op が要求する場合のみ (set の値 / remove の除去対象)。JSON 表現は canonical 規約 (数値は最短形 `1.0` → `1`、DR-050 §4)
-  - **variant effect (effect mode)**: cell fn の `Value` 返却は通常の `set`、Sentinel 返却は `default` / `unset` / `empty` として effects に射影する。`incr` 等が `ctx.old` から返した新値も `set` として観測し、専用 `update` op は持たない
-  - **default_fn (default mode)**: default 席は `Value` を返す cell fn だけを受け入れ、Sentinel を返す fn の指定は definition-error `invalid-range`。default 解決は値源ラダー充填なので effects には載せず、値を `result`、由来を `sources` で検証する
+  - `operand`: `set` では present-required で値として `null` を許す。`remove` でも除去対象の値として必須。missing key と explicit null を decoder が同じ内部状態へ畳んではならない。JSON 表現は canonical 規約 (数値は最短形 `1.0` → `1`、DR-050 §4)
+  - **variant effect (effect mode)**: cell fn の `Value` 返却は通常の `set`。`unset` は `null` を返すので `{"op":"set","operand":null}`、`empty` は返り値が空値でも accumulator の行供給との非単射を避けるため同名 op として effects に射影する。Sentinel 返却は `default` だけである。`incr` 等が `ctx.old` から返した新値も `set` として観測し、専用 `update` op は持たない
+  - **default_fn (default mode)**: default 席は `Value` を返す cell fn だけを受け入れ、唯一の Sentinel 返しである `default` fn の指定は definition-error `invalid-range`。default 解決は値源ラダー充填なので effects には載せず、値を `result`、由来を `sources` で検証する
   - `source`: 値源タグ (DR-031)。effects に載るのは `cli` / `link` の 2 つだけ (下記。ラダー充填の由来は `sources` 側)
 - **effects に載るのは cli / link 由来のパース時効果のみ** — 値源ラダー充填 (env / config / default) は完走後の値確定であり args 順の全順序を持たないため、effects には載せない (例: 未発火 flag の `false` は result に現れ、effects には現れない)。ラダー充填の**値**は `result` で、**由来**は `sources` フィールドで検証する (effects への source 拡張は「充填同士の順序が非規範で全順序規約を汚す」ため不採用 — DR-065)。**effects の要素は entity (値セル) 単位** — 結果キーを持たない nameless 子 (DESIGN §2.4 の透過) は entity を持たないため、cli 消費していても effects に現れない (値の着地は result / sources 側で検証する)。消費 0 literal が置く `const` 値も効果ではないため現れない
-- **`result` は最終結果オブジェクト** (ラダー充填込みの確定値、DR-051 の absent 規則適用後)。runner は effects / result の両方を検証する
+- **`result` は最終結果オブジェクト** (ラダー充填込みの確定値、DR-130 の宣言キー全列挙 + null 射影適用後)。runner はキー集合を含む effects / result の両方を検証する
 - **`sources` (optional)**: 最終結果の値源を検証する **`result` と同型の shadow tree** (DR-122)。`result` の構造をそのまま持ち、**値の座だけを値源タグに置き換えた**オブジェクトである。タグの語彙は `cli` / `link` / `env` / `config` / `tty` / `default` / `const` (DR-031「source の記録」の 7 語彙が正本 — DR-098 §6 の `tty`、2026-07-26 裁定の `const`、DR-125 の 4 段ラダーを含む)。`const` は消費 0 literal (`value:`、位置を問わない、DESIGN §5.2) が置いた宣言由来の定数 — 値セルに最初からいる値であり、ラダー充填 (`default`) とは別物。`default:` は or/seq の子位置でもラダー席なので、その座のタグは `const` ではなく `default` になる (CHILDDEF-Q1=b、DR-031)。`link` は他要素の入口から link で飛んできた効果が最終値を確定させた場合 (自分の入口からなら `cli`、DR-031 の source 確定ルール) — ラダー同順位で経路の違いのみ。effects が cli / link 効果のみである規約は不変 (ラダー充填の順序を effects に持ち込まず、由来の検証は本フィールドが担う)。
 
   ```json
@@ -102,10 +101,10 @@ fixture が期待する outcome の代わりに `kind: "unsupported"` の defini
   shadow tree は次の規則で構築する:
 
   1. **座の対応** (DR-122 §1) — スカラー値の座はタグ (string)、配列はタグの**配列** (`result` の i 番目の要素の由来が `sources` の i 番目)、kv / scope はタグの kv (キーは `result` と同じ露出キー)。`result` の入れ子構造と露出規則の正本は DESIGN §2.3〜§2.6 / DR-052 であり、`export_key: null` の scope segment が現れない (子が親へ昇格する、`fixtures/export-key/command-promote.json`) 点も `result` と同じ形になる帰結として従う
-  2. **キー集合は `result` の射影** (DR-122 §2) — `result` に現れないキーは `sources` にも現れない (未選択 scope / absent は成立しなかった構造であり、source を語る対象が存在しない)。逆に `result` にある値の座は必ず対応するタグを持つ。scope generator は子 result の所有スコープとして `result` に kv を作るので `sources` にも同じ位置に kv が立つが、**スコープ自体を指すタグは無い** — presence marker の空 kv `{}` (DR-052 §3) は `sources` でも `{}`、accumulator の 0 発火 `[]` (DR-044) は `sources` でも `[]` (値の座が無いので置き換えるタグも無い)
+  2. **キー集合は `result` と完全一致する** (DR-122 §2 / DR-130 §5) — 両者は同じ宣言キー導出を共有する。`result` で `null` の座は `sources` でも `null` であり、その座を確定させた主体が存在しないことを表す。未選択 scope は両方で親キーが `null` になり、内側は展開しない。選択された scope は両方で同じ kv を持つが、スコープ自体を指すタグは無い。accumulator の 0 発火 `[]` は `sources` でも `[]` (値の座が無いので置き換えるタグも無い)
   3. **タグの決定単位は「値の座」** (DR-122 §3) — 各座のタグは DR-031 の source 確定ルール (最終値を確定させた効果 / 充填の由来) をその座に適用した結果。同一 cell が複数回着席した場合は DR-031 / DR-081 に従って**最終確定 source** を載せる。nameless `seq` の tuple は各要素が自分の由来を持ち (`["cli", "const"]`)、accumulator の各 row / 各要素はその要素を産んだ発火の source を持つ (下位席の値を splice した merge accumulator では `["env", "env", "cli"]` のように混在しうる、`fixtures/multiple-parse/merge-first-firing.json`)
 
-  **空コレクションの由来は表現しない** (DR-122 §2 の帰結) — `[]` / `{}` は値の座を持たないため、「ユーザが明示的に空にした (`empty` op、committed=true)」と「何も来なかった (未発火 / `unset` 後の default 席)」が `sources` 上では同じ `[]` になる。この区別は `effects` の op (`empty` / `unset`) が担う (`fixtures/multiple-parse/filters-cell-ops.json`)。`sources` は値の由来を写す面であって committed 軸を持たない (DR-031「committed/selected との直交性」)。
+  **空コレクションの由来は表現しない** (DR-122 §2 の帰結) — `[]` / `{}` は値の座を持たないため、「ユーザが明示的に空にした (`empty` op、committed=true)」と「何も来なかった (`set(null)` による開放後の default 席)」が `sources` 上では同じ `[]` になる。この区別は `effects` の op (`empty` / `set` with null operand) が担う (`fixtures/multiple-parse/filters-cell-ops.json`)。`sources` は値の由来を写す面であって committed 軸を持たない (DR-031「committed/selected との直交性」)。
 
   **内部セルは射影しない**: `type: "none"` (DR-089) / `config_file` (DR-050) / dd trigger (DR-064) は `effects` / `result` / `sources` のいずれにも現れない。
 
@@ -140,7 +139,7 @@ fixture が期待する outcome の代わりに `kind: "unsupported"` の defini
  "interpretations": [{"s": "ax"}, {"s": "a", "x": true}]}
 ```
 
-- `interpretations`: 全解釈の列挙、各解釈は結果オブジェクト形のビュー (DR-053)。ビューは解釈の結果オブジェクトを直書きする (result 単独フィールドの省略形、DR-053 §3)
+- `interpretations`: 全解釈の列挙、各解釈は parse 相で触れた座だけを載せる sparse view (DR-053 / DR-118)。値源ラダーと DR-130 の null 全列挙は適用しない。ビューは解釈の結果オブジェクトを直書きする (result 単独フィールドの省略形、DR-053 §3)
 - **`help_entry` (optional, String)**: failure と同じ意味論 (DR-053 §4) — 定義に help 入口があれば、その綴りを ambiguous にも載せる (誘導行素材)。`tried_triggers` は DR-053 §4 が failure 専用に規定するため ambiguous には無い。**fixture では optional 検証** — 書かれた時のみ比較
 
 ### definition-error (`query: "definition_error"`、DR-082)
@@ -156,16 +155,15 @@ fixture が期待する outcome の代わりに `kind: "unsupported"` の defini
 - `kind` の語彙 (DR-054 §4、DR-085 訂正で `invalid-argument`、DR-120 §5 で `export-key-collision` 追加): `vocab-intersection` / `unknown-vocab` / `invalid-range` / `absent-ref` / `circular-ref` / `zero-progress` / `config-cycle` / `invalid-argument` / `export-key-collision`
 - `unsupported` (DR-054 更新4) は `parse_definition()` の返値としては正規だが、**fixture の期待値には書けない** — `schema/fixture.schema.json` の kind enum に含めず、上記 9 語彙のみが fixture 側の語彙である。fixture は spec の正解を固定するもので、実装ごとに違う未対応範囲は正解になりえない (§0.1 の green 規範がこの kind を mismatch として扱う)
 - universal fn では registry に無い fn = `unknown-vocab`、arity / argument type 不正 = `invalid-argument`、呼び出し席と出力型の不適合 = `invalid-range`、`observes` 依存循環 = `circular-ref` (DR-114 §11)
-- `absent-source` は参照先不在を表す runtime fn reason であり、definition-error kind には加えない
 - **`message`/`hint` は比較しない** (parse fixture の `errors[].message` と同じ流儀、文言はレンダラの関心)
 
 ## 3. 比較規約
 
-- **構造等価** (DR-063 §4): key 順序非規範、フィールド省略 = default 値と等価。byte 一致は要求しない
-- effects は配列順込みの完全一致 (順序が同一性成分)
-- result は構造等価
-- `sources` は構造等価 (DR-122) — `result` と同型なので、object のキー順が非規範・配列が要素対応という比較規約は `result` と同じものがそのまま効く。順序の論点は構造が持ち込む (kv は unordered / 配列は添字対応) ため、`sources` 固有の順序規約は持たない
-- interpretations は集合比較 (各解釈は構造等価、**列挙順は非規範**) — 完全経路間に優先がない (DR-038) ため順序は同一性成分でない (effects の順序規範性と対照的、errors と同じ集合扱い)。重複解釈の dedup 可否は「解釈の同一性」定義に従属し本書では定めない (DR-053 §3)。各解釈のビューは **parse 相 + DR-118 §3 の 2 規則** (Default-source scalar 除外 / 空 accumulator 配列の保持) を適用した姿 — 値源ラダー (resolve 相) は適用しない (DR-118)
+- **構造等価** (DR-063 §4): key 順序非規範、フィールド省略 = default 値と等価。byte 一致は要求しない。ただし `result` / `sources` は次項の完全一致規約を優先し、この省略読み替えを適用しない
+- effects は配列順込みの完全一致 (順序が同一性成分)。`set` の `operand` は present-required で missing と explicit null を区別する
+- result は**キー集合込みの完全一致**。object の key 順序だけは非規範、配列は添字対応。missing key と explicit null は一致しない
+- `sources` は**キー集合込みの完全一致** (DR-122 / DR-130)。`result` と同じ key 集合を要求し、object の key 順序だけは非規範、配列は添字対応。missing key と explicit null は一致しない
+- interpretations は集合比較 (各解釈は構造等価、**列挙順は非規範**) — 完全経路間に優先がない (DR-038) ため順序は同一性成分でない (effects の順序規範性と対照的、errors と同じ集合扱い)。重複解釈の dedup 可否は「解釈の同一性」定義に従属し本書では定めない (DR-053 §3)。各解釈のビューは **parse 相 + DR-118 §3 の 2 規則** (Default-source scalar 除外 / 空 accumulator 配列の保持) を適用した sparse な姿 — 値源ラダー (resolve 相) と null による全キー列挙は適用しない (DR-118 / DR-130 §4.2)
 - errors は集合比較 (`query:"parse"` の failure outcome: element, args_pos, kind, reason の組。**reason は fixture 側に書かれている要素でのみ比較対象** (§2 の optional 検証)、message は常に無視)。**同一 4-tuple (element, args_pos, kind, reason) の error は 1 件に dedupe する** (SPK-Q2=a) — DR-053 §2 の「全保持」は診断材料としての経路網羅 (別候補経路の別の躓きを捨てない) の規定であり、複数経路がたまたま同一 4-tuple の躓きに合流した場合の多重度は診断情報を持たない。producer は同一 4-tuple を重複出力してはならず、比較は dedupe 後の集合同士で行う (message の違いは同一性に影響しない — message は比較対象外)
 - `query:"definition_error"` の errors は element + kind の組の集合比較 (`args_pos`/`reason` は definition-error 構造に存在しない、DR-082 §1)。message/hint は比較しない
 - universal fn の colon-string と 1 段 array of string は同じ `name + args` へ decode してから比較する。wire 表現の違いは呼び出しの同一性成分ではない (DR-114 §6)
@@ -192,15 +190,15 @@ fixture が期待する outcome の代わりに `kind: "unsupported"` の defini
 
 | outcome (`query`) | フィールド | 比較 | opt-in / 常時 |
 |---|---|---|---|
-| `success` | `result` | 構造等価 | 常時 |
-| `success` | `effects` | 配列順込み完全一致 (順序が同一性成分) | 常時 |
-| `success` | `sources` | 構造等価 | 常時 |
+| `success` | `result` | キー集合込み完全一致 (object の key 順序は非規範、missing ≠ null) | 常時 |
+| `success` | `effects` | 配列順込み完全一致 (順序が同一性成分、`set.operand` は present-required・null 可) | 常時 |
+| `success` | `sources` | キー集合込み完全一致 (result と同一キー集合、missing ≠ null) | 常時 |
 | `success` | `warnings` | 集合比較 (element)、`kind` は fixture 側にある要素のみ比較 | opt-in per-element |
 | `failure` | `errors` | 集合比較 (`element`/`args_pos`/`kind` の組)、`reason` は fixture 側にある要素のみ比較、`message` は常に無視 | opt-in per-element (`reason`) |
 | `failure` | `fired_action` | 構造等価 | fixture 側にある時のみ (opt-in) |
 | `failure` | `help_entry` | 構造等価 | opt-in |
 | `failure` | `tried_triggers` | 集合比較 (順序非規範) | opt-in |
-| `ambiguous` | `interpretations` | 集合比較 (各解釈は構造等価、**列挙順は非規範**)。各解釈のビューは parse 相 + DR-118 §3 の 2 規則を適用した姿 (値源ラダー非適用) | 常時 |
+| `ambiguous` | `interpretations` | 集合比較 (各解釈は構造等価、**列挙順は非規範**)。各解釈は parse 相 + DR-118 §3 の 2 規則だけを適用した sparse view (値源ラダー・null 全列挙は非適用) | 常時 |
 | `ambiguous` | `help_entry` | 構造等価 | opt-in |
 | `definition_error` | `errors` | 集合比較 (`element` + `kind` の組)、`args_pos`/`reason`/`message`/`hint` は比較しない | 常時 |
 | `complete` | `candidates` | 順序非依存の multiset 比較 (§3 の 6 フィールド identity、`meta` は必須検証、`completer` は opt-in) | 常時 (§3 の詳細参照) |
@@ -208,11 +206,11 @@ fixture が期待する outcome の代わりに `kind: "unsupported"` の defini
 | `help` (成功) | それ以外 (`value_structure`/`types`/`origin` 等) | 構造等価 | 常時 |
 | `help` (query-error) | `errors` | `kind` の集合比較 | 常時 |
 
-*凡例*: 「集合比較」= 順序非規範、`identity` フィールドの組で一対一対応。「順序込み一致」= 配列インデックス順が同一性の成分。「構造等価」は本節冒頭の一般規約 (key 順序非規範、フィールド省略 = default 値と等価)。「opt-in per-element」= fixture 側に当該フィールドが書かれた時のみ比較対象。
+*凡例*: 「集合比較」= 順序非規範、`identity` フィールドの組で一対一対応。「順序込み一致」= 配列インデックス順が同一性の成分。「構造等価」は本節冒頭の一般規約 (key 順序非規範、フィールド省略 = default 値と等価)。「キー集合込み完全一致」は key 順序だけを無視し、missing key と explicit null を区別する。「opt-in per-element」= fixture 側に当該フィールドが書かれた時のみ比較対象。
 
 ## 4. 補完クエリ (`query: "complete"`、DR-104)
 
-`query: "complete"` の fixture は、`definition` に対する `args_before` (必須) / `args_after` (optional) を入力に `candidates` の期待集合を検証する。`word_before`/`word_after` (カーソル単語内の前後半) は v1 未使用可のまま予約されており fixture では書かない (DR-104 §1)。**case オブジェクトに `word_before`/`word_after` が書かれていた場合、runner は fixture 不備として明示的に reject する** (silent ignore はしない、codex レビュー #2 m-4 の反映)。**本節は §2 の 6 op 表 (`effects[].op`) とは独立の語彙体系である** — complete は値セルへの副作用を持たない候補集合クエリであり、6 op 表と混同しない (COMP-Q5)。
+`query: "complete"` の fixture は、`definition` に対する `args_before` (必須) / `args_after` (optional) を入力に `candidates` の期待集合を検証する。`word_before`/`word_after` (カーソル単語内の前後半) は v1 未使用可のまま予約されており fixture では書かない (DR-104 §1)。**case オブジェクトに `word_before`/`word_after` が書かれていた場合、runner は fixture 不備として明示的に reject する** (silent ignore はしない、codex レビュー #2 m-4 の反映)。**本節は §2 の 5 op 表 (`effects[].op`) とは独立の語彙体系である** — complete は値セルへの副作用を持たない候補集合クエリであり、effects op 表と混同しない (COMP-Q5)。
 
 ```json
 {

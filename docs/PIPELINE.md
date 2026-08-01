@@ -27,18 +27,18 @@
 | **CLI args** | matcher / exact が照合・消費した生文字列、DSL 固定値 (`:set:true` の `true`)、または値スロットを消費しない `{fn,args}` cell fn invocation carrier | `string[] | {fn,args}` |
 | **env** | 環境変数名 → 文字列。count 型の `VERBOSITY=5` も number として parse し、通常の set operand 5 にする | `<env_provider>` |
 | **config** | 文字列値は字句層へ。native number は既に binary64 化 (DR-075 §5 の非対称: string 源は binary64 非経由の厳密判定、native-number 源は JSON 由来 binary64 経由) | `string | native` |
-| **default** | ラダー最下段。固定値は typed internal `set(value)`、動的値は `Value` を返す `cell_fns` 呼び出しで供給する。`Sentinel` 出力の fn はこの席では definition-error `invalid-range`。type preset も固定値を差す (`flag` = false / `count` = 0) | `<cell_fns>` |
+| **default** | ラダー最下段。固定値は typed internal `set(value)`、動的値は `Value` を返す `cell_fns` 呼び出しで供給する。唯一の `Sentinel` 出力である `default` fn はこの席では definition-error `invalid-range`。type preset も固定値を差す (`flag` = false / `count` = 0) | `<cell_fns>` |
 
-文字列値は出所によらず字句層 (§2) を通って型 `T` になる。`cell_fns` が返す型付き `Value` は通常の set operand として filter pipeline へ入り、`Sentinel` は対応する cell operation になる (DR-114 §2 / §6.1)。
+文字列値は出所によらず字句層 (§2) を通って型 `T` になる。`cell_fns` が返す型付き `Value` は通常の set operand として filter pipeline へ入り、null は共通 dispatcher が filter を呼ばず素通しする。`Sentinel` は `default` だけで、対応する cell operation になる (DR-130 §3、DR-131、DR-114 §2 / §6.1)。
 
 ### 1.2 CLI 発火からセルへの適用
 
 ```mermaid
 flowchart TD
-  A["a. 発火 (CLI 面のみ)<br/>set 縮退形 / direct op {op} / cell fn {fn,args}"]
-  F["b. cell_fns 呼び出し<br/>(args, FnCtx) → Value | Sentinel<br/>Value は通常の set 経路、Sentinel は対応 operation"]
+  A["a. 発火 (CLI 面のみ)<br/>set 縮退形 / default direct op / cell fn {fn,args}"]
+  F["b. cell_fns 呼び出し<br/>(args, FnCtx) → Value | Sentinel<br/>Value は通常の set 経路、Sentinel は default のみ"]
   B["c. mutation ledger の畳み (左→右、あと勝ち、DR-015)<br/>event[] → T + committed"]
-  C["d. 値源ラダー: cli(committed) → env → config → default<br/>seat 選択 (committed=false = unset なら後段席が上書きできる、DR-031 / DR-045 §2)"]
+  C["d. 値源ラダー: cli(committed) → env → config → default<br/>seat 選択 (set operand=null なら committed=false、後段席が上書きできる、DR-131 §2)"]
   D["e. 結果オブジェクト<br/>entity 名 → ExportKey → JSON"]
   A -- "direct operation" --> B
   A -- "{fn,args}" --> F
@@ -48,11 +48,11 @@ flowchart TD
   C -- "実体ごとの最終値" --> D
 ```
 
-- **a. 発火**: lowered 形は、値が確定済みの set 縮退形、`default` / `unset` / `empty` の direct op、または DR-114 §6.1 の `{fn,args}` carrier を使う
-- **b. cell fn 呼び出し**: `cell_fns` から fn を引き、args と統一 `FnCtx` を渡す。`incr` は `ctx.old` を読み old + 1 の `Value` を返す。`Value` は通常の set operand と同じ filter pipeline へ入り、`Sentinel` は対応 operation として ledger に積む。図の Value→ledger 矢印は §2 / §3.2 の通常 set 経路を矢印内に畳んだ表記である
+- **a. 発火**: lowered 形は、値が確定済みの set 縮退形、`default` の direct op、または DR-114 §6.1 の `{fn,args}` carrier を使う。`unset` / `empty` は fn carrier である
+- **b. cell fn 呼び出し**: `cell_fns` から fn を引き、args と統一 `FnCtx` を渡す。`incr` は `ctx.old` を読み old + 1、`unset` は null、`empty` は target 型の空値を `Value` として返す。`Value` は通常の set operand と同じ filter pipeline へ入り、null は filter を呼ばず素通しする。`Sentinel` は `default` だけで対応 operation として ledger に積む。図の Value→ledger 矢印は §2 / §3.2 の通常 set 経路を矢印内に畳んだ表記である
 - **c. mutation ledger の畳み**: あと勝ち (DR-015)。例: `-vv --log-level 5 -v` の発火列は `incr, incr, set, incr`。fn 適用後の ledger event は `set(1), set(2), set(5), set(6)` となり、0 → 1 → 2 → 5 → 6 と畳まれる。効果列順序は同一性成分 (DR-045 §1)
-- **d. 値源ラダー**: cli が committed=true でセルを確定させれば下段は上書きされない。`unset` (committed=false) だけがラダーを開放して env → config → default が後勝ち可能に
-- **e. 結果オブジェクト**: キーは ExportKey map (DR-052)。1 露出キーに対応する値セルはちょうど 1 つで、複数セルが同じ露出キーへ解決する定義は definition-error (DR-120)。反復系は 0 発火でも `[]` (DR-051 §2b)、非反復・非必須・値源なし要素の未発火は absent (キー不在、DR-051 §1)
+- **d. 値源ラダー**: cli の set operand が非 null なら committed=true でセルを確定させ、下段は上書きしない。operand が null なら committed=false でラダーを開放し、env → config → default が後勝ち可能になる
+- **e. 結果オブジェクト**: キーは ExportKey map (DR-052)。1 露出キーに対応する値セルはちょうど 1 つで、複数セルが同じ露出キーへ解決する定義は definition-error (DR-120)。成功 result の実現スコープでは宣言上出うる全キーを列挙し、値が確定しない座を `null` にする。未選択 scope は親キーの `null` で内側を畳む。反復系は暗黙 default により 0 発火でも `[]` (DR-123 §3、DR-130 §1/§2)
 
 ## 2. 字句層 — filter chain の 7 段
 
@@ -93,7 +93,7 @@ flowchart TD
 | 2 | separator 分割 | `string → piece[]` | `--tag a,b,c` → `["a","b","c"]`。separator は multiple プリセットの属性 (DR-034 / DR-036)。multiple 無しは長さ 1 の `[piece]` に縮退 |
 | 3 | piece_filters | `string → string` (piece 単位) | 分割後の各 piece に適用: `trim`, `regex_match:^[a-z]+$` … (DR-034 pieceProcessor の pre 相) |
 | 4 | type.parse | `(string) → T` (要素単位) | canonical 字句 (DR-074 / DR-075)。configurable factory の config キー (`int_round`, `number_allow_base_prefix`) はここに効く (DR-061 §4) |
-| 5 | value_filters | `T → T` (要素単位) | 検証 + 変換: `in_range:1:65535`, `non_empty` … args は全て string (DR-009 / DR-114 §6)。cell に書かれる実値に適用するため、parser 出力、DSL 固定値、cell fn が返した `Value` は対象になる。`Sentinel` による operation (`unset` / `default` / `empty`) は値を書かないので対象が無い |
+| 5 | value_filters | `T → T` (要素単位) | 検証 + 変換: `in_range:1:65535`, `non_empty` … args は全て string (DR-009 / DR-114 §6)。cell に書かれる実値に適用するため、parser 出力、DSL 固定値、cell fn が返した `Value` は対象になる。null 要素は共通 dispatcher が filter を呼ばず個別に素通しし、空コレクションには適用対象が無い。`default` Sentinel は値を書かないので対象が無い |
 | 6 | accumulator | `(Acc, T) → Acc` | 複数「値」の畳み: `append`, `merge`。count の現在値更新は `cell_fns.incr` が担い、accumulator は複数「値」の畳みを担う (DR-036 / DR-114 §2) |
 | 7a | final_filters (非 accum 要素) | `T → T` | 確定した最終値に適用する。count の上限は `in_range` (DR-040)。cell fn が返して set operand になった `Value` も対象になる (DR-114 §6.1)。1 属性 1 registry (scalar filter registry、DR-102) |
 | 7b | accum_filters (accum 要素) | `Acc → Acc` | 累積後の配列に: `sort`, `unique` 等。1 属性 1 registry (ARRAY filter registry、DR-102)。非 accum 要素への `accum_filters` 宣言・accum 要素への `final_filters` 宣言はいずれも definition-error kind=invalid-range (DR-102 §3、accum 要素の定義は `multiple`/`repeat`/`separator` のいずれか) |
@@ -114,11 +114,11 @@ variant DSL `"<prefix>:<fn>[:args...]"` は `cell_fns` の universal fn 呼び�
 
 | wire の fn | lowered 形 | セルへの適用 | committed | 値スロット消費 |
 |---|---|---|---|---|
-| `set` | `{exact, value, link}` (operand 確定済みの縮退形) | operand を書く。引数なしは値スロットを準備し、引数ありは args を `Value` として返す | true | 0 or 1+ |
-| `default` | `{exact, link, effect:{op:"default"}}` | `use_default` sentinel に対応し、default placeholder へ戻す | true | 0 |
-| `unset` | `{exact, link, effect:{op:"unset"}}` | unset sentinel に対応し、ラダー後段が値を供給できる状態にする | **false** | 0 |
-| `empty` | `{exact, link, effect:{op:"empty"}}` | empty sentinel に対応し、array / map を空にする | true | 0 |
-| 任意の cell fn | `{exact, link, effect:{fn:"<name>",args:[...]}}` | `Value` は set operand、`Sentinel` は対応 operation。`incr` は `ctx.old + 1` の `Value` を返す | 返却結果に対応 | 0 |
+| `set` | `{exact, value, link}` (operand 確定済みの縮退形) | operand を書く。引数なしは値スロットを準備し、引数ありは args を `Value` として返す | operand ≠ null なら true、null なら false | 0 or 1+ |
+| `default` | `{exact, link, effect:{op:"default"}}` | `use_default` Sentinel に対応し、default placeholder へ戻す | true | 0 |
+| `unset` | `{exact, link, effect:{fn:"unset",args:[]}}` | null Value を返す。effects は `set(null)`、cell 適用時にラダーを開放する | **false** | 0 |
+| `empty` | `{exact, link, effect:{fn:"empty",args:[]}}` | target 型の空 Value を返して array / map / record を空にする。effects は非単射回避のため `empty` | true | 0 |
+| 任意の cell fn | `{exact, link, effect:{fn:"<name>",args:[...]}}` | `Value` は set operand、`Sentinel` は `default` operation。`incr` は `ctx.old + 1` の `Value` を返す | 返却結果に対応 | 0 |
 
 ### 3.2 set 経路と cell fn (`incr`) 経路の比較
 
@@ -131,7 +131,7 @@ variant DSL `"<prefix>:<fn>[:args...]"` は `cell_fns` の universal fn 呼び�
 **cell fn 経路 (発火時に値を供給・操作する、DR-114)**:
 1. 値スロットを消費せず `{fn,args}` carrier が発火
 2. registry から fn を引き、args と `FnCtx` を渡す。`incr` は発火直前の `ctx.old` を読む
-3. `Value` の返り値は通常の set operand として `value_filters` / `final_filters` を通って cell へ適用する。`Sentinel` は対応 operation として適用する
+3. `Value` の返り値は通常の set operand として `value_filters` / `final_filters` を通って cell へ適用する。null は filter を呼ばず素通しし、cell 適用時だけ committed=false の unset 状態へ変わる。`Sentinel` は `default` operation として適用する
 4. fn が返す型付き `Value` に parser は関与しない。env の `VERBOSITY=5` は文字列を number として parse → set する
 
 ### 3.3 preset との関係
@@ -151,14 +151,14 @@ AST にはクロージャを持たせない — フィールド名と呼び出�
 |---|---|---|---|
 | `types` | `parse: (string) → T` + default filters + config キー | `type:` (configurable factory は `definitions.types` で config 束縛、DR-061) | `string` / `number` / `int` / `float` / `bool` |
 | `filters` | `(args, FnCtx[filter]) → Result<Value, Reason>`。入力は `FilterCtx.input()`。scalar の preserve / transform と ARRAY transform | `piece_filters:` / `value_filters:` / `final_filters:` (scalar) / `accum_filters:` (ARRAY、DR-102)。通常の filter 席から明示参照する | `trim` / `in_range` / `non_empty` / `regex_match` / `increment` / `unique` |
-| `cell_fns` | `(args, FnCtx) → Result<Value | Sentinel, Reason>` | variant / default_fn の universal fn。greedy 面では `{fn,args}` effect carrier、default 席では遅延値供給として呼ぶ (DR-114 §1 / §4 / §6.1) | `set` / `incr` / `borrow` / `env` / `uuid` / `computed` / `default` / `unset` / `empty` |
+| `cell_fns` | `(args, FnCtx) → Result<Value | Sentinel, Reason>` | variant / default_fn の universal fn。greedy 面では `{fn,args}` effect carrier、default 席では遅延値供給として呼ぶ。Sentinel 住人は `default` だけ (DR-114 §1 / §4 / §6.1、DR-131) | `set` / `incr` / `borrow` / `env` / `uuid` / `computed` / `unset` / `empty` (Value) / `default` (Sentinel) |
 | `accumulators` | `(Acc, T) → Acc` (+ 既定 collector / separator の属性セット) | `multiple.accumulator` | `append` / `merge` |
 | `multiple` | accumulator + collector + separator の糖衣プリセット | `multiple:` の文字列形 | `append` / `merge` / `set` / `map` |
 | `handlers` | command 実行フック | `run` / `action` | — |
 | `env_provider` | `name → string?` | 値源ラダーの `env:` 席 | OS 環境変数 |
 | `completers` | 動的補完生成 | completion 面 (DR-060 は素材まで) | — |
 
-`cell_fns` は共通 registry だが呼び出し席の出力型適合を保つ。default 席が受け入れるのは `Value` 出力の fn だけで、`Sentinel` 出力は definition-error `invalid-range` となる。`default` / `unset` / `empty` は effect mode 専用の cell operation fn である (DR-114 §2 / §7)。
+`cell_fns` は共通 registry だが呼び出し席の出力型適合を保つ。default 席が受け入れるのは `Value` 出力の fn だけで、`Sentinel` 出力は definition-error `invalid-range` となる。したがって `unset` / `empty` は対象型が適合すれば default mode と effect mode の両方で使え、`default` は effect mode 専用である (DR-114 §2 / §7、DR-131 §7)。
 
 ## 5. IO 端点の型 早見表
 
