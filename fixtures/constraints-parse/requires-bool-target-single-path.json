@@ -59,7 +59,11 @@
             "operand": true,
             "source": "cli"
           }
-        ]
+        ],
+        "result": {
+          "a": true,
+          "c": true
+        }
       }
     }
   ]

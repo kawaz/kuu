@@ -52,7 +52,12 @@
             "operand": true,
             "source": "cli"
           }
-        ]
+        ],
+        "result": {
+          "a": false,
+          "b": true,
+          "c": false
+        }
       }
     },
     {
