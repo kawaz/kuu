@@ -6,48 +6,164 @@
       "templates": {
         "tagged": {
           "seq": [
-            {"name": "key", "type": "string"},
-            {"name": "vals", "type": "number", "repeat": {"min": 1}}
+            {
+              "name": "key",
+              "type": "string"
+            },
+            {
+              "name": "vals",
+              "type": "number",
+              "repeat": {
+                "min": 1
+              }
+            }
           ]
         }
       }
     },
     "options": [
-      {"name": "from", "ref": "tagged", "long": true},
-      {"name": "to", "ref": "tagged", "long": true}
+      {
+        "name": "from",
+        "ref": "tagged",
+        "long": true
+      },
+      {
+        "name": "to",
+        "ref": "tagged",
+        "long": true
+      }
     ]
   },
   "cases": [
     {
       "id": "two-ref-sites-repeat-independently",
       "why": "`--from a 1 2 --to b 3`: from の vals は greedy に [1,2] を取り、次のトークンが option トリガ `--to` なので閉じる。to の vals は [3]。2 サイトの反復回数が 2 と 1 で別々に立つことが、テンプレ由来の閉包が参照サイトごとに独立実体化する pin。各 option の値は結果キー持ちの子が並ぶ seq なので 1 個の kv (DESIGN §5.1/§2.5)、その中で vals だけが配列 (DR-044)。effects の entity はテンプレ内要素名 (key / vals) がそのまま現れ、2 サイト分が消費順に並ぶ — 参照サイト名 (from / to) では区別されない (fixtures/multiple-parse/ref-repeat-rows-nested.json の effects と同じ扱い)。",
-      "args": ["--from", "a", "1", "2", "--to", "b", "3"],
+      "args": [
+        "--from",
+        "a",
+        "1",
+        "2",
+        "--to",
+        "b",
+        "3"
+      ],
       "expect": {
         "outcome": "success",
         "effects": [
-          {"entity": "key", "op": "set", "operand": "a", "source": "cli"},
-          {"entity": "vals", "op": "set", "operand": 1, "source": "cli"},
-          {"entity": "vals", "op": "set", "operand": 2, "source": "cli"},
-          {"entity": "key", "op": "set", "operand": "b", "source": "cli"},
-          {"entity": "vals", "op": "set", "operand": 3, "source": "cli"}
+          {
+            "entity": "key",
+            "op": "set",
+            "operand": "a",
+            "source": "cli"
+          },
+          {
+            "entity": "vals",
+            "op": "set",
+            "operand": 1,
+            "source": "cli"
+          },
+          {
+            "entity": "vals",
+            "op": "set",
+            "operand": 2,
+            "source": "cli"
+          },
+          {
+            "entity": "key",
+            "op": "set",
+            "operand": "b",
+            "source": "cli"
+          },
+          {
+            "entity": "vals",
+            "op": "set",
+            "operand": 3,
+            "source": "cli"
+          }
         ],
-        "result": {"from": {"key": "a", "vals": [1, 2]}, "to": {"key": "b", "vals": [3]}},
-        "sources": {"from": {"key": "cli", "vals": ["cli", "cli"]}, "to": {"key": "cli", "vals": ["cli"]}}
+        "result": {
+          "from": {
+            "key": "a",
+            "vals": [
+              1,
+              2
+            ]
+          },
+          "to": {
+            "key": "b",
+            "vals": [
+              3
+            ]
+          }
+        },
+        "sources": {
+          "from": {
+            "key": "cli",
+            "vals": [
+              "cli",
+              "cli"
+            ]
+          },
+          "to": {
+            "key": "cli",
+            "vals": [
+              "cli"
+            ]
+          }
+        }
       }
     },
     {
       "id": "single-ref-site-fires",
-      "why": "`--to b 3 4`: 発火しなかった from は親ごと absent で、`{}` にも `{vals: []}` にもならない (DESIGN §5.2「親が未発火なら子は親ごと absent で着席自体が起きない」/ DR-051、fixtures/or-parse/unselected-branch-default-absent.json と同じ規則)。テンプレ内に反復系の子が居ても、参照サイトが未発火なら反復系の `[]` 規則 (DR-051 §2b) は発動しない — `[]` が立つのは座が成立した場合だけ、という前提条件の pin。発火した to 側では vals が 2 反復。",
-      "args": ["--to", "b", "3", "4"],
+      "why": "`--to b 3 4`: 発火しなかった from は親ごと null で、`{}` にも `{vals: []}` にもならない (DESIGN §5.2「親が未発火なら子は親ごと null で着席自体が起きない」/ DR-130、fixtures/or-parse/unselected-branch-default-null.json と同じ規則)。テンプレ内に反復系の子が居ても、参照サイトが未発火なら反復系の `[]` 規則 (DR-130 §1) は発動しない — `[]` が立つのは座が成立した場合だけ、という前提条件の pin。発火した to 側では vals が 2 反復。",
+      "args": [
+        "--to",
+        "b",
+        "3",
+        "4"
+      ],
       "expect": {
         "outcome": "success",
         "effects": [
-          {"entity": "key", "op": "set", "operand": "b", "source": "cli"},
-          {"entity": "vals", "op": "set", "operand": 3, "source": "cli"},
-          {"entity": "vals", "op": "set", "operand": 4, "source": "cli"}
+          {
+            "entity": "key",
+            "op": "set",
+            "operand": "b",
+            "source": "cli"
+          },
+          {
+            "entity": "vals",
+            "op": "set",
+            "operand": 3,
+            "source": "cli"
+          },
+          {
+            "entity": "vals",
+            "op": "set",
+            "operand": 4,
+            "source": "cli"
+          }
         ],
-        "result": {"to": {"key": "b", "vals": [3, 4]}},
-        "sources": {"to": {"key": "cli", "vals": ["cli", "cli"]}}
+        "result": {
+          "from": null,
+          "to": {
+            "key": "b",
+            "vals": [
+              3,
+              4
+            ]
+          }
+        },
+        "sources": {
+          "from": null,
+          "to": {
+            "key": "cli",
+            "vals": [
+              "cli",
+              "cli"
+            ]
+          }
+        }
       }
     }
   ]

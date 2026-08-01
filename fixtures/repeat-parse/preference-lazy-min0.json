@@ -3,23 +3,62 @@
   "query": "parse",
   "definition": {
     "positionals": [
-      {"name": "xs", "type": "string", "repeat": {"min": 0, "lazy": true}},
-      {"name": "ys", "type": "string", "repeat": {"min": 1}}
+      {
+        "name": "xs",
+        "type": "string",
+        "repeat": {
+          "min": 0,
+          "lazy": true
+        }
+      },
+      {
+        "name": "ys",
+        "type": "string",
+        "repeat": {
+          "min": 1
+        }
+      }
     ]
   },
   "cases": [
     {
       "id": "lazy-min0-shortest-left-empty",
-      "why": "lazy な xs (min:0) + greedy な ys (min:1) に `a b c`: lazy な xs は最短 (0 個、空) を取り、greedy な ys が残り全部 [a,b,c] を取る (DR-043 の取り分選好、min:0 側は空取りが最短)。xs は反復系なので 0 回発火でも result に [] が出る (DESIGN §「absent」の反復系規約)。",
-      "args": ["a", "b", "c"],
+      "why": "lazy な xs (min:0) + greedy な ys (min:1) に `a b c`: lazy な xs は最短 (0 個、空) を取り、greedy な ys が残り全部 [a,b,c] を取る (DR-043 の取り分選好、min:0 側は空取りが最短)。xs は反復系なので 0 回発火でも result に [] が出る (DESIGN §「null」の反復系規約)。",
+      "args": [
+        "a",
+        "b",
+        "c"
+      ],
       "expect": {
         "outcome": "success",
         "effects": [
-          {"entity": "ys", "op": "set", "operand": "a", "source": "cli"},
-          {"entity": "ys", "op": "set", "operand": "b", "source": "cli"},
-          {"entity": "ys", "op": "set", "operand": "c", "source": "cli"}
+          {
+            "entity": "ys",
+            "op": "set",
+            "operand": "a",
+            "source": "cli"
+          },
+          {
+            "entity": "ys",
+            "op": "set",
+            "operand": "b",
+            "source": "cli"
+          },
+          {
+            "entity": "ys",
+            "op": "set",
+            "operand": "c",
+            "source": "cli"
+          }
         ],
-        "result": {"xs": [], "ys": ["a", "b", "c"]}
+        "result": {
+          "xs": [],
+          "ys": [
+            "a",
+            "b",
+            "c"
+          ]
+        }
       }
     },
     {
@@ -29,7 +68,12 @@
       "expect": {
         "outcome": "failure",
         "errors": [
-          {"element": "ys", "args_pos": 0, "kind": "parse", "reason": "missing_operand"}
+          {
+            "element": "ys",
+            "args_pos": 0,
+            "kind": "parse",
+            "reason": "missing_operand"
+          }
         ]
       }
     }

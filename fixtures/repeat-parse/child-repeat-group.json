@@ -6,36 +6,87 @@
       {
         "name": "grp",
         "positionals": [
-          {"name": "xs", "type": "string", "repeat": {"min": 1}}
+          {
+            "name": "xs",
+            "type": "string",
+            "repeat": {
+              "min": 1
+            }
+          }
         ]
       },
-      {"name": "ctrl", "type": "string"}
+      {
+        "name": "ctrl",
+        "type": "string"
+      }
     ]
   },
   "cases": [
     {
       "id": "child-cell-stays-inside-group-scope",
       "why": "`a b c`: grp は repeat を持たないので 1 回だけ成立し、その中の子 xs が greedy に反復する。xs=[a,b,c] は後続の ctrl (非 repeat・消費 1 必須) を枯渇させるので取り分を 1 つ縮め、xs=[a,b] / ctrl=c で全消費が成立 (DR-043 の縮小再分割が group 境界を跨いで効く)。result の形が本 case の主眼: grp は name 持ちなので結果スコープを作り (DESIGN §2.3)、xs はその子スコープのキーになる。root スコープに現れるキーは grp と ctrl だけで、`xs` が root にも並ぶ形 (子セルの root 漏れ) にはならない — 露出規則が『最も浅い name 層で止め、それより深い name は止めた層の子スコープに属する』(DESIGN §2.4) と規定する以上、同じセルが 2 つの層に同時に現れる余地は無い。grp 自身は反復宣言を持たないので配列ではなく kv (DR-044)。",
-      "args": ["a", "b", "c"],
+      "args": [
+        "a",
+        "b",
+        "c"
+      ],
       "expect": {
         "outcome": "success",
         "effects": [
-          {"entity": "xs", "op": "set", "operand": "a", "source": "cli"},
-          {"entity": "xs", "op": "set", "operand": "b", "source": "cli"},
-          {"entity": "ctrl", "op": "set", "operand": "c", "source": "cli"}
+          {
+            "entity": "xs",
+            "op": "set",
+            "operand": "a",
+            "source": "cli"
+          },
+          {
+            "entity": "xs",
+            "op": "set",
+            "operand": "b",
+            "source": "cli"
+          },
+          {
+            "entity": "ctrl",
+            "op": "set",
+            "operand": "c",
+            "source": "cli"
+          }
         ],
-        "result": {"grp": {"xs": ["a", "b"]}, "ctrl": "c"},
-        "sources": {"grp": {"xs": ["cli", "cli"]}, "ctrl": "cli"}
+        "result": {
+          "grp": {
+            "xs": [
+              "a",
+              "b"
+            ]
+          },
+          "ctrl": "c"
+        },
+        "sources": {
+          "grp": {
+            "xs": [
+              "cli",
+              "cli"
+            ]
+          },
+          "ctrl": "cli"
+        }
       }
     },
     {
       "id": "group-child-min-and-sibling-exceed-tokens",
       "why": "`a`: 完全経路には子 xs の min:1 (1 トークン以上) と ctrl の 1 トークンで最低 2 トークンが要る。xs=[] は min:1 を破るので枝生成されず (DR-043)、唯一の取り分 xs=[a] では ctrl に渡すトークンが尽きる → failure。element=ctrl、args_pos=args.length=1、reason=missing_operand。group-trailing-positional.json の single-token-both-unsatisfiable が「group 自身が repeat」の版で pin する同型のベースラインを、「子が repeat」の版で pin する。",
-      "args": ["a"],
+      "args": [
+        "a"
+      ],
       "expect": {
         "outcome": "failure",
         "errors": [
-          {"element": "ctrl", "args_pos": 1, "kind": "parse", "reason": "missing_operand"}
+          {
+            "element": "ctrl",
+            "args_pos": 1,
+            "kind": "parse",
+            "reason": "missing_operand"
+          }
         ]
       }
     }

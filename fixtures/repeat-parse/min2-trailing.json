@@ -3,47 +3,123 @@
   "query": "parse",
   "definition": {
     "positionals": [
-      {"name": "src", "type": "string", "repeat": {"min": 2}},
-      {"name": "dst", "type": "string"}
+      {
+        "name": "src",
+        "type": "string",
+        "repeat": {
+          "min": 2
+        }
+      },
+      {
+        "name": "dst",
+        "type": "string"
+      }
     ]
   },
   "cases": [
     {
       "id": "dst-starved",
       "why": "`a b` は src の min:2 が両トークンを消費し、末尾 dst にトークンが残らず完全経路 0 本 → dst が operand を得られない構造的失敗。element=dst / kind=parse / reason=missing_operand、args_pos=args.length=2 (dd/basic case 3 と同型: 末尾 scalar の operand 不足)。",
-      "args": ["a", "b"],
+      "args": [
+        "a",
+        "b"
+      ],
       "expect": {
         "outcome": "failure",
-        "errors": [{"element": "dst", "args_pos": 2, "kind": "parse", "reason": "missing_operand"}]
+        "errors": [
+          {
+            "element": "dst",
+            "args_pos": 2,
+            "kind": "parse",
+            "reason": "missing_operand"
+          }
+        ]
       }
     },
     {
       "id": "split-one-trailing",
       "why": "`a b c`: greedy な src は dst が 1 トークン得られる範囲で最長取り = `[a,b]`、dst=`c`。src は flatten で配列、dst は scalar。",
-      "args": ["a", "b", "c"],
+      "args": [
+        "a",
+        "b",
+        "c"
+      ],
       "expect": {
         "outcome": "success",
         "effects": [
-          {"entity": "src", "op": "set", "operand": "a", "source": "cli"},
-          {"entity": "src", "op": "set", "operand": "b", "source": "cli"},
-          {"entity": "dst", "op": "set", "operand": "c", "source": "cli"}
+          {
+            "entity": "src",
+            "op": "set",
+            "operand": "a",
+            "source": "cli"
+          },
+          {
+            "entity": "src",
+            "op": "set",
+            "operand": "b",
+            "source": "cli"
+          },
+          {
+            "entity": "dst",
+            "op": "set",
+            "operand": "c",
+            "source": "cli"
+          }
         ],
-        "result": {"src": ["a", "b"], "dst": "c"}
+        "result": {
+          "src": [
+            "a",
+            "b"
+          ],
+          "dst": "c"
+        }
       }
     },
     {
       "id": "split-longer-src",
       "why": "`a b c d`: src=`[a,b,c]`、dst=`d`。min:2 は下限のみなので src は末尾に 1 個残す最長取り。",
-      "args": ["a", "b", "c", "d"],
+      "args": [
+        "a",
+        "b",
+        "c",
+        "d"
+      ],
       "expect": {
         "outcome": "success",
         "effects": [
-          {"entity": "src", "op": "set", "operand": "a", "source": "cli"},
-          {"entity": "src", "op": "set", "operand": "b", "source": "cli"},
-          {"entity": "src", "op": "set", "operand": "c", "source": "cli"},
-          {"entity": "dst", "op": "set", "operand": "d", "source": "cli"}
+          {
+            "entity": "src",
+            "op": "set",
+            "operand": "a",
+            "source": "cli"
+          },
+          {
+            "entity": "src",
+            "op": "set",
+            "operand": "b",
+            "source": "cli"
+          },
+          {
+            "entity": "src",
+            "op": "set",
+            "operand": "c",
+            "source": "cli"
+          },
+          {
+            "entity": "dst",
+            "op": "set",
+            "operand": "d",
+            "source": "cli"
+          }
         ],
-        "result": {"src": ["a", "b", "c"], "dst": "d"}
+        "result": {
+          "src": [
+            "a",
+            "b",
+            "c"
+          ],
+          "dst": "d"
+        }
       }
     }
   ]

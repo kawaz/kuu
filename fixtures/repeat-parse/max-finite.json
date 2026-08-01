@@ -3,43 +3,97 @@
   "query": "parse",
   "definition": {
     "positionals": [
-      {"name": "f", "type": "string", "repeat": {"min": 1, "max": 3}}
+      {
+        "name": "f",
+        "type": "string",
+        "repeat": {
+          "min": 1,
+          "max": 3
+        }
+      }
     ]
   },
   "cases": [
     {
       "id": "min-satisfied-one",
       "why": "`a` 1 個は min:1 充足・max 3 以内。flatten で 1 要素配列 `[a]` (max=1 特別扱いはしない、DR-043/044 の uniform-array)。",
-      "args": ["a"],
+      "args": [
+        "a"
+      ],
       "expect": {
         "outcome": "success",
         "effects": [
-          {"entity": "f", "op": "set", "operand": "a", "source": "cli"}
+          {
+            "entity": "f",
+            "op": "set",
+            "operand": "a",
+            "source": "cli"
+          }
         ],
-        "result": {"f": ["a"]}
+        "result": {
+          "f": [
+            "a"
+          ]
+        }
       }
     },
     {
       "id": "at-max-three",
       "why": "`a b c` 3 個は max 上限ちょうど。`[a,b,c]`。",
-      "args": ["a", "b", "c"],
+      "args": [
+        "a",
+        "b",
+        "c"
+      ],
       "expect": {
         "outcome": "success",
         "effects": [
-          {"entity": "f", "op": "set", "operand": "a", "source": "cli"},
-          {"entity": "f", "op": "set", "operand": "b", "source": "cli"},
-          {"entity": "f", "op": "set", "operand": "c", "source": "cli"}
+          {
+            "entity": "f",
+            "op": "set",
+            "operand": "a",
+            "source": "cli"
+          },
+          {
+            "entity": "f",
+            "op": "set",
+            "operand": "b",
+            "source": "cli"
+          },
+          {
+            "entity": "f",
+            "op": "set",
+            "operand": "c",
+            "source": "cli"
+          }
         ],
-        "result": {"f": ["a", "b", "c"]}
+        "result": {
+          "f": [
+            "a",
+            "b",
+            "c"
+          ]
+        }
       }
     },
     {
       "id": "over-max-four",
       "why": "`a b c d` 4 個目は max 3 を超え、閉包が閉じた後は消費者が居ない → 残余トークンで失敗。element 省略 = スコープレベルの躓き、kind=parse / reason=unexpected_token、args_pos=残余先頭=3 (dd/basic case 4 と同型)。",
-      "args": ["a", "b", "c", "d"],
+      "args": [
+        "a",
+        "b",
+        "c",
+        "d"
+      ],
       "expect": {
         "outcome": "failure",
-        "errors": [{"args_pos": 3, "kind": "parse", "reason": "unexpected_token"}]
+        "errors": [
+          {
+            "args_pos": 3,
+            "kind": "parse",
+            "reason": "unexpected_token"
+          }
+        ]
       }
     }
   ]

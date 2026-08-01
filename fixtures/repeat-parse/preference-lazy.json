@@ -3,25 +3,79 @@
   "query": "parse",
   "definition": {
     "positionals": [
-      {"name": "xs", "type": "string", "repeat": {"min": 1, "lazy": true}},
-      {"name": "ys", "type": "string", "repeat": {"min": 1}}
+      {
+        "name": "xs",
+        "type": "string",
+        "repeat": {
+          "min": 1,
+          "lazy": true
+        }
+      },
+      {
+        "name": "ys",
+        "type": "string",
+        "repeat": {
+          "min": 1
+        }
+      }
     ]
   },
   "cases": [
     {
       "id": "lazy-shortest-left",
       "why": "lazy + greedy に `a b c d e`: lazy な xs は必須の min:1 だけ (`[a]`) を取り、greedy な ys が残り `[b,c,d,e]` を取る。preference-greedy の同入力 `[a,b,c,d],[e]` と鏡像 — 選好の向きだけで確定点が反転することの固定。",
-      "args": ["a", "b", "c", "d", "e"],
+      "args": [
+        "a",
+        "b",
+        "c",
+        "d",
+        "e"
+      ],
       "expect": {
         "outcome": "success",
         "effects": [
-          {"entity": "xs", "op": "set", "operand": "a", "source": "cli"},
-          {"entity": "ys", "op": "set", "operand": "b", "source": "cli"},
-          {"entity": "ys", "op": "set", "operand": "c", "source": "cli"},
-          {"entity": "ys", "op": "set", "operand": "d", "source": "cli"},
-          {"entity": "ys", "op": "set", "operand": "e", "source": "cli"}
+          {
+            "entity": "xs",
+            "op": "set",
+            "operand": "a",
+            "source": "cli"
+          },
+          {
+            "entity": "ys",
+            "op": "set",
+            "operand": "b",
+            "source": "cli"
+          },
+          {
+            "entity": "ys",
+            "op": "set",
+            "operand": "c",
+            "source": "cli"
+          },
+          {
+            "entity": "ys",
+            "op": "set",
+            "operand": "d",
+            "source": "cli"
+          },
+          {
+            "entity": "ys",
+            "op": "set",
+            "operand": "e",
+            "source": "cli"
+          }
         ],
-        "result": {"xs": ["a"], "ys": ["b", "c", "d", "e"]}
+        "result": {
+          "xs": [
+            "a"
+          ],
+          "ys": [
+            "b",
+            "c",
+            "d",
+            "e"
+          ]
+        }
       }
     }
   ]
