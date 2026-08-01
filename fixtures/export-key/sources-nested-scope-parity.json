@@ -3,19 +3,69 @@
   "query": "parse",
   "definition": {
     "options": [
-      {"name": "pair", "long": true, "seq": [{"name": "path", "type": "string"}, {"name": "value", "type": "string"}]},
-      {"name": "mode", "long": true, "or": [{"name": "lvl", "type": "int"}, {"name": "tag", "type": "string"}]}
+      {
+        "name": "pair",
+        "long": true,
+        "seq": [
+          {
+            "name": "path",
+            "type": "string"
+          },
+          {
+            "name": "value",
+            "type": "string"
+          }
+        ]
+      },
+      {
+        "name": "mode",
+        "long": true,
+        "or": [
+          {
+            "name": "lvl",
+            "type": "int"
+          },
+          {
+            "name": "tag",
+            "type": "string"
+          }
+        ]
+      }
     ]
   },
   "cases": [
     {
       "id": "nested-scopes-carry-path-without-command",
       "why": "`--pair a b --mode hot`: named seq `pair` と named or `mode` がそれぞれ 1 段の結果スコープを作り、result は `{pair:{path,value}, mode:{tag}}`。sources も同じ入れ子を `path` 軸で持つ。`sources-nested-scope-parity-with-command.json` が同一 argv・同一要素で command 有りの側を取り、両者の sources が一致することで非対称が無いことが定まる。",
-      "args": ["--pair", "a", "b", "--mode", "hot"],
+      "args": [
+        "--pair",
+        "a",
+        "b",
+        "--mode",
+        "hot"
+      ],
       "expect": {
         "outcome": "success",
-        "result": {"pair": {"path": "a", "value": "b"}, "mode": {"tag": "hot"}},
-        "sources": {"pair": {"path": "cli", "value": "cli"}, "mode": {"tag": "cli"}}
+        "result": {
+          "pair": {
+            "path": "a",
+            "value": "b"
+          },
+          "mode": {
+            "lvl": null,
+            "tag": "hot"
+          }
+        },
+        "sources": {
+          "pair": {
+            "path": "cli",
+            "value": "cli"
+          },
+          "mode": {
+            "lvl": null,
+            "tag": "cli"
+          }
+        }
       }
     }
   ]

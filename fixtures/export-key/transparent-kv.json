@@ -3,34 +3,67 @@
   "query": "parse",
   "definition": {
     "options": [
-      {"name": "verbose", "type": "flag", "long": true, "export_key": null},
-      {"name": "keep", "type": "flag", "long": true}
+      {
+        "name": "verbose",
+        "type": "flag",
+        "long": true,
+        "export_key": null
+      },
+      {
+        "name": "keep",
+        "type": "flag",
+        "long": true
+      }
     ]
   },
   "cases": [
     {
       "id": "transparent-fires-hidden",
       "why": "`--verbose --keep`: verbose は発火する (effects に entity=verbose の set true が載る = 値は伝搬) が export_key null なので kv result からキーごと消える。keep は通常キーで present。result は {keep:true} のみ。effects (2 発火) と result (1 キー) の差が『値は流れるがキーが無い』を固定する。",
-      "args": ["--verbose", "--keep"],
+      "args": [
+        "--verbose",
+        "--keep"
+      ],
       "expect": {
         "outcome": "success",
         "effects": [
-          {"entity": "verbose", "op": "set", "operand": true, "source": "cli"},
-          {"entity": "keep", "op": "set", "operand": true, "source": "cli"}
+          {
+            "entity": "verbose",
+            "op": "set",
+            "operand": true,
+            "source": "cli"
+          },
+          {
+            "entity": "keep",
+            "op": "set",
+            "operand": true,
+            "source": "cli"
+          }
         ],
-        "result": {"keep": true}
+        "result": {
+          "keep": true
+        }
       }
     },
     {
       "id": "transparent-only",
-      "why": "`--verbose` のみ: verbose は発火するが透過で result に出ない。keep は未発火の flag = preset default false で present (DR-051 §2)。result は {keep:false} — 透過要素 verbose が発火していても結果に痕跡を残さない一方、通常 flag keep は未発火でも false として現れる、の対比。",
-      "args": ["--verbose"],
+      "why": "`--verbose` のみ: verbose は発火するが透過で result に出ない。keep は未発火の flag = preset default false で present (DR-130 §2)。result は {keep:false} — 透過要素 verbose が発火していても結果に痕跡を残さない一方、通常 flag keep は未発火でも false として現れる、の対比。",
+      "args": [
+        "--verbose"
+      ],
       "expect": {
         "outcome": "success",
         "effects": [
-          {"entity": "verbose", "op": "set", "operand": true, "source": "cli"}
+          {
+            "entity": "verbose",
+            "op": "set",
+            "operand": true,
+            "source": "cli"
+          }
         ],
-        "result": {"keep": false}
+        "result": {
+          "keep": false
+        }
       }
     }
   ]

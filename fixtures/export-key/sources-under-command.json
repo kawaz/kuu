@@ -3,8 +3,19 @@
   "query": "parse",
   "definition": {
     "options": [
-      {"name": "verbose", "type": "flag", "long": true, "export_key": "v"},
-      {"name": "tags", "type": "string", "long": true, "multiple": "append", "export_key": "t"}
+      {
+        "name": "verbose",
+        "type": "flag",
+        "long": true,
+        "export_key": "v"
+      },
+      {
+        "name": "tags",
+        "type": "string",
+        "long": true,
+        "multiple": "append",
+        "export_key": "t"
+      }
     ],
     "commands": [
       {
@@ -12,7 +23,12 @@
         "name": "serve",
         "export_key": "sv",
         "options": [
-          {"name": "port", "type": "number", "long": true, "export_key": "p"}
+          {
+            "name": "port",
+            "type": "number",
+            "long": true,
+            "export_key": "p"
+          }
         ]
       }
     ]
@@ -21,53 +37,138 @@
     {
       "id": "command-fired-renamed-path-and-key",
       "why": "`--verbose serve --port 80`: command が発火し、scope ラベルは `sv` へ、配下の値セルは `p` へ写る。sources の path も `sv`、key も `p` になり result の `{sv:{p:80}}` と構造が一致する。射影前で組むと `serve.port` になって result のどのキーも指さない。effects の entity は射影前の `verbose` / `port` のままで、結果面だけが写る 2 面射影 (DESIGN §11.4)。",
-      "args": ["--verbose", "serve", "--port", "80"],
+      "args": [
+        "--verbose",
+        "serve",
+        "--port",
+        "80"
+      ],
       "expect": {
         "outcome": "success",
         "effects": [
-          {"entity": "verbose", "op": "set", "operand": true, "source": "cli"},
-          {"entity": "port", "op": "set", "operand": 80, "source": "cli"}
+          {
+            "entity": "verbose",
+            "op": "set",
+            "operand": true,
+            "source": "cli"
+          },
+          {
+            "entity": "port",
+            "op": "set",
+            "operand": 80,
+            "source": "cli"
+          }
         ],
-        "result": {"v": true, "sv": {"p": 80}, "t": []},
-        "sources": {"v": "cli", "sv": {"p": "cli"}, "t": []}
+        "result": {
+          "v": true,
+          "t": [],
+          "sv": {
+            "p": 80
+          }
+        },
+        "sources": {
+          "v": "cli",
+          "t": [],
+          "sv": {
+            "p": "cli"
+          }
+        }
       }
     },
     {
       "id": "command-unfired-same-key-system",
-      "why": "`--verbose` のみ (command 未発火): root の値セルは `v` へ写る。**command が発火していなくても定義に command が在るだけでキー体系が変わってはならない** — 射影経路を「command が在るか」で分岐させた実装はここで生名 `verbose` を出して落ちる。未発火 command の scope は result に現れない (DR-051 absent) ので sources にも席が無い。",
-      "args": ["--verbose"],
+      "why": "`--verbose` のみ: root の全宣言キーを列挙し、未選択 command `sv` は `null` で 1 段停止する (DR-130 §1/§2)。rename は発火有無と直交し、`v` / `t` / `sv` のキー体系は command 選択に左右されない。sources は result と同型で `sv:null`、0 発火 accumulator `t:[]` は空配列のまま。",
+      "args": [
+        "--verbose"
+      ],
       "expect": {
         "outcome": "success",
         "effects": [
-          {"entity": "verbose", "op": "set", "operand": true, "source": "cli"}
+          {
+            "entity": "verbose",
+            "op": "set",
+            "operand": true,
+            "source": "cli"
+          }
         ],
-        "result": {"v": true, "t": []},
-        "sources": {"v": "cli", "t": []}
+        "result": {
+          "v": true,
+          "t": [],
+          "sv": null
+        },
+        "sources": {
+          "v": "cli",
+          "t": [],
+          "sv": null
+        }
       }
     },
     {
       "id": "unfired-cells-default-under-command",
-      "why": "`serve` のみ: 未発火 flag `verbose` は preset default の `false` を、0 回発火の accum セル `tags` は uniform array の `[]` (DR-044) を result に持つので、どちらも sources に `default` の席を持つ — いずれも射影後キー (`v` / `t`)。選ばれた command の presence marker `sv:{}` (DR-052 §3) は sources に席を持たない — スコープ生成要素は結果キーを占有する 1 セルとして数えられる (DR-120 §4) が、その占有はスコープの存在自体であって値源ラダーが確定する値ではないので報告すべき値源が無い (CONFORMANCE §2)。配下の `p` は値源なし未発火で absent。",
-      "args": ["serve"],
+      "why": "`serve` のみ: 選択された `sv` scope の内側は宣言キーを全列挙し、未発火で値源の無い `p` は `null` になる (DR-130 §1/§2)。root の flag `v` は preset default false、accumulator `t` は 0 発火の暗黙 default `[]`。sources も同型で `p:null` を持つ。",
+      "args": [
+        "serve"
+      ],
       "expect": {
         "outcome": "success",
         "effects": [],
-        "result": {"v": false, "sv": {}, "t": []},
-        "sources": {"v": "default", "sv": {}, "t": []}
+        "result": {
+          "v": false,
+          "t": [],
+          "sv": {
+            "p": null
+          }
+        },
+        "sources": {
+          "v": "default",
+          "t": [],
+          "sv": {
+            "p": null
+          }
+        }
       }
     },
     {
       "id": "accum-multiple-firings-single-source-entry",
       "why": "`--tags a --tags b`: accum セルが 2 回着席しても sources は射影後キー `t` の 1 エントリに畳まれる。sources は「キー → 値源タグ」のマップなので同一キーが複数回現れる形を持たない — binding ごとに無条件で積む実装はここで `t` を 2 つ出して落ちる。両発火とも `cli` なので本 case が pin するのは **dedup されること**だけで、どの発火が残るかは別 case (`unset-reopens-ladder-under-command`) が見る。未発火 flag `verbose` は default 席で確定。",
-      "args": ["--tags", "a", "--tags", "b"],
+      "args": [
+        "--tags",
+        "a",
+        "--tags",
+        "b"
+      ],
       "expect": {
         "outcome": "success",
         "effects": [
-          {"entity": "tags", "op": "set", "operand": "a", "source": "cli"},
-          {"entity": "tags", "op": "set", "operand": "b", "source": "cli"}
+          {
+            "entity": "tags",
+            "op": "set",
+            "operand": "a",
+            "source": "cli"
+          },
+          {
+            "entity": "tags",
+            "op": "set",
+            "operand": "b",
+            "source": "cli"
+          }
         ],
-        "result": {"t": ["a", "b"], "v": false},
-        "sources": {"t": ["cli", "cli"], "v": "default"}
+        "result": {
+          "v": false,
+          "t": [
+            "a",
+            "b"
+          ],
+          "sv": null
+        },
+        "sources": {
+          "v": "default",
+          "t": [
+            "cli",
+            "cli"
+          ],
+          "sv": null
+        }
       }
     }
   ]

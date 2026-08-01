@@ -13,7 +13,11 @@
             "name": "inner",
             "export_key": null,
             "options": [
-              {"name": "port", "type": "number", "long": true}
+              {
+                "name": "port",
+                "type": "number",
+                "long": true
+              }
             ]
           }
         ]
@@ -28,7 +32,11 @@
             "name": "beta",
             "export_key": "b",
             "options": [
-              {"name": "port", "type": "number", "long": true}
+              {
+                "name": "port",
+                "type": "number",
+                "long": true
+              }
             ]
           }
         ]
@@ -39,49 +47,111 @@
     {
       "id": "rename-then-transparent-promotes-into-renamed-scope",
       "why": "`outer inner --port 80`: 1 段目は rename されて結果キー `o` を作り、2 段目は透過なので結果キー層に数えられず、その子 `port` が 1 つ上 — **root ではなく `o`** — へ昇格する (DESIGN §2.4)。透過段の子を昇格させる先を「直近の結果キー層」でなく root と誤読した実装は `{port:80}` を吐いて落ちる。`sources` も同じ段構成で `{o:{port:\"cli\"}}`。effects の entity は値セル `port` で、scope の rename / 透過は effects に一切現れない (DR-045: 効果は cell 単位で、露出パスではない)。",
-      "args": ["outer", "inner", "--port", "80"],
+      "args": [
+        "outer",
+        "inner",
+        "--port",
+        "80"
+      ],
       "expect": {
         "outcome": "success",
         "effects": [
-          {"entity": "port", "op": "set", "operand": 80, "source": "cli"}
+          {
+            "entity": "port",
+            "op": "set",
+            "operand": 80,
+            "source": "cli"
+          }
         ],
-        "result": {"o": {"port": 80}},
-        "sources": {"o": {"port": "cli"}}
+        "result": {
+          "o": {
+            "port": 80
+          }
+        },
+        "sources": {
+          "o": {
+            "port": "cli"
+          }
+        }
       }
     },
     {
       "id": "transparent-then-rename-promotes-renamed-scope-to-root",
       "why": "`alpha beta --port 80`: 逆配置。1 段目 `alpha` が透過なので結果キー層にならず、2 段目の renamed スコープ `b` が root へ昇格する。**透過段の下にある結果キー層はそのまま生き残る** — 透過を「その subtree ごと結果から消す」と読む実装 (DR-052 が採らなかった完全消滅案) はここで `{}` を吐いて落ちる。昇格するのは透過段の子の結果キー (`b`) であって、さらにその子 (`port`) が root まで持ち上がるわけではない: 結果キー層は 1 段だけ数え直される。",
-      "args": ["alpha", "beta", "--port", "80"],
+      "args": [
+        "alpha",
+        "beta",
+        "--port",
+        "80"
+      ],
       "expect": {
         "outcome": "success",
         "effects": [
-          {"entity": "port", "op": "set", "operand": 80, "source": "cli"}
+          {
+            "entity": "port",
+            "op": "set",
+            "operand": 80,
+            "source": "cli"
+          }
         ],
-        "result": {"b": {"port": 80}},
-        "sources": {"b": {"port": "cli"}}
+        "result": {
+          "o": null,
+          "b": {
+            "port": 80
+          }
+        },
+        "sources": {
+          "o": null,
+          "b": {
+            "port": "cli"
+          }
+        }
       }
     },
     {
       "id": "transparent-inner-leaves-only-outer-marker",
-      "why": "`outer inner` のみ (子未発火): `outer` は選ばれた結果キー持ちスコープなので presence marker を持つ (DR-052 §3)。`inner` は選ばれているが透過なので presence marker を持たない (`command-promote.json::promote-empty-child` と同じく、null スコープは marker も昇格キーも生まない)。`port` は値源なし未発火で absent (DR-051 §1)。よって昇格すべき中身が無く `o` は空 kv になる。sources も `{o:{}}` — スコープ自体を指すタグは無く、空 kv に置き換えるタグも無い (DR-122 §2)。**透過段が marker を持たないことと、走査がそこで止まらないことは別**であることを、次の case と対で示す。",
-      "args": ["outer", "inner"],
+      "why": "`outer inner`: outer は `o` を占有し、transparent な inner 自身はキーを占有しない。選択された inner の子 `port` は `o` scope へ参加し、未発火・値源なしなので `o.port:null` になる (DR-130 §1/§1b)。",
+      "args": [
+        "outer",
+        "inner"
+      ],
       "expect": {
         "outcome": "success",
         "effects": [],
-        "result": {"o": {}},
-        "sources": {"o": {}}
+        "result": {
+          "o": {
+            "port": null
+          }
+        },
+        "sources": {
+          "o": {
+            "port": null
+          }
+        }
       }
     },
     {
       "id": "transparent-outer-keeps-inner-marker-at-root",
-      "why": "`alpha beta` のみ: 透過段 `alpha` は marker を持たないが、その子 `beta` の presence marker `{}` は結果キー層として生きているので root に `b:{}` として現れる。前 case (透過段が最下段) と合わせて、**透過段は自分のキーを落とすだけで、下の層の露出を止めない**ことを両順序で固定する。透過段に出会った時点で subtree の走査を打ち切る実装はここで空の result を吐いて落ちる。sources は同形の `{b:{}}`。",
-      "args": ["alpha", "beta"],
+      "why": "`alpha beta`: transparent な alpha 自身はキーを占有せず、選択された beta が root の `b` を占有する。beta 内の `port` は未発火・値源なしなので `b.port:null`。未選択の sibling command `o` は root で `null` になる (DR-130 §1/§2)。",
+      "args": [
+        "alpha",
+        "beta"
+      ],
       "expect": {
         "outcome": "success",
         "effects": [],
-        "result": {"b": {}},
-        "sources": {"b": {}}
+        "result": {
+          "o": null,
+          "b": {
+            "port": null
+          }
+        },
+        "sources": {
+          "o": null,
+          "b": {
+            "port": null
+          }
+        }
       }
     }
   ]

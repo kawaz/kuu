@@ -6,10 +6,37 @@
       {
         "type": "command",
         "name": "outer",
-        "options": [{"name": "mid", "type": "flag", "long": true}],
+        "options": [
+          {
+            "name": "mid",
+            "type": "flag",
+            "long": true
+          }
+        ],
         "commands": [
-          {"type": "command", "name": "inner", "export_key": null, "options": [{"name": "deep", "type": "flag", "long": true}]},
-          {"type": "command", "name": "other", "options": [{"name": "o", "type": "flag", "long": true}]}
+          {
+            "type": "command",
+            "name": "inner",
+            "export_key": null,
+            "options": [
+              {
+                "name": "deep",
+                "type": "flag",
+                "long": true
+              }
+            ]
+          },
+          {
+            "type": "command",
+            "name": "other",
+            "options": [
+              {
+                "name": "o",
+                "type": "flag",
+                "long": true
+              }
+            ]
+          }
         ]
       }
     ]
@@ -18,34 +45,78 @@
     {
       "id": "outer-alone-excludes-both-children",
       "why": "`outer` のみ: 子 command をどちらも選んでいないので、`inner` (透過) の `deep` も `other` の `o` も現れない。`outer` 自身の `mid` だけが preset default で出る。",
-      "args": ["outer"],
+      "args": [
+        "outer"
+      ],
       "expect": {
         "outcome": "success",
         "effects": [],
-        "result": {"outer": {"mid": false}},
-        "sources": {"outer": {"mid": "default"}}
+        "result": {
+          "outer": {
+            "mid": false,
+            "other": null
+          }
+        },
+        "sources": {
+          "outer": {
+            "mid": "default",
+            "other": null
+          }
+        }
       }
     },
     {
       "id": "selected-transparent-child-promotes-to-middle-scope",
       "why": "`outer inner`: 透過 command `inner` を選ぶと、その配下 `deep` は root ではなく **`outer` スコープへ**昇格する (透過が落とすのは自分のラベル 1 段だけ)。`mid` と `deep` が同じ `outer` の下に並ぶ。",
-      "args": ["outer", "inner"],
+      "args": [
+        "outer",
+        "inner"
+      ],
       "expect": {
         "outcome": "success",
         "effects": [],
-        "result": {"outer": {"mid": false, "deep": false}},
-        "sources": {"outer": {"mid": "default", "deep": "default"}}
+        "result": {
+          "outer": {
+            "mid": false,
+            "deep": false,
+            "other": null
+          }
+        },
+        "sources": {
+          "outer": {
+            "mid": "default",
+            "deep": "default",
+            "other": null
+          }
+        }
       }
     },
     {
       "id": "sibling-selection-excludes-transparent-child",
       "why": "`outer other`: identity の兄弟 `other` を選んだ場合、透過 `inner` は選ばれていないので `deep` が `outer` へ漏れない。選択判定が中間スコープの階層でも効くことを固定する — 修正前はここで `{\"outer\":{\"mid\":false,\"deep\":false,\"other\":{\"o\":false}}}` になっていた。",
-      "args": ["outer", "other"],
+      "args": [
+        "outer",
+        "other"
+      ],
       "expect": {
         "outcome": "success",
         "effects": [],
-        "result": {"outer": {"mid": false, "other": {"o": false}}},
-        "sources": {"outer": {"mid": "default", "other": {"o": "default"}}}
+        "result": {
+          "outer": {
+            "mid": false,
+            "other": {
+              "o": false
+            }
+          }
+        },
+        "sources": {
+          "outer": {
+            "mid": "default",
+            "other": {
+              "o": "default"
+            }
+          }
+        }
       }
     }
   ]

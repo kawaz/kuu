@@ -3,13 +3,24 @@
   "query": "parse",
   "definition": {
     "options": [
-      { "name": "x", "type": "flag", "long": true, "export_key": "ox" }
+      {
+        "name": "x",
+        "type": "flag",
+        "long": true,
+        "export_key": "ox"
+      }
     ],
     "commands": [
       {
         "name": "x",
         "type": "command",
-        "options": [{ "name": "inner", "type": "flag", "long": true }]
+        "options": [
+          {
+            "name": "inner",
+            "type": "flag",
+            "long": true
+          }
+        ]
       }
     ]
   },
@@ -17,26 +28,52 @@
     {
       "id": "option-export-key-independent-of-same-named-command",
       "why": "option `x` は `export_key: \"ox\"` を持つので結果キーは `ox`、同名の command `x` は export_key を持たないので identity の `x`。両者が同時に発火しても別キーなので衝突せず success。option 側が identity の `x` に落ちるなら名前でキーしたマップが潰れている。",
-      "args": ["--x", "x"],
+      "args": [
+        "--x",
+        "x"
+      ],
       "expect": {
         "outcome": "success",
         "effects": [
-          { "entity": "x", "op": "set", "operand": true, "source": "cli" }
+          {
+            "entity": "x",
+            "op": "set",
+            "operand": true,
+            "source": "cli"
+          }
         ],
-        "result": { "ox": true, "x": { "inner": false } }
+        "result": {
+          "ox": true,
+          "x": {
+            "inner": false
+          }
+        }
       }
     },
     {
       "id": "option-alone-keeps-mapped-key",
       "why": "command を選ばず option だけを撃った場合も露出キーは `ox` のまま。同名 command の存在が option の解決に影響しないことを固定する。sources も射影後キー `ox` の下で由来を示す — 定義に command が存在するだけで sources のキー体系が変わってはならない (CONFORMANCE §2)。effects の entity は射影前の値セル name `x` のままで、結果面 (result / sources) だけが `ox` に写る 2 面射影を 1 case で並べて見せる。",
-      "args": ["--x"],
+      "args": [
+        "--x"
+      ],
       "expect": {
         "outcome": "success",
         "effects": [
-          { "entity": "x", "op": "set", "operand": true, "source": "cli" }
+          {
+            "entity": "x",
+            "op": "set",
+            "operand": true,
+            "source": "cli"
+          }
         ],
-        "result": { "ox": true },
-        "sources": {"ox": "cli"}
+        "result": {
+          "ox": true,
+          "x": null
+        },
+        "sources": {
+          "ox": "cli",
+          "x": null
+        }
       }
     }
   ]

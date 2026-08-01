@@ -13,8 +13,23 @@
             "name": "add",
             "export_key": "a",
             "options": [
-              {"name": "tags", "type": "string", "long": [":set", "clear:empty"], "multiple": "append", "export_key": "t"},
-              {"name": "url", "type": "string", "long": true, "env": "REMOTE_URL", "export_key": "u"}
+              {
+                "name": "tags",
+                "type": "string",
+                "long": [
+                  ":set",
+                  "clear:empty"
+                ],
+                "multiple": "append",
+                "export_key": "t"
+              },
+              {
+                "name": "url",
+                "type": "string",
+                "long": true,
+                "env": "REMOTE_URL",
+                "export_key": "u"
+              }
             ]
           }
         ]
@@ -24,68 +39,209 @@
   "cases": [
     {
       "id": "zero-fires-empty-accum-at-nested-renamed-path",
-      "why": "`remote add` のみ: 両 command が選ばれ結果スコープは `rm` → `a` の 2 段。accum セル `tags` は 1 度も発火していないので空席のままラダーへ進み、宣言 default が無いため最下段の暗黙 default `[]` が埋める (DR-123 §3)。`[]` は値の座を持たないので sources 側も `[]` でタグは載らない (DR-122 §2)。`url` は env 宣言があるが供給が無く、cli / config / default のいずれの席も埋まらないので absent (DR-051 §1、`value-sources/positional-env-presence.json::env-unset-no-token-stays-unset-absent` と同型)。effects は空 — 0 発火 accum の `[]` は cli/link 効果ではなくラダー充填だから (CONFORMANCE §2)。0 発火 accum の席を「宣言名で作ってから射影する」実装は、2 段の path のどこかで写し漏らすとこの `{rm:{a:{t:[]}}}` に一致しない。",
-      "args": ["remote", "add"],
+      "why": "`remote add` のみ: 両 command が選ばれ結果スコープは `rm` → `a` の 2 段。accum セル `tags` は 1 度も発火していないので空席のままラダーへ進み、宣言 default が無いため最下段の暗黙 default `[]` が埋める (DR-123 §3)。`[]` は値の座を持たないので sources 側も `[]` でタグは載らない (DR-122 §2)。`url` は env 宣言があるが供給が無く、cli / config / default のいずれの席も埋まらないので null (DR-130 §1、`値源ラダー枯渇の既存 pin` と同型)。effects は空 — 0 発火 accum の `[]` は cli/link 効果ではなくラダー充填だから (CONFORMANCE §2)。0 発火 accum の席を「宣言名で作ってから射影する」実装は、2 段の path のどこかで写し漏らすとこの `{rm:{a:{t:[]}}}` に一致しない。",
+      "args": [
+        "remote",
+        "add"
+      ],
       "expect": {
         "outcome": "success",
         "effects": [],
-        "result": {"rm": {"a": {"t": []}}},
-        "sources": {"rm": {"a": {"t": []}}}
+        "result": {
+          "rm": {
+            "a": {
+              "t": [],
+              "u": null
+            }
+          }
+        },
+        "sources": {
+          "rm": {
+            "a": {
+              "t": [],
+              "u": null
+            }
+          }
+        }
       }
     },
     {
       "id": "single-fire-accum-under-two-renamed-scopes",
       "why": "`remote add --tags x`: 綴りは宣言名由来の `--tags` (export_key `t` は綴り軸に効かない、DR-052 §2)。1 回発火でも accum セルの形は配列なので要素 1 件の `[\"x\"]` (DR-044 一様配列、`multiple-parse/append.json::single-fire-list` と同じ縮退規則)。sources は要素対応なので `[\"cli\"]` — 配列の座に 1 個のタグ (DR-122 §1)。`effects[].entity` は `tags` (宣言名) で、`result` / `sources` のキーは `t`。同じセルが 2 つの軸で別綴りになる断面を nested scope 下で固定する。",
-      "args": ["remote", "add", "--tags", "x"],
+      "args": [
+        "remote",
+        "add",
+        "--tags",
+        "x"
+      ],
       "expect": {
         "outcome": "success",
         "effects": [
-          {"entity": "tags", "op": "set", "operand": "x", "source": "cli"}
+          {
+            "entity": "tags",
+            "op": "set",
+            "operand": "x",
+            "source": "cli"
+          }
         ],
-        "result": {"rm": {"a": {"t": ["x"]}}},
-        "sources": {"rm": {"a": {"t": ["cli"]}}}
+        "result": {
+          "rm": {
+            "a": {
+              "t": [
+                "x"
+              ],
+              "u": null
+            }
+          }
+        },
+        "sources": {
+          "rm": {
+            "a": {
+              "t": [
+                "cli"
+              ],
+              "u": null
+            }
+          }
+        }
       }
     },
     {
       "id": "multi-fire-accum-elementwise-shadow",
       "why": "`remote add --tags x --tags y`: 2 発火が append accumulator に畳まれ `[\"x\",\"y\"]`。sources は要素対応の `[\"cli\",\"cli\"]` で、result の i 番目の由来が sources の i 番目 (DR-122 §1)。**要素数が一致することがこの case の主眼** — accum セルに対して cell 単位のタグ 1 個を置く実装 (`\"t\": \"cli\"`) も、発火ごとに別キーを生やす実装も、shadow tree の形に一致しない。effects は消費順に 2 個保持され (DR-045、fold は result 確定時のみ)、entity は両方とも宣言名 `tags`。",
-      "args": ["remote", "add", "--tags", "x", "--tags", "y"],
+      "args": [
+        "remote",
+        "add",
+        "--tags",
+        "x",
+        "--tags",
+        "y"
+      ],
       "expect": {
         "outcome": "success",
         "effects": [
-          {"entity": "tags", "op": "set", "operand": "x", "source": "cli"},
-          {"entity": "tags", "op": "set", "operand": "y", "source": "cli"}
+          {
+            "entity": "tags",
+            "op": "set",
+            "operand": "x",
+            "source": "cli"
+          },
+          {
+            "entity": "tags",
+            "op": "set",
+            "operand": "y",
+            "source": "cli"
+          }
         ],
-        "result": {"rm": {"a": {"t": ["x", "y"]}}},
-        "sources": {"rm": {"a": {"t": ["cli", "cli"]}}}
+        "result": {
+          "rm": {
+            "a": {
+              "t": [
+                "x",
+                "y"
+              ],
+              "u": null
+            }
+          }
+        },
+        "sources": {
+          "rm": {
+            "a": {
+              "t": [
+                "cli",
+                "cli"
+              ],
+              "u": null
+            }
+          }
+        }
       }
     },
     {
       "id": "env-supplied-sibling-under-renamed-scopes",
       "why": "`remote add --tags x` + env `REMOTE_URL`: 同じ renamed nested scope の下で、cli 由来の accum と env 由来の scalar が並ぶ。env 席の値は args 順の全順序を持たない完走後の確定なので effects には現れず、`result` の値と `sources` の `env` タグだけが観測経路になる (CONFORMANCE §2、`value-sources/env-ladder.json` と同じ機序)。**射影は値源に依存しない** — 露出キーへの写しを cli binding にだけ通し、env/config 充填は宣言名のまま結果へ載せる実装はここで `url` を吐いて落ちる。env の lookup キー `REMOTE_URL` は宣言そのままで、export_key `u` にもスコープ rename にも影響されない (DR-049 の env 席は綴りを宣言から取る)。",
-      "args": ["remote", "add", "--tags", "x"],
-      "env": {"REMOTE_URL": "https://example.test/repo.git"},
+      "args": [
+        "remote",
+        "add",
+        "--tags",
+        "x"
+      ],
+      "env": {
+        "REMOTE_URL": "https://example.test/repo.git"
+      },
       "expect": {
         "outcome": "success",
         "effects": [
-          {"entity": "tags", "op": "set", "operand": "x", "source": "cli"}
+          {
+            "entity": "tags",
+            "op": "set",
+            "operand": "x",
+            "source": "cli"
+          }
         ],
-        "result": {"rm": {"a": {"t": ["x"], "u": "https://example.test/repo.git"}}},
-        "sources": {"rm": {"a": {"t": ["cli"], "u": "env"}}}
+        "result": {
+          "rm": {
+            "a": {
+              "t": [
+                "x"
+              ],
+              "u": "https://example.test/repo.git"
+            }
+          }
+        },
+        "sources": {
+          "rm": {
+            "a": {
+              "t": [
+                "cli"
+              ],
+              "u": "env"
+            }
+          }
+        }
       }
     },
     {
       "id": "empty-op-clears-accum-under-renamed-scopes",
       "why": "`remote add --tags x --clear-tags`: variant `clear:empty` (DR-045 §4 の empty、`multiple-parse/filters-cell-ops.json` と同型) が accum を決定論的に空にする。綴りは宣言名から合成された `--clear-tags` で、ここでも export_key は効かない。最終値 `[]` には値の座が無いので sources は `[]` — 「ユーザが明示的に空にした」ことは sources ではなく effects の `op: \"empty\"` が担う (DR-122 §2.1)。zero-fires-empty-accum-at-nested-renamed-path と result / sources が同形になり、effects だけが違う対で、committed 軸が sources に漏れていないことを nested renamed scope の下で確認する。",
-      "args": ["remote", "add", "--tags", "x", "--clear-tags"],
+      "args": [
+        "remote",
+        "add",
+        "--tags",
+        "x",
+        "--clear-tags"
+      ],
       "expect": {
         "outcome": "success",
         "effects": [
-          {"entity": "tags", "op": "set", "operand": "x", "source": "cli"},
-          {"entity": "tags", "op": "empty", "source": "cli"}
+          {
+            "entity": "tags",
+            "op": "set",
+            "operand": "x",
+            "source": "cli"
+          },
+          {
+            "entity": "tags",
+            "op": "empty",
+            "source": "cli"
+          }
         ],
-        "result": {"rm": {"a": {"t": []}}},
-        "sources": {"rm": {"a": {"t": []}}}
+        "result": {
+          "rm": {
+            "a": {
+              "t": [],
+              "u": null
+            }
+          }
+        },
+        "sources": {
+          "rm": {
+            "a": {
+              "t": [],
+              "u": null
+            }
+          }
+        }
       }
     }
   ]

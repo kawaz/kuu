@@ -3,20 +3,77 @@
   "query": "parse",
   "definition": {
     "options": [
-      {"name": "pair", "long": true, "seq": [{"name": "path", "type": "string"}, {"name": "value", "type": "string"}]},
-      {"name": "mode", "long": true, "or": [{"name": "lvl", "type": "int"}, {"name": "tag", "type": "string"}]}
+      {
+        "name": "pair",
+        "long": true,
+        "seq": [
+          {
+            "name": "path",
+            "type": "string"
+          },
+          {
+            "name": "value",
+            "type": "string"
+          }
+        ]
+      },
+      {
+        "name": "mode",
+        "long": true,
+        "or": [
+          {
+            "name": "lvl",
+            "type": "int"
+          },
+          {
+            "name": "tag",
+            "type": "string"
+          }
+        ]
+      }
     ],
-    "commands": [{"type": "command", "name": "dummy"}]
+    "commands": [
+      {
+        "type": "command",
+        "name": "dummy"
+      }
+    ]
   },
   "cases": [
     {
       "id": "nested-scopes-carry-path-with-unfired-command",
-      "why": "`--pair a b --mode hot` (dummy command は未発火): 対の fixture と同一の result / sources になる。未発火 command のスコープは値源を持たないので result に現れず (DR-051)、sources にも席が無い。",
-      "args": ["--pair", "a", "b", "--mode", "hot"],
+      "why": "`--pair a b --mode hot` (dummy command は未発火): 対の fixture と同一の result / sources になる。未発火 command のスコープは値源を持たないので result に現れず (DR-130)、sources にも席が無い。",
+      "args": [
+        "--pair",
+        "a",
+        "b",
+        "--mode",
+        "hot"
+      ],
       "expect": {
         "outcome": "success",
-        "result": {"pair": {"path": "a", "value": "b"}, "mode": {"tag": "hot"}},
-        "sources": {"pair": {"path": "cli", "value": "cli"}, "mode": {"tag": "cli"}}
+        "result": {
+          "pair": {
+            "path": "a",
+            "value": "b"
+          },
+          "mode": {
+            "lvl": null,
+            "tag": "hot"
+          },
+          "dummy": null
+        },
+        "sources": {
+          "pair": {
+            "path": "cli",
+            "value": "cli"
+          },
+          "mode": {
+            "lvl": null,
+            "tag": "cli"
+          },
+          "dummy": null
+        }
       }
     }
   ]
