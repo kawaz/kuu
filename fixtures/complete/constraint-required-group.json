@@ -1,14 +1,39 @@
 {
-  "why": "`required_group` 述語の before-only 生存 + after-filter 除外の対 (DR-104 §5、DR-103、codex レビュー #2 M-7 の反映、統括検証 2026-07-14)。`required_group` は group member のうち少なくとも 1 つが充足すればよい論理和 (`exclusive_group` とは名前空間が独立、DR-103) — `exclusive_group` (最大 1 つ) と対称の下限側制約。`required`/`required_group` は値述語 (充足 = 値の有無、DR-093/DR-103 §7、RG-Q1) であり発火ベースの真偽値ではない — member を暗黙 default を持つ plain `flag` にすると未発火でも default:false で値が常時充足し group が vacuous になり違反経路が構造的に作れない (`constraint-required-group-vacuous-flag.json` がこの vacuous ケース自体を別途 pin する)。本 fixture で違反経路を作るため、member は default 無しの `bool` + `long: [\":set:true\"]` (正本 `constraints-parse/required-group.json` と同形) で宣言し、未発火なら absent (値未充足) になるようにする。",
+  "why": "`required_group` 述語の before-only 生存 + after-filter 除外の対 (DR-104 §5、DR-103、codex レビュー #2 M-7 の反映、統括検証 2026-07-14)。`required_group` は group member のうち少なくとも 1 つが充足すればよい論理和 (`exclusive_group` とは名前空間が独立、DR-103) — `exclusive_group` (最大 1 つ) と対称の下限側制約。`required`/`required_group` は値述語 (充足 = 値の有無、DR-093/DR-103 §7、RG-Q1) であり発火ベースの真偽値ではない — member を暗黙 default を持つ plain `flag` にすると未発火でも default:false で値が常時充足し group が vacuous になり違反経路が構造的に作れない (`constraint-required-group-vacuous-flag.json` がこの vacuous ケース自体を別途 pin する)。本 fixture で違反経路を作るため、member は default 無しの `bool` + `long: [\":set:true\"]` (正本 `constraints-parse/required-group.json` と同形) で宣言し、未発火なら値が `null` となり required_group を充足しないようにする。",
   "query": "complete",
   "definition": {
     "options": [
-      {"name": "verbose", "type": "flag", "long": true},
-      {"name": "create", "type": "bool", "long": [":set:true"], "required_group": ["mode"]},
-      {"name": "update", "type": "bool", "long": [":set:true"], "required_group": ["mode"]}
+      {
+        "name": "verbose",
+        "type": "flag",
+        "long": true
+      },
+      {
+        "name": "create",
+        "type": "bool",
+        "long": [
+          ":set:true"
+        ],
+        "required_group": [
+          "mode"
+        ]
+      },
+      {
+        "name": "update",
+        "type": "bool",
+        "long": [
+          ":set:true"
+        ],
+        "required_group": [
+          "mode"
+        ]
+      }
     ],
     "positionals": [
-      {"name": "target", "type": "string"}
+      {
+        "name": "target",
+        "type": "string"
+      }
     ]
   },
   "cases": [
@@ -19,10 +44,50 @@
       "expect": {
         "outcome": "complete",
         "candidates": [
-          {"spelling": "--verbose", "is_value": false, "origin": "verbose", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}},
-          {"spelling": "--create", "is_value": false, "origin": "create", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}},
-          {"spelling": "--update", "is_value": false, "origin": "update", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}},
-          {"is_value": true, "type": "string", "origin": "target", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}}
+          {
+            "spelling": "--verbose",
+            "is_value": false,
+            "origin": "verbose",
+            "term": "word_end",
+            "meta": {
+              "is_alias": false,
+              "hidden": false,
+              "deprecated": false
+            }
+          },
+          {
+            "spelling": "--create",
+            "is_value": false,
+            "origin": "create",
+            "term": "word_end",
+            "meta": {
+              "is_alias": false,
+              "hidden": false,
+              "deprecated": false
+            }
+          },
+          {
+            "spelling": "--update",
+            "is_value": false,
+            "origin": "update",
+            "term": "word_end",
+            "meta": {
+              "is_alias": false,
+              "hidden": false,
+              "deprecated": false
+            }
+          },
+          {
+            "is_value": true,
+            "type": "string",
+            "origin": "target",
+            "term": "word_end",
+            "meta": {
+              "is_alias": false,
+              "hidden": false,
+              "deprecated": false
+            }
+          }
         ]
       }
     },
@@ -30,13 +95,45 @@
       "id": "required-group-unsatisfied-path-excluded-by-after-consistency-check",
       "why": "args_before 空、args_after: [\"x\"] (target 用の中立トークン)。--verbose を採用すると完全経路 [\"--verbose\",\"x\"] は verbose 発火・x は target へ落ちるが、mode group のどの member (create/update) も未発火のまま完走してしまい `required_group_violated` で Failure — after 整合フィルタにより除外される。--create を採用すると完全経路 [\"--create\",\"x\"] は create 発火で mode 充足 (論理和なので 1 member で足りる)、x は target へ → Success → 生存。--update も同様に mode 充足で生存。target の値位置候補は `is_value:true` のため無条件生存。",
       "args_before": [],
-      "args_after": ["x"],
+      "args_after": [
+        "x"
+      ],
       "expect": {
         "outcome": "complete",
         "candidates": [
-          {"spelling": "--create", "is_value": false, "origin": "create", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}},
-          {"spelling": "--update", "is_value": false, "origin": "update", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}},
-          {"is_value": true, "type": "string", "origin": "target", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}}
+          {
+            "spelling": "--create",
+            "is_value": false,
+            "origin": "create",
+            "term": "word_end",
+            "meta": {
+              "is_alias": false,
+              "hidden": false,
+              "deprecated": false
+            }
+          },
+          {
+            "spelling": "--update",
+            "is_value": false,
+            "origin": "update",
+            "term": "word_end",
+            "meta": {
+              "is_alias": false,
+              "hidden": false,
+              "deprecated": false
+            }
+          },
+          {
+            "is_value": true,
+            "type": "string",
+            "origin": "target",
+            "term": "word_end",
+            "meta": {
+              "is_alias": false,
+              "hidden": false,
+              "deprecated": false
+            }
+          }
         ]
       }
     }
