@@ -4,6 +4,7 @@ active な issue の一覧。close 済みは archive/ にあり、ここには�
 
 | date | category | status | slug | 概要 |
 |---|---|---|---|---|
+| 2026-08-01 | design | open | [update-op-vocab-inconsistency](./2026-08-01-update-op-vocab-inconsistency.md) | `update` op の語彙不整合。DR-045/077 は effects op として規定するが CONFORMANCE §2 は専用 op を持たないと規定 |
 | 2026-07-29 | design | idea | [unset-variant-on-repeat-closure-interaction](./2026-07-29-unset-variant-on-repeat-closure-interaction.md) | unset variant を repeat 閉包を持つ要素へ撃つ場合の相互作用 (min 消費段・途中発火・再初期化) が未規定 |
 | 2026-07-28 | design | idea | [positional-seq-child-porosity-unpinned](./2026-07-28-positional-seq-child-porosity-unpinned.md) | positional 直下 seq 子と positionals 入れ子の消費意味論の差 (option 割り込みの多孔質性) が未規定、fixture pin 無し |
 | 2026-07-24 | design | idea | [insert-form-positional-group-decode-drop](./2026-07-24-insert-form-positional-group-decode-drop.md) | positional group 上の insert_form 宣言が decode 段で silent drop される spec gap (DR-117 §2.6) |
