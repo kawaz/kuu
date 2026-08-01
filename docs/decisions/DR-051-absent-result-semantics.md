@@ -7,7 +7,18 @@
 > §1 (値の無い要素は absent) と §4 (null は値空間に存在しない) は覆っており、§3 の型導出は
 > `T?` → `T | null` へ読み替わる。§2 の「absent にならない条件」(反復系 / flag・count / required) は
 > 「null にならない条件」として不変、§5 の 2 層分離 (result と ParserContext) も不変で DR-130 が継承する。
-> config の JSON null を「供給なし」として扱う §4 第 2 項は入力側の別軸なので裁定不変 (DR-050)。
+>
+> §4 の 3 項の行き先は個別に分かれる:
+>
+> - **第 1 項**「『明示的に取り消す』は unset 効果が担う、null 値のセットは持たない」— **DR-131 §1 が
+>   置換する**。`unset` は Sentinel をやめて `null` を返す Value fn になり、`set(null) = unset` になった
+>   ので、「null のセット」と「取り消し」は同じものになった
+> - **第 2 項**「config ファイルの JSON null は供給なし」— **裁定不変** (入力側の別軸、DR-050)。
+>   provider 境界の `| null` を Maybe として読む一般則は DR-130 §9.1
+> - **第 3 項**「`value: null` / `default: null` は書けない」— **DR-130 §3.1 が根拠を替えて存続させる**。
+>   定義側に null リテラルを書けない禁止は維持され、違反は definition-error `invalid-range`。
+>   ただし `default_fn` が実行時に `null` を返すのは合法
+>
 > 逐条の対応は DR-130 §1〜§9 と同 §波及。
 
 > 由来: findings `2026-06-29-ast-missing-pieces.md` の F-022 (optional の semantics — unset / null / default の区別)。slice PoC 第 6 弾の「0 回発火の repeat 要素は `{x: []}`」観測が材料。本セッションで確定。
