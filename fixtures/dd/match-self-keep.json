@@ -3,53 +3,139 @@
   "query": "parse",
   "definition": {
     "options": [
-      {"name": "n", "type": "int", "long": true, "short": "n"},
-      {"name": "utility_marker", "type": "dd", "match": "^[^\\-]", "self": "keep"}
+      {
+        "name": "n",
+        "type": "int",
+        "long": true,
+        "short": "n"
+      },
+      {
+        "name": "utility_marker",
+        "type": "dd",
+        "match": "^[^\\-]",
+        "self": "keep"
+      }
     ],
     "positionals": [
-      {"name": "rest", "type": "string", "repeat": {"min": 0}}
+      {
+        "name": "rest",
+        "type": "string",
+        "repeat": {
+          "min": 0
+        }
+      }
     ]
   },
   "cases": [
     {
       "id": "known-option-before-dd-then-severed-raw",
       "why": "`-n 1 rm -f a` (xargs -n 1 rm -f a 相当): `-n` はハイフンなので pattern 非マッチ、通常の option として発火し値スロットが \"1\" を raw 消費 (n=1)。続く \"rm\" は非ハイフンで pattern `^[^\\-]` に一致 → dd 発火、self:keep なので \"rm\" 自身は消費 0 のまま rest (raw positional) の最初の要素になる。発火以降は severed (greedy 面 off) — 続く \"-f\" は option の綴りと一致していても再発火せず raw 消費、\"a\" も raw。rest=[\"rm\",\"-f\",\"a\"]。effects は n の set (dd は値効果なし) に続き、rest への raw 消費 3 個 (repeat セルの各周回が個別 set、DR-045 効果列は消費順)。",
-      "args": ["-n", "1", "rm", "-f", "a"],
+      "args": [
+        "-n",
+        "1",
+        "rm",
+        "-f",
+        "a"
+      ],
       "expect": {
         "outcome": "success",
         "effects": [
-          {"entity": "n", "op": "set", "operand": 1, "source": "cli"},
-          {"entity": "rest", "op": "set", "operand": "rm", "source": "cli"},
-          {"entity": "rest", "op": "set", "operand": "-f", "source": "cli"},
-          {"entity": "rest", "op": "set", "operand": "a", "source": "cli"}
+          {
+            "entity": "n",
+            "op": "set",
+            "operand": 1,
+            "source": "cli"
+          },
+          {
+            "entity": "rest",
+            "op": "set",
+            "operand": "rm",
+            "source": "cli"
+          },
+          {
+            "entity": "rest",
+            "op": "set",
+            "operand": "-f",
+            "source": "cli"
+          },
+          {
+            "entity": "rest",
+            "op": "set",
+            "operand": "a",
+            "source": "cli"
+          }
         ],
-        "result": {"n": 1, "rest": ["rm", "-f", "a"]}
+        "result": {
+          "n": 1,
+          "rest": [
+            "rm",
+            "-f",
+            "a"
+          ]
+        }
       }
     },
     {
       "id": "trailing-token-triggers-dd-before-any-option",
-      "why": "`rm -n 2` (xargs rm -n 2 相当 — 先頭から utility): 先頭トークン \"rm\" は非ハイフンで即座に pattern dd に一致 → 発火 (n の option は一度も読まれない、trigger 判定が先に消費点で成立するため)。self:keep で \"rm\" 自身が rest の最初の要素になり、以降は severed。続く \"-n\" は **既知の option 綴りだが severed 後は raw** — これが実 xargs の挙動 (`-n` が utility に渡る引数であって xargs 自身のオプションではない) と一致する本命の軸。rest=[\"rm\",\"-n\",\"2\"]。n は一度も option として発火しないので未発火・default 無しで absent (result にキーなし、DR-051)。",
-      "args": ["rm", "-n", "2"],
+      "why": "`rm -n 2` (xargs rm -n 2 相当 — 先頭から utility): 先頭トークン \"rm\" は非ハイフンで即座に pattern dd に一致 → 発火 (n の option は一度も読まれない、trigger 判定が先に消費点で成立するため)。self:keep で \"rm\" 自身が rest の最初の要素になり、以降は severed。続く \"-n\" は **既知の option 綴りだが severed 後は raw** — これが実 xargs の挙動 (`-n` が utility に渡る引数であって xargs 自身のオプションではない) と一致する本命の軸。rest=[\"rm\",\"-n\",\"2\"]。n は一度も option として発火しないので未発火・default 無しで null (result にキーなし、DR-130)。",
+      "args": [
+        "rm",
+        "-n",
+        "2"
+      ],
       "expect": {
         "outcome": "success",
         "effects": [
-          {"entity": "rest", "op": "set", "operand": "rm", "source": "cli"},
-          {"entity": "rest", "op": "set", "operand": "-n", "source": "cli"},
-          {"entity": "rest", "op": "set", "operand": "2", "source": "cli"}
+          {
+            "entity": "rest",
+            "op": "set",
+            "operand": "rm",
+            "source": "cli"
+          },
+          {
+            "entity": "rest",
+            "op": "set",
+            "operand": "-n",
+            "source": "cli"
+          },
+          {
+            "entity": "rest",
+            "op": "set",
+            "operand": "2",
+            "source": "cli"
+          }
         ],
-        "result": {"rest": ["rm", "-n", "2"]}
+        "result": {
+          "rest": [
+            "rm",
+            "-n",
+            "2"
+          ],
+          "n": null
+        }
       }
     },
     {
       "id": "no-trailing-operand-option-reads-normally",
-      "why": "(対極) `-n 2` のみ、非ハイフントークンが後続しない: dd の発火対象トークンが存在しないため pattern dd は一度も発火せず、`-n` は通常どおり option として値 \"2\" を raw 消費する (severed 化が一切起きていない状態、DR-090 §3 の『option 面がどこで終わるかはトリガの宣言 + severed の効果』の裏付け — トリガが発火しなければ severed も起きず全区間が通常解釈のまま)。rest は 0 発火の一様配列 `[]` (DR-044/051 §2)。",
-      "args": ["-n", "2"],
+      "why": "(対極) `-n 2` のみ、非ハイフントークンが後続しない: dd の発火対象トークンが存在しないため pattern dd は一度も発火せず、`-n` は通常どおり option として値 \"2\" を raw 消費する (severed 化が一切起きていない状態、DR-090 §3 の『option 面がどこで終わるかはトリガの宣言 + severed の効果』の裏付け — トリガが発火しなければ severed も起きず全区間が通常解釈のまま)。rest は 0 発火の一様配列 `[]` (DR-044/130 §2)。",
+      "args": [
+        "-n",
+        "2"
+      ],
       "expect": {
         "outcome": "success",
         "effects": [
-          {"entity": "n", "op": "set", "operand": 2, "source": "cli"}
+          {
+            "entity": "n",
+            "op": "set",
+            "operand": 2,
+            "source": "cli"
+          }
         ],
-        "result": {"n": 2, "rest": []}
+        "result": {
+          "n": 2,
+          "rest": []
+        }
       }
     }
   ]
