@@ -56,7 +56,7 @@ fixture が期待する outcome の代わりに `kind: "unsupported"` の defini
 | `cases[].args` | | 前処理済みトークン列、プログラム名 ($0) を含まない (`Array[String]`、DESIGN §0.1)。`query:"parse"` は必須、`query:"definition_error"` は定義の静的検査のみで実行しないため省略 (DR-082 §1) |
 | `cases[].env` | | 値源系 fixture の環境変数供給: key → 値のマップ。runner が env_provider (DR-049) に注入する |
 | `cases[].config` | | config_provider (DR-050) が返す階層オブジェクト。`cases[].config_files` (パス → オブジェクトのマップ) でパス別供給も可 |
-| `cases[].tty` | | 値源系 fixture の tty 判定値供給: stream (`stdin`/`stdout`/`stderr`) → `{terminal, cygwin}` の生観測 2 値のマップ (DR-099。DR-098 の bool 単一値から改訂)。runner が tty_provider に注入する。省略キーは provider が null (提供なし) を返したものとして扱う。`builtin/tty` preset 型の暗黙 default が `terminal || (tty_cygwin && cygwin)` で fold する |
+| `cases[].tty` | | 値源系 fixture の tty 判定値供給: stream (`stdin`/`stdout`/`stderr`) → そのストリームが端末か否かの bool 単一のマップ (DR-129 §1)。runner が tty_provider に注入する。省略キーは provider が null (提供なし) を返したものとして扱う。`builtin/tty` preset 型の暗黙 default はこの観測をそのまま消費する (`resolved_default = 観測 ?? 宣言 default ?? absent`、DR-129 §3)。cygwin pty を端末扱いに含めるか等の判定方言は provider 実装の内側の責務なので注入形には現れない |
 | `cases[].path` | | `query:"help"` の選択スコープ。省略 = ルート |
 | `cases[].depth` | | `query:"help"` の `"scope"` / `"all"`。省略 = `"scope"` |
 | `cases[].category_mode` | | `query:"help"` の `"default"` / `"all"` / `{"named":name}`。省略 = `"default"` |

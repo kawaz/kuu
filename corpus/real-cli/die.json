@@ -127,9 +127,9 @@
     },
     {
       "id": "bare-non-tty-stdin-forwards",
-      "why": "`die` (引数・-- なし)、stdin が非 TTY (パイプ等): 実機は stdin forward 分岐に入る (stdin から読んだ内容をそのまま処理)。args positional は requires:[\"--\"] を持つが 0 個消費では committed にならずトリガ不発火なので、requires 制約は評価されず bare 単独 (空 args) で成功する (help-alone-no-dd 等と同じ『トリガ不発火で制約非参加』の帰結)。stdin_tty=false は tty_provider からの注入 (`{terminal: false, cygwin: false}` → fold = false || (true && false) = false、DR-099 §2/§4) — kuu が届けるのはこの bool 値までで、実際の stdin 読み込み分岐の実行はアプリ側の関心 (DESIGN §13.9)。",
+      "why": "`die` (引数・-- なし)、stdin が非 TTY (パイプ等): 実機は stdin forward 分岐に入る (stdin から読んだ内容をそのまま処理)。args positional は requires:[\"--\"] を持つが 0 個消費では committed にならずトリガ不発火なので、requires 制約は評価されず bare 単独 (空 args) で成功する (help-alone-no-dd 等と同じ『トリガ不発火で制約非参加』の帰結)。stdin_tty=false は tty_provider からの注入 (観測 `false` = stdin は端末でない、DR-129 §1/§3 の `resolved_default = 観測 ?? 宣言 default ?? absent`) — kuu が届けるのはこの bool 値までで、実際の stdin 読み込み分岐の実行はアプリ側の関心 (DESIGN §13.9)。",
       "args": [],
-      "tty": {"stdin": {"terminal": false, "cygwin": false}},
+      "tty": {"stdin": false},
       "expect": {
         "outcome": "success",
         "effects": [],
@@ -138,9 +138,9 @@
     },
     {
       "id": "bare-tty-stdin-shows-help",
-      "why": "`die` (引数・-- なし)、stdin が TTY (端末に直結): 実機は help fallback 分岐に入る。stdin_tty=true は tty_provider からの注入 (`{terminal: true, cygwin: false}` → fold = true || (true && false) = true、DR-099 §2/§4)。bare-non-tty-stdin-forwards (前 case) との対で、同じ args (空) でも tty_provider の応答だけで stdin_tty の値が変わることを示す — help 表示への分岐実行自体は引き続きアプリ側の関心 (DESIGN §13.9)、kuu が保証するのは stdin_tty=true という値の到達のみ。",
+      "why": "`die` (引数・-- なし)、stdin が TTY (端末に直結): 実機は help fallback 分岐に入る。stdin_tty=true は tty_provider からの注入 (観測 `true` = stdin は端末、DR-129 §1/§3)。bare-non-tty-stdin-forwards (前 case) との対で、同じ args (空) でも tty_provider の応答だけで stdin_tty の値が変わることを示す — help 表示への分岐実行自体は引き続きアプリ側の関心 (DESIGN §13.9)、kuu が保証するのは stdin_tty=true という値の到達のみ。",
       "args": [],
-      "tty": {"stdin": {"terminal": true, "cygwin": false}},
+      "tty": {"stdin": true},
       "expect": {
         "outcome": "success",
         "effects": [],
