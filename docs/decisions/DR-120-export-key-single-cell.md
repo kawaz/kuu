@@ -1,5 +1,12 @@
 # DR-120: 露出キーに対応する値セルはちょうど 1 つ — 別セルの同キー露出は definition-error
 
+> **更新 (DR-124、2026-07-29): §4 の参加要素から `inheritable` の write-target が抜けた。** `inheritable`
+> 語彙・installer・祖先スコープへの write-target セルは DR-124 で仕様から落ちており、祖先スコープの値を
+> 既定値にする定義は内側要素の default 席 `default_fn: "borrow:<外側要素名>"` で書く (DR-125 §3) —
+> 借り手は自分のスコープに自分のセルを持つ通常要素なので、参加/非参加の判定は §4 の一般則で決まる。
+> 「関連」節の DR-059 §5 / DESIGN §11.3 の参照も同様に対象を失っている。§4 のそれ以外の項と §1 の
+> 中核規範は不変。
+
 > 由来: dogfooding D4 で判明した露出キー衝突の 2 つの検出ギャップ (issue
 > `2026-07-25-expose-key-collision-option-command-silent-loss.md` — 同名の別実体が 1 claimant へ
 > 潰れて衝突判定を素通りし option の値が黙って消える / scope 生成要素 command の結果キー占有が
