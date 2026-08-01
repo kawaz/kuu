@@ -78,7 +78,10 @@
           "a": false,
           "b": false,
           "sources": [],
-          "attach_only": "80"
+          "attach_only": "80",
+          "plain": null,
+          "space_only": null,
+          "gnu_style": null
         }
       }
     },
@@ -111,7 +114,11 @@
           "sources": [
             "-q",
             "80"
-          ]
+          ],
+          "plain": null,
+          "attach_only": null,
+          "space_only": null,
+          "gnu_style": null
         }
       }
     },
@@ -136,7 +143,10 @@
           "a": false,
           "b": false,
           "sources": [],
-          "space_only": "80"
+          "space_only": "80",
+          "plain": null,
+          "attach_only": null,
+          "gnu_style": null
         }
       }
     },
@@ -161,7 +171,11 @@
           "b": false,
           "sources": [
             "-r80"
-          ]
+          ],
+          "plain": null,
+          "attach_only": null,
+          "space_only": null,
+          "gnu_style": null
         }
       }
     },
@@ -197,7 +211,10 @@
           "a": true,
           "b": true,
           "sources": [],
-          "attach_only": "80"
+          "attach_only": "80",
+          "plain": null,
+          "space_only": null,
+          "gnu_style": null
         }
       }
     },
@@ -222,7 +239,11 @@
           "b": false,
           "sources": [
             "-abr80"
-          ]
+          ],
+          "plain": null,
+          "attach_only": null,
+          "space_only": null,
+          "gnu_style": null
         }
       }
     },
@@ -259,7 +280,10 @@
           "a": true,
           "b": true,
           "sources": [],
-          "plain": "80"
+          "plain": "80",
+          "attach_only": null,
+          "space_only": null,
+          "gnu_style": null
         }
       }
     },
@@ -292,7 +316,11 @@
           "sources": [
             "-abq",
             "80"
-          ]
+          ],
+          "plain": null,
+          "attach_only": null,
+          "space_only": null,
+          "gnu_style": null
         }
       }
     },
@@ -329,7 +357,10 @@
           "a": true,
           "b": true,
           "sources": [],
-          "space_only": "80"
+          "space_only": "80",
+          "plain": null,
+          "attach_only": null,
+          "gnu_style": null
         }
       }
     },
@@ -380,7 +411,10 @@
           "a": false,
           "b": false,
           "sources": [],
-          "gnu_style": "80ab"
+          "gnu_style": "80ab",
+          "plain": null,
+          "attach_only": null,
+          "space_only": null
         }
       }
     },
@@ -416,7 +450,10 @@
           "a": true,
           "b": true,
           "sources": [],
-          "gnu_style": "80"
+          "gnu_style": "80",
+          "plain": null,
+          "attach_only": null,
+          "space_only": null
         }
       }
     },
@@ -441,7 +478,10 @@
           "a": false,
           "b": false,
           "sources": [],
-          "gnu_style": "80"
+          "gnu_style": "80",
+          "plain": null,
+          "attach_only": null,
+          "space_only": null
         }
       }
     },
@@ -470,7 +510,11 @@
         "result": {
           "a": true,
           "b": true,
-          "sources": []
+          "sources": [],
+          "plain": null,
+          "attach_only": null,
+          "space_only": null,
+          "gnu_style": null
         }
       }
     }

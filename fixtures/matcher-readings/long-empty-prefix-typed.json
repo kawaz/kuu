@@ -50,7 +50,8 @@
           "rest": [
             "height",
             "height"
-          ]
+          ],
+          "height": null
         }
       }
     },
