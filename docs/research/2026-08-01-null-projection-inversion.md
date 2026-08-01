@@ -78,6 +78,24 @@
 - サイクル 4: kuu.mbt (build_result 系 + source_shadow + conformance decoder、単一 writer)
 - サイクル 5: kuu-cli 追随 → lockstep push (spec → kuu.mbt pin → kuu-cli pin)
 
+## 5b. 追補裁定 (2026-08-01、DR 起草後の統括裁定 — 異議あれば差し戻し可)
+
+- **`absent-source` (値不在側) は廃止方向**: DR-130 下では参照先の座は不在にならず null になるため、
+  borrow は null を返し `set(null) = unset` が呼び出し元へ伝播する — DR-113 §5.4 の
+  「absent-source で呼び出し元も unset のまま落ちる」規定は DR-131 の一規則に吸収される。
+  `absent-ref` (名前解決失敗、定義時) は別概念で不変。NUL-C1 の「absent-source は転換対象外」は
+  誤爆置換防止の意図であって意味論の温存指示ではない、と整理。fixture
+  `value-sources/default-fn-borrow-ladder.json::borrow-source-absent` の期待値は null 形へ更新対象
+- **行供給の座 (accumulator の値スロット) への null = 供給なし (行を積まない)**: `set(null) = unset`
+  の一規則を全座へ貫く。null 行 (`[null]` の行) は発火の産物として作らない。DR-127 の link 値残余座の
+  `set(null)` も同様にその座を null へ戻す
+- **`fixtures/absent/` (4 ファイル) は `fixtures/null-projection/` へ改称**: absent 意味論そのものの
+  pin 領域なので書き直し + 領域名も現行化 (absent 語のディレクトリ残置は誤爆源)。台帳・pin の参照有無は
+  サイクル 3 で確認
+- committed の担い手: DR-131 §2 の「set の committed は operand が null かで決まる」(worker 導出) を
+  統括承認 — DR-045 §2 の明示制御原則を op から operand へ移す形
+- update op の既存不整合 (DR-045/077 vs CONFORMANCE) は本転換と独立の issue として起票
+
 ## 6. 未決の隣接論点 (本転換に含めない)
 
 - link 入口の name/export_key による二重露出 (mid=29 提起、方向感未確定) — 別 Q として継続
