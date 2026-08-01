@@ -1,6 +1,6 @@
 ---
 title: update op の語彙不整合 (DR-045/077 vs CONFORMANCE §2)
-status: open
+status: resolved
 category: design
 created: 2026-08-01T23:21:31+09:00
 last_read: 2026-08-02T07:49:39+09:00
@@ -9,10 +9,10 @@ wip_entered:
 blocked_entered:
 pending_entered:
 discarded_entered:
-resolved_entered:
+resolved_entered: 2026-08-02T07:55:28+09:00
 discard_reason:
 pending_reason:
-close_reason:
+close_reason: ["dr/DR-045:supersede-annotated","dr/DR-077:supersede-annotated","dr/DR-114:source-of-truth","implemented"]
 blocked_by:
 origin: 自リポ TODO
 ---
