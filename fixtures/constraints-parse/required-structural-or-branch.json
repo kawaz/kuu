@@ -8,8 +8,14 @@
         "long": true,
         "required": true,
         "or": [
-          {"type": "int", "name": "num"},
-          {"type": "bool", "name": "flag"}
+          {
+            "type": "int",
+            "name": "num"
+          },
+          {
+            "type": "bool",
+            "name": "flag"
+          }
         ]
       }
     ]
@@ -18,25 +24,51 @@
     {
       "id": "int-branch-supplied",
       "why": "`--level 5`: num 枝 (int) が \"5\" を受理して発火、flag 枝 (bool) は canonical bool 語彙 (true/1, false/0/\"\") に \"5\" が無く not_a_bool で確実に死ぬ — 完全経路ちょうど1本 (DESIGN §15.1) で success のはず、値空間を持つ leaf が発火し値が確定しているので required も充足 (DR-093 §1)。実機確認: 実際は `fail:required 'level' is missing` — num=5 という値が確定しているにもかかわらず level の required 判定が missing を返す (バグ)。",
-      "args": ["--level", "5"],
+      "args": [
+        "--level",
+        "5"
+      ],
       "expect": {
         "outcome": "success",
         "effects": [
-          {"entity": "num", "op": "set", "operand": 5, "source": "cli"}
+          {
+            "entity": "num",
+            "op": "set",
+            "operand": 5,
+            "source": "cli"
+          }
         ],
-        "result": {"level": {"num": 5}}
+        "result": {
+          "level": {
+            "num": 5,
+            "flag": null
+          }
+        }
       }
     },
     {
       "id": "bool-branch-supplied",
       "why": "`--level true`: flag 枝 (bool) が \"true\" を canonical 語彙で受理して発火、num 枝 (int) は \"true\" が number 構文でなく not_a_number で死ぬ — int-branch-supplied と対称、or 構造のどちらの枝を通っても同じ required missing バグが起きることを固定する (型固有の偶然ではなく or 親の required 判定そのものが壊れていることの証拠)。実機確認: 実際は `fail:required 'level' is missing`。",
-      "args": ["--level", "true"],
+      "args": [
+        "--level",
+        "true"
+      ],
       "expect": {
         "outcome": "success",
         "effects": [
-          {"entity": "flag", "op": "set", "operand": true, "source": "cli"}
+          {
+            "entity": "flag",
+            "op": "set",
+            "operand": true,
+            "source": "cli"
+          }
         ],
-        "result": {"level": {"flag": true}}
+        "result": {
+          "level": {
+            "num": null,
+            "flag": true
+          }
+        }
       }
     },
     {
@@ -45,7 +77,14 @@
       "args": [],
       "expect": {
         "outcome": "failure",
-        "errors": [{"element": "level", "args_pos": 0, "kind": "constraint", "reason": "required_violated"}]
+        "errors": [
+          {
+            "element": "level",
+            "args_pos": 0,
+            "kind": "constraint",
+            "reason": "required_violated"
+          }
+        ]
       }
     }
   ]

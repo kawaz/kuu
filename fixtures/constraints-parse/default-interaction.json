@@ -52,7 +52,8 @@
         "result": {
           "decrypt": false,
           "key_file": "/id.key",
-          "format": "json"
+          "format": "json",
+          "schema": null
         }
       }
     },
@@ -75,7 +76,8 @@
         "result": {
           "decrypt": true,
           "key_file": "/id.key",
-          "format": "json"
+          "format": "json",
+          "schema": null
         }
       }
     },

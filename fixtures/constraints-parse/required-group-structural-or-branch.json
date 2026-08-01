@@ -52,8 +52,10 @@
         ],
         "result": {
           "level": {
-            "num": 5
-          }
+            "num": 5,
+            "flag": null
+          },
+          "other": null
         }
       }
     },
@@ -76,8 +78,10 @@
         ],
         "result": {
           "level": {
+            "num": null,
             "flag": true
-          }
+          },
+          "other": null
         }
       }
     },

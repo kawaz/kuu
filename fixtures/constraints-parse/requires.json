@@ -84,7 +84,9 @@
         ],
         "result": {
           "decrypt": true,
-          "key_file": "k"
+          "key_file": "k",
+          "format": null,
+          "schema": null
         }
       }
     },
@@ -96,7 +98,10 @@
         "outcome": "success",
         "effects": [],
         "result": {
-          "decrypt": false
+          "decrypt": false,
+          "key_file": null,
+          "format": null,
+          "schema": null
         }
       }
     },
@@ -138,7 +143,9 @@
         ],
         "result": {
           "decrypt": false,
-          "format": "yaml"
+          "key_file": null,
+          "format": "yaml",
+          "schema": null
         }
       }
     },
@@ -169,6 +176,7 @@
         ],
         "result": {
           "decrypt": false,
+          "key_file": null,
           "format": "json",
           "schema": "s"
         }

@@ -4,39 +4,78 @@
   "definition": {
     "definitions": {
       "templates": {
-        "level_tmpl": {"or": [
-          {"type": "int", "name": "num"},
-          {"type": "bool", "name": "flag"}
-        ]}
+        "level_tmpl": {
+          "or": [
+            {
+              "type": "int",
+              "name": "num"
+            },
+            {
+              "type": "bool",
+              "name": "flag"
+            }
+          ]
+        }
       }
     },
     "options": [
-      {"name": "level", "ref": "level_tmpl", "long": true, "required": true}
+      {
+        "name": "level",
+        "ref": "level_tmpl",
+        "long": true,
+        "required": true
+      }
     ]
   },
   "cases": [
     {
       "id": "ref-int-branch-supplied",
       "why": "`--level 5`: level が ref 継承した level_tmpl の or 構造のうち num 枝 (int) が \"5\" を受理して発火、flag 枝は not_a_bool で死ぬ — 完全経路ちょうど1本、num という値確定した candidate cell が存在するので required は充足する (`required-structural-or-branch.json::int-branch-supplied` と同じ充足判定)。露出は ref 経由の Scoped ネスト規則により `{level: {num: 5}}` (直書き or 版のようなトップレベル `{num: 5}` にはならない、DR-025 の宣言名非露出規則は直書き or 固有)。",
-      "args": ["--level", "5"],
+      "args": [
+        "--level",
+        "5"
+      ],
       "expect": {
         "outcome": "success",
         "effects": [
-          {"entity": "num", "op": "set", "operand": 5, "source": "cli"}
+          {
+            "entity": "num",
+            "op": "set",
+            "operand": 5,
+            "source": "cli"
+          }
         ],
-        "result": {"level": {"num": 5}}
+        "result": {
+          "level": {
+            "num": 5,
+            "flag": null
+          }
+        }
       }
     },
     {
       "id": "ref-bool-branch-supplied",
       "why": "`--level true`: flag 枝 (bool) が \"true\" を受理して発火、num 枝は not_a_number で死ぬ — ref-int-branch-supplied と対称、ref 展開後のどちらの枝でも required 充足に寄与することを固定する。露出は同じ Scoped ネスト規則で `{level: {flag: true}}`。",
-      "args": ["--level", "true"],
+      "args": [
+        "--level",
+        "true"
+      ],
       "expect": {
         "outcome": "success",
         "effects": [
-          {"entity": "flag", "op": "set", "operand": true, "source": "cli"}
+          {
+            "entity": "flag",
+            "op": "set",
+            "operand": true,
+            "source": "cli"
+          }
         ],
-        "result": {"level": {"flag": true}}
+        "result": {
+          "level": {
+            "num": null,
+            "flag": true
+          }
+        }
       }
     },
     {
@@ -45,7 +84,14 @@
       "args": [],
       "expect": {
         "outcome": "failure",
-        "errors": [{"element": "level", "args_pos": 0, "kind": "constraint", "reason": "required_violated"}]
+        "errors": [
+          {
+            "element": "level",
+            "args_pos": 0,
+            "kind": "constraint",
+            "reason": "required_violated"
+          }
+        ]
       }
     }
   ]
