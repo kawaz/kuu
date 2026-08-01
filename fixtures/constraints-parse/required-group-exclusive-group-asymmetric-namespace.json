@@ -3,40 +3,100 @@
   "query": "parse",
   "definition": {
     "options": [
-      {"name": "a", "type": "bool", "long": [":set:true"], "required_group": ["g"], "exclusive_group": ["g"]},
-      {"name": "b", "type": "bool", "long": [":set:true"], "required_group": ["g"]},
-      {"name": "c", "type": "bool", "long": [":set:true"], "exclusive_group": ["g"]}
+      {
+        "name": "a",
+        "type": "bool",
+        "long": [
+          ":set:true"
+        ],
+        "required_group": [
+          "g"
+        ],
+        "exclusive_group": [
+          "g"
+        ]
+      },
+      {
+        "name": "b",
+        "type": "bool",
+        "long": [
+          ":set:true"
+        ],
+        "required_group": [
+          "g"
+        ]
+      },
+      {
+        "name": "c",
+        "type": "bool",
+        "long": [
+          ":set:true"
+        ],
+        "exclusive_group": [
+          "g"
+        ]
+      }
     ]
   },
   "cases": [
     {
       "id": "b-alone-satisfies-required-without-touching-exclusive",
-      "why": "`--b`: required_group \"g\" の member は {a,b} — b が発火し値充足 (plain bool) なので required は成立。exclusive_group \"g\" の member は {a,c} — a も c も未発火なので committed 0 個、exclusive も成立 (最大 1 つの制約に 0 は違反しない)。b は required_group の member だが exclusive_group の member ではない — required の充足に exclusive 側の判定が一切関与しないことを示す (両述語が別集合を見ている証拠)。a/c は plain bool (暗黙 default なし) で未発火のため absent、result にキーは現れない (`required-group.json` の同型ケースと同じ、DR-051 §1)。",
-      "args": ["--b"],
+      "why": "`--b`: required_group \"g\" の member は {a,b} — b が発火し値充足 (plain bool) なので required は成立。exclusive_group \"g\" の member は {a,c} — a も c も未発火なので committed 0 個、exclusive も成立 (最大 1 つの制約に 0 は違反しない)。b は required_group の member だが exclusive_group の member ではない — required の充足に exclusive 側の判定が一切関与しないことを示す (両述語が別集合を見ている証拠)。a/c は plain bool (暗黙 default なし) で未発火のため null、result にキーは現れない (`required-group.json` の同型ケースと同じ、DR-130)。",
+      "args": [
+        "--b"
+      ],
       "expect": {
         "outcome": "success",
         "effects": [
-          {"entity": "b", "op": "set", "operand": true, "source": "cli"}
+          {
+            "entity": "b",
+            "op": "set",
+            "operand": true,
+            "source": "cli"
+          }
         ],
-        "result": {"b": true}
+        "result": {
+          "b": true,
+          "a": null,
+          "c": null
+        }
       }
     },
     {
       "id": "c-alone-satisfies-exclusive-but-violates-required",
       "why": "`--c`: exclusive_group \"g\" の member は {a,c} — c のみ committed (1 個) なので exclusive は成立。required_group \"g\" の member は {a,b} — c は required_group の member ではないため c の発火は required の充足に一切寄与しない。a も b も未発火・default なしで値未充足のため required_group_violated (element=\"g\")。b-alone-satisfies-required-without-touching-exclusive との対比: 同じグループ名 \"g\" でも required_group と exclusive_group が別集合の member を見ている非対称性が、この失敗自体で実証される。args_pos=1=args.length。",
-      "args": ["--c"],
+      "args": [
+        "--c"
+      ],
       "expect": {
         "outcome": "failure",
-        "errors": [{"element": "g", "args_pos": 1, "kind": "constraint", "reason": "required_group_violated"}]
+        "errors": [
+          {
+            "element": "g",
+            "args_pos": 1,
+            "kind": "constraint",
+            "reason": "required_group_violated"
+          }
+        ]
       }
     },
     {
       "id": "a-and-c-violate-exclusive-while-required-stays-satisfied",
       "why": "`--a --c`: exclusive_group \"g\" の member {a,c} が両方 committed (2 個) → exclusive_group_violated。required_group \"g\" の member {a,b} は a が発火し値充足しているため required は成立 (b は不要)。c は required_group の member でないため required 側の判定には現れず、a のみで required が満たされる — required_group が exclusive_group の違反とは独立に評価されることを示す。args_pos=2=args.length。",
-      "args": ["--a", "--c"],
+      "args": [
+        "--a",
+        "--c"
+      ],
       "expect": {
         "outcome": "failure",
-        "errors": [{"element": "g", "args_pos": 2, "kind": "constraint", "reason": "exclusive_group_violated"}]
+        "errors": [
+          {
+            "element": "g",
+            "args_pos": 2,
+            "kind": "constraint",
+            "reason": "exclusive_group_violated"
+          }
+        ]
       }
     }
   ]

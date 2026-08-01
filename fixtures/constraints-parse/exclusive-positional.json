@@ -3,34 +3,67 @@
   "query": "parse",
   "definition": {
     "positionals": [
-      {"name": "a", "type": "string", "required": true, "exclusive_group": ["g"]}
+      {
+        "name": "a",
+        "type": "string",
+        "required": true,
+        "exclusive_group": [
+          "g"
+        ]
+      }
     ],
     "options": [
-      {"name": "b", "type": "string", "long": true, "exclusive_group": ["g"]}
+      {
+        "name": "b",
+        "type": "string",
+        "long": true,
+        "exclusive_group": [
+          "g"
+        ]
+      }
     ]
   },
   "cases": [
     {
       "id": "positional-exclusive-fires",
       "why": "positional a と option --b の両 member 発火 → group `g` の committed 数 2 で違反。element=g (group ラベル)、reason=exclusive_group_violated、args_pos=3=args.length。conflicts 版 (conflicts-positional.json) の element=宣言元 と対照して、exclusive の element が group ラベル固有であることを positional 参加席でも固定する (DR-103 §2 / DR-063 §3)。",
-      "args": ["x", "--b", "y"],
+      "args": [
+        "x",
+        "--b",
+        "y"
+      ],
       "expect": {
         "outcome": "failure",
         "errors": [
-          {"element": "g", "args_pos": 3, "kind": "constraint", "reason": "exclusive_group_violated"}
+          {
+            "element": "g",
+            "args_pos": 3,
+            "kind": "constraint",
+            "reason": "exclusive_group_violated"
+          }
         ]
       }
     },
     {
       "id": "positional-exclusive-single-ok",
-      "why": "positional a のみ committed (option --b 未供給で非 committed) → group `g` の committed 数 1 で許容、success (最大 1 つは OK、DESIGN §9.2)。effects は a の cli set 1 件、result は b absent。",
-      "args": ["x"],
+      "why": "positional a のみ committed (option --b 未供給で非 committed) → group `g` の committed 数 1 で許容、success (最大 1 つは OK、DESIGN §9.2)。effects は a の cli set 1 件、result は b null。",
+      "args": [
+        "x"
+      ],
       "expect": {
         "outcome": "success",
         "effects": [
-          {"entity": "a", "op": "set", "operand": "x", "source": "cli"}
+          {
+            "entity": "a",
+            "op": "set",
+            "operand": "x",
+            "source": "cli"
+          }
         ],
-        "result": {"a": "x"}
+        "result": {
+          "a": "x",
+          "b": null
+        }
       }
     }
   ]

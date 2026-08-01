@@ -6,38 +6,79 @@
       {
         "name": "level",
         "long": true,
-        "required_group": ["g"],
+        "required_group": [
+          "g"
+        ],
         "or": [
-          {"type": "int", "name": "num"},
-          {"type": "bool", "name": "flag"}
+          {
+            "type": "int",
+            "name": "num"
+          },
+          {
+            "type": "bool",
+            "name": "flag"
+          }
         ]
       },
-      {"name": "other", "type": "bool", "long": [":set:true"], "required_group": ["g"]}
+      {
+        "name": "other",
+        "type": "bool",
+        "long": [
+          ":set:true"
+        ],
+        "required_group": [
+          "g"
+        ]
+      }
     ]
   },
   "cases": [
     {
       "id": "int-branch-satisfies-group",
-      "why": "`--level 5`: num 枝 (int) が \"5\" を受理して発火、flag 枝 (bool) は not_a_bool で死ぬ — 完全経路ちょうど1本、num という値確定した candidate cell が存在する。required 単項なら (`required-structural-or-branch.json::int-branch-supplied` と同型に) この時点で充足するので、required_group も同じ型委譲でグループ g が充足すべき — other (plain bool) は未発火・default なしで absent = 未充足だが、level 側 (num=5 経由) の充足だけで group は成立し required_group_violated は起きない。result は level が作る結果スコープの中に num が入る (DESIGN §2.4、`required-structural-or-branch.json::int-branch-supplied` と同形)。現行実装は `e.name`=\"level\" を値セル名として引き (値は子スコープ内の num に着地している) 未充足と誤判定する疑いがあり (codex M-2)、その場合は mismatch になる。",
-      "args": ["--level", "5"],
+      "why": "`--level 5`: num 枝 (int) が \"5\" を受理して発火、flag 枝 (bool) は not_a_bool で死ぬ — 完全経路ちょうど1本、num という値確定した candidate cell が存在する。required 単項なら (`required-structural-or-branch.json::int-branch-supplied` と同型に) この時点で充足するので、required_group も同じ型委譲でグループ g が充足すべき — other (plain bool) は未発火・default なしで null = 未充足だが、level 側 (num=5 経由) の充足だけで group は成立し required_group_violated は起きない。result は level が作る結果スコープの中に num が入る (DESIGN §2.4、`required-structural-or-branch.json::int-branch-supplied` と同形)。現行実装は `e.name`=\"level\" を値セル名として引き (値は子スコープ内の num に着地している) 未充足と誤判定する疑いがあり (codex M-2)、その場合は mismatch になる。",
+      "args": [
+        "--level",
+        "5"
+      ],
       "expect": {
         "outcome": "success",
         "effects": [
-          {"entity": "num", "op": "set", "operand": 5, "source": "cli"}
+          {
+            "entity": "num",
+            "op": "set",
+            "operand": 5,
+            "source": "cli"
+          }
         ],
-        "result": {"level": {"num": 5}}
+        "result": {
+          "level": {
+            "num": 5
+          }
+        }
       }
     },
     {
       "id": "bool-branch-satisfies-group",
       "why": "`--level true`: flag 枝 (bool) が \"true\" を受理して発火、num 枝 (int) は not_a_number で死ぬ — int-branch-satisfies-group と対称、or 構造のどちらの枝でも group 充足に寄与することを固定する (型固有の偶然でなく or 親要素の充足判定そのものを検証するため)。",
-      "args": ["--level", "true"],
+      "args": [
+        "--level",
+        "true"
+      ],
       "expect": {
         "outcome": "success",
         "effects": [
-          {"entity": "flag", "op": "set", "operand": true, "source": "cli"}
+          {
+            "entity": "flag",
+            "op": "set",
+            "operand": true,
+            "source": "cli"
+          }
         ],
-        "result": {"level": {"flag": true}}
+        "result": {
+          "level": {
+            "flag": true
+          }
+        }
       }
     },
     {
@@ -46,7 +87,14 @@
       "args": [],
       "expect": {
         "outcome": "failure",
-        "errors": [{"element": "g", "args_pos": 0, "kind": "constraint", "reason": "required_group_violated"}]
+        "errors": [
+          {
+            "element": "g",
+            "args_pos": 0,
+            "kind": "constraint",
+            "reason": "required_group_violated"
+          }
+        ]
       }
     }
   ]

@@ -3,34 +3,65 @@
   "query": "parse",
   "definition": {
     "positionals": [
-      {"name": "a", "type": "string", "optional": true, "required_group": ["g"]}
+      {
+        "name": "a",
+        "type": "string",
+        "optional": true,
+        "required_group": [
+          "g"
+        ]
+      }
     ],
     "options": [
-      {"name": "b", "type": "string", "long": true, "required_group": ["g"]}
+      {
+        "name": "b",
+        "type": "string",
+        "long": true,
+        "required_group": [
+          "g"
+        ]
+      }
     ]
   },
   "cases": [
     {
       "id": "positional-required-group-violates",
-      "why": "positional a も option --b もどちらも未供給 (positional a は optional なので argv 空でも parse 失敗にならず、0 発火 = non-committed になる、DR-051 §2b + reversal reading: 反復セルは 0 発火で空配列 [] present だが committed は「値供給の実体化」で判定される、DR-093 型委譲) → group `g` の充足 member 0 → 違反。element=g、reason=required_group_violated、args_pos=0=args.length。",
+      "why": "positional a も option --b もどちらも未供給 (positional a は optional なので argv 空でも parse 失敗にならず、0 発火 = non-committed になる、DR-130 + reversal reading: 反復セルは 0 発火で空配列 [] present だが committed は「値供給の実体化」で判定される、DR-093 型委譲) → group `g` の充足 member 0 → 違反。element=g、reason=required_group_violated、args_pos=0=args.length。",
       "args": [],
       "expect": {
         "outcome": "failure",
         "errors": [
-          {"element": "g", "args_pos": 0, "kind": "constraint", "reason": "required_group_violated"}
+          {
+            "element": "g",
+            "args_pos": 0,
+            "kind": "constraint",
+            "reason": "required_group_violated"
+          }
         ]
       }
     },
     {
       "id": "positional-required-group-satisfied-by-positional",
-      "why": "positional a のみ発火 (トークン x で消費、a committed) → group `g` の member a 充足 → success。b は未発火 → absent。positional 側発火だけで group を充足させられることを固定 (DR-103 §1 の「いずれか 1 つでも候補セル充足していれば OK」を positional 席で pin)。",
-      "args": ["x"],
+      "why": "positional a のみ発火 (トークン x で消費、a committed) → group `g` の member a 充足 → success。b は未発火 → null。positional 側発火だけで group を充足させられることを固定 (DR-103 §1 の「いずれか 1 つでも候補セル充足していれば OK」を positional 席で pin)。",
+      "args": [
+        "x"
+      ],
       "expect": {
         "outcome": "success",
         "effects": [
-          {"entity": "a", "op": "set", "operand": "x", "source": "cli"}
+          {
+            "entity": "a",
+            "op": "set",
+            "operand": "x",
+            "source": "cli"
+          }
         ],
-        "result": {"a": ["x"]}
+        "result": {
+          "a": [
+            "x"
+          ],
+          "b": null
+        }
       }
     }
   ]

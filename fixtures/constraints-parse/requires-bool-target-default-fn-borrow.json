@@ -1,26 +1,58 @@
 {
-  "why": "bool 目的語 requires の**値源不問性** (DR-047 §5 明確化 2026-07-09) が **default 席経由**でも貫通することを pin する。requires-bool-target*.json は cli / env / config 席を扱っており、ラダー最下段の default 席 (DESIGN §11.4 の 4 段) は未検証だった。判断本質: bool 型は preset の暗黙 default:false (LOWERING §A.5、flag = bool + default:false) を常に持つため、requires の充足判定を素朴に「値の有無」でやると bool 目的語は常に vacuous に充足してしまう。だから bool 目的語だけは判定基準を「**解決後の値が true であること**」に切り替える (DR-047 §5) — この判定は最終解決値だけを見るので値源そのものは不問で、cli / env / config / default のどれで true になっても満たされる。制約は遅延述語であり、判定は全完全経路の収集後に値源ラダーが解ける後段 (resolve 層) で経路フィルタとして適用される (DR-047 §5、DR-087 §4 の resolve 後評価) ので、default 席の解決が制約判定より先に完了していることが前提になる。\n\n本 fixture が特に狙うのは default 席の住人が `borrow` (`default_fn: \"borrow:<source>\"`、DR-114 §8 / DR-125 §3) である場合 — 値源解決 (lexical scope chain の名前解決 + DR-087 の依存グラフ位相順の遅延解決) と制約検査という 2 つの機構の統合点であり、それぞれ単独の fixture では組合せの正しさが保証されない。`default` と `default_fn` は同じ default 席なので併用できず (DESIGN §11.4 の definition-error `invalid-range`)、type preset の暗黙 default はユーザ明示の `default_fn` があれば**置換される** (DESIGN §11.4 / DR-113 §5.2) — したがって目的語 `c` / `d` の default 席には preset の false ではなく borrow が座っており、borrow が値を運べなければ目的語は false へ落ちるのではなく absent になる。\n\n定義: root に借り元の 2 つを置く — `outer_yes` は `flag` (preset default:false を持つので必ず値がある、発火で true / 未発火で false)、`outer_opt` は素の `bool` (preset ではないので暗黙 default を持たず、未供給なら absent)。子コマンド `run` / `probe` がそれぞれ `requires` のトリガと目的語の対を持ち、目的語の default 席が root の借り元を borrow する。root option は `global` でないので子スコープへ入口は伝播せず、子から root の値へ届く経路は borrow だけになる。`sources` は borrow 由来でも `default` (borrow は独立した値源席ではなく default 席の住人、ラダーは 4 段のまま — DR-125 §1、`value-sources/default-fn-borrow-ladder.json`)、ラダー充填は effects に載らない (effects は cli / link 由来のみ、CONFORMANCE §2)。",
+  "why": "bool 目的語 requires の**値源不問性** (DR-047 §5 明確化 2026-07-09) が **default 席経由**でも貫通することを pin する。requires-bool-target*.json は cli / env / config 席を扱っており、ラダー最下段の default 席 (DESIGN §11.4 の 4 段) は未検証だった。判断本質: bool 型は preset の暗黙 default:false (LOWERING §A.5、flag = bool + default:false) を常に持つため、requires の充足判定を素朴に「値の有無」でやると bool 目的語は常に vacuous に充足してしまう。だから bool 目的語だけは判定基準を「**解決後の値が true であること**」に切り替える (DR-047 §5) — この判定は最終解決値だけを見るので値源そのものは不問で、cli / env / config / default のどれで true になっても満たされる。制約は遅延述語であり、判定は全完全経路の収集後に値源ラダーが解ける後段 (resolve 層) で経路フィルタとして適用される (DR-047 §5、DR-087 §4 の resolve 後評価) ので、default 席の解決が制約判定より先に完了していることが前提になる。\n\n本 fixture が特に狙うのは default 席の住人が `borrow` (`default_fn: \"borrow:<source>\"`、DR-114 §8 / DR-125 §3) である場合 — 値源解決 (lexical scope chain の名前解決 + DR-087 の依存グラフ位相順の遅延解決) と制約検査という 2 つの機構の統合点であり、それぞれ単独の fixture では組合せの正しさが保証されない。`default` と `default_fn` は同じ default 席なので併用できず (DESIGN §11.4 の definition-error `invalid-range`)、type preset の暗黙 default はユーザ明示の `default_fn` があれば**置換される** (DESIGN §11.4 / DR-113 §5.2) — したがって目的語 `c` / `d` の default 席には preset の false ではなく borrow が座っており、borrow が値を運べなければ目的語は false へ落ちるのではなく null になる。\n\n定義: root に借り元の 2 つを置く — `outer_yes` は `flag` (preset default:false を持つので必ず値がある、発火で true / 未発火で false)、`outer_opt` は素の `bool` (preset ではないので暗黙 default を持たず、未供給なら null)。子コマンド `run` / `probe` がそれぞれ `requires` のトリガと目的語の対を持ち、目的語の default 席が root の借り元を borrow する。root option は `global` でないので子スコープへ入口は伝播せず、子から root の値へ届く経路は borrow だけになる。`sources` は borrow 由来でも `default` (borrow は独立した値源席ではなく default 席の住人、ラダーは 4 段のまま — DR-125 §1、`value-sources/default-fn-borrow-ladder.json`)、ラダー充填は effects に載らない (effects は cli / link 由来のみ、CONFORMANCE §2)。",
   "query": "parse",
   "definition": {
     "options": [
-      {"name": "outer_yes", "type": "flag", "long": true},
-      {"name": "outer_opt", "type": "bool", "long": true}
+      {
+        "name": "outer_yes",
+        "type": "flag",
+        "long": true
+      },
+      {
+        "name": "outer_opt",
+        "type": "bool",
+        "long": true
+      }
     ],
     "commands": [
       {
         "type": "command",
         "name": "run",
         "options": [
-          {"name": "a", "type": "flag", "long": true, "requires": ["c"]},
-          {"name": "c", "type": "flag", "long": true, "default_fn": "borrow:outer_yes"}
+          {
+            "name": "a",
+            "type": "flag",
+            "long": true,
+            "requires": [
+              "c"
+            ]
+          },
+          {
+            "name": "c",
+            "type": "flag",
+            "long": true,
+            "default_fn": "borrow:outer_yes"
+          }
         ]
       },
       {
         "type": "command",
         "name": "probe",
         "options": [
-          {"name": "b", "type": "flag", "long": true, "requires": ["d"]},
-          {"name": "d", "type": "flag", "long": true, "default_fn": "borrow:outer_opt"}
+          {
+            "name": "b",
+            "type": "flag",
+            "long": true,
+            "requires": [
+              "d"
+            ]
+          },
+          {
+            "name": "d",
+            "type": "flag",
+            "long": true,
+            "default_fn": "borrow:outer_opt"
+          }
         ]
       }
     ]
@@ -28,37 +60,83 @@
   "cases": [
     {
       "id": "borrow-true-satisfies-requires",
-      "why": "主題: `--outer-yes` を root で発火させて borrow に true を運ばせる。`c` は CLI 未発火だが、その default 席の `borrow:outer_yes` が lexical scope chain (現在スコープ → 外側、DESIGN §2.7 / DR-125 §4) で root の `outer_yes` に届き、解決値 true を引く。requires の判定は「解決後の値が true」だけを見るので、値源が default 席 (しかも borrow 経由) でも充足する (DR-047 §5 の値源不問) — トリガ側 `a` は cli 発火で committed、目的語側 `c` は値述語で判定、という混合述語の形も既存 requires fixture と同じ。判定が resolve 後に行われる (DR-087 §4) からこそ borrow の遅延解決結果が判定入力になる点が本 case の観測対象で、eval 層で判定していれば `c` は未解決のまま違反になる。effects は cli 発火した `outer_yes` と `a` の set のみ (`c` は default 席由来なので非掲載、CONFORMANCE §2)。`outer_opt` は未供給・暗黙 default なしで absent、`probe` は未入場なのでどちらも result / sources に現れない。`sources` で `c` の由来 default を検証する。",
-      "args": ["--outer-yes", "run", "--a"],
+      "why": "主題: `--outer-yes` を root で発火させて borrow に true を運ばせる。`c` は CLI 未発火だが、その default 席の `borrow:outer_yes` が lexical scope chain (現在スコープ → 外側、DESIGN §2.7 / DR-125 §4) で root の `outer_yes` に届き、解決値 true を引く。requires の判定は「解決後の値が true」だけを見るので、値源が default 席 (しかも borrow 経由) でも充足する (DR-047 §5 の値源不問) — トリガ側 `a` は cli 発火で committed、目的語側 `c` は値述語で判定、という混合述語の形も既存 requires fixture と同じ。判定が resolve 後に行われる (DR-087 §4) からこそ borrow の遅延解決結果が判定入力になる点が本 case の観測対象で、eval 層で判定していれば `c` は未解決のまま違反になる。effects は cli 発火した `outer_yes` と `a` の set のみ (`c` は default 席由来なので非掲載、CONFORMANCE §2)。`outer_opt` は未供給・暗黙 default なしで null、`probe` は未入場なので親スコープの座が null になる。`sources` で `c` の由来 default と null 座の同型を検証する。",
+      "args": [
+        "--outer-yes",
+        "run",
+        "--a"
+      ],
       "expect": {
         "outcome": "success",
         "effects": [
-          {"entity": "outer_yes", "op": "set", "operand": true, "source": "cli"},
-          {"entity": "a", "op": "set", "operand": true, "source": "cli"}
+          {
+            "entity": "outer_yes",
+            "op": "set",
+            "operand": true,
+            "source": "cli"
+          },
+          {
+            "entity": "a",
+            "op": "set",
+            "operand": true,
+            "source": "cli"
+          }
         ],
-        "result": {"outer_yes": true, "run": {"a": true, "c": true}},
-        "sources": {"outer_yes": "cli", "run": {"a": "cli", "c": "default"}}
+        "result": {
+          "outer_yes": true,
+          "run": {
+            "a": true,
+            "c": true
+          },
+          "outer_opt": null,
+          "probe": null
+        },
+        "sources": {
+          "outer_yes": "cli",
+          "run": {
+            "a": "cli",
+            "c": "default"
+          },
+          "outer_opt": null,
+          "probe": null
+        }
       }
     },
     {
       "id": "borrow-false-still-violates",
-      "why": "(対極その 1) `--outer-yes` を撃たずに `run --a`: `outer_yes` は flag preset の暗黙 default:false (LOWERING §A.5) で false に確定し、borrow はその false を `c` へ運ぶ。値が届いている (absent ではない) が「解決後の値が true」を満たさないので requires 違反 — 値源が default 席へ移っても「false なら不充足」という判定基準自体は不変であることの固定で、requires-bool-target-config-obj.json の config-false-still-violates と同型。error 語彙も requires-bool-target-single-path.json の c-unset-fails と同じ (element=a、kind=constraint、reason=requires_violated)。`args_pos` は args.length = 2 — 制約は遅延述語なので完了後の final position で評価される (DR-047 §5)。",
-      "args": ["run", "--a"],
+      "why": "(対極その 1) `--outer-yes` を撃たずに `run --a`: `outer_yes` は flag preset の暗黙 default:false (LOWERING §A.5) で false に確定し、borrow はその false を `c` へ運ぶ。値が届いている (null ではない) が「解決後の値が true」を満たさないので requires 違反 — 値源が default 席へ移っても「false なら不充足」という判定基準自体は不変であることの固定で、requires-bool-target-config-obj.json の config-false-still-violates と同型。error 語彙も requires-bool-target-single-path.json の c-unset-fails と同じ (element=a、kind=constraint、reason=requires_violated)。`args_pos` は args.length = 2 — 制約は遅延述語なので完了後の final position で評価される (DR-047 §5)。",
+      "args": [
+        "run",
+        "--a"
+      ],
       "expect": {
         "outcome": "failure",
         "errors": [
-          {"element": "a", "args_pos": 2, "kind": "constraint", "reason": "requires_violated"}
+          {
+            "element": "a",
+            "args_pos": 2,
+            "kind": "constraint",
+            "reason": "requires_violated"
+          }
         ]
       }
     },
     {
-      "id": "borrow-absent-source-violates",
-      "why": "(対極その 2) 借り元が値を持たない場合: `outer_opt` は素の `bool` で preset の暗黙 default を持たず (flag preset だけが default:false を同梱する、LOWERING §A.5)、CLI / env / config のどの席からも値を得ないので absent (DR-051 §1)。`d` の default 席の `borrow:outer_opt` は fn reason `absent-source` になり、**呼び出し元も unset のまま落ちる** (DR-113 §5.4) — `d` 自身の flag preset の暗黙 default:false は明示 `default_fn` に置換済み (DESIGN §11.4) なので false へは戻らず、`d` は absent になる。したがって bool 目的語の充足条件「解決後の値が true」(DR-047 §5) は値が無い以上成立せず、`b` の requires は違反する。前 case (false が届いて違反) と本 case (何も届かず違反) で、目的語が true になれない 2 通りの経路が同じ error 語彙に落ちることを固定する。`args_pos` は args.length = 2。",
-      "args": ["probe", "--b"],
+      "id": "borrow-null-source-violates",
+      "why": "(対極その 2) 借り元が値を持たない場合: `outer_opt` は素の `bool` で preset の暗黙 default を持たず (flag preset だけが default:false を同梱する、LOWERING §A.5)、CLI / env / config のどの席からも値を得ないので null (DR-130)。`d` の default 席の `borrow:outer_opt` は null を普通の値として返し、`set(null) = unset` により呼び出し元のラダーを開放する (DR-131 §1/§2) — `d` 自身の flag preset の暗黙 default:false は明示 `default_fn` に置換済み (DESIGN §11.4) なので false へは戻らず、`d` は null になる。したがって bool 目的語の充足条件「解決後の値が true」(DR-047 §5) は値が無い以上成立せず、`b` の requires は違反する。前 case (false が届いて違反) と本 case (何も届かず違反) で、目的語が true になれない 2 通りの経路が同じ error 語彙に落ちることを固定する。`args_pos` は args.length = 2。",
+      "args": [
+        "probe",
+        "--b"
+      ],
       "expect": {
         "outcome": "failure",
         "errors": [
-          {"element": "b", "args_pos": 2, "kind": "constraint", "reason": "requires_violated"}
+          {
+            "element": "b",
+            "args_pos": 2,
+            "kind": "constraint",
+            "reason": "requires_violated"
+          }
         ]
       }
     }

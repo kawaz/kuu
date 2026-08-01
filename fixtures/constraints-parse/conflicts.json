@@ -3,53 +3,118 @@
   "query": "parse",
   "definition": {
     "options": [
-      {"name": "foo", "type": "flag", "long": ["no:unset"], "conflicts_with": ["bar"]},
-      {"name": "bar", "type": "flag", "long": true}
+      {
+        "name": "foo",
+        "type": "flag",
+        "long": [
+          "no:unset"
+        ],
+        "conflicts_with": [
+          "bar"
+        ]
+      },
+      {
+        "name": "bar",
+        "type": "flag",
+        "long": true
+      }
     ]
   },
   "cases": [
     {
       "id": "conflict-fires",
       "why": "conflict 発火: foo と bar が両方 committed → 衝突で failure kind:constraint。宣言は foo 側にのみ置いたが判定は『両方 committed』なので発火する。element=宣言元 foo、args_pos=2=args.length。",
-      "args": ["--foo", "--bar"],
+      "args": [
+        "--foo",
+        "--bar"
+      ],
       "expect": {
         "outcome": "failure",
-        "errors": [{"element": "foo", "args_pos": 2, "kind": "constraint", "reason": "conflicts_with_violated"}]
+        "errors": [
+          {
+            "element": "foo",
+            "args_pos": 2,
+            "kind": "constraint",
+            "reason": "conflicts_with_violated"
+          }
+        ]
       }
     },
     {
       "id": "conflict-symmetric",
       "why": "両方向対称: bar を先に出しても衝突は同じく発火する (宣言の向きに非依存、DR-055)。前ケースと args 順を反転しても同一の failure。element/args_pos は前ケースと同じ (element は宣言元 foo で不変、args_pos は全消費後の args.length)。",
-      "args": ["--bar", "--foo"],
+      "args": [
+        "--bar",
+        "--foo"
+      ],
       "expect": {
         "outcome": "failure",
-        "errors": [{"element": "foo", "args_pos": 2, "kind": "constraint", "reason": "conflicts_with_violated"}]
+        "errors": [
+          {
+            "element": "foo",
+            "args_pos": 2,
+            "kind": "constraint",
+            "reason": "conflicts_with_violated"
+          }
+        ]
       }
     },
     {
       "id": "single-side-ok",
-      "why": "片側のみ committed → 衝突なし: foo だけなら bar は未 committed で述語不成立、success。result は foo=true、未発火 flag bar は preset default false で present (LOWERING §A.5 / DR-051 §2)。",
-      "args": ["--foo"],
+      "why": "片側のみ committed → 衝突なし: foo だけなら bar は未 committed で述語不成立、success。result は foo=true、未発火 flag bar は preset default false で present (LOWERING §A.5 / DR-130)。",
+      "args": [
+        "--foo"
+      ],
       "expect": {
         "outcome": "success",
         "effects": [
-          {"entity": "foo", "op": "set", "operand": true, "source": "cli"}
+          {
+            "entity": "foo",
+            "op": "set",
+            "operand": true,
+            "source": "cli"
+          }
         ],
-        "result": {"foo": true, "bar": false}
+        "result": {
+          "foo": true,
+          "bar": false
+        }
       }
     },
     {
       "id": "unset-cancels-conflict",
       "why": "unset で取消 → 非衝突 (committed 判定は最終効果、DR-045): foo→bar→no-foo の順で発火すると foo の最終効果は unset なので foo は非 committed、conflict は立たず success。効果列は 3 効果を適用順で全保持 (foo set / bar set / foo unset — 最終勝ち collapse は is_committed / ladder 時点で起き、効果列自体は畳まれない、順序は同一性成分)。result: foo は unset でラダー開放 → preset default false、bar=true。unset op は operand を持たない (DR-045)。",
-      "args": ["--foo", "--bar", "--no-foo"],
+      "args": [
+        "--foo",
+        "--bar",
+        "--no-foo"
+      ],
       "expect": {
         "outcome": "success",
         "effects": [
-          {"entity": "foo", "op": "set", "operand": true, "source": "cli"},
-          {"entity": "bar", "op": "set", "operand": true, "source": "cli"},
-          {"entity": "foo", "op": "unset", "source": "cli"}
+          {
+            "entity": "foo",
+            "op": "set",
+            "operand": true,
+            "source": "cli"
+          },
+          {
+            "entity": "bar",
+            "op": "set",
+            "operand": true,
+            "source": "cli"
+          },
+          {
+            "entity": "foo",
+            "op": "set",
+            "source": "cli",
+            "operand": null
+          }
         ],
-        "result": {"foo": false, "bar": true}
+        "result": {
+          "foo": false,
+          "bar": true
+        }
       }
     }
   ]
