@@ -1,5 +1,7 @@
 # DR-064: dd の宣言配置 — canonical は options[]
 
+> **更新 (DR-130、2026-08-01): dd は値セルも子も持たないため露出キーを占有せず、成功 result の全キー列挙対象にもならない。** canonical 配置・severed 化・消費挙動の裁定は不変。
+
 > 由来: dd fixture の輪郭議論 (docs/issue/2026-07-04-phase1-serialization-design-agenda.md の派生) で、dd だけが「配置が意味を持たない要素」として positionals[] に例示されている違和感 — DR-018 の「配置で役割が決まる」原則との不整合 — が指摘されたこと。
 
 ## 決定

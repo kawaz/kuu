@@ -1,5 +1,7 @@
 # DR-127: link 固定パス DSL の実装可能化 — セル空間 / 値空間の 2 相分解、record 宣言による静的化、器の auto-vivify
 
+> **更新 (DR-130/131、2026-08-01): 値残余の座への部分書きは未充足座を null として保持し、nameless tuple は `[null, 2]`、record は `{until: X, since: null}` の形を取りうる。** record の宣言済み欠落フィールドは論理的に null と読む。値残余座で発火時 Reject となる Sentinel fn は `default` だけで、`unset` は null Value、`empty` は空 Value を返す。`ctx.old` を要する fn だけが未 vivify の空座で Reject になる。
+
 > 由来: kuu.mbt issue `2026-07-27-link-fixed-path-dsl-unimplemented` を起点にした設計検討 (2026-07-28) と、
 > kawaz チャット裁定 2026-07-31 (ccmsg r98 mid=2〜16) / 2026-08-01 (mid=21/22)。正本は
 > `docs/research/2026-07-28-link-fixed-path-dsl-design.md` (§3 案 1 が採用案、§4b が record 導入後の

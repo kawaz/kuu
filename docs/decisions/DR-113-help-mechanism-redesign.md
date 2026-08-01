@@ -1,5 +1,7 @@
 # DR-113: help 機構の再設計 — help_installer・5 直交 type・構造化 model
 
+> **更新 (DR-130/131、2026-08-01): `borrow:<source>` の参照座に値が無い場合は null Value を返し、`set(null)` の一般規則で呼び出し元のラダーを開放する。** `absent-source` reason は使わない。default 席で弾く Sentinel fn は `default` だけで、`unset` / `empty` は対象型が適合すれば Value fn として指定できる。help 機構の裁定は不変。
+
 > **更新 (DR-124、2026-07-29): entry の `origin` から `{"kind": "inheritable", ...}` が抜けた。**
 > 値域は `"local"` / `{"kind":"global",...}` / `{"kind":"alias",...}` の 3 値。他は不変。
 

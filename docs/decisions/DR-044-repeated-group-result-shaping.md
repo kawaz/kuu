@@ -1,5 +1,7 @@
 # DR-044: 反復グループの結果整形 — 配列が既定、map は from_entries
 
+> **更新 (DR-130、2026-08-01): 反復系が 0 発火でも `[]` を持つ裁定は不変で、成功 result の null 座にはならない。** 反復セルの default 席には暗黙 bottom default `[]` があり (DR-123 §3)、行の内側に静的宣言キーがある場合だけ、その未充足座を `null` で補う。
+
 > 由来: authsock-warden 型の入れ子反復グループ (`--upstream ... --socket ... filters...`) の結果表現の議論と、垂直スライス PoC 第 4 弾の実測。findings `2026-06-29-ast-missing-pieces.md` の F-021 (map 型の key 抽出) の片翼を確定する。
 
 ## 決定

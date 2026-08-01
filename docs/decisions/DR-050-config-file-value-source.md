@@ -1,5 +1,7 @@
 # DR-050: config ファイル値源 — type: config_file の配線、provider 契約、config_key の同型対応
 
+> **更新 (DR-130、2026-08-01): config JSON の null は引き続き「供給なし」と読む入力側の別軸で、kuu の値空間へ null Value を供給しない。** result の null はラダー枯渇後の出力射影であり、同じ JSON 綴りでも config 入力との round-trip 形ではない。
+
 > 由来: findings `2026-06-29-ast-missing-pieces.md` の F-029 (config ファイル値源の注入機構、critical)。F-032 (source: "config" が立つ条件) の片翼も確定する。本セッションの議論で確定。
 
 ## 決定

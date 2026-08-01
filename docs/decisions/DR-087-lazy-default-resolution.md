@@ -1,5 +1,7 @@
 # DR-087: default の遅延解決 — placeholder 設置と依存順の最終実体化
 
+> **更新 (DR-130/131、2026-08-01): default の遅延 placeholder と依存順実体化は不変。** `default_fn` が実行時に null Value を返すのは合法で、その回は値を供給せず座が `null` になる。`default` だけは実値が発火時点で決まらないため Sentinel として残る。
+
 > **更新 (DR-125、2026-07-29): 値源席の列挙から `inherit` が抜けた。** default 席を書き換える
 > 上位席は env / config のみ。§2 の「inherit は祖先 cell の解決値に依存する」は
 > `default_fn: "borrow:<source>"` が担い、同じ位相順則 (参照先 cell の実体化が先) に載る

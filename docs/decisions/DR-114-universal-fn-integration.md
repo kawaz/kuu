@@ -1,5 +1,7 @@
 # DR-114: universal fn 統合 — variant effect・filter・default_fn の共通呼び出し機構
 
+> **更新 (DR-130/131、2026-08-01): `cell_fns` の `unset` / `empty` は Value 返し群へ移り、Sentinel 返しは `default` だけになる。** null Value は共通 dispatcher が filter を呼ばず素通しし、cell 適用時に `set(null)` としてラダーを開放する。default 席は Value 返し fn を受け入れるため、対象型が適合する `unset` / `empty` を指定できる。
+
 > **更新 (DR-125、2026-07-29): `cell_fns` の住人一覧と値源ラダー席から `inherit` が抜けた。**
 > `borrow` は不変 — `inherit` は descriptor の全軸 (`role` / `io_type` / `fallibility` /
 > `invocation` / `observes` / `reasons`) が `borrow` と一致する重複住人だったため落ちた。以下の
