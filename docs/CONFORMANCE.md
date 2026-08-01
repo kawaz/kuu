@@ -72,8 +72,9 @@ fixture が期待する outcome の代わりに `kind: "unsupported"` の defini
  "result": {"a": true}}
 ```
 
-- **`effects` が判定の正本** (主 oracle、LOWERING §C.5)。要素は `{entity, op, operand?, source}`。**配列順 = 適用順** (効果列の順序は同一性成分、DR-038/045)
+- **`effects` が判定の正本** (主 oracle、LOWERING §C.5)。要素は `{entity, path?, op, operand?, source}`。**配列順 = 適用順** (効果列の順序は同一性成分、DR-038/045)
   - `entity`: 実体 (値セル) の name / id
+  - `path`: optional な name (string) / index (integer) segment 配列。`entity` から実際の着地座までの観測アドレスで、nameless 透過子や複合値内部の座を指す (DR-127 §6)。index は解決済みの非負値。省略は `[]` (= entity 自身への着地) と等価
   - `op`: DR-131 §6 の 3 op (`set` / `default` / `empty`) + DR-080 §2 の merge accumulator piece op のうち集合演算系 2 種 (`remove` / `splice`。add piece は通常の set として現れる、DR-080 §4)。計 5 op:
 
     | op | 意味 | operand | 実例 (fixture::case) |
@@ -160,7 +161,7 @@ fixture が期待する outcome の代わりに `kind: "unsupported"` の defini
 ## 3. 比較規約
 
 - **構造等価** (DR-063 §4): key 順序非規範、フィールド省略 = default 値と等価。byte 一致は要求しない。ただし `result` / `sources` は次項の完全一致規約を優先し、この省略読み替えを適用しない
-- effects は配列順込みの完全一致 (順序が同一性成分)。`set` の `operand` は present-required で missing と explicit null を区別する
+- effects は配列順込みの完全一致 (順序が同一性成分)。`path` の省略は `[]` と等価で、name/index segment は配列順・型込みで比較する。`set` の `operand` は present-required で missing と explicit null を区別する
 - result は**キー集合込みの完全一致**。object の key 順序だけは非規範、配列は添字対応。missing key と explicit null は一致しない
 - `sources` は**キー集合込みの完全一致** (DR-122 / DR-130)。`result` と同じ key 集合を要求し、object の key 順序だけは非規範、配列は添字対応。missing key と explicit null は一致しない
 - interpretations は集合比較 (各解釈は構造等価、**列挙順は非規範**) — 完全経路間に優先がない (DR-038) ため順序は同一性成分でない (effects の順序規範性と対照的、errors と同じ集合扱い)。重複解釈の dedup 可否は「解釈の同一性」定義に従属し本書では定めない (DR-053 §3)。各解釈のビューは **parse 相 + DR-118 §3 の 2 規則** (Default-source scalar 除外 / 空 accumulator 配列の保持) を適用した sparse な姿 — 値源ラダー (resolve 相) と null による全キー列挙は適用しない (DR-118 / DR-130 §4.2)
@@ -191,7 +192,7 @@ fixture が期待する outcome の代わりに `kind: "unsupported"` の defini
 | outcome (`query`) | フィールド | 比較 | opt-in / 常時 |
 |---|---|---|---|
 | `success` | `result` | キー集合込み完全一致 (object の key 順序は非規範、missing ≠ null) | 常時 |
-| `success` | `effects` | 配列順込み完全一致 (順序が同一性成分、`set.operand` は present-required・null 可) | 常時 |
+| `success` | `effects` | 配列順込み完全一致 (順序が同一性成分、`path` 省略 = `[]`、`set.operand` は present-required・null 可) | 常時 |
 | `success` | `sources` | キー集合込み完全一致 (result と同一キー集合、missing ≠ null) | 常時 |
 | `success` | `warnings` | 集合比較 (element)、`kind` は fixture 側にある要素のみ比較 | opt-in per-element |
 | `failure` | `errors` | 集合比較 (`element`/`args_pos`/`kind` の組)、`reason` は fixture 側にある要素のみ比較、`message` は常に無視 | opt-in per-element (`reason`) |

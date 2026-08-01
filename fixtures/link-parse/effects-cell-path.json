@@ -17,6 +17,12 @@
         "type": "string",
         "long": true,
         "link": "pair[-1]"
+      },
+      {
+        "name": "overwrite-first",
+        "type": "string",
+        "long": true,
+        "link": "pair[0]"
       }
     ]
   },
@@ -41,6 +47,29 @@
         },
         "sources": {
           "pair": [null, null, "link"]
+        }
+      }
+    },
+    {
+      "id": "literal-seat-is-overwritten-through-link",
+      "why": "`value:` const は非特権の初期値であり、link 効果が同じ値セルへ着地すれば通常の優先順位で上書きされる (DR-031)。`--overwrite-first override` は第 1 literal 座へ着地し、result / sources は `[\"override\", null, null]` / `[\"link\", null, null]`、effects は entity `pair` と解決済み path [0] を載せる。",
+      "args": ["--overwrite-first", "override"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {
+            "entity": "pair",
+            "path": [0],
+            "op": "set",
+            "operand": "override",
+            "source": "link"
+          }
+        ],
+        "result": {
+          "pair": ["override", null, null]
+        },
+        "sources": {
+          "pair": ["link", null, null]
         }
       }
     }

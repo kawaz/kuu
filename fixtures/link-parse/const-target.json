@@ -1,0 +1,43 @@
+{
+  "why": "`value:` const は値セルの非特権な初期値であり、cli/link 効果は DR-031 の通常の優先順位で上書きできる。bare link は固定パスの縮退形として対象セルへ完全に同期する (DR-127 §2.1)。const を持つ root セルも例外ではなく、link 入口の operand が最終値になり source は link へ更新される。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {
+        "name": "target",
+        "type": "string",
+        "value": "fixed"
+      },
+      {
+        "name": "legacy",
+        "type": "string",
+        "long": true,
+        "link": "target"
+      }
+    ]
+  },
+  "cases": [
+    {
+      "id": "bare-link-overwrites-root-const",
+      "why": "`--legacy override` は const 初期値 `fixed` を持つ root セル target へ通常の set 効果として着地する。最終 result は operand `override`、sources と effects の source は link になり、const は上位の link 効果に残らない。",
+      "args": ["--legacy", "override"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {
+            "entity": "target",
+            "op": "set",
+            "operand": "override",
+            "source": "link"
+          }
+        ],
+        "result": {
+          "target": "override"
+        },
+        "sources": {
+          "target": "link"
+        }
+      }
+    }
+  ]
+}
