@@ -22,6 +22,14 @@
 
 ## 裁定待ち
 
+### 👺 NULOR-Q1: named 枝 or の null 射影 (NUL-Q3 の裁定が nameless union 前提で覆っていなかった穴)
+
+実例 `{name:"mode", or:[{name:"fast",type:"string"},{name:"slow",type:"int",default:7}]}` — named 枝は入れ子 kv になる (`--mode x` → 現行 `{"mode":{"fast":"x"}}`)。NUL-Q3 の「or はセル単位 1 キー」は枝が値 (union) の場合の話で、named 枝の**内側キー集合**をどうするか未裁定。
+
+- [ ] a: **全枝列挙** — `{"mode":{"fast":"x","slow":null}}`、セル未発火なら `{"mode":null}`。排他は「非選択枝 = null」で表現 (null = 立っていない、の一貫適用。キー集合が常に安定 = 発見性の完遂)。未選択枝の default (slow の 7) は充填しない — 枝の default は選択された枝の中でだけ生きる (既存裁定の null 版) (統括推し)
+- [ ] b: 選択枝のみ (sparse — 現行に近いがキー集合が実行ごとに揺れ、発見性と自己矛盾)
+- [ ] c: 保留 / 別案
+
 ## 確認待ち
 
 (現在なし)
