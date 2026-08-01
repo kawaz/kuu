@@ -1,6 +1,6 @@
 ---
 title: 露出キー衝突が option × command で ambiguous に昇格しない (command が黙って勝つ)
-status: open
+status: resolved
 category: bug
 created: 2026-07-25T16:52:07+09:00
 last_read: 2026-07-31T00:00:00+09:00
@@ -9,10 +9,10 @@ wip_entered:
 blocked_entered:
 pending_entered:
 discarded_entered:
-resolved_entered:
+resolved_entered: 2026-08-01T10:59:53+09:00
 discard_reason:
 pending_reason:
-close_reason:
+close_reason: ["dr/DR-120: implemented", "finding: export_key collision -> definition-error kind=export-key-collision (DR-120 §4 EXK-Q2)", "fixtures/export-key/collision-option-command.json: done", "docs sweep: done (commit 144a61d4 / 8f752f48)"]
 blocked_by:
 origin: 自リポ TODO
 ---
