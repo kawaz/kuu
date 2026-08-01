@@ -1,5 +1,15 @@
 # DR-051: 結果の欠落表現 — 値の無い要素は absent、null は値空間に持たない
 
+**Status: Superseded by DR-130 (2026-08-01)**
+
+> DR-130 が意味論を反転させた — 成功 result は宣言上出うる全キーを必ず持ち、値の無い座は `null` になる。
+> absent (キー自体が現れない) は成功 result から消え、`null` が値空間の住人へ昇格する。以下の本文の
+> §1 (値の無い要素は absent) と §4 (null は値空間に存在しない) は覆っており、§3 の型導出は
+> `T?` → `T | null` へ読み替わる。§2 の「absent にならない条件」(反復系 / flag・count / required) は
+> 「null にならない条件」として不変、§5 の 2 層分離 (result と ParserContext) も不変で DR-130 が継承する。
+> config の JSON null を「供給なし」として扱う §4 第 2 項は入力側の別軸なので裁定不変 (DR-050)。
+> 逐条の対応は DR-130 §1〜§9 と同 §波及。
+
 > 由来: findings `2026-06-29-ast-missing-pieces.md` の F-022 (optional の semantics — unset / null / default の区別)。slice PoC 第 6 弾の「0 回発火の repeat 要素は `{x: []}`」観測が材料。本セッションで確定。
 
 ## 決定
