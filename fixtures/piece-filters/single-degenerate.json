@@ -3,20 +3,37 @@
   "query": "parse",
   "definition": {
     "options": [
-      {"name": "name", "type": "string", "long": true, "piece_filters": ["trim"]}
+      {
+        "name": "name",
+        "type": "string",
+        "long": true,
+        "piece_filters": [
+          "trim"
+        ]
+      }
     ]
   },
   "cases": [
     {
       "id": "degenerate-single-piece-trimmed",
       "why": "`--name \" x \"` は multiple 無しなので長さ 1 の [\" x \"] に縮退 (DR-034)、piece_filters trim がその唯一の piece に適用され \"x\" → parse (string 恒等) → unwrap_single 相当の scalar collector で result name=\"x\" (配列でなくスカラー)。",
-      "args": ["--name", " x "],
+      "args": [
+        "--name",
+        " x "
+      ],
       "expect": {
         "outcome": "success",
         "effects": [
-          {"entity": "name", "op": "set", "operand": "x", "source": "cli"}
+          {
+            "entity": "name",
+            "op": "set",
+            "operand": "x",
+            "source": "cli"
+          }
         ],
-        "result": {"name": "x"}
+        "result": {
+          "name": "x"
+        }
       }
     }
   ]

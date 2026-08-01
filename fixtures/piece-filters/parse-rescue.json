@@ -3,30 +3,62 @@
   "query": "parse",
   "definition": {
     "options": [
-      {"name": "rescued", "type": "number", "long": true, "piece_filters": ["trim"]},
-      {"name": "bare", "type": "number", "long": true}
+      {
+        "name": "rescued",
+        "type": "number",
+        "long": true,
+        "piece_filters": [
+          "trim"
+        ]
+      },
+      {
+        "name": "bare",
+        "type": "number",
+        "long": true
+      }
     ]
   },
   "cases": [
     {
       "id": "trimmed-then-parsed",
       "why": "piece_filters:[\"trim\"] を持つ rescued は `\" 42 \"` を trim → `\"42\"` → number parse 成功、result rescued=42 (DR-074 §1 の canonical 字句は空白除去後の \"42\" に一致)。",
-      "args": ["--rescued", " 42 "],
+      "args": [
+        "--rescued",
+        " 42 "
+      ],
       "expect": {
         "outcome": "success",
         "effects": [
-          {"entity": "rescued", "op": "set", "operand": 42, "source": "cli"}
+          {
+            "entity": "rescued",
+            "op": "set",
+            "operand": 42,
+            "source": "cli"
+          }
         ],
-        "result": {"rescued": 42}
+        "result": {
+          "rescued": 42,
+          "bare": null
+        }
       }
     },
     {
       "id": "untrimmed-parse-rejected",
       "why": "piece_filters を持たない bare は `\" 42 \"` をそのまま number parse に渡し、canonical 字句 (DR-074 §1) が空白を受理しないため not_a_number で reject (DR-066 reason 表)。rescued (trimmed-then-parsed) との対比で piece_filters の有無が parse 結果を分ける輪郭を固定する。args_pos=1 は値トークンの 0-based 位置 (kind=parse の既存実例 value-typing/int-round-modes.json::error-mode-fractional-rejected と同じ規約)。",
-      "args": ["--bare", " 42 "],
+      "args": [
+        "--bare",
+        " 42 "
+      ],
       "expect": {
         "outcome": "failure",
-        "errors": [{"element": "bare", "args_pos": 1, "kind": "parse", "reason": "not_a_number"}]
+        "errors": [
+          {
+            "element": "bare",
+            "args_pos": 1,
+            "kind": "parse",
+            "reason": "not_a_number"
+          }
+        ]
       }
     }
   ]

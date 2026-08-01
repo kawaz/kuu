@@ -3,26 +3,46 @@
   "query": "parse",
   "definition": {
     "options": [
-      {"name": "name", "type": "string", "long": true, "piece_filters": ["non_empty"]}
+      {
+        "name": "name",
+        "type": "string",
+        "long": true,
+        "piece_filters": [
+          "non_empty"
+        ]
+      }
     ]
   },
   "cases": [
     {
       "id": "matching-accepted",
       "why": "non_empty を満たす `abc` は piece_filters を通過して string parse (恒等) → success、result name=\"abc\" (reject 対比の基準ケース)。",
-      "args": ["--name", "abc"],
+      "args": [
+        "--name",
+        "abc"
+      ],
       "expect": {
         "outcome": "success",
         "effects": [
-          {"entity": "name", "op": "set", "operand": "abc", "source": "cli"}
+          {
+            "entity": "name",
+            "op": "set",
+            "operand": "abc",
+            "source": "cli"
+          }
         ],
-        "result": {"name": "abc"}
+        "result": {
+          "name": "abc"
+        }
       }
     },
     {
       "id": "non-matching-rejected",
       "why": "空文字列は non_empty の ValueSpaceMiss で枝から静かに脱落する。outcome は failure だが DR-037 Reject は診断を保持しないため errors は空。string parse 自体は空文字を受理するので、piece filter が parse 前に働いたことも固定する。",
-      "args": ["--name", ""],
+      "args": [
+        "--name",
+        ""
+      ],
       "expect": {
         "outcome": "failure",
         "errors": []
