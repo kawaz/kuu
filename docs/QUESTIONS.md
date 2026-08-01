@@ -22,6 +22,15 @@
 
 ## 裁定待ち
 
+### 👺 LNK2-Q1: nameless tuple への部分 index 書きの result 形
+
+出所: DR-127 第 1 波実装の監査 (2026-08-01 M-2)。`{"name":"pair","seq":[a,b]}` (nameless tuple、結果は配列) の座 1 だけに link path (`link:"pair[1]"`) で書いた場合、kuu 値空間に null が無いため**配列の穴が表現できない** — 現実装は存在する座だけを詰めて `{pair:[x]}` にするが、これでは `pair[0]` 単独書きと result/sources が同一になり座標情報が消える (effects でしか区別できない)。
+
+- [ ] a: **部分状態の tuple は result に出さない** — 全座が立つまで tuple キーごと absent (器 `{}` の record と違い、配列は穴を持てないという構造差の帰結。effects には書きが残るので観測は失われない) (統括推し)
+- [ ] b: 詰めて出す (現実装 — 座標消失を許容、座標は effects で読む)
+- [ ] c: nameless tuple への index 単独書きを definition-error にする (座標が要るなら named seq を使え、と誘導 — 表現力縮小)
+- [ ] d: 保留 / 別案
+
 ## 確認待ち
 
 (現在なし)
