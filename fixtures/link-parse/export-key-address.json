@@ -3,22 +3,45 @@
   "query": "parse",
   "definition": {
     "options": [
-      {"name": "format", "type": "string", "default": "text", "long": true, "export_key": "fmt"},
-      {"name": "json", "long": [":set:json"], "link": "format"}
+      {
+        "name": "format",
+        "type": "string",
+        "default": "text",
+        "long": true,
+        "export_key": "fmt"
+      },
+      {
+        "name": "json",
+        "long": [
+          ":set:json"
+        ],
+        "link": "format"
+      }
     ]
   },
   "cases": [
     {
       "id": "link-entry-fires-under-export-key",
       "why": "`--json`: link 越しに実体セル format へ set。effects の entity は宣言名 `format` のまま (export_key を適用しない、DR-121 §5)。result / sources は export_key 適用後の露出キー `fmt` で現れ、source は経路どおり `link`。",
-      "args": ["--json"],
+      "args": [
+        "--json"
+      ],
       "expect": {
         "outcome": "success",
         "effects": [
-          {"entity": "format", "op": "set", "operand": "json", "source": "link"}
+          {
+            "entity": "format",
+            "op": "set",
+            "operand": "json",
+            "source": "link"
+          }
         ],
-        "result": {"fmt": "json"},
-        "sources": {"fmt": "link"}
+        "result": {
+          "fmt": "json"
+        },
+        "sources": {
+          "fmt": "link"
+        }
       }
     }
   ]

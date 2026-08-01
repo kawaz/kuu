@@ -3,35 +3,69 @@
   "query": "parse",
   "definition": {
     "options": [
-      {"name": "format", "type": "string", "default": "text", "long": true},
-      {"name": "json", "long": [":set:json"], "link": "format"}
+      {
+        "name": "format",
+        "type": "string",
+        "default": "text",
+        "long": true
+      },
+      {
+        "name": "json",
+        "long": [
+          ":set:json"
+        ],
+        "link": "format"
+      }
     ]
   },
   "cases": [
     {
       "id": "link-entry-fires",
       "why": "`--json` は実体を持たない参照側。link:\"format\" 越しに実体セル format へ \"json\" を set する。効果の entity は合流先の実体 `format` (DR-045、link は id 層の合流であって別 entity にはならない)、source は経路が link 越しなので `link` (DR-031)。",
-      "args": ["--json"],
+      "args": [
+        "--json"
+      ],
       "expect": {
         "outcome": "success",
         "effects": [
-          {"entity": "format", "op": "set", "operand": "json", "source": "link"}
+          {
+            "entity": "format",
+            "op": "set",
+            "operand": "json",
+            "source": "link"
+          }
         ],
-        "result": {"format": "json"},
-        "sources": {"format": "link"}
+        "result": {
+          "format": "json"
+        },
+        "sources": {
+          "format": "link"
+        }
       }
     },
     {
       "id": "own-entry-fires",
       "why": "`--format xml` は実体自身の入口から直接発火。link を経由しないので source は `cli` — link-entry-fires (case A) との対比が本 fixture の核心 (同じ実体セルに同じ形の set 効果が積まれるが、経路が違うだけで source タグが変わる)。",
-      "args": ["--format", "xml"],
+      "args": [
+        "--format",
+        "xml"
+      ],
       "expect": {
         "outcome": "success",
         "effects": [
-          {"entity": "format", "op": "set", "operand": "xml", "source": "cli"}
+          {
+            "entity": "format",
+            "op": "set",
+            "operand": "xml",
+            "source": "cli"
+          }
         ],
-        "result": {"format": "xml"},
-        "sources": {"format": "cli"}
+        "result": {
+          "format": "xml"
+        },
+        "sources": {
+          "format": "cli"
+        }
       }
     },
     {
@@ -41,36 +75,76 @@
       "expect": {
         "outcome": "success",
         "effects": [],
-        "result": {"format": "text"},
-        "sources": {"format": "default"}
+        "result": {
+          "format": "text"
+        },
+        "sources": {
+          "format": "default"
+        }
       }
     },
     {
       "id": "cli-then-link-last-wins",
       "why": "`--format xml --json`: 実体自身の入口が先に xml を set (source=cli)、続けて link 越しの入口が json を set (source=link)。DR-029 の『操作の時系列適用』により最後に勝った効果が確定値・確定 source を決める — 2 効果は消費順に積まれ (DR-045)、最終 source は最後に勝った経路である link。",
-      "args": ["--format", "xml", "--json"],
+      "args": [
+        "--format",
+        "xml",
+        "--json"
+      ],
       "expect": {
         "outcome": "success",
         "effects": [
-          {"entity": "format", "op": "set", "operand": "xml", "source": "cli"},
-          {"entity": "format", "op": "set", "operand": "json", "source": "link"}
+          {
+            "entity": "format",
+            "op": "set",
+            "operand": "xml",
+            "source": "cli"
+          },
+          {
+            "entity": "format",
+            "op": "set",
+            "operand": "json",
+            "source": "link"
+          }
         ],
-        "result": {"format": "json"},
-        "sources": {"format": "link"}
+        "result": {
+          "format": "json"
+        },
+        "sources": {
+          "format": "link"
+        }
       }
     },
     {
       "id": "link-then-cli-last-wins",
       "why": "`--json --format xml`: cli-then-link-last-wins (case D) と発火順序を逆転させた対。link 越しの効果が先に json を set (source=link)、続けて実体自身の入口が xml を set (source=cli)。あと勝ちで確定値・確定 source は最後の経路である cli — link と cli が同順位のラダーであること (DR-031) を順序反転で二重に固定する。",
-      "args": ["--json", "--format", "xml"],
+      "args": [
+        "--json",
+        "--format",
+        "xml"
+      ],
       "expect": {
         "outcome": "success",
         "effects": [
-          {"entity": "format", "op": "set", "operand": "json", "source": "link"},
-          {"entity": "format", "op": "set", "operand": "xml", "source": "cli"}
+          {
+            "entity": "format",
+            "op": "set",
+            "operand": "json",
+            "source": "link"
+          },
+          {
+            "entity": "format",
+            "op": "set",
+            "operand": "xml",
+            "source": "cli"
+          }
         ],
-        "result": {"format": "xml"},
-        "sources": {"format": "cli"}
+        "result": {
+          "format": "xml"
+        },
+        "sources": {
+          "format": "cli"
+        }
       }
     }
   ]
