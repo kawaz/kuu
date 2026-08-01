@@ -23,18 +23,12 @@ result:  {"timeout": 30}                  → sources: {"timeout": "const"}
 result:  {"sub": {"ttl": "30"}}           → sources: {"sub": {"ttl": "env"}}
 ```
 
-### 2. キー集合は result と完全一致 (result の射影)
+### 2. キー集合は result と完全一致
 
-`result` に現れないキーは `sources` にも現れない。**死んだ枝 (未選択 scope / absent) は
-成立しなかった構造であり、source を語る対象が存在しない** (kawaz 裁定 2026-07-26:
-「result に出てこないのは他の死んだ枝であって構造も何もかも違う。そもそも成立しない枝に
-意味ない」)。逆に `result` にある値の座は必ず `sources` に対応するタグを持つ。
+`result` と `sources` は DR-130 §1b の同じ宣言キー導出を共有し、キー集合が完全に一致する。`result` で値が確定せず `null` になった座は `sources` でも `null` になり、その座を確定させた主体が存在しないことを表す。未選択 scope は両方で親キーが `null` となり、内側は展開しない。選択された scope は両方で同じ kv を持つ。
 
-- scope 生成要素の空 kv `{}` (presence marker、DR-052 §3) は `sources` でも `{}` — 値の座が
-  無いので置き換えるタグも無い
-- accumulator の 0 発火 `[]` (DR-044) は `sources` でも `[]` — 要素が無いので要素タグも無い。
-  DR-121 §2.2 の「0 発火 accum に default entry を 1 件」は本 DR で廃止する
-  (「発火していない」ことは空配列そのものが表現しており、タグの捏造は要らない)
+- 子を宣言していない選択済み scope は、空のキー集合を列挙した結果として両方で `{}` になる
+- accumulator の 0 発火 `[]` (DR-044) は `sources` でも `[]` — 要素が無いので要素タグも無い
 
 #### 2.1 空コレクションの由来は表現しない (SHADOW-Q1、kawaz 2026-07-27)
 
@@ -48,11 +42,9 @@ result:  {"sub": {"ttl": "30"}}           → sources: {"sub": {"ttl": "env"}}
 
 - **`sources` は値の由来を写す面であり、committed 軸を持たない** (DR-031「committed/selected との
   直交性」)。空という結果を誰が作ったかは committed 軸の情報であって、値の由来ではない
-- **情報自体は失われない** — `effects` が `op: "unset"` / `op: "empty"` で既に区別を pin している
-  (DR-045 §4)。観測経路が消えるわけではなく、担当する面が `sources` から `effects` へ移るだけ
+- **情報自体は失われない** — `effects` が `set` with null operand / `empty` で区別を pin する (DR-131 §6)。観測経路が消えるわけではなく、担当する面が `sources` から `effects` へ移るだけ
 
-**空コレクションの由来 (明示 `empty` か未発火か) は `effects` の op で観測する** — `sources` は
-値の構造の影であり、要素の無い座に影は無い。
+**空コレクションの由来 (明示 `empty` か、`set(null)` による開放後の暗黙 default か) は `effects` の op と operand で観測する** — `sources` は値の構造の影であり、要素の無い座に影は無い。
 
 空配列だけタグを許す (`"ports": "cli"` のように座の型と違う形を置く) 案は、shadow tree の
 「値の構造そのまま」が崩れ schema と比較規約に分岐が増えるため不採用。cell 単位のタグを別フィールドで
@@ -112,5 +104,5 @@ entry 列に要素を刺すための語彙で、shadow tree では不要 (同 is
 
 - DR-031 (source タグの語彙と確定ルール — タグの決定単位は不変)
 - DR-121 (前形。§4/§5 は存続、他は本 DR が置き換え)
-- DR-044 (uniform array) / DR-051 (absent) / DR-052 §3 (presence marker)
+- DR-044 / DR-123 (反復セルの暗黙 bottom default `[]`) / DR-130 §1/§2/§5 (全キー列挙・未選択 scope・null 座)
 - issue `2026-07-26-array-element-provenance-sources-addressing` (本 DR で解消)

@@ -20,15 +20,15 @@ repeat / multiple / `optional: true` 糖衣 (以下まとめて**反復セル**)
 
 発火しなかった反復セルは空席なので、**通常どおり値源ラダー (DR-031、DESIGN §11.4 の 5 段) が回る**。env / config / inherit / default のいずれかが宣言されていればその席が値を供給し、`sources` はその席を指す。
 
-これは DR-083 §4 (multiple 要素のラダー供給時: 未発火・uncommitted なら sources = default_source) を反復セル全域へ広げたものであり、multiple と repeat で規則を分けない。DR-083 §1 が multiple について述べた「DR-051 §2b の『反復系は 0 回発火でも `[]`』は宣言 default 不在時の暗黙 default であり、宣言 default はそれを置き換える」は、repeat を含む反復セル一般の規則である。
+これは DR-083 §4 (multiple 要素のラダー供給時: 未発火・uncommitted なら sources = default_source) を反復セル全域へ広げたものであり、multiple と repeat で規則を分けない。宣言 default 不在時の暗黙 default `[]` を宣言 default が置き換える規則は、repeat を含む反復セル一般に適用する。
 
 ### 3. `[]` はラダー最下段の暗黙 default (配置換え)
 
 「0 発火なら `[]`」は独立した結果整形規則ではなく、**ラダー最下段の位置づけを持つ**: 反復セルの default 席は、`default:` が宣言されていなければ暗黙に `[]` を供給する。宣言があればその値が席を占める (DR-083 §1)。
 
-この配置換えにより、DR-051 §2b (反復系は absent にならない) は独立規則でなく **DR-051 §2a (default 持ちは absent にならない) の系**になる — 反復セルは default 席が常に埋まっている (宣言 default か暗黙 `[]` か) から absent にならない。DR-051 §3 の型導出 (反復系 → T) は同じ結論を保ったまま、根拠が「反復系は特別」から「反復系は default を必ず持つ」へ移る。
+この配置により、反復セルは default 席が常に埋まっている (宣言 default か暗黙 `[]` か) ため、DR-130 §1 の成功 result で `null` にならない。型導出も native default ありの分岐により `T` となる。
 
-帰結として既存の pin が再導出される: `unset` (committed=false へ戻しラダーを開放、DR-045 §2) を反復セルへ撃つと、下位席があればその値が供給され (`fixtures/multiple-parse/unset-env-fallback.json` の unset-opens-ladder-to-env-separator-list)、無ければ最下段の暗黙 default `[]` に落ちる (同 unset-with-no-lower-source-resets-to-empty)。`[]` がセルに最初から居る読みでは「開放したのに既に値がある」ことになり unset の意味論が壊れるが、本 DR のモデルでは素直に導出される。
+`unset` fn が返す null を反復セルへ set すると committed=false でラダーを開放し、下位席があればその値が供給され、無ければ最下段の暗黙 default `[]` に落ちる (DR-131 §2、`fixtures/multiple-parse/unset-env-fallback.json`)。
 
 なお最下段の暗黙 default が供給する `[]` には値の座が無いため、`sources` にはタグが載らず `[]` のままである (DR-122 §2) — DESIGN §11.4 の「未発火要素の sources は `default`」は値の座を持つセル (flag の `false` 等) の規則であり、空コレクションはその適用対象ではない。
 

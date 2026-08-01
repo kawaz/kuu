@@ -3,6 +3,8 @@
 Status: Accepted (SRCADDR-Q1=d / Q2-α=a / Q2-β=c / LINKSRC-Q1=a、kawaz 2026-07-26) —
 **§1 / §2.2 / §3 は DR-122 が置き換え** (§4 / §5 は現役、末尾「Superseded (歴史)」節参照)
 
+> **更新 (DR-130、2026-08-01): 現行の `sources` は `result` と同じ宣言キー集合を持ち、値が確定しない座は両方で `null` になる。** §2 の「値源ラダーが確定した値セルだけが席を持つ」は、値が確定しなかった宣言座にも `null` の席が立つ形へ変わる。presence marker は廃止され、未選択 scope は親キーの `null` で内側を畳む。空コレクションに source タグを置かない規則は不変 (DR-122 §2 / DR-130 §5)。
+
 > **更新 (DR-125、2026-07-29): `sources` のタグ語彙から `inherit` が抜けた。** §1 の例の
 > `{"path": ["sub"], "key": "ttl", "source": "inherit"}` と §1.1 の語彙列挙
 > (`cli` / `link` / `env` / `config` / `inherit` / `tty` / `default`) は対象を失っている。

@@ -58,11 +58,7 @@ mapped 経由 (`export_key` 明示) だったかを区別しない (EXK-Q4)。
 **占有する (検査に参加する)**:
 
 - 露出キーを持ち値セルを持つ要素 — 入口ありの通常要素、入口なしの実体だけノード (DR-030) の双方
-- 露出キーを持つ**スコープ生成要素 (command を含む)** — スコープ生成は値の発生であり、選ばれたら
-  子が全部 absent でも空 kv `{}` を持つ (DESIGN §2.6 / DR-052 §3)。結果キーを占有する 1 セルとして
-  数える (EXK-Q2)
-- `inheritable` が祖先スコープへ置く write-target — 祖先スコープで実際に結果キーを占有する
-  (DESIGN §11.3 / DR-059 §5) ため、その祖先スコープで参加する
+- 露出キーを持つ**スコープ生成要素 (command を含む)** — 未選択なら親スコープで `null`、選択されたら宣言キーを全列挙した kv を持つ (DESIGN §2.6 / DR-052 §3 / DR-130 §1〜§2)。結果キーを占有する 1 セルとして数える (EXK-Q2)
 
 **占有しない (参加しない)**:
 
@@ -79,9 +75,7 @@ mapped 経由 (`export_key` 明示) だったかを区別しない (EXK-Q4)。
 ### 5. 検査の時点・面・error の形
 
 - **時点**: `parse_definition` 本体 (DR-054 §3 — Error 検査の座席、実行時 bundle に同梱される)
-- **面**: 全 installer の宣言層寄与を適用し終えた宣言層 (help_query capability が読む面と同じ、
-  DESIGN §15.15) — `commands` / `global` / `inheritable` / `alias` の宣言的コピーを含み、lowered 産物は
-  見ない。結果キーが決まるのはこの面である
+- **面**: 全 installer の宣言層寄与を適用し終えた宣言層 (help_query capability が読む面と同じ、DESIGN §15.15) — `commands` / `global` / `alias` の宣言的コピーを含み、lowered 産物は見ない。結果キーが決まるのはこの面である
 - **kind**: `export-key-collision` (DR-054 §4 の kind 列挙に追加)
 - **粒度**: 衝突に関与する要素ごとに 1 件 (`element` = 当該要素) を全列挙する (DR-054 §4 の全列挙
   原則。比較は `(element, kind)` の集合なので、衝突グループ単位の代表 1 件にすると衝突相手が
@@ -365,14 +359,13 @@ DESIGN §2.6 の型導出が破綻する。
 - DR-073 (export-key 衝突の担体 — 本 DR が全体を Superseded、§8)
 - DR-029 (link = 値同期、1 実体 : N 参照) / DR-057 (alias — 結果キーは canonical のみ) / DR-030
   (実体だけノード) — 正当な書き方の供給元 (§2)
-- DR-052 (結果キー軸の一本化 — 露出キーの解決規則、command の presence marker) / DR-046 (名前の軸分解)
+- DR-052 (結果キー軸の一本化 — 露出キーの解決規則、スコープ生成要素の射影) / DR-046 (名前の軸分解)
 - DR-054 (definition-error の境界基準 — Error / warn の線引き・kind 列挙・hint の座席と文言の射程外、§5/§6)
 - DR-082 §1 (definition_error fixture — 比較単位は `(element, kind)`、message / hint は非比較。hint の
   文言を規範化しない根拠、§5) / LOWERING §A.5 (type プリセット展開 — 値空間判定の基準、§5)
 - DR-063 §4 (JSON object は unordered = キー一意前提) / DR-053 (パース結末の構造)
 - DR-064 §5 (dd は値セルを持たない — 非参加の根拠、§4)
-- DR-059 §5 / DESIGN §11.3 (inheritable の祖先 write-target — 参加の根拠、§4)
 - DR-041 / DR-067 §1 (トリガ綴りの重複は warn + 実行時 ambiguous — 軸の分離、§7)
-- DESIGN §2.4 (露出規則) / §2.6 (absent と presence marker) / §5.1 / §5.3 (or 席) / §15.5 / §15.6 /
+- DESIGN §2.4 (露出規則) / §2.6 (全キー列挙と null 射影) / §5.1 / §5.3 (or 席) / §15.5 / §15.6 /
   §15.15 (宣言層寄与適用後の面)
 - issue `2026-07-25-expose-key-collision-option-command-silent-loss.md` (由来、解消)

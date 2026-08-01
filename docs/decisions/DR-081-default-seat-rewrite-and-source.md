@@ -15,7 +15,7 @@
 - 最終値と source の決定:
 
 ```
-source = if committed { cli } else if default が在る { default_source } else { absent (DR-051 §1) }
+source = if committed { cli } else if default が在る { default_source } else { null (DR-130 §5) }
 ```
 
 観測挙動は従来のラダー選択と、**op=default の場合を除いて**同値 (unset → env 供給あり = sources=env、供給なし = sources=default、いずれも従来 pin と一致)。
@@ -24,11 +24,11 @@ source = if committed { cli } else if default が在る { default_source } else 
 
 - `:default` variant の発火は **その時点の default 値** (env/config が書き換えていればその値) をセルへ書き、committed=true でロックする
 - **source は `cli`** — 値の内容が default 値と同じでも、その値を確定させたのはユーザの明示操作 (DR-031 の明文を再確認)。「デフォルト値をユーザが選んだ」という意思の記録であり、default_source が env であっても cli
-- accum セルでは default 値 = 一様形 `[]` (宣言 default なし時、DR-051 §2b) — 書き換え済み default があればそれ (multiple への宣言 default 配列の意味論は issue multiple-declared-default-semantics で別途裁定)
+- accum セルでは default 値 = 一様形 `[]` (宣言 default なし時、DR-123 §3) — 書き換え済み default があればそれ (multiple への宣言 default 配列の意味論は issue multiple-declared-default-semantics で別途裁定)
 
-### 3. op=unset = uncommitted 化
+### 3. `set(null)` = uncommitted 化
 
-従来どおり committed=false へ戻し、source は default_source になる (env 供給あり → env)。DR-045 の規定は不変。
+`unset` fn は null Value を返し、effects では `{"op":"set","operand":null}` として観測される。cell への適用時に committed=false へ戻してラダーを開放する。下位の default が在れば source は default_source (env 供給ありなら env)、下位席が無ければ result / sources の座はともに `null` になる (DR-130 §5、DR-131 §1/§2)。
 
 ### 4. canonical 例
 
@@ -68,6 +68,6 @@ fixture 実践 (unset-ladder.json default-commits-locked / default-cell-ops.json
 
 ## 関連
 
-- DR-031 (source の定義、op=default → cli の明文) / DR-045 (committed 意味論) / DR-051 (absent)
+- DR-031 (source の定義、op=default → cli の明文) / DR-045 (committed 意味論) / DR-130 §5 (値未確定座の sources=null) / DR-131 §2 (`set(null)` のラダー開放)
 - issue default-op-source-tag-contradiction (発端の矛盾)
 - issue multiple-declared-default-semantics (multiple への宣言 default — 本 DR の default 書き換えモデルが前提を与える)
