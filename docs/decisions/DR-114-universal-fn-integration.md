@@ -1,6 +1,6 @@
 # DR-114: universal fn 統合 — variant effect・filter・default_fn の共通呼び出し機構
 
-> **更新 (DR-130/131、2026-08-01): `cell_fns` の `unset` / `empty` は Value 返し群へ移り、Sentinel 返しは `default` だけになる。** null Value は共通 dispatcher が filter を呼ばず素通しし、cell 適用時に `set(null)` としてラダーを開放する。default 席は Value 返し fn を受け入れるため、対象型が適合する `unset` / `empty` を指定できる。
+> **更新 (DR-130/131、2026-08-01、2026-08-02 EMP-Q1=a 追補): `cell_fns` の `unset` は Value 返し群へ移り、`empty` は Sentinel に残る。Sentinel 返しは `default` / `empty` の 2 つである。** null Value は共通 dispatcher が filter を呼ばず素通しし、cell 適用時に `set(null)` としてラダーを開放する。default 席は Value 返し fn だけを受け入れるため `unset` は指定できるが、`default` / `empty` は definition-error `invalid-range` となる。空配列を既定値にする場合は `default: []` と書く。
 
 > **更新 (DR-125、2026-07-29): `cell_fns` の住人一覧と値源ラダー席から `inherit` が抜けた。**
 > `borrow` は不変 — `inherit` は descriptor の全軸 (`role` / `io_type` / `fallibility` /
@@ -45,8 +45,8 @@ universal fn は、**name で registry から fn 実体を引き、colon args �
 |---|---|---|
 | `set` | `":set"` / `"no:set:false"` / `"red:set:rgb:255:0:0"` | 引数なし形は値スロット準備、引数あり形は args を `Value` として返して cell へ set |
 | `default` | `":default"` | `use_default` sentinel を返し、default placeholder へ戻す |
-| `unset` | `":unset"` | unset sentinel を返す |
-| `empty` | `":empty"` | array / map を空にする sentinel を返す |
+| `unset` | `":unset"` | null Value を返し、cell 適用時にラダーを開放する |
+| `empty` | `":empty"` | `Sentinel(Empty)` を返し、array / map / record を空にする |
 
 4 fn は variant 専用の閉じた effect enum ではない。他の `cell_fns` 住人と同じ descriptor / registry / ABI を使う。
 
@@ -59,7 +59,7 @@ universal fn は、**name で registry から fn 実体を引き、colon args �
 
 現行の `prefix:fn:arg...` 記法を維持し、2 個目の部品が fn 名、3 個目以降が args となる。4 variant 呼称以外の cell fn も同じ位置から呼べる。
 
-発火時呼び出しは `Result<Value | Sentinel, Reason>` を返す。`Value` は set operation、`Sentinel` は descriptor の出力型が表す `use_default` / unset / empty 等の operation として cell に適用する。`use_default` は DR-087 の placeholder 操作であり、発火時に default_fn を評価しない。実値は値源解決の最終相で依存順に実体化する。default 席は `Value` を返す fn だけを受け入れ、`Sentinel` を返す fn の指定は definition-error `invalid-range` とする。
+発火時呼び出しは `Result<Value | Sentinel, Reason>` を返す。`Value` は set operation、`Sentinel` は descriptor の出力型が表す `use_default` / `empty` operation として cell に適用する。`use_default` は DR-087 の placeholder 操作であり、発火時に default_fn を評価しない。実値は値源解決の最終相で依存順に実体化する。default 席は `Value` を返す fn だけを受け入れ、`Sentinel` を返す `default` / `empty` fn の指定は definition-error `invalid-range` とする。
 
 DR-077 の `update` effect は廃止する。現在値を使う更新は `incr` 等の独立 cell fn が `ctx.old` を任意参照して新しい `Value` を返すことで表現する。`filters` registry の transform を effect 側から特殊呼び出しする経路は設けない。
 
@@ -167,7 +167,7 @@ count preset の `long: true` が `incr` を呼ぶ canonical lowering 例:
 lowering 断面の 3 形を区別する。
 
 1. set 縮退形: `{exact, value, link}`。operand が lowering 時点で確定する
-2. 直接 op: `{exact, link, effect: {op: "default" | "unset" | "empty"}}`
+2. 直接 op: `{exact, link, effect: {op: "default" | "empty"}}`
 3. cell fn invocation: `{exact, link, effect: {fn: "<name>", args: [...]}}`。operand は fn 実行時に確定する
 
 fn descriptor が `Value` を返した場合、その値を通常の set operand として cell に適用する。`Sentinel` を返した場合は §2 の対応 operation を適用する。上例の `incr` は発火時に `ctx.old + 1` を返し、その `Value` が count cell へ set される。
@@ -227,9 +227,9 @@ DR-107 の `role` enum に `"fn"` を追加する。`role: "fn"` は default 席
 
 `cell_fns` の代表住人:
 
-- `Value` を返し default / effect 両 mode で使える: `set` / `borrow` / `env` / `inherit` / `computed` / `uuid`
+- `Value` を返し default / effect 両 mode で使える: `set` / `borrow` / `env` / `inherit` / `computed` / `uuid` / `unset`
 - `ctx.old` を参照して新しい `Value` を返す更新 fn: `incr` 等
-- `Sentinel` を返し effect mode だけで使える: `default` (`use_default`) / `unset` / `empty`
+- `Sentinel` を返し effect mode だけで使える: `default` (`use_default`) / `empty`
 
 bare 名は DR-094 に従い `builtin` namespace の糖衣とする。拡張住人は `myapp/name` のように namespace を明示する。registry が分かれるため、同じ bare 名が filter と cell fn に存在しても衝突しない。
 
@@ -240,7 +240,7 @@ bare 名は DR-094 に従い `builtin` namespace の糖衣とする。拡張住�
 | 軸 | `fn` role の規約 |
 |---|---|
 | `construction` | `static` または `factory` |
-| `io_type` | **output-only で必須**。`io_type.input` は禁止し、args の型・個数は `invocation.parameters` が担う。output は既存 value_type または tagged sentinel type (`{"sentinel":"use_default"}` / `{"sentinel":"unset"}` / `{"sentinel":"empty"}`) |
+| `io_type` | **output-only で必須**。`io_type.input` は禁止し、args の型・個数は `invocation.parameters` が担う。output は既存 value_type または tagged sentinel type (`{"sentinel":"use_default"}` / `{"sentinel":"empty"}`) |
 | `output_mode` | 禁止。入力保持 / 変換の filter 軸であり、入力を持たない値供給 fn と cell operation へ別義で流用しない |
 | `fallibility` | 必須。`total` または `reject` |
 | `invocation` | 必須。`colon_args` 固定。array 記法も同じ positional args の別 wire 表現。`parameters` は kuu の positionals 定義式を使い、seq / or / repeat を表せる |
@@ -315,7 +315,7 @@ filter descriptor にも `observes` を許可し、全 universal fn specializati
   "ns": "builtin",
   "role": "fn",
   "construction": "static",
-  "io_type": {"output": {"sentinel": "unset"}},
+  "io_type": {"output": "null"},
   "fallibility": "total",
   "invocation": {"encoding": "colon_args", "parameters": []},
   "observes": [],

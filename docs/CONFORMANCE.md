@@ -81,12 +81,12 @@ fixture が期待する outcome の代わりに `kind: "unsupported"` の defini
     |---|---|---|---|
     | `set` | 通常の値バインド。cell fn が `Value` を返した場合もこの形で観測する。operand が `null` ならラダー開放、committed=false | **必須**。`null` 可 | `fixtures/multiple-parse/merge-basic.json::no-marker-overwrites-cell` |
     | `default` | `use_default` Sentinel による default placeholder 選択、committed=true | なし | `fixtures/multiple-parse/default-cell-ops.json::default-with-no-declared-default-resets-to-empty` |
-    | `empty` | `empty` fn が返す空値でセルをクリアしたことを表す観測 op、committed=true | なし | `fixtures/multiple-parse/filters-cell-ops.json::empty-after-set-resets-to-empty-with-cli-source` |
+    | `empty` | `Sentinel(Empty)` によるセルのクリア、committed=true | なし | `fixtures/multiple-parse/filters-cell-ops.json::empty-after-set-resets-to-empty-with-cli-source` |
     | `remove` | merge accumulator: operand と等価な要素を全削除 (DR-080 §2) | 除去対象の値 | `fixtures/multiple-parse/merge-splice-remove.json::implicit-at-then-remove-only` |
     | `splice` | merge accumulator: old をその位置に展開 (DR-080 §2) | なし | `fixtures/multiple-parse/merge-basic.json::bare-splice-is-identity` |
   - `operand`: `set` では present-required で値として `null` を許す。`remove` でも除去対象の値として必須。missing key と explicit null を decoder が同じ内部状態へ畳んではならない。JSON 表現は canonical 規約 (数値は最短形 `1.0` → `1`、DR-050 §4)
-  - **variant effect (effect mode)**: cell fn の `Value` 返却は通常の `set`。`unset` は `null` を返すので `{"op":"set","operand":null}`、`empty` は返り値が空値でも accumulator の行供給との非単射を避けるため同名 op として effects に射影する。Sentinel 返却は `default` だけである。`incr` 等が `ctx.old` から返した新値も `set` として観測し、専用 `update` op は持たない
-  - **default_fn (default mode)**: default 席は `Value` を返す cell fn だけを受け入れ、唯一の Sentinel 返しである `default` fn の指定は definition-error `invalid-range`。default 解決は値源ラダー充填なので effects には載せず、値を `result`、由来を `sources` で検証する
+  - **variant effect (effect mode)**: cell fn の `Value` 返却は通常の `set`。`unset` は `null` を返すので `{"op":"set","operand":null}`。Sentinel 返却の `default` / `empty` は、それぞれ同名 op として effects に射影する。`incr` 等が `ctx.old` から返した新値も `set` として観測し、専用 `update` op は持たない
+  - **default_fn (default mode)**: default 席は `Value` を返す cell fn だけを受け入れ、Sentinel 返しの `default` / `empty` fn の指定は definition-error `invalid-range`。空配列を既定値にする場合は `default: []` と書く。default 解決は値源ラダー充填なので effects には載せず、値を `result`、由来を `sources` で検証する
   - `source`: 値源タグ (DR-031)。effects に載るのは `cli` / `link` の 2 つだけ (下記。ラダー充填の由来は `sources` 側)
 - **effects に載るのは cli / link 由来のパース時効果のみ** — 値源ラダー充填 (env / config / default) は完走後の値確定であり args 順の全順序を持たないため、effects には載せない (例: 未発火 flag の `false` は result に現れ、effects には現れない)。ラダー充填の**値**は `result` で、**由来**は `sources` フィールドで検証する (effects への source 拡張は「充填同士の順序が非規範で全順序規約を汚す」ため不採用 — DR-065)。**effects の要素は entity (値セル) 単位** — 結果キーを持たない nameless 子 (DESIGN §2.4 の透過) は entity を持たないため、cli 消費していても effects に現れない (値の着地は result / sources 側で検証する)。消費 0 literal が置く `const` 値も効果ではないため現れない
 - **`result` は最終結果オブジェクト** (ラダー充填込みの確定値、DR-130 の宣言キー全列挙 + null 射影適用後)。runner はキー集合を含む effects / result の両方を検証する

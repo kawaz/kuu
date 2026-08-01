@@ -1,10 +1,15 @@
 # DR-131: Sentinel を default 1 つへ縮小する — unset は null 返し、empty は空値を返す Value fn
 
-> 由来: kawaz チャット裁定 2026-08-01 (ccmsg r98 mid=32〜40)、NUL-Q2=a / NUL2-Q1=a で effects の op 語彙も確定。
-> 正本ノートは `docs/research/2026-08-01-null-projection-inversion.md` §3。
-> **前提は DR-130** — `null` が値空間の住人に昇格したことで、「値を書かない cell 操作」として Sentinel に
-> 追い出されていた `unset` / `empty` が普通の値返し fn として書けるようになる。cell fn の返り値型
-> `Value | Sentinel` (DR-113 §5.3 / DR-114 §7) の Sentinel 側は `default` 1 つに縮む。
+> **更新 (2026-08-02、EMP-Q1=a): `empty` の Value fn 化を差し戻し、`Sentinel(Empty)` を返す cell fn に残す。**
+> Sentinel の住人は `default` / `empty` の 2 つになる。観測 op `empty` の温存、対象型に依存する空値決定、
+> 空値を運ぶための `abi.Value` 複合化依存という 3 つの特別視が残り、値化の利得が立たなかったためである。
+> `unset` の null Value 化と `set(null) = unset` は不変。
+>
+> 由来: kawaz チャット裁定 2026-08-01 (ccmsg r98 mid=32〜40)、NUL-Q2=a / NUL2-Q1=a、
+> 2026-08-02 EMP-Q1=a。正本ノートは `docs/research/2026-08-01-null-projection-inversion.md` §3 / §5c。
+> **前提は DR-130** — `null` が値空間の住人に昇格したことで、`unset` は普通の値返し fn として書ける。
+> cell fn の返り値型 `Value | Sentinel` (DR-113 §5.3 / DR-114 §7) の Sentinel 側は `default` / `empty` の
+> 2 住人に縮む。
 
 ## 決定
 
@@ -34,8 +39,8 @@ fn が `null` を返すことが unset 効果そのものになる。**`set(null
 
 ### 2. `set` の committed は operand が `null` かどうかで決まる
 
-DR-045 §2 の「committed は効果が明示制御する」という規範は不変だが、その制御の担い手が op から
-operand へ移る。
+DR-045 §2 の「committed は効果が明示制御する」という規範は不変である。`set` operation では制御の担い手が
+op から operand の null 性へ移る。`default` / `empty` operation は引き続き op 自体が committed=true を規定する。
 
 | 効果 | committed | 値源ラダーへの作用 |
 |---|---|---|
@@ -45,9 +50,9 @@ operand へ移る。
 `unset` が「触っていないことにする」(DR-045 §1) 意味論は、`null` が「この文脈に存在するが値が無い」を
 語る値である (DR-130 §1) ことから直に出る。**値が無いのだから commit する対象も無い**。
 
-`empty` が返す空値を適用しても committed=true である点 (§3) は、`[]` / `{}` が null ではない普通の値だから
-そのまま従う — DR-045 が `unset` と `empty` の違いを committed フラグで説明していた区別は、適用値が
-null か空値かの違いとして保存される。effects では `empty` の観測 op を温存する (§6)。
+`empty` は `Sentinel(Empty)` を返し、対象 collection を committed=true で空にする (§3)。DR-045 が
+`unset` と `empty` の違いを committed フラグで説明していた区別は、null Value によるラダー開放と Sentinel による
+明示クリアの違いとして保存される。effects では `empty` の観測 op をそのまま使う (§6)。
 
 この規則から、反復セルへの `set(null)` の帰結が導ける: ラダーが開放されてセルは**空席へ戻り** (DR-123
 §1 の「反復セルは初回発火まで空席」)、下位席が無ければラダー最下段の暗黙 default である `[]` に落ちる
@@ -93,44 +98,32 @@ link の値残余の座 (DR-127 §4) への `set(null)` は、他の座と同じ
 消すのでも、器を再生成するのでもない — 座の値が `null` になり、DR-130 §1 の射影でそのまま `null` として
 現れる。
 
-### 3. `empty` は対象型の空値を返す普通の Value fn になる
+### 3. `empty` は `Sentinel(Empty)` を返す cell fn のまま残る
 
-`empty` はコレクションを空にする特別な cell 操作をやめ、**対象セルの型に応じた空値を返す Value fn**に
-なる。配列セルなら `[]`、map セルなら `{}` を返し、その値が通常の `set` として適用される。
-
-対象型の参照は既存の ABI で足りる — `EffectCtx` は対象 cell を提供し (DR-114 §7)、`DefaultCtx` は
-default 値の target を提供する。`set` / `borrow` が既に target 依存で振る舞う fn である以上、`empty` が
-target の型を見て空値を組み立てるのは新しいパターンではない。
-
-committed=true の意味論は不変である。「ユーザが明示的に空にした」は `[]` という値の明示 set であって、
-ラダーを開放する `unset` とは引き続き区別される (§2)。
+`empty` は値を供給する fn ではなく、**対象 collection を空にするセル操作の指示語**である。
+`Sentinel(Empty)` を返し、cell 適用時に committed=true で対象を空にする。`unset` が null Value を返して
+committed=false でラダーを開放するのとは、値供給とセル操作の層で区別される (§2)。
 
 #### 3.1 `empty` の target 域
 
-「対象型の空値」が定義できる target は閉じている。定義できない target に `empty` を置くのは
+`empty` を適用できる target は閉じている。適用できない target に `empty` を置くのは
 **definition-error `invalid-range`** (DR-054 §4) である:
 
-| target の型 | `empty` の返り値 |
+| target の型 | `empty` のセル操作 |
 |---|---|
-| array | `[]` |
-| map | `{}` |
-| record (DR-126) | `{}` — 射影で全フィールドが `null` になる (DR-130 §4/§4.1) |
+| array | `[]` にする |
+| map | `{}` にする |
+| record (DR-126) | `{}` にする — 射影で全フィールドが `null` になる (DR-130 §4/§4.1) |
 | scalar (number / string / bool 等) / union / その他 | **definition-error `invalid-range`** |
 
-scalar に「空値」は無い。ゼロ値 (`0` / `""` / `false`) を空値と読むのは「型のゼロ値」という暗黙ルールの
-導入であり、DR-051 が「全キーを型のゼロ値で埋める」案を蹴ったのと同じ理由で採らない — ゼロ値と
-「ユーザが `0` を指定した」の区別が消える。「値を取り除きたい」が意図なら `unset` (= `null` 返し、§1) が
-その住人である。
+scalar に「空」は無い。ゼロ値 (`0` / `""` / `false`) を空と読む暗黙ルールは導入しない。「値を取り除きたい」
+意図は `unset` (= `null` 返し、§1) が担う。
 
-この検査は `default_fn: "empty"` の席にも同じく適用される — scalar target の要素に
-`default_fn: "empty"` を書けば definition-error になる。§7 が「`empty` は default 席に書けるようになる」と
-言うのは、target が空値を持つ型である場合の話である。
+`default_fn` の席は Value 返し fn だけを受け入れるため、target 型にかかわらず `default_fn: "empty"` は
+**definition-error `invalid-range`** になる。空配列を既定値にする場合は `default: []` と書けるので、
+表現力は失われない。
 
-### 4. 「行としての `[]`」と「クリアとしての `[]`」は適用の座が区別する — 値では混ざらない
-
-`empty` が普通の値を返すようになると、accumulator セルで「`[]` という行を 1 つ append する」のか
-「セル全体を `[]` にする」のかが値だけでは決まらない、という懸念が生じる。これは**座 (seat) の区別**が
-既に配管側にあるので生じない。
+### 4. `empty` は値を運ばず、セル操作と観測 op が一対一に対応する
 
 ```
 {name:"numslist", type:"number", repeat:2, multiple:"append",
@@ -138,37 +131,21 @@ scalar に「空値」は無い。ゼロ値 (`0` / `""` / `false`) を空値と�
 ```
 
 - `:set` の値スロットは **accumulator への行供給の座**。`--numslist 5 5` は行 `[5,5]` を積んで `[[5,5]]`
-- `no:empty` は **セル操作の座**。`--no-numslist` はセル値を丸ごと `[]` にする
-- 続けて `--numslist 2 3` を書けば行供給の座へ戻り `[[2,3]]` になる (mid=37/38)
+- `no:empty` は **セル操作の座**。`--no-numslist` は `Sentinel(Empty)` によりセル値を丸ごと `[]` にする
+- 続けて `--numslist 2 3` を書けば行供給の座へ戻り `[[2,3]]` になる
 
-fn の返り値がどちらの座へ着地するかを決めるのは、その fn を呼んだ**入口の配管**であって返り値の形では
-ない。同じ `[]` という値が両方の座に現れうるが、**セルへの適用として混ざる場面は無い**。
+セル操作の `empty` 発火は `{"op":"empty"}`、行供給の `[]` は `{"op":"set","operand":[]}` と観測する。
+観測 op `empty` の温存 (NUL2-Q1=a) は、`empty` が普通の Value fn ではなくセル操作の指示語であることと一致する。
+同じ座の区別は §2.1 の `null` にも効き、セル操作の座へ着地した `null` はラダーを開放し、行供給の座へ
+着地した `null` は行を積まない。
 
-同じ座の区別が §2.1 の `null` にも効く — セル操作の座へ着地した `null` はラダーを開放し、行供給の座へ
-着地した `null` は行を積まない。どちらも `set(null) = unset` の一規則の、座ごとの現れ方である。
+### 5. Sentinel は `default` / `empty` の 2 住人に縮小する
 
-**effects の観測面では `empty` をクリア専用 op として温存する (NUL2-Q1=a、2026-08-01)**。
-accumulator セルの「セルを空にした」と「`[]` という行を 1 つ積んだ」を、どちらも
-`{"op":"set","operand":[]}` へ写すと `entity` / `op` / `operand` / `source` がすべて一致し、適用の座が
-持つ区別を観測面で復元できない。`append` は accumulator registry の住人名であって `effects[].op` ではなく、
-座を写す別成分も無い。
+`default` (`use_default`) は、遅延解決される default placeholder を選ぶ指示子であり、発火時点に Value として
+書けないため Sentinel に残る。`empty` は、対象 collection を空にするセル操作の指示語であり、値供給へ畳むと
+§根拠の 3 つの特別視が残るため Sentinel に残る。
 
-したがってセル操作の `empty` 発火は従来どおり `{"op":"empty"}`、行供給の `[]` は
-`{"op":"set","operand":[]}` と観測する。fn の返り値型はどちらも Value であり、適用時の配管も §4 の座で
-区別するが、effects 射影だけは非単射を避けるため op を分ける。これは `.` 連結によるアドレス衝突を観測面へ
-持ち込まなかった DR-121 §1.2 と同じ判断である。
-
-### 5. `default` だけが Sentinel として残る
-
-`default` (`use_default`) は Sentinel のまま残す。**値として書けないため**である。
-
-op=default が意味するのは「現在の (書き換え済みの) default を明示 set する」(DR-081 §2) であり、その
-実値は発火時点では決まっていない — default は placeholder として設置され、依存順で最終相に実体化する
-(DR-087 §2/§3)。発火時に `Value` を返す fn へ畳もうとすると、fn の中で default 席を先に解決することに
-なり DR-087 の遅延解決モデルを壊す。
-
-したがって `default` は「**定義注入された cell_fn を拾ってこい**」という指示子であり続ける。Sentinel union
-は実質この 1 住人に縮小する。
+`unset` だけが null Value へ畳まれ、Sentinel union は `default` / `empty` の 2 住人になる。
 
 ### 6. effects の op 語彙から `unset` のみ廃止し、`empty` は温存する (NUL-Q2=a / NUL2-Q1=a)
 
@@ -183,37 +160,32 @@ CONFORMANCE §2 の op 表は **6 op から 5 op** (`set` / `default` / `remove`
 (`remove` / `splice` は merge accumulator の piece op で本 DR の対象外、DR-080 §2)。
 
 **観測の非単射は生じない** — unset と empty は `set(null)` / `empty` の op で区別でき、accumulator セルの
-クリアと `[]` 行供給も `empty` / `set([])` で区別できる。committed は §2 の規則どおり、適用値が null か
-空値かから導ける。`fixtures/multiple-parse/filters-cell-ops.json` が「両者の最終値はともに `[]` で sources も
+クリアと `[]` 行供給も `empty` / `set([])` で区別できる。committed は §2 の規則どおり、set は operand が
+null なら false・それ以外なら true、empty は Sentinel operation として true になる。`fixtures/multiple-parse/filters-cell-ops.json` が「両者の最終値はともに `[]` で sources も
 同形なので、区別を担うのは effects の op である」と pin していた対比は、**unset 側だけ `set(null)` へ
 移し、empty 側の op を残す**形で保存される。
 
 同 fixture が pin するもう 1 つの規範 (「値を書かない cell 操作は value_filters を通らないので reject の
-対象にすらならない」) も観測は不変だが、**根拠が変わる**:
+対象にすらならない」) は次の 2 経路で保存される:
 
 - `set(null)` は operand を運ぶが、DR-130 §3 の **null 素通し**により filter は null に触れない
-- `set([])` は空コレクションなので、each 相の value_filters には適用対象の要素が 1 つも無い
+- `empty` は Sentinel を返して値を運ばないため、filter の対象 piece が生じない
 
-いずれも filter が reject を出さない結果に落ちる。「operand を運ばないから piece が生じない」という
-DESIGN §8.3 の説明は、この 2 本の根拠へ差し替える必要がある。
+いずれも filter が reject を出さない。
 
-### 7. Sentinel を前提にした特例群が縮小する
+### 7. Sentinel を前提にした特例群は 2 住人へ縮小する
 
-Sentinel が `default` 1 つになることで、「Sentinel かどうか」で分岐していた規定が単純化する。
-
-- **DR-113 §5.4 / DR-114 §2**「default 席で Sentinel fn を指定 → definition-error `invalid-range`」— 検査
-  そのものは残るが、弾く対象は `default` fn ただ 1 つになる。`unset` / `empty` は `Value` を返すので
-  default 席に書けるようになる (`default_fn: "empty"` = 空コレクションを既定値にする、が素直に通る)
-- **DR-127 §4.1**「値残余の座に許すのは set と Value 返し fn のみ、Sentinel 返しは発火時 Reject」— 同じく
-  Reject 対象が `default` 1 つに縮む。link パスの座へ `null` を書く (= その座を空ける) ことは §1 により
+- **DR-113 §5.4 / DR-114 §2**「default 席で Sentinel fn を指定 → definition-error `invalid-range`」— 弾く
+  対象は `default` / `empty` の 2 つになる。`unset` は null Value を返すため default 席に書ける。
+  空コレクションを既定値にする場合は `default: []` / `default: {}` と書く
+- **DR-127 §4.1**「値残余の座に許すのは set と Value 返し fn のみ、Sentinel 返しは発火時 Reject」— Reject
+  対象は `default` / `empty` の 2 つになる。link パスの座へ `null` を書く (= その座を空ける) ことは §1 により
   通常の set として成立する
-- **DR-127 §3 の「空の座への適用は Reject」を精密化する** — Reject になるのは **`ctx.old` を要する fn**
-  (`incr` 等) に限る。`set` と `null` 返し (`unset`) は現在の座の値を必要としないので Reject 側ではなく、
-  座に値が無くてもそのまま成立する。`ctx.old` を要する fn を `null` の座へ適用した場合は DR-130 §3 の
-  素通しが先に効き、fn は呼ばれずに `null` が通る (= vivify されていない器の座を指した場合の Reject と
-  は別の経路である)
-- **DR-114 §8** の `cell_fns` 代表住人の 3 分類は 2 分類になる — 「`Value` を返す」群に `unset` / `empty` が
-  移り、「`Sentinel` を返し effect mode だけで使える」群は `default` のみになる
+- **DR-127 §3 の「空の座への適用は Reject」を精密化する** — Value 返し fn で Reject になるのは
+  **`ctx.old` を要する fn** (`incr` 等) に限る。`set` と `null` 返し (`unset`) は現在の座の値を必要としないので、
+  座に値が無くても成立する。Sentinel 返しの `default` / `empty` は前項により Reject となる
+- **DR-114 §8** の `cell_fns` 代表住人は、「`Value` を返す」群に `unset` が移り、「`Sentinel` を返し
+  effect mode だけで使える」群が `default` / `empty` になる
 
 ## 根拠
 
@@ -227,28 +199,27 @@ DR-130 で `null` が「この文脈に存在するが値が無い」を語る�
 なり、両者の相互作用 (`set(null)` の後に `unset` が来たら? など) を規定する必要が新たに生まれる。
 統一すればその規定は要らない。DR-125 が `inherit` を `borrow` の重複住人として畳んだのと同型の判断である。
 
-### 型依存の空値は、既存の target 依存 fn パターンで書ける
+### `empty` を Value fn 化しても 3 つの特別視が残る
 
-`empty` を Sentinel に置いた理由は「空値が対象型に依存する」ことだった — 配列なら `[]`、map なら `{}` で、
-発火時に値を 1 つ決め打ちできない。
+1. **観測 op `empty` の温存** — fn の素性を見て通常の `set` から op を差し替える必要があり、普通の Value fn
+   と同じ射影にならない
+2. **対象型に依存する空値決定** — `FnCtx` へ target 型を供給し、array / map / record ごとの空値を組み立てる
+   必要がある
+3. **`abi.Value` の複合化依存** — `[]` / `{}` を fn の返り値として運ぶため、値表現の拡張が前提になる
 
-しかしこれは `set` / `borrow` が既に持っている性質である。両者とも target セルの型に適合する値を供給する
-fn であり、そのための context (`EffectCtx` の対象 cell、`DefaultCtx` の target) は DR-114 §7 の ABI に
-最初から用意されている。`empty` だけを別空間へ追い出す理由にはならない。
+観測 op を温存した判断は、クリアと `[]` 行供給を同じ `set([])` へ写す非単射を避けるためであり、`empty` が
+値ではなくセル操作の指示語であることを認めている。3 つを残したまま返り値の型だけを Value に替えても、
+Sentinel を外す利得は立たない。
 
-### Sentinel に残す条件は「値として書けないこと」であり、`default` だけが満たす
+### Sentinel に残す条件は、値供給へ畳んだ時に特別視が消えること
 
-3 つの Sentinel を並べると、残す/畳むの判定軸が 1 本に見える。
-
-| Sentinel | 発火時に値が決まるか | 判定 |
+| Sentinel | Value への表現 | 判定 |
 |---|---|---|
-| `unset` | 決まる (`null`) | 畳む |
-| `empty` | 決まる (target 型の空値) | 畳む |
-| `default` | **決まらない** (placeholder の実体化は最終相、DR-087) | 残す |
+| `unset` | `null`。通常の `set(null)` として全経路を共有できる | 畳む |
+| `empty` | 空値へ写しても前節の 3 特別視が残る | 残す |
+| `default` | placeholder の実体化は最終相で、発火時に値が決まらない (DR-087) | 残す |
 
-Sentinel は「値を返せない fn のための逃げ道」であって、機構として好まれる形ではない。逃げ道を必要と
-する住人が 1 つに減ったことは、逃げ道を消せという主張ではなく、**逃げ道の存在理由が明確になった**という
-ことである。`default` の Sentinel は「遅延解決される席を指す」という機構的役割を持ち、値の一種ではない。
+この軸により Sentinel は `default` / `empty` の 2 住人へ縮小する。
 
 ## 波及
 
@@ -258,15 +229,15 @@ Sentinel は「値を返せない fn のための逃げ道」であって、機�
   の記述へ縮小。§2 の committed の説明を「op が制御する」から「set の operand が `null` かどうかが
   制御する」へ改める (§2)。§旧実装からの継承の「旧 Variation の Reset / Unset が本 DR の default / unset に
   対応する」という考古学の記述は、対応先が `default` / `set(null)` になる
-- **DR-113 §5.4**: failure semantics 表の「default 席で Sentinel fn を指定」行の対象が `default` 1 つに
-  なることを追補 (§7)。同表の「`borrow:X` の source が最終的に不在 / unset → fn reason `absent-source`」の
+- **DR-113 §5.4**: failure semantics 表の「default 席で Sentinel fn を指定」行の対象が `default` / `empty`
+  の 2 つになることを追補 (§7)。同表の「`borrow:X` の source が最終的に不在 / unset → fn reason `absent-source`」の
   行は**削除する** — 参照先の座は `null` になり、borrow の `null` 返しと `set(null) = unset` の伝播が
   同じ観測を produce する (§1.1)。`absent-source` の reason 語彙も併せて廃止される
 - **DR-114 §2 / §8**: §2 末尾の「default 席は `Value` を返す fn だけを受け入れ、`Sentinel` を返す fn の
-  指定は definition-error `invalid-range`」は文言不変で対象が縮む。§8 の `cell_fns` 代表住人リストで
-  `unset` / `empty` を `Value` 返し群へ移す (§7)
+  指定は definition-error `invalid-range`」は文言不変で、対象は `default` / `empty`。§8 の `cell_fns`
+  代表住人リストで `unset` を `Value` 返し群へ移し、`empty` は Sentinel 群に残す (§7)
 - **DR-127 §4.1**: 「Sentinel を返す fn (`unset` / `default` / `empty`) の適用は発火時の Reject」の列挙を
-  `default` 1 つへ (§7)
+  `default` / `empty` の 2 つへ (§7)
 - **DR-081 §2/§3**: op=default の意味 (現在の default を明示 set、committed=true) は不変。§3 の
   「op=unset = uncommitted 化」を `set(null)` の形へ書き換える
 - **DR-077**: `update` op を追加した DR。CONFORMANCE §2 が既に「`incr` 等が `ctx.old` から返した新値も
@@ -275,27 +246,27 @@ Sentinel は「値を返せない fn のための逃げ道」であって、機�
   **独立の issue として起票して処理する** (本 DR の op 表改定に混ぜない — 転換とは無関係な既存の不整合で
   あり、同じ commit に載せると本 DR の波及範囲が読めなくなる)
 - **DR-011**: variant DSL の effect 4 種が op 語彙の出所。wire の綴り (`reset:unset` / `no:empty`) は
-  不変で、lowering 先が Sentinel から Value 返し fn へ変わる点を追補
+  不変。`unset` の lowering 先だけが Sentinel から null Value fn invocation へ変わり、`empty` は
+  Sentinel/direct-op lowering のまま
 
 ### docs 本体
 
 - **docs/CONFORMANCE.md §2**: op 表を 6 op から 5 op へ (§6)。「variant effect (effect mode): cell fn の
-  `Value` 返却は通常の `set`、クリアの `empty` だけは非単射回避のため同名 op、Sentinel 返却は `default`
-  として effects に射影する」へ改定。「default_fn (default mode): default 席は `Value` を返す cell fn だけを
+  `Value` 返却は通常の `set`、Sentinel 返却の `default` / `empty` は同名 op として effects に射影する」へ
+  改定。「default_fn (default mode): default 席は `Value` を返す cell fn だけを
   受け入れ」は文言不変
-- **docs/DESIGN.md §8.3 / docs/PIPELINE.md §2 段 5**: 「unset / default / empty は値を書かないので filter
-  chain を通らない」の根拠を、null 素通し (DR-130 §3) と空コレクションに each 相の適用対象が無いこと の
-  2 本へ差し替える (§6)。`default` については従来の根拠が残る
+- **docs/DESIGN.md §8.3 / docs/PIPELINE.md §2 段 5**: `unset` は null 素通し (DR-130 §3)、`default` / `empty`
+  は Sentinel で値を運ばないため filter chain の対象 piece が生じない、と記述する (§6)
 - **docs/CONFORMANCE.md §2 (`sources` の空コレクション)**: 「ユーザが明示的に空にした / 何も来なかった の
   区別は `effects` の op (`empty` / `unset`) が担う」を **`empty` / `set(null)` が担う**形へ (§6)
-- **docs/REFERENCE.md**: `cell_fns` 住人一覧の返り値型 (`unset` / `empty` が `Value` 返しへ)
+- **docs/REFERENCE.md**: `cell_fns` 住人一覧の返り値型 (`unset` は null `Value`、`empty` は `Sentinel(Empty)`)
 
 ### schema
 
 - `schema/fixture.schema.json`: `effects[].op` の enum から `unset` のみ削除し、`empty` は温存。
   `operand` を `null` 許容へ
-- `schema/builtin-descriptors.json`: `cell_fns` の `unset` / `empty` の `io_type.output` を
-  tagged `Sentinel` から `Value` (`unset` は `"null"`、`empty` は target 依存) へ
+- `schema/builtin-descriptors.json`: `cell_fns` の `unset` の `io_type.output` を tagged `Sentinel` から
+  `Value` (`"null"`) へ。`empty` は tagged `Sentinel` のまま
 
 ### fixture
 
@@ -319,10 +290,9 @@ Sentinel は「値を返せない fn のための逃げ道」であって、機�
 
 ### 実装
 
-- **kuu.mbt**: cell fn の返り値型から `Sentinel::unset` / `Sentinel::empty` を削除し、`unset` は
-  `Value::null` を返す住人へ、`empty` は対象セル型から空値を組み立てる住人へ。効果適用側は
-  `set` の operand が `null` かで committed を分ける (§2)。effects の serialize と conformance decoder も
-  5 op へ
+- **kuu.mbt**: cell fn の返り値型から `Sentinel::unset` を削除し、`unset` は `Value::null` を返す住人へ。
+  `Sentinel::empty` は残す。効果適用側は `set` の operand が `null` かで committed を分ける (§2)。effects の
+  serialize と conformance decoder は 5 op へ
 - **kuu-cli**: 追随のみ
 
 ## 採用しなかった案
@@ -353,7 +323,7 @@ accumulator セルのクリアと `[]` 行供給が同じ `set([])` へ潰れて
 
 - DR-130 (**前提** — `null` の値空間への昇格・素通し規則。本 DR はその上で Sentinel を畳む)
 - DR-045 §1/§2 (効果記述子の op 語彙と committed の制御 — §2/§6 で改定)
-- DR-011 (variant DSL の effect 4 種 — wire の綴りは不変、lowering 先が変わる)
+- DR-011 (variant DSL の effect 4 種 — wire の綴りは不変、`unset` の lowering 先だけが null Value fn invocation へ変わる)
 - DR-113 §5.3/§5.4 (cell fn ABI `Value | Sentinel` と failure semantics — §7 で対象が縮み、
   `absent-source` の行は §1.1 で削除)
 - DR-114 §2/§7/§8 (universal fn 統合・`FnCtx` / `EffectCtx` / `DefaultCtx`・`cell_fns` 住人分類 — §3/§7)

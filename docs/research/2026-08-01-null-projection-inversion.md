@@ -105,6 +105,13 @@
   Value fn のまま、effects 語彙は `set / default / remove / splice / empty` とする。accumulator セルの
   「クリア」と「`[]` 行供給」を同じ wire へ潰す非単射を避ける (DR-121 §1.2 と同じ判断)
 
+## 5c. empty Sentinel 残留の追補裁定
+
+2026-08-02 kawaz 裁定 (EMP-Q1=a) により、§2 / §3 / §5b に記録した `empty` Value fn 化は差し戻し、`empty` は
+`Sentinel(Empty)` を返す cell fn に残る。観測 op `empty` の温存、対象型に依存する空値決定、空値を運ぶための
+`abi.Value` 複合化依存という 3 つの特別視が残り、値化の利得が立たなかったためである。参照実装は
+`CellSentinel::Empty` のまま Value fn 化が未完だったため、実装の差し戻しコストは無い。
+
 ## 6. 未決の隣接論点 (本転換に含めない)
 
 - link 入口の name/export_key による二重露出 (mid=29 提起、方向感未確定) — 別 Q として継続

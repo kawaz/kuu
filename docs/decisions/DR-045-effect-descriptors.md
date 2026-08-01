@@ -1,6 +1,6 @@
 # DR-045: 効果記述子 — 値セルへの操作は純データで衛星に載る
 
-> **更新 (DR-131、2026-08-01): effects の op 語彙は `set` / `default` / `empty` / `remove` / `splice` の 5 語彙。** `unset` fn は null Value を返し `{"op":"set","operand":null}` と観測され、operand が null の set だけ committed=false になる。`empty` は空 Value を返すが、accumulator の行供給との非単射を避けるため観測 op を保つ。純データの効果記述と順序規範は不変。
+> **更新 (DR-131、2026-08-01、2026-08-02 EMP-Q1=a 追補): effects の op 語彙は `set` / `default` / `empty` / `remove` / `splice` の 5 語彙。** `unset` fn は null Value を返し `{"op":"set","operand":null}` と観測され、operand が null の set だけ committed=false になる。`empty` は `Sentinel(Empty)` を返し、同名 op として committed=true のクリアを行う。純データの効果記述と順序規範は不変。
 
 > 由来: variant の非 set effect (default / unset / empty) の lowering が未定義という gap (LOWERING カタログの variant 効果 lowering 節) と、旧実装の考古学 (`main` ws `src/core/` の Variation / Accessor / alias clone の観測)。findings F-... ではなく DR-011 の効果語彙に直接対応する。
 

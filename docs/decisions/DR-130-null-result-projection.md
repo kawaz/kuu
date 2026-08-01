@@ -469,4 +469,4 @@ fixture の記述コストを抑え、既存 578 case の書き換えを回避�
 - DESIGN §12b / DR-050 (provider 境界の `| null` と config の JSON null — §9.1 の別軸、値空間へ流入しない)
 - CONFORMANCE §2/§3 (`result` / `sources` の規定と比較規約 — §8 で改定)
 - docs/research/2026-08-01-null-projection-inversion.md (本 DR の正本ノート、NUL-Q1〜Q4 / NUL-C1)
-- DR-131 (Sentinel 縮小 — 本 DR の null を前提に unset / empty を Value fn へ畳む。effects は empty op を温存)
+- DR-131 (Sentinel 縮小 — 本 DR の null を前提に unset を Value fn へ畳む。empty は Sentinel に残り、effects の empty op を担う)

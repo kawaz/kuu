@@ -1,6 +1,6 @@
 # DR-127: link 固定パス DSL の実装可能化 — セル空間 / 値空間の 2 相分解、record 宣言による静的化、器の auto-vivify
 
-> **更新 (DR-130/131、2026-08-01): 値残余の座への部分書きは未充足座を null として保持し、nameless tuple は `[null, 2]`、record は `{until: X, since: null}` の形を取りうる。** record の宣言済み欠落フィールドは論理的に null と読む。値残余座で発火時 Reject となる Sentinel fn は `default` だけで、`unset` は null Value、`empty` は空 Value を返す。`ctx.old` を要する fn だけが未 vivify の空座で Reject になる。
+> **更新 (DR-130/131、2026-08-01、2026-08-02 EMP-Q1=a 追補): 値残余の座への部分書きは未充足座を null として保持し、nameless tuple は `[null, 2]`、record は `{until: X, since: null}` の形を取りうる。** record の宣言済み欠落フィールドは論理的に null と読む。値残余座で発火時 Reject となる Sentinel fn は `default` / `empty` で、`unset` は null Value を返す。Value 返し fn のうち `ctx.old` を要するものだけが未 vivify の空座で Reject になる。
 
 > 由来: kuu.mbt issue `2026-07-27-link-fixed-path-dsl-unimplemented` を起点にした設計検討 (2026-07-28) と、
 > kawaz チャット裁定 2026-07-31 (ccmsg r98 mid=2〜16) / 2026-08-01 (mid=21/22)。正本は
@@ -102,8 +102,9 @@ vivify が届くのは **器の形が定義時に言える宣言が続く深さ�
 record 内の `map` フィールドの内側を指す座への書きは、セルに値がありその座が実在すれば書けるが、
 無ければ Reject (map の器は vivify しない — closed でないため生成する器の形が定義時に言えない、
 §根拠「vivify を許すのは、closed record が『器の形』を定義時に確定させるから」の非対称そのまま)。
-また **vivify は `set` (部分書き) 専用**であり、Value 返し fn (§4.1) は
-現在の座の値 (`ctx.old`) を必要とするため、空の座への適用は解決失敗 = その枝の Reject である。
+また **vivify は `set` (部分書き) 専用**である。Value 返し fn (§4.1) のうち現在の座の値 (`ctx.old`) を
+必要とするものは、空の座への適用が解決失敗 = その枝の Reject になる。`unset` は `ctx.old` を要さず null Value を
+返すため空座でも成立する。Sentinel 返しの `default` / `empty` は §4.1 の規定により Reject となる。
 
 record での vivify が安全なのは closed record だからである — キー語彙が定義時に閉じているため、
 生成される器がどの形になりうるかが定義時に決まる。`{until: X}` で終わっても
@@ -164,8 +165,8 @@ fn descriptor の `io_type.output` とフィールドの `out` の適合を定�
 
 #### 4.1 値残余の座に許す操作は set と Value 返し fn のみ
 
-到達した座は「退化セル」として扱う — `set` (override) と Value を返す cell fn (`incr` 等、`ctx.old` は現在の座の値)
-だけを受け付ける。Sentinel を返す fn (`unset` / `default` / `empty`) の適用は発火時の Reject である。
+到達した座は「退化セル」として扱う — `set` (override) と Value を返す cell fn (`incr` / `unset` 等、
+`ctx.old` は現在の座の値) だけを受け付ける。Sentinel を返す fn (`default` / `empty`) の適用は発火時の Reject である。
 器の vivify (§3) はこの語彙の拡張ではない — set が座る前段階の器生成にすぎない。
 
 #### 4.1b 未選択枝のセルへの着地

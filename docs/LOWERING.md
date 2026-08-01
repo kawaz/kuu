@@ -235,12 +235,12 @@ variant は universal fn carrier へ lowering する:
   {exact: "--no-color", link: "color", effect: {fn: "unset", args: []}}
 ```
 
-`unset` は `null` を返す Value fn、`empty` は対象型の空値を返す Value fn である。Value は通常の set 経路へ入り、
-`set(null)` だけが committed=false としてラダーを開放する。`default` は唯一残る Sentinel で default placeholder を
-選ぶ。effects の観測語彙は `set` / `default` / `empty` (`remove` / `splice` を含めると全 5 op) で、`unset` 発火は
-`set` + null operand、`empty` 発火は accumulator の行供給との非単射を避けるため `empty` op として観測する
-(DR-130 §3、DR-131 §1〜§6)。args は全て string で CLI 入力と同じ手順を通り、null は共通 dispatcher が filter を
-呼ばず素通しする。variant 構造は AtomicAST に残らず exact + fn carrier に展開される。
+`unset` は `null` を返す Value fn であり、通常の set 経路へ入る。`set(null)` は committed=false としてラダーを
+開放する。`default` / `empty` は Sentinel で、前者は default placeholder を選び、後者は collection のセルを
+committed=true で空にする。effects の観測語彙は `set` / `default` / `empty` (`remove` / `splice` を含めると全 5 op) で、
+`unset` 発火は `set` + null operand、`empty` 発火は `empty` op として観測する (DR-130 §3、DR-131 §1〜§6)。args は
+全て string で CLI 入力と同じ手順を通り、null は共通 dispatcher が filter を呼ばず素通しする。variant 構造は
+AtomicAST に残らず exact + direct operation / fn carrier に展開される。
 
 **由来**: DR-042, DR-011, DR-015, DR-045
 

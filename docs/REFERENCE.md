@@ -720,7 +720,7 @@ construction=factory の `config` キー宣言 (デプロイ時の方言設定) 
 | `set` | fn | total | (空) | 1 個以上の logical value を返す。effect mode では通常 set、`default` 糖衣では native JSON value の typed internal call |
 | `default` | fn | total | (空) | `use_default` Sentinel を返し default placeholder へ戻す effect-mode operation |
 | `unset` | fn | total | (空) | null Value を返す。cell への適用時に `set(null)` としてラダーを開放する |
-| `empty` | fn | total | (空) | target 型の空 Value (`[]` / `{}`) を返す。array / map / record にだけ適用でき、scalar 等は definition-error `invalid-range` |
+| `empty` | fn | total | (空) | `Sentinel(Empty)` を返し、array / map / record を committed=true で空にする。scalar 等は definition-error `invalid-range` |
 | `incr` | fn | total | (空) | `ctx.old` を参照して `old + 1` の number Value を返す。count preset が使用 |
 | `borrow` | fn | reject | `option:<source>` | 他 option の値を返す。`<source>` は lexical scope chain (DESIGN §2.7) で解決し、decoded source から依存 edge を concrete 化 |
 | `env` | fn | reject | `env:<var>` | 明示した環境値を返す。値源ラダーの env 席とは別の fn 呼び出し |
@@ -730,7 +730,7 @@ construction=factory の `config` キー宣言 (デプロイ時の方言設定) 
 
 概念 ABI は `(args: string[], ctx: FnCtx) → Result<Value | Sentinel, Reason>` の 1 種。`ctx.mode()` は `"default" | "effect" | "filter"` を返し、`as_default()` / `as_effect()` / `as_filter()` で位相固有 context を取得する。`ctx.old()` は対象 cell の内在状態であり `observes` edge ではない。外部 option / env / system 参照は descriptor の `observes` に宣言し、concrete edge だけを `ctx.observes()` 経由で読める。
 
-`Value` 返却は effect mode では通常の set operand、default mode では default 値になる。null Value は共通 dispatcher が filter を呼ばず素通しし、cell への適用時に committed=false の unset 状態へ変わる。`empty` の空 Value は通常の set として適用するが、effects では accumulator の行供給との非単射を避けるため `empty` op を保つ。`Sentinel` は `use_default` だけで、default 席には指定できない。colon-string と 1 段 array of string は同じ name + args に decode される。
+`Value` 返却は effect mode では通常の set operand、default mode では default 値になる。null Value は共通 dispatcher が filter を呼ばず素通しし、cell への適用時に committed=false の unset 状態へ変わる。`Sentinel` は `use_default` / `empty` の 2 つで、effect mode ではそれぞれ `default` / `empty` op として適用する。いずれも default 席には指定できない。空配列を既定値にする場合は `default: []` と書く。colon-string と 1 段 array of string は同じ name + args に decode される。
 
 正本: DESIGN §7/§11.4/§13.1, DR-114, `schema/builtin-descriptors.json`
 

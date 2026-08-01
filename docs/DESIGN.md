@@ -624,9 +624,9 @@ variant DSL の値供給・cell operation は DR-114 の universal fn ABI を使
 | `set` | 引数なし = 値スロット準備 / 1 個以上 = `Value` | 値を cell へ set |
 | `default` | なし / `use_default` Sentinel | default placeholder へ戻す |
 | `unset` | なし / null `Value` | `set(null)` として cell のラダーを開放する |
-| `empty` | なし / target 型の空 `Value` | 配列 / Map / record を空にする。scalar 等は definition-error `invalid-range` |
+| `empty` | なし / `Sentinel(Empty)` | 配列 / Map / record を committed=true で空にする。scalar 等は definition-error `invalid-range` |
 
-4 名は閉じた effect enum ではなく `cell_fns` の builtin 住人である。`incr` / `borrow` / `env` 等の他の cell fn も同じ位置から呼べる。発火時の `FnCtx.mode()` は `"effect"`。fn が `Value` を返せば通常の set operand として適用し、null は filter を素通しして cell 適用時に committed=false となる。Sentinel 返しは `default` だけである。effects では unset を `set(null)`、empty によるクリアを `empty` として観測する。`update` effect と filters transform の特殊呼び出しは持たない。
+4 名は閉じた effect enum ではなく `cell_fns` の builtin 住人である。`incr` / `borrow` / `env` 等の他の cell fn も同じ位置から呼べる。発火時の `FnCtx.mode()` は `"effect"`。fn が `Value` を返せば通常の set operand として適用し、null は filter を素通しして cell 適用時に committed=false となる。Sentinel 返しは `default` / `empty` である。effects では unset を `set(null)`、empty によるクリアを `empty` として観測する。`update` effect と filters transform の特殊呼び出しは持たない。
 
 ### 7.5 variant は決定的に lowering される
 
@@ -672,7 +672,7 @@ filter は2箇所に乗る:
 
 **filter 名の未登録は definition-error** (kind=`unknown-vocab`、DR-101): `value_filters` / `piece_filters` / `final_filters` / `accum_filters` の 4 属性に指定された filter 名 (§8.4 DSL の `<name>`、DR-094 の ns 付き識別子 / bare は `builtin` ns の糖衣) が filters registry の descriptor `owns` 集合 (DR-061 / DR-094) に載らない場合、`parse_definition` が静的に reject する (runtime reason `unknown_filter` は持たない)。1 属性 1 registry の対応 (`final_filters` は scalar filter registry T→T、`accum_filters` は ARRAY filter registry Acc→Acc) なので判定は自 registry の owns 集合のみで完結し、層違いの 2 段判定は無い (DR-102 §2)。非 accum 要素への `accum_filters`、accum 要素への `final_filters` はいずれも definition-error kind=`invalid-range` (DR-102 §3)。filter 装置内の失敗 (例: `regex_match` の pattern compile 失敗) は kind=`invalid-argument` (DR-085) で別層。
 
-**cell fn の返り値と `value_filters` (each 相、T→T) の関係**: `value_filters` は cell に書かれる実値に乗る。入口の set operand と、`incr` / `unset` / `empty` 等の cell fn が返した `Value` は通常の set operand として対象になる。ただし共通 dispatcher は入力が `null` なら chain を呼ばず `null` をそのまま通す。each 相では null 要素だけを個別に素通しし、空コレクションには適用対象の要素が無い。`default` は唯一残る Sentinel で、新しい実値を運ばないため対象 piece が生じない。これらの操作発火が filter に reject される事態は起きない (DR-130 §3、DR-131 §2b/§6)。
+**cell fn の返り値と `value_filters` (each 相、T→T) の関係**: `value_filters` は cell に書かれる実値に乗る。入口の set operand と、`incr` / `unset` 等の cell fn が返した `Value` は通常の set operand として対象になる。ただし共通 dispatcher は入力が `null` なら chain を呼ばず `null` をそのまま通す。each 相では null 要素だけを個別に素通しする。`default` / `empty` は Sentinel で、新しい実値を運ばないため対象 piece が生じない。これらの操作発火が filter に reject される事態は起きない (DR-130 §3、DR-131 §2b/§6)。
 
 本段は発火時 specialization の規定である。`set(null)` によるラダー開放後に供給される下位席の値と、`default` 発火で選択される default 席の値がどの chain を通るかは値源席の規定 (DR-049 / DR-050) の管轄で、非 multiple 要素の宣言 default 値も同じ型依存規則に従う (DR-102 §5)。`piece_filters` (String→String) は消費した raw string に乗るため、値トークンを消費しない cell operation の発火には走る場面がない。`final_filters` / `accum_filters` は発火単位でなく確定後の最終値・累積配列に乗るため本規定の対象外。
 
@@ -1549,7 +1549,7 @@ options / commands の `origin` は `"local"`、`{"kind":"global","declared_at":
 | **descriptor** | installer / registry 住人の自己記述。role / construction / io_type / fallibility / invocation / reasons 等の直交軸と、role ごとの owns / observes / config を宣言する (DR-061/107/114) |
 | **observes** | descriptor の観測宣言。installer では宣言語彙の advisory read、fn / filter では runtime の option / env / system 参照を静的依存 edge として宣言する (DR-114 §9〜§10) |
 | **universal fn** | name + string args + 統一 FnCtx で registry 住人を呼ぶ共通機構。variant effect / filter / default_fn は specialization ごとに結果の適用先を保つ (DR-114) |
-| **cell_fns** | default 値供給と発火時 cell operation の fn registry。`set` / `unset` / `empty` / `incr` / `borrow` 等は Value を返し、`default` だけが Sentinel を返す (DR-114 §8、DR-131) |
+| **cell_fns** | default 値供給と発火時 cell operation の fn registry。`set` / `unset` / `incr` / `borrow` 等は Value を返し、`default` / `empty` は Sentinel を返す (DR-114 §8、DR-131) |
 | **FnCtx** | universal fn の統一 context。`mode()` で default / effect / filter を判別し、位相固有 context、old、env、system、observes 制限面を提供する (DR-114 §7) |
 | **query-error** | 合法な definition に対する capability 入力の失敗。help_query では `absent-path` / `absent-category` を持ち、definition-error と位相を分ける (DR-113 §1) |
 | **configurable factory** | registry 住人の `{name, config}` 参照形。方言バリエーションを純データ config の差分で表現、canonical default = default config (DR-061) |
