@@ -43,7 +43,7 @@
   "cases": [
     {
       "id": "color-arity-vs-name-receptacle",
-      "why": "args `--color 255 0 0` は 2 通りに全消費できる → ambiguous:2 (DESIGN §15.4 の canonical 例)。経路 A: --color が r=255,g=0,b=0 の 3 数値を取り (数値の canonical 最短形、DR-050 §4)、color の子スコープが {r,g,b} の kv になり (DESIGN §2.5)、受け皿 rest は 0 トークン消費で []。経路 B: --color が name='255' の 1 文字列を取って color の子スコープが {name} になり、残る '0' '0' を rest が文字列要素として 2 個消費し rest=['0','0']。両経路とも全 4 トークンを消費する完全経路で、構造 (アリティ) が異なるため選好で畳めず 2 本並ぶ (DR-038)。interpretations は各経路の結果オブジェクト形ビュー (DR-053 §3)。rest が両ビューに現れるのは min:0 repeat が 0 発火でも [] を materialize する構造値だから (absent でも preset default でもない、DR-130 §1) — interpretations が省くのは未発火 flag の false 等の preset default 注入であり、repeat の [] とは層が違う。列挙順は非規範、runner は集合として突き合わせる (CONFORMANCE §3)。",
+      "why": "args `--color 255 0 0` は 2 通りに全消費できる → ambiguous:2 (DESIGN §15.4 の canonical 例)。経路 A: --color が r=255,g=0,b=0 の 3 数値を取り (数値の canonical 最短形、DR-050 §4)、color の子スコープが {r,g,b} の kv になり (DESIGN §2.5)、受け皿 rest は 0 トークン消費で []。経路 B: --color が name='255' の 1 文字列を取って color の子スコープが {name} になり、残る '0' '0' を rest が文字列要素として 2 個消費し rest=['0','0']。両経路とも全 4 トークンを消費する完全経路で、構造 (アリティ) が異なるため選好で畳めず 2 本並ぶ (DR-038)。interpretations は各経路の結果オブジェクト形ビュー (DR-053 §3)。rest が両ビューに現れるのは min:0 repeat が 0 発火でも [] を materialize する構造値だから (null 座でも flag preset default 注入でもない、DR-130 §1) — interpretations が省くのは未発火 flag の false 等の preset default 注入であり、repeat の [] とは層が違う。列挙順は非規範、runner は集合として突き合わせる (CONFORMANCE §3)。",
       "args": [
         "--color",
         "255",
