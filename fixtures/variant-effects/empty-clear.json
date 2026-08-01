@@ -1,5 +1,5 @@
 {
-  "why": "`empty` は対象 accumulator の空値 `[]` を返す Value fn で、セル操作の座へ適用され committed=true のクリアになる (DR-131 §3/§4)。effects では空行供給の `set([])` と区別するため `empty` op を温存する。効果列を適用順に畳み、empty より前の蓄積を消し、後続の set は空セルへ再蓄積する。",
+  "why": "`empty` は `Sentinel(Empty)` を返す cell fn で、committed=true のクリアを行う (DR-131、EMP-Q1=a 差し戻し)。effects では空行供給の `set([])` と区別する `empty` op で観測する。効果列を適用順に畳み、empty より前の蓄積を消し、後続の set は空セルへ再蓄積する。",
   "query": "parse",
   "definition": {
     "options": [

@@ -1,5 +1,5 @@
 {
-  "why": "accumulator セルの `unset` / `empty` と `value_filters` の境界を固定する。`unset` は `null` を返す Value fn で、filter dispatcher が null を素通しし、effects では `set` + `operand:null` と観測する (DR-130 §3、DR-131 §1/§2b/§6)。`empty` は空配列を返すが、each 相には要素が無いため filter 対象がなく、effects の `empty` op はクリアと空行供給の非単射を避けるため温存される。両者の最終 result / sources は `[]` でも、effects が `set(null)` と `empty` を区別する。",
+  "why": "accumulator セルの `unset` / `empty` と `value_filters` の境界を固定する。`unset` は `null` を返す Value fn で、filter dispatcher が null を素通しし、effects では `set` + `operand:null` と観測する (DR-130 §3、DR-131 §1/§2b/§6)。`empty` は `Sentinel(Empty)` のクリアで filter 段に値を運ばず、effects の `empty` op はクリアと空行供給の非単射を避けるため温存される (EMP-Q1=a)。両者の最終 result / sources は `[]` でも、effects が `set(null)` と `empty` を区別する。",
   "query": "parse",
   "definition": {
     "options": [
@@ -89,7 +89,7 @@
     },
     {
       "id": "empty-after-set-resets-to-empty-with-cli-source",
-      "why": "`--ports 5 --clear-ports`: empty fn は空配列を返すため each 相の filter 対象が 0 件で、セルを `[]` にクリアする。effects は非単射回避のため `empty` op を温存し、unset の `set(null)` と区別する (DR-131 §4/§6)。",
+      "why": "`--ports 5 --clear-ports`: empty fn は `Sentinel(Empty)` のクリアで filter 段に値を運ばず、セルを `[]` にする。effects は非単射回避のため `empty` op で観測し、unset の `set(null)` と区別する (DR-131)。",
       "args": [
         "--ports",
         "5",
