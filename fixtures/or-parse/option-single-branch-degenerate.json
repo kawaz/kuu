@@ -3,21 +3,45 @@
   "query": "parse",
   "definition": {
     "options": [
-      {"name": "level", "long": true, "or": [{"type": "int"}]},
-      {"name": "verbose", "type": "flag", "long": true}
+      {
+        "name": "level",
+        "long": true,
+        "or": [
+          {
+            "type": "int"
+          }
+        ]
+      },
+      {
+        "name": "verbose",
+        "type": "flag",
+        "long": true
+      }
     ]
   },
   "cases": [
     {
       "id": "single-branch-same-shape-as-multi",
       "why": "`--level 5 --verbose`: 枝 1 本でも `level` は結果キーとして立つ。2 枝版の sibling-option-coexists と結果形が一致する。",
-      "args": ["--level", "5", "--verbose"],
+      "args": [
+        "--level",
+        "5",
+        "--verbose"
+      ],
       "expect": {
         "outcome": "success",
         "effects": [
-          {"entity": "verbose", "op": "set", "operand": true, "source": "cli"}
+          {
+            "entity": "verbose",
+            "op": "set",
+            "operand": true,
+            "source": "cli"
+          }
         ],
-        "result": {"level": 5, "verbose": true}
+        "result": {
+          "level": 5,
+          "verbose": true
+        }
       }
     }
   ]

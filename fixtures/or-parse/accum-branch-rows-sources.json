@@ -1,5 +1,5 @@
 {
-  "why": "named or の wrapper に accumulator が乗ったときの `sources` shadow を固定する。corpus には named or × accumulator の `result` fixture (`multiple-parse/ref-rows-append.json` 等) も、or 枝 × sources の fixture (`or-parse/child-repeat-branch.json`) もあるが、両者の交差 = 「or 枝の中の座に要素対応タグを付ける」形は無かった。危険なのは合成の 3 点 — (1) wrapper が結果スコープを作り (DESIGN §2.4/§2.5)、(2) accumulator の畳み単位が発火値 = row になり (DR-084 §1)、(3) row の中身が発火ごとに違う枝形を持つ。shadow tree は result と同型なので、**入れ子の各段が独立に配列化する** (DR-044) 構造がそのままタグ側にも写る: 外側の配列は accum の発火列、その要素は row の kv、row 内の repeat セルはさらに要素対応の配列。cell 単位のタグ 1 個に潰す実装 (DR-121 が持っていた wrapper 1 タグの縮退) はここで形が合わない (DR-122 §3)。0 発火の相も同じ file で見る — 反復セルは発火するまで空席で、宣言 default が無ければラダー最下段の暗黙 default `[]` が埋め (DR-123 §1/§3)、`[]` には値の座が無いのでタグも載らない (DR-122 §2)。定義は `child-repeat-branch.json` の 2 枝 (数値 repeat 枝 / 文字列枝) をそのまま土台にし、`multiple: \"append\"` だけを足した差分にしてある。",
+  "why": "named or の wrapper に accumulator が乗ったときの `sources` shadow を固定する。corpus には named or × accumulator の `result` fixture (`multiple-parse/ref-rows-append.json` 等) も、or 枝 × sources の fixture (`or-parse/child-repeat-branch.json`) もあるが、両者の交差 = 「or 枝の中の座に要素対応タグを付ける」形は無かった。危険なのは合成の 3 点 — (1) wrapper が結果スコープを作り (DESIGN §2.4/§2.5)、(2) accumulator の畳み単位が発火値 = row になり (DR-084 §1)、(3) row のキー集合は全枝で固定され、発火ごとに非 null の枝座が変わる。shadow tree は result と同型なので、**入れ子の各段が独立に配列化する** (DR-044) 構造がそのままタグ側にも写る: 外側の配列は accum の発火列、その要素は row の kv、row 内の repeat セルはさらに要素対応の配列。cell 単位のタグ 1 個に潰す実装 (DR-121 が持っていた wrapper 1 タグの縮退) はここで形が合わない (DR-122 §3)。0 発火の相も同じ file で見る — 反復セルは発火するまで空席で、宣言 default が無ければラダー最下段の暗黙 default `[]` が埋め (DR-123 §1/§3)、`[]` には値の座が無いのでタグも載らない (DR-122 §2)。定義は `child-repeat-branch.json` の 2 枝 (数値 repeat 枝 / 文字列枝) をそのまま土台にし、`multiple: \"append\"` だけを足した差分にしてある。",
   "query": "parse",
   "definition": {
     "options": [
@@ -8,8 +8,17 @@
         "long": true,
         "multiple": "append",
         "or": [
-          {"name": "nums", "type": "number", "repeat": {"min": 1}},
-          {"name": "word", "type": "string"}
+          {
+            "name": "nums",
+            "type": "number",
+            "repeat": {
+              "min": 1
+            }
+          },
+          {
+            "name": "word",
+            "type": "string"
+          }
         ]
       }
     ]
@@ -17,41 +26,116 @@
   "cases": [
     {
       "id": "zero-fires-empty-accum-without-tags",
-      "why": "発火なし: accum セルは空席のままラダーへ進み、宣言 default が無いので最下段の暗黙 default `[]` が埋める (DR-123 §3、`multiple-parse/append.json::zero-fires-empty` と同じ縮退)。`[]` は値の座を持たないので sources も `[]` でタグは載らない (DR-122 §2) — 0 発火の accum に `default` タグを 1 件捏造する形 (DR-121 §2.2 が持っていて DR-122 が廃した形) はここで落ちる。未選択の or 枝は成立しなかった構造なので result にも sources にも席が無い (DR-051 / DR-122 §2)。effects は空。",
+      "why": "発火なし: accum セルは空席のままラダーへ進み、宣言 default が無いので最下段の暗黙 default `[]` が埋める (DR-123 §3、`multiple-parse/append.json::zero-fires-empty` と同じ縮退)。`[]` は値の座を持たないので sources も `[]` でタグは載らない (DR-122 §2) — 0 発火の accum に `default` タグを 1 件捏造する形 (DR-121 §2.2 が持っていて DR-122 が廃した形) はここで落ちる。0 発火では accumulator 全体が `[]` なので行自体が無い。発火した行では DR-130 §4 により全枝キーを列挙し、未選択枝の座は result/sources とも null になる。effects は空。",
       "args": [],
       "expect": {
         "outcome": "success",
         "effects": [],
-        "result": {"sel": []},
-        "sources": {"sel": []}
+        "result": {
+          "sel": []
+        },
+        "sources": {
+          "sel": []
+        }
       }
     },
     {
       "id": "single-fire-row-stays-wrapped",
-      "why": "`--sel foo`: 数値枝は `foo` を値空間外として Reject するので (DR-037 の Reject = ValueSpaceMiss、枝が成立しないだけで Error にならない) 文字列枝だけが完全経路を作る。発火が 1 回でも accum セルの形は配列なので row は配列に包まれたまま (`ref-rows-append.json::single-fire-list` と同じ、scalar への unwrap はしない)。sources は外側 1 要素の配列、その要素が row の shadow kv `{word:\"cli\"}` — **wrapper の座と row 内の座が別の段である**ことを最小形で固定する。`word` 枝は repeat を宣言していないので row 内は scalar のままで、タグも scalar (DR-044 は反復宣言子だけを配列にする)。",
-      "args": ["--sel", "foo"],
+      "why": "`--sel foo`: 数値枝は `foo` を値空間外として Reject するので (DR-037 の Reject = ValueSpaceMiss、枝が成立しないだけで Error にならない) 文字列枝だけが完全経路を作る。発火が 1 回でも accum セルの形は配列なので row は配列に包まれたまま (`ref-rows-append.json::single-fire-list` と同じ、scalar への unwrap はしない)。sources は外側 1 要素の配列、その要素が row の shadow kv `{nums:null,word:\"cli\"}` — **wrapper の座と row 内の座が別の段である**ことを最小形で固定する。`word` 枝は repeat を宣言していないので row 内は scalar のままで、タグも scalar (DR-044 は反復宣言子だけを配列にする)。",
+      "args": [
+        "--sel",
+        "foo"
+      ],
       "expect": {
         "outcome": "success",
         "effects": [
-          {"entity": "word", "op": "set", "operand": "foo", "source": "cli"}
+          {
+            "entity": "word",
+            "op": "set",
+            "operand": "foo",
+            "source": "cli"
+          }
         ],
-        "result": {"sel": [{"word": "foo"}]},
-        "sources": {"sel": [{"word": "cli"}]}
+        "result": {
+          "sel": [
+            {
+              "nums": null,
+              "word": "foo"
+            }
+          ]
+        },
+        "sources": {
+          "sel": [
+            {
+              "nums": null,
+              "word": "cli"
+            }
+          ]
+        }
       }
     },
     {
       "id": "two-fires-different-branches-elementwise-shadow",
-      "why": "`--sel 1 2 --sel foo`: 1 回目の発火は数値枝が 2 反復して `1`/`2` を全消費し (文字列枝は 1 トークンしか取れず `2` が残余になるので完全経路に届かない、`child-repeat-branch.json::numeric-branch-repeats-uniquely` と同じ枝決定)、row `{nums:[1,2]}` を積む。2 回目は文字列枝で row `{word:\"foo\"}`。同じ option の 2 発火が別の枝を選んでも accumulator は row をそのまま順に積むだけで枝の違いを畳まない (DR-084 §1)。**sources が 3 段になるのがこの case の主眼**: 外側の配列 (accum の発火列) → row の kv → row 内の repeat セルの配列。`{sel:[{nums:[\"cli\",\"cli\"]},{word:\"cli\"}]}` の各段が result の同じ位置と 1:1 で対応する (DR-122 §1)。段のどこかを潰す実装 — wrapper に 1 タグ、row に 1 タグ、repeat 要素をまとめて 1 タグ — はいずれも形が合わない。effects は消費順の 3 個で、entity は row の所属を持たない値セル名のまま (DR-045)。",
-      "args": ["--sel", "1", "2", "--sel", "foo"],
+      "why": "`--sel 1 2 --sel foo`: 1 回目の発火は数値枝が 2 反復して `1`/`2` を全消費し (文字列枝は 1 トークンしか取れず `2` が残余になるので完全経路に届かない、`child-repeat-branch.json::numeric-branch-repeats-uniquely` と同じ枝決定)、row `{nums:[1,2],word:null}` を積む。2 回目は文字列枝で row `{nums:null,word:\"foo\"}`。同じ option の 2 発火が別の枝を選んでも accumulator は row をそのまま順に積むだけで枝の違いを畳まない (DR-084 §1)。**sources が 3 段になるのがこの case の主眼**: 外側の配列 (accum の発火列) → row の kv → row 内の repeat セルの配列。`{sel:[{nums:[\"cli\",\"cli\"],word:null},{nums:null,word:\"cli\"}]}` の各段が result の同じ位置と 1:1 で対応する (DR-122 §1)。段のどこかを潰す実装 — wrapper に 1 タグ、row に 1 タグ、repeat 要素をまとめて 1 タグ — はいずれも形が合わない。effects は消費順の 3 個で、entity は row の所属を持たない値セル名のまま (DR-045)。",
+      "args": [
+        "--sel",
+        "1",
+        "2",
+        "--sel",
+        "foo"
+      ],
       "expect": {
         "outcome": "success",
         "effects": [
-          {"entity": "nums", "op": "set", "operand": 1, "source": "cli"},
-          {"entity": "nums", "op": "set", "operand": 2, "source": "cli"},
-          {"entity": "word", "op": "set", "operand": "foo", "source": "cli"}
+          {
+            "entity": "nums",
+            "op": "set",
+            "operand": 1,
+            "source": "cli"
+          },
+          {
+            "entity": "nums",
+            "op": "set",
+            "operand": 2,
+            "source": "cli"
+          },
+          {
+            "entity": "word",
+            "op": "set",
+            "operand": "foo",
+            "source": "cli"
+          }
         ],
-        "result": {"sel": [{"nums": [1, 2]}, {"word": "foo"}]},
-        "sources": {"sel": [{"nums": ["cli", "cli"]}, {"word": "cli"}]}
+        "result": {
+          "sel": [
+            {
+              "nums": [
+                1,
+                2
+              ],
+              "word": null
+            },
+            {
+              "nums": null,
+              "word": "foo"
+            }
+          ]
+        },
+        "sources": {
+          "sel": [
+            {
+              "nums": [
+                "cli",
+                "cli"
+              ],
+              "word": null
+            },
+            {
+              "nums": null,
+              "word": "cli"
+            }
+          ]
+        }
       }
     }
   ]

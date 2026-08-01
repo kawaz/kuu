@@ -1,5 +1,5 @@
 {
-  "why": "DESIGN §1.2「`or` / `seq` キーは name / multiple / value_name 等の通常フィールドと同居可能」の観測面。or を持つ要素が結果スコープを作らない (= 値の着地するセルを持たない) 実装では、同居させた `multiple` / `export_key` が**着地先を失って無言で捨てられる** — 宣言が黙って効かないのは §1.2 の同居規定に反する。`multiple: \"append\"` は ref 経由で書いた同型 (`multiple-parse/ref-rows-append.json` の `{hlcolors:[{colorname:...}]}`) と結果形が一致する (DR-084 §1 の「1 発火 = 1 row」、DR-007 / DR-078 §1 の経路非依存)。",
+  "why": "DESIGN §1.2「`or` / `seq` キーは name / multiple / value_name 等の通常フィールドと同居可能」の観測面。or を持つ要素が結果スコープを作らない (= 値の着地するセルを持たない) 実装では、同居させた `multiple` / `export_key` が**着地先を失って無言で捨てられる** — 宣言が黙って効かないのは §1.2 の同居規定に反する。`multiple: \"append\"` は ref 経由で書いた同型 (`multiple-parse/ref-rows-append.json` の `{hlcolors:[{r:null,g:null,b:null,colorname:...}]}`) と結果形が一致する (DR-084 §1 の「1 発火 = 1 row」、DR-007 / DR-078 §1 の経路非依存)。",
   "query": "parse",
   "definition": {
     "options": [
@@ -10,47 +10,110 @@
         "or": [
           {
             "seq": [
-              {"type": "number", "name": "r"},
-              {"type": "number", "name": "g"},
-              {"type": "number", "name": "b"}
+              {
+                "type": "number",
+                "name": "r"
+              },
+              {
+                "type": "number",
+                "name": "g"
+              },
+              {
+                "type": "number",
+                "name": "b"
+              }
             ]
           },
-          {"type": "string", "name": "colorname"}
+          {
+            "type": "string",
+            "name": "colorname"
+          }
         ]
       },
       {
         "name": "tone",
         "long": true,
         "export_key": "TONE",
-        "or": [{"type": "string"}]
+        "or": [
+          {
+            "type": "string"
+          }
+        ]
       }
     ]
   },
   "cases": [
     {
       "id": "multiple-append-rows-per-firing",
-      "why": "`--color red --color 0 128 255`: 発火ごとに 1 row を積む (DR-084 §1)。row は各枝の畳み結果そのもの (1 セル枝 = `{colorname}` の kv、seq 枝 = `{r,g,b}` の kv)。枝 leaf を親スコープへ平坦に落とす実装では or を持つ要素に accumulator の畳み単位が無く、`multiple` が効かずに最後の発火の leaf だけが残る。`--tone` は未発火なので absent (DR-051)。",
-      "args": ["--color", "red", "--color", "0", "128", "255"],
+      "why": "`--color red --color 0 128 255`: 発火ごとに 1 row を積む (DR-084 §1)。row は各枝の畳み結果そのもの (1 セル枝 = `{r:null,g:null,b:null,colorname}`、seq 枝 = `{r,g,b,colorname:null}` の固定キー kv)。枝 leaf を親スコープへ平坦に落とす実装では or を持つ要素に accumulator の畳み単位が無く、`multiple` が効かずに最後の発火の leaf だけが残る。`--tone` は未発火なので null (DR-130)。",
+      "args": [
+        "--color",
+        "red",
+        "--color",
+        "0",
+        "128",
+        "255"
+      ],
       "expect": {
         "outcome": "success",
         "effects": [
-          {"entity": "colorname", "op": "set", "operand": "red", "source": "cli"},
-          {"entity": "r", "op": "set", "operand": 0, "source": "cli"},
-          {"entity": "g", "op": "set", "operand": 128, "source": "cli"},
-          {"entity": "b", "op": "set", "operand": 255, "source": "cli"}
+          {
+            "entity": "colorname",
+            "op": "set",
+            "operand": "red",
+            "source": "cli"
+          },
+          {
+            "entity": "r",
+            "op": "set",
+            "operand": 0,
+            "source": "cli"
+          },
+          {
+            "entity": "g",
+            "op": "set",
+            "operand": 128,
+            "source": "cli"
+          },
+          {
+            "entity": "b",
+            "op": "set",
+            "operand": 255,
+            "source": "cli"
+          }
         ],
         "result": {
-          "color": [{"colorname": "red"}, {"r": 0, "g": 128, "b": 255}]
+          "color": [
+            {
+              "r": null,
+              "g": null,
+              "b": null,
+              "colorname": "red"
+            },
+            {
+              "r": 0,
+              "g": 128,
+              "b": 255,
+              "colorname": null
+            }
+          ],
+          "TONE": null
         }
       }
     },
     {
       "id": "export-key-renames-the-or-scope",
       "why": "`--tone warm`: or を持つ要素の `export_key` が結果キーを差し替える (DR-052 §1)。枝 leaf を親スコープへ平坦に落とす実装では or を持つ要素が結果キー軸を持たないため、宣言した `export_key` が無視されるどころか値ごと消える。`--color` は 0 発火の accumulator セルなので DR-044 の uniform array で `[]`。",
-      "args": ["--tone", "warm"],
+      "args": [
+        "--tone",
+        "warm"
+      ],
       "expect": {
         "outcome": "success",
-        "result": {"color": [], "TONE": "warm"}
+        "result": {
+          "color": [],
+          "TONE": "warm"
+        }
       }
     }
   ]

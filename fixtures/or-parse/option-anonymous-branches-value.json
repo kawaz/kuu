@@ -6,49 +6,89 @@
       {
         "name": "level",
         "long": true,
-        "or": [{"type": "int"}, {"type": "bool"}]
+        "or": [
+          {
+            "type": "int"
+          },
+          {
+            "type": "bool"
+          }
+        ]
       },
-      {"name": "verbose", "type": "flag", "long": true}
+      {
+        "name": "verbose",
+        "type": "flag",
+        "long": true
+      }
     ]
   },
   "cases": [
     {
       "id": "anonymous-branch-value-lands-on-parent-key",
-      "why": "`--level 5`: int 枝が成立し、枝は結果キーを持たないので値がそのまま `level` に乗る。併存する `--verbose` は未発火なので flag の preset default false (DR-051 / LOWERING §A.5)。**この case が pin する退行**: or 直下の値が親スコープへ平坦に落ちると `level` キーが結果から消え、option が 1 個だけの定義では result が object ですらない素の scalar になる (CONFORMANCE「`result` は最終結果オブジェクト」違反)。",
-      "args": ["--level", "5"],
+      "why": "`--level 5`: int 枝が成立し、枝は結果キーを持たないので値がそのまま `level` に乗る。併存する `--verbose` は未発火なので flag の preset default false (DR-130 / LOWERING §A.5)。**この case が pin する退行**: or 直下の値が親スコープへ平坦に落ちると `level` キーが結果から消え、option が 1 個だけの定義では result が object ですらない素の scalar になる (CONFORMANCE「`result` は最終結果オブジェクト」違反)。",
+      "args": [
+        "--level",
+        "5"
+      ],
       "expect": {
         "outcome": "success",
-        "result": {"level": 5, "verbose": false}
+        "result": {
+          "level": 5,
+          "verbose": false
+        }
       }
     },
     {
       "id": "bool-branch-same-shape",
       "why": "`--level true`: 選ばれる枝が変わっても露出構造は不変 (§5.1 は「選ばれた子の値」であって枝ごとの結果キーではない)。型だけが枝に従う。",
-      "args": ["--level", "true"],
+      "args": [
+        "--level",
+        "true"
+      ],
       "expect": {
         "outcome": "success",
-        "result": {"level": true, "verbose": false}
+        "result": {
+          "level": true,
+          "verbose": false
+        }
       }
     },
     {
       "id": "sibling-option-coexists",
       "why": "`--level 5 --verbose`: 併存する別 option の結果キーと同時に現れる。枝の値を親スコープへ平坦に落とす実装では `level` だけが消えて `{verbose:true}` になる — この消失が「root が scalar になる」現象と同じ根であることを、object が保たれる構成でも固定する。",
-      "args": ["--level", "5", "--verbose"],
+      "args": [
+        "--level",
+        "5",
+        "--verbose"
+      ],
       "expect": {
         "outcome": "success",
         "effects": [
-          {"entity": "verbose", "op": "set", "operand": true, "source": "cli"}
+          {
+            "entity": "verbose",
+            "op": "set",
+            "operand": true,
+            "source": "cli"
+          }
         ],
-        "result": {"level": 5, "verbose": true}
+        "result": {
+          "level": 5,
+          "verbose": true
+        }
       }
     },
     {
       "id": "eq-form-same-shape",
       "why": "`--level=5`: 変わるのは入口の綴り面 (DESIGN §7.1/§7.2、DR-014) だけで露出規則は不変 — 空間形と同じ結果形。**この case が pin する退行**: `=` 形の値スロットを共有 eq_split matcher へ素の entry として積むと枝 leaf の binding が親スコープ直下に出て、匿名枝では値ごと結果から消える (空間形と `=` 形で結果が割れる)。",
-      "args": ["--level=5"],
+      "args": [
+        "--level=5"
+      ],
       "expect": {
         "outcome": "success",
-        "result": {"level": 5, "verbose": false}
+        "result": {
+          "level": 5,
+          "verbose": false
+        }
       }
     }
   ]

@@ -6,8 +6,14 @@
       {
         "name": "target",
         "or": [
-          {"type": "int", "name": "port"},
-          {"type": "bool", "name": "auto"}
+          {
+            "type": "int",
+            "name": "port"
+          },
+          {
+            "type": "bool",
+            "name": "auto"
+          }
         ]
       }
     ]
@@ -16,25 +22,49 @@
     {
       "id": "named-positional-or-creates-scope",
       "why": "`8080`: int 枝の leaf `port` は `target` の子スコープに入る (option 側 `or-parse/option-named-branch-leaves-kv.json` と同形)。枝は int / bool で値空間が排他なので完全経路ちょうど 1 本 (string 枝を混ぜると任意トークンを両枝が受理して ambiguous:2 になる)。",
-      "args": ["8080"],
+      "args": [
+        "8080"
+      ],
       "expect": {
         "outcome": "success",
         "effects": [
-          {"entity": "port", "op": "set", "operand": 8080, "source": "cli"}
+          {
+            "entity": "port",
+            "op": "set",
+            "operand": 8080,
+            "source": "cli"
+          }
         ],
-        "result": {"target": {"port": 8080}}
+        "result": {
+          "target": {
+            "port": 8080,
+            "auto": null
+          }
+        }
       }
     },
     {
       "id": "other-branch-same-parent-key",
-      "why": "`true`: bool 枝を通っても親キーは `target` のまま (Partial union、DR-025 C 型)。",
-      "args": ["true"],
+      "why": "`true`: bool 枝を通っても親キーは `target` のままで、子スコープは `{port:null,auto:true}` と全枝キーを持つ (DR-130 §4)。",
+      "args": [
+        "true"
+      ],
       "expect": {
         "outcome": "success",
         "effects": [
-          {"entity": "auto", "op": "set", "operand": true, "source": "cli"}
+          {
+            "entity": "auto",
+            "op": "set",
+            "operand": true,
+            "source": "cli"
+          }
         ],
-        "result": {"target": {"auto": true}}
+        "result": {
+          "target": {
+            "port": null,
+            "auto": true
+          }
+        }
       }
     }
   ]

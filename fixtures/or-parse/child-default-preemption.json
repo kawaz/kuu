@@ -7,27 +7,65 @@
         "name": "mode",
         "long": true,
         "or": [
-          {"name": "value", "type": "string", "default": "D"}
+          {
+            "name": "value",
+            "type": "string",
+            "default": "D"
+          }
         ]
       }
     ],
     "positionals": [
-      {"name": "rest", "type": "string", "repeat": {"min": 0}}
+      {
+        "name": "rest",
+        "type": "string",
+        "repeat": {
+          "min": 0
+        }
+      }
     ]
   },
   "cases": [
     {
       "id": "consuming-branch-seat-preempts-default-empty-path",
       "why": "value が a を消費しても rest=[b] で完全経路へ届くため、value=D として a,b を rest へ送る空席枝は立たない。",
-      "args": ["--mode", "a", "b"],
+      "args": [
+        "--mode",
+        "a",
+        "b"
+      ],
       "expect": {
         "outcome": "success",
         "effects": [
-          {"entity": "value", "op": "set", "operand": "a", "source": "cli"},
-          {"entity": "rest", "op": "set", "operand": "b", "source": "cli"}
+          {
+            "entity": "value",
+            "op": "set",
+            "operand": "a",
+            "source": "cli"
+          },
+          {
+            "entity": "rest",
+            "op": "set",
+            "operand": "b",
+            "source": "cli"
+          }
         ],
-        "result": {"mode": {"value": "a"}, "rest": ["b"]},
-        "sources": {"mode": {"value": "cli"}, "rest": ["cli"]}
+        "result": {
+          "mode": {
+            "value": "a"
+          },
+          "rest": [
+            "b"
+          ]
+        },
+        "sources": {
+          "mode": {
+            "value": "cli"
+          },
+          "rest": [
+            "cli"
+          ]
+        }
       }
     }
   ]

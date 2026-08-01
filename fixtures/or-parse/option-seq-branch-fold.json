@@ -1,5 +1,5 @@
 {
-  "why": "`or` の枝が `seq` (複数セル枝) のときの畳み方は、option 直下の `seq` とまったく同じ (DESIGN §5.1「seq → 子の値の配列 (要素数によらず常に配列)。結果キーを持つ子が 1 つでもあれば代わりに 1 個の kv」/ §2.5) — 枝の中に居ることで畳み規則が変わる理由は無い。畳んだ結果が or 親の結果スコープ (`box`) の値になる (DR-025 の --color 4 パターン表 D 型 `color: {r,g,b} | string` がまさにこの合成)。**この fixture が pin する退行**: or 枝の複数 item を素の順次消費として組むと、匿名子の seq 枝が「配列」ではなく最後の子の値だけを残す scalar に潰れる (`seq-parse/option-anonymous-children-array.json` が option 直下で pin する形と食い違う)。名前付き子の seq 枝は `multiple-parse/ref-rows-append.json` が ref 経由で `{r,g,b}` の kv 行を pin しており、inline 枝でも同じ形になる (DR-007 / DR-078 §1)。",
+  "why": "`or` の枝が `seq` (複数セル枝) のときの畳み方は、option 直下の `seq` とまったく同じ (DESIGN §5.1「seq → 子の値の配列 (要素数によらず常に配列)。結果キーを持つ子が 1 つでもあれば代わりに 1 個の kv」/ §2.5) — 枝の中に居ることで畳み規則が変わる理由は無い。畳んだ結果が or 親の結果スコープ (`box`) の値になる (DR-025 の --color 4 パターン表 D 型 `color: {r,g,b} | string` がまさにこの合成)。**この fixture が pin する退行**: or 枝の複数 item を素の順次消費として組むと、匿名子の seq 枝が「配列」ではなく最後の子の値だけを残す scalar に潰れる (`seq-parse/option-anonymous-children-array.json` が option 直下で pin する形と食い違う)。名前付き子の seq 枝は `multiple-parse/ref-rows-append.json` が ref 経由で `{r,g,b,colorname:null}` 型の全枝キー kv 行を pin しており、inline 枝でも同じ形になる (DR-007 / DR-078 §1)。",
   "query": "parse",
   "definition": {
     "options": [
@@ -9,19 +9,39 @@
         "or": [
           {
             "seq": [
-              {"type": "number", "name": "w"},
-              {"type": "number", "name": "h"}
+              {
+                "type": "number",
+                "name": "w"
+              },
+              {
+                "type": "number",
+                "name": "h"
+              }
             ]
           },
-          {"type": "string", "name": "preset"}
+          {
+            "type": "string",
+            "name": "preset"
+          }
         ]
       },
       {
         "name": "span",
         "long": true,
         "or": [
-          {"seq": [{"type": "number"}, {"type": "number"}]},
-          {"type": "bool"}
+          {
+            "seq": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              }
+            ]
+          },
+          {
+            "type": "bool"
+          }
         ]
       }
     ]
@@ -29,36 +49,82 @@
   "cases": [
     {
       "id": "named-seq-branch-folds-into-kv",
-      "why": "`--box 3 4`: 結果キーを持つ子 (w/h) が並ぶ seq 枝は 1 個の kv になり (§2.5)、それが `box` の値。`--span` は未発火なので absent (DR-051 — 値の無い要素は結果に出ない)。",
-      "args": ["--box", "3", "4"],
+      "why": "`--box 3 4`: 結果キーを持つ子 (w/h) が並ぶ seq 枝は 1 個の kv になり (§2.5)、それが `box` の値。`--span` は未発火なので null (DR-130 — 宣言キーは立ち、値の無い座は null になる)。",
+      "args": [
+        "--box",
+        "3",
+        "4"
+      ],
       "expect": {
         "outcome": "success",
         "effects": [
-          {"entity": "w", "op": "set", "operand": 3, "source": "cli"},
-          {"entity": "h", "op": "set", "operand": 4, "source": "cli"}
+          {
+            "entity": "w",
+            "op": "set",
+            "operand": 3,
+            "source": "cli"
+          },
+          {
+            "entity": "h",
+            "op": "set",
+            "operand": 4,
+            "source": "cli"
+          }
         ],
-        "result": {"box": {"w": 3, "h": 4}}
+        "result": {
+          "box": {
+            "w": 3,
+            "h": 4,
+            "preset": null
+          },
+          "span": null
+        }
       }
     },
     {
       "id": "single-cell-branch-of-same-or",
-      "why": "`--box wide`: 同じ or の 1 セル枝を通ると、その枝は結果キー `preset` を持つ leaf なので `box` の子スコープが `{preset}` の kv になる (§2.4/§2.5) — seq 枝 (`{w,h}`) と 1 セル枝 (`{preset}`) で子スコープの中身が変わるだけで、親キーは常に `box` (DR-025 C 型の Partial union)。枝の畳み方 (配列 / kv / 素の値) を決めるのは枝の構造と子の結果キーの有無であって、枝が or の何本目かではない。",
-      "args": ["--box", "wide"],
+      "why": "`--box wide`: 同じ or の 1 セル枝を通ると、その枝は結果キー `preset` を持つ leaf なので `box` の子スコープが `{w:null,h:null,preset}` の全枝キー kv になる (§2.4/§2.5) — 選択枝に応じて非 null の座は変わるが子スコープのキー集合 `{w,h,preset}` は固定されるだけで、親キーは常に `box` (DR-130 §4 の named or 全枝列挙)。枝の畳み方 (配列 / kv / 素の値) を決めるのは枝の構造と子の結果キーの有無であって、枝が or の何本目かではない。",
+      "args": [
+        "--box",
+        "wide"
+      ],
       "expect": {
         "outcome": "success",
         "effects": [
-          {"entity": "preset", "op": "set", "operand": "wide", "source": "cli"}
+          {
+            "entity": "preset",
+            "op": "set",
+            "operand": "wide",
+            "source": "cli"
+          }
         ],
-        "result": {"box": {"preset": "wide"}}
+        "result": {
+          "box": {
+            "w": null,
+            "h": null,
+            "preset": "wide"
+          },
+          "span": null
+        }
       }
     },
     {
       "id": "anonymous-seq-branch-stays-an-array",
-      "why": "`--span 3 4`: 結果キーを持つ子が 1 つも無い seq 枝は §5.1 の「子の値の配列」— option 直下の匿名 seq (`seq-parse/option-anonymous-children-array.json`) と同じ形が or 枝の中でも成立する。`--box` は未発火なので absent。",
-      "args": ["--span", "3", "4"],
+      "why": "`--span 3 4`: 結果キーを持つ子が 1 つも無い seq 枝は §5.1 の「子の値の配列」— option 直下の匿名 seq (`seq-parse/option-anonymous-children-array.json`) と同じ形が or 枝の中でも成立する。`--box` は未発火なので null。",
+      "args": [
+        "--span",
+        "3",
+        "4"
+      ],
       "expect": {
         "outcome": "success",
-        "result": {"span": [3, 4]}
+        "result": {
+          "box": null,
+          "span": [
+            3,
+            4
+          ]
+        }
       }
     }
   ]

@@ -172,8 +172,9 @@ fn descriptor の `io_type.output` とフィールドの `out` の適合を定�
 
 第 1 相の束縛は名前と宣言の対応であって、対象セルの**枝が選択されるか**は従来どおり消費だけが決める。
 `or` の未選択枝内のセルに link パスで書いた場合、書き自体は通常のセル書きとして成立するが、
-未選択枝のセルの値は結果に表面化しない (`fixtures/or-parse/unselected-branch-default-absent.json` が
-default 持ちセルについて既に pin している一般規則の適用)。**書きが枝の選択を強制することはなく、
+未選択枝のセルの値は結果の非選択枝座へ採用されず、当該座は `null` になる
+(`fixtures/or-parse/unselected-branch-default-null.json` が default 持ちセルについて pin している一般規則の適用)。
+**書きが枝の選択を強制することはなく、
 書けないことを理由に枝が Reject されることもない** — 選択は消費構造の関心、値は席の関心という
 既存の分離を保つ。
 

@@ -1,5 +1,5 @@
 {
-  "why": "option 直下 inline `or` の結果形 (枝の leaf が結果キーを持つ場合): 露出規則 (DESIGN §2.4 — 最も浅い name 層で止め、それより深い name は止めた層が作る子スコープに属する) により、枝 leaf の結果キーは `color` が作る**子スコープ**に入る — DR-025 の --color 4 パターン表 C 型 (`or に name` + `枝ごとに name` → `color: {rgb} | {name}` の Partial union)。同じ or body を definitions.templates 経由の `ref` で書いた場合の結果形 (`repeat-parse/ref-template-no-repeat-degenerate.json` / `multiple-parse/ref-rows-append.json` が `{hlcolor:{r,g,b}}` / `{hlcolors:[{colorname:...}]}` を pin) と一致する — inline `or` と `ref` は同じ構造の別の書き口 (DR-007「ref は構造定義全てを引き継ぐ」/ DR-078 §1) なので**結果形は経路に依らない**。枝 leaf は値の着地セルなので effects には自分の name で現れる (DR-045 の効果は entity 単位 — entity は値セルであって露出パスではない、`path-search/variable-arity-ambiguous.json` の effects が leaf 名なのと同型)。露出のネスト (result 側) と効果の帰属 (effects 側) は独立した軸。枝は int / bool で値空間が排他 (`constraints-parse/required-structural-or-branch.json` と同じ型選定、完全経路ちょうど 1 本)。",
+  "why": "option 直下 inline `or` の結果形 (枝の leaf が結果キーを持つ場合): 露出規則 (DESIGN §2.4 — 最も浅い name 層で止め、それより深い name は止めた層が作る子スコープに属する) により、枝 leaf の結果キーは `color` が作る**子スコープ**に入る — DR-025 の --color 4 パターン表 C 型 (`or に name` + `枝ごとに name` → `level:{num,flag}` の固定キー object)。同じ or body を definitions.templates 経由の `ref` で書いた場合の結果形 (`repeat-parse/ref-template-no-repeat-degenerate.json` / `multiple-parse/ref-rows-append.json` が `{hlcolor:{r,g,b,colorname:null}}` / `{hlcolors:[{r:null,g:null,b:null,colorname:...}]}` を pin) と一致する — inline `or` と `ref` は同じ構造の別の書き口 (DR-007「ref は構造定義全てを引き継ぐ」/ DR-078 §1) なので**結果形は経路に依らない**。枝 leaf は値の着地セルなので effects には自分の name で現れる (DR-045 の効果は entity 単位 — entity は値セルであって露出パスではない、`path-search/variable-arity-ambiguous.json` の effects が leaf 名なのと同型)。露出のネスト (result 側) と効果の帰属 (effects 側) は独立した軸。枝は int / bool で値空間が排他 (`constraints-parse/required-structural-or-branch.json` と同じ型選定、完全経路ちょうど 1 本)。",
   "query": "parse",
   "definition": {
     "options": [
@@ -7,36 +7,74 @@
         "name": "level",
         "long": true,
         "or": [
-          {"type": "int", "name": "num"},
-          {"type": "bool", "name": "flag"}
+          {
+            "type": "int",
+            "name": "num"
+          },
+          {
+            "type": "bool",
+            "name": "flag"
+          }
         ]
       },
-      {"name": "verbose", "type": "flag", "long": true}
+      {
+        "name": "verbose",
+        "type": "flag",
+        "long": true
+      }
     ]
   },
   "cases": [
     {
       "id": "named-leaf-lands-in-child-scope",
       "why": "`--level 5`: int 枝の leaf `num` は `level` の子スコープの結果キー。枝 leaf を親スコープへ平坦に落とす実装では `{num:5}` と root に出て、宣言した `level` が結果から消える。",
-      "args": ["--level", "5"],
+      "args": [
+        "--level",
+        "5"
+      ],
       "expect": {
         "outcome": "success",
         "effects": [
-          {"entity": "num", "op": "set", "operand": 5, "source": "cli"}
+          {
+            "entity": "num",
+            "op": "set",
+            "operand": 5,
+            "source": "cli"
+          }
         ],
-        "result": {"level": {"num": 5}, "verbose": false}
+        "result": {
+          "level": {
+            "num": 5,
+            "flag": null
+          },
+          "verbose": false
+        }
       }
     },
     {
       "id": "other-branch-same-parent-key",
-      "why": "`--level true`: bool 枝を通っても親キーは同じ `level` で、子スコープの中身だけが枝に従う (Partial union — 両枝のキーを同時に持つ object にはならない、DR-025 C 型)。",
-      "args": ["--level", "true"],
+      "why": "`--level true`: bool 枝を通っても親キーは同じ `level` で、子スコープのキー集合 `{num,flag}` は固定され、選択枝だけが非 null になる (DR-130 §4)。",
+      "args": [
+        "--level",
+        "true"
+      ],
       "expect": {
         "outcome": "success",
         "effects": [
-          {"entity": "flag", "op": "set", "operand": true, "source": "cli"}
+          {
+            "entity": "flag",
+            "op": "set",
+            "operand": true,
+            "source": "cli"
+          }
         ],
-        "result": {"level": {"flag": true}, "verbose": false}
+        "result": {
+          "level": {
+            "num": null,
+            "flag": true
+          },
+          "verbose": false
+        }
       }
     }
   ]

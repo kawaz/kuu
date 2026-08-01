@@ -3,40 +3,96 @@
   "query": "parse",
   "definition": {
     "options": [
-      {"name": "mode", "long": true, "values": ["fast", "slow"]},
+      {
+        "name": "mode",
+        "long": true,
+        "values": [
+          "fast",
+          "slow"
+        ]
+      },
       {
         "name": "tier",
         "long": true,
-        "or": [{"exact": "hot"}, {"exact": "cold"}]
+        "or": [
+          {
+            "exact": "hot"
+          },
+          {
+            "exact": "cold"
+          }
+        ]
       },
-      {"name": "verbose", "type": "flag", "long": true}
+      {
+        "name": "verbose",
+        "type": "flag",
+        "long": true
+      }
     ]
   },
   "cases": [
     {
       "id": "values-and-or-exact-same-shape",
       "why": "`--mode fast --tier hot`: 糖衣 (values) と正規形 (or + exact) がどちらも親 name をそのまま結果キーにし、選ばれた exact 値を値にする。両者を 1 case で並べることで、片方だけが平坦化するような経路差が無いことを固定する。",
-      "args": ["--mode", "fast", "--tier", "hot"],
+      "args": [
+        "--mode",
+        "fast",
+        "--tier",
+        "hot"
+      ],
       "expect": {
         "outcome": "success",
         "effects": [
-          {"entity": "mode", "op": "set", "operand": "fast", "source": "cli"},
-          {"entity": "tier", "op": "set", "operand": "hot", "source": "cli"}
+          {
+            "entity": "mode",
+            "op": "set",
+            "operand": "fast",
+            "source": "cli"
+          },
+          {
+            "entity": "tier",
+            "op": "set",
+            "operand": "hot",
+            "source": "cli"
+          }
         ],
-        "result": {"mode": "fast", "tier": "hot", "verbose": false}
+        "result": {
+          "mode": "fast",
+          "tier": "hot",
+          "verbose": false
+        }
       }
     },
     {
       "id": "other-enum-member-same-shape",
       "why": "`--mode slow --tier cold`: 選ぶ枝を変えても結果構造は不変 (enum の枝は全て同じセルへ着地する、`enum_value_node` の意味論)。",
-      "args": ["--mode", "slow", "--tier", "cold"],
+      "args": [
+        "--mode",
+        "slow",
+        "--tier",
+        "cold"
+      ],
       "expect": {
         "outcome": "success",
         "effects": [
-          {"entity": "mode", "op": "set", "operand": "slow", "source": "cli"},
-          {"entity": "tier", "op": "set", "operand": "cold", "source": "cli"}
+          {
+            "entity": "mode",
+            "op": "set",
+            "operand": "slow",
+            "source": "cli"
+          },
+          {
+            "entity": "tier",
+            "op": "set",
+            "operand": "cold",
+            "source": "cli"
+          }
         ],
-        "result": {"mode": "slow", "tier": "cold", "verbose": false}
+        "result": {
+          "mode": "slow",
+          "tier": "cold",
+          "verbose": false
+        }
       }
     }
   ]

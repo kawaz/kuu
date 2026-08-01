@@ -1,0 +1,79 @@
+{
+  "why": "named 枝 `or` は選択された枝の内側で全枝キーを列挙し、非選択枝を `null` にする (DR-130 §4、NULOR-Q1=a)。非選択枝の `default:` は充填されず、default はその枝が選択された場合だけ生きる。sources も result と同型で、非選択枝は `null`。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {
+        "name": "mode",
+        "long": true,
+        "or": [
+          {
+            "name": "fast",
+            "type": "string"
+          },
+          {
+            "name": "slow",
+            "type": "int",
+            "default": 7
+          }
+        ]
+      }
+    ]
+  },
+  "cases": [
+    {
+      "id": "selected-branch-fills-unselected-with-null",
+      "why": "`--mode x` は fast 枝だけが成立する。result / sources は fast の値と由来を持ち、非選択の slow は default 7 を充填せず `null` になる。",
+      "args": [
+        "--mode",
+        "x"
+      ],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {
+            "entity": "fast",
+            "op": "set",
+            "operand": "x",
+            "source": "cli"
+          }
+        ],
+        "result": {
+          "mode": {
+            "fast": "x",
+            "slow": null
+          }
+        },
+        "sources": {
+          "mode": {
+            "fast": "cli",
+            "slow": null
+          }
+        }
+      }
+    },
+    {
+      "id": "missing-value-selects-default-branch",
+      "why": "`--mode` は fast 枝が missing_operand で不成立、default を持つ slow 枝だけが成立して 7 を得る。選択枝 slow の default は生き、非選択 fast は `null`。",
+      "args": [
+        "--mode"
+      ],
+      "expect": {
+        "outcome": "success",
+        "effects": [],
+        "result": {
+          "mode": {
+            "fast": null,
+            "slow": 7
+          }
+        },
+        "sources": {
+          "mode": {
+            "fast": null,
+            "slow": "default"
+          }
+        }
+      }
+    }
+  ]
+}
