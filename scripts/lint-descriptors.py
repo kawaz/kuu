@@ -4,7 +4,8 @@
 schema/descriptor.schema.json は単一 descriptor と envelope (filters/cell_fns/
 types/accumulators/completers/providers の 6 区分マップ) の両方を検証できるが、JSON Schema の表現範囲外の
 semantic 制約 (map key と descriptor.name の一致、output_mode:"preserve" の
-io_type.input == io_type.output、observes template の parameter 存在照合) は本スクリプトが machine-check する
+io_type.input == io_type.output、observes template の parameter 存在照合、record フィールドの
+type 参照が registry の type 語彙に解決すること) は本スクリプトが machine-check する
 (codex レビュー #4 A-M11/B-Maj6 が指摘した「envelope 自体を検証する形が無い」
 の是正、DR-107 §4 が「semantic lint の検査対象」と位置づけた preserve 不変量
 の実装)。
@@ -25,8 +26,74 @@ SCHEMA_PATH = ROOT / "schema" / "descriptor.schema.json"
 DATA_PATH = ROOT / "schema" / "builtin-descriptors.json"
 
 
+# record フィールドの type 参照が解決できる type 語彙のうち、descriptor 実体を持たない住人
+# (DR-126 §1 の「registry 空間で解決する」対象)。`reasons: []` が自明な型は
+# builtin-descriptors.json に収載されない (DR-095 射程外) ため、この集合は
+# DESIGN §3.3 / REFERENCE §3.1 の type カタログから転記する。descriptor を持つ住人
+# (builtin/tty 等) は types 区分のキーから導出するのでここには書かない。
+CATALOG_TYPE_NAMES = frozenset(
+    {
+        "string", "number", "int", "float", "bool", "path", "file", "dir",
+        "datetime", "exact", "none",
+        "flag", "count", "count_or_set", "command",
+        "help", "help_all_category", "help_category", "help_show_hidden", "help_tree",
+        "completion_script", "dd", "tty", "config_file",
+    }
+)
+
+
 def fail(msg: str) -> None:
     print(f"[FAIL] {msg}")
+
+
+def record_field_refs(node: object, path: str):
+    """value_type を再帰的に辿り、record フィールドの type 参照を (位置, 参照) で列挙する。"""
+    if isinstance(node, list):  # union
+        for index, item in enumerate(node):
+            yield from record_field_refs(item, f"{path}[{index}]")
+    elif isinstance(node, dict):
+        fields = node.get("record")
+        if isinstance(fields, dict):
+            for field, ref in fields.items():
+                if isinstance(ref, str):
+                    yield f"{path}.record.{field}", ref
+        for tag in ("array", "map"):
+            if tag in node:
+                yield from record_field_refs(node[tag], f"{path}.{tag}")
+
+
+def parameter_value_types(nodes: list[object], path: str):
+    """invocation.parameters (seq/or/repeat ネスト込み) の型宣言を (位置, value_type) で列挙する。"""
+    for index, node in enumerate(nodes):
+        if not isinstance(node, dict):
+            continue
+        here = f"{path}[{index}]"
+        if "type" in node:
+            yield f"{here}.type", node["type"]
+        for branch in ("seq", "or"):
+            children = node.get(branch)
+            if isinstance(children, list):
+                yield from parameter_value_types(children, f"{here}.{branch}")
+        repeat = node.get("repeat")
+        if isinstance(repeat, dict) and "node" in repeat:
+            yield from parameter_value_types([repeat["node"]], f"{here}.repeat")
+
+
+def descriptor_value_types(desc: dict, path: str):
+    """1 descriptor が宣言する value_type を (位置, value_type) で列挙する。"""
+    io_type = desc.get("io_type")
+    if isinstance(io_type, dict):
+        for side in ("input", "output"):
+            if side in io_type:
+                yield f"{path}.io_type.{side}", io_type[side]
+    config = desc.get("config")
+    if isinstance(config, dict):
+        for key, spec in config.items():
+            if isinstance(spec, dict) and "value_type" in spec:
+                yield f"{path}.config.{key}.value_type", spec["value_type"]
+    parameters = desc.get("invocation", {}).get("parameters", [])
+    if isinstance(parameters, list):
+        yield from parameter_value_types(parameters, f"{path}.invocation.parameters")
 
 
 def parameter_names(nodes: list[object]) -> set[str]:
@@ -143,6 +210,34 @@ def main() -> int:
             fail(f"observes template: {m}")
     else:
         print("[OK]   observes templates reference declared invocation parameters")
+
+    # 5. record フィールドの type 参照は registry の type 語彙に解決できなければならない
+    #    (DR-126 §1 — 未登録参照は unknown-vocab 系の definition-error。参照先の存在は
+    #    JSON Schema では書けないので semantic lint 側で検出する)。解決は registry 空間のみで、
+    #    使用側 definition の definitions.types には shadow されない。bare 名は builtin ns の糖衣 (DR-094)。
+    registry_type_names = set(CATALOG_TYPE_NAMES)
+    for key in data.get("types", {}):
+        registry_type_names.add(key)
+        bare = key[len("builtin/"):] if key.startswith("builtin/") else None
+        if bare:
+            registry_type_names.add(bare)
+    unresolved_refs = []
+    record_field_count = 0
+    for section in sections:
+        for key, desc in data.get(section, {}).items():
+            for location, value_type in descriptor_value_types(desc, f"{section}.{key}"):
+                for field_location, ref in record_field_refs(value_type, location):
+                    record_field_count += 1
+                    if ref not in registry_type_names:
+                        unresolved_refs.append(
+                            f"{field_location}: type 参照 {ref!r} は registry の type 語彙に解決できない"
+                        )
+    if unresolved_refs:
+        ok = False
+        for m in unresolved_refs:
+            fail(f"record field type ref: {m}")
+    else:
+        print(f"[OK]   record field type refs resolve in registry ({record_field_count} 件)")
 
     print()
     if not ok:

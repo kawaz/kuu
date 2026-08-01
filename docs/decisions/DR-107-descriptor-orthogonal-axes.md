@@ -58,6 +58,13 @@ value_type :=
 
 union (`[T1, T2, ...]`) は主に「値が無い」を表す `null` との組合せに使う (provider の `T | null` 返却、§6)。固定フィールドを持つ struct 型 (例: tty_provider の `{terminal: bool, cygwin: bool}`) は本体系では正確に表現できない — `{"map": "value"}` (map<string, value>) で近似し、フィールド構成は `description` に注記する (§6 で明記)。これは値域制約と同様「構造の精密化は型宣言の外」という原則の帰結であり、意図的な簡略化である (codex レビュー #4 A-C3/B-Maj5 が指摘する record/tuple/literal-enum/型変数の不足は、この裁定を再確認しただけで新規欠陥ではない)。
 
+> **更新 (DR-126、2026-08-01): struct の map 近似は撤回された。** 固定フィールドを持つ object 型は
+> `{"record": {<field>: <type 参照>, ...}}` で第一級に宣言する (closed / presence-optional / 宣言と実産出の
+> 乖離は Error)。フィールドの値は value_type ではなく kuu の type 参照で書く。「構造の精密化は型宣言の外」
+> という原則のうち**値域**の側 (固定幅なし・値域制約は filter の領分) は不変 — record が精密化するのは
+> 構造だけである。キー語彙が実行時にしか決まらない object を `{"map": "value"}` / `"value"` で宣言する道も
+> 塞がない (DR-126 §5)。tuple / literal-enum / 型変数は引き続き射程外。
+
 `value = "value"` の定義域は JSON value 全体 (kuu Value 相当の string/number/bool/null/array/object) であり、host native object は含まない — パーサ実装が host 言語のネイティブ型へ変換するのは実装の自由 (§ 上記) だが、`value_type` 自身が指す定義域は常に JSON 表現可能な範囲に閉じる。union の bare array 記法 (`[value_type, ...]`) は、将来 tuple 型を導入する場合に構文が衝突しうる (`["string", "number"]` が union か 2 要素 tuple か構文上曖昧になる) — 本 DR の射程では tuple 型を導入しないため現時点で衝突は発生しないが、将来 tuple 導入時は union を `{"union": [...]}` 等のタグ付き形へ移行する必要がある (射程外、上記「射程外」節に追記)。
 
 VISION §4 の生成フロー (独自 filter の descriptor から import 先で interface/モックを生成する) がこの軸を必要とする根拠は本 findings §「VISION §4 の生成フローが要求する情報の内訳」に詳しい — 入出力の値型が descriptor に無いと「string を渡すのか value を渡すのか」を追加情報無しに決められない。
@@ -118,6 +125,14 @@ DESIGN §12/§12b/§14.3 が散文で定義していた 3 provider のシグネ�
 | `tty_provider` | `(stream: "stdin"\|"stdout"\|"stderr") → {terminal: bool, cygwin: bool} \| null` (§12b、DR-099) | `{ input: "string", output: [{"map": "value"}, "null"] }` |
 
 `tty_provider` の入力は本来 3 値 enum (`"stdin"|"stdout"|"stderr"`) だが、`io_type` の値語彙にリテラル enum 制約を表現する手段がない (§3 の型体系は値域を持たない) ため `"string"` で近似し、`description` に許容値を明記する。出力の固定フィールド struct (`{terminal, cygwin}`) も同様に `{"map": "value"}` で近似する。
+
+> **更新 (DR-126 / DR-129、2026-08-01): 上表の `tty_provider` 行は現行ではない。** 固定フィールド struct の
+> map 近似は DR-126 の `record` が解消し (§3 の注記)、その旗艦例だった `tty_provider` 自身は DR-129 が
+> cygwin 観測を削除したため、シグネチャが `(stream) → bool | null`、`io_type` が
+> `{ input: "string", output: ["bool", "null"] }` になった (record 化そのものが不要、DR-129 §4)。
+> 入力側の 3 値 enum を `"string"` で近似する扱いは不変。`env_provider` / `config_provider` の 2 行と、
+> provider が `reasons`/`fallibility` を使わず `null` を `io_type.output` の union で表す構図も不変。
+> 実体の正本は `schema/builtin-descriptors.json`。
 
 3 provider はいずれも `construction:"static"` (registry の単一スロットに固定実装として登録される、DESIGN §12/§12b/§14.3)、`invocation:{encoding:"none", parameters:[]}` (呼び出しは評価器内部のランタイム参照であり wire 上の DSL args を持たない)、`reasons:[]` (`null` 返却は「情報なし」であって filter の reject/reason 機構とは別の意味論 — provider の失敗可能性は `io_type.output` の union に `null` を含めることで表現し、`reasons`/`fallibility` 軸は使わない、§7)。
 

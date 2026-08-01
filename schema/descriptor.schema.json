@@ -6,7 +6,7 @@
 
   "$defs": {
     "value_type": {
-      "description": "descriptor io_type / invocation.parameters / config が使う値型の再帰体系 (DR-107 §3)。JSON 表現可能な型のみを扱う — int/uint/u8/u64 等の固定幅は持たない (number が int/float 双方の精密化元、値域制約は filter の領分であって型宣言の領分ではない、DR-075 との整合)。固定フィールドを持つ struct 型は本体系では正確に表現できず map<string,value> で近似する (DR-107 §6 の provider 例)。`value` (= any) の定義域は JSON 表現可能な範囲 (kuu Value 相当) に閉じ、host native object は含まない (DR-107 §3)。",
+      "description": "descriptor io_type / invocation.parameters / config が使う値型の再帰体系 (DR-107 §3)。JSON 表現可能な型のみを扱う — int/uint/u8/u64 等の固定幅は持たない (number が int/float 双方の精密化元、値域制約は filter の領分であって型宣言の領分ではない、DR-075 との整合)。固定フィールドを持つ struct 型は `{\"record\": {...}}` で宣言する (DR-126 §1、キー語彙が実行時にしか決まらない object は従来どおり map<string,value> / value で近似する)。`value` (= any) の定義域は JSON 表現可能な範囲 (kuu Value 相当) に閉じ、host native object は含まない (DR-107 §3)。",
       "anyOf": [
         { "type": "string", "enum": ["string", "number", "bool", "null", "value"] },
         {
@@ -21,6 +21,22 @@
           "description": "map<string, T> — キーは常に string、値型のみ宣言する",
           "properties": { "map": { "$ref": "#/$defs/value_type" } },
           "required": ["map"],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "description": "record — 固定フィールドを持つ closed な object 型 (DR-126)。宣言に無いキーはその型の値として現れてはならず (§2 closed)、宣言済みキーは値ごとに立ったり立たなかったりする (§3 presence-optional、null は使わない)。フィールドの値は value_type ではなく **kuu の type 参照** (registry / DR-094 の ns 付き識別子、bare 名は builtin ns の糖衣、wire の `type:` と同じ鍵空間) の string — `\"bool\"` / `\"number\"` はここでは value_type primitive の綴りではなく組み込み提供の registry type を指す (DR-126 §1)。JSON 形は参照先 type の `out` を再帰的に辿って導出する。参照先の存在検査と循環検査は Schema では書けない — 未登録参照 / `circular-ref` は参照層 (DR-067) の関心で、builtin descriptor については scripts/lint-descriptors.py が検出する。フィールド 0 個 (`{\"record\": {}}`) は「常に `{}`」という定まった型で構文上は合法。",
+          "properties": {
+            "record": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string",
+                "pattern": "^([a-z][a-z0-9_]*/)?[a-z][a-z0-9_]*$",
+                "minLength": 1
+              }
+            }
+          },
+          "required": ["record"],
           "additionalProperties": false
         },
         {
