@@ -3,16 +3,35 @@
   "query": "parse",
   "definition": {
     "options": [
-      {"name": "gverb", "type": "flag", "global": true},
-      {"alias": "gverb", "name": "verbose", "long": [":set:true"]}
+      {
+        "name": "gverb",
+        "type": "flag",
+        "global": true
+      },
+      {
+        "alias": "gverb",
+        "name": "verbose",
+        "long": [
+          ":set:true"
+        ]
+      }
     ],
     "commands": [
       {
         "type": "command",
         "name": "build",
         "options": [
-          {"name": "lverb", "type": "flag"},
-          {"alias": "lverb", "name": "verbose", "long": [":set:true"]}
+          {
+            "name": "lverb",
+            "type": "flag"
+          },
+          {
+            "alias": "lverb",
+            "name": "verbose",
+            "long": [
+              ":set:true"
+            ]
+          }
         ]
       }
     ]
@@ -21,35 +40,65 @@
     {
       "id": "child-shadows-global",
       "why": "build 内 --verbose は build 自前の alias (lverb 再導出) が発火する。root canonical gverb はトリガを持たないので global コピーが build に入っても衝突しない (旧 shadow 機構のテストではなく、alias 併用時に子の自前 --verbose 宣言が一意に効くことの固定)。gverb は未発火 → root に preset default false。effect entity は lverb。",
-      "args": ["build", "--verbose"],
+      "args": [
+        "build",
+        "--verbose"
+      ],
       "expect": {
         "outcome": "success",
         "effects": [
-          {"entity": "lverb", "op": "set", "operand": true, "source": "cli"}
+          {
+            "entity": "lverb",
+            "op": "set",
+            "operand": true,
+            "source": "cli"
+          }
         ],
-        "result": {"gverb": false, "build": {"lverb": true}}
+        "result": {
+          "gverb": false,
+          "build": {
+            "lverb": true
+          }
+        }
       }
     },
     {
       "id": "root-own-fires",
-      "why": "対照: build に入らず root で --verbose を発火させると root の alias (gverb 再導出) が発火する。build は未入場 → absent。root の alias 入口が root で効くことの固定。",
-      "args": ["--verbose"],
+      "why": "対照: build に入らず root で --verbose を発火させると root の alias (gverb 再導出) が発火する。build は未入場 → null。root の alias 入口が root で効くことの固定。",
+      "args": [
+        "--verbose"
+      ],
       "expect": {
         "outcome": "success",
         "effects": [
-          {"entity": "gverb", "op": "set", "operand": true, "source": "cli"}
+          {
+            "entity": "gverb",
+            "op": "set",
+            "operand": true,
+            "source": "cli"
+          }
         ],
-        "result": {"gverb": true}
+        "result": {
+          "gverb": true,
+          "build": null
+        }
       }
     },
     {
       "id": "bare-enter-presets",
-      "why": "build を素で入場: 何も発火せず、両 flag は preset default false で present (gverb は root、lverb は build スコープ)。effects 空。selected 空スコープでも flag preset が present になることの固定 (DR-051 §2)。",
-      "args": ["build"],
+      "why": "build を素で入場: 何も発火せず、両 flag は preset default false で present (gverb は root、lverb は build スコープ)。effects 空。selected 空スコープでも flag preset が present になることの固定 (DR-130)。",
+      "args": [
+        "build"
+      ],
       "expect": {
         "outcome": "success",
         "effects": [],
-        "result": {"gverb": false, "build": {"lverb": false}}
+        "result": {
+          "gverb": false,
+          "build": {
+            "lverb": false
+          }
+        }
       }
     }
   ]

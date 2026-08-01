@@ -61,14 +61,15 @@
           "rest": [],
           "build": {
             "port": 8080,
-            "verbose": false
+            "verbose": false,
+            "out": null
           }
         }
       }
     },
     {
       "id": "nonviable-reading-releases-scope",
-      "why": "`build --port xyz` (精密化の本体): build 内の --port トリガは一致するが、値 xyz が number 照合に失敗し読みが成立しない — 成立する読みが控えていないので早閉じ抑制は build を引き留めず、build スコープは閉じて親の背骨が再開する。親に --port の greedy は無いので読みゼロ → 素通しで rest が `--port` `xyz` を raw 消費し success (held Error の not_a_number は素通し側の完全経路が通るため捨てられる、DR-037)。旧述語 (トリガ一致) なら build が閉じられず not_a_number の failure になっていた側。build は選ばれたスコープなので子が全部 absent でも kv を持つ (verbose は flag default 同梱、DR-052)。",
+      "why": "`build --port xyz` (精密化の本体): build 内の --port トリガは一致するが、値 xyz が number 照合に失敗し読みが成立しない — 成立する読みが控えていないので早閉じ抑制は build を引き留めず、build スコープは閉じて親の背骨が再開する。親に --port の greedy は無いので読みゼロ → 素通しで rest が `--port` `xyz` を raw 消費し success (held Error の not_a_number は素通し側の完全経路が通るため捨てられる、DR-037)。旧述語 (トリガ一致) なら build が閉じられず not_a_number の failure になっていた側。build は選ばれたスコープなので子が全部 null でも kv を持つ (verbose は flag default 同梱、DR-052)。",
       "args": [
         "build",
         "--port",
@@ -96,7 +97,9 @@
             "xyz"
           ],
           "build": {
-            "verbose": false
+            "verbose": false,
+            "port": null,
+            "out": null
           }
         }
       }

@@ -1,21 +1,44 @@
 {
-  "why": "name とは無関係な綴りで同一トリガを奪い合うシナリオは DR-057 alias 独立要素で表現する (DR-011 明確化 2026-07-08: colon-less な `long` 配列要素は文法エラー、旧 LLiteral 経路は創作構文だったため廃止)。root rverb / 中間 a の averb はいずれも canonical (トリガなし、global) + alias `{alias:\"<name>\", name:\"verbose\"}` (トリガ --verbose を name=verbose で再導出、DR-057 §3) を伴う。alias は AliasDef に is_global を持たず global 伝播しない (global は canonical 実体の属性、alias は別入口の追加という DR-057 の意図的な範囲外) ので、`averb` の --verbose トリガ自体は孫 b へ global コピーされない。それでも `a b --verbose` が averb へ書くのは、DR-041 §4 の早閉じ+porous 性による: b は自身の positional/greedy を持たない (無宣言) ため即座にスコープを閉じ、continuation が親 a の scope_step へ戻る — そこで a 自身の greedy 面 (averb-alias の --verbose トリガ) がまだ読める。旧 fixture が検証していた「中間 shadow が subtree を governs する (global コピーの再伝播)」という機構そのものはこの構成では発火せず (トリガが元々子へコピーされないため)、observable な結果 (どの case でどの entity が発火するか) が porous スコープ遡上という別経路で保存されているだけ — この違いは重要なので明記する。averb は a で宣言された global なので値セルは a に在り、result では a キーの下に present。未発火 root rverb は preset default false (DR-051 §2)。",
+  "why": "name とは無関係な綴りで同一トリガを奪い合うシナリオは DR-057 alias 独立要素で表現する (DR-011 明確化 2026-07-08: colon-less な `long` 配列要素は文法エラー、旧 LLiteral 経路は創作構文だったため廃止)。root rverb / 中間 a の averb はいずれも canonical (トリガなし、global) + alias `{alias:\"<name>\", name:\"verbose\"}` (トリガ --verbose を name=verbose で再導出、DR-057 §3) を伴う。alias は AliasDef に is_global を持たず global 伝播しない (global は canonical 実体の属性、alias は別入口の追加という DR-057 の意図的な範囲外) ので、`averb` の --verbose トリガ自体は孫 b へ global コピーされない。それでも `a b --verbose` が averb へ書くのは、DR-041 §4 の早閉じ+porous 性による: b は自身の positional/greedy を持たない (無宣言) ため即座にスコープを閉じ、continuation が親 a の scope_step へ戻る — そこで a 自身の greedy 面 (averb-alias の --verbose トリガ) がまだ読める。旧 fixture が検証していた「中間 shadow が subtree を governs する (global コピーの再伝播)」という機構そのものはこの構成では発火せず (トリガが元々子へコピーされないため)、observable な結果 (どの case でどの entity が発火するか) が porous スコープ遡上という別経路で保存されているだけ — この違いは重要なので明記する。averb は a で宣言された global なので値セルは a に在り、result では a キーの下に present。未発火 root rverb は preset default false (DR-130)。",
   "query": "parse",
   "definition": {
     "options": [
-      {"name": "rverb", "type": "flag", "global": true},
-      {"alias": "rverb", "name": "verbose", "long": [":set:true"]}
+      {
+        "name": "rverb",
+        "type": "flag",
+        "global": true
+      },
+      {
+        "alias": "rverb",
+        "name": "verbose",
+        "long": [
+          ":set:true"
+        ]
+      }
     ],
     "commands": [
       {
         "type": "command",
         "name": "a",
         "options": [
-          {"name": "averb", "type": "flag", "global": true},
-          {"alias": "averb", "name": "verbose", "long": [":set:true"]}
+          {
+            "name": "averb",
+            "type": "flag",
+            "global": true
+          },
+          {
+            "alias": "averb",
+            "name": "verbose",
+            "long": [
+              ":set:true"
+            ]
+          }
         ],
         "commands": [
-          {"type": "command", "name": "b"}
+          {
+            "type": "command",
+            "name": "b"
+          }
         ]
       }
     ]
@@ -24,37 +47,76 @@
     {
       "id": "grandchild-subtree-global",
       "why": "孫で発火: b は averb-alias のトリガを持たない (global 非伝播) が、無宣言スコープなので即閉じし継続が a の scope_step へ戻り、a 自身の averb-alias (--verbose) が読める (DR-041 §4 早閉じ+porous)。結果として b 内 --verbose は a の averb セルへ書く (root rverb には届かない)。averb は a キー下に present、b は selected 空 {}、root rverb は未発火 preset false。",
-      "args": ["a", "b", "--verbose"],
+      "args": [
+        "a",
+        "b",
+        "--verbose"
+      ],
       "expect": {
         "outcome": "success",
         "effects": [
-          {"entity": "averb", "op": "set", "operand": true, "source": "cli"}
+          {
+            "entity": "averb",
+            "op": "set",
+            "operand": true,
+            "source": "cli"
+          }
         ],
-        "result": {"rverb": false, "a": {"averb": true, "b": {}}}
+        "result": {
+          "rverb": false,
+          "a": {
+            "averb": true,
+            "b": {}
+          }
+        }
       }
     },
     {
       "id": "mid-shadow-fires",
-      "why": "中間で直接発火: a 内 --verbose は a 自前の averb-alias を発火。root rverb-alias は a に伝播しないトリガなので競合しない。b は未入場 → absent、rverb 未発火 preset false。",
-      "args": ["a", "--verbose"],
+      "why": "中間で直接発火: a 内 --verbose は a 自前の averb-alias を発火。root rverb-alias は a に伝播しないトリガなので競合しない。b は未入場 → null、rverb 未発火 preset false。",
+      "args": [
+        "a",
+        "--verbose"
+      ],
       "expect": {
         "outcome": "success",
         "effects": [
-          {"entity": "averb", "op": "set", "operand": true, "source": "cli"}
+          {
+            "entity": "averb",
+            "op": "set",
+            "operand": true,
+            "source": "cli"
+          }
         ],
-        "result": {"rverb": false, "a": {"averb": true}}
+        "result": {
+          "rverb": false,
+          "a": {
+            "averb": true,
+            "b": null
+          }
+        }
       }
     },
     {
       "id": "root-own-fires",
-      "why": "対照: root で --verbose を発火させると root 自前の rverb-alias が発火する (a の averb-alias は a 未入場では読めない)。a は未入場 → absent。",
-      "args": ["--verbose"],
+      "why": "対照: root で --verbose を発火させると root 自前の rverb-alias が発火する (a の averb-alias は a 未入場では読めない)。a は未入場 → null。",
+      "args": [
+        "--verbose"
+      ],
       "expect": {
         "outcome": "success",
         "effects": [
-          {"entity": "rverb", "op": "set", "operand": true, "source": "cli"}
+          {
+            "entity": "rverb",
+            "op": "set",
+            "operand": true,
+            "source": "cli"
+          }
         ],
-        "result": {"rverb": true}
+        "result": {
+          "rverb": true,
+          "a": null
+        }
       }
     }
   ]
