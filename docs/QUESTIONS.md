@@ -26,20 +26,24 @@
 
 DR-127 波及の fixture (2)(4)(5)(6) と W2-7/W2-8/W2-9 の conformance 露出には「複合値を産む conformance 住人」が必要だが現存しない。設計正本: [docs/research/2026-08-02-record-builtin-type-design.md](docs/research/2026-08-02-record-builtin-type-design.md) (§8 が裁定候補の詳細)。新機構は発明せず **DR-128 §12 (SPL-Q2=a+b) の `fixture/*` residents 系統**に乗せる設計。
 
-- [ ] RECB-Q1a: **ビークル = `fixture/*` ns に具象 3 住人 (timestamp / timerange / json) (推し)** — json は fixture (4) 用 (record は vivify するので absent Reject が起きず、value out 住人が別途要る)
-- [ ] RECB-Q1b: 汎用 record_parser factory (builtin/struct と二重の汎用機構になるため非推奨)
-- [ ] RECB-Q1c: builtin/struct 前倒し (splice 実装が前提になり順序逆転)
-- [ ] RECB-Q2a: **timerange フィールド型 = `fixture/timestamp` 参照 (推し)** — 型依存グラフ + 「フィールド type がパースする」(DR-127 §3.2) の判別 pin が立つ
+> **kawaz 方向付け (mid=48、2026-08-02)**: timestamp / timerange / duration を kawaz/timespec.mbt 風の
+> self 3rd type として追加する構想 — duration 内部 ms、timestamp 内部 epoch_ms、
+> timerange = record{since: timestamp, until: timestamp}。以下はこの方向を反映した改稿版。
+
+- [ ] RECB-Q1a: **住人 = timespec 系 3 型 (timestamp / duration / timerange) + fixture (4) 用の json→value 型 (推し)** — fixture 専用のおもちゃ型でなく実用型のプレビューとして定義。json 型は record が vivify する (absent Reject が起きない) ため value out の住人が別途要る分
+- [ ] RECB-Q1b: fixture 専用の最小 3 住人 (実用性なし)
+- [ ] RECB-Q2a: **timerange フィールド型 = timestamp 型参照 (推し)** — 型依存グラフ + 「フィールド type がパースする」(DR-127 §3.2) の判別 pin。内部表現: timestamp = epoch_ms、duration = ms (out は number への精密化)
 - [ ] RECB-Q2b: `"number"` 直参照
-- [ ] RECB-Q3a: **timestamp 受理輪郭 = canonical 10 進整数のみ (推し)** — number_parser より狭くして入口/フィールドのパーサ行使を判別可能に
-- [ ] RECB-Q3b: number 同域 (Q2a の価値が消える)
-- [ ] RECB-Q4a: **timerange 文法 = `A..B` / `A..` / `..B` / `..`、単独 A は reject (推し)** (相対時刻 `-5m..now` は決定性のため対象外)
-- [ ] RECB-Q4b: `..` も reject
-- [ ] RECB-Q4c: 単独 A を `{since:A}` (DR-128 §2 と不整合なので非推奨)
-- [ ] RECB-Q5a: **descriptor 置き場 = builtin-descriptors.json に fixture ns 区分追加 (推し)**
+- [ ] RECB-Q3a: **受理文法は timespec 風にフル定義 (相対形込み)、conformance fixture の case は決定的な絶対形サブセットのみ使用 (推し)** — now 注入の仕様化は v1 では避ける
+- [ ] RECB-Q3b: 型自体を決定的サブセットに絞る (実用型としての価値が下がる)
+- [ ] RECB-Q4: **ns と正本の帰属 (要裁定)** — kawaz/timespec.mbt の型を conformance 前提にすると他言語実装も同じ受理文法を再実装する義務を負う
+  - [ ] RECB-Q4a: **ns は 3rd 風 (例 `timespec/*`)、正本 descriptor + 受理文法規定は spec 側が持ち、kawaz/timespec.mbt は参照実装 (統括推し)**
+  - [ ] RECB-Q4b: builtin ns に昇格 (bare 名で参照可)
+  - [ ] RECB-Q4c: 別の整理 (自由記述で)
+- [ ] RECB-Q5a: **descriptor 置き場 = builtin-descriptors.json に ns 区分追加 (推し)**
 - [ ] RECB-Q5b: 新ファイル分離
-- [ ] RECB-Q6a: **提供義務 = conformance 実行文脈での解決可能性のみ、通常 registry は実装裁量 + 安定性保証外 (推し)**
-- [ ] RECB-Q6b: builtin 同格の常設
+- [ ] RECB-Q6a: **提供義務 = conformance 実行文脈での解決可能性のみ、通常 registry は実装裁量 (推し)**
+- [ ] RECB-Q6b: builtin 同格の常設義務
 
 ## 確認待ち
 
