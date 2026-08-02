@@ -333,7 +333,7 @@
       "fallibility": "reject",
       "invocation": { "encoding": "none", "parameters": [] },
       "reasons": ["not_an_int_range"],
-      "description": "conformance 専用の record 産出仮想型 (DR-132 §2、fixture ns = DR-128 §12)。実用型ではなく、複合値の pin (DR-127 波及 fixture (2)(5)(6): 値残余のフィールド書き・時系列上書き・sources の座 re-tag、および record null 補形 DR-130 §4.1) の乗り物。string 形はカンマちょうど 1 個の全体一致 `A,B` / `A,` / `,B` の 3 形のみ受理し、部分形は欠落フィールドをキーごと持たない部分 presence を産出する (`5,` → `{\"start\": 5}`、DR-127 §3.1)。A/B は canonical default の int 受理輪郭 (anchored、trim なし、DR-074/075) で読み、range 形に読めない綴り (カンマ無し・`,` 単体・構成部の int 不適合) は not_an_int_range で reject する。link 注入経路の operand はフィールド型 int のパーサが読み (DR-127 §3.2)、そこでは builtin/int_parser の reasons が発生源どおり emit される (DR-132 §2.2)。提供義務は conformance 実行文脈での解決可能性のみ (DR-132 §1)。"
+      "description": "conformance 専用の record 産出仮想型 (DR-132 §2、fixture ns = DR-128 §12)。実用型ではなく、複合値の pin (DR-127 波及 fixture (2)(5)(6): 値残余のフィールド書き・時系列上書き・sources の座 re-tag、および record null 補形 DR-130 §4.1) の乗り物。string 形は最初に現れる `..` で 1 回だけ分割した全体一致 `A..B` / `A..` / `..B` の 3 形のみ受理し (分割はバックトラックしない表層規則で決定的、DR-132 §2.1)、部分形は欠落フィールドをキーごと持たない部分 presence を産出する (`5..` → `{\"start\": 5}`、DR-127 §3.1)。A/B は canonical default の int 受理輪郭 (anchored、trim なし、DR-074/075) で読み、range 形に読めない綴り (`..` 無し・`..` 単体・構成部の int 不適合) は not_an_int_range で reject する。link 注入経路の operand はフィールド型 int のパーサが読み (DR-127 §3.2)、そこでは builtin/int_parser の reasons が発生源どおり emit される (DR-132 §2.2)。提供義務は conformance 実行文脈での解決可能性のみ (DR-132 §1)。"
     },
     "fixture/json": {
       "name": "fixture/json",

@@ -543,7 +543,7 @@ enum にならない)。要素に配列があれば `seq` ブランチに展開�
 | `builtin/int_parser` | factory | int の値空間判定 value_parser (number として読み、値が整数かで判定) |
 | `builtin/bool_parser` | factory | bool の value_parser |
 | `builtin/tty` | factory | bool を値空間の土台にする preset 型 — 暗黙 default = tty 観測 (§3.1 の tty 行・DR-099・DR-129) |
-| `fixture/int_range` | fixture (static) | conformance 専用の record 産出仮想型 (`{start?: int, end?: int}`)。string 形は `A,B` / `A,` / `,B` の 3 形、部分形は部分 presence を産出。DR-132 §2 |
+| `fixture/int_range` | fixture (static) | conformance 専用の record 産出仮想型 (`{start?: int, end?: int}`)。string 形は `A..B` / `A..` / `..B` の 3 形 (最初の `..` で 1 回だけ分割)、部分形は部分 presence を産出。DR-132 §2 |
 | `fixture/json` | fixture (static) | conformance 専用の value 産出仮想型。1 トークンを JSON テキストとして読む。DR-132 §3 |
 <!-- kuu-lint:end -->
 
@@ -829,7 +829,7 @@ pin できない** — 定義から注入できる住人は builtin だけで、
 | `not_an_integer` | `builtin/int_parser` | number としては読めるが整数でない入力。`int_round:"error"` の時のみ emit (丸めモードでは丸めて成功するため emit しない) |
 | `int_out_of_range` | `builtin/int_parser` | 整数値としては読めるが実装定義の値域 (参照実装は Int64) を超える |
 | `not_a_bool` | `builtin/bool_parser` | canonical 語彙外の入力 (例 `"yes"`) |
-| `not_an_int_range` | `fixture/int_range` | range 形 (`A,B` / `A,` / `,B`) に読めない綴り — カンマ無し・`,` 単体・構成部の int 不適合を全て畳む (DR-132 §2.2)。link 注入経路の構成部失敗は `builtin/int_parser` の reasons が発生源どおり出る |
+| `not_an_int_range` | `fixture/int_range` | range 形 (`A..B` / `A..` / `..B`) に読めない綴り — `..` 無し・`..` 単体・構成部の int 不適合を全て畳む (DR-132 §2.2)。link 注入経路の構成部失敗は `builtin/int_parser` の reasons が発生源どおり出る |
 | `not_json` | `fixture/json` | JSON テキストとして読めない綴り (DR-132 §3) |
 <!-- kuu-lint:end -->
 

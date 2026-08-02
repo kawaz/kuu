@@ -8,8 +8,10 @@
 >   `fixture/json`。§3 の 3 住人案 (timestamp / timerange / json) は置き換え —
 >   専用フィールド型住人 (`fixture/timestamp`) は立てず、フィールド型は既存 registry type `int` の
 >   直参照 (判別可能性は int ≠ number の輪郭差が担保、DR-132 §根拠)
-> - **string 形はカンマ区切り** `A,B` / `A,` / `,B` の 3 形のみ受理。`,` 単体 (空 record) と
->   単独 `A` は reject (RECB-Q4 の (a) から変更 — 空 record の pin 素材は将来住人の関心へ)
+> - **string 形は `..` 区切り** `A..B` / `A..` / `..B` の 3 形のみ受理 (最初の `..` で 1 回だけ
+>   分割する決定的規則、kawaz mid=55-56 で `,` 案から `..` へ確定 — docs の link 設計例との一貫性)。
+>   `..` 単体 (空 record) と単独 `A` は reject (RECB-Q4 の (a) から `..` 単体の扱いのみ変更 —
+>   空 record の pin 素材は将来住人の関心へ)
 > - RECB-Q5 = a (`schema/builtin-descriptors.json` の types 区分に fixture ns 収載)、
 >   RECB-Q6 = a (提供義務は conformance 実行文脈の解決可能性のみ)、reason は
 >   `not_an_int_range` / `not_json`
