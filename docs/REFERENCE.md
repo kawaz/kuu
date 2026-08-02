@@ -782,6 +782,10 @@ installer 発生源 (下表) は `schema/builtin-descriptors.json` の descripto
 |---|---|---|
 | `parse` | `missing_operand` | トークンが尽きて要素の消費要求が満たせない |
 | `parse` | `unexpected_token` | 消費者の居ないトークンが残る (残余トークン) |
+| `parse` | `undeclared_field` | 住人が、自身の record 宣言に無いキーを産んだ (DR-126 §4 (a)) |
+| `parse` | `duplicate_field` | 住人が、同じキーを 2 度産んだ (DR-126 §4 (a) 系 — wire JSON object が表現できない値) |
+| `parse` | `field_type_mismatch` | 宣言済みキーの値が、そのフィールドの type が名乗る `out` と合わない (DR-126 §4 (b)) |
+| `parse` | `output_shape_mismatch` | 産出値そのものが、住人の `io_type.output` 宣言の形と合わない |
 | `constraint` | `required_violated` | `required` の値充足 (DR-047) 失敗 |
 | `constraint` | `required_group_violated` | `required_group` 内のいずれの member も値充足しない (DR-103) |
 | `constraint` | `requires_violated` | `requires` の目的語不足 |
@@ -789,6 +793,11 @@ installer 発生源 (下表) は `schema/builtin-descriptors.json` の descripto
 | `constraint` | `conflicts_with_violated` | `conflicts_with` の committed 衝突 |
 
 constraint 系は `<属性名>_violated` で機械的に統一されている。
+
+`undeclared_field` / `duplicate_field` / `field_type_mismatch` / `output_shape_mismatch` の 4 つは
+DR-126 §4 の乖離検査 (「返した値 vs 自己宣言」の矛盾) が emit する。**conformance fixture では
+pin できない** — 定義から注入できる住人は builtin だけで、自己宣言に反する builtin を注入する
+手段が無いため、この 4 つの pin は実装側テストの領分である (DR-126 §4)。
 
 ### 7.4 builtin filter が emit する reason
 
