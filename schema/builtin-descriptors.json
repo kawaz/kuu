@@ -1,5 +1,5 @@
 {
-  "$comment": "kuu builtin registry 住人の宣言集合 — 各エントリは schema/descriptor.schema.json に適合する。正本は docs/decisions/DR-095-builtin-descriptor-reasons.md (§3 filters / §4 factories) + DR-107-descriptor-orthogonal-axes.md (role/construction/io_type/output_mode/fallibility/invocation の直交軸) + DR-114-universal-fn-integration.md (cell_fns / fn role / observes / tagged Sentinel) + DR-117-completion-generator-abi.md (§7 completers)。DR-095 §射程外の通り、installer 発生源 (missing_operand 等) と constraint 系 reason (required_violated 等) は本ファイルの対象外 — 前者はエンジン構造の発生源で installer descriptor 側の宣言軸が未実体化、後者は constraint installer (DR-047/055) 側で別途宣言が必要。トップレベル区分名 (filters/cell_fns/types/accumulators/completers/providers) は DESIGN §13.1 の registry 区分名 (呼ばれるフィールド名の単位) を踏襲し、descriptor の `role` (DR-107) とは独立 — `types` registry 住人は `role:\"type_parser\"` を持つ (registry 区分名と role は別軸)。accumulators 区分は append/merge/kv_map の 3 住人 (DR-111 §3)、completers 区分は shell 委譲表に対応する files/dirs の 2 住人 (DR-117 §7) を収載する。",
+  "$comment": "kuu builtin registry 住人の宣言集合 — 各エントリは schema/descriptor.schema.json に適合する。正本は docs/decisions/DR-095-builtin-descriptor-reasons.md (§3 filters / §4 factories) + DR-107-descriptor-orthogonal-axes.md (role/construction/io_type/output_mode/fallibility/invocation の直交軸) + DR-114-universal-fn-integration.md (cell_fns / fn role / observes / tagged Sentinel) + DR-117-completion-generator-abi.md (§7 completers)。DR-095 §射程外の通り、installer 発生源 (missing_operand 等) と constraint 系 reason (required_violated 等) は本ファイルの対象外 — 前者はエンジン構造の発生源で installer descriptor 側の宣言軸が未実体化、後者は constraint installer (DR-047/055) 側で別途宣言が必要。トップレベル区分名 (filters/cell_fns/types/accumulators/completers/providers) は DESIGN §13.1 の registry 区分名 (呼ばれるフィールド名の単位) を踏襲し、descriptor の `role` (DR-107) とは独立 — `types` registry 住人は `role:\"type_parser\"` を持つ (registry 区分名と role は別軸)。accumulators 区分は append/merge/kv_map の 3 住人 (DR-111 §3)、completers 区分は shell 委譲表に対応する files/dirs の 2 住人 (DR-117 §7) を収載する。types 区分には builtin ns の factory に加えて **fixture ns (conformance 専用 namespace、DR-128 §12 / DR-132) の仮想型住人**も収載する — 提供義務は conformance 実行文脈での解決可能性のみで、通常 registry への常設は実装裁量かつ安定性保証外 (DR-132 §1)。",
   "$schema-ref": "descriptor.schema.json",
 
   "filters": {
@@ -323,6 +323,28 @@
       },
       "reasons": ["not_a_bool"],
       "description": "bool を値空間の土台にする preset 型 (DR-099 §1、DR-076 の flag/count と同族の糖衣プリセット)。DR-099 §1「それ以外のすべて (long/short/env 席の宣言可否、multiple、filters、required 充足) は素の bool と完全に同一に振る舞う」の通り、parse 相 (String→bool) は builtin/bool_parser と完全に同一の経路を通り、canonical bool 語彙外の文字列 (例 `--use-color yesplz`) は通常の bool parse と同じく `not_a_bool` で reject する。reasons の帰属は排他的所有ではないグローバル語彙 (`reasons` フィールドの description 参照) なので、`not_a_bool` を builtin/bool_parser と共有 emit することは compositional exemption を必要としない — 素の bool と完全に同一という DR-099 §1 の主張自体が fallibility:reject を要求する。値の由来 (tty_provider の bool 観測、null なら宣言 default) は値源ラダー §11.4 の `default` 席の型依存解決規則であり、この解決自体は failure mode を持たない — fallibility:reject は bool parse 相にのみ由来する。"
+    },
+    "fixture/int_range": {
+      "name": "fixture/int_range",
+      "role": "type_parser",
+      "construction": "static",
+      "io_type": { "input": "string", "output": { "record": { "start": "int", "end": "int" } } },
+      "output_mode": "transform",
+      "fallibility": "reject",
+      "invocation": { "encoding": "none", "parameters": [] },
+      "reasons": ["not_an_int_range"],
+      "description": "conformance 専用の record 産出仮想型 (DR-132 §2、fixture ns = DR-128 §12)。実用型ではなく、複合値の pin (DR-127 波及 fixture (2)(5)(6): 値残余のフィールド書き・時系列上書き・sources の座 re-tag、および record null 補形 DR-130 §4.1) の乗り物。string 形はカンマちょうど 1 個の全体一致 `A,B` / `A,` / `,B` の 3 形のみ受理し、部分形は欠落フィールドをキーごと持たない部分 presence を産出する (`5,` → `{\"start\": 5}`、DR-127 §3.1)。A/B は canonical default の int 受理輪郭 (anchored、trim なし、DR-074/075) で読み、range 形に読めない綴り (カンマ無し・`,` 単体・構成部の int 不適合) は not_an_int_range で reject する。link 注入経路の operand はフィールド型 int のパーサが読み (DR-127 §3.2)、そこでは builtin/int_parser の reasons が発生源どおり emit される (DR-132 §2.2)。提供義務は conformance 実行文脈での解決可能性のみ (DR-132 §1)。"
+    },
+    "fixture/json": {
+      "name": "fixture/json",
+      "role": "type_parser",
+      "construction": "static",
+      "io_type": { "input": "string", "output": "value" },
+      "output_mode": "transform",
+      "fallibility": "reject",
+      "invocation": { "encoding": "none", "parameters": [] },
+      "reasons": ["not_json"],
+      "description": "conformance 専用の value 産出仮想型 (DR-132 §3、fixture ns = DR-128 §12)。入力 1 トークンを JSON テキスト (RFC 8259) として読み、その値をそのまま返す — 読めない綴りは not_json で reject。value 宣言座の実行時解決系 (DR-127 §2.2 遷移表の map/value 行、fixture (4): セル未確定 / キー不在 → 枝 Reject → 他枝勝ち、vivify 不可) の pin を担う。map out の住人は立てず value で代表 pin する (DR-127 §2.2 で map は value と同挙動)。fixture で使う JSON 値は host 差の出ない範囲 (安全整数・string・bool・null・object/array) に限る (DR-085 §3 と同じ姿勢、DR-132 §3)。提供義務は conformance 実行文脈での解決可能性のみ (DR-132 §1)。"
     }
   },
 

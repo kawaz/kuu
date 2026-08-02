@@ -84,7 +84,7 @@ fixture が期待する outcome の代わりに `kind: "unsupported"` の defini
     | `empty` | `Sentinel(Empty)` によるセルのクリア、committed=true | なし | `fixtures/multiple-parse/filters-cell-ops.json::empty-after-set-resets-to-empty-with-cli-source` |
     | `remove` | merge accumulator: operand と等価な要素を全削除 (DR-080 §2) | 除去対象の値 | `fixtures/multiple-parse/merge-splice-remove.json::implicit-at-then-remove-only` |
     | `splice` | merge accumulator: old をその位置に展開 (DR-080 §2) | なし | `fixtures/multiple-parse/merge-basic.json::bare-splice-is-identity` |
-  - `operand`: `set` では present-required で値として `null` を許す。`remove` でも除去対象の値として必須。missing key と explicit null を decoder が同じ内部状態へ畳んではならない。JSON 表現は canonical 規約 (数値は最短形 `1.0` → `1`、DR-050 §4)
+  - `operand`: `set` では present-required で値として `null` を許す。`remove` でも除去対象の値として必須。missing key と explicit null を decoder が同じ内部状態へ畳んではならない。JSON 表現は canonical 規約 (数値は最短形 `1.0` → `1`、DR-050 §4)。複合値 (record 等) の operand は**補形前の生出力** — null 補形 (DR-130 §4.1) は射影層の仕事で effects には届かず、欠落フィールドは operand でも欠落のまま書く。missing / explicit null の区別保持は operand の object 内部にもそのまま及ぶ (DR-132 §4)
   - **variant effect (effect mode)**: cell fn の `Value` 返却は通常の `set`。`unset` は `null` を返すので `{"op":"set","operand":null}`。Sentinel 返却の `default` / `empty` は、それぞれ同名 op として effects に射影する。`incr` 等が `ctx.old` から返した新値も `set` として観測し、専用 `update` op は持たない
   - **default_fn (default mode)**: default 席は `Value` を返す cell fn だけを受け入れ、Sentinel 返しの `default` / `empty` fn の指定は definition-error `invalid-range`。空配列を既定値にする場合は `default: []` と書く。default 解決は値源ラダー充填なので effects には載せず、値を `result`、由来を `sources` で検証する
   - `source`: 値源タグ (DR-031)。effects に載るのは `cli` / `link` の 2 つだけ (下記。ラダー充填の由来は `sources` 側)
@@ -103,7 +103,7 @@ fixture が期待する outcome の代わりに `kind: "unsupported"` の defini
 
   1. **座の対応** (DR-122 §1) — スカラー値の座はタグ (string)、配列はタグの**配列** (`result` の i 番目の要素の由来が `sources` の i 番目)、kv / scope はタグの kv (キーは `result` と同じ露出キー)。`result` の入れ子構造と露出規則の正本は DESIGN §2.3〜§2.6 / DR-052 であり、`export_key: null` の scope segment が現れない (子が親へ昇格する、`fixtures/export-key/command-promote.json`) 点も `result` と同じ形になる帰結として従う
   2. **キー集合は `result` と完全一致する** (DR-122 §2 / DR-130 §5) — 両者は同じ宣言キー導出を共有する。`result` で `null` の座は `sources` でも `null` であり、その座を確定させた主体が存在しないことを表す。未選択 scope は両方で親キーが `null` になり、内側は展開しない。選択された scope は両方で同じ kv を持つが、スコープ自体を指すタグは無い。accumulator の 0 発火 `[]` は `sources` でも `[]` (値の座が無いので置き換えるタグも無い)
-  3. **タグの決定単位は「値の座」** (DR-122 §3) — 各座のタグは DR-031 の source 確定ルール (最終値を確定させた効果 / 充填の由来) をその座に適用した結果。同一 cell が複数回着席した場合は DR-031 / DR-081 に従って**最終確定 source** を載せる。nameless `seq` の tuple は各要素が自分の由来を持ち (`["cli", "const"]`)、accumulator の各 row / 各要素はその要素を産んだ発火の source を持つ (下位席の値を splice した merge accumulator では `["env", "env", "cli"]` のように混在しうる、`fixtures/multiple-parse/merge-first-firing.json`)
+  3. **タグの決定単位は「値の座」** (DR-122 §3) — 各座のタグは DR-031 の source 確定ルール (最終値を確定させた効果 / 充填の由来) をその座に適用した結果。同一 cell が複数回着席した場合は DR-031 / DR-081 に従って**最終確定 source** を載せる。nameless `seq` の tuple は各要素が自分の由来を持ち (`["cli", "const"]`)、accumulator の各 row / 各要素はその要素を産んだ発火の source を持つ (下位席の値を splice した merge accumulator では `["env", "env", "cli"]` のように混在しうる、`fixtures/multiple-parse/merge-first-firing.json`)。**value_parser 産の複合値 (record 等) の内側も座単位で分解する** — link による部分書きは当該の座だけ `link` タグを持ち、他の座は産出発火のタグを保つ (DR-127 §6 / DR-132 §4)
 
   **空コレクションの由来は表現しない** (DR-122 §2 の帰結) — `[]` / `{}` は値の座を持たないため、「ユーザが明示的に空にした (`empty` op、committed=true)」と「何も来なかった (`set(null)` による開放後の default 席)」が `sources` 上では同じ `[]` になる。この区別は `effects` の op (`empty` / `set` with null operand) が担う (`fixtures/multiple-parse/filters-cell-ops.json`)。`sources` は値の由来を写す面であって committed 軸を持たない (DR-031「committed/selected との直交性」)。
 
@@ -304,6 +304,7 @@ DR への遡及は各 `why` 内の DR ref で辿る (機能領域は複数 DR �
 1. `definition` (wire form) を parse_definition に通す。`query:"parse"` / `"complete"` / `"help"` で definition-error なら fixture fail。`query:"definition_error"` は逆に definition-error が正常系で、返された `DefError` 列を §2 の形へ射影して比較する
 2. `query:"parse"` は各 case の `args` で parse を実行し、outcome を §2 へ射影する。`query:"complete"` は `args_before` / `args_after` で complete capability を呼ぶ。`query:"help"` は assembly の help_installer を適用し、各 case の `path` / `depth` / `category_mode` で help_query capability を直接呼ぶ (パース実行なし・kuu-cli 非依存)
 3. help_query の不在 path / named category は definition-error へ変換せず、§5 の query-error envelope のまま比較する。その他を含め `expect` と §3 の規約で比較する
+4. **`fixture/*` namespace (conformance 専用の仮想型、DR-132) の住人を type registry で解決できること** — fixture の `definition` が `type: "fixture/int_range"` 等で参照するため、conformance 実行文脈での解決可能性は runner 契約の一部である。通常実行の registry への常設は実装裁量かつ安定性保証外 (DR-132 §1)
 
 runner は §0.1 の green 規範を満たす形で結果を集計する: **プロファイル (`query` タグ) 別**に decode 数・実行 case 数・skipped 数・mismatch 数を出し、実行対象にした **spec commit SHA** を記録する。skip は「対応できないため読み飛ばした」ことの可視化であり、0 でなければそのプロファイルは green ではない (DR-108 §4)。
 

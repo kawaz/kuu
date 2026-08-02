@@ -1,5 +1,22 @@
 # record 産出 builtin type の設計 — conformance 面に複合値を導入するビークル (DR 起草前の下敷き)
 
+> **裁定確定 (2026-08-02、kawaz mid=48〜54 + 統括)**: RECB-Q1〜Q6 は **DR-132** として確定した。
+> 正本は `docs/decisions/DR-132-fixture-namespace-conformance-residents.md`。本ファイル以下の本文は
+> 当時の検討記録であり、確定形は次の点で本文の推し案と異なる:
+>
+> - **住人は 2 つ** — `fixture/int_range` (record `{start: int, end: int}`、string 形あり) +
+>   `fixture/json`。§3 の 3 住人案 (timestamp / timerange / json) は置き換え —
+>   専用フィールド型住人 (`fixture/timestamp`) は立てず、フィールド型は既存 registry type `int` の
+>   直参照 (判別可能性は int ≠ number の輪郭差が担保、DR-132 §根拠)
+> - **string 形はカンマ区切り** `A,B` / `A,` / `,B` の 3 形のみ受理。`,` 単体 (空 record) と
+>   単独 `A` は reject (RECB-Q4 の (a) から変更 — 空 record の pin 素材は将来住人の関心へ)
+> - RECB-Q5 = a (`schema/builtin-descriptors.json` の types 区分に fixture ns 収載)、
+>   RECB-Q6 = a (提供義務は conformance 実行文脈の解決可能性のみ)、reason は
+>   `not_an_int_range` / `not_json`
+> - §5 の綴り例は 2 点誤りがあった — link 参照ノードは結果キーを占有しない (DR-120 §4) ので
+>   result / sources にトップレベルキーは現れず、link 越し効果の source は `cli` でなく `link`
+>   (DR-031、`fixtures/link-parse/basic.json` の pin)。正しい綴りは DR-132 §4
+
 > 由来: kuu.mbt W2-5 の実装記録 (`kuu.mbt docs/findings/2026-08-02-w2-5-producer-and-divergence.md` §5)
 > が可視化した欠落 — conformance の定義が使える type は builtin factory のみで、record を名乗る住人が
 > 1 つも無いため、DR-127 波及の fixture (2) 値残余書き / (4) 値残余 absent Reject / (5) 時系列上書き /

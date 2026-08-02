@@ -503,8 +503,9 @@ enum にならない)。要素に配列があれば `seq` ブランチに展開�
 
 値プリミティブ (葉) と糖衣プリセットの総覧。**本節は正本 (DESIGN §3.3) からの手動転記であり、
 機械検査の対象外** — `schema/builtin-descriptors.json` に descriptor 実体を持つのは §3.2 の
-configurable factory 4 種のみで (`reasons: []` が自明な型は descriptor 化されていない、
-DR-095 射程外)、それ以外の type は本表が唯一のカタログになる。
+6 種 (configurable factory 4 種 + conformance 専用の fixture 仮想型 2 種、DR-132) のみで
+(`reasons: []` が自明な型は descriptor 化されていない、DR-095 射程外)、それ以外の type は
+本表が唯一のカタログになる。
 
 | type | 種別 | 意味論 | 正本 |
 |---|---|---|---|
@@ -533,20 +534,27 @@ DR-095 射程外)、それ以外の type は本表が唯一のカタログにな
 | `tty` (`builtin/tty`) | 糖衣プリセット / factory | bool を土台に、暗黙 default = tty 観測 | DESIGN §3.3, §12b, DR-099, DR-129 |
 | `config_file` | 特殊 type | config ファイルパスの配線宣言 | DESIGN §14.3, DR-050 |
 
-### 3.2 configurable factory カタログ
+### 3.2 descriptor 収載 type カタログ (configurable factory + fixture 仮想型)
 
 <!-- kuu-lint:vocab type-factories -->
-| factory | kind | 意味論 |
+| type | kind | 意味論 |
 |---|---|---|
 | `builtin/number_parser` | factory | number/float 共通の value_parser。構文不一致は全て `not_a_number` |
 | `builtin/int_parser` | factory | int の値空間判定 value_parser (number として読み、値が整数かで判定) |
 | `builtin/bool_parser` | factory | bool の value_parser |
 | `builtin/tty` | factory | bool を値空間の土台にする preset 型 — 暗黙 default = tty 観測 (§3.1 の tty 行・DR-099・DR-129) |
+| `fixture/int_range` | fixture (static) | conformance 専用の record 産出仮想型 (`{start?: int, end?: int}`)。string 形は `A,B` / `A,` / `,B` の 3 形、部分形は部分 presence を産出。DR-132 §2 |
+| `fixture/json` | fixture (static) | conformance 専用の value 産出仮想型。1 トークンを JSON テキストとして読む。DR-132 §3 |
 <!-- kuu-lint:end -->
 
-定義側での参照形は `{"name": "<factory名>", "config": {...}}` (canonical default = factory の
-default config)。`type:` から直接 bare 名で参照する場合は `definitions.types` 経由でローカル名を
-作ってから使う (`tty_stream` 必須のため bare `type: "tty"` は definition-error、§3.3 参照)。
+factory の定義側での参照形は `{"name": "<factory名>", "config": {...}}` (canonical default =
+factory の default config)。`type:` から直接 bare 名で参照する場合は `definitions.types` 経由で
+ローカル名を作ってから使う (`tty_stream` 必須のため bare `type: "tty"` は definition-error、§3.3 参照)。
+
+`fixture/*` は CONFORMANCE が宣言する fixture 専用 namespace (DR-128 §12 / DR-132) — 住人は
+construction: static (config ダイヤルなし) の仮想型で、wire からは `type: "fixture/int_range"` の
+ns 付き参照で直接指す。提供義務は conformance 実行文脈での解決可能性のみで、通常 registry への
+常設は実装裁量かつ安定性保証外 (DR-132 §1)。
 
 最小例:
 
@@ -812,15 +820,17 @@ pin できない** — 定義から注入できる住人は builtin だけで、
 | `too_long` | `length_range` | 累積後の配列長が上限超過 |
 <!-- kuu-lint:end -->
 
-### 7.5 builtin type factory が emit する reason
+### 7.5 type descriptor (factory / fixture 仮想型) が emit する reason
 
 <!-- kuu-lint:vocab factory-reasons -->
-| reason | factory | 意味 |
+| reason | type | 意味 |
 |---|---|---|
 | `not_a_number` | `builtin/number_parser`, `builtin/int_parser` | number/float の構文不一致 (int も number 字句で判定するため、number として全く読めない入力はここに落ちる) |
 | `not_an_integer` | `builtin/int_parser` | number としては読めるが整数でない入力。`int_round:"error"` の時のみ emit (丸めモードでは丸めて成功するため emit しない) |
 | `int_out_of_range` | `builtin/int_parser` | 整数値としては読めるが実装定義の値域 (参照実装は Int64) を超える |
 | `not_a_bool` | `builtin/bool_parser` | canonical 語彙外の入力 (例 `"yes"`) |
+| `not_an_int_range` | `fixture/int_range` | range 形 (`A,B` / `A,` / `,B`) に読めない綴り — カンマ無し・`,` 単体・構成部の int 不適合を全て畳む (DR-132 §2.2)。link 注入経路の構成部失敗は `builtin/int_parser` の reasons が発生源どおり出る |
+| `not_json` | `fixture/json` | JSON テキストとして読めない綴り (DR-132 §3) |
 <!-- kuu-lint:end -->
 
 ### 7.6 builtin cell fn が emit する reason
