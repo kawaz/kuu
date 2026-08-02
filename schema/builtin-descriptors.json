@@ -202,7 +202,7 @@
       "role": "fn",
       "construction": "static",
       "io_type": { "output": "value" },
-      "fallibility": "reject",
+      "fallibility": "total",
       "invocation": {
         "encoding": "colon_args",
         "parameters": [
@@ -210,15 +210,15 @@
         ]
       },
       "observes": ["option:<source>"],
-      "reasons": ["absent-source"],
-      "description": "他 option の値を返す cell fn。observes template を decoded source へ束縛して依存 edge を作る (DR-114 §2/§9/§10)。"
+      "reasons": [],
+      "description": "他 option の値を返す cell fn。observes template を decoded source へ束縛して依存 edge を作り、値不在は null Value を返す (DR-114 §2/§9/§10、DR-131 §1.1)。"
     },
     "env": {
       "name": "env",
       "role": "fn",
       "construction": "static",
       "io_type": { "output": "value" },
-      "fallibility": "reject",
+      "fallibility": "total",
       "invocation": {
         "encoding": "colon_args",
         "parameters": [
@@ -226,8 +226,8 @@
         ]
       },
       "observes": ["env:<var>"],
-      "reasons": ["absent-source"],
-      "description": "明示した環境値を返す cell fn。値源ラダーの env 席とは別の universal fn 呼び出し (DR-114 §2/§4.1/§10)。暫定契約: env(var) → value、参照不在は absent-source。詳細契約は P3 の kuu.mbt 実装時に確定する。"
+      "reasons": [],
+      "description": "明示した環境値を返す cell fn。値源ラダーの env 席とは別の universal fn 呼び出しで、値不在は null Value を返す (DR-114 §2/§4.1/§10、DR-131 §1.1)。"
     },
     "uuid": {
       "name": "uuid",
@@ -250,7 +250,7 @@
       "role": "fn",
       "construction": "static",
       "io_type": { "output": "value" },
-      "fallibility": "reject",
+      "fallibility": "total",
       "invocation": {
         "encoding": "colon_args",
         "parameters": [
@@ -258,8 +258,8 @@
         ]
       },
       "observes": ["system:<key>"],
-      "reasons": ["absent-source"],
-      "description": "system key に対応する計算値を取得して返す cell fn。参照対象は observes template から concrete edge 化する (DR-114 §2/§10)。暫定契約: computed(key) → value、参照不在は absent-source。key の集合を含む詳細契約は P3 の kuu.mbt 実装時に確定する。"
+      "reasons": [],
+      "description": "system key に対応する計算値を取得して返す cell fn。参照対象は observes template から concrete edge 化し、値不在は null Value を返す (DR-114 §2/§10、DR-131 §1.1)。"
     }
   },
 

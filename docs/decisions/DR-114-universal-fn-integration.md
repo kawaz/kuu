@@ -281,7 +281,7 @@ filter descriptor にも `observes` を許可し、全 universal fn specializati
   "role": "fn",
   "construction": "static",
   "io_type": {"output": "value"},
-  "fallibility": "reject",
+  "fallibility": "total",
   "invocation": {
     "encoding": "colon_args",
     "parameters": [
@@ -289,9 +289,11 @@ filter descriptor にも `observes` を許可し、全 universal fn specializati
     ]
   },
   "observes": ["option:<source>"],
-  "reasons": ["absent-source"]
+  "reasons": []
 }
 ```
+
+`borrow` は参照先の値不在も成功として null Value を返すため total であり、runtime reason を持たない (DR-131 §1.1)。
 
 無引数 cell operation fn は output-only `io_type` と空の `parameters` で表す。
 
@@ -351,7 +353,7 @@ observes: ["option:<name>", "env:<var>", "system:<key>"]
 - args が literal に確定せず concrete edge を作れない参照は dynamic reference であり、runtime error とする
 - default 解決は DR-087 の位相順で行う
 - 循環は definition-error `circular-ref`
-- 依存先が最終的に unset なら、呼び出し元も `absent-source` として unset のまま落ちる。DR-088 に従い探索を再演しない
+- 依存先が最終的に unset なら null Value を返し、`set(null)` の一般規則で呼び出し元のラダーを開放する (DR-131 §1.1)
 
 `ctx.observes()` は concrete 化済みの宣言集合に制限された参照面を返す。`ctx.env()` / `ctx.system()` / 位相固有 ctx の参照 API はこの集合に無い対象を読めない。
 
@@ -365,7 +367,7 @@ observes: ["option:<name>", "env:<var>", "system:<key>"]
 | arity / argument type 不正 | definition-error `invalid-argument` (DR-085) |
 | 呼び出し席と出力型の不適合 | definition-error `invalid-range` |
 | `observes` 依存循環 | definition-error `circular-ref` (DR-082) |
-| 参照先不在 | fn reason `absent-source`。default 席では unset のまま落ちる |
+| 参照先不在 | null Value を返し、`set(null)` の一般規則でラダーを開放する |
 | filter の reject | DR-037 の枝解決に従う |
 
 namespace 解決と bare builtin 糖衣は DR-094、reason 宣言集合は DR-066 / DR-095 の規約に従う。

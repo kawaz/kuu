@@ -23,9 +23,10 @@ wire 属性 `inherit` (bool 形・`{"from": ...}` object 形の両方)、それ�
 ### 2. `inherit` cell fn も廃止する — `borrow` と同型の重複だった
 
 `cell_fns` には `inherit(source)` と `borrow(source)` が並んでいたが、descriptor の全軸が一致していた:
-`role:"fn"` / `io_type.output:"value"` / `fallibility:"reject"` / `invocation` は `source: string` 1 個 /
-`observes: ["option:<source>"]` / `reasons: ["absent-source"]`。説明文の「祖先 scope の」だけが差で、
-機械可読な軸には一切現れていない。裁定の「同じことを別機能として残す意味ない」はこの重複を指す。
+`role:"fn"` / `io_type.output:"value"` / `fallibility:"total"` / `invocation` は `source: string` 1 個 /
+`observes: ["option:<source>"]` / `reasons: []`。どちらも値不在は null Value を返す。説明文の
+「祖先 scope の」だけが差で、機械可読な軸には一切現れていない。裁定の「同じことを別機能として
+残す意味ない」はこの重複を指す。
 **`borrow` を残し `inherit` を落とす** — 名前が参照方向を含意せず、既に引数付きの汎用参照として
 DR-114 §8 の canonical 住人だから。
 
@@ -104,8 +105,7 @@ inherit 席の解決規則 (最近祖先の同名実体)、bool 形と object �
 - **LOWERING**: §B.7 (inherit installer) を削除、§B.3 (env installer) のラダー順序記述を 4 段に
 - **PIPELINE**: 値源の表から inherit 行、ラダーの mermaid ノードと本文を 4 段に
 - **CONFORMANCE**: §2 の `sources` タグ語彙から `inherit`、effects 非掲載の席列挙から `inherit`
-- **REFERENCE**: 語彙表と `inherit` 属性節、`cell_fns` 表の `inherit` 行、reasons 表の
-  `absent-source` 発生源から `inherit` を除去
+- **REFERENCE**: 語彙表と `inherit` 属性節、`cell_fns` 表から `inherit` を除去
 - **schema**: `wire.schema.json` の `inherit` プロパティ、`fixture.schema.json` の source enum、
   `builtin-descriptors.json` の `cell_fns.inherit`、`descriptor.schema.json` の cell_fns required 列挙
 - **fixtures**: `value-sources/inherit-ladder.json` / `value-sources/inherit-from-ladder.json` /

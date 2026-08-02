@@ -1,7 +1,5 @@
 # DR-113: help 機構の再設計 — help_installer・5 直交 type・構造化 model
 
-> **更新 (DR-130/131、2026-08-01、2026-08-02 EMP-Q1=a 追補): `borrow:<source>` の参照座に値が無い場合は null Value を返し、`set(null)` の一般規則で呼び出し元のラダーを開放する。** `absent-source` reason は使わない。default 席で弾く Sentinel fn は `default` / `empty` で、Value fn の `unset` は指定できる。help 機構の裁定は不変。
-
 > **更新 (DR-124、2026-07-29): entry の `origin` から `{"kind": "inheritable", ...}` が抜けた。**
 > 値域は `"local"` / `{"kind":"global",...}` / `{"kind":"alias",...}` の 3 値。他は不変。
 
@@ -386,9 +384,9 @@ help type 合成の `borrow` は `ctx.mode() == "default"` で `ctx.as_default()
 | arity / type 不正 | definition-error `invalid-argument` (DR-085) |
 | default 席で Sentinel fn を指定 | definition-error `invalid-range` |
 | `observes` の依存循環 | definition-error `circular-ref` (DR-082) |
-| `borrow:X` の source が最終的に不在 / unset | fn reason `absent-source`。呼び出し元も unset のまま落ちる |
+| `borrow:X` の source が最終的に不在 / unset | null Value を返し、`set(null)` の一般規則で呼び出し元のラダーを開放する |
 
-default_fn は DR-087 の placeholder と依存グラフへ載せ、位相順で解決する。DR-088 に従い、宣言は探索中の「default あり」判定へ参加するが、遅延解決後に値が無ければ unset のまま落ち、探索へ戻らない。
+default_fn は DR-087 の placeholder と依存グラフへ載せ、位相順で解決する。参照値が無い場合も呼び出しは成功して null Value を返し、DR-131 §1.1 の一規則でラダーを開放する。
 
 ### 6. 内部セルは help の直交軸をそのまま表す
 
@@ -484,7 +482,7 @@ help_after の規則:
 - path / depth / category_mode (`default` / `all` / `named`)
 - definition-error の invalid-range / circular-ref
 - query-error `absent-path` / `absent-category`。definition_error outcome と別 outcome で pin する
-- cell_fns の unknown-vocab / invalid-argument / absent-source と依存解決
+- cell_fns の unknown-vocab / invalid-argument、値不在時の null Value、依存解決
 
 conformance runner は definition の合法性検査と help query 実行を別位相として扱い、definition-error と query-error を混同しない。options / commands / positionals は順序込みで比較する。v1 発行条件は parse-core / lowering / definition-error / completion / help の 5 プロファイルすべてが指定参照実装 kuu.mbt で green であることとする。
 

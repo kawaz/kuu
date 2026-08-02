@@ -730,10 +730,10 @@ construction=factory の `config` キー宣言 (デプロイ時の方言設定) 
 | `unset` | fn | total | (空) | null Value を返す。cell への適用時に `set(null)` としてラダーを開放する |
 | `empty` | fn | total | (空) | `Sentinel(Empty)` を返し、array / map / record を committed=true で空にする。scalar 等は definition-error `invalid-range` |
 | `incr` | fn | total | (空) | `ctx.old` を参照して `old + 1` の number Value を返す。count preset が使用 |
-| `borrow` | fn | reject | `option:<source>` | 他 option の値を返す。`<source>` は lexical scope chain (DESIGN §2.7) で解決し、decoded source から依存 edge を concrete 化 |
-| `env` | fn | reject | `env:<var>` | 明示した環境値を返す。値源ラダーの env 席とは別の fn 呼び出し |
+| `borrow` | fn | total | `option:<source>` | 他 option の値を返す。`<source>` は lexical scope chain (DESIGN §2.7) で解決し、decoded source から依存 edge を concrete 化。値不在は null Value |
+| `env` | fn | total | `env:<var>` | 明示した環境値を返す。値源ラダーの env 席とは別の fn 呼び出し。値不在は null Value |
 | `uuid` | fn | total | (空) | registry 実装が UUID string を生成して返す |
-| `computed` | fn | reject | `system:<key>` | system key に対応する計算値を返す |
+| `computed` | fn | total | `system:<key>` | system key に対応する計算値を返す。値不在は null Value |
 <!-- kuu-lint:end -->
 
 概念 ABI は `(args: string[], ctx: FnCtx) → Result<Value | Sentinel, Reason>` の 1 種。`ctx.mode()` は `"default" | "effect" | "filter"` を返し、`as_default()` / `as_effect()` / `as_filter()` で位相固有 context を取得する。`ctx.old()` は対象 cell の内在状態であり `observes` edge ではない。外部 option / env / system 参照は descriptor の `observes` に宣言し、concrete edge だけを `ctx.observes()` 経由で読める。
@@ -835,14 +835,9 @@ pin できない** — 定義から注入できる住人は builtin だけで、
 
 ### 7.6 builtin cell fn が emit する reason
 
-cell fn reason は runtime の値取得失敗であり、filter reason や definition-error kind と混ぜない。builtin cell fn が emit する v1 reason 語彙は空である。`borrow` の参照先に値が無い場合は null Value を返し、`set(null)` の一般規則で呼び出し元のラダーを開放する (DR-131 §1.1)。
-
-次の表は descriptor schema と同期する予約語彙を含む。`absent-source` は builtin cell fn が emit してはならない。
+cell fn reason は runtime の値取得失敗であり、filter reason や definition-error kind と混ぜない。builtin cell fn が emit する v1 reason 語彙は空で、全 descriptor が `reasons: []` である。値不在は null Value を返し、`set(null)` の一般規則で呼び出し元のラダーを開放する (DR-131 §1.1)。
 
 <!-- kuu-lint:vocab cell-fn-reasons -->
-| reason | cell fn | 意味 |
-|---|---|---|
-| `absent-source` | — | 予約名。値不在は専用 reason でなく null Value で表す |
 <!-- kuu-lint:end -->
 
 `builtin/tty` は `reasons: []` — 本 factory 固有の失敗は definition-error (`tty_stream` 必須違反)
