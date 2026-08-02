@@ -34,7 +34,7 @@ DR-127 波及の fixture (2)(4)(5)(6) と W2-7/W2-8/W2-9 の conformance 露出�
 - [ ] RECB-Q1b: fixture 専用の最小 3 住人 (実用性なし)
 - [ ] RECB-Q2a: **timerange フィールド型 = timestamp 型参照 (推し)** — 型依存グラフ + 「フィールド type がパースする」(DR-127 §3.2) の判別 pin。内部表現: timestamp = epoch_ms、duration = ms (out は number への精密化)
 - [ ] RECB-Q2b: `"number"` 直参照
-- [ ] RECB-Q3a: **受理文法は timespec 風にフル定義 (相対形込み)、conformance fixture の case は決定的な絶対形サブセットのみ使用 (推し)** — now 注入の仕様化は v1 では避ける
+- [ ] RECB-Q3a: **受理文法は timespec 実装準拠でフル定義 (相対形込み)。決定性は factory config での now 固定注入で確保 (推し)** — timespec.mbt の parse_timespec/parse_range は now~/epoch~/tz~ を注入可能 (実機確認済み)。`definitions.types` の config 差し替え慣行 (int_hex 等) で now を固定すれば相対形も conformance で決定的に pin できる。range 区切りは timespec 実文法の `~` (`since~until`、単独は since)
 - [ ] RECB-Q3b: 型自体を決定的サブセットに絞る (実用型としての価値が下がる)
 - [ ] RECB-Q4: **ns と正本の帰属 (要裁定)** — kawaz/timespec.mbt の型を conformance 前提にすると他言語実装も同じ受理文法を再実装する義務を負う
   - [ ] RECB-Q4a: **ns は 3rd 風 (例 `timespec/*`)、正本 descriptor + 受理文法規定は spec 側が持ち、kawaz/timespec.mbt は参照実装 (統括推し)**
