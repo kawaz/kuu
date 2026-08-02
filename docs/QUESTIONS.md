@@ -22,7 +22,24 @@
 
 ## 裁定待ち
 
-(現在なし)
+### RECB-Q1〜Q6: record 産出 builtin (conformance 複合値ビークル)
+
+DR-127 波及の fixture (2)(4)(5)(6) と W2-7/W2-8/W2-9 の conformance 露出には「複合値を産む conformance 住人」が必要だが現存しない。設計正本: [docs/research/2026-08-02-record-builtin-type-design.md](docs/research/2026-08-02-record-builtin-type-design.md) (§8 が裁定候補の詳細)。新機構は発明せず **DR-128 §12 (SPL-Q2=a+b) の `fixture/*` residents 系統**に乗せる設計。
+
+- [ ] RECB-Q1a: **ビークル = `fixture/*` ns に具象 3 住人 (timestamp / timerange / json) (推し)** — json は fixture (4) 用 (record は vivify するので absent Reject が起きず、value out 住人が別途要る)
+- [ ] RECB-Q1b: 汎用 record_parser factory (builtin/struct と二重の汎用機構になるため非推奨)
+- [ ] RECB-Q1c: builtin/struct 前倒し (splice 実装が前提になり順序逆転)
+- [ ] RECB-Q2a: **timerange フィールド型 = `fixture/timestamp` 参照 (推し)** — 型依存グラフ + 「フィールド type がパースする」(DR-127 §3.2) の判別 pin が立つ
+- [ ] RECB-Q2b: `"number"` 直参照
+- [ ] RECB-Q3a: **timestamp 受理輪郭 = canonical 10 進整数のみ (推し)** — number_parser より狭くして入口/フィールドのパーサ行使を判別可能に
+- [ ] RECB-Q3b: number 同域 (Q2a の価値が消える)
+- [ ] RECB-Q4a: **timerange 文法 = `A..B` / `A..` / `..B` / `..`、単独 A は reject (推し)** (相対時刻 `-5m..now` は決定性のため対象外)
+- [ ] RECB-Q4b: `..` も reject
+- [ ] RECB-Q4c: 単独 A を `{since:A}` (DR-128 §2 と不整合なので非推奨)
+- [ ] RECB-Q5a: **descriptor 置き場 = builtin-descriptors.json に fixture ns 区分追加 (推し)**
+- [ ] RECB-Q5b: 新ファイル分離
+- [ ] RECB-Q6a: **提供義務 = conformance 実行文脈での解決可能性のみ、通常 registry は実装裁量 + 安定性保証外 (推し)**
+- [ ] RECB-Q6b: builtin 同格の常設
 
 ## 確認待ち
 
