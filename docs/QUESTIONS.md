@@ -28,9 +28,9 @@ DR-127 波及の fixture (2)(4)(5)(6) と W2-7〜W2-9 の conformance 露出に�
 
 - [ ] RECB-Q1a: **住人 = `fixture/int_range` + `fixture/json` (→value、fixture (4) 用) の 2 つ (推し)** — int_range は record + string 形 + 部分形 + int フィールド参照 (型依存グラフ・パーサ帰属 pin) を 1 型で覆う。json は record が vivify する (absent Reject が起きない) ため value out 住人が別途要る分
 - [ ] RECB-Q1b: 他の構成 (自由記述で)
-- [ ] RECB-Q2a: **string 形 = `A..B` / `A..` / `..B` を受理、`..` 単体と単独 `A` は reject (推し)** — 部分形は `{start:A, end:null}` 系の部分 presence を産出 (DR-130 null 補形の conformance 素材)。単独 A の暗黙 since 扱いは DR-128 §2 (string 固定の縮退) と不整合なので不採用
-- [ ] RECB-Q2b: `..` 単体も受理 (両フィールド null の空 range)
-- [ ] RECB-Q2c: 単独 `A` = `{start:A, end:null}` として受理
+- [ ] RECB-Q2a: **string 形 = カンマ区切り `A,B` / 部分形 `A,` / `,B` を受理、`,` 単体と単独 `A` は reject (推し)** — 区切り字は非本質 (mid=53 カンマで十分)。本質は部分形の受理で、`{start:A, end:null}` 系の部分 presence を産出 (DR-130 null 補形の conformance 素材)。単独 A の暗黙割当は DR-128 §2 と不整合なので不採用
+- [ ] RECB-Q2b: 部分形は受理しない (`A,B` の全量形のみ — 部分 presence 素材は link 部分書き側だけになる)
+- [ ] RECB-Q2c: `,` 単体も受理 (両フィールド null)
 - [ ] RECB-Q3a: **descriptor 置き場 = builtin-descriptors.json に fixture ns 区分追加 (推し)**
 - [ ] RECB-Q3b: 新ファイル分離
 - [ ] RECB-Q4a: **提供義務 = conformance 実行文脈での解決可能性のみ、通常 registry は実装裁量 (推し)**
