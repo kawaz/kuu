@@ -22,21 +22,7 @@
 
 ## 裁定待ち
 
-### RECB: conformance 複合値ビークル (int_range 仮想型)
-
-DR-127 波及の fixture (2)(4)(5)(6) と W2-7〜W2-9 の conformance 露出に「複合値を産む conformance 住人」が必要 (現存しない)。設計正本: [docs/research/2026-08-02-record-builtin-type-design.md](docs/research/2026-08-02-record-builtin-type-design.md)。kawaz 方向付け (mid=48〜52): timespec 級の実用型でなく**シンプルな仮想型**、かつ「string 1 個受け入れ」の複雑さを持つ **`int_range: {start:int, end:int}` (string 形 `0..2`)** を実験台に。DR-128 §12 (SPL-Q2=a+b) の `fixture/*` residents 系統に乗せる。
-
-- [ ] RECB-Q1a: **住人 = `fixture/int_range` + `fixture/json` (→value、fixture (4) 用) の 2 つ (推し)** — int_range は record + string 形 + 部分形 + int フィールド参照 (型依存グラフ・パーサ帰属 pin) を 1 型で覆う。json は record が vivify する (absent Reject が起きない) ため value out 住人が別途要る分
-- [ ] RECB-Q1b: 他の構成 (自由記述で)
-- [ ] RECB-Q2a: **string 形 = カンマ区切り `A,B` / 部分形 `A,` / `,B` を受理、`,` 単体と単独 `A` は reject (推し)** — 区切り字は非本質 (mid=53 カンマで十分)。本質は部分形の受理で、`{start:A, end:null}` 系の部分 presence を産出 (DR-130 null 補形の conformance 素材)。単独 A の暗黙割当は DR-128 §2 と不整合なので不採用
-- [ ] RECB-Q2b: 部分形は受理しない (`A,B` の全量形のみ — 部分 presence 素材は link 部分書き側だけになる)
-- [ ] RECB-Q2c: `,` 単体も受理 (両フィールド null)
-- [ ] RECB-Q3a: **descriptor 置き場 = builtin-descriptors.json に fixture ns 区分追加 (推し)**
-- [ ] RECB-Q3b: 新ファイル分離
-- [ ] RECB-Q4a: **提供義務 = conformance 実行文脈での解決可能性のみ、通常 registry は実装裁量 (推し)**
-- [ ] RECB-Q4b: builtin 同格の常設義務
-
-(補足: timespec 系実用型 (timestamp/timerange/duration) は本ビークルと独立に、将来 `timespec/*` ns の実型として別 DR で検討 — duration の内部表現 (ms+subms) が固まってからで良い)
+(現在なし)
 
 ## 確認待ち
 
