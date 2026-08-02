@@ -22,7 +22,21 @@
 
 ## 裁定待ち
 
-(現在なし)
+### CNV-Q1: command node の `value` 属性は合法か
+
+issue 棚卸し (2026-08-03) で浮上。schema の node 共通属性と DESIGN は `value` を全 node 位置で合法としているが、実装の CommandDef は carrier を持たず decoder が reject する。DR-120 (command = 結果スコープ) / DR-130 (未選択 command = 親キー null) の下で「command 自身が値を持つ」意味論は定義されていない。
+
+- [ ] CNV-Q1a: **command への `value` は definition-error として spec 側を精密化 (統括推し)** — 「command は値セルでなく結果スコープ」の現行意味論と一致。schema/DESIGN の「全位置合法」を command 除外へ追補
+- [ ] CNV-Q1b: command の `value` に意味論を与える (何に使うかの設計から必要 — v2 域の感触)
+
+### CFM-Q1: config_file の複数指定の意味論
+
+同棚卸しで浮上。DR-050 は複数 config_file を射程外としており、現実装は宣言順の最後勝ち。
+
+- [ ] CFM-Q1a: **複数指定を合法とし「後勝ち (宣言順で後が優先)」を規範化 (統括推し)** — 現実装挙動の追認 + fixture pin。config レイヤの慣習 (後のファイルが上書き) とも整合
+- [ ] CFM-Q1b: 逆順 (先勝ち)
+- [ ] CFM-Q1c: 複数指定は definition-error (単一のみ合法)
+- [ ] CFM-Q1d: マージ意味論 (深いマージ等) を設計 (v1 では過剰の感触)
 
 ## 確認待ち
 
