@@ -1,0 +1,102 @@
+{
+  "why": "値残余の解決失敗は枝 Reject であって Error ではない — 他に成立する解釈があればそれが選ばれる (DR-127 §4/§4.2、DR-037) を `fixture/json` の `value` 宣言座 (DR-132 §3/§5 の fixture (4)) で固定する。record 宣言では書けない pin — record は vivify するため未確定セルでも Reject にならない (DR-127 §3)。読みの分岐は or の可変 arity (seq 2 消費 vs string 1 消費 + 位置 link 残り 1 消費) が作り、link 側の読みだけが値残余の解決失敗で落ちて兄弟解釈が勝つ。裁定は枝ローカルの効果列 fold の後 (DR-127 §4.2 — 裁定後に失敗が発覚する順序では他解釈が選ばれない)。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {
+        "name": "j",
+        "type": "fixture/json",
+        "long": true
+      },
+      {
+        "name": "c",
+        "long": true,
+        "or": [
+          {
+            "seq": [
+              {"type": "int", "name": "n1"},
+              {"type": "int", "name": "n2"}
+            ]
+          },
+          {"type": "string", "name": "s1"}
+        ]
+      }
+    ],
+    "positionals": [
+      {
+        "name": "p",
+        "type": "int",
+        "repeat": {"min": 0, "max": 1},
+        "link": "j.k"
+      }
+    ]
+  },
+  "cases": [
+    {
+      "id": "unset-cell-branch-rejects-sibling-wins",
+      "why": "`--c 5 7` (j 未発火): s1 読み (s1=\"5\" + p が 7 を j.k へ書く) はセル未確定の解決失敗で枝 Reject (DR-127 §2.2 value 行 — vivify しない)、seq 読み (n1=5, n2=7) だけが完全経路として残り勝つ。Failure にも Ambiguous にもならない。result は named or 席の全枝キー列挙で非選択枝 s1 は null (DR-130 §4)、未発火の j も null。link 参照ノード p は結果キーを占有しない (DR-120 §4)。",
+      "args": ["--c", "5", "7"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {
+            "entity": "n1",
+            "op": "set",
+            "operand": 5,
+            "source": "cli"
+          },
+          {
+            "entity": "n2",
+            "op": "set",
+            "operand": 7,
+            "source": "cli"
+          }
+        ],
+        "result": {
+          "j": null,
+          "c": {"n1": 5, "n2": 7, "s1": null}
+        },
+        "sources": {
+          "j": null,
+          "c": {"n1": "cli", "n2": "cli", "s1": null}
+        }
+      }
+    },
+    {
+      "id": "missing-key-branch-rejects-sibling-wins",
+      "why": "`--j {\"a\":1} --c 5 7`: セルに値はあるがキー k の座が実在しない — キー不在も同じ実行時の解決失敗で s1 読みが枝 Reject、seq 読みが勝つ (DR-127 §2.2 value 行)。セル未確定 (前 case) とキー不在の両形が同じ「枝 Reject → 兄弟勝ち」に落ちることの対。j の sources は value_parser 産複合値の座分解 (DR-122 §3)。",
+      "args": ["--j", "{\"a\":1}", "--c", "5", "7"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {
+            "entity": "j",
+            "op": "set",
+            "operand": {"a": 1},
+            "source": "cli"
+          },
+          {
+            "entity": "n1",
+            "op": "set",
+            "operand": 5,
+            "source": "cli"
+          },
+          {
+            "entity": "n2",
+            "op": "set",
+            "operand": 7,
+            "source": "cli"
+          }
+        ],
+        "result": {
+          "j": {"a": 1},
+          "c": {"n1": 5, "n2": 7, "s1": null}
+        },
+        "sources": {
+          "j": {"a": "cli"},
+          "c": {"n1": "cli", "n2": "cli", "s1": null}
+        }
+      }
+    }
+  ]
+}

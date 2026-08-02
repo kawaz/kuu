@@ -1,0 +1,111 @@
+{
+  "why": "値空間残余への部分書きと parser 産出の時系列上書き (DR-127 §4 の表、両順) を `fixture/int_range` (DR-132 §2) で固定する — DR-127 波及 fixture (5)、および部分書きした座だけが `link` タグを持つ sources の座 re-tag (DR-127 §6) — 同 (6)。セルへの書きは出現順の操作列 (DR-029 の時系列適用) であり、パス付きでもこの規則がそのまま効く: 部分書き → 産出は丸ごと置換 (部分書きは消える)、産出 → 部分書きは当該の座だけ更新。effects は args 出現順で両効果を記録し (DR-045)、result / sources は最終状態の射影。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {
+        "name": "r",
+        "type": "fixture/int_range",
+        "long": true
+      },
+      {
+        "name": "end",
+        "type": "string",
+        "long": true,
+        "link": "r.end"
+      }
+    ]
+  },
+  "cases": [
+    {
+      "id": "field-write-then-producer-replaces",
+      "why": "`--end 7 --r 5..9` (DR-127 §4 表 行 3): 先行する部分書き (vivify で `{end: 7}`) の後、parser 産出 `{start: 5, end: 9}` がセル値を丸ごと置換し、部分書きは消える。effects は両操作を出現順に記録する (効果は観測記録であって最終状態ではない、DR-045)。最終 sources は産出発火の cli が全座を持ち、消えた部分書きの link タグは残らない (DR-127 §6 — タグは座の現在値を確定させた主体)。",
+      "args": [
+        "--end",
+        "7",
+        "--r",
+        "5..9"
+      ],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {
+            "entity": "r",
+            "path": [
+              "end"
+            ],
+            "op": "set",
+            "operand": 7,
+            "source": "link"
+          },
+          {
+            "entity": "r",
+            "op": "set",
+            "operand": {
+              "start": 5,
+              "end": 9
+            },
+            "source": "cli"
+          }
+        ],
+        "result": {
+          "r": {
+            "start": 5,
+            "end": 9
+          }
+        },
+        "sources": {
+          "r": {
+            "start": "cli",
+            "end": "cli"
+          }
+        }
+      }
+    },
+    {
+      "id": "producer-then-field-write-retags-seat",
+      "why": "`--r 5..9 --end 7` (DR-127 §4 表 行 4): parser 産出の上に、当該の座だけ更新。sources は座単位の re-tag — 部分書きした end だけが `link`、触っていない start は産出発火の `cli` タグを保つ (DR-127 §6、merge accumulator が 1 配列内で由来を混在させる DR-122 §3 と同型)。fixture (6) の本丸。",
+      "args": [
+        "--r",
+        "5..9",
+        "--end",
+        "7"
+      ],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {
+            "entity": "r",
+            "op": "set",
+            "operand": {
+              "start": 5,
+              "end": 9
+            },
+            "source": "cli"
+          },
+          {
+            "entity": "r",
+            "path": [
+              "end"
+            ],
+            "op": "set",
+            "operand": 7,
+            "source": "link"
+          }
+        ],
+        "result": {
+          "r": {
+            "start": 5,
+            "end": 7
+          }
+        },
+        "sources": {
+          "r": {
+            "start": "cli",
+            "end": "link"
+          }
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,163 @@
+{
+  "why": "値空間残余への部分書き (DR-127 §3 の vivify) を record 産出の pin 住人 `fixture/int_range` (DR-132 §2) で固定する — DR-127 波及 fixture (2)。link パスの残余 `r.end` は record 宣言のフィールド座を指し、セル未発火でも器 `{}` を auto-vivify して座に書ける。operand のパースはフィールドの type 参照 `int` が担い (DR-127 §3.2)、入口セルの type 宣言ではない — 発生源の判別は reason の綴り (`not_an_integer` = builtin/int_parser / `not_an_int_range` = fixture/int_range) で観測する (DR-132 §2.2)。result は宣言キー全列挙 + null 補形の適用後 (DR-130 §4/§4.1)、effects の operand は補形前の生出力 (DR-132 §4-3)、sources は座単位の shadow (DR-127 §6 / DR-122 §3)。ns 付き type 直参照 (`type: \"fixture/int_range\"`、DR-094 拡張 ns 側 — bare 糖衣なし) の初 pin を兼ねる。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {
+        "name": "r",
+        "type": "fixture/int_range",
+        "long": true
+      },
+      {
+        "name": "end",
+        "type": "string",
+        "long": true,
+        "link": "r.end"
+      }
+    ]
+  },
+  "cases": [
+    {
+      "id": "partial-write-vivifies-and-null-fills",
+      "why": "`--end 7` 単独: r は未発火だが record 宣言なので器 `{}` を vivify して end 座に 7 が座る (DR-127 §3)。operand 7 はフィールド型 `int` のパース後の値 (DR-127 §3.2)。link 参照ノード `end` は結果キーを占有しない (DR-120 §4)。result は宣言キー全列挙で欠落座 start が null 補形され (DR-130 §4.1)、sources も同型 — 値を確定させた主体が無い座は null (DR-130 §5)。effects の path は entity `r` の内側の着地座 [\"end\"] (DR-127 §6)。",
+      "args": [
+        "--end",
+        "7"
+      ],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {
+            "entity": "r",
+            "path": [
+              "end"
+            ],
+            "op": "set",
+            "operand": 7,
+            "source": "link"
+          }
+        ],
+        "result": {
+          "r": {
+            "start": null,
+            "end": 7
+          }
+        },
+        "sources": {
+          "r": {
+            "start": null,
+            "end": "link"
+          }
+        }
+      }
+    },
+    {
+      "id": "parser-partial-presence-raw-operand",
+      "why": "`--r 5..` 単独 (DR-132 §4 の綴り例 1): parser string 経路の部分形は欠落フィールドをキーごと持たない部分 presence を産出する (DR-127 §3.1 / DR-132 §2.3)。effects の operand は補形前の生出力 `{\"start\": 5}` のまま (欠落キーは operand でも欠落、DR-130 §8.1 の区別保持が operand の object 内部にも及ぶ)。result / sources は射影層の null 補形適用後 — operand と result の対比が「補形は射影層の仕事で生出力は書き換えない」(DR-130 §4.1) をそのまま観測面に写す。",
+      "args": [
+        "--r",
+        "5.."
+      ],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {
+            "entity": "r",
+            "op": "set",
+            "operand": {
+              "start": 5
+            },
+            "source": "cli"
+          }
+        ],
+        "result": {
+          "r": {
+            "start": 5,
+            "end": null
+          }
+        },
+        "sources": {
+          "r": {
+            "start": "cli",
+            "end": null
+          }
+        }
+      }
+    },
+    {
+      "id": "partial-producer-then-field-write",
+      "why": "`--r 5.. --end 9` (DR-132 §4 の綴り例 2): parser 産出 (部分形) の上に link 越しの座書きが乗る。効果は出現順の 2 件で、部分書きの operand 9 はフィールド型 `int` のパース後の値。sources は座単位 — start は産出発火の cli、end は link (DR-127 §6)。link 参照ノード `end` のトップレベルキーは現れない (DR-120 §4)。",
+      "args": [
+        "--r",
+        "5..",
+        "--end",
+        "9"
+      ],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {
+            "entity": "r",
+            "op": "set",
+            "operand": {
+              "start": 5
+            },
+            "source": "cli"
+          },
+          {
+            "entity": "r",
+            "path": [
+              "end"
+            ],
+            "op": "set",
+            "operand": 9,
+            "source": "link"
+          }
+        ],
+        "result": {
+          "r": {
+            "start": 5,
+            "end": 9
+          }
+        },
+        "sources": {
+          "r": {
+            "start": "cli",
+            "end": "link"
+          }
+        }
+      }
+    },
+    {
+      "id": "link-operand-parsed-by-field-type",
+      "why": "`--end 1.5`: link 注入経路の operand はフィールドの type 参照 `int` の pieceProcessor が読む (DR-127 §3.2 / DR-132 §2.2)。`1.5` は number としては読めるが整数でないため、発生源 builtin/int_parser の `not_an_integer` がそのまま emit される (REFERENCE §7.5) — string 形経路の `not_an_int_range` とは発生源も reason も異なることが、パースの担い手がフィールド側であることの観測面の証跡。args_pos は operand トークン位置 1。",
+      "args": [
+        "--end",
+        "1.5"
+      ],
+      "expect": {
+        "outcome": "failure",
+        "errors": [
+          {
+            "element": "end",
+            "args_pos": 1,
+            "kind": "parse",
+            "reason": "not_an_integer"
+          }
+        ]
+      }
+    },
+    {
+      "id": "string-form-folds-to-not-an-int-range",
+      "why": "`--r 1.5..3`: string 形 (本住人の parse 相) では構成部の失敗も含めトークン全体が range 型として読めなかったという 1 事実に畳み、発生源 fixture/int_range の `not_an_int_range` で Reject する (DR-132 §2.2、builtin/number_parser の慣行と同型)。Reject (ValueSpaceMiss) は DR-037 の位相どおり枝から静かに脱落し診断を保持しない — 他に読みが無いので outcome は failure、errors は空 (piece-filters/reject.json::non-matching-rejected が pin する既存規約と同じ)。前 case (link 経路の not_an_integer = RecognizedButInvalid の Held 位相、errors に載る) との対比が、同じ入口周りで Reject / Error の 2 位相が errors 集合の有無として観測できることの pin。",
+      "args": [
+        "--r",
+        "1.5..3"
+      ],
+      "expect": {
+        "outcome": "failure",
+        "errors": []
+      }
+    }
+  ]
+}

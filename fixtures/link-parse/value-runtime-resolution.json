@@ -1,0 +1,175 @@
+{
+  "why": "`value` 宣言座の link パス残余は全て実行時解決 (DR-127 §2.2 遷移表の value 行) — その担い手 `fixture/json` (DR-132 §3) で、実在する座への部分書きの成立、負 index の発火時点解決 (DR-127 §1 — fixture (3) の実行時分)、解決失敗 = 枝 Reject (単枝では全体パース失敗、DR-127 §4/§4.2) を固定する。`value` は vivify しない (器の形が定義時に言えない、DR-127 §3) ため、セル未確定・キー不在・範囲外 index はすべて解決失敗。effects の index segment は解決済みの非負 index を載せる (DR-127 §6 — fixture (7) の値空間分)。operand は入口 entry 自身の type が読む (フィールド型差し替えは record フィールド終端の規定で、value 残余には静的フィールド型が無い)。全枝落ちの合成 ParseError の args_pos は当該 binding の at_pos (DR-127 §4.2 / DR-037)。reason は実装の開いた語彙 (spec は綴りを規定しない) のため本 fixture では表明しない。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {
+        "name": "j",
+        "type": "fixture/json",
+        "long": true
+      },
+      {
+        "name": "wk",
+        "type": "int",
+        "long": true,
+        "link": "j.k"
+      },
+      {
+        "name": "wlast",
+        "type": "int",
+        "long": true,
+        "link": "j[-1]"
+      }
+    ]
+  },
+  "cases": [
+    {
+      "id": "existing-key-partial-write",
+      "why": "`--j {\"k\":1} --wk 5`: セルに値がありキー k の座が実在するので部分書きが成立する (DR-127 §3 — 座が実在すれば書ける)。sources は value_parser 産複合値の座分解 (DR-132 §4-2 / DR-122 §3) で、書いた座だけ link。effects の operand は生の産出 (`{\"k\": 1}`) と座書き (5) の 2 件が出現順。",
+      "args": [
+        "--j",
+        "{\"k\":1}",
+        "--wk",
+        "5"
+      ],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {
+            "entity": "j",
+            "op": "set",
+            "operand": {
+              "k": 1
+            },
+            "source": "cli"
+          },
+          {
+            "entity": "j",
+            "path": [
+              "k"
+            ],
+            "op": "set",
+            "operand": 5,
+            "source": "link"
+          }
+        ],
+        "result": {
+          "j": {
+            "k": 5
+          }
+        },
+        "sources": {
+          "j": {
+            "k": "link"
+          }
+        }
+      }
+    },
+    {
+      "id": "negative-index-resolves-at-fire-time",
+      "why": "`--j [1,2,3] --wlast 9`: 値空間 segment の負 index は発火時点の現在長で確定する (DR-127 §1) — `[-1]` は長さ 3 の配列で index 2 の座。effects の path は解決済みの非負 index [2] を載せる (DR-127 §6 — 字面の -1 を載せると消費者はどの座か判別できない)。sources は要素座単位で、書いた座だけ link (DR-122 §3)。",
+      "args": [
+        "--j",
+        "[1,2,3]",
+        "--wlast",
+        "9"
+      ],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {
+            "entity": "j",
+            "op": "set",
+            "operand": [
+              1,
+              2,
+              3
+            ],
+            "source": "cli"
+          },
+          {
+            "entity": "j",
+            "path": [
+              2
+            ],
+            "op": "set",
+            "operand": 9,
+            "source": "link"
+          }
+        ],
+        "result": {
+          "j": [
+            1,
+            2,
+            9
+          ]
+        },
+        "sources": {
+          "j": [
+            "cli",
+            "cli",
+            "link"
+          ]
+        }
+      }
+    },
+    {
+      "id": "unset-cell-rejects",
+      "why": "`--wk 5` 単独: `value` 宣言座はセル未確定で解決先が無く、vivify もしない (DR-127 §3 の表) — 解決失敗はその枝の Reject で、他に成立する解釈が無いので全体パース失敗 (DR-127 §4)。全枝落ちでは ParseError の合成が義務 (DR-127 §4.2 — 無言の全枝落ちは DR-037 の帰属原則違反)。element は合流先の実体 `j` — link の binding は id 層の合流で合流先セルに属する (DR-045、effects の entity が `j` になるのと同じ宣言名軸 DR-121 §5)。args_pos は当該 binding の at_pos = operand トークン位置 1 (DR-127 §4.2)。",
+      "args": [
+        "--wk",
+        "5"
+      ],
+      "expect": {
+        "outcome": "failure",
+        "errors": [
+          {
+            "element": "j",
+            "args_pos": 1,
+            "kind": "parse"
+          }
+        ]
+      }
+    },
+    {
+      "id": "missing-key-rejects",
+      "why": "`--j {\"a\":1} --wk 5`: セルに値はあるがキー k の座が実在しない — `value` 残余のキー不在は実行時に落ちる解決失敗 = 枝 Reject (DR-127 §2.2 value 行)。単枝なので全体パース失敗、合成 ParseError の element は合流先実体 `j` (DR-045 / DR-121 §5)、args_pos は operand トークン位置 3。",
+      "args": [
+        "--j",
+        "{\"a\":1}",
+        "--wk",
+        "5"
+      ],
+      "expect": {
+        "outcome": "failure",
+        "errors": [
+          {
+            "element": "j",
+            "args_pos": 3,
+            "kind": "parse"
+          }
+        ]
+      }
+    },
+    {
+      "id": "out-of-range-index-rejects",
+      "why": "`--j [] --wlast 9`: 範囲外 index は解決失敗 = 枝 Reject (DR-127 §1 — index の存在は実行時、構造は静的合法なので definition-error ではない)。単枝なので全体パース失敗、element は合流先実体 `j`、args_pos は operand トークン位置 3。",
+      "args": [
+        "--j",
+        "[]",
+        "--wlast",
+        "9"
+      ],
+      "expect": {
+        "outcome": "failure",
+        "errors": [
+          {
+            "element": "j",
+            "args_pos": 3,
+            "kind": "parse"
+          }
+        ]
+      }
+    }
+  ]
+}
