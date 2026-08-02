@@ -1,0 +1,146 @@
+{
+  "why": "`ctx.old` を読む cell fn (`incr`) が、宣言 default・`unset`・`default` 効果と組み合わさったときに何を old として読むかを固定する。DR-114 §7 は effect mode の old を『発火直前の cell 値』と定め、DR-131 §2b は `set(null)` を席を開ける unset と定め、DR-081 §2 は op=default をその時点の書き換え済み default をセルへ書く操作と定める。3 つが交差する組合せは既存 corpus に 1 件も無く (count preset の宣言 default が 0 固定で、old が absent か 0 かを incr が区別できないため)、effects と result が食い違っても検出できなかった。宣言 default を非ゼロにすると両者の差が観測面に出る。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {
+        "name": "n",
+        "type": "number",
+        "default": 5,
+        "long": [
+          ":incr",
+          "clear:unset",
+          "reset:default"
+        ]
+      }
+    ],
+    "commands": [
+      {
+        "type": "command",
+        "name": "sub",
+        "options": [
+          {
+            "name": "m",
+            "type": "number",
+            "default": 5,
+            "long": [
+              ":incr"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "cases": [
+    {
+      "id": "scope-declared-default-is-old",
+      "why": "scope 配下のセルでも old は当該セルの宣言 default から始まる。`--m` 1 発火は 5+1=6 で、effects の operand と result が一致する。root scope の entity しか引けない実装では宣言 default を見失って old が absent になり、incr が 0 起点で `set(1)` を emit しつつ result だけ 6 になる — その乖離をここで塞ぐ。",
+      "args": [
+        "sub",
+        "--m"
+      ],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {
+            "entity": "m",
+            "op": "set",
+            "operand": 6,
+            "source": "cli"
+          }
+        ],
+        "result": {
+          "n": 5,
+          "sub": {
+            "m": 6
+          }
+        },
+        "sources": {
+          "n": "default",
+          "sub": {
+            "m": "cli"
+          }
+        }
+      }
+    },
+    {
+      "id": "unset-reopens-old-to-declared-default",
+      "why": "`clear:unset` は `set(null)` = 席を開ける (DR-131 §2b)。席が開いた座の old は宣言 default (DR-114 §7 / DR-077 §1 — 値源ラダーの他席は old に参加しない) なので、直後の `--n` は 6 に戻る。座に `null` を書き込む実装だと次の incr が Some(Null) を受けて落ち、operand の無い生 invoke に化ける。",
+      "args": [
+        "--n",
+        "--clear-n",
+        "--n"
+      ],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {
+            "entity": "n",
+            "op": "set",
+            "operand": 6,
+            "source": "cli"
+          },
+          {
+            "entity": "n",
+            "op": "set",
+            "operand": null,
+            "source": "cli"
+          },
+          {
+            "entity": "n",
+            "op": "set",
+            "operand": 6,
+            "source": "cli"
+          }
+        ],
+        "result": {
+          "n": 6,
+          "sub": null
+        },
+        "sources": {
+          "n": "cli",
+          "sub": null
+        }
+      }
+    },
+    {
+      "id": "default-effect-rewrites-old",
+      "why": "`reset:default` は op=default で、その時点の default をセルへ書く (DR-081 §2)。したがって直後の `--n` の old は直前の 6 ではなく 5 で、結果は 7 ではなく 6 になる。`default` 効果で座を更新しない実装は直前の値を old に残して 7 を emit する。前ケースと同じ 3 発火・同じ最終値でありながら中間の op が違うので、2 つを並べると『座を開ける』と『default を書く』が別物であることが対照で読める。",
+      "args": [
+        "--n",
+        "--reset-n",
+        "--n"
+      ],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {
+            "entity": "n",
+            "op": "set",
+            "operand": 6,
+            "source": "cli"
+          },
+          {
+            "entity": "n",
+            "op": "default",
+            "source": "cli"
+          },
+          {
+            "entity": "n",
+            "op": "set",
+            "operand": 6,
+            "source": "cli"
+          }
+        ],
+        "result": {
+          "n": 6,
+          "sub": null
+        },
+        "sources": {
+          "n": "cli",
+          "sub": null
+        }
+      }
+    }
+  ]
+}
