@@ -158,6 +158,24 @@
         "outcome": "failure",
         "errors": []
       }
+    },
+    {
+      "id": "eq-form-surfaces-not-an-int-range",
+      "why": "`--r=1.5..3` (eq-split 形): eq 形は 1 トークンに trigger と operand が同居する committed な読みで、ValueSpaceMiss でも他の読みが operand を所有する余地が無く、診断が Held として errors に載る — `not_an_int_range` の reason 語彙が観測可能な綴りを持つこと (死に語彙でないこと) の pin。space 形 (前 case、errors 空) との対比で、同じ Reject 位相でも綴りの形によって診断の可視性が変わることを固定する。args_pos は当該トークン位置 0。",
+      "args": [
+        "--r=1.5..3"
+      ],
+      "expect": {
+        "outcome": "failure",
+        "errors": [
+          {
+            "element": "r",
+            "args_pos": 0,
+            "kind": "parse",
+            "reason": "not_an_int_range"
+          }
+        ]
+      }
     }
   ]
 }

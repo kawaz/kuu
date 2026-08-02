@@ -143,7 +143,9 @@ fixture で使う JSON 値は host 差の出ない範囲 (安全整数・string�
    operand の object 内部にもそのまま及ぶ
 
 綴り例。定義は `{"name": "r", "type": "fixture/int_range", "long": true}` と link 入口
-`{"name": "end", "long": true, "link": "r.end"}` の 2 要素とする:
+`{"name": "end", "type": "string", "long": true, "link": "r.end"}` の 2 要素とする
+(型なしの `long: true` は canonical 語彙では flag になり operand を消費しない。`type: "string"` を
+名乗っても operand はフィールド型 `int` が読む — §2.2 の判別がそのまま効く):
 
 - `--r "5.."` 単独:
 
