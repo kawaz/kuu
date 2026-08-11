@@ -1,0 +1,106 @@
+{
+  "why": "複数 config_file の後勝ち (DR-133) が選ぶのは「宣言順で最後の要素」ではなく「宣言順で最後に**パスを持つ**要素」。config_file 要素のパスも普通の値源ラダーで解決される以上、cli / env / default のどれからも供給されない要素はパスを持たない (= 読むべきファイルを指していない) ので、後勝ちの主体になれず一つ前の要素へ譲る。default を持たない config_file 要素 (= 明示指定されたときだけ効く設定ファイル) を書いたときの挙動がこれで決まる。\n\n定義は c1 (default /a.toml) → c2 (long/env のみ、default なし) の順。config/multi-file.json が「両方パスを持つときの後勝ち」を、本 fixture が「後がパスを持たないときの譲り」を固定する。CONFIG 入力表記は config/path.json と同じ `config_files` {パス→オブジェクト}。config_file 要素はインフラで結果非掲載 (DR-121 §2)。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {
+        "name": "c1",
+        "type": "config_file",
+        "long": true,
+        "default": "/a.toml"
+      },
+      {
+        "name": "c2",
+        "type": "config_file",
+        "long": true,
+        "env": "MYAPP_C2"
+      },
+      {
+        "name": "port",
+        "type": "number",
+        "long": true,
+        "config_key": [
+          "port"
+        ],
+        "default": 7
+      }
+    ]
+  },
+  "cases": [
+    {
+      "id": "later-without-path-yields-to-earlier",
+      "why": "c2 は cli / env のどちらでも供給されず default も無いのでパスを持たない → 後勝ちの主体は c1 になり、有効 config は /a.toml。port=1@config。",
+      "args": [],
+      "config_files": {
+        "/a.toml": {
+          "port": 1
+        },
+        "/b.toml": {
+          "port": 2
+        }
+      },
+      "expect": {
+        "outcome": "success",
+        "effects": [],
+        "result": {
+          "port": 1
+        },
+        "sources": {
+          "port": "config"
+        }
+      }
+    },
+    {
+      "id": "later-with-cli-path-wins",
+      "why": "同じ定義で c2 に cli パスを与えると c2 がパスを持つので後勝ちの主体になり、有効 config は /b.toml。port=2@config。同一定義で譲る/勝つが切り替わることを対で固定する。",
+      "args": [
+        "--c2",
+        "/b.toml"
+      ],
+      "config_files": {
+        "/a.toml": {
+          "port": 1
+        },
+        "/b.toml": {
+          "port": 2
+        }
+      },
+      "expect": {
+        "outcome": "success",
+        "effects": [],
+        "result": {
+          "port": 2
+        },
+        "sources": {
+          "port": "config"
+        }
+      }
+    },
+    {
+      "id": "later-with-env-path-wins",
+      "why": "env 席から供給されてもパスを持つことに変わりはない (config_file 要素のパスラダーは cli > env > default、DR-050 §1) → c2 が後勝ちの主体で /b.toml。",
+      "args": [],
+      "env": {
+        "MYAPP_C2": "/b.toml"
+      },
+      "config_files": {
+        "/a.toml": {
+          "port": 1
+        },
+        "/b.toml": {
+          "port": 2
+        }
+      },
+      "expect": {
+        "outcome": "success",
+        "effects": [],
+        "result": {
+          "port": 2
+        },
+        "sources": {
+          "port": "config"
+        }
+      }
+    }
+  ]
+}

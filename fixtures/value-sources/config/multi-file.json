@@ -1,0 +1,167 @@
+{
+  "why": "同一スコープに複数の config_file 要素があるときの意味論 (DR-133): 合法であり、有効になる config オブジェクトは 1 つだけ = 宣言順で最後にパスを持つ config_file 要素のもの (後勝ち)。後勝ちの粒度は config オブジェクト全体の置換であって、キー単位のレイヤ重ねではない — 前のファイルにしか無いキーは前から供給されず、値要素は自前の default に落ちる (onlya の観測点)。各 config_file 要素のパス自体は従来どおり要素ごとに独立な cli > env > default ラダーで解決する (DR-050 §1)。先行する config_file 要素のパスは provider に渡らない (読込自体が行われない) ため、そのパスが読めないものであっても Error にならない (earlier-path-not-read の観測点)。\n\nCONFIG 入力表記はパス依存の観測なので config/path.json と同じ `config_files` {パス→オブジェクト} を使う (マップ外パス = provider が None を返す = 読めない)。committed パス (cli/env 明示) の読込失敗は Error だが、resolve フェーズのエラーは args_pos を持たず failure schema に収まらない (config/path.json と同じ理由) ため、本 fixture は成功輪郭のみ固定する。config_file 要素はインフラで結果非掲載 (DR-121 §2)。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {
+        "name": "c1",
+        "type": "config_file",
+        "long": true,
+        "default": "/a.toml"
+      },
+      {
+        "name": "c2",
+        "type": "config_file",
+        "long": true,
+        "env": "MYAPP_C2",
+        "default": "/b.toml"
+      },
+      {
+        "name": "port",
+        "type": "number",
+        "long": true,
+        "config_key": [
+          "port"
+        ],
+        "default": 7
+      },
+      {
+        "name": "onlya",
+        "type": "number",
+        "long": true,
+        "config_key": [
+          "onlya"
+        ],
+        "default": 70
+      },
+      {
+        "name": "onlyb",
+        "type": "number",
+        "long": true,
+        "config_key": [
+          "onlyb"
+        ],
+        "default": 80
+      }
+    ]
+  },
+  "cases": [
+    {
+      "id": "last-file-wins-whole-object",
+      "why": "c1 → /a.toml, c2 → /b.toml が両方読める。宣言順で後の c2 が勝ち、有効な config は /b.toml の**オブジェクト全体**。port は両ファイルにあり後勝ちで 2、onlyb は /b.toml から供給される。onlya は /a.toml にしか無く、レイヤ重ねではないので config からは供給されず自前 default 70 に落ちる (source:default) — ここが「全体置換であってキー単位の後勝ちではない」の観測点。",
+      "args": [],
+      "config_files": {
+        "/a.toml": {
+          "port": 1,
+          "onlya": 11
+        },
+        "/b.toml": {
+          "port": 2,
+          "onlyb": 22
+        }
+      },
+      "expect": {
+        "outcome": "success",
+        "effects": [],
+        "result": {
+          "port": 2,
+          "onlya": 70,
+          "onlyb": 22
+        },
+        "sources": {
+          "port": "config",
+          "onlya": "default",
+          "onlyb": "config"
+        }
+      }
+    },
+    {
+      "id": "later-element-path-ladder-is-own",
+      "why": "後勝ちの主体は要素であり、その要素のパスは要素自身の cli > env > default ラダーで決まる (DR-050 §1)。c2 に cli で /c.toml を与えると有効 config は /c.toml のオブジェクトになり、c2 の default /b.toml も c1 の /a.toml も効かない。port=3 / onlyb=default 80 (=/c.toml に onlyb キーが無い) で観測する。",
+      "args": [
+        "--c2",
+        "/c.toml"
+      ],
+      "config_files": {
+        "/a.toml": {
+          "port": 1,
+          "onlya": 11
+        },
+        "/b.toml": {
+          "port": 2,
+          "onlyb": 22
+        },
+        "/c.toml": {
+          "port": 3
+        }
+      },
+      "expect": {
+        "outcome": "success",
+        "effects": [],
+        "result": {
+          "port": 3,
+          "onlya": 70,
+          "onlyb": 80
+        },
+        "sources": {
+          "port": "config",
+          "onlya": "default",
+          "onlyb": "default"
+        }
+      }
+    },
+    {
+      "id": "later-default-path-absent-tolerated",
+      "why": "勝った c2 のパスが default 由来 (/b.toml) で読めない場合は黙認 (DR-050 §2、設定ファイルはオプショナル) — かつ前の c1 の /a.toml へフォールバックはしない。有効な config が無いだけなので全要素が自前 default に落ちる (port=7 / onlya=70 / onlyb=80、全て source:default)。/a.toml が読める状態で置いてあることが「フォールバックしない」の観測点。",
+      "args": [],
+      "config_files": {
+        "/a.toml": {
+          "port": 1,
+          "onlya": 11
+        }
+      },
+      "expect": {
+        "outcome": "success",
+        "effects": [],
+        "result": {
+          "port": 7,
+          "onlya": 70,
+          "onlyb": 80
+        },
+        "sources": {
+          "port": "default",
+          "onlya": "default",
+          "onlyb": "default"
+        }
+      }
+    },
+    {
+      "id": "earlier-path-not-read",
+      "why": "先行する c1 に cli で読めないパス /missing.toml を与えても Error にならない — 負けた config_file 要素のパスは provider に渡らず読込自体が行われないため、committed 読込失敗 (DR-050 §2) の判定対象にもならない。結果は勝った c2 の /b.toml だけで決まる。",
+      "args": [
+        "--c1",
+        "/missing.toml"
+      ],
+      "config_files": {
+        "/b.toml": {
+          "port": 2,
+          "onlyb": 22
+        }
+      },
+      "expect": {
+        "outcome": "success",
+        "effects": [],
+        "result": {
+          "port": 2,
+          "onlya": 70,
+          "onlyb": 22
+        },
+        "sources": {
+          "port": "config",
+          "onlya": "default",
+          "onlyb": "config"
+        }
+      }
+    }
+  ]
+}
