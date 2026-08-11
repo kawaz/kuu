@@ -18,10 +18,10 @@ active な issue の一覧。close 済みは archive/ にあり、ここには�
 | 2026-07-25 | design | open | [raw-tail-capture-after-positional](./2026-07-25-raw-tail-capture-after-positional.md) | 最初の positional 充足後を丸ごと raw で取る境界を宣言できない (docker run/kubectl exec 型) |
 | 2026-07-25 | design | open | [closed-enum-open-form-completion-gap](./2026-07-25-closed-enum-open-form-completion-gap.md) | closed enum + 開放形の混在値 (default|all|named:X) が補完候補として提示できない |
 | 2026-07-25 | design | open | [fixture-envelope-shared-runner](./2026-07-25-fixture-envelope-shared-runner.md) | fixture envelope を第三者が再利用できる共通 runner/runbook 資産が無い |
-| 2026-07-22 | task | open | [dr-116-completion-generator-implementation](./2026-07-22-dr-116-completion-generator-implementation.md) | DR-116 (canonical 補完生成器の既定 policy) の実装 — 生成器・product test 未実装 |
 | 2026-07-25 | docs | open | [dr-body-implementation-specific-names-cleanup](./2026-07-25-dr-body-implementation-specific-names-cleanup.md) | DR-057/076/078/105/106 本文に残る実装固有名 (kuu.mbt/installer.mbt/slice PoC) の整理 |
 | 2026-07-26 | design | open | [warnings-element-export-key-timing](./2026-07-26-warnings-element-export-key-timing.md) | warnings[].element のキー体系が export_key 適用の前後どちらか未規定 (sources 側は明確化済み、DR-058 §2 の canonical 解釈待ち) |
 | 2026-07-26 | task | open | [projection-verification-structural-gaps](./2026-07-26-projection-verification-structural-gaps.md) | 射影 (result/effects/sources) の検証断面に構造的な空白が残っている (P1/P2 の 8 テーマ) |
+| 2026-07-22 | task | wip | [dr-116-completion-generator-implementation](./2026-07-22-dr-116-completion-generator-implementation.md) | DR-116 (canonical 補完生成器の既定 policy) の実装 — 生成器・product test 未実装 |
 
 <!--
 雛形メモ (migrate sub-command 用):

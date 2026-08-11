@@ -1,11 +1,11 @@
 ---
 title: DR-116 を実装完了する
-status: open
+status: wip
 category: task
 created: 2026-07-22T15:34:01+09:00
 last_read: 2026-08-12T08:26:23+09:00
 open_entered: 2026-07-22T15:34:01+09:00
-wip_entered:
+wip_entered: 2026-08-12T08:27:25+09:00
 blocked_entered:
 pending_entered:
 discarded_entered:
@@ -44,6 +44,10 @@ DR-116 §「波及」(末尾節) は以下を実装課題として明示して�
 - [ ] 生成器 product test: help model 順の適用、hidden 除外、deprecated 注記、alias 表示、origin からの説明引き直しをそれぞれ検証する。検証単位は行指向応答 (DR-117 §8.2)
 - [ ] spec conformance への増分が DR-117 §8.1 の範囲 (wire schema の type 値 `completion_script` 受理、preset lowering、definition-error、`schema/builtin-descriptors.json` の completers 区分) に収まり、新 profile を設けていないことを確認する
 - [ ] query プロトコル (env 二箇所一致・応答行文法) 由来の schema / fixture 増分がゼロであることを確認する (DR-117 §8.1 — runtime 挙動の規範は fixture pin 対象外)
+
+## 進捗
+
+- 2026-08-12: 担当セッションが kuu.mbt 実装を codex worker へ委譲して着手。
 
 ## 関連
 
