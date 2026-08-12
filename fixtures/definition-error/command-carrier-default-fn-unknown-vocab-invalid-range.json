@@ -1,0 +1,52 @@
+{
+  "why": "DR-134 §5「値の供給は既存の node 意味論のまま」の帰結として、command 担体の default 席にも element 系と同じ definition-error 検査が効くことを pin する。命名も帰属も新設しない — element 版は `fixtures/help/def-error-default-fn.json`::default-fn-static-failures-classified (registry に無い fn 名 = unknown-vocab / Sentinel を返す `default` の default 席指定 = invalid-range、DR-113 §5.4 / DR-114 §11 / DR-131 §5§7) と `fixtures/definition-error/completion-script-invalid-range.json`::completion-default-seat-collision (同一 default 席への `default` + `default_fn` 二重宣言 = invalid-range、DR-114 §4.1 / DR-125) が既に pin しており、本 fixture はその command 担体版である。\n\nerrors は全列挙 (DR-054 §4) なので、1 定義に 3 つの違反 command と担体だけを持つ合法 command を同居させ、集合比較 (CONFORMANCE §3) で「ok は違反でない」も同時に固定する。element は当該 command の name (DR-134 §2 の帰属と同じ)。どの command も結果キー占有子を持たないので、DR-134 §2 の value × 占有子の invalid-range とは混ざらない (その形は `fixtures/definition-error/command-value-occupying-child.json` が担当)。",
+  "query": "definition_error",
+  "definition": {
+    "commands": [
+      {
+        "type": "command",
+        "name": "dup-seat",
+        "default": "1.2.3",
+        "default_fn": "uuid:v4"
+      },
+      {
+        "type": "command",
+        "name": "unknown-fn",
+        "default_fn": "no_such_fn"
+      },
+      {
+        "type": "command",
+        "name": "sentinel-default",
+        "default_fn": "default"
+      },
+      {
+        "type": "command",
+        "name": "ok",
+        "default": "1.2.3"
+      }
+    ]
+  },
+  "cases": [
+    {
+      "id": "command-carrier-default-seat-failures-classified",
+      "why": "dup-seat は同一 default 席を `default` と `default_fn` で二重宣言するため invalid-range (DR-114 §4.1 / DR-125、element 版は completion-script-invalid-range.json と同型)。unknown-fn の `no_such_fn` は cell_fns registry に無いので unknown-vocab、sentinel-default の `default` は use_default Sentinel を返す cell operation で default 席には置けないので invalid-range (どちらも DR-113 §5.4 / DR-114 §11 / DR-131 §5§7、element 版は help/def-error-default-fn.json と同型)。ok は default 席を 1 つだけ持つ値担体 command なので違反ではない — 未選択なら `default` を持っていても `null` になる (DR-134 §4) が、それは射影の話で定義の合法性には効かない。args は書かない (定義の静的検査であり実行しない)。",
+      "expect": {
+        "outcome": "definition-error",
+        "errors": [
+          {
+            "element": "dup-seat",
+            "kind": "invalid-range"
+          },
+          {
+            "element": "unknown-fn",
+            "kind": "unknown-vocab"
+          },
+          {
+            "element": "sentinel-default",
+            "kind": "invalid-range"
+          }
+        ]
+      }
+    }
+  ]
+}

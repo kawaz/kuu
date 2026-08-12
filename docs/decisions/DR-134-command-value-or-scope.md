@@ -115,6 +115,10 @@ node 共通属性である。spec 側は最初から合法であり、本 DR が
   (通常要素 / 子 command) を置く形が `invalid-range`
 - `fixtures/command-scope/value-command-non-occupying-children.json` (新規) — 非占有子 (`type: "none"` /
   `dd`) との共存が合法で、結果は値のまま
+- `fixtures/definition-error/command-carrier-default-fn-unknown-vocab-invalid-range.json` (新規) —
+  §5 の帰結として command 担体の default 席にも element 系の検査が効く (同一席の `default` +
+  `default_fn` 二重宣言と Sentinel `default` が `invalid-range`、registry に無い fn 名が
+  `unknown-vocab`)
 
 ### 実装 (参照実装の乖離)
 
