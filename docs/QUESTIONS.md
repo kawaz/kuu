@@ -29,8 +29,13 @@ kawaz mid=8 (2026-08-12) で DR-133 の誤読が確定: fold は**1 つの confi
 `{type:"config_file", multiple:{append}, ...}` の 1 要素、分割指定も borrow で 1 要素に集約)。
 DR-133 は要素間規則を撤去して再改稿する。残る確認:
 
-- [ ] CFM-Q3a: **複数 config_file 要素の並置は definition-error (統括推し)** — 意味を与えない構成は
-  定義時に倒す (1 スコープ 1 config_file)。CFM-Q1c 相当へ回帰
+mid=9 で並置需要なしがさらに確定 (綴り違い --config/--config-file は alias 語彙で 1 要素に吸収、
+「探す場所が複数 = 最初の readable 1 個」は file 要素 + readable filter + borrow の合成で書ける方向)。
+再改稿の骨子: ①1 スコープ 1 config_file (並置 definition-error)、②fold は multiple パス列のみ、
+③探索は合成に委ね readable filter (I/O filter の新カテゴリ) は別 issue。
+
+- [ ] CFM-Q3a: **複数 config_file 要素の並置は definition-error (統括推し、mid=9 で補強)** — 意味を
+  与えない構成は定義時に倒す (1 スコープ 1 config_file)
 - [ ] CFM-Q3b: 並置は放置 (検査しない、挙動は未規定のまま)
 - [ ] CFM-Q3-β: mid=8 の 1 例目 `values:[...]` の読み — (a) 配列 default (`default:[...]`) の意で書くのが
   既存語彙的に素直 / (b) values に「multiple の既定供給列」の用法を持たせる (values 糖衣の意味論拡張)。
