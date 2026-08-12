@@ -19,6 +19,7 @@ active な issue の一覧。close 済みは archive/ にあり、ここには�
 | 2026-08-12 | task | open | [command-value-carrier](./2026-08-12-command-value-carrier.md) | 参照実装の CommandDef が value 担体を持たず command の value を reject する (DR-134 未追随) |
 | 2026-08-12 | design | open | [completion-ux-layer-completer-closure-abi](./2026-08-12-completion-ux-layer-completer-closure-abi.md) | completion ux 層の座席 (kuu.mbt vs kuu-cli lib) と形態 A completer クロージャ ABI が DR-117 波及節で未設計 |
 | 2026-08-12 | design | open | [command-value-default-fn-value-space](./2026-08-12-command-value-default-fn-value-space.md) | value 持ち command の default_fn 単独時の値空間が未規定 |
+| 2026-08-12 | task | open | [export-key-non-occupying-co-export-fixture](./2026-08-12-export-key-non-occupying-co-export-fixture.md) | 非占有要素 (config_file) の export_key が実セルの露出キーと重なる構成の fixture 追加 |
 | 2026-07-26 | design | open | [parent-type-ignored-lint-warn](./2026-07-26-parent-type-ignored-lint-warn.md) | 親と子の両方が type を持つ or/seq に「親の type は無意味」の lint warn を出す (DR-067 §2/§3.5 は合法規定、静的バリデータ未実装後の追加項目) |
 | 2026-07-25 | design | open | [bash-completion-comp-line-point-relex](./2026-07-25-bash-completion-comp-line-point-relex.md) | bash 補完 glue の words 再結合、COMP_WORDS ベースでは空白情報が失われる残存ギャップ (H9 follow-up) |
 | 2026-07-25 | design | open | [raw-tail-capture-after-positional](./2026-07-25-raw-tail-capture-after-positional.md) | 最初の positional 充足後を丸ごと raw で取る境界を宣言できない (docker run/kubectl exec 型) |
