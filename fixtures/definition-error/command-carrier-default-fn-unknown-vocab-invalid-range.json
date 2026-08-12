@@ -7,7 +7,7 @@
         "type": "command",
         "name": "dup-seat",
         "default": "1.2.3",
-        "default_fn": "uuid:v4"
+        "default_fn": "uuid:4"
       },
       {
         "type": "command",
