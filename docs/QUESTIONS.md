@@ -24,6 +24,28 @@
 
 (現在なし)
 
+### CVQ-Q1: value 持ち command の配列 value は合法か
+
+DR-133/134 実装レビュー (2026-08-12、fable5-high) で顕在化。[DR-134](decisions/DR-134-command-value-or-scope.md) §1 は
+「値を名乗る command は『フィールド名 + JSON scalar / array』」と書くが、参照実装の担体セルは非 accum
+(単値) で、配列 value (`{"type":"command","name":"x","value":[1,2]}`) は decode を通った後に単値へ縮む
+(黙殺)。既存の definition-error 群では「scalar 要素への配列 default」は invalid-range。
+
+- [ ] CVQ-Q1a: **配列 value は invalid-range (統括推し)** — 担体は scalar literal のみ。§1 の「array」は
+  「スコープ (map) でなく値」の対比表現であり array を積極的に約束した文ではない、と読み直して DR-134 に
+  1 行明確化。既存の「scalar 要素への配列 default」線と整合
+- [ ] CVQ-Q1b: 配列 value を合法にする (担体を accum 化 or 配列 literal 許容 — 実装・意味論の追加設計が要る)
+
+### CVQ-Q2: 透過 (export_key: null) の value 持ち command
+
+同レビュー M3。透過 command (DR-052 §2 で合法) に value を書くと、値の座るキーが無く選択時に値が
+無言で消える (現実装)。既存には「宣言定数の置き場が無い構成は definition-error」の線がある
+(DR-083 §5 筋の collect_const_on_valueless_wrapper)。
+
+- [ ] CVQ-Q2a: **透過 command への value/default/default_fn は definition-error kind=invalid-range (統括推し)**
+  — 置き場の無い宣言定数の既存線と同型。DR-134 §2 の表へ 1 行追加
+- [ ] CVQ-Q2b: 合法のまま別の座を定義する (透過の意味論拡張が要る、v1 では過剰の感触)
+
 ## 確認待ち
 
 (現在なし)
