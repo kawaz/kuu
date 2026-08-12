@@ -22,7 +22,23 @@
 
 ## 裁定待ち
 
-(現在なし)
+### CFL-Q1: config_file の committed 判定に link 経由の明示供給を含めるか
+
+実測 (2026-08-12、kuu.mbt issue [command-definition-error-parity-review-followup](https://github.com/kawaz/kuu.mbt) の (2) 節に再現記録) で顕在化。
+link は config_file セルを target にでき (decode / lint / parse / resolve すべて通過)、CLI で明示した値が
+link 経由で config path として効く。ただし binding の source は Link になるため、DR-133 §3 の committed
+判定 (現行実装 = source が cli/env のときのみ Error) から漏れ、**CLI で指定したのに読込失敗が黙認される**。
+
+DR-031 は CLI / link を同順位の明示操作と規定し、DR-121 §4 は Link を独立 source タグとして維持する。
+一方 DR-133 §3 は committed を「cli / env 明示」とだけ列挙しており、link の位置づけが未規定。
+
+- [ ] CFL-Q1a: **committed 判定は link を透過し、値の源席の cli/env 性で判定する (統括推し)** — committed の
+  意味は「利用者が明示したのに読めないのは失敗」(DR-050 §2) であり、link は明示供給の搬送路にすぎない
+  (DR-031 の同順位規定と整合)。sources の観測タグは Link のまま (DR-121 §4 不変) で、committed 判定
+  (内部) だけ由来を辿る
+- [ ] CFL-Q1b: committed は文字どおり cli/env 直のみ (link 経由は常に黙認) — 現実装の追認。「CLI 指定
+  したのに黙認」の観測が残る
+- [ ] CFL-Q1c: config_file セルを link target にすること自体を definition-error にする (経路ごと塞ぐ)
 
 ### CVQ-Q1: value 持ち command の配列 value は合法か
 
