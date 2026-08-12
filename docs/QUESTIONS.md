@@ -22,6 +22,20 @@
 
 ## 裁定待ち
 
+### CFM-Q3: DR-133 再改稿の残確認 2 点 (mid=8 の枠組みへの回帰)
+
+kawaz mid=8 (2026-08-12) で DR-133 の誤読が確定: fold は**1 つの config_file 要素の multiple パス列**に
+定義するもので、複数の config_file 要素の並置に意味を与えない (重ねの正規形 =
+`{type:"config_file", multiple:{append}, ...}` の 1 要素、分割指定も borrow で 1 要素に集約)。
+DR-133 は要素間規則を撤去して再改稿する。残る確認:
+
+- [ ] CFM-Q3a: **複数 config_file 要素の並置は definition-error (統括推し)** — 意味を与えない構成は
+  定義時に倒す (1 スコープ 1 config_file)。CFM-Q1c 相当へ回帰
+- [ ] CFM-Q3b: 並置は放置 (検査しない、挙動は未規定のまま)
+- [ ] CFM-Q3-β: mid=8 の 1 例目 `values:[...]` の読み — (a) 配列 default (`default:[...]`) の意で書くのが
+  既存語彙的に素直 / (b) values に「multiple の既定供給列」の用法を持たせる (values 糖衣の意味論拡張)。
+  どちらの意図か
+
 ### CFL-Q1: config_file の committed 判定に link 経由の明示供給を含めるか
 
 実測 (2026-08-12、kuu.mbt issue [command-definition-error-parity-review-followup](https://github.com/kawaz/kuu.mbt) の (2) 節に再現記録) で顕在化。
