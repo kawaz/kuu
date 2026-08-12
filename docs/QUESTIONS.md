@@ -51,30 +51,6 @@ multiple config_file = 要素内のパス列をトップレベルキー置換限
 > 改稿範囲: DR-133 追記 (multiple fold 節 + 動機記述を multiple 誘導へ) + DR-050 §2 note + fixture 追加
 > (multiple config_file の fold / committed 独立判定)。裁定まで DR-133 系 commit の push は保留。
 
-### CMP-Q1: option / command の面越し同名と補完 identity の突き合わせ規則
-
-DR-116 実装レビュー (2026-08-12、fable5-high) で顕在化した spec 未規定領域。candidate の `origin`
-(DR-104) は「どの面 (option / command / positional) の名前か」を修飾しない裸の String で、DR-117 §5 の
-「options / commands entry の name に突き合わせる」も面越し衝突を未規定のまま残している。同一スコープに
-option `build` と command `build` が併存する定義は現行 wire decode で受理される見込みで、その場合
-command 候補が option entry の説明・順序席に誤接続する。named alias 名が他要素名と衝突する場合も同型。
-
-- [ ] CMP-Q1a: **面越し同名を definition-error にする (統括推し)** — 補完 identity・help entry・
-  export_key いずれの面でも「同名の別物」は利用者にも紛らわしく、禁止の見返りが大きい。既存の
-  同型裁定 (export-key/collision 系 fixture の definition-error) と整合
-- [ ] CMP-Q1b: 合法のまま突き合わせ規則を規定 (origin を面修飾付きにする等、candidate wire の変更が波及)
-- [ ] CMP-Q1c: その他
-
-### CMP-Q2: DR-117 §5 へ「prefix 絞りは挿入文字列を持つ候補への操作」の note 追記確認
-
-同レビューの M2。値位置 marker (spelling 空、`:shell_action` へ翻訳される候補) が §5 の列挙順の字面
-どおりだと prefix 絞りで落ち、一文字打つとファイル補完が全滅する。実装は marker を prefix 絞り対象外へ
-修正中 (DR-060 §4 の shell 委譲意図から導出)。spec 側にも DR-117 §5 へ一行 note (「prefix 絞りは挿入
-文字列を持つ候補への操作であり、値位置 marker は対象外」) を追記したい。
-
-- [ ] CMP-Q2a: **note 追記して確定 (統括推し)** — DR-060 §4 との整合を明文化、実装との齟齬芽を摘む
-- [ ] CMP-Q2b: 異議あり (prefix 絞りが marker にも及ぶべき等)
-
 ## 確認待ち
 
 (現在なし)
