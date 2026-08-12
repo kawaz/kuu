@@ -1,0 +1,181 @@
+{
+  "why": "`multiple` の config_file 要素は、パス列 (DR-133 §1) の**自分の位置に供給順で inline 展開**される。要素の綴り (単体を複数個並べる / multiple を 1 個) で fold の意味は変わらない — どちらも「宣言順に並んだパス列を順に読んでトップキー置換で畳む」1 本の規則に従う (DR-133 §1.1)。\n\n定義は sys (default /etc.toml) → user (multiple、default なし) → site (default /site.toml) の宣言順で、system 設定の下地にユーザ設定を重ね、最後に site 設定が上書きする典型形。`--user /u1.toml --user /u2.toml` ならパス列は [/etc.toml, /u1.toml, /u2.toml, /site.toml] になる。CONFIG 入力表記は config/path.json と同じ `config_files`。config_file 要素はインフラで結果非掲載 (DR-121 §2)。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {
+        "name": "sys",
+        "type": "config_file",
+        "long": true,
+        "default": "/etc.toml"
+      },
+      {
+        "name": "user",
+        "type": "config_file",
+        "long": true,
+        "multiple": "append"
+      },
+      {
+        "name": "site",
+        "type": "config_file",
+        "long": true,
+        "default": "/site.toml"
+      },
+      {
+        "name": "port",
+        "type": "number",
+        "long": true,
+        "config_key": [
+          "port"
+        ],
+        "default": 7
+      },
+      {
+        "name": "ketc",
+        "type": "number",
+        "long": true,
+        "config_key": [
+          "ketc"
+        ],
+        "default": 70
+      },
+      {
+        "name": "ku1",
+        "type": "number",
+        "long": true,
+        "config_key": [
+          "ku1"
+        ],
+        "default": 71
+      },
+      {
+        "name": "ku2",
+        "type": "number",
+        "long": true,
+        "config_key": [
+          "ku2"
+        ],
+        "default": 72
+      }
+    ]
+  },
+  "cases": [
+    {
+      "id": "multiple-paths-inline-in-declaration-position",
+      "why": "列は [/etc.toml, /u1.toml, /u2.toml, /site.toml]。port は 4 ファイルすべてが持ち、最後の /site.toml が置き換えて 4@config。各ファイル固有のキーは重ねで残る (ketc=10 / ku1=20 / ku2=30、いずれも source:config)。multiple の 2 パスが sys と site の**間**に供給順で入っていることは、ketc と ku1/ku2 が同時に残りつつ port が site 由来になることで観測できる。",
+      "args": [
+        "--user",
+        "/u1.toml",
+        "--user",
+        "/u2.toml"
+      ],
+      "config_files": {
+        "/etc.toml": {
+          "port": 1,
+          "ketc": 10
+        },
+        "/u1.toml": {
+          "port": 2,
+          "ku1": 20
+        },
+        "/u2.toml": {
+          "port": 3,
+          "ku2": 30
+        },
+        "/site.toml": {
+          "port": 4
+        }
+      },
+      "expect": {
+        "outcome": "success",
+        "effects": [],
+        "result": {
+          "port": 4,
+          "ketc": 10,
+          "ku1": 20,
+          "ku2": 30
+        },
+        "sources": {
+          "port": "config",
+          "ketc": "config",
+          "ku1": "config",
+          "ku2": "config"
+        }
+      }
+    },
+    {
+      "id": "multiple-supply-order-decides-the-fold-order",
+      "why": "同じ 2 ファイルを逆順に供給すると列の順も逆になる: [/etc.toml, /u2.toml, /u1.toml, /site.toml]。/site.toml を provider が返せない状態にして最後段を落とすと (default 由来の不在なので黙認、DR-133 §3)、port を最後に置き換えるのは /u1.toml になり 2@config。前ケース (同じ 2 ファイルを逆順に供給) の port=4 と対にすることで、multiple の**供給順**がそのまま fold 順になることを観測する。",
+      "args": [
+        "--user",
+        "/u2.toml",
+        "--user",
+        "/u1.toml"
+      ],
+      "config_files": {
+        "/etc.toml": {
+          "port": 1,
+          "ketc": 10
+        },
+        "/u1.toml": {
+          "port": 2,
+          "ku1": 20
+        },
+        "/u2.toml": {
+          "port": 3,
+          "ku2": 30
+        }
+      },
+      "expect": {
+        "outcome": "success",
+        "effects": [],
+        "result": {
+          "port": 2,
+          "ketc": 10,
+          "ku1": 20,
+          "ku2": 30
+        },
+        "sources": {
+          "port": "config",
+          "ketc": "config",
+          "ku1": "config",
+          "ku2": "config"
+        }
+      }
+    },
+    {
+      "id": "multiple-without-supply-does-not-join",
+      "why": "multiple 要素に 1 つもパスが供給されなければ列に参加しない (DR-133 §1.1 — 単体要素の不参加と同じ規則)。列は [/etc.toml, /site.toml] だけになり、ku1/ku2 は自前 default に落ちる。port は site が置換して 4@config、ketc は etc から残って 10@config。",
+      "args": [],
+      "config_files": {
+        "/etc.toml": {
+          "port": 1,
+          "ketc": 10
+        },
+        "/u1.toml": {
+          "port": 2,
+          "ku1": 20
+        },
+        "/site.toml": {
+          "port": 4
+        }
+      },
+      "expect": {
+        "outcome": "success",
+        "effects": [],
+        "result": {
+          "port": 4,
+          "ketc": 10,
+          "ku1": 71,
+          "ku2": 72
+        },
+        "sources": {
+          "port": "config",
+          "ketc": "config",
+          "ku1": "default",
+          "ku2": "default"
+        }
+      }
+    }
+  ]
+}
