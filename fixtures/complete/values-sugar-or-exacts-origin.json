@@ -1,0 +1,54 @@
+{
+  "why": "values 糖衣 (DR-063 / LOWERING §A.4) と or-of-exacts で組んだ named option の候補 origin を pin する (DR-104 §2 の origin 規則と明確化 note (ii)/(iii))。**要素の値構造は trigger 候補の origin を変えない** — long トリガは long installer が named 要素から生む衛星 (LOWERING §B.1 の `«greedy» {or: [{seq: [{exact: \"--<name>\"}, {ref, link}]}]}`) であり、note (ii) の「lowering 産物の内部でも name は元の要素名のまま伝播する」により origin は要素名。note (iii) の spelling フォールバックは『名前を持たない要素』専用の fallback (`fixtures/complete/anonymous-exact-origin.json`) であって、名前を持つ option の入口綴りには適用されない (`fixtures/complete/anonymous-named-exact-collision.json::same-spelling-different-origin-survives` が flag option の `--boot` で origin=\"boot\" を、同綴りの匿名 exact で origin=\"--boot\" を対で pin 済み)。DR-116 §4 は candidate の `origin` から定義要素の `help` を引き直す設計なので、入口綴りが origin に載ると引き直しが空振りして説明が消える — この corpus は値構造 3 形 (values 糖衣 / or-of-exacts / plain primitive) の入口 origin が同一規則に従うことを 1 case 内で並べて固定する。値位置側は逆に note (iii) が効く: values/or の exact 枝は A.1 正規化で生まれる匿名 exact (name を持たない) なので origin は spelling 自身。`fixtures/or-parse/values-sugar-parity.json` が parse 面で固定する糖衣⇔正規形の等価性を、complete 面でも同型に固定する。`long_eq_sep: \"deny\"` (DR-096 §1) は eq-split 由来の `term:cont` 候補を止めて origin という焦点を単離するため (`ref-template-origin-trigger.json` と同じ関心分離)。",
+  "query": "complete",
+  "definition": {
+    "config": {"long_eq_sep": "deny"},
+    "options": [
+      {"name": "mode", "long": true, "values": ["fast", "slow"]},
+      {"name": "tier", "long": true, "or": [
+        {"exact": "hot"},
+        {"exact": "cold"}
+      ]},
+      {"name": "label", "type": "string", "long": true}
+    ]
+  },
+  "cases": [
+    {
+      "id": "trigger-origin-is-element-name-across-value-shapes",
+      "why": "args_before 空: 3 option の入口綴りが同時に候補になる。`mode` は values 糖衣 (LOWERING §A.4 で or-of-exacts へ展開)、`tier` はその正規形 (or + exact 枝)、`label` は plain な typed primitive — 値構造は 3 者で異なるが、入口綴りを生むのはいずれも long installer が **named 要素** から植える greedy 衛星 (LOWERING §B.1) であり、DR-104 §2 表の origin (= 由来要素名) と note (ii) の name 伝播により origin は要素名 `mode` / `tier` / `label` になる。値構造 (or の枝が exact か typed leaf か、糖衣か正規形か) は入口候補の origin に一切影響しない。note (iii) の spelling フォールバックは名前を持たない要素の fallback なので、ここでは発火しない — `--mode` 等の綴りが origin に載る挙動は note (iii) の適用範囲外への誤適用であり、DR-116 §4 の `origin` → entry `help` 引き直しを空振りさせる。`long_eq_sep:\"deny\"` により eq-split 由来の `term:cont` 候補は生成されず、space form の入口 3 件だけが残る。",
+      "args_before": [],
+      "expect": {
+        "outcome": "complete",
+        "candidates": [
+          {"spelling": "--mode", "is_value": false, "origin": "mode", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}},
+          {"spelling": "--tier", "is_value": false, "origin": "tier", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}},
+          {"spelling": "--label", "is_value": false, "origin": "label", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}}
+        ]
+      }
+    },
+    {
+      "id": "values-sugar-enum-candidates-origin-is-own-spelling",
+      "why": "args_before: [\"--mode\"] で `mode` のトリガは消費済みとなり、値スロットが Pending になる (complete 相では Pending が viable、DR-097 / `dr097-pending-mode-split.json`)。発火した greedy の内部消費 (値スロット) には背骨がない (DR-041 §4) ため他 option のトリガはこの消費点で候補にならず、候補は values 糖衣が展開した or の exact 枝だけになる。`values: [\"fast\", \"slow\"]` は LOWERING §A.4 で `or: [{exact: \"fast\"}, {exact: \"slow\"}]` へ、各スカラは §A.1 で匿名 exact へ正規化される — これらの枝は name を持たないので DR-104 §2 note (iii) の fallback が効き、origin は spelling 自身 (\"fast\" / \"slow\") になる。ここが入口側 (case 1、origin = 要素名 `mode`) との非対称であり、同じ option の候補でも『名前を持つ要素が生んだ入口』と『名前を持たない枝が生んだ選択肢』で origin の決まり方が違うことを対で固定する。exact 候補なので `is_value:false`、`type` は持たない (DR-104 §2 表: `type` は `is_value:true` の時のみ意味を持つ)。",
+      "args_before": ["--mode"],
+      "expect": {
+        "outcome": "complete",
+        "candidates": [
+          {"spelling": "fast", "is_value": false, "origin": "fast", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}},
+          {"spelling": "slow", "is_value": false, "origin": "slow", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}}
+        ]
+      }
+    },
+    {
+      "id": "or-of-exacts-enum-candidates-match-values-sugar",
+      "why": "args_before: [\"--tier\"]: values 糖衣の正規形 (or + exact 枝を直書き) でも候補集合の形は case `values-sugar-enum-candidates-origin-is-own-spelling` と同型 — 匿名 exact 枝 2 件、origin は spelling 自身 (\"hot\" / \"cold\")。糖衣 (`mode`) と正規形 (`tier`) を同一 definition 内に並べることで、`fixtures/or-parse/values-sugar-parity.json` が parse 面で固定する等価性が complete 面でも成立すること (綴り経路の差が候補生成に漏れないこと) を固定する。",
+      "args_before": ["--tier"],
+      "expect": {
+        "outcome": "complete",
+        "candidates": [
+          {"spelling": "hot", "is_value": false, "origin": "hot", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}},
+          {"spelling": "cold", "is_value": false, "origin": "cold", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}}
+        ]
+      }
+    }
+  ]
+}
