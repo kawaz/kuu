@@ -15,6 +15,7 @@ active な issue の一覧。close 済みは archive/ にあり、ここには�
 | 2026-07-23 | task | idea | [help-category-link-last-wins](./2026-07-23-help-category-link-last-wins.md) | M5 で #help_category 内部セルの link 配線実装時は at_pos ベース last-wins を使う (completion.mbt L42-72 pattern 再利用、宣言順 push 由来の bug class 回避) |
 | 2026-08-12 | design | open | [nested-config-not-supplied](./2026-08-12-nested-config-not-supplied.md) | 参照実装が root 宣言の config_file を子スコープの要素へ供給しない (DR-050 §3 同型対応の nested 未実装) |
 | 2026-08-12 | task | open | [config-committed-carry-over](./2026-08-12-config-committed-carry-over.md) | 参照実装が複数 config_file 間で committed フラグを持ち越し、DR-133 §4 に反する resolve エラーを出す。fixture 化不能 (args_pos なし) |
+| 2026-08-12 | task | open | [command-value-carrier](./2026-08-12-command-value-carrier.md) | 参照実装の CommandDef が value 担体を持たず command の value を reject する (DR-134 未追随) |
 | 2026-08-12 | design | open | [completion-ux-layer-completer-closure-abi](./2026-08-12-completion-ux-layer-completer-closure-abi.md) | completion ux 層の座席 (kuu.mbt vs kuu-cli lib) と形態 A completer クロージャ ABI が DR-117 波及節で未設計 |
 | 2026-07-26 | design | open | [parent-type-ignored-lint-warn](./2026-07-26-parent-type-ignored-lint-warn.md) | 親と子の両方が type を持つ or/seq に「親の type は無意味」の lint warn を出す (DR-067 §2/§3.5 は合法規定、静的バリデータ未実装後の追加項目) |
 | 2026-07-25 | design | open | [bash-completion-comp-line-point-relex](./2026-07-25-bash-completion-comp-line-point-relex.md) | bash 補完 glue の words 再結合、COMP_WORDS ベースでは空白情報が失われる残存ギャップ (H9 follow-up) |
