@@ -1,0 +1,65 @@
+{
+  "why": "消費済み command トリガの非再露出を、子スコープが positional を持たない構成で pin する (fixtures/complete/command-scope.json の pin の一般化)。規範は同じ: サブコマンドは親 greedy 面のトリガ衛星であり、名前を消費すると子スコープの新しい背骨に入り、祖先の greedy は子に届かない (DR-041 §4) — トリガは 1 回消費されると再露出しない。この構造は子スコープの中身 (positional の有無) に依存しない。既存 pin (command-scope.json::child-scope-candidate-after-entry) の definition は子が positional を持つため、「子の背骨が何も消費しない (options のみ) 構成」の経路を踏んでおらず corpus 欠落だった (参照実装で当該構成の再露出を実測 2026-08-12 — 実装課題は実装リポ側 issue)。定義は最小形: root は command のみ、子は option 1 本。",
+  "query": "complete",
+  "definition": {
+    "commands": [
+      {
+        "type": "command",
+        "name": "build",
+        "options": [
+          {
+            "name": "alpha",
+            "type": "flag",
+            "long": true
+          }
+        ]
+      }
+    ]
+  },
+  "cases": [
+    {
+      "id": "command-name-candidate-before-entry",
+      "why": "入場前の対照: 親 greedy 面のコマンド名綴り build だけが候補。子スコープの option はまだ候補源にならない (command-scope.json の同名 case と同じ輪郭を options のみ子スコープでも観測する)。",
+      "args_before": [],
+      "expect": {
+        "outcome": "complete",
+        "candidates": [
+          {
+            "spelling": "build",
+            "is_value": false,
+            "origin": "build",
+            "term": "word_end",
+            "meta": {
+              "is_alias": false,
+              "hidden": false,
+              "deprecated": false
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "no-reexposure-in-positional-less-child-scope",
+      "why": "build を消費して子スコープへ入場した後の候補は子の --alpha のみ。親のコマンド名綴り build は候補に出ない — 子の背骨が options だけで何も消費していなくても、消費済みトリガの非再露出 (祖先の greedy が子に届かない) は変わらない。ここが positional あり版 (command-scope.json) が踏まない観測点。",
+      "args_before": [
+        "build"
+      ],
+      "expect": {
+        "outcome": "complete",
+        "candidates": [
+          {
+            "spelling": "--alpha",
+            "is_value": false,
+            "origin": "alpha",
+            "term": "word_end",
+            "meta": {
+              "is_alias": false,
+              "hidden": false,
+              "deprecated": false
+            }
+          }
+        ]
+      }
+    }
+  ]
+}
