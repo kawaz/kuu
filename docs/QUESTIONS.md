@@ -40,6 +40,21 @@ DR-031 は CLI / link を同順位の明示操作と規定し、DR-121 §4 は L
   したのに黙認」の観測が残る
 - [ ] CFL-Q1c: config_file セルを link target にすること自体を definition-error にする (経路ごと塞ぐ)
 
+### DNR-Q1: 宣言名重複の definition-error に使う kind
+
+kuu.mbt の m3 修正 (2026-08-12) の過程で顕在化 (kuu.mbt issue 2026-08-12-duplicate-element-name-not-rejected)。
+同一スコープの宣言名重複 (例: config_file "user" + option "user") は DR-006 / DR-003 の重複禁止 (現役規範)
+に反するが、参照実装は decode を通してしまい、binding 層で 2 要素が 1 identity に潰れる実害がある
+(`--user alice` が config path として消費され読込エラー)。検査の実装は明確に必要だが、報告に使う kind が
+DR-054 の正式列挙に無い — export-key-collision は露出キー軸で、config_file (非占有、DR-120 §4) との
+同名はそこに掛からない。
+
+- [ ] DNR-Q1a: **新 kind `duplicate-name` を DR-054 列挙 + schema enum へ追加 (統括推し)** — 宣言名軸の
+  一意性違反 (DR-006) は露出キー軸 (export-key-collision) と別軸で、既存 kind への相乗りは意味の希釈。
+  追加後、spec fixture (definition-error/) + kuu.mbt 実装
+- [ ] DNR-Q1b: 既存 kind に相乗り (invalid-range 等) — 列挙は増えないが「構成の組合せの値域外」の意味から外れる
+- [ ] DNR-Q1c: その他
+
 ### CVQ-Q1: value 持ち command の配列 value は合法か
 
 DR-133/134 実装レビュー (2026-08-12、fable5-high) で顕在化。[DR-134](decisions/DR-134-command-value-or-scope.md) §1 は
