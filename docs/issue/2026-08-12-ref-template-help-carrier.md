@@ -3,7 +3,7 @@ title: ref/template 由来 help_meta の provenance carrier 未実装 (M1 次サ
 status: open
 category: task
 created: 2026-08-12T11:08:26+09:00
-last_read:
+last_read: 2026-08-12T14:57:04+09:00
 open_entered: 2026-08-12T11:08:26+09:00
 wip_entered:
 blocked_entered:
