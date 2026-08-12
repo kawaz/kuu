@@ -523,7 +523,7 @@ enum にならない)。要素に配列があれば `seq` ブランチに展開�
 | `flag` | 糖衣プリセット | bool + `default:false` + 起動で true | DESIGN §3.3 |
 | `count` | 糖衣プリセット | number + `default:0` + 起動時に `cell_fns.incr` (`ctx.old + 1`) を呼ぶ。値は取らない | DESIGN §3.3, DR-114 §2/§6.1 |
 | `count_or_set` | 糖衣プリセット | count + optional 値スロット。`-v` は `incr`、`-v 3` は `set` | DESIGN §3.3, DR-040/114 |
-| `command` | 糖衣プリセット | name でスコープを作り name 完全一致でトリガ | DESIGN §3.3, §4.2 |
+| `command` | 糖衣プリセット | name でスコープを作り name 完全一致でトリガ。`value` を書けば値を名乗る (占有子との共存は definition-error) | DESIGN §3.3, §4.2, DR-134 |
 | `help` | 糖衣プリセット | `#help` へ true を供給する基本 help。`help_on_failure` 既定 true | DESIGN §3.3, §14.1, DR-113 §2.1 |
 | `help_all_category` | 糖衣プリセット | `#help` + `#help_all_category`。category 絞りなし、hidden 表示は含意しない | DESIGN §14.1, DR-113 §2.2 |
 | `help_category` | 糖衣プリセット | `#help` + string の `#help_category`。bool 枝との出し分けは `or`、複数指定は last-wins | DESIGN §14.1, DR-113 §2.3 |

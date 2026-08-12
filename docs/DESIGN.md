@@ -344,6 +344,7 @@ canonical は「最も寛容」でも「最小」でもなく、**言語中立�
 - commands と素の positionals は排他。command 名の完全一致でマッチすればそちらが選ばれる — 排他は専用規則ではなく完全経路の一意性 (§15.1) と先食い (§15.8) から創発する
 - 具体的な lowering は command installer (§13.1、LOWERING §B.5): greedy マーク付き exact トリガ衛星 + 新しい背骨を宣言する部分木
 - commands 不在時は何も展開しない
+- **command は値かスコープのどちらかを名乗る** (DR-134)。command node に `value` (および `default` / `default_fn`) を書いてよく、選択された値持ち command は親スコープのキーに**値そのもの**を座らせる (kv ではない、source は `value:` 由来なら `const`)。値を名乗る command の内側に**結果キーを占有する要素** (§15.5 / DR-120 §4 の占有側) を置くのは definition-error kind=invalid-range — 1 露出キー = 1 値セルなので kv と値が同じ座を争う。非占有子 (`dd` / `type: "none"` / `link` / `alias` / `#` 内部セル) は共存可。未選択なら値持ちでも `null` で一様 (§2.6 / DR-130)
 
 ### 4.3 command 一級扱い、内部正規形は同型 (DR-017)
 

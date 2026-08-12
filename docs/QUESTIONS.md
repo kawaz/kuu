@@ -22,19 +22,6 @@
 
 ## 裁定待ち
 
-### CNV-Q1: command node の `value` 属性は合法か
-
-issue 棚卸し (2026-08-03) で浮上。schema の node 共通属性と DESIGN は `value` を全 node 位置で合法としているが、実装の CommandDef は carrier を持たず decoder が reject する。DR-120 (command = 結果スコープ) / DR-130 (未選択 command = 親キー null) の下で「command 自身が値を持つ」意味論は定義されていない。
-
-> kawaz 裁定方向 (mid=60): b — command が値を持つのは help/version 等でよく見る形。スコープ生成は
-> command 特有でなく (named or も作る)、スコープ = 値が map というだけ。親から見ればどちらも
-> フィールド名 + JSON 値であり拒否理由が無い。統括も (a) 推しを撤回し同意。
-
-- [ ] CNV-Q1b 確定待ちの残設計点: **value 持ち command と結果キー占有子の共存規則** — 統括推し:
-  「command は値かスコープのどちらかを名乗る」= value 持ち command に結果キー占有子は definition-error
-  (非占有子は共存可)。未選択時は従来どおり null で一様。value 供給は既存 node 意味論 (value:/default/fn) のまま。
-  異議なければこの形で DR 起草へ
-
 ### CFM-Q2: 複数 config_file の後勝ち粒度 — 全体置換 (DR-133 現形) の確認
 
 CFM-Q1a 反映の実測で下位軸が顕在化。起草済み [DR-133](decisions/DR-133-multi-config-file-last-wins.md) は
