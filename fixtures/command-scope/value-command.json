@@ -1,0 +1,142 @@
+{
+  "why": "command node の `value` は合法で、選択された value 持ち command は親スコープのキーに**値そのもの**を座らせる (DR-134 §1/§3)。スコープを名乗る command が選択時に宣言キー全列挙の kv を持つ (DR-130 §1) のに対し、値を名乗る command はその同じ 1 セルに値を持つ — 親から見ればどちらも「フィールド名 + JSON 値」であり、占有する結果キーが 1 つであることは変わらない (DR-120 §4)。sources は値を確定させた席のタグで、`value:` 由来なら const (DR-031 CONST-Q1=a)。\n\n未選択の command は値持ちでも `null` で一様 (DR-134 §4 / DR-130 §2)、sources も同座で null (DR-130 §5)。`default` を持つ value 持ち command も未選択なら null — 値源ラダーが走るのは実現したセルに対してであり、未選択枝の default が漏れないのは or 枝の既存規範 (or-parse/unselected-branch-default-null.json) と同じ形。command のトリガ消費とスコープ自体は消えないので、兄弟のスコープ command は従来どおり kv を持つ。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {
+        "name": "verbose",
+        "type": "flag",
+        "long": true
+      }
+    ],
+    "commands": [
+      {
+        "type": "command",
+        "name": "version",
+        "value": "1.2.3"
+      },
+      {
+        "type": "command",
+        "name": "probe",
+        "default": 7
+      },
+      {
+        "type": "command",
+        "name": "serve",
+        "options": [
+          {
+            "name": "port",
+            "type": "number",
+            "long": true,
+            "default": 8080
+          }
+        ]
+      }
+    ]
+  },
+  "cases": [
+    {
+      "id": "selected-value-command-holds-value",
+      "why": "`version` を選択 → 親スコープのキー version に値 \"1.2.3\" が直接座る (kv ではない)。source は const。未選択の probe / serve は null で、serve の内側は null がサブツリーごと置き換えるので展開されない (DR-130 §2)。command の発火自体は effects エントリを持たない。",
+      "args": [
+        "version"
+      ],
+      "expect": {
+        "outcome": "success",
+        "effects": [],
+        "result": {
+          "verbose": false,
+          "version": "1.2.3",
+          "probe": null,
+          "serve": null
+        },
+        "sources": {
+          "verbose": "default",
+          "version": "const",
+          "probe": null,
+          "serve": null
+        }
+      }
+    },
+    {
+      "id": "selected-default-command-fills-from-ladder",
+      "why": "`probe` を選択 → 実現したセルの値源ラダーが走り default 7 が座る (source:default)。値供給に command 専用の規則は無く既存の node 意味論のまま (DR-134 §5)。",
+      "args": [
+        "probe"
+      ],
+      "expect": {
+        "outcome": "success",
+        "effects": [],
+        "result": {
+          "verbose": false,
+          "version": null,
+          "probe": 7,
+          "serve": null
+        },
+        "sources": {
+          "verbose": "default",
+          "version": null,
+          "probe": "default",
+          "serve": null
+        }
+      }
+    },
+    {
+      "id": "unselected-value-commands-are-null",
+      "why": "スコープを名乗る `serve` を選択 → serve は従来どおり宣言キー全列挙の kv。値を名乗る version と default を持つ probe はどちらも未選択なので null (値持ち・default 持ちでも未選択は null で一様、DR-134 §4)。",
+      "args": [
+        "serve"
+      ],
+      "expect": {
+        "outcome": "success",
+        "effects": [],
+        "result": {
+          "verbose": false,
+          "version": null,
+          "probe": null,
+          "serve": {
+            "port": 8080
+          }
+        },
+        "sources": {
+          "verbose": "default",
+          "version": null,
+          "probe": null,
+          "serve": {
+            "port": "default"
+          }
+        }
+      }
+    },
+    {
+      "id": "no-command-selected",
+      "why": "command を選ばない経路では 3 つとも未選択で null。value 持ち command が「宣言されているだけで値を漏らす」ことは無い (const は実現したセルの初期値であって、成立しなかった座には現れない)。",
+      "args": [
+        "--verbose"
+      ],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {
+            "entity": "verbose",
+            "op": "set",
+            "operand": true,
+            "source": "cli"
+          }
+        ],
+        "result": {
+          "verbose": true,
+          "version": null,
+          "probe": null,
+          "serve": null
+        },
+        "sources": {
+          "verbose": "cli",
+          "version": null,
+          "probe": null,
+          "serve": null
+        }
+      }
+    }
+  ]
+}

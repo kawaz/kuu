@@ -1,0 +1,55 @@
+{
+  "why": "value 持ち command に**結果キー占有子** (DR-120 §4 の占有側) を置く形は definition-error kind=invalid-range (DR-134 §2)。1 露出キー = 1 値セル (DR-120 §1) であり 1 セルが持てる値は 1 つなので、占有子が居れば選択時の射影は宣言キー全列挙の kv に確定し (DR-130 §1)、`value` が同じ座を争う。kind が invalid-range なのは「その席に置けない属性の組合せ」を表す既存 kind だから (default × default_fn の併用、非 multiple への accum_filters、scalar への配列 default と同族)。\n\n1 定義に (1) 通常要素を子に持つ形 (2) 子 command を持つ形 (3) 占有子を持たない形 の 3 つを同居させ、errors の全列挙 + 集合比較 (DR-054 §4 / CONFORMANCE §3) で境界を対で固定する — 期待 errors が {a, b} のみであること自体が「ok は違反でない」の pin を兼ねる。element は当該 command の name。",
+  "query": "definition_error",
+  "definition": {
+    "commands": [
+      {
+        "type": "command",
+        "name": "a",
+        "value": "x",
+        "options": [
+          {
+            "name": "port",
+            "type": "number",
+            "long": true
+          }
+        ]
+      },
+      {
+        "type": "command",
+        "name": "b",
+        "value": "y",
+        "commands": [
+          {
+            "type": "command",
+            "name": "inner"
+          }
+        ]
+      },
+      {
+        "type": "command",
+        "name": "ok",
+        "value": "z"
+      }
+    ]
+  },
+  "cases": [
+    {
+      "id": "occupying-children-under-value-command",
+      "why": "a は値セルを持つ通常要素 port を、b は露出キーを持つスコープ生成要素 inner を内側に持つ — どちらも DR-120 §4 の占有側なので invalid-range。ok は占有子を持たない値持ち command なのでエラーにならない。",
+      "expect": {
+        "outcome": "definition-error",
+        "errors": [
+          {
+            "element": "a",
+            "kind": "invalid-range"
+          },
+          {
+            "element": "b",
+            "kind": "invalid-range"
+          }
+        ]
+      }
+    }
+  ]
+}

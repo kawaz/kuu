@@ -1,0 +1,61 @@
+{
+  "why": "value 持ち command と**非占有子**の共存は合法 (DR-134 §2)。排他の対象は DR-120 §4 の「露出キーを占有する要素」だけで、値セルも子も持たない `dd` / `type: \"none\"` は結果に痕跡を残さない (DR-064 §5 / DR-089) ため kv 射影を確定させない。したがって command が名乗る値と席を争わない。\n\n共存しても結果は値のままである (`tool` の座に \"t\" が座り、内側の none / dd は result にも sources にも現れない) ことを固定する。none 要素は発火しても effects エントリを持たない (value-typing/none-value-space.json と同型)。",
+  "query": "parse",
+  "definition": {
+    "commands": [
+      {
+        "type": "command",
+        "name": "tool",
+        "value": "t",
+        "options": [
+          {
+            "name": "quiet",
+            "type": "none",
+            "long": true
+          },
+          {
+            "name": "--",
+            "type": "dd"
+          }
+        ]
+      }
+    ]
+  },
+  "cases": [
+    {
+      "id": "value-with-none-child-fired",
+      "why": "`tool --quiet` : none 要素 quiet は発火するが値空間を持たないので結果キーを占有せず、command は値 \"t\" を名乗ったままでいられる。result は tool: \"t\" (kv ではない)、source は const。",
+      "args": [
+        "tool",
+        "--quiet"
+      ],
+      "expect": {
+        "outcome": "success",
+        "effects": [],
+        "result": {
+          "tool": "t"
+        },
+        "sources": {
+          "tool": "const"
+        }
+      }
+    },
+    {
+      "id": "value-with-non-occupying-children-declared-only",
+      "why": "同じ定義で子を一切発火させない経路。dd / none が宣言されているだけの状態でも command は値を名乗り、結果は tool: \"t\" のまま (宣言の存在が kv 射影を呼び込まない = 排他の線が「占有子の宣言」ではなく「占有子であること」で引かれていることの確認)。",
+      "args": [
+        "tool"
+      ],
+      "expect": {
+        "outcome": "success",
+        "effects": [],
+        "result": {
+          "tool": "t"
+        },
+        "sources": {
+          "tool": "const"
+        }
+      }
+    }
+  ]
+}
