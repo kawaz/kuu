@@ -1121,7 +1121,7 @@ help_installer は表示メタの回収、5 preset の植え付け、help_query 
 - **config 値の期待型は要素の type**: string は CLI/env と同一の全段 pipeline (number/bool 要素へは parse 試行)、scalar (number/bool) は型一致なら T 域の座席のみ (value_filters / 確定後の final_filters・accum_filters — multiple 有無で対応する属性が決まる、DR-102。string 域の piece_filters / parse は型の帰結でスキップ)・**string 要素へは JSON 文字列化で受理** (寛容の双方向対称、数値は最短表現 `1.0` → `"1"`)、bool↔number の意味変換と構造不一致 (array/object ↔ scalar) は Error、array は分割済み pieces、object は同型再帰 (DR-050 §4)
 - 依存順序: 経路確定 → config_file 値確定 → provider 読込 → config 席有効化 → 最終値確定 → 遅延述語。**config は構造 (matcher / 経路探索) に影響しない**。config_file 要素自身は config 席を持てない (循環禁止)
 - committed なパス (CLI/env 明示) の読込失敗は Error、default 由来のパス不在は黙認
-- **同一スコープに複数の config_file 要素を宣言してよい** (DR-133)。config 席を埋めるオブジェクトは 1 つで、**宣言順で最後にパスを持つ要素** (cli/env/default のどれからも供給されない要素はパスを持たず一つ前へ譲る) のものが勝つ。**粒度はオブジェクト全体の置換**であってキー単位のレイヤ重ねではない — 負けたファイルにしか無いキーは供給されず要素は自前 default に落ちる (キー単位の重ねは複数ファイルのマージ戦略 = provider の関心)。provider に渡るのは勝った 1 パスのみで、上記の Error / 黙認も勝った要素のパスの committed 性だけで決まる
+- **同一スコープに複数の config_file 要素を宣言してよく、席埋め規則は単体も複数も 1 本** (DR-133)。各要素が供給するパスを**宣言順に並べた 1 本のパス列**を作り (`multiple` の要素は自分の位置に供給順で inline 展開、どの席からもパスが供給されない要素は列に参加しない)、列の各パスを順に provider へ渡し (1 パス → 1 オブジェクトの契約のまま列の長さだけ呼ぶ)、読めたオブジェクトを**トップレベルキー置換**で畳んだ 1 個が config 席に座る。後のファイルのトップキーが前を置き換え、後に無いトップキーは前の値が残る (= 重ね)。**深いマージはしない** (需要は合成済みオブジェクトを返す provider の関心)。上記の committed Error / default 由来不在の黙認は**各パス独立**に判定する。単体要素は列長 1 の縮退形で、排他的なファイル選択は 1 要素の値源ラダーで書き分ける
 - 要素の `config` フィールド (§7.2 の階層継承設定) とは**別物**
 
 ### 14.4 visibility / deprecated (DR-058)
