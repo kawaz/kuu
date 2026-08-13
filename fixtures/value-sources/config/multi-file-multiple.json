@@ -1,5 +1,5 @@
 {
-  "why": "`multiple` の config_file 要素は、パス列 (DR-133 §1) の**自分の位置に供給順で inline 展開**される。要素の綴り (単体を複数個並べる / multiple を 1 個) で fold の意味は変わらない — どちらも「宣言順に並んだパス列を順に読んでトップキー置換で畳む」1 本の規則に従う (DR-133 §1.1)。\n\n定義は sys (default /etc.toml) → user (multiple、default なし) → site (default /site.toml) の宣言順で、system 設定の下地にユーザ設定を重ね、最後に site 設定が上書きする典型形。`--user /u1.toml --user /u2.toml` ならパス列は [/etc.toml, /u1.toml, /u2.toml, /site.toml] になる。CONFIG 入力表記は config/path.json と同じ `config_files`。config_file 要素自身も通常要素として結果に出る (DR-135。値 = 確定したパス、sources は自分のラダー席のタグ。config 席は循環禁止 (DR-050 §5) なので `config` タグは立たない)。 本 fixture の `user` は `multiple` なので**供給順のパス列 string[]** が座り、0 供給なら `[]` になる。`site` は /site.toml を供給するケースで provider が読めなくても値としては座る — result に出るのは**供給されたパス**であって読めたパスではない (DR-135 §2.1)。",
+  "why": "`multiple` の config_file 要素は、パス列 (DR-133 §1) の**自分の位置に供給順で inline 展開**される。要素の綴り (単体を複数個並べる / multiple を 1 個) で fold の意味は変わらない — どちらも「宣言順に並んだパス列を順に読んでトップキー置換で畳む」1 本の規則に従う (DR-133 §1.1)。\n\n定義は sys (default /etc.toml) → user (multiple、default なし) → site (default /site.toml) の宣言順で、system 設定の下地にユーザ設定を重ね、最後に site 設定が上書きする典型形。`--user /u1.toml --user /u2.toml` ならパス列は [/etc.toml, /u1.toml, /u2.toml, /site.toml] になる。CONFIG 入力表記は config/path.json と同じ `config_files`。config_file 要素はインフラで結果非掲載 (DR-121 §2)。",
   "query": "parse",
   "definition": {
     "options": [
@@ -88,39 +88,14 @@
       },
       "expect": {
         "outcome": "success",
-        "effects": [
-          {
-            "entity": "user",
-            "op": "set",
-            "operand": "/u1.toml",
-            "source": "cli"
-          },
-          {
-            "entity": "user",
-            "op": "set",
-            "operand": "/u2.toml",
-            "source": "cli"
-          }
-        ],
+        "effects": [],
         "result": {
-          "sys": "/etc.toml",
-          "user": [
-            "/u1.toml",
-            "/u2.toml"
-          ],
-          "site": "/site.toml",
           "port": 4,
           "ketc": 10,
           "ku1": 20,
           "ku2": 30
         },
         "sources": {
-          "sys": "default",
-          "user": [
-            "cli",
-            "cli"
-          ],
-          "site": "default",
           "port": "config",
           "ketc": "config",
           "ku1": "config",
@@ -153,39 +128,14 @@
       },
       "expect": {
         "outcome": "success",
-        "effects": [
-          {
-            "entity": "user",
-            "op": "set",
-            "operand": "/u2.toml",
-            "source": "cli"
-          },
-          {
-            "entity": "user",
-            "op": "set",
-            "operand": "/u1.toml",
-            "source": "cli"
-          }
-        ],
+        "effects": [],
         "result": {
-          "sys": "/etc.toml",
-          "user": [
-            "/u2.toml",
-            "/u1.toml"
-          ],
-          "site": "/site.toml",
           "port": 2,
           "ketc": 10,
           "ku1": 20,
           "ku2": 30
         },
         "sources": {
-          "sys": "default",
-          "user": [
-            "cli",
-            "cli"
-          ],
-          "site": "default",
           "port": "config",
           "ketc": "config",
           "ku1": "config",
@@ -214,18 +164,12 @@
         "outcome": "success",
         "effects": [],
         "result": {
-          "sys": "/etc.toml",
-          "user": [],
-          "site": "/site.toml",
           "port": 4,
           "ketc": 10,
           "ku1": 71,
           "ku2": 72
         },
         "sources": {
-          "sys": "default",
-          "user": [],
-          "site": "default",
           "port": "config",
           "ketc": "config",
           "ku1": "default",

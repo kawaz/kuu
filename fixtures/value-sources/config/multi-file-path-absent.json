@@ -1,5 +1,5 @@
 {
-  "why": "パス列 (DR-133 §1) に参加するのは**パスを供給した config_file 要素だけ**である。config_file 要素のパスも普通の値源ラダーで解決される以上、cli / env / default のどれからも供給されない要素は読むべきファイルを指しておらず、列に足すものが無い (エラーではなく不参加)。default を持たない config_file 要素 (= 明示指定されたときだけ効く設定ファイル) を書いたときの挙動がこれで決まる。\n\n定義は c1 (default /a.toml) → c2 (long/env のみ、default なし) の順。c2 が供給されると列は [/a.toml, /b.toml] になり、トップキー置換の fold で port は後の /b.toml が置き換え、/a.toml にしか無い onlya は残る。config/multi-file.json が両方 default 由来の重ねを、本 fixture が「不参加 ↔ 合流」の切り替わりを固定する。CONFIG 入力表記は config/path.json と同じ `config_files`。config_file 要素自身も通常要素として結果に出る (DR-135。値 = 確定したパス、sources は自分のラダー席のタグ。config 席は循環禁止 (DR-050 §5) なので `config` タグは立たない)。 パスを供給しない `c2` は列に参加しないだけでなく**値も確定しない**ので、その座は `null` (DR-130) — 「列への不参加」が result 上で直接観測できる。",
+  "why": "パス列 (DR-133 §1) に参加するのは**パスを供給した config_file 要素だけ**である。config_file 要素のパスも普通の値源ラダーで解決される以上、cli / env / default のどれからも供給されない要素は読むべきファイルを指しておらず、列に足すものが無い (エラーではなく不参加)。default を持たない config_file 要素 (= 明示指定されたときだけ効く設定ファイル) を書いたときの挙動がこれで決まる。\n\n定義は c1 (default /a.toml) → c2 (long/env のみ、default なし) の順。c2 が供給されると列は [/a.toml, /b.toml] になり、トップキー置換の fold で port は後の /b.toml が置き換え、/a.toml にしか無い onlya は残る。config/multi-file.json が両方 default 由来の重ねを、本 fixture が「不参加 ↔ 合流」の切り替わりを固定する。CONFIG 入力表記は config/path.json と同じ `config_files`。config_file 要素はインフラで結果非掲載 (DR-121 §2)。",
   "query": "parse",
   "definition": {
     "options": [
@@ -53,14 +53,10 @@
         "outcome": "success",
         "effects": [],
         "result": {
-          "c1": "/a.toml",
-          "c2": null,
           "port": 1,
           "onlya": 11
         },
         "sources": {
-          "c1": "default",
-          "c2": null,
           "port": "config",
           "onlya": "config"
         }
@@ -84,23 +80,12 @@
       },
       "expect": {
         "outcome": "success",
-        "effects": [
-          {
-            "entity": "c2",
-            "op": "set",
-            "operand": "/b.toml",
-            "source": "cli"
-          }
-        ],
+        "effects": [],
         "result": {
-          "c1": "/a.toml",
-          "c2": "/b.toml",
           "port": 2,
           "onlya": 11
         },
         "sources": {
-          "c1": "default",
-          "c2": "cli",
           "port": "config",
           "onlya": "config"
         }
@@ -126,14 +111,10 @@
         "outcome": "success",
         "effects": [],
         "result": {
-          "c1": "/a.toml",
-          "c2": "/b.toml",
           "port": 2,
           "onlya": 11
         },
         "sources": {
-          "c1": "default",
-          "c2": "env",
           "port": "config",
           "onlya": "config"
         }

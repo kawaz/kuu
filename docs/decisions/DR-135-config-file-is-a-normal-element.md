@@ -171,13 +171,15 @@ DR-120 の由来 issue が実測した「値が黙って消える」経路を作
 
 ### fixture
 
-- `fixtures/value-sources/config/*.json` — 名前付き config_file 要素を持つ全 fixture の
-  `result` / `sources` に当該要素の座が増える。cli 供給のパスは `effects` にも 1 件増える
-  (`path.json` の `cli-path-wins`、`multi-file.json` の `each-element-resolves-its-own-path` /
-  `committed-path-then-tolerated-absent-path`、`multi-file-path-absent.json` の
-  `cli-supplied-path-joins-the-list`、`multi-file-multiple.json` の `--user` 供給ケース)
-- `fixtures/value-sources/config/multi-file-multiple.json` — `multiple` の config_file が `string[]` を
-  持つこと、および供給されたパスが読めなくても値として座ること (§2.1) の pin
+- `fixtures/value-sources/config/{path,ladder,isomorphic-path,array-object,null-supply,value-typing}.json`
+  — 名前付き config_file 要素の座が `result` / `sources` に増える。cli 供給のパスは `effects` にも
+  1 件増える (`path.json` の `cli-path-wins`)。`path.json` の `default-read-tolerated` が §2.1
+  (読めなくても値は座る) の pin を兼ねる
+- **`multi-file.json` / `multi-file-path-absent.json` / `multi-file-multiple.json` は本 DR では
+  手を付けない** — CFM-Q3a (複数 config_file 要素の並置は definition-error、kawaz 2026-08-14) により
+  DR-133 の要素間規則が撤去されるため、3 本とも定義ごと組み替えになる。本 DR の帰結
+  (`multiple` のパス列が `string[]` として座る / 供給されたパスが読めなくても座る) の pin は、
+  再改稿後の `multiple` 1 要素形へ組み込む (DR-133 再改稿の作業単位)
 - `fixtures/export-key/collision-config-file-option.json` (新規) — config_file が占有子として
   `export-key-collision` に参加する
 - `fixtures/export-key/config-file-transparent-non-occupier.json` (新規) — `export_key: null` の
@@ -206,6 +208,8 @@ DR-120 の由来 issue が実測した「値が黙って消える」経路を作
 - `docs/issue/2026-08-12-config-committed-carry-over.md` — 「`multiple` の config_file が result / sources に
   `user=[]` として現れるのは DR-121 §2 違反」という観測が反転 (本 DR では**正しい挙動**)。受け入れ条件を
   差し替え
+- `docs/issue/2026-08-14-dr133-redraft-single-config-file.md` — CFM-Q3a による DR-133 再改稿。上記
+  multi-file 系 3 fixture の組み替えと、本 DR の `multiple` パス列 pin の受け皿を含む
 
 ### 実装 (参照実装の乖離)
 
