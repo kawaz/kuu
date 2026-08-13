@@ -15,7 +15,6 @@ active な issue の一覧。close 済みは archive/ にあり、ここには�
 | 2026-07-23 | task | idea | [help-category-link-last-wins](./2026-07-23-help-category-link-last-wins.md) | M5 で #help_category 内部セルの link 配線実装時は at_pos ベース last-wins を使う (completion.mbt L42-72 pattern 再利用、宣言順 push 由来の bug class 回避) |
 | 2026-08-12 | task | open | [ref-template-help-carrier](./2026-08-12-ref-template-help-carrier.md) | ref/template 由来 help_meta の provenance carrier 未実装、DR-116 §4 説明引き直しの ref 越し分を次サイクルへ |
 | 2026-08-12 | design | open | [nested-config-not-supplied](./2026-08-12-nested-config-not-supplied.md) | 参照実装が root 宣言の config_file を子スコープの要素へ供給しない (DR-050 §3 同型対応の nested 未実装) |
-| 2026-08-12 | task | open | [config-committed-carry-over](./2026-08-12-config-committed-carry-over.md) | 参照実装が DR-133 のパス列 fold に未追随 (最後勝ち全体置換のまま)。DR-135 で config_file 通常要素化、fixture 再測要 |
 | 2026-08-12 | task | open | [command-value-carrier](./2026-08-12-command-value-carrier.md) | 参照実装の CommandDef が value 担体を持たず command の value を reject する (DR-134 未追随) |
 | 2026-08-12 | design | open | [completion-ux-layer-completer-closure-abi](./2026-08-12-completion-ux-layer-completer-closure-abi.md) | completion ux 層の座席 (kuu.mbt vs kuu-cli lib) と形態 A completer クロージャ ABI が DR-117 波及節で未設計 |
 | 2026-08-12 | design | open | [command-value-default-fn-value-space](./2026-08-12-command-value-default-fn-value-space.md) | value 持ち command の default_fn 単独時の値空間が未規定 |

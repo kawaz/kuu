@@ -1,6 +1,6 @@
 ---
 title: 参照実装が config パス列の fold に未追随 (最後勝ち全体置換のまま / committed 持ち越し)
-status: open
+status: resolved
 category: task
 created: 2026-08-12T00:00:00+09:00
 last_read:
@@ -9,10 +9,10 @@ wip_entered:
 blocked_entered:
 pending_entered:
 discarded_entered:
-resolved_entered:
+resolved_entered: 2026-08-14T00:00:00+09:00
 discard_reason:
 pending_reason:
-close_reason:
+close_reason: ["dr/DR-135:implemented","dr/DR-133:implemented","dr/DR-134:implemented","done:kuu.mbt Release v0.0.32 (5cc1f1d9〜4f380e46) で実装追随完了、conformance 414 decoded/935 ran/mismatches=0、committed 読込失敗 Error は resolve_wbtest で RED 先行 pin 済み"]
 blocked_by:
 origin: DR-133 起草時の実測 (2026-08-12)
 ---
@@ -79,21 +79,21 @@ config_file 要素が result / sources に `user=[]` として現れる」のは
 
 ## 受け入れ条件
 
-- [ ] fixtures/definition-error/config-file-siblings-invalid-range.json が通る (並置 = invalid-range、関与要素
+- [x] fixtures/definition-error/config-file-siblings-invalid-range.json が通る (並置 = invalid-range、関与要素
       ごとに 1 件)
-- [ ] fixtures/value-sources/config/multi-file.json の 4 case が通る (トップキー置換の重ね / cli 席が宣言 default
+- [x] fixtures/value-sources/config/multi-file.json の 4 case が通る (トップキー置換の重ね / cli 席が宣言 default
       の列を置き換える / default 由来パスの不在の黙認 / 全パス不在)
-- [ ] fixtures/value-sources/config/multi-file-multiple.json の 2 case が通る (供給順が fold 順を決める、逆順で
+- [x] fixtures/value-sources/config/multi-file-multiple.json の 2 case が通る (供給順が fold 順を決める、逆順で
       勝者が入れ替わる)
-- [ ] fixtures/value-sources/config/multi-file-path-absent.json の 3 case が通る (供給なし = 空列 / env 席から
+- [x] fixtures/value-sources/config/multi-file-path-absent.json の 3 case が通る (供給なし = 空列 / env 席から
       合流 / cli が env の列を置き換える)
-- [ ] fixtures/value-sources/config/link-supplied-path.json の 3 case が通る (link 経由供給の sources タグが link
+- [x] fixtures/value-sources/config/link-supplied-path.json の 3 case が通る (link 経由供給の sources タグが link
       のまま / 自入口なら cli / 未発火なら default パス)
-- [ ] 既存の単一 config_file fixture (ladder / path / isomorphic-path / array-object / null-supply / value-typing)
+- [x] 既存の単一 config_file fixture (ladder / path / isomorphic-path / array-object / null-supply / value-typing)
       が引き続き通る (列長 1 の縮退形)
-- [ ] 名前付き config_file 要素が result / sources に確定パスを持って現れる (multiple は供給順のパス列
+- [x] 名前付き config_file 要素が result / sources に確定パスを持って現れる (multiple は供給順のパス列
       `string[]`、0 供給は `[]`、未供給の座は null)。cli 由来の発火は effects にも載る (DR-135 §2/§3)
-- [ ] 供給されたパスが読めなくても result の列に残る (DR-135 §2.1 / DR-133 §8)
+- [x] 供給されたパスが読めなくても result の列に残る (DR-135 §2.1 / DR-133 §8)
 
 ## 注意 (push 順序)
 
