@@ -4,7 +4,6 @@ active な issue の一覧。close 済みは archive/ にあり、ここには�
 
 | date | category | status | slug | 概要 |
 |---|---|---|---|---|
-| 2026-08-14 | task | open | [command-array-value-invalid-range](./2026-08-14-command-array-value-invalid-range.md) | 値持ち command の配列 value は invalid-range — DR-134 §1 の array 表現を読み直す (CVQ-Q1a 裁定の反映) |
 | 2026-08-02 | design | open | [accum-cell-value-path-semantics](./2026-08-02-accum-cell-value-path-semantics.md) | accumulator セルへの link 値空間パスの意味論が未規定。v1 は Unsupported (definition-error) で塞ぐ裁定 (DR-127 第2波) |
 | 2026-07-29 | design | idea | [unset-variant-on-repeat-closure-interaction](./2026-07-29-unset-variant-on-repeat-closure-interaction.md) | unset variant を repeat 閉包を持つ要素へ撃つ場合の相互作用 (min 消費段・途中発火・再初期化) が未規定 |
 | 2026-07-28 | design | idea | [positional-seq-child-porosity-unpinned](./2026-07-28-positional-seq-child-porosity-unpinned.md) | positional 直下 seq 子と positionals 入れ子の消費意味論の差 (option 割り込みの多孔質性) が未規定、fixture pin 無し |
