@@ -24,8 +24,8 @@
 
 ### CFM-Q3-β: mid=8 の 1 例目 `values:[...]` の読み
 
-同バッチの CFM-Q3a (複数 config_file 要素の並置は definition-error) は裁定済みで、内容は
-[DR-133 再改稿 issue](issue/2026-08-14-dr133-redraft-single-config-file.md) へ反映済み。本項だけが未回答。
+同バッチの CFM-Q3a (複数 config_file 要素の並置は definition-error) は裁定済みで、
+[DR-133](decisions/DR-133-config-path-list-fold.md) の再改稿として反映済み。本項だけが未回答。
 
 mid=8 の 1 例目に出てきた `values:[...]` の綴りをどう読むか:
 

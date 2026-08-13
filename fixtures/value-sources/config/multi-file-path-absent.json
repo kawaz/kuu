@@ -1,19 +1,14 @@
 {
-  "why": "パス列 (DR-133 §1) に参加するのは**パスを供給した config_file 要素だけ**である。config_file 要素のパスも普通の値源ラダーで解決される以上、cli / env / default のどれからも供給されない要素は読むべきファイルを指しておらず、列に足すものが無い (エラーではなく不参加)。default を持たない config_file 要素 (= 明示指定されたときだけ効く設定ファイル) を書いたときの挙動がこれで決まる。\n\n定義は c1 (default /a.toml) → c2 (long/env のみ、default なし) の順。c2 が供給されると列は [/a.toml, /b.toml] になり、トップキー置換の fold で port は後の /b.toml が置き換え、/a.toml にしか無い onlya は残る。config/multi-file.json が両方 default 由来の重ねを、本 fixture が「不参加 ↔ 合流」の切り替わりを固定する。CONFIG 入力表記は config/path.json と同じ `config_files`。config_file 要素はインフラで結果非掲載 (DR-121 §2)。",
+  "why": "**パスを供給しなければ列は空** (DR-133 §2.1)。config_file 要素のパスも普通の値源ラダーで解決される以上、cli / env / default のどれからも供給されなければ読むべきファイルを指しておらず、列に足すものが無い — エラーではなく、config 席が空のまま値要素が自前の default に落ちるだけである。default を持たない config_file 要素 (= 明示指定されたときだけ効く設定ファイル) を書いたときの挙動がこれで決まる。\n\n併せて **env 席**と、席ごとの入れ替え (cli > env) を固定する。`multiple` 要素でも上位席が発火すれば下位席の列は使われない (fixtures/multiple-parse/declared-default-array-ladder.json と同型)。\n\n供給なしの座は `result` / `sources` とも **`[]`** になる — 反復系は 0 発火でも `[]` を持ち (DR-044 / DR-123)、空コレクションの由来は表現しない (DR-122 §2 / CONFORMANCE §2)。fold の意味論 (トップキー置換・重ね) は config/multi-file.json、供給順は config/multi-file-multiple.json が持つ。CONFIG 入力表記は `config_files` {パス→オブジェクト}。",
   "query": "parse",
   "definition": {
     "options": [
       {
-        "name": "c1",
+        "name": "config",
         "type": "config_file",
         "long": true,
-        "default": "/a.toml"
-      },
-      {
-        "name": "c2",
-        "type": "config_file",
-        "long": true,
-        "env": "MYAPP_C2"
+        "multiple": "append",
+        "env": "MYAPP_CONFIG"
       },
       {
         "name": "port",
@@ -37,66 +32,71 @@
   },
   "cases": [
     {
-      "id": "element-without-path-does-not-join-the-list",
-      "why": "c2 は cli / env のどちらでも供給されず default も無いのでパスを持たない → 列は [/a.toml] の 1 本だけ。/b.toml は provider が返せる状態で置いてあるが読まれない (列に入っていないパスは provider へ渡らない)。port=1@config / onlya=11@config。",
+      "id": "no-path-supplied-yields-an-empty-list",
+      "why": "引数も env も無く、要素が default も持たない: どの席からもパスが供給されないので列は空になり、provider は 1 度も呼ばれない。config 席が空なので port / onlya は自前の default に落ちる。/a.toml が provider 側に存在していても、指していない以上読まれない。config の座は `[]` で sources も `[]`。",
       "args": [],
       "config_files": {
         "/a.toml": {
           "port": 1,
           "onlya": 11
-        },
-        "/b.toml": {
-          "port": 2
         }
       },
       "expect": {
         "outcome": "success",
         "effects": [],
         "result": {
-          "port": 1,
-          "onlya": 11
+          "config": [],
+          "port": 7,
+          "onlya": 70
         },
         "sources": {
-          "port": "config",
-          "onlya": "config"
-        }
-      }
-    },
-    {
-      "id": "cli-supplied-path-joins-the-list",
-      "why": "同じ定義で c2 に cli パスを与えると列は [/a.toml, /b.toml] になる。fold は {port:1, onlya:11} に {port:2} を重ねて {port:2, onlya:11} — port は後段が置換して 2@config、onlya は /b.toml に無いので前段の 11@config が残る。",
-      "args": [
-        "--c2",
-        "/b.toml"
-      ],
-      "config_files": {
-        "/a.toml": {
-          "port": 1,
-          "onlya": 11
-        },
-        "/b.toml": {
-          "port": 2
-        }
-      },
-      "expect": {
-        "outcome": "success",
-        "effects": [],
-        "result": {
-          "port": 2,
-          "onlya": 11
-        },
-        "sources": {
-          "port": "config",
-          "onlya": "config"
+          "config": [],
+          "port": "default",
+          "onlya": "default"
         }
       }
     },
     {
       "id": "env-supplied-path-joins-the-list",
-      "why": "env 席から供給されても列への参加は同じ (config_file 要素のパスラダーは cli > env > default、DR-050 §1)。列は [/a.toml, /b.toml] で結果も cli 供給時と一致する。",
+      "why": "env `MYAPP_CONFIG=/a.toml`: env 席から 1 本供給されて列は [/a.toml] になり、port / onlya がその中身で埋まる。env 由来のパス確定はラダー充填なので effects には載らず (CONFORMANCE §2)、由来は sources の `env` タグで読む。",
       "args": [],
       "env": {
-        "MYAPP_C2": "/b.toml"
+        "MYAPP_CONFIG": "/a.toml"
+      },
+      "config_files": {
+        "/a.toml": {
+          "port": 1,
+          "onlya": 11
+        }
+      },
+      "expect": {
+        "outcome": "success",
+        "effects": [],
+        "result": {
+          "config": [
+            "/a.toml"
+          ],
+          "port": 1,
+          "onlya": 11
+        },
+        "sources": {
+          "config": [
+            "env"
+          ],
+          "port": "config",
+          "onlya": "config"
+        }
+      }
+    },
+    {
+      "id": "cli-supply-replaces-the-env-list",
+      "why": "`--config /b.toml` + env `MYAPP_CONFIG=/a.toml`: 上位席の cli が発火したので env 席の列は使われず、列は [/b.toml] だけになる (席ごとの入れ替えで、連結はしない)。/a.toml は読まれないので onlya は自前 default に落ちる。cli 発火は effects に 1 件。",
+      "args": [
+        "--config",
+        "/b.toml"
+      ],
+      "env": {
+        "MYAPP_CONFIG": "/a.toml"
       },
       "config_files": {
         "/a.toml": {
@@ -109,14 +109,27 @@
       },
       "expect": {
         "outcome": "success",
-        "effects": [],
+        "effects": [
+          {
+            "entity": "config",
+            "op": "set",
+            "operand": "/b.toml",
+            "source": "cli"
+          }
+        ],
         "result": {
+          "config": [
+            "/b.toml"
+          ],
           "port": 2,
-          "onlya": 11
+          "onlya": 70
         },
         "sources": {
+          "config": [
+            "cli"
+          ],
           "port": "config",
-          "onlya": "config"
+          "onlya": "default"
         }
       }
     }

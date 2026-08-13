@@ -1,0 +1,49 @@
+{
+  "why": "1 スコープ 1 config_file (DR-133 §1)。config 席はスコープに 1 つ (DR-031 #3) で、それを埋めるオブジェクトも 1 つ (DR-133 §2) なので、2 つ以上の config_file 要素は同じ 1 席への重複宣言 = 席の値域外になる。kind は `invalid-range` — 同居不可の組合せを表す既存 kind で、DR-134 §2 が値持ち command と占有子の共存に採ったのと同じ筋 (`default` + `default_fn` の併用、非 multiple 要素への `accum_filters` 等と同族)。`export-key-collision` のような固有の解決手段の出し分け (DR-120 §5 の hint) を持たないので新 kind は興さない。\n\nerrors は**並置に関与した config_file 要素ごとに 1 件**を全列挙する (DR-054 §4 の全列挙原則。代表 1 件にすると相方が expect から読めない — DR-120 §5 と同じ理由)。したがって集合比較 (CONFORMANCE §3) は {c1, c2} の 2 件をちょうど要求する。\n\n正しい書き方は 1 要素の `multiple` (DR-133 §1.1) — 重ねは `{type:\"config_file\", multiple:\"append\", default:[...]}` で書き、綴り違いの入口は `alias`、由来違いの入口は元からラダーが持つ 3 席、分割指定は `borrow` が担う。fold 側の輪郭は `fixtures/value-sources/config/multi-file.json` (1 要素 multiple 形) が持つ。",
+  "query": "definition_error",
+  "definition": {
+    "options": [
+      {
+        "name": "c1",
+        "type": "config_file",
+        "long": true,
+        "default": "/a.toml"
+      },
+      {
+        "name": "c2",
+        "type": "config_file",
+        "long": true,
+        "env": "MYAPP_C2",
+        "default": "/b.toml"
+      },
+      {
+        "name": "port",
+        "type": "number",
+        "long": true,
+        "config_key": [
+          "port"
+        ],
+        "default": 7
+      }
+    ]
+  },
+  "cases": [
+    {
+      "id": "two-config-file-elements-in-one-scope",
+      "why": "同一スコープ (root) に config_file 要素が 2 つ。検査は構造的で、どちらがパスを供給するか・実行時にどちらが読まれるかを見ない (定義の形だけで決まる)。関与する c1 / c2 の両方に 1 件ずつ error が立つ。config_file でない `port` は関与しないので error を持たない。",
+      "expect": {
+        "outcome": "definition-error",
+        "errors": [
+          {
+            "element": "c1",
+            "kind": "invalid-range"
+          },
+          {
+            "element": "c2",
+            "kind": "invalid-range"
+          }
+        ]
+      }
+    }
+  ]
+}

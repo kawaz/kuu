@@ -1,0 +1,126 @@
+{
+  "why": "link は config_file セルを target にでき、別入口から明示した値が config パスとして効く (DR-029 の 1 実体 : N 参照)。本 fixture は **CFL-Q1a (DR-133 §4.1) の観測面の半分**を固定する — committed 判定が link を透過するようになっても、**`sources` のタグは `link` のまま**である (DR-121 §4 は現役)。committed 判定 (内部) だけが値の源席の cli/env 性を辿り、観測面は経路をそのまま写す、という 2 軸の分離がここで読める。\n\n**判定側 (link 経由の committed なパスが読めなければ Error) は現行の fixture schema では固定できない。** config の読込失敗は resolve フェーズのエラーで、`runtimeError` が required とする `args_pos` に対応するトークンを持たず、`kind` の語彙 (`parse` / `filter` / `constraint`) にも席が無い。直接 cli 供給の committed 失敗も同じ理由で固定できておらず (config/path.json の why 参照)、link 経由だけの制約ではない。規定は DR-133 §4.1 が持ち、fixture は成功輪郭のみを担う。\n\nlink 参照ノード (`legacy-config`) は露出キーを占有しない (値は canonical の `config` セルへ流れ自前のセルを持たない、DR-120 §4) ので result / sources には現れない。canonical 側の `config` は通常要素として確定パスを持つ (DR-135)。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {
+        "name": "config",
+        "type": "config_file",
+        "long": true,
+        "default": "/d.toml"
+      },
+      {
+        "name": "legacy-config",
+        "type": "string",
+        "long": true,
+        "link": "config"
+      },
+      {
+        "name": "port",
+        "type": "number",
+        "long": true,
+        "config_key": [
+          "port"
+        ],
+        "default": 7
+      }
+    ]
+  },
+  "cases": [
+    {
+      "id": "link-supplied-path-is-read-and-tagged-link",
+      "why": "`--legacy-config /l.toml`: link 入口から供給されたパスが canonical の config セルへ流れ、provider が /l.toml を読んで port=9 が config 席から埋まる。effects の entity は canonical セルの宣言名 `config` で source は `link` (DR-031 の source 確定ルール — 自分の入口からなら cli、link 越しなら link)。**result / sources の config の座も `link` タグ**で、経路がそのまま観測できる。link 参照ノード `legacy-config` 自身は非占有なので結果に現れない。",
+      "args": [
+        "--legacy-config",
+        "/l.toml"
+      ],
+      "config_files": {
+        "/l.toml": {
+          "port": 9
+        },
+        "/d.toml": {
+          "port": 1
+        }
+      },
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {
+            "entity": "config",
+            "op": "set",
+            "operand": "/l.toml",
+            "source": "link"
+          }
+        ],
+        "result": {
+          "config": "/l.toml",
+          "port": 9
+        },
+        "sources": {
+          "config": "link",
+          "port": "config"
+        }
+      }
+    },
+    {
+      "id": "own-entry-keeps-the-cli-tag",
+      "why": "(対) `--config /c.toml`: 同じセルを自分の入口から供給すると source は `cli` になる。link とラダー同順位で、違いは経路だけであることの固定 (DR-031 / DR-121 §4)。link 経由と自入口で値の扱いは変わらず、タグだけが分かれる。",
+      "args": [
+        "--config",
+        "/c.toml"
+      ],
+      "config_files": {
+        "/c.toml": {
+          "port": 5
+        },
+        "/d.toml": {
+          "port": 1
+        }
+      },
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {
+            "entity": "config",
+            "op": "set",
+            "operand": "/c.toml",
+            "source": "cli"
+          }
+        ],
+        "result": {
+          "config": "/c.toml",
+          "port": 5
+        },
+        "sources": {
+          "config": "cli",
+          "port": "config"
+        }
+      }
+    },
+    {
+      "id": "unfired-link-leaves-the-default-path",
+      "why": "(対) どちらの入口も発火しなければ、config は自前の default パス /d.toml に落ちて port=1 が読まれる。link 入口の存在自体はラダーに影響しない (入口が増えてもセルは 1 つ、DR-120 §1)。",
+      "args": [],
+      "config_files": {
+        "/c.toml": {
+          "port": 5
+        },
+        "/d.toml": {
+          "port": 1
+        }
+      },
+      "expect": {
+        "outcome": "success",
+        "effects": [],
+        "result": {
+          "config": "/d.toml",
+          "port": 1
+        },
+        "sources": {
+          "config": "default",
+          "port": "config"
+        }
+      }
+    }
+  ]
+}

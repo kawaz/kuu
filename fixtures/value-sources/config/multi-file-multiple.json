@@ -1,25 +1,13 @@
 {
-  "why": "`multiple` の config_file 要素は、パス列 (DR-133 §1) の**自分の位置に供給順で inline 展開**される。要素の綴り (単体を複数個並べる / multiple を 1 個) で fold の意味は変わらない — どちらも「宣言順に並んだパス列を順に読んでトップキー置換で畳む」1 本の規則に従う (DR-133 §1.1)。\n\n定義は sys (default /etc.toml) → user (multiple、default なし) → site (default /site.toml) の宣言順で、system 設定の下地にユーザ設定を重ね、最後に site 設定が上書きする典型形。`--user /u1.toml --user /u2.toml` ならパス列は [/etc.toml, /u1.toml, /u2.toml, /site.toml] になる。CONFIG 入力表記は config/path.json と同じ `config_files`。config_file 要素はインフラで結果非掲載 (DR-121 §2)。",
+  "why": "**供給順が fold の順を決める** (DR-133 §2)。`multiple` の config_file 要素が複数パスを供給すると、供給された順にそのまま列になり、後のパスのトップキーが前を置き換える。同じ 2 本を逆順に供給すると勝者が入れ替わることを対で固定する — 列の順序が意味を持つ (= 集合ではない) ことの pin。\n\n併せて **DR-135 の結果面**を固定する: config_file 要素自身が通常要素として result / sources に座り、`multiple` なら値は**供給順のパス列** (`string[]`)、sources は shadow tree として要素ごとのタグ配列 (DR-122)。cli 発火は 1 供給 1 件で `effects` にも載る (DR-135 §3。effects は宣言名軸なので綴りは要素名)。\n\n本 fixture は cli 供給のみで観測する (宣言 default を持たない要素にして、列の中身が供給そのものだけで決まる形にしてある)。既定パス列と席ごとの入れ替えは multi-file.json、供給なし = 空列と env 席は multi-file-path-absent.json が持つ。CONFIG 入力表記は `config_files` {パス→オブジェクト}。",
   "query": "parse",
   "definition": {
     "options": [
       {
-        "name": "sys",
-        "type": "config_file",
-        "long": true,
-        "default": "/etc.toml"
-      },
-      {
-        "name": "user",
+        "name": "config",
         "type": "config_file",
         "long": true,
         "multiple": "append"
-      },
-      {
-        "name": "site",
-        "type": "config_file",
-        "long": true,
-        "default": "/site.toml"
       },
       {
         "name": "port",
@@ -29,15 +17,6 @@
           "port"
         ],
         "default": 7
-      },
-      {
-        "name": "ketc",
-        "type": "number",
-        "long": true,
-        "config_key": [
-          "ketc"
-        ],
-        "default": 70
       },
       {
         "name": "ku1",
@@ -61,19 +40,15 @@
   },
   "cases": [
     {
-      "id": "multiple-paths-inline-in-declaration-position",
-      "why": "列は [/etc.toml, /u1.toml, /u2.toml, /site.toml]。port は 4 ファイルすべてが持ち、最後の /site.toml が置き換えて 4@config。各ファイル固有のキーは重ねで残る (ketc=10 / ku1=20 / ku2=30、いずれも source:config)。multiple の 2 パスが sys と site の**間**に供給順で入っていることは、ketc と ku1/ku2 が同時に残りつつ port が site 由来になることで観測できる。",
+      "id": "supply-order-decides-the-fold-order",
+      "why": "`--config /u1.toml --config /u2.toml`: 供給順どおり列は [/u1.toml, /u2.toml]。両方が持つ port は後の /u2.toml が勝って 3、各ファイルにしか無い ku1 / ku2 はそれぞれ残る。config の値は供給順のパス列、タグは供給ごとに cli。",
       "args": [
-        "--user",
+        "--config",
         "/u1.toml",
-        "--user",
+        "--config",
         "/u2.toml"
       ],
       "config_files": {
-        "/etc.toml": {
-          "port": 1,
-          "ketc": 10
-        },
         "/u1.toml": {
           "port": 2,
           "ku1": 20
@@ -81,42 +56,54 @@
         "/u2.toml": {
           "port": 3,
           "ku2": 30
-        },
-        "/site.toml": {
-          "port": 4
         }
       },
       "expect": {
         "outcome": "success",
-        "effects": [],
+        "effects": [
+          {
+            "entity": "config",
+            "op": "set",
+            "operand": "/u1.toml",
+            "source": "cli"
+          },
+          {
+            "entity": "config",
+            "op": "set",
+            "operand": "/u2.toml",
+            "source": "cli"
+          }
+        ],
         "result": {
-          "port": 4,
-          "ketc": 10,
+          "config": [
+            "/u1.toml",
+            "/u2.toml"
+          ],
+          "port": 3,
           "ku1": 20,
           "ku2": 30
         },
         "sources": {
+          "config": [
+            "cli",
+            "cli"
+          ],
           "port": "config",
-          "ketc": "config",
           "ku1": "config",
           "ku2": "config"
         }
       }
     },
     {
-      "id": "multiple-supply-order-decides-the-fold-order",
-      "why": "同じ 2 ファイルを逆順に供給すると列の順も逆になる: [/etc.toml, /u2.toml, /u1.toml, /site.toml]。/site.toml を provider が返せない状態にして最後段を落とすと (default 由来の不在なので黙認、DR-133 §3)、port を最後に置き換えるのは /u1.toml になり 2@config。前ケース (同じ 2 ファイルを逆順に供給) の port=4 と対にすることで、multiple の**供給順**がそのまま fold 順になることを観測する。",
+      "id": "reversed-supply-order-flips-the-winner",
+      "why": "(対) 同じ 2 本を逆順に供給すると列も [/u2.toml, /u1.toml] になり、port は後の /u1.toml が勝って 2 になる。ku1 / ku2 は衝突しないので順序に依らず同じ。列が集合ではなく順序を持つことの固定。",
       "args": [
-        "--user",
+        "--config",
         "/u2.toml",
-        "--user",
+        "--config",
         "/u1.toml"
       ],
       "config_files": {
-        "/etc.toml": {
-          "port": 1,
-          "ketc": 10
-        },
         "/u1.toml": {
           "port": 2,
           "ku1": 20
@@ -128,52 +115,37 @@
       },
       "expect": {
         "outcome": "success",
-        "effects": [],
+        "effects": [
+          {
+            "entity": "config",
+            "op": "set",
+            "operand": "/u2.toml",
+            "source": "cli"
+          },
+          {
+            "entity": "config",
+            "op": "set",
+            "operand": "/u1.toml",
+            "source": "cli"
+          }
+        ],
         "result": {
+          "config": [
+            "/u2.toml",
+            "/u1.toml"
+          ],
           "port": 2,
-          "ketc": 10,
           "ku1": 20,
           "ku2": 30
         },
         "sources": {
+          "config": [
+            "cli",
+            "cli"
+          ],
           "port": "config",
-          "ketc": "config",
           "ku1": "config",
           "ku2": "config"
-        }
-      }
-    },
-    {
-      "id": "multiple-without-supply-does-not-join",
-      "why": "multiple 要素に 1 つもパスが供給されなければ列に参加しない (DR-133 §1.1 — 単体要素の不参加と同じ規則)。列は [/etc.toml, /site.toml] だけになり、ku1/ku2 は自前 default に落ちる。port は site が置換して 4@config、ketc は etc から残って 10@config。",
-      "args": [],
-      "config_files": {
-        "/etc.toml": {
-          "port": 1,
-          "ketc": 10
-        },
-        "/u1.toml": {
-          "port": 2,
-          "ku1": 20
-        },
-        "/site.toml": {
-          "port": 4
-        }
-      },
-      "expect": {
-        "outcome": "success",
-        "effects": [],
-        "result": {
-          "port": 4,
-          "ketc": 10,
-          "ku1": 71,
-          "ku2": 72
-        },
-        "sources": {
-          "port": "config",
-          "ketc": "config",
-          "ku1": "default",
-          "ku2": "default"
         }
       }
     }
