@@ -84,6 +84,11 @@ value を名乗ろうとスコープを名乗ろうと、command は親スコー
 (DR-120 §4)。露出キー衝突検査への参加も、`export_key` による改名も従来どおりで、本 DR は §4 の
 占有 / 非占有の判定表を変更しない。
 
+透過 (`export_key: null`、DR-052 §2) の value 持ち command も**合法**である (kawaz 裁定 2026-08-14)。
+値の座るキーが無いので value は結果に射影されない — 射影しないと明示宣言した通りの動作であり、
+`dd` への `export_key` (inert) や常時充足要素への `required` (vacuous) と同じ「無意味だが無害な宣言」
+の線に従う。誤解への気づかせは lint の領分。
+
 ### 7. schema 変更は無い
 
 `schema/wire.schema.json` は `commands` の要素を `#/$defs/node` として再帰参照しており、`value` は
