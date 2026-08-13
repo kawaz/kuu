@@ -1,5 +1,5 @@
 {
-  "why": "config ファイル値源を加えた 4 席ラダー cli > env > config > default (DR-050 §5 / DR-031 #3)。config は席宣言型で構造 (matcher/経路探索) に一切関与せず (DR-050 §5)、完走後の resolve フェーズ (経路確定 → config_file 値確定 → provider 読込 → config 席有効化 → 最終値確定) で効く。port は env 席 (PORT) + config_key [port] + default 1 を持ち、4 つの値源が順に供給する。source タグ (cli/env/config/default) が保存される (DR-050 §5 config 席 = source:config)。config 由来値もラダー充填なので effects 非掲載、result/sources で検証 (CONFORMANCE §2)。config_file 要素 config はインフラで結果に出ない (値源解決の足場)。\n\nCONFIG 入力表記 (本領域が提案、findings 参照): case に `config` フィールドを足し、config_provider が任意パスに対し返す階層オブジェクトを置く (slice の provider_obj と同型)。定義の config_file 要素のパス (cli/env/default で解決) がどれでも同じオブジェクトを返す抽象化。読込失敗は別 fixture (config/path.json) で `config` 省略により表現。",
+  "why": "config ファイル値源を加えた 4 席ラダー cli > env > config > default (DR-050 §5 / DR-031 #3)。config は席宣言型で構造 (matcher/経路探索) に一切関与せず (DR-050 §5)、完走後の resolve フェーズ (経路確定 → config_file 値確定 → provider 読込 → config 席有効化 → 最終値確定) で効く。port は env 席 (PORT) + config_key [port] + default 1 を持ち、4 つの値源が順に供給する。source タグ (cli/env/config/default) が保存される (DR-050 §5 config 席 = source:config)。config 由来値もラダー充填なので effects 非掲載、result/sources で検証 (CONFORMANCE §2)。config_file 要素 config 自身も通常要素として結果に出る (DR-135。値 = 確定したパス、sources は自分のラダー席のタグ。config 席は循環禁止 (DR-050 §5) なので `config` タグは立たない)。\n\nCONFIG 入力表記 (本領域が提案、findings 参照): case に `config` フィールドを足し、config_provider が任意パスに対し返す階層オブジェクトを置く (slice の provider_obj と同型)。定義の config_file 要素のパス (cli/env/default で解決) がどれでも同じオブジェクトを返す抽象化。読込失敗は別 fixture (config/path.json) で `config` 省略により表現。",
   "query": "parse",
   "definition": {
     "options": [
@@ -25,7 +25,7 @@
   "cases": [
     {
       "id": "cli-wins",
-      "why": "cli 最上席: --port 9090 が config {port:3000} と env を差し置いて勝つ。effects に cli set、result/sources は cli。config_file 要素はインフラで結果非掲載。",
+      "why": "cli 最上席: --port 9090 が config {port:3000} と env を差し置いて勝つ。effects に cli set、result/sources は cli。`config` 要素自身も result に出る (default パス /app.toml、sources=default、DR-135)。",
       "args": [
         "--port",
         "9090"
@@ -44,9 +44,11 @@
           }
         ],
         "result": {
+          "config": "/app.toml",
           "port": 9090
         },
         "sources": {
+          "config": "default",
           "port": "cli"
         }
       }
@@ -65,9 +67,11 @@
         "outcome": "success",
         "effects": [],
         "result": {
+          "config": "/app.toml",
           "port": 8080
         },
         "sources": {
+          "config": "default",
           "port": "env"
         }
       }
@@ -83,9 +87,11 @@
         "outcome": "success",
         "effects": [],
         "result": {
+          "config": "/app.toml",
           "port": 3000
         },
         "sources": {
+          "config": "default",
           "port": "config"
         }
       }
@@ -99,9 +105,11 @@
         "outcome": "success",
         "effects": [],
         "result": {
+          "config": "/app.toml",
           "port": 1
         },
         "sources": {
+          "config": "default",
           "port": "default"
         }
       }

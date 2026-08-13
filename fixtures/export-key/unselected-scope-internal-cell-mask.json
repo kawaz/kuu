@@ -1,5 +1,5 @@
 {
-  "why": "内部セル (`type: \"none\"` / `config_file` / dd trigger) は結果から**落とす**対象なので、その席は `(path, key)` の negative list として持たれる。ここで**未選択の透過 command** 配下の内部セルを席に含めてしまうと、透過ラベルが落ちて席が root に着地し、**root に実在する同名の値セルを巻き添えで除外**する。値が消えるので実害が大きく、しかも透過固有 (identity なら席が `([\"c\"], ...)` になり衝突しない) なので気づきにくい。除外の席も「選ばれたスコープの配下」に限る。",
+  "why": "内部セル (`type: \"none\"` / dd trigger) は結果から**落とす**対象なので、その席は `(path, key)` の negative list として持たれる。ここで**未選択の透過 command** 配下の内部セルを席に含めてしまうと、透過ラベルが落ちて席が root に着地し、**root に実在する同名の値セルを巻き添えで除外**する。値が消えるので実害が大きく、しかも透過固有 (identity なら席が `([\"c\"], ...)` になり衝突しない) なので気づきにくい。除外の席も「選ばれたスコープの配下」に限る。\n\n`config_file` は negative list に**含まれない** (DR-135 — 値 (パス) を持つ通常の値セルであり、内部セルとして残るのは値を持たない `type: \"none\"` と dd trigger の 2 者)。本 fixture は同じ透過 command の下に `cfgpath` (config_file) を同居させ、除外される `mark` (none) と対比する — 選択時に `cfgpath` は昇格露出して結果に現れ、`mark` は現れない。negative list を type で引くときに config_file を混ぜたままにする実装はここで落ちる。\n\n`cfgpath` の宣言名を root の `cfg` とずらしてあるのは意図的で、config_file が占有子になった (DR-135 §4) 以上、透過 command 配下の同名 config_file は昇格先の root で `cfg` と衝突し definition-error になるため (DR-120 §6 の「別 command 配下から昇格露出する子も対象」)。衝突側の輪郭は `collision-config-file-option.json` が持つ。",
   "query": "parse",
   "definition": {
     "options": [
@@ -32,7 +32,7 @@
         "export_key": null,
         "options": [
           {
-            "name": "cfg",
+            "name": "cfgpath",
             "type": "config_file",
             "long": true
           },
@@ -48,7 +48,7 @@
   "cases": [
     {
       "id": "unselected-transparent-internal-cells-do-not-mask-root",
-      "why": "`--cfg hello --mark world a --keep`: 透過 command `c` は選ばれていないので、その配下の `cfg` (config_file) と `mark` (none) は除外席を作らない。root の同名の**値セル** `cfg` / `mark` は普通の文字列として結果に残る。除外席が未選択スコープからも作られると、root の `cfg` と `mark` が両方 result からも sources からも消える。",
+      "why": "`--cfg hello --mark world a --keep`: 透過 command `c` は選ばれていないので、その配下の `mark` (none) は除外席を作らない。root の同名の**値セル** `mark` は普通の文字列として結果に残る。除外席が未選択スコープからも作られると、root の `mark` が result からも sources からも消える。`c` 配下の `cfgpath` も未選択スコープの住人なので昇格せず、キー自体が現れない (透過 command は未選択なら内側を展開しない、DR-130 §2)。",
       "args": [
         "--cfg",
         "hello",
@@ -97,7 +97,7 @@
     },
     {
       "id": "selected-transparent-internal-cells-still-excluded",
-      "why": "`c --mark`: 透過 command `c` を選んだ場合、その配下の `mark` (none) は従来どおり除外される — 内部セル除外そのものは生きている。選択判定を入れたことで除外を殺していないことを固定する。root の `cfg` / `mark` は発火していないので null (値源なし、DR-130)。",
+      "why": "`c --mark`: 透過 command `c` を選んだ場合、その配下の `mark` (none) は従来どおり除外される — 内部セル除外そのものは生きている。選択判定を入れたことで除外を殺していないことを固定する。一方 `cfgpath` (config_file) は内部セルではないので root へ昇格露出し、パスをどの席からも供給されていないため `null` で座る (DR-135 §2 / DR-130 §1)。root の `cfg` / `mark` は発火していないので null (値源なし、DR-130)。",
       "args": [
         "c",
         "--mark"
@@ -108,12 +108,50 @@
         "result": {
           "cfg": null,
           "mark": null,
-          "a": null
+          "a": null,
+          "cfgpath": null
         },
         "sources": {
           "cfg": null,
           "mark": null,
-          "a": null
+          "a": null,
+          "cfgpath": null
+        }
+      }
+    },
+    {
+      "id": "selected-transparent-config-file-carries-its-path",
+      "why": "`c --cfgpath /u.toml --mark`: 昇格露出した config_file にパスを供給すると、その値 (確定したパス) が root の座に現れ sources は自分のラダー席 `cli` になる。cli 発火なので `effects` にも 1 件載る (DR-135 §3 — effects は宣言名軸なので `cfgpath` の綴りで書く)。同じスコープの `mark` (none) は発火しても effects / result のどちらにも現れないままで、値を持つ要素と持たない要素の分界が 1 ケース内で対比できる。`config_files` に `/u.toml` を空オブジェクトで置いてあるのは、**committed (cli) なパスの読込失敗が Error になる** (DR-050 §2 / DR-133 §3) のを避けて成功輪郭に留めるため。中身を空にしてあるので、供給される config 値は無く、スコープをまたぐ config 供給の未確定論点 (DR-133 §5 の射程外) に本 fixture は依存しない。",
+      "args": [
+        "c",
+        "--cfgpath",
+        "/u.toml",
+        "--mark"
+      ],
+      "config_files": {
+        "/u.toml": {}
+      },
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {
+            "entity": "cfgpath",
+            "op": "set",
+            "operand": "/u.toml",
+            "source": "cli"
+          }
+        ],
+        "result": {
+          "cfg": null,
+          "mark": null,
+          "a": null,
+          "cfgpath": "/u.toml"
+        },
+        "sources": {
+          "cfg": null,
+          "mark": null,
+          "a": null,
+          "cfgpath": "cli"
         }
       }
     }

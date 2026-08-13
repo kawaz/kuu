@@ -172,4 +172,5 @@ fold への追随が要る。`src/kuu/resolve.mbt` の `resolve_scope_config_wit
 - DR-031 (値源ラダーの config 席 — 席は 1 つ、埋めるオブジェクトも 1 つ)
 - DR-037 (Reject / Error の分界 — 読込失敗の Error 帰属)
 - DR-034 / DR-105 (`multiple` の供給順 — パス列の inline 展開が従う順序)
-- DR-121 §2 (config_file 要素は内部セルで sources / result に現れない)
+- DR-135 (config_file は通常要素 — 内部セルの特別枠を廃止。result に座るのは**供給されたパス**であって
+  読めたパスではなく、読めたかどうかは本 DR の fold の関心に閉じる)

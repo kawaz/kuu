@@ -1,5 +1,5 @@
 {
-  "why": "config_key を持たない要素は同型 path (結果スコープパス + name) で config を引く (DR-050 §3 同型対応)。明示 config_key (絶対パス DSL) との対照: config_key なしの port は結果と同じ形で config オブジェクトを辿る (root スコープ → path [port])。これは『結果と同じ形』の対応 (DR-030 appconfig 統合ストア) であり、config オブジェクトの入れ子が結果スコープの入れ子に一致すれば引ける。一致しなければ default に落ちる (エラーでなく供給なし)。config 由来値は effects 非掲載、result/sources で検証。config_file 要素はインフラで結果非掲載。config 入力表記は config/ladder.json の注記と同じ (case の `config` フィールド = provider が任意パスに返すオブジェクト)。",
+  "why": "config_key を持たない要素は同型 path (結果スコープパス + name) で config を引く (DR-050 §3 同型対応)。明示 config_key (絶対パス DSL) との対照: config_key なしの port は結果と同じ形で config オブジェクトを辿る (root スコープ → path [port])。これは『結果と同じ形』の対応 (DR-030 appconfig 統合ストア) であり、config オブジェクトの入れ子が結果スコープの入れ子に一致すれば引ける。一致しなければ default に落ちる (エラーでなく供給なし)。config 由来値は effects 非掲載、result/sources で検証。config_file 要素自身も通常要素として結果に出る (DR-135。値 = 確定したパス、sources は自分のラダー席のタグ。config 席は循環禁止 (DR-050 §5) なので `config` タグは立たない)。config 入力表記は config/ladder.json の注記と同じ (case の `config` フィールド = provider が任意パスに返すオブジェクト)。",
   "query": "parse",
   "definition": {
     "options": [
@@ -29,9 +29,11 @@
         "outcome": "success",
         "effects": [],
         "result": {
+          "config": "/app.toml",
           "port": 5000
         },
         "sources": {
+          "config": "default",
           "port": "config"
         }
       }
@@ -49,9 +51,11 @@
         "outcome": "success",
         "effects": [],
         "result": {
+          "config": "/app.toml",
           "port": 1
         },
         "sources": {
+          "config": "default",
           "port": "default"
         }
       }

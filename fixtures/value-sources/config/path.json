@@ -1,5 +1,5 @@
 {
-  "why": "config_file 要素のパス自身が cli > env > default ラダーで解決する (DR-050 path ladder)。config_file 要素は普通の要素であり、その値 (=ファイルパス) が cli/env/default の 3 席で決まる。どのパスが勝ったかは、パスごとに別オブジェクトを返す provider で観測する。加えて default 由来パスの読込失敗は黙認 (設定ファイルはオプショナル) で値要素は自前 default に落ちる。config 由来値は effects 非掲載、result/sources で検証。config_file 要素はインフラで結果非掲載。\n\nCONFIG 入力表記 2 種 (本領域が提案、findings 参照): (1) パス依存の観測には `config_files` フィールド {パス→オブジェクト} を使い、provider がパスごとに返す値を表す (マップ外パスは None)。(2) 読込全失敗 (provider が全パスで None) は case トップの `config` を null にして表す (config/null-supply.json のネスト null = 値の供給なし とは別 — こちらはファイル自体が読めない)。committed パス (cli/env 明示) の読込失敗は Error だが、resolve フェーズのエラーは args_pos を持たず failure schema に収まらないため findings 送り。本 fixture は成功輪郭 (どのパスが勝つか + default パス不在の黙認) のみ固定する。",
+  "why": "config_file 要素のパス自身が cli > env > default ラダーで解決する (DR-050 path ladder)。config_file 要素は普通の要素であり、その値 (=ファイルパス) が cli/env/default の 3 席で決まる。どのパスが勝ったかは、パスごとに別オブジェクトを返す provider で観測する。加えて default 由来パスの読込失敗は黙認 (設定ファイルはオプショナル) で値要素は自前 default に落ちる。config 由来値は effects 非掲載、result/sources で検証。config_file 要素自身も通常要素として結果に出る (DR-135。値 = 確定したパス、sources は自分のラダー席のタグ。config 席は循環禁止 (DR-050 §5) なので `config` タグは立たない)。 どの席が勝ったかは `config` の座の sources タグ (cli/env/default) で直接読めるので、勝ったパスの観測は provider の返り値経由と二重に固定される。`default-read-tolerated` は読込全失敗でも値が default パスのまま座ることを見る (DR-135 §2.1)。\n\nCONFIG 入力表記 2 種 (本領域が提案、findings 参照): (1) パス依存の観測には `config_files` フィールド {パス→オブジェクト} を使い、provider がパスごとに返す値を表す (マップ外パスは None)。(2) 読込全失敗 (provider が全パスで None) は case トップの `config` を null にして表す (config/null-supply.json のネスト null = 値の供給なし とは別 — こちらはファイル自体が読めない)。committed パス (cli/env 明示) の読込失敗は Error だが、resolve フェーズのエラーは args_pos を持たず failure schema に収まらないため findings 送り。本 fixture は成功輪郭 (どのパスが勝つか + default パス不在の黙認) のみ固定する。",
   "query": "parse",
   "definition": {
     "options": [
@@ -42,11 +42,20 @@
       },
       "expect": {
         "outcome": "success",
-        "effects": [],
+        "effects": [
+          {
+            "entity": "config",
+            "op": "set",
+            "operand": "/cli.toml",
+            "source": "cli"
+          }
+        ],
         "result": {
+          "config": "/cli.toml",
           "port": 11
         },
         "sources": {
+          "config": "cli",
           "port": "config"
         }
       }
@@ -73,9 +82,11 @@
         "outcome": "success",
         "effects": [],
         "result": {
+          "config": "/env.toml",
           "port": 22
         },
         "sources": {
+          "config": "env",
           "port": "config"
         }
       }
@@ -99,9 +110,11 @@
         "outcome": "success",
         "effects": [],
         "result": {
+          "config": "/default.toml",
           "port": 33
         },
         "sources": {
+          "config": "default",
           "port": "config"
         }
       }
@@ -115,9 +128,11 @@
         "outcome": "success",
         "effects": [],
         "result": {
+          "config": "/default.toml",
           "port": 7
         },
         "sources": {
+          "config": "default",
           "port": "default"
         }
       }

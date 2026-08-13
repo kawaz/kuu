@@ -41,10 +41,12 @@
         "outcome": "success",
         "effects": [],
         "result": {
+          "config": "/app.toml",
           "port": 9,
           "name": null
         },
         "sources": {
+          "config": "default",
           "port": "default",
           "name": null
         }
@@ -61,10 +63,12 @@
         "outcome": "success",
         "effects": [],
         "result": {
+          "config": "/app.toml",
           "port": 3000,
           "name": null
         },
         "sources": {
+          "config": "default",
           "port": "config",
           "name": null
         }

@@ -107,7 +107,7 @@ fixture が期待する outcome の代わりに `kind: "unsupported"` の defini
 
   **空コレクションの由来は表現しない** (DR-122 §2 の帰結) — `[]` / `{}` は値の座を持たないため、「ユーザが明示的に空にした (`empty` op、committed=true)」と「何も来なかった (`set(null)` による開放後の default 席)」が `sources` 上では同じ `[]` になる。この区別は `effects` の op (`empty` / `set` with null operand) が担う (`fixtures/multiple-parse/filters-cell-ops.json`)。`sources` は値の由来を写す面であって committed 軸を持たない (DR-031「committed/selected との直交性」)。
 
-  **内部セルは射影しない**: `type: "none"` (DR-089) / `config_file` (DR-050) / dd trigger (DR-064) は `effects` / `result` / `sources` のいずれにも現れない。
+  **内部セルは射影しない**: `type: "none"` (DR-089) / dd trigger (DR-064) は `effects` / `result` / `sources` のいずれにも現れない。**`config_file` はここに含まれない** — 値 (パス) を持つ通常の値セルなので、露出キーがあれば `result` / `sources` に確定したパスが座り、cli / link 由来の発火は `effects` にも載る (DR-135)。
 
   `effects[].entity` は**射影前の canonical entity name / id** であり `export_key` を適用しない (DR-045: 効果は cell 単位で記録する。entity は値セルであって露出パスではない)。したがって `effects` は宣言名軸、`result` / `sources` は結果アドレス軸であり、同じ cell でも綴りが異なる — `{"name":"verbose","export_key":"v"}` に `--verbose` を与えた場合、`effects[].entity` は `"verbose"`、`result` / `sources` のキーはともに `"v"` (`fixtures/export-key/rename-flag-default.json`)。
 - **report 直下のフィールド名 (`result` / `effects` / `sources` / `warnings` 等) は entity name として予約しない** (SPK-Q2=a): `{"name": "sources"}` のような要素宣言は合法で、definition-error にしない。衝突が起きない構造的根拠 — entity の値は常に `result` **の中の**キーとして現れ (`result.sources`)、report 直下のフィールドとは階層が異なる。`sources` shadow tree のキー (`result` と同じ露出キー、DR-122) も `warnings[].element` (canonical セル参照、DR-058 §2) も結果面 / 宣言面の名前空間であり、report envelope のフィールド名空間とは交差しない。実装が flat な連想構造で report を組む場合の衝突は実装バグであって仕様の禁則対象ではない

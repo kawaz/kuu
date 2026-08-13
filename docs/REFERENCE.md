@@ -532,7 +532,7 @@ enum にならない)。要素に配列があれば `seq` ブランチに展開�
 | `completion_script` | 糖衣プリセット | 必須の shell 名 string を `#completion_script` へ供給し、completion_script capability を発火する。値域は自由入力、候補は実装対応 shell 名 | DESIGN §15.13, DR-117 §2 |
 | `dd` | 糖衣プリセット | greedy 面のトリガ兼消費者 (`--`)。§2.2「dd 専用」参照 | DESIGN §3.3, DR-064/090 |
 | `tty` (`builtin/tty`) | 糖衣プリセット / factory | bool を土台に、暗黙 default = tty 観測 | DESIGN §3.3, §12b, DR-099, DR-129 |
-| `config_file` | 特殊 type | config ファイルパスの配線宣言。同一スコープの全要素が供給するパスを宣言順に読み、トップキー置換で畳んだ 1 個が config 席を埋める (`multiple` は inline 展開) | DESIGN §14.3, DR-050/133 |
+| `config_file` | 特殊 type | config ファイルパスの配線宣言。同一スコープの全要素が供給するパスを宣言順に読み、トップキー置換で畳んだ 1 個が config 席を埋める (`multiple` は inline 展開)。要素自身は**通常要素**で、露出キーがあれば確定したパスが `result` / `sources` に座り露出キー衝突検査にも参加する (隠すなら `export_key: null`) | DESIGN §14.3, DR-050/133/135 |
 
 ### 3.2 descriptor 収載 type カタログ (configurable factory + fixture 仮想型)
 

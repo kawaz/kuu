@@ -5,6 +5,8 @@ Status: Accepted (SRCADDR-Q1=d / Q2-α=a / Q2-β=c / LINKSRC-Q1=a、kawaz 2026-0
 
 > **更新 (DR-130、2026-08-01): 現行の `sources` は `result` と同じ宣言キー集合を持ち、値が確定しない座は両方で `null` になる。** §2 の「値源ラダーが確定した値セルだけが席を持つ」は、値が確定しなかった宣言座にも `null` の席が立つ形へ変わる。presence marker は廃止され、未選択 scope は親キーの `null` で内側を畳む。空コレクションに source タグを置かない規則は不変 (DR-122 §2 / DR-130 §5)。
 
+> **更新 (DR-135、2026-08-14): §2.1 の内部セルから `config_file` が抜けた。** 内部セルとして残るのは `type: "none"` (DR-089) と dd trigger (DR-064) の 2 者で、いずれも値セルを持たない構造マーカーである。`config_file` は string のパス値を自分のラダーで確定させる通常の値セル (DR-050 §1) なので、`effects` / `result` / `sources` に通常要素と同じ規則で現れ、露出キー衝突検査にも占有子として参加する。結果に出したくない定義は `export_key: null` か nameless で書く (DR-135 §5)。
+
 > **更新 (DR-125、2026-07-29): `sources` のタグ語彙から `inherit` が抜けた。** §1 の例の
 > `{"path": ["sub"], "key": "ttl", "source": "inherit"}` と §1.1 の語彙列挙
 > (`cli` / `link` / `env` / `config` / `inherit` / `tty` / `default`) は対象を失っている。
@@ -66,7 +68,7 @@ cell** である。構文上の node 種別では判定しない。
   空 kv `{}` を作る場合。スコープ生成要素は結果キーを占有する 1 セルとして数えるが (DR-120 §4)、
   その占有はスコープの存在自体であってラダーが確定する値ではない
 - **透過セル** (`export_key: null` の値セル) — 結果キー軸を持たないので `result` の kv にも現れない
-- **内部セル** — `type: "none"` (DR-089) / `config_file` (DR-050) / dd trigger (DR-064) は
+- **内部セル** — `type: "none"` (DR-089) / dd trigger (DR-064) は
   `effects` / `result` / `sources` のいずれにも現れない
 
 ### 2.2 席を持つもの

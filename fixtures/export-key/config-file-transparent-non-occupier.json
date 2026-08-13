@@ -1,0 +1,96 @@
+{
+  "why": "`export_key: null` の config_file は透過 (DR-052 §2) であり、結果キー軸を持たないので `result` / `sources` に現れず、露出キー衝突検査でも非占有側になる (DR-120 §4 / DR-135 §5)。`collision-config-file-option.json` と対で読む — 衝突側と同じ配置 (config_file `cfg` + option `user`) のまま `cfg` の `export_key` を `\"user\"` から `null` へ倒すと、definition-error が消えて合法になる (観測用に `port` と default パスを足してある)。config_file を結果から隠す手段が型固有の特別枠ではなく通常語彙であることの固定であり、DR-135 が内部セルの特別枠を廃せる根拠そのものである。\n\n**値の伝搬は止まらない** (DR-052 §1「export しないのではなく名前が無くなるだけ」) ので、透過にしてもパスの供給と config 席の充填は従来どおり働く — `port` が config 由来で埋まることがそれを示す。加えて透過でも cli 発火は `effects` に載る (DR-135 §3。effects は宣言名軸で `export_key` を適用しない、DR-121 §5) ので、result からは消えるが効果列からは消えないという 2 軸の違いが同じ fixture 内で対比できる。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {
+        "name": "cfg",
+        "type": "config_file",
+        "long": true,
+        "export_key": null,
+        "default": "/app.toml"
+      },
+      {
+        "name": "user",
+        "type": "string",
+        "long": true
+      },
+      {
+        "name": "port",
+        "type": "number",
+        "long": true,
+        "config_key": [
+          "port"
+        ],
+        "default": 7
+      }
+    ]
+  },
+  "cases": [
+    {
+      "id": "transparent-config-file-has-no-result-key",
+      "why": "引数なし: 透過 config_file `cfg` は default パス `/app.toml` を確定させ、provider が返す `{port: 5000}` が config 席を埋める (値の伝搬は止まっていない) が、自身は結果キーを持たないので `result` / `sources` のどちらにも `cfg` の座が無い。衝突側で `cfg` が名乗っていた露出キー `user` を option `user` が単独で持つ形になり、definition-error にならないのは透過が非占有だからである。default 由来のパス確定はラダー充填なので `effects` は空。",
+      "args": [],
+      "config_files": {
+        "/app.toml": {
+          "port": 5000
+        }
+      },
+      "expect": {
+        "outcome": "success",
+        "effects": [],
+        "result": {
+          "user": null,
+          "port": 5000
+        },
+        "sources": {
+          "user": null,
+          "port": "config"
+        }
+      }
+    },
+    {
+      "id": "transparent-config-file-still-fires-into-effects",
+      "why": "`--cfg /other.toml --user alice`: 透過 config_file への cli 発火は `effects` に `entity: \"cfg\"` (宣言名軸) で 1 件載る一方、`result` / `sources` には座を持たないまま。供給したパスが読まれて `{port: 8080}` が config 席に座ることで、透過でも config 供給が働き続けることを併せて固定する。cli 供給パスは committed なので読める必要がある (DR-050 §2)。",
+      "args": [
+        "--cfg",
+        "/other.toml",
+        "--user",
+        "alice"
+      ],
+      "config_files": {
+        "/app.toml": {
+          "port": 5000
+        },
+        "/other.toml": {
+          "port": 8080
+        }
+      },
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {
+            "entity": "cfg",
+            "op": "set",
+            "operand": "/other.toml",
+            "source": "cli"
+          },
+          {
+            "entity": "user",
+            "op": "set",
+            "operand": "alice",
+            "source": "cli"
+          }
+        ],
+        "result": {
+          "user": "alice",
+          "port": 8080
+        },
+        "sources": {
+          "user": "cli",
+          "port": "config"
+        }
+      }
+    }
+  ]
+}
