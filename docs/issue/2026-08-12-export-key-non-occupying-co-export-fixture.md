@@ -3,7 +3,7 @@ title: 非占有要素 (config_file) の export_key が実セルの露出キー�
 status: open
 category: task
 created: 2026-08-12T16:00:58+09:00
-last_read:
+last_read: 2026-08-14T04:19:28+09:00
 open_entered: 2026-08-12T16:00:58+09:00
 wip_entered:
 blocked_entered:
