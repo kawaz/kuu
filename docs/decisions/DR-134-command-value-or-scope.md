@@ -20,6 +20,22 @@
   JSON object」、値を名乗る command は「フィールド名 + JSON scalar / array」であり、どちらも
   フィールド名 + JSON 値である。射影の形が違うだけで、キーを 1 つ占有する 1 セルであることは変わらない
 
+**この「array」は担体の約束ではない** (CVQ-Q1a、kawaz 2026-08-14)。上の対比が言っているのは
+「その座の値が **map (スコープ) か、そうでない値か**」であって、配列 literal を積極的に許した文ではない。
+**値持ち command の担体は scalar literal のみ**であり、配列 `value` / 配列 `default` は definition-error
+**kind = `invalid-range`** になる:
+
+```json
+{"type": "command", "name": "x", "value": [1, 2]}   ← invalid-range
+{"type": "command", "name": "x", "default": [1, 2]} ← invalid-range
+```
+
+これは **非 multiple のスカラー要素に配列 default を書けない**既存の線 (DR-083 §5、
+`fixtures/definition-error/scalar-array-default-invalid-range.json`) と同族である。値持ち command は
+`multiple` 宣言を持たない単値セルなので、要素の値空間 (scalar) と literal の構造 (配列) の不一致が
+定義時点で静的に既知になる — §5 のとおり値の供給規則に command 専用の特例は無く、通常の値セルと同じ
+検査が掛かるという帰結にすぎない。
+
 ### 2. command は値かスコープのどちらかを名乗る — 占有子との共存は definition-error
 
 `value` を持つ command の内側に**結果キー占有子** (DR-120 §4 の「占有する (検査に参加する)」側の要素) を
@@ -144,6 +160,21 @@ help / version 型の需要を語彙から締め出す見返りも無い。
 
 値持ち command の値を `{"version": {"#value": "1.2.3", ...}}` のような予約キーへ入れる案。結果オブジェクトに
 kuu 由来の予約キーが現れ、「結果は利用者が宣言したキーだけを持つ」(DR-130 §1) が崩れる。
+
+### 配列 value を合法にする — 担体を accum 化する / 配列 literal を許容する (CVQ-Q1b)
+
+値持ち command が配列を名乗れるようにする案。担体セルを accumulator にするか、単値セルに配列 literal を
+そのまま座らせるかのどちらかが要る。**どちらも意味論の追加設計を呼び込む**:
+
+- **accum 化**: `multiple` を宣言していないセルが accumulator になる特例が生まれ、`accum_filters` /
+  供給順 / 0 発火の `[]` といった反復系の規則が「宣言していないのに効く」形で付いてくる (DR-102 の
+  1 属性 1 registry や DR-044 の uniform array と噛み合わない)
+- **配列 literal の許容**: 単値セルの値空間に配列を入れることになり、DR-083 §5 が非 multiple 要素への
+  配列 default を静的に倒している線と正面から食い違う。command だけ例外にする理由が無い
+
+配列を返したい需要は、`multiple` を宣言した通常要素を command のスコープ内に置くか、値持ち command を
+やめてスコープを名乗る形にすれば既存語彙で書ける。担体を scalar literal に留めるのは、command に
+専用の値空間規則を作らないためである。
 
 ### 値と kv をマージする
 

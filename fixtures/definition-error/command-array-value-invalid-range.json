@@ -1,0 +1,48 @@
+{
+  "why": "値持ち command の担体は **scalar literal のみ**で、配列 `value` / 配列 `default` は definition-error kind=`invalid-range` (DR-134 §1、CVQ-Q1a 裁定 2026-08-14)。DR-134 §1 の「フィールド名 + JSON scalar / array」は「その座の値が **map (スコープ) か、そうでない値か**」の対比表現であって、配列 literal の担体を約束した文ではない、という読み直しの pin。\n\n判断の筋は `scalar-array-default-invalid-range.json` (非 multiple のスカラー要素への配列 default、DR-083 §5) と**同族**である — 値持ち command は `multiple` 宣言を持たない単値セルなので、要素の値空間 (scalar) と literal の構造 (配列) の不一致が定義時点で静的に既知になる。DR-134 §5 のとおり値の供給規則に command 専用の特例は無いので、通常の値セルと同じ検査がそのまま掛かる。\n\n配列を返したい需要は `multiple` を宣言した通常要素を command のスコープ内に置くか、値持ちをやめてスコープを名乗る形にすれば既存語彙で書ける (DR-134 の採用しなかった案)。args は書かない (DR-082 §1、定義の静的検査であり実行しない)。",
+  "query": "definition_error",
+  "definition": {
+    "commands": [
+      {
+        "type": "command",
+        "name": "arrval",
+        "value": [
+          1,
+          2
+        ]
+      },
+      {
+        "type": "command",
+        "name": "arrdef",
+        "default": [
+          1,
+          2
+        ]
+      },
+      {
+        "type": "command",
+        "name": "ok",
+        "value": "1.2.3"
+      }
+    ]
+  },
+  "cases": [
+    {
+      "id": "array-value-and-array-default-on-command-are-invalid-range",
+      "why": "`arrval` は配列 `value`、`arrdef` は配列 `default` で、どちらも単値担体に配列 literal を与えているので `invalid-range`。供給席が const (`value:`) か値源ラダーの default 席かで扱いが割れないことを 1 ケースで対比する (DR-134 §5 — 値の供給は既存の node 意味論のまま)。scalar literal を持つ `ok` は合法なので error を持たず、「値持ち command そのものが違法になったのではない」ことも同時に固定する (DR-134 §1 の value 合法化は不変)。",
+      "expect": {
+        "outcome": "definition-error",
+        "errors": [
+          {
+            "element": "arrval",
+            "kind": "invalid-range"
+          },
+          {
+            "element": "arrdef",
+            "kind": "invalid-range"
+          }
+        ]
+      }
+    }
+  ]
+}
