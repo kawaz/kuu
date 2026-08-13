@@ -4,7 +4,6 @@ active な issue の一覧。close 済みは archive/ にあり、ここには�
 
 | date | category | status | slug | 概要 |
 |---|---|---|---|---|
-| 2026-08-14 | task | open | [dr133-redraft-single-config-file](./2026-08-14-dr133-redraft-single-config-file.md) | DR-133 再改稿 — 1 スコープ 1 config_file (並置 definition-error)、fold は multiple パス列のみ |
 | 2026-08-14 | task | open | [config-committed-through-link](./2026-08-14-config-committed-through-link.md) | DR-133 §3 の committed 判定を link 透過にする (CFL-Q1a 裁定の反映) |
 | 2026-08-14 | task | open | [command-array-value-invalid-range](./2026-08-14-command-array-value-invalid-range.md) | 値持ち command の配列 value は invalid-range — DR-134 §1 の array 表現を読み直す (CVQ-Q1a 裁定の反映) |
 | 2026-08-02 | design | open | [accum-cell-value-path-semantics](./2026-08-02-accum-cell-value-path-semantics.md) | accumulator セルへの link 値空間パスの意味論が未規定。v1 は Unsupported (definition-error) で塞ぐ裁定 (DR-127 第2波) |

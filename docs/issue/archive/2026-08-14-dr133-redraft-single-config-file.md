@@ -1,6 +1,6 @@
 ---
 title: DR-133 再改稿 — 1 スコープ 1 config_file (並置 definition-error)、fold は multiple パス列のみ
-status: open
+status: resolved
 category: task
 created: 2026-08-14T04:27:55+09:00
 last_read:
@@ -9,10 +9,10 @@ wip_entered:
 blocked_entered:
 pending_entered:
 discarded_entered:
-resolved_entered:
+resolved_entered: 2026-08-14T04:46:54+09:00
 discard_reason:
 pending_reason:
-close_reason:
+close_reason: ["dr/DR-133", "implemented", "issue/2026-08-12-config-committed-carry-over"]
 blocked_by:
 origin: 自リポ TODO
 ---
@@ -62,3 +62,14 @@ spec 側 fixture の変更は kuu.mbt 実装追随とロックステップで pu
 - docs/decisions/DR-135-config-file-is-a-normal-element.md (config_file 通常要素化。§波及に本 issue を参照済み)
 - docs/issue/2026-08-12-config-committed-carry-over.md (参照実装の fold 未追随。受け入れ条件が本再改稿で変わる)
 - docs/issue/2026-08-12-io-predicate-vocabulary-seat.md (readable filter の席)
+
+## 完了記録 (2026-08-14)
+
+- DR-133 を再改稿: 要素間規則 (全 config_file 要素の宣言順走査 / inline 展開) を撤去し、§1 に「1 スコープ 1 config_file、並置は definition-error kind=invalid-range (関与要素ごとに 1 件全列挙)」、§1.1 に「重ねの正規形は 1 要素の multiple (既定パス列は配列 default)」、§1.2 に「探索は合成に委ねる」を新設。fold 本体 (§2 パス列 → 1 オブジェクト / §3 トップキー置換・深いマージなし / §4 各パス独立) は multiple の供給列に対する規定として保持
+- kind の選定根拠: config 席はスコープに 1 つ (DR-031 #3) なので 2 つ以上は同じ 1 席への重複宣言 = 席の値域外。invalid-range は DR-134 §2 と同じ「同居不可の組合せ」の筋で、export-key-collision のような hint 出し分けを持たないため新 kind は興さない
+- 波及: DESIGN §14.3 / REFERENCE の config_file 行 / DR-050 §2 の読み直し note と射程外項に確定 note / INDEX
+- fixture: fixtures/definition-error/config-file-siblings-invalid-range.json を新設 (並置 = invalid-range)。multi-file 系 3 本を 1 要素 multiple 形へ組み替え、役割を分離した — multi-file.json = fold の意味論と席ごとの入れ替え (4 case) / multi-file-multiple.json = 供給順が fold 順を決める (2 case) / multi-file-path-absent.json = 供給なし = 空列と env 席 (3 case)。DR-135 の結果面 pin (パス列が string[] として座る、読めなくても座る、0 供給は []) も組み込み済み
+- 検証: fold 規則を素朴実装で再現し、3 fixture 9 case の result / sources 期待値と全一致することを確認。lint 3 種 OK (fixture 413 件)
+- CFM-Q3-β (values:[...] の読み) は未裁定のまま docs/QUESTIONS.md に残っている。本再改稿では既定パス列を配列 default で書き、values 糖衣には触れていない
+
+DR-133 再改稿は spec 側完了。kuu.mbt 実装追随は docs/issue/2026-08-12-config-committed-carry-over.md が持つ。
