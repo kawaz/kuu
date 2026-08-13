@@ -42,12 +42,18 @@ config_file 要素が供給するパスを宣言順に並べた 1 本の列を�
 4. **`parse_fold_ladder` の写しも同期** — 同ファイルに Phase 1/2 相当の写しがあり、こちらもパス列 fold へ揃える
    必要がある
 
-## 併せて観測された別乖離 (DR-121 §2 違反)
+## DR-135 による前提の反転 (旧「別乖離」節の訂正)
 
-`multiple` の config_file 要素が result / sources に `user=[]` として現れる。config_file 要素は内部セルで
-result に現れない (DR-121 §2 / DR-120 §4 非占有) ので、multiple 経路でも結果に漏れてはいけない。
+DR-135 (2026-08-14 裁定) により、config_file は通常要素であることが確定した。name を持つ config_file 要素は
+result / sources に現れる: multiple なら供給順のパス列 `string[]`、供給が 0 件なら `[]`。したがって「multiple の
+config_file 要素が result / sources に `user=[]` として現れる」のは乖離ではなく DR-135 に沿った正しい挙動であり、
+逆に「結果に出さない」実装のほうが DR-135 違反になる。
 
 ## 実測 (2026-08-12、spec 側 fixture 追加後の kuu.mbt `moon test -p kuu`)
+
+(注) この実測は DR-135 反映前の fixture に対するもの。config fixture 群は DR-135 で期待値が変わっている
+(config_file 要素自身の座が result / sources に増え、cli 供給パスは effects にも 1 件増える) ため、mismatch の
+再測が要る。
 
 `[json-conformance] decoded=404 ran_cases=915 skipped=2 mismatches=9` のうち config 関連は 8 件:
 
@@ -71,7 +77,8 @@ result に現れない (DR-121 §2 / DR-120 §4 非占有) ので、multiple 経
 - [ ] fixtures/value-sources/config/multi-file-multiple.json の 3 case が通る
 - [ ] 既存の config fixture (ladder / path / isomorphic-path / array-object / null-supply / value-typing) が
       引き続き通る (単体要素 = 列長 1 の縮退形として一致すること)
-- [ ] multiple config_file が result / sources に現れない
+- [ ] 名前付き config_file 要素が result / sources に確定パスを持って現れる (multiple は供給順のパス列、未供給の
+      座は null)。cli 由来の発火は effects にも載る (DR-135 §2/§3)
 
 ## 注意 (push 順序)
 
