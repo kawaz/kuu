@@ -34,7 +34,7 @@ mid=9 で並置需要なしがさらに確定 (綴り違い --config/--config-fi
 再改稿の骨子: ①1 スコープ 1 config_file (並置 definition-error)、②fold は multiple パス列のみ、
 ③探索は合成に委ね readable filter (I/O filter の新カテゴリ) は別 issue。
 
-- [ ] CFM-Q3a: **複数 config_file 要素の並置は definition-error (統括推し、mid=9 で補強)** — 意味を
+- [x] CFM-Q3a: **複数 config_file 要素の並置は definition-error (統括推し、mid=9 で補強)** — 意味を
   与えない構成は定義時に倒す (1 スコープ 1 config_file)
 - [ ] CFM-Q3b: 並置は放置 (検査しない、挙動は未規定のまま)
 - [ ] CFM-Q3-β: mid=8 の 1 例目 `values:[...]` の読み — (a) 配列 default (`default:[...]`) の意で書くのが
@@ -51,7 +51,7 @@ link 経由で config path として効く。ただし binding の source は Li
 DR-031 は CLI / link を同順位の明示操作と規定し、DR-121 §4 は Link を独立 source タグとして維持する。
 一方 DR-133 §3 は committed を「cli / env 明示」とだけ列挙しており、link の位置づけが未規定。
 
-- [ ] CFL-Q1a: **committed 判定は link を透過し、値の源席の cli/env 性で判定する (統括推し)** — committed の
+- [x] CFL-Q1a: **committed 判定は link を透過し、値の源席の cli/env 性で判定する (統括推し)** — committed の
   意味は「利用者が明示したのに読めないのは失敗」(DR-050 §2) であり、link は明示供給の搬送路にすぎない
   (DR-031 の同順位規定と整合)。sources の観測タグは Link のまま (DR-121 §4 不変) で、committed 判定
   (内部) だけ由来を辿る
@@ -65,8 +65,23 @@ kuu.mbt の m3 修正 (2026-08-12) の過程で顕在化 (kuu.mbt issue 2026-08-
 同一スコープの宣言名重複 (例: config_file "user" + option "user") は DR-006 / DR-003 の重複禁止 (現役規範)
 に反するが、参照実装は decode を通してしまい、binding 層で 2 要素が 1 identity に潰れる実害がある
 (`--user alice` が config path として消費され読込エラー)。検査の実装は明確に必要だが、報告に使う kind が
-DR-054 の正式列挙に無い — export-key-collision は露出キー軸で、config_file (非占有、DR-120 §4) との
-同名はそこに掛からない。
+DR-054 の正式列挙に無い。
+
+**DR-135 (2026-08-14) による前提の変化**: 起票時の「export-key-collision は露出キー軸で、config_file
+(非占有、DR-120 §4) との同名はそこに掛からない」は成立しなくなった。config_file は通常要素として
+露出キー衝突検査に**占有子として参加**する ([DR-135](decisions/DR-135-config-file-is-a-normal-element.md) §4)
+ので、由来の主実害ケース (config_file `user` + option `user`) は両方が露出キー `user` を名乗る 2 セルとして
+`export-key-collision` で捕まる。
+
+**それでも DNR-Q1 は残る** — 露出キー軸で掛からない宣言名重複が書けるため:
+
+- 一方に `export_key` を書いて露出キーをずらすと (config_file `user` + option `user` + `export_key: "u"`)、
+  露出キーは別なので衝突しないが**宣言名 `user` は重複したまま**。link / ref / observes の参照アドレス
+  (宣言名軸、DR-046 の id 軸) が 2 要素のどちらを指すか曖昧になる
+- 両方に `export_key: null` を書く形も同様 (露出キーを持たないので検査対象外)
+
+したがって射程は「露出キー軸で掛からない宣言名重複」へ狭まったが、kind の選定 (下記の選択肢) は
+そのまま生きている。
 
 - [ ] DNR-Q1a: **新 kind `duplicate-name` を DR-054 列挙 + schema enum へ追加 (統括推し)** — 宣言名軸の
   一意性違反 (DR-006) は露出キー軸 (export-key-collision) と別軸で、既存 kind への相乗りは意味の希釈。
@@ -81,7 +96,7 @@ DR-133/134 実装レビュー (2026-08-12、fable5-high) で顕在化。[DR-134]
 (単値) で、配列 value (`{"type":"command","name":"x","value":[1,2]}`) は decode を通った後に単値へ縮む
 (黙殺)。既存の definition-error 群では「scalar 要素への配列 default」は invalid-range。
 
-- [ ] CVQ-Q1a: **配列 value は invalid-range (統括推し)** — 担体は scalar literal のみ。§1 の「array」は
+- [x] CVQ-Q1a: **配列 value は invalid-range (統括推し)** — 担体は scalar literal のみ。§1 の「array」は
   「スコープ (map) でなく値」の対比表現であり array を積極的に約束した文ではない、と読み直して DR-134 に
   1 行明確化。既存の「scalar 要素への配列 default」線と整合
 - [ ] CVQ-Q1b: 配列 value を合法にする (担体を accum 化 or 配列 literal 許容 — 実装・意味論の追加設計が要る)
