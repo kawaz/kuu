@@ -29,9 +29,9 @@
 統括が mid=16 を「重複合法化」と誤読した DNR-Q1-α 系は撤回)。参照実装が decode を通す現状は検査漏れで、
 実装課題 (kuu.mbt issue 2026-08-12-duplicate-element-name-not-rejected)。残る裁定は kind のみ:
 
-- [ ] DNR-Q1a: **新 kind `duplicate-name` を DR-054 列挙 + schema enum へ追加 (統括推し)** — DR-133 §1 で
-  確立した独立 kind の基準「固有の解決手段の出し分けを持つか」に該当する (hint = 片方を rename /
-  参照用途なら `id` を分離、DR-046 §2)。export-key-collision と同じ側
+- [ ] DNR-Q1a: **新 kind `duplicate-name` を DR-054 列挙 + schema enum へ追加 (統括推し)** — 根拠は
+  「既存 kind のどれにも意味が合わない」の 1 点 (invalid-range は属性の組合せの値域外で別要素間の衝突では
+  ない / export-key-collision は露出キー軸)。相乗りは意味の希釈。対処は片方の rename (hint は message で)
 - [ ] DNR-Q1b: 既存 kind に相乗り (invalid-range 等) — 列挙は増えないが「構成の組合せの値域外」の意味から
   外れ、解決手段の hint も出し分けられない
 - [ ] DNR-Q1c: その他
