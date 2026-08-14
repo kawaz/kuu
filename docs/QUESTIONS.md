@@ -29,38 +29,24 @@
 
 mid=8 の 1 例目に出てきた `values:[...]` の綴りをどう読むか:
 
-- [ ] CFM-Q3-β-a: 配列 default (`default:[...]`) の意で書くのが既存語彙的に素直
+- [x] CFM-Q3-β-a: 配列 default (`default:[...]`) の意で書くのが既存語彙的に素直
 - [ ] CFM-Q3-β-b: `values` に「multiple の既定供給列」の用法を持たせる (values 糖衣の意味論拡張)
 
-### DNR-Q1: 宣言名重複の definition-error に使う kind
+### DNR-Q1: 宣言名重複 — id 軸分離による再整理 (mid=16)
 
-kuu.mbt の m3 修正 (2026-08-12) の過程で顕在化 (kuu.mbt issue 2026-08-12-duplicate-element-name-not-rejected)。
-同一スコープの宣言名重複 (例: config_file "user" + option "user") は DR-006 / DR-003 の重複禁止 (現役規範)
-に反するが、参照実装は decode を通してしまい、binding 層で 2 要素が 1 identity に潰れる実害がある
-(`--user alice` が config path として消費され読込エラー)。検査の実装は明確に必要だが、報告に使う kind が
-DR-054 の正式列挙に無い。
+kawaz mid=16 (2026-08-14) で方向転換: name の多義性 (各軸のデフォルト供給源、DR-046) は保ち、参照
+identity が要る場面は既存の `id` 軸 (DR-046 §2、参照識別子、未指定なら name が兼ねる) で分離する。
+**name 重複そのものは禁止しない** (旧 DNR-Q1a の新 kind `duplicate-name` は統括撤回)。実害 (binding 層の
+identity 潰れ) は id 軸での解決 + 下記規則で解消する。残る規定は 1 点:
 
-**DR-135 (2026-08-14) による前提の変化**: 起票時の「export-key-collision は露出キー軸で、config_file
-(非占有、DR-120 §4) との同名はそこに掛からない」は成立しなくなった。config_file は通常要素として
-露出キー衝突検査に**占有子として参加**する ([DR-135](decisions/DR-135-config-file-is-a-normal-element.md) §4)
-ので、由来の主実害ケース (config_file `user` + option `user`) は両方が露出キー `user` を名乗る 2 セルとして
-`export-key-collision` で捕まる。
+- [ ] DNR-Q1-α: **id 無しで name が重複する要素へ参照 (link/ref/observes/borrow) が向いたとき、一意に
+  解決できない参照は definition-error。kind は既存 `absent-ref` の意味を「解決できない参照 (不在 + 曖昧)」
+  へ広げる (統括推し)** — 黙った先勝ちは DR-062 §1 が @base を退けた発見不能性と同じ罠。列挙も増えない
+- [ ] DNR-Q1-β: 曖昧参照に別 kind を立てる (ambiguous-ref 等、列挙が増える)
+- [ ] DNR-Q1-γ: その他
 
-**それでも DNR-Q1 は残る** — 露出キー軸で掛からない宣言名重複が書けるため:
+参照が無い name 重複は完全に無害 (露出キーは export_key 衝突検査が既に守る) — inert/vacuous の線。
 
-- 一方に `export_key` を書いて露出キーをずらすと (config_file `user` + option `user` + `export_key: "u"`)、
-  露出キーは別なので衝突しないが**宣言名 `user` は重複したまま**。link / ref / observes の参照アドレス
-  (宣言名軸、DR-046 の id 軸) が 2 要素のどちらを指すか曖昧になる
-- 両方に `export_key: null` を書く形も同様 (露出キーを持たないので検査対象外)
-
-したがって射程は「露出キー軸で掛からない宣言名重複」へ狭まったが、kind の選定 (下記の選択肢) は
-そのまま生きている。
-
-- [ ] DNR-Q1a: **新 kind `duplicate-name` を DR-054 列挙 + schema enum へ追加 (統括推し)** — 宣言名軸の
-  一意性違反 (DR-006) は露出キー軸 (export-key-collision) と別軸で、既存 kind への相乗りは意味の希釈。
-  追加後、spec fixture (definition-error/) + kuu.mbt 実装
-- [ ] DNR-Q1b: 既存 kind に相乗り (invalid-range 等) — 列挙は増えないが「構成の組合せの値域外」の意味から外れる
-- [ ] DNR-Q1c: その他
 
 ## 確認待ち
 
