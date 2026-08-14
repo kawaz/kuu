@@ -22,15 +22,6 @@
 
 ## 裁定待ち
 
-### CFM-Q3-β: mid=8 の 1 例目 `values:[...]` の読み
-
-同バッチの CFM-Q3a (複数 config_file 要素の並置は definition-error) は裁定済みで、
-[DR-133](decisions/DR-133-config-path-list-fold.md) の再改稿として反映済み。本項だけが未回答。
-
-mid=8 の 1 例目に出てきた `values:[...]` の綴りをどう読むか:
-
-- [x] CFM-Q3-β-a: 配列 default (`default:[...]`) の意で書くのが既存語彙的に素直
-- [ ] CFM-Q3-β-b: `values` に「multiple の既定供給列」の用法を持たせる (values 糖衣の意味論拡張)
 
 ### DNR-Q1: 宣言名重複 — id 軸分離による再整理 (mid=16)
 
