@@ -153,8 +153,8 @@ fixture が期待する outcome の代わりに `kind: "unsupported"` の defini
 `query: "definition_error"` は `success`/`failure`/`ambiguous` (DR-053 の実行時 outcome union) とは別レイヤ — `parse_definition()` (定義そのものの静的検査、DR-054 §4) の返値をそのまま転用する。`cases[].args` は書かない (定義の静的検査であり実行しない、DR-082 §1)。
 
 - `errors`: `parse_definition()` が検出した全定義エラーの配列。`element` (該当要素、省略可) と `kind` の組で構成される
-- `kind` の語彙 (DR-054 §4、DR-085 訂正で `invalid-argument`、DR-120 §5 で `export-key-collision` 追加): `vocab-intersection` / `unknown-vocab` / `invalid-range` / `absent-ref` / `circular-ref` / `zero-progress` / `config-cycle` / `invalid-argument` / `export-key-collision`
-- `unsupported` (DR-054 更新4) は `parse_definition()` の返値としては正規だが、**fixture の期待値には書けない** — `schema/fixture.schema.json` の kind enum に含めず、上記 9 語彙のみが fixture 側の語彙である。fixture は spec の正解を固定するもので、実装ごとに違う未対応範囲は正解になりえない (§0.1 の green 規範がこの kind を mismatch として扱う)
+- `kind` の語彙 (DR-054 §4、DR-085 訂正で `invalid-argument`、DR-120 §5 で `export-key-collision`、DR-054 更新 5 で `duplicate-name` 追加): `vocab-intersection` / `unknown-vocab` / `invalid-range` / `absent-ref` / `circular-ref` / `zero-progress` / `config-cycle` / `invalid-argument` / `export-key-collision` / `duplicate-name`
+- `unsupported` (DR-054 更新4) は `parse_definition()` の返値としては正規だが、**fixture の期待値には書けない** — `schema/fixture.schema.json` の kind enum に含めず、上記 10 語彙のみが fixture 側の語彙である。fixture は spec の正解を固定するもので、実装ごとに違う未対応範囲は正解になりえない (§0.1 の green 規範がこの kind を mismatch として扱う)
 - universal fn では registry に無い fn = `unknown-vocab`、arity / argument type 不正 = `invalid-argument`、呼び出し席と出力型の不適合 = `invalid-range`、`observes` 依存循環 = `circular-ref` (DR-114 §11)
 - **`message`/`hint` は比較しない** (parse fixture の `errors[].message` と同じ流儀、文言はレンダラの関心)
 

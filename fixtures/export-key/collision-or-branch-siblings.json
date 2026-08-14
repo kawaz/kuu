@@ -16,12 +16,14 @@
   "cases": [
     {
       "id": "or-branch-leaves-share-key",
-      "why": "`--level` の 2 枝がともに leaf 名 `amount` を名乗る (int 枝と string 枝)。どちらか一方の枝しか発火しえないが、構造としては露出キー `amount` に対応する値セルが 2 つある → definition-error。errors は関与する 2 leaf へ 1 件ずつ (element はどちらも \"amount\")。",
+      "why": "`--level` の 2 枝がともに leaf 名 `amount` を名乗る (int 枝と string 枝)。どちらか一方の枝しか発火しえないが、構造としては露出キー `amount` に対応する値セルが 2 つある → definition-error。errors は関与する 2 leaf へ 1 件ずつ (element はどちらも \"amount\")。\n\n2 leaf は `level` が作る同一 lexical スコープ (DR-025 / DR-033) の兄弟でもあり、参照識別子 `amount` も重複する — or / seq の子は duplicate-name に参加する (DR-054 更新 5) ので、要素ごとに 2 kind が立って計 4 件になる。2 軸が同時に破れる形であり、一方を抑制する規則は無い (DR-054 §4 の全列挙)。",
       "expect": {
         "outcome": "definition-error",
         "errors": [
           {"element": "amount", "kind": "export-key-collision"},
-          {"element": "amount", "kind": "export-key-collision"}
+          {"element": "amount", "kind": "export-key-collision"},
+          {"element": "amount", "kind": "duplicate-name"},
+          {"element": "amount", "kind": "duplicate-name"}
         ]
       }
     }

@@ -687,9 +687,10 @@
                   "zero-progress",
                   "config-cycle",
                   "invalid-argument",
-                  "export-key-collision"
+                  "export-key-collision",
+                  "duplicate-name"
                 ],
-                "description": "DR-054 §4 の kind 列挙 (DR-085 訂正で invalid-argument 追加、DR-120 §5 で export-key-collision 追加)。"
+                "description": "DR-054 §4 の kind 列挙 (DR-085 訂正で invalid-argument 追加、DR-120 §5 で export-key-collision 追加、DR-054 更新 5 で duplicate-name 追加)。"
               }
             },
             "required": ["kind"],
