@@ -1,0 +1,71 @@
+{
+  "why": "tuple 宣言セルの負 index は定義時静的に解決される (DR-137 §4 — 値空間 segment だが構造が closed なので array の「発火時現在長」規則によらず宣言アリティで確定する)。effects の index segment は解決済みの非負 index を載せる (DR-127 §6 — 字面 -1 を漏らさない)。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {
+        "name": "p2",
+        "type": "fixture/pair"
+      },
+      {
+        "name": "a",
+        "type": "int",
+        "long": true,
+        "link": "p2[0]"
+      },
+      {
+        "name": "z",
+        "type": "int",
+        "long": true,
+        "link": "p2[-1]"
+      }
+    ]
+  },
+  "cases": [
+    {
+      "id": "negative-index-resolves-to-last-seat",
+      "why": "`--a 1 --z 9`: `p2[-1]` は定義時にアリティ 2 の末尾 = 座 1 へ解決。effects の path は解決済みの [1]。両座充足で [1,9] の完成値。",
+      "args": [
+        "--a",
+        "1",
+        "--z",
+        "9"
+      ],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {
+            "entity": "p2",
+            "path": [
+              0
+            ],
+            "op": "set",
+            "operand": 1,
+            "source": "link"
+          },
+          {
+            "entity": "p2",
+            "path": [
+              1
+            ],
+            "op": "set",
+            "operand": 9,
+            "source": "link"
+          }
+        ],
+        "result": {
+          "p2": [
+            1,
+            9
+          ]
+        },
+        "sources": {
+          "p2": [
+            "link",
+            "link"
+          ]
+        }
+      }
+    }
+  ]
+}

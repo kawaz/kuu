@@ -1,0 +1,43 @@
+{
+  "why": "tuple 宣言セルへのパス DSL は定義時静的 (DR-137 §4 — アリティが宣言で閉じている): 範囲外 index と `.name` 降下はいずれも definition-error `absent-ref` 系で、実行時の枝 Reject には落ちない (array 行の「index の存在は実行時」との対比 — DR-127 §2.2 / DR-137 §3 の 2×2 の帰結)。definition-error は全列挙 (DR-054)。",
+  "query": "definition_error",
+  "definition": {
+    "options": [
+      {
+        "name": "p2",
+        "type": "fixture/pair"
+      },
+      {
+        "name": "x",
+        "type": "int",
+        "long": true,
+        "link": "p2[5]"
+      },
+      {
+        "name": "y",
+        "type": "int",
+        "long": true,
+        "link": "p2.k"
+      }
+    ]
+  },
+  "cases": [
+    {
+      "id": "out-of-range-and-name-descent",
+      "why": "`p2[5]` はアリティ 2 の範囲外 (定義時に判定可能)、`p2.k` は tuple に名前軸の座が無い — どちらも absent-ref (DR-137 §4)。",
+      "expect": {
+        "outcome": "definition-error",
+        "errors": [
+          {
+            "element": "x",
+            "kind": "absent-ref"
+          },
+          {
+            "element": "y",
+            "kind": "absent-ref"
+          }
+        ]
+      }
+    }
+  ]
+}

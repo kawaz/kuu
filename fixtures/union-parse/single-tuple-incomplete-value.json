@@ -1,0 +1,90 @@
+{
+  "why": "単相 tuple セル (union でない) の完成判定 (全座 non-null、DR-138 §1) — 未完成の確定は淘汰すべき他枝が無いので直ちに経路不成立で kind=parse / reason=incomplete_value (DR-138 §4 — union の生存ゼロと同じ完成判定の 2 つの現れ、reason を分けない)。乗り物は `fixture/pair` (out = 単相 tuple [int,int]、DR-137)。args_pos は着地書き込みの argv 最深 operand 位置。全座充足なら通常の成功で、sources は座単位の位置対応配列 (DR-137 §2 / DR-122 §3)。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {
+        "name": "p2",
+        "type": "fixture/pair"
+      },
+      {
+        "name": "a",
+        "type": "int",
+        "long": true,
+        "link": "p2[0]"
+      },
+      {
+        "name": "b",
+        "type": "int",
+        "long": true,
+        "link": "p2[1]"
+      }
+    ]
+  },
+  "cases": [
+    {
+      "id": "all-seats-filled-succeeds",
+      "why": "`--a 1 --b 2`: 両座とも位置書きで埋まり [1,2] は完成値 → 成功。link 参照ノード a/b は結果キーを占有しない (DR-120 §4)。",
+      "args": [
+        "--a",
+        "1",
+        "--b",
+        "2"
+      ],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {
+            "entity": "p2",
+            "path": [
+              0
+            ],
+            "op": "set",
+            "operand": 1,
+            "source": "link"
+          },
+          {
+            "entity": "p2",
+            "path": [
+              1
+            ],
+            "op": "set",
+            "operand": 2,
+            "source": "link"
+          }
+        ],
+        "result": {
+          "p2": [
+            1,
+            2
+          ]
+        },
+        "sources": {
+          "p2": [
+            "link",
+            "link"
+          ]
+        }
+      }
+    },
+    {
+      "id": "null-seat-remains-incomplete-value",
+      "why": "`--a 1`: [1,null] は全座充足でなく未完成 (DR-138 §1 tuple 行)。単相なので直ちに経路不成立 → incomplete_value、args_pos は最深の着地書き込みの operand 位置 (\"1\" = 1)、element は当該セル p2 (DR-138 §4)。",
+      "args": [
+        "--a",
+        "1"
+      ],
+      "expect": {
+        "outcome": "failure",
+        "errors": [
+          {
+            "element": "p2",
+            "args_pos": 1,
+            "kind": "parse",
+            "reason": "incomplete_value"
+          }
+        ]
+      }
+    }
+  ]
+}
