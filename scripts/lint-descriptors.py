@@ -244,6 +244,50 @@ def main() -> int:
     else:
         print(f"[OK]   record/tuple field type refs resolve in registry ({record_field_count} 件)")
 
+    # 2b. record/tuple の type 参照グラフの循環検査 (DR-126 §1 / DR-137 §1 — 非循環必須、
+    #     circular-ref は参照層 (DR-067) の関心。builtin descriptor 分をここで検出する。
+    #     descriptor を持たない catalog 名 (int 等) は葉として終端)
+    types_map = data.get("types", {})
+
+    def canonical_type_key(ref: str):
+        if ref in types_map:
+            return ref
+        bare_as_builtin = f"builtin/{ref}"
+        return bare_as_builtin if bare_as_builtin in types_map else None
+
+    type_edges = {}
+    for key, desc in types_map.items():
+        targets = set()
+        for location, value_type in descriptor_value_types(desc, f"types.{key}"):
+            for _field_location, ref in record_field_refs(value_type, location):
+                target = canonical_type_key(ref)
+                if target is not None:
+                    targets.add(target)
+        type_edges[key] = sorted(targets)
+
+    cycles = []
+    state = {}  # 0=visiting, 1=done
+
+    def visit(node, stack):
+        if state.get(node) == 1:
+            return
+        if state.get(node) == 0:
+            cycles.append(" -> ".join(stack[stack.index(node):] + [node]))
+            return
+        state[node] = 0
+        for target in type_edges.get(node, []):
+            visit(target, stack + [node])
+        state[node] = 1
+
+    for key in types_map:
+        visit(key, [])
+    if cycles:
+        ok = False
+        for c in sorted(set(cycles)):
+            fail(f"type ref cycle (circular-ref): {c}")
+    else:
+        print(f"[OK]   record/tuple type ref graph is acyclic ({len(type_edges)} 住人)")
+
     print()
     if not ok:
         print("lint-descriptors: FAIL")
