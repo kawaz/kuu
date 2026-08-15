@@ -17,7 +17,7 @@
 
 export_key と value_name は既にこのパターンの実例であり、本 DR は新設 2 軸 (id / display_name) を加えて全体を一般化する。
 
-> **更新 (DR-136、kawaz 裁定 2026-08-15): 綴り軸 `trigger_name` が加わり、デフォルト供給に軸ごとの変換が入る。** CLI 表面の照合綴り (long の基幹綴り / command のトリガ / alias の入口綴り) は `trigger_name` 軸が担い、`name` からのデフォルトは kebab(name)。同時に id / export_key は snake(name)、value_name は UPPER_SNAKE(name)、display_name は name 無変換となる (変換は underscore ↔ hyphen 置換と ASCII 大文字化のみ、明示指定には掛からない)。上表の value_name 行「upper(name)」は DR-136 §1 の表が正本。
+> **更新 (DR-136、kawaz 裁定 2026-08-15): 綴り軸 `trigger_name` が加わり、デフォルト供給に軸ごとの変換が入る。** CLI 表面の照合綴り (long の基幹綴り / command のトリガ / alias の入口綴り) は `trigger_name` 軸が担い、`name` からのデフォルトは name への**文字写像** (ASCII 非英数 → `-`) である。同時に id / export_key は同じ写像 (→ `_`)、value_name はその写像 + ASCII 大文字化、display_name は raw name (写像を通さない) となる (写像の定義は DR-136 §3、明示指定には掛からない)。上表の value_name 行「upper(name)」は DR-136 §1 の表が正本。
 
 ### 2. id はスコープを生成せず、結果にも出ない
 

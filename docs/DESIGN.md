@@ -547,7 +547,7 @@ separator も §6.2 のパイプライン内にのみ存在する部品であり
 
 `long` は二形 (DR-071): **bool 糖衣 | variant DSL 配列 (正規形)**。
 
-- 正規形は配列で、**各要素が long 入口を 1 個生む**: `:set` (prefix 空) = 主入口 `--<name>` (値スロット)、`"no:set:false"` 等 = variant 入口 (§7.3)
+- 正規形は配列で、**各要素が long 入口を 1 個生む**: `:set` (prefix 空) = 主入口 `--<trigger_name>` (値スロット)、`"no:set:false"` 等 = variant 入口 (§7.3)。基幹綴りは `trigger_name` 軸が供給する (未指定なら name への文字写像、DR-136 §1〜§3) — variant DSL 自体は基幹綴りを持たず affix と cell fn 呼び出しだけを語る
 - `long: true` = `[":set"]` の糖衣。**absent = `false` = `[]` = 入口なし (全て同義)** — presence を absent/空の区別に載せない (省略 = default の構造等価、DR-063 §4)
 - 主入口なしで variant のみ (`long: ["no:set:false"]` → `--no-verbose` だけ) も表現できる
 - `short` 文字列の各文字が個別ショートオプション (short は variant 概念を持たず不変)
@@ -594,7 +594,7 @@ colon-string と 1 段の array of string は意味論的に等価で、同じ�
 
 ```ebnf
 variant     = prefix , ":" , fn-name , { ":" , arg } ;
-prefix      = { name-char } ;             (* 空可 — 空 prefix = 主入口 --<name> *)
+prefix      = { name-char } ;             (* 空可 — 空 prefix = 主入口 --<trigger_name> *)
 fn-name     = name-char , { name-char } ; (* cell_fns registry の fn 名。bare 名は builtin ns の糖衣 (DR-094)、ns 付きは "ext/incr" 等の registry キーそのまま *)
 arg         = { arg-char } ;              (* 空可。型解釈は fn の parameter 宣言 (DR-114) に従う *)
 name-char   = ? ":" を除く任意の文字 ? ;
@@ -604,7 +604,7 @@ arg-char    = ? ":" を除く任意の文字 ? ;
 - 分割は **単純な `:` 区切り** (エスケープ規則を持たない)。`:` を含む prefix / fn 名 / arg を書きたい場合は array 形を使う — colon-string 側に quote や `\:` を導入しない (エスケープ文法の沼を array 形の存在で回避する、DR-114 §6 の 2 形等価の設計理由そのもの)
 - 最初の部品が prefix、2 個目が fn 名、3 個目以降が args — 部品数 1 (`"no"` 等、`:` なし) は variant として不正 (definition-error `invalid-range`)。fn 名は空にできない
 - op トークンの綴り例 (全て cell_fns の builtin 住人名、§7.4 の表と同一語彙): `":set"` (主入口・値スロット)、`"no:set:false"` (--no-X で false を set)、`"no:unset"` (--no-X でラダー開放)、`"reset:default"` (--reset-X で default 選択)、`"clear:empty"` (--clear-X で空化)。**op トークン = cell_fns の fn 名**であり、DSL 専用の op 語彙は存在しない — `unset`/`default`/`empty` の綴りは §7.4 の builtin fn 名がそのまま正本
-- 生成される variant 入口の綴りは `--<prefix>-<name>` (prefix 非空時) / `--<name>` (prefix 空時)。pin: `fixtures/value-sources/unset-ladder.json` (`no:unset` → `--no-color`、`reset:default` → `--reset-color`)、`fixtures/value-sources/default-source-model.json` (`default:default` / `unset:unset`)、`fixtures/lowering/long/variant.json` (`no:set:false`)
+- 生成される variant 入口の綴りは `--<prefix>-<trigger_name>` (prefix 非空時) / `--<trigger_name>` (prefix 空時)。pin: `fixtures/value-sources/unset-ladder.json` (`no:unset` → `--no-color`、`reset:default` → `--reset-color`)、`fixtures/value-sources/default-source-model.json` (`default:default` / `unset:unset`)、`fixtures/lowering/long/variant.json` (`no:set:false`)
 
 ```json
 {

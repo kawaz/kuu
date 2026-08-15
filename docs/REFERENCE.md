@@ -280,7 +280,7 @@ command-scope/mid-global-repropagation.json`)。
 #### CLI 起動
 
 **`long`**
-long 入口。基幹綴りは `trigger_name` 軸が供給する (`--<trigger_name>`、既定は kebab(name))。
+long 入口。基幹綴りは `trigger_name` 軸が供給する (`--<trigger_name>`、既定は name への文字写像 — ASCII 非英数 → `-`、DR-136 §3)。
 `true` = `[":set"]` の糖衣 (主入口のみ)。variant の各 item は colon-string または 1 段 array of string で、`["no","set","false"]` と `"no:set:false"` は同じ `cell_fns` 呼び出し。2 部品目が fn 名、後続部品が args となり、`set` / `default` / `unset` / `empty` に限らず任意の適合 cell fn を呼べる。同じ列で string / array を混在でき、array of array は受け入れない。`absent = false = [] = 入口なし` は全て同義。
 最小例: `{"name":"verbose","long":true}` / `{"name":"label","long":[["tag","set","a:b"]]}`
 正本: DESIGN §7.1, §7.3〜7.5, DR-071, DR-114 §2/§6, DR-136 §2

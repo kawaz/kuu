@@ -33,7 +33,7 @@ alias は canonical の宣言を継承する (ref と同じ) が、入口宣言�
 
 > **name から導出される入口 (long 配列 = variant DSL 込み、command の name 照合) は、alias 要素の name で再導出される。明示綴りの入口 (short) は継承されない。**
 
-> **更新 (DR-136、kawaz 裁定 2026-08-15): 再導出の主語を綴り軸 `trigger_name` に置き換える。** alias は「綴り軸の別名を追加する入口ノード」であり、入口綴りは alias ノード自身の `trigger_name` (name からのデフォルトは kebab(name)) が供給する。「alias 要素の name で再導出」は、その name が trigger_name 軸へ供給された結果として読む。affix 構造との合成であって文字列置換ではない点、short を継承しない点、値源・結果キー・制約を継承しない点はいずれも不変。
+> **更新 (DR-136、kawaz 裁定 2026-08-15): 再導出の主語を綴り軸 `trigger_name` に置き換える。** alias は「綴り軸の別名を追加する入口ノード」であり、入口綴りは alias ノード自身の `trigger_name` (name からのデフォルトは name への文字写像 — ASCII 非英数 → `-`、DR-136 §3) が供給する。「alias 要素の name で再導出」は、その name が trigger_name 軸へ供給された結果として読む。affix 構造との合成であって文字列置換ではない点、short を継承しない点、値源・結果キー・制約を継承しない点はいずれも不変。
 
 - `{"alias": "paths", "name": "files"}` → canonical の `long: ["no:set:..."]` が files で再導出され、**--files も --no-files も効く**
 - 再導出は **variant の affix 構造 (DR-011 の prefix) と name の合成**で行う — 具象綴りの文字列置換ではない (lowered 表現は affix を保持する必要がある。具象 trigger からの substring 復元は退化ケースで誤判定する、slice PoC 第 16 弾の flag)

@@ -67,6 +67,8 @@ options に `name: "config"` があって、positionals にも `name: "config"` 
 ## Superseded (歴史)
 
 > **更新: DR-025 により本 DR の「スコープ単位」が「children を持つ要素」から「name を持つノード」に変更。DR-033 で lexical scope = name scope と整理。本 DR の lexical chain 探索順序・重複禁止ルールは引き続き有効。**
+>
+> **さらに更新 (TRG-Q4=a): その「name を持つノード」も現役ではない** — スコープ生成の条件は「解決後の結果キー (`export_key`) 軸の占有」に訂正された (決定本文の更新注記が正本)。単位の変遷は children 説 → name 説 → 結果キー軸占有説の 3 段である。
 
 ### children を持つ要素がスコープを作る (DR-025 で更新)
 

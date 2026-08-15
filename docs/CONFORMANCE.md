@@ -111,7 +111,7 @@ fixture が期待する outcome の代わりに `kind: "unsupported"` の defini
 
   `effects[].entity` は**射影前の canonical entity の参照識別子 (id)** であり `export_key` を適用しない (DR-045: 効果は cell 単位で記録する。entity は値セルであって露出パスではない)。したがって `effects` は id 軸、`result` / `sources` は結果アドレス軸であり、同じ cell でも綴りが異なる — `{"name":"verbose","export_key":"v"}` に `--verbose` を与えた場合、`effects[].entity` は `"verbose"`、`result` / `sources` のキーはともに `"v"` (`fixtures/export-key/rename-flag-default.json`)。
 - **report 直下のフィールド名 (`result` / `effects` / `sources` / `warnings` 等) は entity name として予約しない** (SPK-Q2=a): `{"name": "sources"}` のような要素宣言は合法で、definition-error にしない。衝突が起きない構造的根拠 — entity の値は常に `result` **の中の**キーとして現れ (`result.sources`)、report 直下のフィールドとは階層が異なる。`sources` shadow tree のキー (`result` と同じ露出キー、DR-122) も `warnings[].element` (canonical セル参照、DR-058 §2) も結果面 / 宣言面の名前空間であり、report envelope のフィールド名空間とは交差しない。実装が flat な連想構造で report を組む場合の衝突は実装バグであって仕様の禁則対象ではない
-- **`warnings` (optional)**: 起動された deprecated 入口 (DR-058 §2) が積む構造化警告の配列、各要素 `{element, kind}`。`element` は canonical セル参照 (どの入口が deprecated かでなく代替すべき canonical、DR-058 §2)、`kind` は機械可読識別子 (v1 は `"deprecated"`)。ParserContext (DR-016) の warnings — DR-058 §2 による拡張フィールド — の projection であり、effects が cli / link 効果のみである規約は不変 (deprecated 警告はパース成功後の利用推奨であって args 順の効果ではない、filter warn とは別層)。比較は element の集合比較 (順序非規範)、`kind` は fixture 側に書かれた要素でのみ比較する (`errors.reason` と同じ optional 検証、§3)
+- **`warnings` (optional)**: 起動された deprecated 入口 (DR-058 §2) が積む構造化警告の配列、各要素 `{element, kind}`。`element` は canonical セル参照 (どの入口が deprecated かでなく代替すべき canonical、DR-058 §2) を**参照識別子 (id) の綴り**で書く (`errors[].element` / `effects[].entity` と同軸、TRG-Q3=a からの導出 — 同じ観測面で綴りの軸が割れる理由が無い)、`kind` は機械可読識別子 (v1 は `"deprecated"`)。ParserContext (DR-016) の warnings — DR-058 §2 による拡張フィールド — の projection であり、effects が cli / link 効果のみである規約は不変 (deprecated 警告はパース成功後の利用推奨であって args 順の効果ではない、filter warn とは別層)。比較は element の集合比較 (順序非規範)、`kind` は fixture 側に書かれた要素でのみ比較する (`errors.reason` と同じ optional 検証、§3)
 
 ### failure
 
@@ -124,6 +124,7 @@ fixture が期待する outcome の代わりに `kind: "unsupported"` の defini
 - `errors`: 全保持の配列 (DR-053/066) — 別候補経路の Error に加え、可変長取り分 (DR-043) が全滅した場合の各取り分 dead-end の躓きも積む (DR-053 §2)。**message は仕様でない** (文言はレンダラ) ため fixture に書かず比較しない
 - `reason`: 機械可読な失敗理由の識別子 (DR-066)。**fixture では optional 検証** — 書けば検証、書かなければ kind まで。発生源の emit しうる reason は descriptor の `reasons` 宣言 (DR-061/066) に列挙され、「定義に登場する全パーツの reasons の和 vs fixture のカバー」の完備チェックに使える
 - `args_pos` は 0-based で、**失敗が帰属する args トークンの位置**を指す。piece 単位の失敗 (piece_filters / type.parse / value_filters、DR-034 pieceProcessor) は piece が由来する値トークンの位置。**どのトークンにも帰属しない失敗は `args.length`** を指す — トークンが尽きて要求が満たせない (= 次に要求した位置)、env / config 由来の値の失敗 (`args: []` なら 0)、`final_filters`/`accum_filters` の reject (multiple 有無を問わず、確定した最終値・累積配列全体への一括検証であり特定トークンに帰属しない、DR-102 §4) がこれに当たる
+- `element` は**当該要素の参照識別子 (id)** を綴る (TRG-Q3=a、kawaz 裁定 2026-08-15) — 明示 `id` があればその値、無ければ name に id 軸の文字写像 (DR-136 §3) を掛けた値。生の name ではない (`{"name": "force-mode"}` の element は `force_mode`)。`effects[].entity` と同じ軸であり、`result` / `sources` の結果アドレス軸とは綴りが異なりうる
 - `element` の**省略 = 特定要素に紐付かないスコープレベルの躓き** (残余トークン等)
 - `kind` の割当 (DR-065 §3):
   - `parse` — 型照合・経路構築の失敗。**構造的必須の不成立** (required 属性なしの positional がトークンを得られない、reason: `missing_operand`) と**残余トークン** (element 省略、args_pos = 残余先頭、reason: `unexpected_token`) を含む。**value_parser の型照合失敗**は reason: `not_a_number` (number / float の構文不一致) / `not_an_integer` (int が非整数入力を弾く、DR-066 §3)
@@ -152,7 +153,7 @@ fixture が期待する outcome の代わりに `kind: "unsupported"` の defini
 
 `query: "definition_error"` は `success`/`failure`/`ambiguous` (DR-053 の実行時 outcome union) とは別レイヤ — `parse_definition()` (定義そのものの静的検査、DR-054 §4) の返値をそのまま転用する。`cases[].args` は書かない (定義の静的検査であり実行しない、DR-082 §1)。
 
-- `errors`: `parse_definition()` が検出した全定義エラーの配列。`element` (該当要素、省略可) と `kind` の組で構成される
+- `errors`: `parse_definition()` が検出した全定義エラーの配列。`element` (該当要素の**参照識別子 (id)**、省略可 — 綴りの規定は §2 の failure と同じ) と `kind` の組で構成される
 - `kind` の語彙 (DR-054 §4、DR-085 訂正で `invalid-argument`、DR-120 §5 で `export-key-collision`、DR-054 更新 5 で `duplicate-id` 追加): `vocab-intersection` / `unknown-vocab` / `invalid-range` / `absent-ref` / `circular-ref` / `zero-progress` / `config-cycle` / `invalid-argument` / `export-key-collision` / `duplicate-id`
 - `unsupported` (DR-054 更新4) は `parse_definition()` の返値としては正規だが、**fixture の期待値には書けない** — `schema/fixture.schema.json` の kind enum に含めず、上記 10 語彙のみが fixture 側の語彙である。fixture は spec の正解を固定するもので、実装ごとに違う未対応範囲は正解になりえない (§0.1 の green 規範がこの kind を mismatch として扱う)
 - universal fn では registry に無い fn = `unknown-vocab`、arity / argument type 不正 = `invalid-argument`、呼び出し席と出力型の不適合 = `invalid-range`、`observes` 依存循環 = `circular-ref` (DR-114 §11)

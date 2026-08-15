@@ -86,7 +86,7 @@ Claude が `namedExport: boolean | string` のような複合フィールドを�
 
 ### CLI マッチング軸 (軸1) の分離 (DR-136 で更新)
 
-> **更新: DR-136 により、CLI 表面の照合綴りは一級軸 `trigger_name` として分離された (name からのデフォルトは kebab(name))。** 本 DR の軸 1 が「name が CLI 表面の綴りを直接供給する」と読める点は現役仕様ではない。short が明示専用であること、positional が入口綴りを持たないことは DR-136 §2 が引き継ぐ。
+> **更新: DR-136 により、CLI 表面の照合綴りは一級軸 `trigger_name` として分離された (name からのデフォルトは name への文字写像 — ASCII 非英数 → `-`、DR-136 §3)。** 本 DR の軸 1 が「name が CLI 表面の綴りを直接供給する」と読める点は現役仕様ではない。short が明示専用であること、positional が入口綴りを持たないことは DR-136 §2 が引き継ぐ。
 
 ### name の全軸兼任 (DR-046 で再解釈)
 
