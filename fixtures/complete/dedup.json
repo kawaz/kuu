@@ -1,21 +1,36 @@
 {
-  "why": "候補 dedup 規則 (DR-104 §3): 2 つの候補が同一とみなされるのは spelling/is_value/ty/origin/term/meta の完全一致に限る (path は同一性に関与しない)。参照実装の内部テスト「同じ綴りが 2 つの異なる祖先 scope から来ても 1 件に畳まれる」(2 つの別 scope に同じ exact 綴り `--x` を置いた AtomicAST 直接構築) の意図を、DR-067 §2「同一スコープ内のトリガ重複は合法」を使って wire form で再現する — 2 つの独立した command 定義が同名 \"build\" を持つ構成は、2 つの異なる経路 (別々のコマンド名衛星) から同じコマンド名トリガが供給されるという同型のシナリオになる。command の name はトリガ綴りを保つ軸で id 軸・結果キー軸とは独立 (DR-046 §1 / DR-052 §2) なので、id 側は相異なる明示 `id` を割って DR-054 更新 5 の duplicate-id を、結果キー側は相異なる `export_key` を割って DR-120 §1 の「1 露出キー・1 値セル」を満たしつつ、検証したい綴り軸の重複だけを残す。",
+  "why": "候補 dedup 規則 (DR-104 §3): 2 つの候補が同一とみなされるのは spelling/is_value/type/origin/term/meta の完全一致に限り、**path (祖先 scope 経路) は同一性に関与しない**。参照実装の内部テスト「同じ綴りが 2 つの異なる祖先 scope から来ても 1 件に畳まれる」の意図を、`global` の子孫コピー (DR-042 の不動点反復) で wire form に再現する — root で宣言した `global: true` の option は outer / inner の各 command scope へ構造コピーされるので、inner 入場後の可読集合には **root の宣言そのものと、各段へ落ちたコピー**が同時に居る。コピーは link 同期する衛星で実体は root のままなので origin は宣言元 canonical の参照識別子に揃い (DR-104 §2 明確化 note (i)、TRG-Q1=b で id 語彙)、6 フィールドが完全一致して 1 件に畳まれる。畳まれなければ『同じ綴りが複数回出る』という DR-060 §3 の契約 (和集合はスペリングの和集合であって経路の和集合ではない) 違反になる。\n\n**`global-scope-union.json` との役割分担**: あちらは *scope union* の pin — 子固有の候補と祖先由来の global 候補が同一 candidates 配列に**共存**すること (子入場で親候補が消える通常の排他的切替の例外) を見る。こちらは *dedup 粒度* の pin — 同一 origin の候補が複数経路から供給されたときに**1 件へ畳まれる**ことを見る。共存と畳み込みは別の規範なので fixture を分けている。",
   "query": "complete",
   "definition": {
+    "options": [
+      {"name": "verbose", "type": "flag", "long": true, "global": true}
+    ],
     "commands": [
-      {"type": "command", "name": "build", "id": "build_fast_def", "export_key": "build_fast", "options": [{"name": "fast", "type": "flag", "long": true}]},
-      {"type": "command", "name": "build", "id": "build_verbose_def", "export_key": "build_verbose", "options": [{"name": "verbose", "type": "flag", "long": true}]}
+      {
+        "type": "command",
+        "name": "outer",
+        "commands": [
+          {
+            "type": "command",
+            "name": "inner",
+            "options": [
+              {"name": "fast", "type": "flag", "long": true}
+            ]
+          }
+        ]
+      }
     ]
   },
   "cases": [
     {
-      "id": "same-spelling-different-command-definition-collapses",
-      "why": "args_before 空: \"build\" という同じコマンド名トリガが 2 つの独立した command 定義 (それぞれ別の子スコープ構造を持つ) から生成されるが、いずれも spelling=\"build\"/is_value=false/origin=\"build\"/term=word_end/meta 全 false で完全一致するため 1 件に畳まれる。畳まれなければ『同じ綴りが 2 回出る』という DR-060 §3 の契約 (和集合はスペリングの和集合、経路の和集合ではない) 違反になる。",
-      "args_before": [],
+      "id": "same-spelling-from-multiple-ancestor-scopes-collapses",
+      "why": "args_before [\"outer\", \"inner\"]: inner scope へ入場済み。`--verbose` は root の宣言と outer / inner へ落ちた global コピーという複数経路から可読だが、いずれも spelling=\"--verbose\"/is_value=false/origin=\"verbose\"/term=word_end/meta 全 false で完全一致するため **1 件**に畳まれる。path が違うだけの候補は同一候補である (DR-104 §3 が path を同一性から除外する趣旨そのもの)。\n\n対照として inner 固有の `--fast` (origin=\"fast\") を並べる — origin が違えば畳まれず併存するので、期待 candidates がちょうど 2 件であることが「全部まとめて 1 件にする」実装と「経路ごとに `--verbose` を重複出力する」実装の両方を落とす。",
+      "args_before": ["outer", "inner"],
       "expect": {
         "outcome": "complete",
         "candidates": [
-          {"spelling": "build", "is_value": false, "origin": "build", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}}
+          {"spelling": "--fast", "is_value": false, "origin": "fast", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}},
+          {"spelling": "--verbose", "is_value": false, "origin": "verbose", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}}
         ]
       }
     }
