@@ -1,6 +1,6 @@
 ---
 title: 「name スコープ」呼称群を「結果キー軸占有」語彙へ統一する用語整理
-status: open
+status: resolved
 category: task
 created: 2026-08-16T01:09:21+09:00
 last_read:
@@ -9,10 +9,10 @@ wip_entered:
 blocked_entered:
 pending_entered:
 discarded_entered:
-resolved_entered:
+resolved_entered: 2026-08-16T01:44:33+09:00
 discard_reason:
 pending_reason:
-close_reason:
+close_reason: ["done:commit 8f3ed110 (2026-08-16) で REFERENCE/LOWERING/DR-044/DR-050 の「name スコープ」呼称群を結果キー軸占有語彙へ統一、想定外の fixture why 2 件と DESIGN 内 5 箇所も走査で発見し対応", "done:DESIGN §2.1a に trigger_name を含む名前軸 5 軸の概念紹介を新設 (正本 = DR-136/REFERENCE §2.2、規定の二重管理なし)", "done:DR の Superseded/歴史注記は判断記録として据え置き、lint 3 種 green"]
 blocked_by:
 origin: 自リポ TODO
 ---

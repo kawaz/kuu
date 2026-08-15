@@ -14,7 +14,6 @@ active な issue の一覧。close 済みは archive/ にあり、ここには�
 | 2026-07-15 | design | idea | [descriptor-conformance-promotion-revisit](./2026-07-15-descriptor-conformance-promotion-revisit.md) | descriptor 検証の conformance 昇格の再検討 (DAX-Q6 先送り分、独自フィルタ実装ラップ or 2言語目着手で再検討) |
 | 2026-07-23 | task | idea | [help-category-link-last-wins](./2026-07-23-help-category-link-last-wins.md) | M5 で #help_category 内部セルの link 配線実装時は at_pos ベース last-wins を使う (completion.mbt L42-72 pattern 再利用、宣言順 push 由来の bug class 回避) |
 | 2026-08-16 | bug | open | [ref-anonymous-template-effects-binding](./2026-08-16-ref-anonymous-template-effects-binding.md) | anonymous scalar template への ref が effects に出ない (binding key が "" で sentinel 扱い) |
-| 2026-08-16 | task | open | [scope-naming-unification](./2026-08-16-scope-naming-unification.md) | 「name スコープ」呼称群を「結果キー軸占有」語彙へ統一する用語整理 (TRG-Q4=a 波及、fable M2/m5) |
 | 2026-08-12 | task | open | [ref-template-help-carrier](./2026-08-12-ref-template-help-carrier.md) | ref/template 由来 help_meta の provenance carrier 未実装、DR-116 §4 説明引き直しの ref 越し分を次サイクルへ |
 | 2026-08-12 | design | open | [nested-config-not-supplied](./2026-08-12-nested-config-not-supplied.md) | 参照実装が root 宣言の config_file を子スコープの要素へ供給しない (DR-050 §3 同型対応の nested 未実装) |
 | 2026-08-12 | task | open | [command-value-carrier](./2026-08-12-command-value-carrier.md) | 参照実装の CommandDef が value 担体を持たず command の value を reject する (DR-134 未追随) |
