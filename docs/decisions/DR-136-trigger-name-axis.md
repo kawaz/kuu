@@ -14,9 +14,11 @@ CLI 表面に現れる**照合綴り**を担う軸を `trigger_name` として�
 | 参照識別子 | `id` | ref / link の解決対象 | しない | snake(name) |
 | 結果キー | `export_key` | 結果オブジェクトのキー、スコープ生成 | する | snake(name) |
 | 値プレースホルダ | `value_name` | help / usage の `<PLACEHOLDER>` | しない | UPPER_SNAKE(name) |
-| 説明ラベル | `display_name` | help でその引数を指す人間可読名 | しない | name (無変換) |
+| 説明ラベル | `display_name` | help でその引数を指す人間可読名 | しない | **raw name (無変換 — 正規化も掛けない)** |
 
 `name` は各軸へ値を供給するだけの存在であり、**それ自体は CLI 表面にも結果にも直接現れない**。
+唯一の例外が `display_name` で、これは人間可読ラベルなので name をそのまま (正規化も変換もせずに)
+受け取る (§3)。
 
 ### 2. trigger_name が担う入口と、担わない入口
 
@@ -34,11 +36,23 @@ CLI 表面に現れる**照合綴り**を担う軸を `trigger_name` として�
 
 ### 3. 供給変換は「name から供給されるときだけ」
 
+供給は **normalize → 軸ごとの変換** の 2 段で行う。
+
+**第 1 段 — normalize(name)** (全軸共通の前処理):
+
+1. 先頭・末尾の whitespace を除去 (trim)
+2. 連続する whitespace (Unicode whitespace) を `_` 1 個へ畳む
+
+**第 2 段 — 軸ごとの変換** (normalize 済みの値に対して):
+
 | 変換 | 内容 |
 |---|---|
 | kebab(name) | underscore → hyphen |
 | snake(name) | hyphen → underscore |
 | UPPER_SNAKE(name) | snake 化してから ASCII 英字を大文字化 |
+
+**`display_name` だけは normalize も第 2 段も掛からず raw name をそのまま使う** — 人間可読の
+説明ラベルであり、空白や綴りの揺れごと書き手の意図として扱う軸だからである。
 
 - **変換は underscore ↔ hyphen の置換と ASCII 大文字化のみ**。camel 系の変換 (camelCase ↔ snake_case 等) は含めない
 - 非 ASCII はそのまま (大文字化も ASCII 英字のみに効く。i18n サブコマンド名が正規である点は DR-067 の name 制約と同じ)
@@ -50,12 +64,18 @@ CLI 表面に現れる**照合綴り**を担う軸を `trigger_name` として�
 
 帰結として、`{"name": "dry_run"}` と `{"name": "dry-run"}` は**全軸で同一の結果に落ちる**:
 
-| | trigger_name | id | export_key | value_name |
-|---|---|---|---|---|
-| `{"name": "dry_run"}` | `--dry-run` | `dry_run` | `dry_run` | `DRY_RUN` |
-| `{"name": "dry-run"}` | `--dry-run` | `dry_run` | `dry_run` | `DRY_RUN` |
+| | trigger_name | id | export_key | value_name | display_name |
+|---|---|---|---|---|---|
+| `{"name": "dry_run"}` | `--dry-run` | `dry_run` | `dry_run` | `DRY_RUN` | `dry_run` |
+| `{"name": "dry-run"}` | `--dry-run` | `dry_run` | `dry_run` | `DRY_RUN` | `dry-run` |
+| `{"name": "font size"}` | `--font-size` | `font_size` | `font_size` | `FONT_SIZE` | `font size` |
 
 書き手は自分の好きな綴りで name を書けばよく、CLI 表面が kebab に、キー面が snake に落ちることは軸の変換が保証する。
+
+3 行目は **display_name 先行の書き方**である。help に出したい人間可読ラベル (`font size`) を
+そのまま name に書けば、normalize (空白 → `_`) を経て機械面の各軸が自然な綴りに落ちる — 説明
+ラベルのために `display_name` を別途書く必要がない。逆に機械面を先に決めたい書き手は
+`{"name": "font_size"}` と書いて `display_name` を明示すればよく、どちらの入口も同じ表を通る。
 
 ### 5. alias は「綴り軸の別名を追加する入口ノード」
 

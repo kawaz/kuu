@@ -111,11 +111,11 @@ wire 正規形のノードが持ちうる全属性。型・既定値・適用対
 | `self` | `"drop"` \| `"keep"` | `"drop"` | `type:"dd"` の要素 |
 | `seq` | array[node] | なし | 枝ノード |
 | `short` | string | なし | option 要素 |
-| `trigger_name` | string | kebab(name) 導出 | 入口綴りを持つ要素 (long / command / alias) |
+| `trigger_name` | string | kebab(normalize(name)) 導出 | 入口綴りを持つ要素 (long / command / alias) |
 | `type` | registryIdentifier | なし | 葉ノード / 任意ノード (糖衣プリセット選択) |
 | `value` | any | なし | 実体だけノード |
 | `value_filters` | filterChain | type 継承 | 値要素 |
-| `value_name` | string | UPPER_SNAKE(name) 導出 | 値要素 (表示メタ) |
+| `value_name` | string | UPPER_SNAKE(normalize(name)) 導出 | 値要素 (表示メタ) |
 <!-- kuu-lint:end -->
 
 正本: `schema/wire.schema.json` の `$defs.node.properties` (本表と 1:1 対応、`just lint-reference`
@@ -126,22 +126,30 @@ wire 正規形のノードが持ちうる全属性。型・既定値・適用対
 #### 名前・識別子
 
 **名前軸まとめ表** — `name` は各軸のデフォルト供給源であり、それ自体は CLI 表面にも結果にも
-直接現れない。供給時にだけ軸ごとの慣習的変換が掛かる (明示指定には掛からない)。正本: DR-136 §1。
+直接現れない。供給は **normalize (trim + 連続 whitespace を `_` 1 個へ畳む) → 軸ごとの変換** の
+2 段で、明示指定にはどちらも掛からない。正本: DR-136 §1/§3。
 
 | 軸 | フィールド | 役割 | 結果露出 | `name` からのデフォルト |
 |---|---|---|---|---|
-| 綴り (トリガ) | `trigger_name` | CLI 表面の照合綴り | しない | kebab(name) — underscore → hyphen |
-| 参照識別子 | `id` | ref / link の解決対象 | しない | snake(name) — hyphen → underscore |
-| 結果キー | `export_key` | 結果オブジェクトのキー、スコープ生成 | する | snake(name) |
-| 値プレースホルダ | `value_name` | help / usage の `<PLACEHOLDER>` | しない | UPPER_SNAKE(name) |
-| 説明ラベル | `display_name` | help の人間可読名 | しない | name (無変換) |
+| 綴り (トリガ) | `trigger_name` | CLI 表面の照合綴り | しない | kebab(normalize(name)) — underscore → hyphen |
+| 参照識別子 | `id` | ref / link の解決対象 | しない | snake(normalize(name)) — hyphen → underscore |
+| 結果キー | `export_key` | 結果オブジェクトのキー、スコープ生成 | する | snake(normalize(name)) |
+| 値プレースホルダ | `value_name` | help / usage の `<PLACEHOLDER>` | しない | UPPER_SNAKE(normalize(name)) |
+| 説明ラベル | `display_name` | help の人間可読名 | しない | **raw name** (normalize も変換も掛けない) |
 
-`{"name": "dry_run"}` と `{"name": "dry-run"}` はこの表を通ると全軸で同じ結果に落ちる
-(`--dry-run` / `dry_run` / `dry_run` / `DRY_RUN`)。
+| `name` の書き方 | trigger_name | id / export_key | value_name | display_name |
+|---|---|---|---|---|
+| `dry_run` | `--dry-run` | `dry_run` | `DRY_RUN` | `dry_run` |
+| `dry-run` | `--dry-run` | `dry_run` | `DRY_RUN` | `dry-run` |
+| `font size` | `--font-size` | `font_size` | `FONT_SIZE` | `font size` |
+
+3 行目が **display_name 先行の書き方** — help に出したいラベルをそのまま name に書けば、
+機械面の各軸は normalize 経由で自然な綴りに落ちる。
 
 **`name`**
-各名前軸のデフォルト供給源 (上のまとめ表)。汎用の名前系値源であり、**ハイフンも書ける** —
-綴り面が kebab に、キー面が snake に落ちることは軸ごとの供給変換が保証する (DR-136 §4)。
+各名前軸のデフォルト供給源 (上のまとめ表)。汎用の名前系値源であり、**ハイフンも空白も書ける** —
+綴り面が kebab に、キー面が snake に落ちることは normalize + 軸ごとの供給変換が保証する
+(DR-136 §3/§4)。
 配置で役割が決まる — `options[]`/`positionals[]`/`commands[]` に置けば key name (結果キー +
 lexical スコープを作る)、`definitions` 配下に置けば def name (ref/link 対象、結果非露出)。
 `id` 未指定なら参照識別子も name が供給し、同一 lexical
@@ -161,7 +169,7 @@ ref/link したい場合に単独で付与する。同名要素へ明示 `id` �
 
 **`trigger_name`**
 綴り軸 — CLI 表面に現れる照合綴り。`long` の基幹綴り (`--<trigger_name>`)、`command` のトリガ
-綴り、`alias` の入口綴りを供給する。未指定なら kebab(name) が供給し、明示値には変換を掛けない
+綴り、`alias` の入口綴りを供給する。未指定なら kebab(normalize(name)) が供給し、明示値には normalize も変換も掛けない
 (`{"trigger_name": "dry_run"}` はそのまま `--dry_run` を植える)。`positional` は入口綴りを持たず、
 `short` は明示専用で本軸から導出しない。`exact` 葉 / `values` 糖衣は literal の直値で name 由来では
 ないため無関係。variant の affix 構造との合成 (DR-011) は本軸の値を素に行う。
@@ -276,7 +284,7 @@ long 入口。基幹綴りは `trigger_name` 軸が供給する (`--<trigger_nam
 **`alias`**
 canonical 実体への別入口参照 (参照ファミリーの 3 人目: `ref` = 構造継承 / `link` = 値同期 /
 `alias` = 別入口)。綴り軸の別名を追加する入口ノードで、効果は canonical の実体セルへ、結果キーは
-canonical のみ。入口綴りは alias ノード自身の `trigger_name` (既定 kebab(alias の name)) が供給し、
+canonical のみ。入口綴りは alias ノード自身の `trigger_name` (既定 kebab(normalize(alias の name))) が供給し、
 canonical の variant 構造がその綴りで再導出される。明示綴り (`short` 等) は継承しない。
 最小例: `{"alias": "port", "short": "n"}`
 正本: DESIGN §14.5, DR-057, DR-136 §5
@@ -451,15 +459,16 @@ UsefulAST 層 (各言語 DX) の関心。
 
 **`display_name`**
 型: string。適用対象: 任意ノード。
-意味論: help でその引数を指す人間可読な説明ラベル (例: 「ポート番号」)。名前の 4 軸
-(id/export_key/value_name/display_name) の 1 つで、`name` がデフォルト供給源。
+意味論: help でその引数を指す人間可読な説明ラベル (例: 「ポート番号」)。`name` がデフォルト
+供給源だが、**本軸だけは normalize も綴り変換も掛からず raw name をそのまま使う** (DR-136 §1/§3)
+— `{"name": "font size"}` の display_name は `font size` のまま。
 最小例: `{"name": "port", "type": "int", "display_name": "port number"}`
 正本: DESIGN §2.1, DR-046 §1/§3
 
 **`value_name`**
 型: string。適用対象: 値要素。
 意味論: help/usage の値プレースホルダ表示 (`<PLACEHOLDER>`)。指定なしなら key name / type 名 /
-def name を UPPER_SNAKE 化 (snake 化してから ASCII 英字を大文字化。非 ASCII はそのまま) して導出
+def name を normalize してから UPPER_SNAKE 化 (snake 化してから ASCII 英字を大文字化。非 ASCII はそのまま) して導出
 (DR-136 §1/§3 — `key-file` も `key_file` も `KEY_FILE`)。ref 継承 + 入口側での
 上書きが可能。
 最小例: `{"name": "port", "type": "int", "value_name": "PORT"}`
