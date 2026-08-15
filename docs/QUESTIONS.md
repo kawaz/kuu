@@ -33,11 +33,3 @@
 
 
 
-## 👺 UC-Q1: tuple 枝の表現 (union 淘汰の前提材)
-
-確定済みの color 例 ([int,int,int] | string) は tuple 前提だが、現行 value_type に tuple は無い (DR-126 §1、DR-128 案(a) で「入力側は seq で足りる」として棄却済み)。出力側の部分構築 (--r で [0,null,null] を作る) には器の形が定義時に確定している必要があり、前提が変わった。詳細: research/2026-08-16-union-culling-settlement.md §1b
-
-- [ ] a: **value_type に tuple を第一級追加 (推し)** — 固定アリティで器の形が定義時確定、record vivify と同じ安全性論拠。DR-126/128 の該当箇所を supersede 申告つきで改稿
-- [ ] b: 固定長 array + 注釈で近似 — bare array 記法との union 衝突と vivify 特例が要るため非推奨
-
-
