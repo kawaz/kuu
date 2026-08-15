@@ -1,6 +1,6 @@
 ---
 title: anonymous scalar template への ref が effects に出ない (binding key が "" で sentinel 扱い)
-status: open
+status: resolved
 category: bug
 created: 2026-08-16T01:19:15+09:00
 last_read:
@@ -9,10 +9,10 @@ wip_entered:
 blocked_entered:
 pending_entered:
 discarded_entered:
-resolved_entered:
+resolved_entered: 2026-08-16T01:57:17+09:00
 discard_reason:
 pending_reason:
-close_reason:
+close_reason: ["implemented: kuu.mbt commit 6229e6e9 (front_door.mbt anonymous_cell_entity) + wbtest 6本","fixture/name-surface/ref-id-axis-lookup.json: effects 3件復活","spec commit 1680ceec: 匿名枝/セル混同の why 改訂 (裁定 a、2026-08-16)"]
 blocked_by:
 origin: self
 ---
@@ -48,8 +48,8 @@ effects に載せる」形になるが、`""` は seq/or の匿名子とも共�
 
 ## 受け入れ条件
 
-- [ ] 匿名 scalar template への `ref` で、値セルへの set が `effects` に現れる (binding key が "" になって sentinel gate に落ちる経路の修正)
-- [ ] **`fixtures/name-surface/ref-id-axis-lookup.json` に `effects` 期待を復活させる** — 本 bug のため現在は `result` だけで pin している。復活させる期待は次の 3 件 (id 軸の綴り):
+- [x] 匿名 scalar template への `ref` で、値セルへの set が `effects` に現れる (binding key が "" になって sentinel gate に落ちる経路の修正)
+- [x] **`fixtures/name-surface/ref-id-axis-lookup.json` に `effects` 期待を復活させる** — 本 bug のため現在は `result` だけで pin している。復活させる期待は次の 3 件 (id 軸の綴り):
   ```json
   {"entity": "box_width",   "op": "set", "operand": 12, "source": "cli"},
   {"entity": "mirror_name", "op": "set", "operand": 34, "source": "cli"},
