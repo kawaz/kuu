@@ -1,5 +1,5 @@
 {
-  "why": "effects.path は entity から実際の着地座までの structured な観測アドレスであり、セル空間で消費した nameless 位置 segment も含む (DR-127 §6)。index は字面でなく、消費 0 の literal を含む全 value-bearing 座に対して宣言時に解決した非負値を記録する。3 座 tuple の link:\"pair[-1]\" は entity `pair`, path [2] として観測される。",
+  "why": "effects.path は entity から実際の着地座までの structured な観測アドレスであり、セル空間で消費した nameless 位置 segment も含む (DR-127 §6)。index は字面でなく、消費 0 の literal を含む全 value-bearing 座に対して宣言時に解決した非負値を記録する。3 座 seq セルの link:\"pair[-1]\" は entity `pair`, path [2] として観測される。",
   "query": "parse",
   "definition": {
     "options": [
@@ -29,7 +29,7 @@
   "cases": [
     {
       "id": "negative-cell-index-is-observed-as-resolved-index",
-      "why": "3 座 tuple の `[-1]` は literal も値座として数え、定義時に第 3 座へ解決される。effects は再解釈が必要な字面 -1 を漏らさず path [2] を載せる。link 書きは親 seq の通常消費を発火させないため、第 1 座の消費 0 literal と未発火の第 2 座はいずれも null、link 着地の第 3 座だけが値と source を持つ。result / sources は 3 座すべてを列挙する。",
+      "why": "3 座 seq セルの `[-1]` は literal も値座として数え、定義時に第 3 座へ解決される。effects は再解釈が必要な字面 -1 を漏らさず path [2] を載せる。link 書きは親 seq の通常消費を発火させないため、第 1 座の消費 0 literal と未発火の第 2 座はいずれも null、link 着地の第 3 座だけが値と source を持つ。result / sources は 3 座すべてを列挙する。",
       "args": ["--legacy", "b"],
       "expect": {
         "outcome": "success",

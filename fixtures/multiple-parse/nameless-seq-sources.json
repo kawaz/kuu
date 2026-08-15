@@ -1,5 +1,5 @@
 {
-  "why": "name 付き seq accumulator の子がすべて nameless の場合、各発火の tuple は wrapper の結果値に積まれる。sources は `result` と同型の shadow tree なので、accumulator の各 row とその中の各要素に要素対応でタグが並ぶ (DR-122 §1/§3) — 子が独立した結果キーを持たなくても、座は result の添字が与える。未発火時は `[]` で、空配列に由来タグは載らない (DR-122 §2)。",
+  "why": "name 付き seq accumulator の子がすべて nameless の場合、各発火の座列 (nameless seq 産の row) は wrapper の結果値に積まれる。sources は `result` と同型の shadow tree なので、accumulator の各 row とその中の各要素に要素対応でタグが並ぶ (DR-122 §1/§3) — 子が独立した結果キーを持たなくても、座は result の添字が与える。未発火時は `[]` で、空配列に由来タグは載らない (DR-122 §2)。",
   "query": "parse",
   "definition": {
     "options": [
@@ -36,7 +36,7 @@
     },
     {
       "id": "one-fire-reports-cli-on-wrapper",
-      "why": "`--pair a b` の 1 発火が tuple `[a,b]` を wrapper の accumulator に追加する。sources は同型の `[[cli, cli]]` — row 1 個・各要素とも cli 発火が確定させた。",
+      "why": "`--pair a b` の 1 発火が座列 `[a,b]` を wrapper の accumulator に追加する。sources は同型の `[[cli, cli]]` — row 1 個・各要素とも cli 発火が確定させた。",
       "args": [
         "--pair",
         "a",

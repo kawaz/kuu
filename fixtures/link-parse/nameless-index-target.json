@@ -1,5 +1,5 @@
 {
-  "why": "link 固定パスは nameless 透過子を値の座を持つ子だけで数え、位置指定で着地できる (DR-029 用途 4 / DR-127 §1, §6)。type:none は値座を持たないため座標から除外される。nameless 子は自前の effects entity を持たず、最寄りの named 祖先 `pair` と path [0] の組で着地座を表す。固定 tuple の未発火座は DR-130 の全列挙規範により null になる。",
+  "why": "link 固定パスは nameless 透過子を値の座を持つ子だけで数え、位置指定で着地できる (DR-029 用途 4 / DR-127 §1, §6)。type:none は値座を持たないため座標から除外される。nameless 子は自前の effects entity を持たず、最寄りの named 祖先 `pair` と path [0] の組で着地座を表す。固定長 seq セルの未発火座は DR-130 の全列挙規範により null になる。",
   "query": "parse",
   "definition": {
     "options": [
