@@ -74,7 +74,7 @@ value_type の体系 (DR-126 §1) は全域が下表で尽きる:
 | array | `[int]` の**構造**は静的に続行する (要素型を辿って降下を継続)。`.name` は definition-error | index の存在 (範囲・負 index の現在長での解決、§1) は実行時。失敗は枝 Reject (§4) | 不可 (要素の存在が実行時) |
 | `map` / `value` | 以降の segment は全て実行時 | 全部 (キー不在・セル未確定も実行時に落ちる) | 不可 |
 | primitive (`string` / `number` / `bool` / `null`) | 残余 segment があれば**恒真不成立**なので definition-error | — | — |
-| union | パスを含む variant が 1 つ以上あれば静的合法 (0 なら definition-error)。含有 variant 間で当該フィールドの型が一致しなければ definition-error (operand のパース型が定まらない、§3.2) | 実行時の現在値の構造で判定する — record は構造的型付けであり variant の同一性を値に保存しないので、合わなければ枝 Reject | 可 (含有 variant の器 `{}`。構造的なので variant 選択は不要) |
+| union | パスを含む variant が 1 つ以上あれば静的合法 (0 なら definition-error)。含有 variant 間で当該フィールドの型が一致しなければ definition-error (operand のパース型が定まらない、§3.2) | 実行時の現在値の構造で判定する — record は構造的型付けであり variant の同一性を値に保存しないので、合わなければ枝 Reject **(→ superseded by DR-138 §2 — 並行着地・確定相淘汰へ置換、枝 Reject は発生しない)** | 可 (含有 variant の器 `{}`。構造的なので variant 選択は不要) |
 
 各 segment はこの表を 1 段ずつ適用して降りる。フィールドの型は type 参照である (DR-126 §1) ため、
 降下は**型の依存グラフを辿る**形になる — segment がフィールドに当たったら、そのフィールドの type の
@@ -82,9 +82,9 @@ value_type の体系 (DR-126 §1) は全域が下表で尽きる:
 `{"map": "value"}` を宣言していれば record 段までは静的に検査され、map の内側を指す segment 以降が
 実行時に落ちる。静的 / 動的の切替深度は宣言がそのまま決める。
 
-パスは**宣言名軸**である (DR-032 / DR-121 §5) — `export_key` の綴りでは辿らない。
+パスは**参照識別子 (id) 軸**である (DR-032 / DR-121 §5 / DR-136 §6) — `export_key` の綴りでは辿らない。
 ただし第 2 相に入った後の segment が指すのは value_parser 産オブジェクトの生キー (record のフィールド名) であり、
-宣言名軸とも結果アドレス軸とも別の第 3 の鍵空間になる。これは「不透明値の内部に kuu のセルは存在しない」という
+参照識別子 (id) 軸とも結果アドレス軸とも別の第 3 の鍵空間になる。これは「不透明値の内部に kuu のセルは存在しない」という
 構造的事実の帰結であって、回避できる設計上の選択ではない。
 
 #### 2.3 二相性は発明した規則ではない
@@ -104,7 +104,7 @@ link パスの残余が値空間の座を指すとき、その座への書きが
 | `map` / `value` / 宣言なし | **その枝の Reject** (解決先が未確定) |
 
 葉セルより深い中間段も含めた value_type 全域の可否は §2.2 の表が正本である (union は含有 variant の
-器を vivify でき、array の要素は vivify できない)。
+器を vivify でき **(→ DR-138 §2 により適合する全 variant を並行 vivify へ読み替え)**、array の要素は vivify できない)。
 
 vivify が届くのは **器の形が定義時に言える宣言が続く深さまで**である (§2.2 の切替深度と同じ規則) —
 record 内の `map` フィールドの内側を指す座への書きは、セルに値がありその座が実在すれば書けるが、
@@ -189,6 +189,9 @@ fn descriptor の `io_type.output` とフィールドの `out` の適合を定�
 
 #### 4.2 完全経路の系 — 裁定は枝ローカルの効果列 fold の後に来る
 
+> 本節の「枝」は**読みの枝** (経路探索の候補、DR-138 §8 左列の消費の or 側) であり、
+> DR-138 §0 の union 枝 (セル内部の候補構築状態) ではない。
+
 実装は**裁定の前に、枝ローカルの効果列を fold してパス解決の可否を判定**しなければならない (DR-038)。
 裁定後に解決失敗が発覚して全体が失敗する順序では、DR-029 の「解決できない枝は落ち、他の解釈が選ばれる」が
 実現できない。第 2 相が実行時解決になる経路 (`map` / `value` 宣言) で最も効く要求である。
@@ -215,7 +218,7 @@ link パス (出力世界) とは交わらない。
   この裁定による既存 pin の変更は無い
 - **effects**: entry に **structured な `path` フィールド (segment 配列) を optional 追加**する (LINKPATH-Q5=a)。
   `path` は**「`entity` から実際の着地座までの観測アドレス」**である — パスの値残余そのものではない。
-  `entity` は着地座を含む**最寄りの named セル** (`effects[].entity` が宣言名軸である DR-121 §5 は不変) で、
+  `entity` は着地座を含む**最寄りの named セル** (`effects[].entity` が参照識別子 (id) 軸である DR-121 §5 / DR-136 §6 は不変) で、
   `path` はそのセルの内側で着地座を一意に指す segment 列である。segment は name (string) と index (int) が並ぶ。
 
   この 1 規則が、値残余の着地と nameless 透過子への着地 (`pair[0]`、DR-029 用途 4) の両方を覆う。
@@ -304,7 +307,7 @@ presence は値ごとに変わる (DR-126 §3) ので、presence 判定と値読
   (4) 値残余の absent → 枝 Reject → 他枝が勝つ / (5) 時系列上書き (部分書き→parser 産出、逆順の両方) /
   (6) sources の座 re-tag (部分書きした座だけ `link`) / (7) effects の `path` 表記 /
   (8) nameless 透過子への位置指定着地 (`pair[0]`、entity + path の観測面込み — DR-029 用途 4)
-- **DR-121**: §4 (`link` は独立した値源タグ) と §5 (effects は宣言名軸) は本 DR の観測面規定の前提として現役。
+- **DR-121**: §4 (`link` は独立した値源タグ) と §5 (effects は参照識別子 (id) 軸、DR-136 §6 の語彙) は本 DR の観測面規定の前提として現役。
   §4.2 が記録する参照実装の乖離 (`Source` enum に `Link` が無い) は、本 DR の追随でも解消対象になる
 - **DR-122**: §3 (タグの決定単位は値の座) を複合値の内部へ一般適用するのが本 DR §6 の sources 規定である。
   §2 (キー集合は result の射影) は vivify した器にもそのまま効く — 座っていないフィールドは
@@ -325,7 +328,7 @@ presence は値ごとに変わる (DR-126 §3) ので、presence 判定と値読
 
 2 相分解の暗黙性 (同じ綴りで意味論の厚みが変わる) が無く、規則が 1 本で済む。棄却理由は effects の規範との衝突である。
 スコープの kv は結果の組み立て時にしか存在しないため、発火時の観測値を枝ローカルの binding 列から都度 fold し、
-書きを子セルの効果へ**逆写像**しなければ effects の cell 単位・宣言名軸 (DR-045 / DR-121 §5) が保てない。
+書きを子セルの効果へ**逆写像**しなければ effects の cell 単位・参照識別子 (id) 軸 (DR-045 / DR-121 §5 / DR-136 §6) が保てない。
 逆写像は `export_key` 透過と nameless 畳み込みが絡んで一意に定まらない。
 また「result の形を辿る」なら鍵空間が露出キーになり、link = name 参照 (DR-032) と正面から衝突する。
 統合の見かけの下で排他的な制約を侵害する型の案である。
@@ -362,7 +365,7 @@ value_parser が必ず通るので `final_filters` への依存が減る、と�
 - DR-045 (cell operation と effects の cell 単位規範 — (a) 棄却の根拠)
 - DR-051 (absent / null — vivify した器の presence 表現)
 - DR-087 (default の遅延解決 — 値源ラダーの遅延実体化。link パスの遅延とは別軸)
-- DR-121 §4/§5 (`link` タグの独立性・effects の宣言名軸)
+- DR-121 §4/§5 (`link` タグの独立性・effects は参照識別子 (id) 軸 — 語彙は DR-136 §6)
 - DR-122 (sources shadow tree — §3 のタグ決定単位を複合値内部へ一般適用)
 - docs/research/2026-07-28-link-fixed-path-dsl-design.md (案の比較と裁定の正本)
 - docs/research/2026-07-31-type-input-structure-splice.md §2b/§2c (入力側 splice との分界、

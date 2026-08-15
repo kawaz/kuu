@@ -54,6 +54,14 @@ record が「キー語彙の閉域」であるのと対称に、tuple は**位�
 この「完成」判定が効くのは値確定相であり、規定は DR-138 §1 が置く (単相 tuple セルの
 未完成確定は kind `parse` / reason `incomplete_value` — DR-138 §4)。
 
+帰結として、**完成値でない tuple 値 (null 座持ち / アリティ不一致) の丸ごと供給は型不適合**
+である — 下位席 (env / config / default) の完全値 1 発供給や丸ごと set の型判定 (DR-138 §3)
+には完成判定が含まれ、宣言 default に完成値でない array を書けばその供給は既存の宣言 default
+供給失敗の経路 (DR-102 §5 系、`fixtures/value-typing/declared-default-parse-failure.json` の族)
+に落ちる。これは **`incomplete_value` (CLI/link による組み上げが完成に達しなかった確定相の
+失敗、DR-138 §4) とは別位相** — 供給された 1 値の型判定は供給時に即座に裁かれ、確定相まで
+遅延しない。
+
 ### 3. 2×2 の整理 — tuple : array = record : map
 
 構造型 4 種は「キー / 位置が定義時に固定か」×「要素型が座ごとに個別か」の 2×2 で

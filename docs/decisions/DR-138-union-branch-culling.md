@@ -28,7 +28,7 @@
 |---|---|
 | **tuple** (DR-137) | 全位置が non-null — 位置は全て構造上必須 (全座充足が値の意味、DR-137 §2)。`[0, 255, null]` は未完成 |
 | **record** (DR-126) | closed キー適合のみ — フィールドは presence-optional (DR-126 §3) なので、着地が 1 件以上あれば部分値 (`{until: X}` 相当) でも完成 |
-| **primitive** (`string` / `number` / `bool` / `null`) | 型適合の値の着地が 1 件以上ある |
+| **primitive** (`string` / `number` / `bool` / `null` — DR-126 §1 の value_type 列挙の primitive) | 型適合の値の着地が 1 件以上ある |
 | `array` / `map` / `value` | 型適合の丸ごと set の着地が 1 件以上ある (部分構築は生じない — array は vivify 不可、map / value は器の形が定義時に言えない。DR-127 §2.2/§3 不変) |
 
 完成判定は**確定相の内部工程**であり、node `required` は**できた最終セル値への述語**
@@ -75,7 +75,8 @@ DR-031 のラダー (CLI/link > env > config > default) は**セル単位**の�
   できない — DR-031「明示的に与えられたものほど優先」の帰結)
 - 下位席 (env / config / default) の供給は**完全値 1 発**として通常の値パイプラインで
   parse され (DR-049 / DR-050)、枝並行構築は起きない — 産出がどの variant に適合するかと
-  いう通常の型判定だけが残る。部分書きの機構 (link パス) は CLI/link 層の住人であり、
+  いう通常の型判定だけが残る — この型判定には §1 の完成判定が含まれ、完成値でない tuple 値の
+  供給は型不適合である (DR-137 §2。`incomplete_value` = CLI/link の組み上げ失敗とは別位相)。部分書きの機構 (link パス) は CLI/link 層の住人であり、
   下位席に部分書きの席は無い (config_key は文法借用のみ、DR-127 波及節) ため、
   「未完成枝」を作れるのは構造的に CLI/link だけである — 「下位席が枝を完成させる」状況は
   発生しない
@@ -114,7 +115,8 @@ DR-031 のラダー (CLI/link > env > config > default) は**セル単位**の�
 
 - tie した枝の**確定値を観測面 (結果射影後の形 — record は DR-130 §4.1 の null 補形適用後)
   で比較**し、**同値なら成功** (その値で確定)、**異値なら ambiguous** (interpretations に
-  各枝の結果ビューを列挙、DR-053)
+  各枝の**結果ビュー (null 補形適用後)** を列挙する — DR-130 §4.2 の sparse 規範への
+  carve-out (同 §4.2 追補、DR-053)。形の違いこそが曖昧の内容なので補形を省けない)
 - 根拠は DR-031 EXP-Q1 の直接の同型 — 同値 default は「観測可能な競合が無い」ため
   success、異 default は ambiguous。宣言順等の順位規則で解決しないのも同じ線
   (DR-038 / DR-042 の順序非依存)
