@@ -74,7 +74,7 @@ wire 正規形のノードが持ちうる全属性。型・既定値・適用対
 | `env` | string | なし | 値要素 |
 | `exact` | string \| boolean \| number | なし | 葉ノード |
 | `exclusive_group` | array[string] | なし | 任意要素 |
-| `export_key` | string \| null | name 由来 | name を持つノード |
+| `export_key` | string \| null | name の文字写像 (→ `_`) | 任意ノード (占有すると結果スコープを作る) |
 | `final_filters` | filterChain (array \| {prepend?,append?}) | 空 | 非 accum 値要素専用 (DR-102) |
 | `global` | boolean | false | options/positionals 配下の要素 |
 | `help` | string | なし | 任意ノード (表示メタ) |
@@ -662,7 +662,7 @@ ns 付き参照で直接指す。提供義務は conformance 実行文脈での�
 | `short_attached_value` | `"require"`\|`"allow"`\|`"deny"`\|`"last_only"` | `"allow"` | 値持ち short の付着形 (`-O2`) と space 分割形 (`-O 2`) の入口ダイヤル |
 | `short_combine` | boolean | `true` | 複数 short オプションを 1 トークンに束ねるクラスタ読み (`-ab`=`-a -b`) の可否 |
 | `env_prefix` | string | なし | env 名の前置連結 (要素単位で `""` に上書きし prefix なしを明示可) |
-| `env_auto` | boolean | `false` | `env:` 未指定の値セル持ち要素へ env 席を自動宣言 (`UPPER(env_prefix)_UPPER(スコープパス)_UPPER(name)`) |
+| `env_auto` | boolean | `false` | `env:` 未指定の値セル持ち要素へ env 席を自動宣言 (`UPPER(env_prefix)_UPPER(スコープパス)_UPPER_SNAKE(name)` — name は id 軸の文字写像を通してから大文字化、DR-136 §3/§4) |
 <!-- kuu-lint:end -->
 
 `short_attached_value` の 4 値の意味論:

@@ -31,7 +31,9 @@ env 名 = UPPER(env_prefix) "_" UPPER(scope_path を "_" 連結) "_" UPPER(name)
 ```
 
 - 例: `env_prefix: "MYAPP"` 配下の `serve` スコープの `port` → `MYAPP_SERVE_PORT`
-- name は wire format の snake_case (DR-022) なので変換は uppercase のみ。kebab / camel からの変換規則は定義しない (case 変換は DX 層の pluggable、DR-022)
+- **name には id 軸の文字写像を掛けてから uppercase する** (= UPPER_SNAKE 供給、DR-136 §3/§4)。camel からの変換規則は定義しない (case 変換は DX 層の pluggable、DR-022)
+
+> **更新 (DR-136): 「name は snake_case が正規形なので変換は uppercase のみ」の前提は失効した。** DR-136 §4 で name にハイフンや空白が書けるようになったため、素朴な uppercase だけでは `{"name": "dry-run"}` が `DRY-RUN` になり **POSIX の環境変数名として不正**になる (名前に使えるのは英数と `_`)。導出は **id 軸の写像 + ASCII 大文字化** (`value_name` と同型) とし、`dry-run` / `dry_run` のどちらで書いても `DRY_RUN` に落ちる。§3 の他の規定 (フル修飾スコープパス、`_` 連結、prefix 省略) は不変。
 - **スコープパスはフル修飾**。衝突回避を優先し、短い名前が欲しい要素には明示 `env:` を書く
 - env_prefix 未設定なら prefix 部を省く (`SERVE_PORT`)。連結セパレータは `_` 固定
 

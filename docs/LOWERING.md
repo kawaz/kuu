@@ -213,7 +213,7 @@ installer は特殊語彙 (属性名・type 値) の所有者であり、parse_d
 variant DSL の配列 — **各要素が入口を 1 個生む**。`:set` (prefix 空) が主入口で、greedy 面に「exact 綴り + 値スロット」
 の衛星を足す。値スロットは `ref` で実体の構造を継承し `link` で実体の値セルへ同期する。`--key=value` 用に eq-split
 再解釈 matcher を足す (config `long_prefix` / `long_eq_sep` がパラメータ)。**absent = `false` = `[]` =
-入口なし** (全て同義 — presence を absent/空の区別に載せない)。CLI 綴りは name の kebab 変換 (DR-022)。
+入口なし** (全て同義 — presence を absent/空の区別に載せない)。CLI 綴りは **`trigger_name` 軸**が供給する (未指定なら name に §3 の文字写像 — ASCII 非英数 → `-` — を掛けた値、DR-136 §1〜§3)。variant DSL 自体は基幹綴りを持たず、affix と cell fn 呼び出しだけを語る (DR-136 §2)。
 
 variant DSL (`long: [":set", "no:set:false"]`) は long 属性内の語彙なので long installer の内部で展開される。別入口として
 greedy exact 衛星をもう 1 本足し、値セルへの操作を効果記述子 (DR-045) として載せて同じ値セルへ link する。
