@@ -28,10 +28,3 @@
 
 (現在なし)
 
-## 👺 CMDID-Q1: command は duplicate-id 検査に参加するか
-
-duplicate-id 改稿 (2026-08-15 裁定「エラー正体は id 重複」) で worker が矛盾検出:
-DR-046 §1 の軸表はノード一般で command を除外しておらず、同名 command 2 本は id 軸のデフォルト供給で id 重複になるはず。現行の不参加理由 (「name は綴り軸を保つ」DR-120 §7) は綴り軸/結果キー軸の話で、id 軸の不参加根拠にならない。
-
-- [ ] a: **参加する (統括推し)** — 同名 command 2 本は duplicate-id エラー。明示 id を割れば合法 (トリガ綴り重複が合法なのは不変 = DR-067 §1/DR-120 §7 の核は id を割った上で維持)。特例が消えモデル一貫。**ただし既存合法 fixture (同名 command + 別 export_key ペア) の期待が反転する breaking**
-- [ ] b: 不参加を維持 — 「command の name は id 軸へデフォルト供給しない (= command へは明示 id が無い限り ref/link 不可)」を新規規定する必要がある
