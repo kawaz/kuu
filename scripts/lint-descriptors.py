@@ -47,7 +47,7 @@ def fail(msg: str) -> None:
 
 
 def record_field_refs(node: object, path: str):
-    """value_type を再帰的に辿り、record フィールドの type 参照を (位置, 参照) で列挙する。"""
+    """value_type を再帰的に辿り、record フィールド / tuple 座の type 参照を (位置, 参照) で列挙する。"""
     if isinstance(node, list):  # union
         for index, item in enumerate(node):
             yield from record_field_refs(item, f"{path}[{index}]")
@@ -57,6 +57,11 @@ def record_field_refs(node: object, path: str):
             for field, ref in fields.items():
                 if isinstance(ref, str):
                     yield f"{path}.record.{field}", ref
+        members = node.get("tuple")
+        if isinstance(members, list):  # tuple の座も type 参照 (DR-137 §1、record と対称)
+            for index, ref in enumerate(members):
+                if isinstance(ref, str):
+                    yield f"{path}.tuple[{index}]", ref
         for tag in ("array", "map"):
             if tag in node:
                 yield from record_field_refs(node[tag], f"{path}.{tag}")
@@ -235,9 +240,9 @@ def main() -> int:
     if unresolved_refs:
         ok = False
         for m in unresolved_refs:
-            fail(f"record field type ref: {m}")
+            fail(f"record/tuple field type ref: {m}")
     else:
-        print(f"[OK]   record field type refs resolve in registry ({record_field_count} 件)")
+        print(f"[OK]   record/tuple field type refs resolve in registry ({record_field_count} 件)")
 
     print()
     if not ok:

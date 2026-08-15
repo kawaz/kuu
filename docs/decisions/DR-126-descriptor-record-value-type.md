@@ -1,5 +1,10 @@
 # DR-126: descriptor value-type 体系への record 型追加 — closed record、フィールド型は kuu type 参照、presence-optional、宣言との乖離は Error
 
+> **更新 (DR-137、2026-08-16): §1 の value_type 列挙に `{"tuple": [<type 参照>, ...]}` (2 要素
+> 以上) が加わった。** 位置軸の closed 型で、record と完全対称 (座の型は type 参照・依存グラフ・
+> 循環禁止・JSON 形再帰導出)。record の規定 (§2〜§5) は不変。union 宣言セルの値確定は
+> DR-138 (枝並行構築と確定相淘汰) が規定する。
+
 > 由来: kawaz チャット裁定 2026-07-31 (ccmsg r98 mid=2〜7) および 2026-08-01 (mid=21/22)、正本は
 > `docs/research/2026-07-28-link-fixed-path-dsl-design.md` §4b と
 > `docs/research/2026-07-31-type-input-structure-splice.md` §2c (フィールド型 = type 参照、
