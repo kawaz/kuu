@@ -25,7 +25,26 @@ scalar template への ref が effects に出ない (binding key が "" で sent
 
 ## 背景
 
-（起票時の一文のみ、詳細背景は追って追記）
+probe 実測 (DR-136 とは無関係な既存ギャップの証跡)。
+
+**切り分け結果**: 記号を含まない = id 軸の分岐が無い最小形でも再現する。
+
+```json
+{"definitions":{"templates":{"sizetmpl":{"type":"number"}}}, "options":[{"name":"boxwidth","ref":"sizetmpl","long":true}]}
+```
+
+args `["--boxwidth","12"]` → `result` は `{boxwidth:12}` で正しいが `effects=[]`。
+
+**原因**: 匿名 leaf の binding key が `""` になり、`project_effects` (kuu.mbt
+`src/kuu/front_door.mbt`) の `is_sentinel(binding.key)` gate が構造 sentinel
+と一緒に落とす。`is_sentinel` は kuu.mbt `src/kuu/resolve.mbt:41` で `""` を
+sentinel に含む。既存 ref fixture 12 本が無事なのは template 側の leaf が
+名前を持つ (`colorname` 等) ため — 匿名 scalar template だけがこの穴に落ちる。
+
+**修正方針**: 「スコープ内の空キー value binding をそのスコープ自身のセルとして
+effects に載せる」形になるが、`""` は seq/or の匿名子とも共有された鍵空間で、
+それらの fixture は effects を assert していない (= 網羅されていない) ため、
+鍵空間の意味を変える前に pin を足すのが安全。
 
 ## 受け入れ条件
 
