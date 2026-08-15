@@ -1,0 +1,62 @@
+{
+  "why": "値源ラダーはセル単位で 1 回、枝ごとに回さない (DR-138 §3 — DR-031「1 実体の値 cell 内で値源を選ぶ規則」/ DR-120 §1)。CLI/link の書き込みが 1 件でもあれば下位席は発火せず、淘汰の結果が生存ゼロでも env は救済しない。書き込みゼロなら env が完全値 1 発として通常パイプラインで供給され、枝並行構築は起きない。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {
+        "name": "color",
+        "type": "fixture/color",
+        "long": true,
+        "env": "COLOR"
+      },
+      {
+        "name": "r",
+        "type": "int",
+        "long": true,
+        "link": "color[0]"
+      }
+    ]
+  },
+  "cases": [
+    {
+      "id": "cli-write-blocks-env-rescue",
+      "why": "`--r 0` + env COLOR=red: セルに CLI/link 書き込みがあるので env 席は発火しない (CLI > env)。tuple 枝未完成・string 枝着地なし → 生存ゼロ → incomplete_value。env の \"red\" は生存ゼロを救済しない (DR-138 §3)。",
+      "args": [
+        "--r",
+        "0"
+      ],
+      "env": {
+        "COLOR": "red"
+      },
+      "expect": {
+        "outcome": "failure",
+        "errors": [
+          {
+            "element": "color",
+            "args_pos": 1,
+            "kind": "parse",
+            "reason": "incomplete_value"
+          }
+        ]
+      }
+    },
+    {
+      "id": "env-supplies-untouched-cell",
+      "why": "書き込みゼロ + env COLOR=red: env は string の完全値供給で、fixture/color の string 形が string 枝の値として産出 → \"red\"。枝並行構築は起きない (DR-138 §3)。env 由来は effects 非掲載 (CONFORMANCE §2)。",
+      "args": [],
+      "env": {
+        "COLOR": "red"
+      },
+      "expect": {
+        "outcome": "success",
+        "effects": [],
+        "result": {
+          "color": "red"
+        },
+        "sources": {
+          "color": "env"
+        }
+      }
+    }
+  ]
+}

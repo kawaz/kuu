@@ -1,0 +1,262 @@
+{
+  "why": "union 値の枝並行構築と確定相淘汰 (DR-138 §1/§2) を `fixture/color` (out = [{tuple:[int,int,int]}, string]、DR-137) で固定する — kawaz 承認済みの color 3 ケース表 (DR-138 §2) の成功側 2 行 + 後勝ちの基準 (最終着地であって完成順ではない) + 枝内時系列。link の位置書き (DR-127 §2 / DR-137 §4) は tuple 枝だけに着地し、丸ごと set は string 枝だけに着地する。effects は実際に発生した操作をセル単位で一度だけ時系列記録し (DR-045 / DR-138 §7)、敗北枝にしか着地しなかった書き込みも残る。sources は勝ち枝の値の座だけ (DR-122 §2 / DR-138 §7)。link 参照ノード r/g/b は結果キーを占有しない (DR-120 §4)。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {
+        "name": "color",
+        "type": "fixture/color",
+        "long": true
+      },
+      {
+        "name": "r",
+        "type": "int",
+        "long": true,
+        "link": "color[0]"
+      },
+      {
+        "name": "g",
+        "type": "int",
+        "long": true,
+        "link": "color[1]"
+      },
+      {
+        "name": "b",
+        "type": "int",
+        "long": true,
+        "link": "color[2]"
+      }
+    ]
+  },
+  "cases": [
+    {
+      "id": "culled-branch-silent-loss",
+      "why": "`--color red --r 0`: 丸ごと set \"red\" が string 枝へ、位置書き 0 が tuple 枝へ着地。tuple 枝は [0,null,null] で未完成 (全座充足が完成、DR-138 §1) → 淘汰。生存は string 枝のみで \"red\"。`--r 0` は敗北枝の着地として消える — エラーではない (DR-138 §2 表 2 行目相当)。effects には両操作が出現順で残る。",
+      "args": [
+        "--color",
+        "red",
+        "--r",
+        "0"
+      ],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {
+            "entity": "color",
+            "op": "set",
+            "operand": "red",
+            "source": "cli"
+          },
+          {
+            "entity": "color",
+            "op": "set",
+            "operand": 0,
+            "source": "link",
+            "path": [
+              0
+            ]
+          }
+        ],
+        "result": {
+          "color": "red"
+        },
+        "sources": {
+          "color": "cli"
+        }
+      }
+    },
+    {
+      "id": "last-write-branch-wins",
+      "why": "`--r 0 --g 255 --color red --b 0`: tuple 枝は最終着地 (--b 0) で [0,255,0] に完成、string 枝も \"red\" で完成。両枝生存 → 最終着地が新しい tuple 枝が後勝ち (DR-138 §2 表 3 行目)。sources は tuple の座単位の位置対応配列 (DR-137 §2 / DR-122 §3)。",
+      "args": [
+        "--r",
+        "0",
+        "--g",
+        "255",
+        "--color",
+        "red",
+        "--b",
+        "0"
+      ],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {
+            "entity": "color",
+            "op": "set",
+            "operand": 0,
+            "source": "link",
+            "path": [
+              0
+            ]
+          },
+          {
+            "entity": "color",
+            "op": "set",
+            "operand": 255,
+            "source": "link",
+            "path": [
+              1
+            ]
+          },
+          {
+            "entity": "color",
+            "op": "set",
+            "operand": "red",
+            "source": "cli"
+          },
+          {
+            "entity": "color",
+            "op": "set",
+            "operand": 0,
+            "source": "link",
+            "path": [
+              2
+            ]
+          }
+        ],
+        "result": {
+          "color": [
+            0,
+            255,
+            0
+          ]
+        },
+        "sources": {
+          "color": [
+            "link",
+            "link",
+            "link"
+          ]
+        }
+      }
+    },
+    {
+      "id": "completion-order-is-not-the-key",
+      "why": "`--r 0 --b 0 --g 255 --color red`: tuple 枝は --g 255 (pos5) で先に完成するが、比較キーは完成順でなく枝への最終着地の時系列位置 (DR-138 §2-3)。最後に触られた枝は string (--color red) → \"red\" が勝つ (最後に触った枝がユーザの意図)。",
+      "args": [
+        "--r",
+        "0",
+        "--b",
+        "0",
+        "--g",
+        "255",
+        "--color",
+        "red"
+      ],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {
+            "entity": "color",
+            "op": "set",
+            "operand": 0,
+            "source": "link",
+            "path": [
+              0
+            ]
+          },
+          {
+            "entity": "color",
+            "op": "set",
+            "operand": 0,
+            "source": "link",
+            "path": [
+              2
+            ]
+          },
+          {
+            "entity": "color",
+            "op": "set",
+            "operand": 255,
+            "source": "link",
+            "path": [
+              1
+            ]
+          },
+          {
+            "entity": "color",
+            "op": "set",
+            "operand": "red",
+            "source": "cli"
+          }
+        ],
+        "result": {
+          "color": "red"
+        },
+        "sources": {
+          "color": "cli"
+        }
+      }
+    },
+    {
+      "id": "intra-branch-timeline-folds",
+      "why": "`--r 0 --r 5 --g 1 --b 2`: 同一枝内の複数の着地は従来どおり出現順の操作列として fold する (DR-029 / DR-138 §2-1 — 枝内は時系列適用のまま、DR-127 §4 の縮小生存)。色 [0] は後の 5 が勝つ。淘汰・後勝ちは枝間だけの規則。",
+      "args": [
+        "--r",
+        "0",
+        "--r",
+        "5",
+        "--g",
+        "1",
+        "--b",
+        "2"
+      ],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {
+            "entity": "color",
+            "op": "set",
+            "operand": 0,
+            "source": "link",
+            "path": [
+              0
+            ]
+          },
+          {
+            "entity": "color",
+            "op": "set",
+            "operand": 5,
+            "source": "link",
+            "path": [
+              0
+            ]
+          },
+          {
+            "entity": "color",
+            "op": "set",
+            "operand": 1,
+            "source": "link",
+            "path": [
+              1
+            ]
+          },
+          {
+            "entity": "color",
+            "op": "set",
+            "operand": 2,
+            "source": "link",
+            "path": [
+              2
+            ]
+          }
+        ],
+        "result": {
+          "color": [
+            5,
+            1,
+            2
+          ]
+        },
+        "sources": {
+          "color": [
+            "link",
+            "link",
+            "link"
+          ]
+        }
+      }
+    }
+  ]
+}

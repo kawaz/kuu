@@ -1,0 +1,75 @@
+{
+  "why": "生存枝ゼロの読みは完全経路と数えない Error 保持の経路不成立で、kind=parse / reason=incomplete_value (DR-138 §4、新 kind は興さず既存 3 kind 体系へ合流)。args_pos は当該セルに着地した書き込みのうち argv 位置最深のものの operand 位置 (DR-053 の primary 最深と同原理)。operand 自体の型不正は淘汰に吸われず書き込み時の通常の型エラーのまま (DR-138 §6 (a) — union に入れた途端 `--r abc` が沈黙する非対称を作らない)。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {
+        "name": "color",
+        "type": "fixture/color",
+        "long": true
+      },
+      {
+        "name": "r",
+        "type": "int",
+        "long": true,
+        "link": "color[0]"
+      },
+      {
+        "name": "g",
+        "type": "int",
+        "long": true,
+        "link": "color[1]"
+      },
+      {
+        "name": "b",
+        "type": "int",
+        "long": true,
+        "link": "color[2]"
+      }
+    ]
+  },
+  "cases": [
+    {
+      "id": "zero-survivor",
+      "why": "`--r 0 --g 255` (DR-138 §2 表 1 行目): tuple 枝 [0,255,null] 未完成、string 枝 着地なし → 生存ゼロ。他の読みが無いので保持された Error を表示。element は当該セル color、args_pos は最深の着地書き込みの operand 位置 (\"255\" = 3)。",
+      "args": [
+        "--r",
+        "0",
+        "--g",
+        "255"
+      ],
+      "expect": {
+        "outcome": "failure",
+        "errors": [
+          {
+            "element": "color",
+            "args_pos": 3,
+            "kind": "parse",
+            "reason": "incomplete_value"
+          }
+        ]
+      }
+    },
+    {
+      "id": "operand-type-error-not-culled",
+      "why": "`--color red --r abc`: 位置書きの operand は座の type int のパーサが読み (DR-127 §3.2 / DR-137 §4)、失敗は書き込み時の型エラー (kind=parse / not_a_number、args_pos = 原因トークン) で読みの成立に効く (DR-138 §6 (a))。淘汰で沈黙して \"red\" が成功する挙動は取らない。",
+      "args": [
+        "--color",
+        "red",
+        "--r",
+        "abc"
+      ],
+      "expect": {
+        "outcome": "failure",
+        "errors": [
+          {
+            "element": "r",
+            "args_pos": 3,
+            "kind": "parse",
+            "reason": "not_a_number"
+          }
+        ]
+      }
+    }
+  ]
+}

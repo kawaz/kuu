@@ -1,0 +1,48 @@
+{
+  "why": "どの枝にも書き込みが無い union セルは淘汰規則の対象外 (適用条件は書き込み 1 件以上、DR-138 §2 末尾) — 全枝が未着手であって未完成ではない。ラダーのどの席も無ければ DR-130 §1 の null が座り、成功 result にキーは立つ。union 型の任意オプションを未指定にしただけでエラーにならないことの pin。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {
+        "name": "color",
+        "type": "fixture/color",
+        "long": true
+      },
+      {
+        "name": "r",
+        "type": "int",
+        "long": true,
+        "link": "color[0]"
+      },
+      {
+        "name": "g",
+        "type": "int",
+        "long": true,
+        "link": "color[1]"
+      },
+      {
+        "name": "b",
+        "type": "int",
+        "long": true,
+        "link": "color[2]"
+      }
+    ]
+  },
+  "cases": [
+    {
+      "id": "no-writes-yields-null",
+      "why": "引数なし: color セルへの書き込みゼロ → 淘汰は発動せず、ラダー全席空 → null (DR-130 §1)。sources も同座で null (確定主体なし)。",
+      "args": [],
+      "expect": {
+        "outcome": "success",
+        "effects": [],
+        "result": {
+          "color": null
+        },
+        "sources": {
+          "color": null
+        }
+      }
+    }
+  ]
+}

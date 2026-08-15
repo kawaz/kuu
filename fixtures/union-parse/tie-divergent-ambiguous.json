@@ -1,0 +1,44 @@
+{
+  "why": "tie 規則 (DR-138 §5): 複数の生存枝の最終着地が同一の書き込みで時系列比較が tie になる場合、確定値を観測面 (射影後の形 — record は DR-130 §4.1 の null 補形適用後) で比較し、同値なら成功・異値なら ambiguous (DR-031 EXP-Q1 の同型 — 宣言順等の順位規則で黙って選ばない)。乗り物は `fixture/shape` (共有フィールド a を持つ record 2 variant の union、DR-138 波及)。部分値の record が完成扱いで生存すること (presence-optional の完成判定、DR-138 §1) の pin も兼ねる — 両 interpretations に部分 record の射影形が現れる。s は入口なしの実体だけノード (DR-030)、sa は link 参照ノードで結果キーを占有しない (DR-120 §4)。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {
+        "name": "s",
+        "type": "fixture/shape"
+      },
+      {
+        "name": "sa",
+        "type": "int",
+        "long": true,
+        "link": "s.a"
+      }
+    ]
+  },
+  "cases": [
+    {
+      "id": "shared-field-write-divergent-projection",
+      "why": "`--sa 1`: link 部分書き a=1 はパスを構造に含む両 variant へ並行着地 (DR-138 §2-1、器は両 variant を並行 vivify — DR-127 §3 読み替え)。record は presence-optional なので両枝とも完成・生存、最終着地も同一書き込みで tie。射影後の観測値は {a:1} と {a:1,b:null} で異なる → ambiguous (どちらの形を意図したか本当に決まらないケースの正しい検出、DR-138 §5)。interpretations は結果オブジェクト形のビュー直書き (DR-053)。",
+      "args": [
+        "--sa",
+        "1"
+      ],
+      "expect": {
+        "outcome": "ambiguous",
+        "interpretations": [
+          {
+            "s": {
+              "a": 1
+            }
+          },
+          {
+            "s": {
+              "a": 1,
+              "b": null
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

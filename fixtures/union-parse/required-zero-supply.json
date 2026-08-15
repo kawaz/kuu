@@ -1,0 +1,38 @@
+{
+  "why": "書き込みゼロ + node required は DR-047 の値述語の不充足 (required_violated) であって incomplete_value ではない (DR-138 §2 末尾 / §4) — 完成判定は確定相の内部工程、required はできた最終セル値への述語という 2 層の分離 (DR-138 §1)。どのトークンにも帰属しないので args_pos = args.length。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {
+        "name": "color",
+        "type": "fixture/color",
+        "long": true,
+        "required": true
+      },
+      {
+        "name": "r",
+        "type": "int",
+        "long": true,
+        "link": "color[0]"
+      }
+    ]
+  },
+  "cases": [
+    {
+      "id": "required-not-incomplete",
+      "why": "引数なし: 淘汰非発動 → null → required は null を不充足として扱う (DR-130 §1)。kind=constraint / required_violated。",
+      "args": [],
+      "expect": {
+        "outcome": "failure",
+        "errors": [
+          {
+            "element": "color",
+            "args_pos": 0,
+            "kind": "constraint",
+            "reason": "required_violated"
+          }
+        ]
+      }
+    }
+  ]
+}
