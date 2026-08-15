@@ -1,6 +1,6 @@
 ---
 title: 参照実装の CommandDef が value 担体を持たず command の value を reject する (DR-134 未追随)
-status: open
+status: resolved
 category: task
 created: 2026-08-12T09:47:45+09:00
 last_read:
@@ -9,10 +9,10 @@ wip_entered:
 blocked_entered:
 pending_entered:
 discarded_entered:
-resolved_entered:
+resolved_entered: 2026-08-16T07:21:43+09:00
 discard_reason:
 pending_reason:
-close_reason:
+close_reason: ["dr/DR-134","implemented","followup:2026-08-12-command-definition-error-parity-review-followup"]
 blocked_by:
 origin: DR-134 起草時の実測 (2026-08-12)
 ---

@@ -16,7 +16,6 @@ active な issue の一覧。close 済みは archive/ にあり、ここには�
 | 2026-08-16 | task | open | [fixture-reason-vocab-lint](./2026-08-16-fixture-reason-vocab-lint.md) | fixture の errors[].reason が宣言語彙 (descriptor reasons + REFERENCE §7.3) に含まれるか検査する lint が無い |
 | 2026-08-12 | task | open | [ref-template-help-carrier](./2026-08-12-ref-template-help-carrier.md) | ref/template 由来 help_meta の provenance carrier 未実装、DR-116 §4 説明引き直しの ref 越し分を次サイクルへ |
 | 2026-08-12 | design | open | [nested-config-not-supplied](./2026-08-12-nested-config-not-supplied.md) | 参照実装が root 宣言の config_file を子スコープの要素へ供給しない (DR-050 §3 同型対応の nested 未実装) |
-| 2026-08-12 | task | open | [command-value-carrier](./2026-08-12-command-value-carrier.md) | 参照実装の CommandDef が value 担体を持たず command の value を reject する (DR-134 未追随) |
 | 2026-08-12 | design | open | [completion-ux-layer-completer-closure-abi](./2026-08-12-completion-ux-layer-completer-closure-abi.md) | completion ux 層の座席 (kuu.mbt vs kuu-cli lib) と形態 A completer クロージャ ABI が DR-117 波及節で未設計 |
 | 2026-08-12 | design | open | [command-value-default-fn-value-space](./2026-08-12-command-value-default-fn-value-space.md) | value 持ち command の default_fn 単独時の値空間が未規定 |
 | 2026-08-12 | design | open | [io-predicate-vocabulary-seat](./2026-08-12-io-predicate-vocabulary-seat.md) | IO 述語系語彙 (readable / exists / dir) の座席設計 (filter 語彙拡張 vs DR-107 role 軸新設) |
