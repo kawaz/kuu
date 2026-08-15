@@ -1,0 +1,49 @@
+{
+  "why": "下位席 (宣言 default) の完全値 1 発供給に §1 の完成判定が含まれることの成功側 (DR-137 §2 / DR-138 §3)。型一致の非 string (array) 供給は string 域と parse をスキップして値域へ入り (DR-050 §4 — 型の帰結)、tuple の完成値 (全座 non-null・宣言アリティ) として union の tuple variant に適合する。枝並行構築は起きない (下位席は完全値 1 発、DR-138 §3)。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {
+        "name": "color",
+        "type": "fixture/color",
+        "long": true,
+        "default": [
+          1,
+          2,
+          3
+        ]
+      },
+      {
+        "name": "r",
+        "type": "int",
+        "long": true,
+        "link": "color[0]"
+      }
+    ]
+  },
+  "cases": [
+    {
+      "id": "complete-tuple-default-fills",
+      "why": "引数なし: CLI/link 書き込みゼロ → 淘汰非発動 → default 席 [1,2,3] が tuple 完成値として供給され成功。sources は座単位の位置対応配列で全座 default (DR-137 §2 / DR-122 §3)。",
+      "args": [],
+      "expect": {
+        "outcome": "success",
+        "effects": [],
+        "result": {
+          "color": [
+            1,
+            2,
+            3
+          ]
+        },
+        "sources": {
+          "color": [
+            "default",
+            "default",
+            "default"
+          ]
+        }
+      }
+    }
+  ]
+}

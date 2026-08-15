@@ -1,0 +1,40 @@
+{
+  "why": "完成値でない tuple 値の丸ごと供給は型不適合 (DR-137 §2 — 全位置充足が値の意味の帰結)。下位席の完全値 1 発判定に完成判定が含まれ、アリティ不一致の array default はどの variant にも適合せず (tuple = アリティ違い、string = array)、宣言 default 供給失敗の既存経路 (DR-102 §5 系、fixtures/value-typing/declared-default-parse-failure.json の族) に落ちる。incomplete_value (CLI/link の組み上げが完成に達しなかった確定相の失敗、DR-138 §4) とは別位相 — 供給された 1 値の型判定は供給時に即座に裁かれる。reason は実装の開いた語彙 (canonical な発生源 parser が走らない型一致判定のため spec は綴りを規定しない) につき本 fixture では表明しない。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {
+        "name": "color",
+        "type": "fixture/color",
+        "long": true,
+        "default": [
+          0,
+          255
+        ]
+      },
+      {
+        "name": "r",
+        "type": "int",
+        "long": true,
+        "link": "color[0]"
+      }
+    ]
+  },
+  "cases": [
+    {
+      "id": "arity-mismatch-default-is-supply-failure",
+      "why": "引数なし: default [0,255] は宣言アリティ 3 の tuple 完成値でなく string でもない → union のどの variant にも型不適合 → 供給時の parse 失敗。CLI 未発火なのでどのトークンにも帰属せず args_pos = args.length = 0 (declared-default-parse-failure.json と同じ帰属規則)。kind=parse のみ pin (reason 非表明)。",
+      "args": [],
+      "expect": {
+        "outcome": "failure",
+        "errors": [
+          {
+            "element": "color",
+            "args_pos": 0,
+            "kind": "parse"
+          }
+        ]
+      }
+    }
+  ]
+}
