@@ -1,0 +1,52 @@
+{
+  "why": "union セルのラダー gate は committed 基準 (DR-138 §3 括弧注記) — 全書き込みが unset (= set(null)、committed=false、DR-131 §1.1) なら枝並行構築の対象となる committed 書き込みがゼロなので、ラダーは従来どおり開放され下位席 (env) が完全値 1 発で供給する。unset は DR-138 §3 の「書き込みがあれば下位席は発火しない」の『書き込み』に数えない。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {
+        "name": "color",
+        "type": "fixture/color",
+        "long": [
+          ":set",
+          "reset:unset"
+        ],
+        "env": "COLOR"
+      },
+      {
+        "name": "r",
+        "type": "int",
+        "long": true,
+        "link": "color[0]"
+      }
+    ]
+  },
+  "cases": [
+    {
+      "id": "unset-only-opens-ladder-to-env",
+      "why": "`--reset-color` + env COLOR=red: unset が set(null) としてセルに乗るが committed=false でラダーを開放 (DR-131 §1.1 / DR-045 §2)。committed 書き込みゼロなので淘汰は非発動、env の string \"red\" が fixture/color の string 形で string 枝の完全値として供給され成功。effects は unset 発火の set(null) 1 件 (cli)、sources は env。",
+      "args": [
+        "--reset-color"
+      ],
+      "env": {
+        "COLOR": "red"
+      },
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {
+            "entity": "color",
+            "op": "set",
+            "operand": null,
+            "source": "cli"
+          }
+        ],
+        "result": {
+          "color": "red"
+        },
+        "sources": {
+          "color": "env"
+        }
+      }
+    }
+  ]
+}
