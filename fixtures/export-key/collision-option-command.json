@@ -1,5 +1,5 @@
 {
-  "why": "スコープ生成要素 (command) も露出キーを占有する 1 セルとして検査に参加する (DR-120 §4): スコープ生成は値の発生であり、選ばれたら子が全部 null でも空 kv {} を持つ (DESIGN §2.6 / DR-052 §3)。option と command が同じ結果キーを名乗る組は、旧規範では検出の入力空間そのものに command が居らず (command は entity ではない、DR-063 §3) option の値が黙って消える経路になっていた — DR-120 の由来 issue が実測したギャップ。綴り (トリガ literal) 軸では `--check` と `check` は別物で衝突しない (DR-120 §7: 綴り軸は本 DR の対象外) が、結果キー軸では両者とも `check` を名乗るので違法。相異なる export_key を割れば両立する。",
+  "why": "スコープ生成要素 (command) も露出キーを占有する 1 セルとして検査に参加する (DR-120 §4): スコープ生成は値の発生であり、選ばれたら子が全部 null でも空 kv {} を持つ (DESIGN §2.6 / DR-052 §3)。option と command が同じ結果キーを名乗る組は、旧規範では検出の入力空間そのものに command が居らず (command は entity ではない、DR-063 §3) option の値が黙って消える経路になっていた — DR-120 の由来 issue が実測したギャップ。綴り (トリガ literal) 軸では `--check` と `check` は別物で衝突しない (DR-120 §7: 綴り軸は本 DR の対象外) が、結果キー軸では両者とも `check` を名乗るので違法。加えて `id` もどちらも未指定なので name が id 軸へも供給され、参照識別子 `check` が重複する — 露出キー軸と id 軸が同時に破れる形なので、要素ごとに `export-key-collision` と `duplicate-id` の 2 kind が立って計 4 件になる (DR-054 §4 の全列挙、抑制規則は無い。`fixtures/definition-error/duplicate-id.json` の x 組と同じパターン)。両立させるには `export_key` と `id` の両軸を割る必要がある (DR-120 §7)。",
   "query": "definition_error",
   "definition": {
     "options": [
@@ -26,7 +26,7 @@
   "cases": [
     {
       "id": "option-and-command-share-key",
-      "why": "option `check` (identity 解決で露出キー \"check\") と command `check` (同じく identity 解決で scope 生成要素として結果キー \"check\" を占有) が root 結果スコープで同じキーを名乗る → definition-error。errors は衝突に関与する 2 要素へ 1 件ずつ (§5 粒度) — element はどちらも \"check\" なので、集合比較は「同一 element の 2 件」をちょうど要求する (1 件へ畳む実装を落とす)。",
+      "why": "option `check` (identity 解決で露出キー \"check\") と command `check` (同じく identity 解決で scope 生成要素として結果キー \"check\" を占有) が root 結果スコープで同じキーを名乗る → definition-error。errors は衝突に関与する 2 要素へ 1 件ずつ (§5 粒度) — element はどちらも \"check\" なので、集合比較は「同一 element の 2 件」をちょうど要求する (1 件へ畳む実装を落とす)。さらに id 軸も同時に破れており (双方 `id` 未指定 → name 供給で参照識別子 `check` が重複)、command も duplicate-id に参加する (DR-054 更新 5、CMDID-Q1=a) ので同じ 2 要素へ `duplicate-id` が 1 件ずつ立ち、計 4 件になる。",
       "expect": {
         "outcome": "definition-error",
         "errors": [
@@ -37,6 +37,14 @@
           {
             "element": "check",
             "kind": "export-key-collision"
+          },
+          {
+            "element": "check",
+            "kind": "duplicate-id"
+          },
+          {
+            "element": "check",
+            "kind": "duplicate-id"
           }
         ]
       }

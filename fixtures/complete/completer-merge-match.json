@@ -1,10 +1,10 @@
 {
-  "why": "DR-104 §3 明確化 note: 6 フィールド一致 dedup で completer も一致する場合は completer が保持される (merge 規則の positive 対比、completer-merge-conflict.json と対)。同名 sibling command には相異なる export_key を割る (DR-120 §1 / DR-052 §2 — 綴り軸の重複だけを残し結果キー軸の重複は作らない)。",
+  "why": "DR-104 §3 明確化 note: 6 フィールド一致 dedup で completer も一致する場合は completer が保持される (merge 規則の positive 対比、completer-merge-conflict.json と対)。同名 sibling command には `id` / `export_key` の両軸を割る (DR-054 更新 5 / DR-120 §1 / DR-052 §2 — 綴り軸の重複だけを残し、id 軸・結果キー軸の重複は作らない)。",
   "query": "complete",
   "definition": {
     "commands": [
-      {"type": "command", "name": "build", "export_key": "build_a", "positionals": [{"name": "target", "type": "string", "completer": "files"}]},
-      {"type": "command", "name": "build", "export_key": "build_b", "positionals": [{"name": "target", "type": "string", "completer": "files"}]}
+      {"type": "command", "name": "build", "id": "build_a_def", "export_key": "build_a", "positionals": [{"name": "target", "type": "string", "completer": "files"}]},
+      {"type": "command", "name": "build", "id": "build_b_def", "export_key": "build_b", "positionals": [{"name": "target", "type": "string", "completer": "files"}]}
     ]
   },
   "cases": [

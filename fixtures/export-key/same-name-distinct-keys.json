@@ -1,5 +1,5 @@
 {
-  "why": "同名の別要素が相異なる `export_key` を持つとき、露出キーは要素ごとに独立に解決される (DR-052 §1 の 3 択解決を要素単位で行う)。名前でキーした 1 本のマップに畳むと、同名要素が 1 エントリを取り合って潰れ、**静的検査 (DR-120 の衝突判定) と result builder が同じ要素の露出キーで食い違う** — 実際に 2026-07-25 の実装でこれが起き、`validate` は ok を返すのに result では identity 露出のまま衝突が残った。DR-120 §3 は「判定は export_key 適用後の露出キーで行う」と規定しており、検査と結果構築が同一の解決を通ることが前提になる。本 fixture はその前提を parse 面から pin する。綴り軸 (トリガ literal) は結果キー軸と独立なので、同名の option と command が併存すること自体は合法 (DR-120 §7)。",
+  "why": "同名の別要素が相異なる `export_key` を持つとき、露出キーは要素ごとに独立に解決される (DR-052 §1 の 3 択解決を要素単位で行う)。名前でキーした 1 本のマップに畳むと、同名要素が 1 エントリを取り合って潰れ、**静的検査 (DR-120 の衝突判定) と result builder が同じ要素の露出キーで食い違う** — 実際に 2026-07-25 の実装でこれが起き、`validate` は ok を返すのに result では identity 露出のまま衝突が残った。DR-120 §3 は「判定は export_key 適用後の露出キーで行う」と規定しており、検査と結果構築が同一の解決を通ることが前提になる。本 fixture はその前提を parse 面から pin する。綴り軸 (トリガ literal) は結果キー軸と独立なので、同名の option と command が併存すること自体は合法 (DR-120 §7)。ただし軸ごとに分けるべきものは全部分ける必要がある — `export_key` を割って解けるのは結果キー軸だけで、`id` を書かなければ name が id 軸へも供給されて参照識別子 `x` が重複し definition-error `duplicate-id` になる (DR-054 更新 5、CMDID-Q1=a で command も参加)。本 fixture は command 側に明示 `id` を割ってその両軸分離を自ら実演し、露出キー解決が要素単位で独立するという主題 (DR-120 §3) を合法な定義のまま pin する。",
   "query": "parse",
   "definition": {
     "options": [
@@ -13,6 +13,7 @@
     "commands": [
       {
         "name": "x",
+        "id": "x_command",
         "type": "command",
         "options": [
           {
@@ -27,7 +28,7 @@
   "cases": [
     {
       "id": "option-export-key-independent-of-same-named-command",
-      "why": "option `x` は `export_key: \"ox\"` を持つので結果キーは `ox`、同名の command `x` は export_key を持たないので identity の `x`。両者が同時に発火しても別キーなので衝突せず success。option 側が identity の `x` に落ちるなら名前でキーしたマップが潰れている。",
+      "why": "option `x` は `export_key: \"ox\"` を持つので結果キーは `ox`、同名の command `x` は export_key を持たないので identity の `x` (id 軸は明示 `id: \"x_command\"` で分けてあるので参照識別子は重複せず定義は合法)。両者が同時に発火しても別キーなので衝突せず success。option 側が identity の `x` に落ちるなら名前でキーしたマップが潰れている。",
       "args": [
         "--x",
         "x"
