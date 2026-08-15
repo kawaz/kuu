@@ -1,0 +1,32 @@
+{
+  "why": "スコープを作るのは **解決後の結果キー (`export_key` 軸) の占有**であって name の presence ではない (DR-025 / DR-033、TRG-Q4=a)。結果スコープと lexical スコープは同じ判定を共有するので、**露出が透ける段は名前も透ける** — その子は囲みスコープの兄弟になり、duplicate-id の判定対象も囲みスコープの住人として決まる (DR-054 更新 5)。\n\n判定が name presence だった旧規則との差が観測に出る 2 形を 1 定義に同居させ、errors の集合比較 (CONFORMANCE §3) で対にして固定する: (box) **name はあるが `export_key: null`** → スコープを作らないので子が外へ透ける、(kept) **name は無いが明示 `export_key`** → スコープを作るので子が中に留まる。name の有無と結論が逆向きになる組なので、name presence で判定する実装はこの 1 定義で必ず落ちる。",
+  "query": "definition_error",
+  "definition": {
+    "options": [
+      {"name": "a", "type": "string", "long": true},
+      {"name": "box", "export_key": null, "or": [
+        {"name": "a", "type": "number", "long": true},
+        {"name": "other", "type": "string", "long": true}
+      ]},
+      {"name": "b", "type": "string", "long": true},
+      {"id": "kept_scope", "export_key": "keep", "or": [
+        {"name": "b", "type": "number", "long": true}
+      ]}
+    ]
+  },
+  "cases": [
+    {
+      "id": "scope-follows-export-key-occupancy-not-name-presence",
+      "why": "box: `name` を持つが `export_key: null` なので結果キー軸を占有せず、結果スコープも lexical スコープも作らない。その子 `a` / `other` は root スコープの兄弟になり、root 直下の `a` と参照識別子が重複して duplicate-id が 2 件。露出キー軸も透過段を素通りして root で参加するため (DR-052 §2 / DR-120 §4) 露出キー `a` に 2 セルが解決し export-key-collision が 2 件。計 4 件。box 自身は id `box` を持つ root の住人だが衝突相手が居ない (id 軸は結果キー軸と独立で、`export_key: null` は id 軸を消さない)。\n\nkept: `name` を持たないが明示 `export_key: \"keep\"` で結果キー軸を占有するのでスコープを作る。その子 `b` は keep スコープの住人であり、root 直下の `b` とは別スコープなので id 軸も露出キー軸も衝突しない。`other` も衝突相手が居ない。errors がちょうど 4 件であることが、この非衝突側 (= name 無しでもスコープが立つこと) の pin を兼ねる。",
+      "expect": {
+        "outcome": "definition-error",
+        "errors": [
+          {"element": "a", "kind": "duplicate-id"},
+          {"element": "a", "kind": "duplicate-id"},
+          {"element": "a", "kind": "export-key-collision"},
+          {"element": "a", "kind": "export-key-collision"}
+        ]
+      }
+    }
+  ]
+}

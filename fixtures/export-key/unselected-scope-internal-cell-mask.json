@@ -1,5 +1,5 @@
 {
-  "why": "内部セル (`type: \"none\"` / dd trigger) は結果から**落とす**対象なので、その席は `(path, key)` の negative list として持たれる。ここで**未選択の透過 command** 配下の内部セルを席に含めてしまうと、透過ラベルが落ちて席が root に着地し、**root に実在する同名の値セルを巻き添えで除外**する。値が消えるので実害が大きく、しかも透過固有 (identity なら席が `([\"c\"], ...)` になり衝突しない) なので気づきにくい。除外の席も「選ばれたスコープの配下」に限る。\n\n`config_file` は negative list に**含まれない** (DR-135 — 値 (パス) を持つ通常の値セルであり、内部セルとして残るのは値を持たない `type: \"none\"` と dd trigger の 2 者)。本 fixture は同じ透過 command の下に `cfgpath` (config_file) を同居させ、除外される `mark` (none) と対比する — 選択時に `cfgpath` は昇格露出して結果に現れ、`mark` は現れない。negative list を type で引くときに config_file を混ぜたままにする実装はここで落ちる。\n\n`cfgpath` の宣言名を root の `cfg` とずらしてあるのは意図的で、config_file が占有子になった (DR-135 §4) 以上、透過 command 配下の同名 config_file は昇格先の root で `cfg` と衝突し definition-error になるため (DR-120 §6 の「別 command 配下から昇格露出する子も対象」)。衝突側の輪郭は `collision-config-file-option.json` が持つ。",
+  "why": "内部セル (`type: \"none\"` / dd trigger) は結果から**落とす**対象なので、その席は `(path, key)` の negative list として持たれる。ここで**未選択の透過 command** 配下の内部セルを席に含めてしまうと、透過ラベルが落ちて席が root に着地し、**root に実在する同名の値セルを巻き添えで除外**する。値が消えるので実害が大きく、しかも透過固有 (identity なら席が `([\"c\"], ...)` になり衝突しない) なので気づきにくい。除外の席も「選ばれたスコープの配下」に限る。\n\n透過 command `c` は `export_key: null` なので結果スコープも lexical スコープも作らない (DR-025 / DR-033、TRG-Q4=a) — その子は root スコープの兄弟になる。内部セル `mark` は root の値セル `mark` と**同名のままである必要がある** (同名だからこそ巻き添え除外が起きうる、というのが本 fixture の主題) ので、**明示 `id: \"mark_internal\"` を割って id 軸だけを分ける** (DR-054 更新 5 — 同名でも id を割れば duplicate-id にならない)。綴り軸・結果キー軸は同名のまま残るため主題は保たれる。\n\n`config_file` は negative list に**含まれない** (DR-135 — 値 (パス) を持つ通常の値セルであり、内部セルとして残るのは値を持たない `type: \"none\"` と dd trigger の 2 者)。本 fixture は同じ透過 command の下に `cfgpath` (config_file) を同居させ、除外される `mark` (none) と対比する — 選択時に `cfgpath` は昇格露出して結果に現れ、`mark` は現れない。negative list を type で引くときに config_file を混ぜたままにする実装はここで落ちる。\n\n`cfgpath` の宣言名を root の `cfg` とずらしてあるのは意図的で、config_file が占有子になった (DR-135 §4) 以上、透過 command 配下の同名 config_file は昇格先の root で `cfg` と衝突し definition-error になるため (DR-120 §6 の「別 command 配下から昇格露出する子も対象」)。衝突側の輪郭は `collision-config-file-option.json` が持つ。",
   "query": "parse",
   "definition": {
     "options": [
@@ -38,6 +38,7 @@
           },
           {
             "name": "mark",
+            "id": "mark_internal",
             "type": "none",
             "long": true
           }

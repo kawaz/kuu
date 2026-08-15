@@ -30,11 +30,11 @@
 ## 名前とスコープ
 
 - [DR-003](DR-003-name-three-axes.md): name は3軸 (CLI起動/結果key/内部参照) を兼任
-- [DR-006](DR-006-scope-and-lexical-resolution.md): スコープは自動、lexical scope chain で解決 — updated by DR-033 (lexical スコープ = name スコープに統一)
+- [DR-006](DR-006-scope-and-lexical-resolution.md): スコープは自動、lexical scope chain で解決 — updated by DR-033 (lexical スコープ = 結果スコープに統一) / TRG-Q4=a (スコープ生成条件は解決後の結果キー軸の占有) / DR-136 §6 (各スコープでの照合は raw 一致優先の 2 段ルックアップ)
 - [DR-022](DR-022-snake-case-naming.md): キー名 snake_case、case 変換 pluggable
 - [DR-024](DR-024-three-name-layers.md): 名前は3層 (key name / def name / value_name)
-- [DR-025](DR-025-name-creates-scope.md): name が結果スコープを作る、露出は最も浅い name 層
-- [DR-033](DR-033-lexical-scope-equals-name-scope.md): lexical スコープ = name が作るスコープ
+- [DR-025](DR-025-name-creates-scope.md): 結果スコープを作る条件と露出規則 (最も浅い層で止める) — **現行の生成条件は解決後の結果キー軸 (`export_key`) の占有** (TRG-Q4=a で「name の presence」から訂正。`export_key: null` は透過、name 無し + 明示 export_key はスコープを作る)
+- [DR-033](DR-033-lexical-scope-equals-name-scope.md): lexical スコープ = 結果スコープ (同一単位、command に限らない) — 単位を決める条件は TRG-Q4=a で結果キー軸の占有へ訂正。露出が透ける段は名前も透ける
 - [DR-046](DR-046-name-axes-decomposition.md): name の軸分解 — id / 結果キー / value_name / display_name の目的別軸、name はデフォルト供給源 (nameless への ref/link が可能に)
 - [DR-052](DR-052-export-key-unification.md): 結果キー軸の一本化 — export_key: string | null (export bool 廃止)、null = nameless 同化の透過 (値は流れる)、選ばれた name スコープは空でも `{}`
 - [DR-120](DR-120-export-key-single-cell.md): 露出キーに対応する値セルはちょうど 1 つ (EXK-Q1〜Q4) — 1 結果スコープで同一露出キーへ解決する別セルが 2 つ以上ある定義は definition-error `export-key-collision` (DR-021 の実行時検査 / DR-073 の claimants 担体を置換)。判定は export_key 適用後の解決キー文字列で行い identity / mapped を区別しない、スコープ生成要素 (command 含む) も結果キーを占有する要素として参加、link / alias 参照ノード・dd・export_key null は非参加。検査は構造的で経路の到達可能性を見ない (or の別枝・排他 command・exclusive_group 兄弟も対象)。正当な用途は link (入口 N : セル 1) と or 席 (セル 1 : 枝 N) で書け、綴り軸の重複は従来どおり warn + 実行時 ambiguous のまま。hint は衝突要素の値空間で出し分ける (一致 → link / 不一致 → or) — 判定は type プリセット展開後の値セルの型で綴りでは見ない (count と number は一致 = DR-029 の canonical link 例)、規範化するのは提示する手段までで文言はレンダラの関心 (DR-082 §1 で hint は非比較)

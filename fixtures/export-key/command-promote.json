@@ -1,5 +1,5 @@
 {
-  "why": "export_key null on a command (scope-generating element) = 昇格露出 (DR-052 §2/§3, DESIGN §2.4): 露出規則 (最も浅い name 層) は export_key null の層を結果キー層と数えないため、その command のスコープキーは落ち、子の結果キー持ちが親スコープへ昇格する。透過は既存の露出規則 1 本で閉じ、subtree の値は消えない (完全消滅案は不採用、DR-052 採用しなかった案)。対照: 通常 command は子を自名の下に 1 段ネストする (command-scope/subcommand.json)。command は綴り軸の name (トリガ) を保つので `serve` トークンでの入場は不変 — 変わるのは結果キー軸のみ (lexical スコープと直交、DR-052 §2)。",
+  "why": "export_key null on a command (scope-generating element) = 昇格露出 (DR-052 §2/§3, DESIGN §2.4): 露出規則 (最も浅い name 層) は export_key null の層を結果キー層と数えないため、その command のスコープキーは落ち、子の結果キー持ちが親スコープへ昇格する。透過は既存の露出規則 1 本で閉じ、subtree の値は消えない (完全消滅案は不採用、DR-052 採用しなかった案)。対照: 通常 command は子を自名の下に 1 段ネストする (command-scope/subcommand.json)。command は綴り軸の trigger_name (DR-136 §2) を保つので `serve` トークンでの入場は不変 — 変わるのは名前の面だけである。結果スコープと lexical スコープはどちらも**解決後の結果キー軸の占有**で決まる同一単位なので (DR-025 / DR-033、TRG-Q4=a)、`export_key: null` の段は**両方とも作らない** — 露出が透けるなら名前も透ける。透けるのは名前解決の面だけで、トリガ照合・入場・背骨といったパース経路の面は構造側の機構として不変 (DR-052 §2)。",
   "query": "parse",
   "definition": {
     "commands": [
