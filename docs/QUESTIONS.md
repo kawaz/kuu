@@ -28,3 +28,11 @@
 
 (現在なし)
 
+
+## 👺 TRG-Q1: completion candidate の origin は raw name か id か
+
+名前系整理 (trigger_name 軸新設) 後、DR-104 の candidate 同一性 6 フィールドの `origin` (現規定:「由来要素名の文字列」= raw name) の意味が分岐する。明示 id/export_key で分離した同 trigger の合法 ambiguous ケースで、origin が name の書き方 (`dry_run` vs `dry-run`) に依存してよいか。
+
+- [ ] a: **origin = raw name のまま (宣言 provenance)** — 「どの宣言由来か」を示す表示・dedup 用メタと割り切る。DR-104 無改変
+- [ ] b: **origin = 参照識別子 (id)** — 実体 identity に揃える (name はここでも値源にすぎない、の一貫)。DR-104 改稿 + dedup 挙動の再導出が必要
+- 付随: alias 経由候補の origin は canonical 側か alias 入口側か (どちらの案でも要明記)
