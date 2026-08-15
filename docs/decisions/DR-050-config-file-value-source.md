@@ -32,7 +32,7 @@ config ファイルのパスを取る要素に `type: "config_file"` を付け�
 
 ### 3. config_key — 同型対応デフォルト + 明示上書き
 
-- **デフォルトは同型対応**: 結果オブジェクトの構造 (name スコープの階層) と config の階層をそのまま対応させる (`serve.port` ↔ config の `serve.port`)。appconfig 統合ストア (DR-030 — 結果オブジェクトが設定の最終形) と噛み合う「結果と同じ形」の 1 規則
+- **デフォルトは同型対応**: 結果オブジェクトの構造 (結果スコープの階層) と config の階層をそのまま対応させる (`serve.port` ↔ config の `serve.port`)。appconfig 統合ストア (DR-030 — 結果オブジェクトが設定の最終形) と噛み合う「結果と同じ形」の 1 規則
 - **明示 `config_key` で上書き**: link の固定パス DSL (DR-029: `.name` / `[int]`) を流用する。解決起点は**config ファイルのルートからの絶対パス** (相対起点の曖昧さを持たない — 相対の役割はデフォルトの同型対応が既に担う)
 - 「未指定なら name 構造から導出、明示で上書き」は DR-046 の「name は各軸のデフォルト供給源」パターンの config key 軸への適用
 
@@ -50,8 +50,8 @@ config 値の期待型は独立の仕様ではなく、config_key を持つ**要
   - 数値の文字列化は **JSON serialize の最短表現** (整数値は小数点なし: `1.0` → `"1"`)。JSON number は整数と浮動小数を区別しない (ECMA-404) ため元の表記は保持できず、常に `.0` を付ける規則は整数 `8080` を `"8080.0"` にしてしまう — 最短形が唯一の一貫解 (slice PoC 第 10 弾の flag で確定。Python 系 serializer の `"1.0"` とは異なるので conformance の比較点)
 - **意味の飛躍は Error**: bool ↔ number の相互変換 (`true` → 1 等) はしない
 - **array** → multiple 要素の**分割済み pieces** として accumulator へ (separator は CLI の 1 引数を分割する機構であり、config では登場しない)
-- **object** → name スコープとの同型対応で子要素へ再帰 (§3 のデフォルト対応と一体)
-- **構造不一致は Error**: array / object を scalar 要素へ、scalar を object 期待 (name スコープ) へ — いずれも DR-037 の **Error** (この値源のつもりだが値が不正)
+- **object** → 結果スコープとの同型対応で子要素へ再帰 (§3 のデフォルト対応と一体)
+- **構造不一致は Error**: array / object を scalar 要素へ、scalar を object 期待 (結果スコープ) へ — いずれも DR-037 の **Error** (この値源のつもりだが値が不正)
 
 ### 5. 依存順序 (完走後パイプライン) と不変条件
 

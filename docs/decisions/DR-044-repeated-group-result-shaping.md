@@ -8,9 +8,9 @@
 
 ### 1. 配列が既定
 
-発火ごとに値が蓄積される要素 — `multiple: "append"` を持つ greedy グループ、反復される name スコープ — は、結果オブジェクトで**配列**になる:
+発火ごとに値が蓄積される要素 — `multiple: "append"` を持つ greedy グループ、反復される結果スコープ — は、結果オブジェクトで**配列**になる:
 
-- 要素が name スコープ (object を作る) なら**配列オブジェクト**: `{upstreams: [{path: ..., sockets: [...]}, ...]}`
+- 要素が結果スコープ (object を作る) なら**配列オブジェクト**: `{upstreams: [{path: ..., sockets: [...]}, ...]}`
 - 要素がスカラなら**配列スカラ**: `{filters: ["filter1", "filter1"]}`
 
 object / スカラで規則は分かれない (発火ごとの蓄積 = 添字付き要素、の一様規則)。
@@ -35,7 +35,7 @@ bare string `collector: "from_entries"` は canonical 形ではなく definition
 
 → `{upstreams: {"/path/to/up1": {sockets: {...}}, "/tmp/foo.sock": {...}}}`
 
-- from_entries は反復グループ (name スコープ) ごとに付与する。入れ子の各段が独立に配列 / map を選べる
+- from_entries は反復グループ (結果スコープ) ごとに付与する。入れ子の各段が独立に配列 / map を選べる
 - 表記は DR-034 / DR-036 の既存合成順 (type → multiple → 直接書き) にそのまま乗る。collector は filters registry の住人 (DR-036) であり、新しい registry 区分は作らない
 - 蓄積要素を `[k, v]` (無名 = 配列) と `{k, v}` (named = object) のどちらで作るかは DR-025 / §2.5 の name 有無規則そのもの — from_entries の 3 用法はその両方を受ける
 
@@ -101,7 +101,7 @@ map 形 (各段の `multiple.collector` に `{"from_entries": "path"}`):
 
 ## 関連
 
-- DR-025 (name が結果スコープを作る — 配列既定はその反復版)
+- DR-025 (結果キー軸の占有が結果スコープを作る — 配列既定はその反復版)
 - DR-034 / DR-036 (collector の座席と合成順 — from_entries はここに乗る)
 - DR-042 (multiple installer — 「発火ごと蓄積」の宣言)
 - DR-043 (repeat / multiple 分離 — 蓄積 (値面) と反復 (構造面) の役割分担)

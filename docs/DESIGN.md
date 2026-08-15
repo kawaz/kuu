@@ -89,7 +89,7 @@ option/positional は所属配列で役割が定まるので type フィール�
 
 ### 1.4 ノードの基本形
 
-ノードは name で結果スコープを作り (DR-025/033)、配置と属性の組合せで CLI 上の役割が決まる。下記は出現しうるフィールドの一覧であって全部書く必要はない:
+ノードは結果キー軸の占有で結果スコープを作り (DR-025/033、TRG-Q4=a)、配置と属性の組合せで CLI 上の役割が決まる。下記は出現しうるフィールドの一覧であって全部書く必要はない:
 
 ```json
 {
@@ -163,7 +163,7 @@ option/positional は所属配列で役割が定まるので type フィール�
 
 | 名前 | 場所 | 役割 | 結果露出 |
 |---|---|---|---|
-| **key name** | `name` (入口配置時) | 結果オブジェクトのキー、スコープを作る | する |
+| **key name** | `name` (入口配置時) | 結果オブジェクトのキー。占有すると結果スコープを作る (§2.3) | する |
 | **def name** | `definitions` のキー | 参照・テンプレ名 (ref/link 対象) | しない |
 | **value_name** | `value_name` | help/usage の値プレースホルダ表示 | しない (表示のみ) |
 
@@ -172,6 +172,24 @@ option/positional は所属配列で役割が定まるので type フィール�
 - options/positionals/commands に置けば key name
 
 名前の軸は `id` (参照識別子、結果非露出・スコープ非生成) と `display_name` (help の説明ラベル) を加えて一般化されており、**name は各軸のデフォルト供給源** (DR-046)。nameless の要素に ref/link したい場合は id だけを付ける。
+
+### 2.1a 名前軸の全体像 — trigger_name を含む 5 軸 (DR-136)
+
+CLI 表面の照合綴りも `name` から直取りするのではなく、独立の軸 `trigger_name` が担う。`name` は
+どの軸にも**デフォルト値を供給するだけ**の存在であり、それ自体は CLI 表面にも結果にも直接現れない
+(唯一の例外は `display_name` — raw name をそのまま渡す):
+
+| 軸 | フィールド | 役割 | 結果露出 |
+|---|---|---|---|
+| 綴り (トリガ) | `trigger_name` | CLI 表面の照合綴り (`--<trigger_name>`、command のトリガ照合綴りも兼ねる) | しない |
+| 参照識別子 | `id` | ref / link の解決対象 | しない |
+| 結果キー | `export_key` | 結果オブジェクトのキー、結果スコープ生成 (§2.3) | する |
+| 値プレースホルダ | `value_name` | help / usage の `<PLACEHOLDER>` 表示 (§2.2) | しない |
+| 説明ラベル | `display_name` | help の人間可読名 | しない |
+
+`name` から各軸への供給は文字単位 1:1 の写像を経由する (記号・空白を軸ごとの区切り文字へ正規化、
+非 ASCII はそのまま)。写像の詳細規則と軸ごとの変換例は正本 (DR-136 §1/§3、REFERENCE §2.2 の
+名前軸まとめ表) を参照 — 本節は軸の存在を紹介するに留め、規定を二重管理しない。
 
 ### 2.2 value_name のデフォルトと上書き
 
@@ -220,9 +238,9 @@ kv (object 的な結果) は専用構造を持たない。**name を持つ子が
 
 `null` は kuu の値空間に属し、filter / pieceProcessor / value_parser は共通 dispatcher による null 素通しで呼び出されない。`required` / `required_group` 等の値述語では `null` は不充足である。型導出は required / native default あり / 反復系 → `T`、それ以外 → `T | null`。`default_fn` は実行時に `null` を返しうるため native default ありには数えない。定義の `default:` / `value:` 席へ null リテラルを書くことはできない。config の JSON null と provider の `| null` は「供給なし」を語る入力境界の別軸で、kuu の値空間へ null を供給しない。値セルのメタ (committed / selected / source) は ParserContext から引ける (§0.3)。
 
-### 2.7 lexical スコープ = name が作るスコープ (DR-033)
+### 2.7 lexical スコープ = 結果キー軸占有が作るスコープ (DR-033)
 
-ref/link の解決スコープは command に限らない。**name を持つ任意のノードがスコープ単位**になる:
+ref/link の解決スコープは command に限らない。**結果キー軸を占有する任意のノードがスコープ単位**になる:
 
 ```
 rgb の中で r/g/b を DRY に定義:
@@ -284,7 +302,7 @@ bytes / binary 型は組み込みに持たない。必要なら拡張 type (regi
 - `flag` = bool + default:false + 起動で true
 - `count` = number + default:0 + 起動時に `cell_fns` の `incr` を呼ぶ (値は取らない — `--verbose=3` は読みが立たず素通し、DR-114 §2/§6.1)
 - `count_or_set` = count + optional 値スロット (repeat {min:0,max:1})。`-v` は `incr`、`-v 3` / `--verbose=3` は `set`。取り分選好は DR-043 が確定する。標準層 (DR-040)
-- `command` = name でスコープを作り、name の完全一致でトリガ
+- `command` = 結果キー軸を占有してスコープを作り、name の完全一致でトリガ
 - help 系 5 preset は help_installer が内部セル link + `cell_fns` 固定値供給へ展開する (§14.1、DR-113)。`help_all_category` (category 絞りなし) / `help_category` (named category) / `help_show_hidden` (hidden 露出の独立軸) / `help_tree` (全 tree) は `help` と直交して合成できる
 - `completion_script` = shell 名を必須値に取る string preset。`#completion_script` へ値を供給して同名 capability を発火する。値域は自由入力で、値位置の候補には実装対応 shell 名を提示する (§15.13、DR-117)
 - `tty` (= `builtin/tty`、DR-099) = bool + 暗黙 default = tty 観測。configurable factory config は `tty_stream` (`"stdin"｜"stdout"｜"stderr"`、必須 — 未指定は definition-error) のみ (DR-129)。long/short/env 席の宣言可否・multiple・filters・required 充足は素の bool と完全に同一 — preset が同梱するのは暗黙 default のみ (詳細は §12b)
@@ -1122,7 +1140,7 @@ help_installer は表示メタの回収、5 preset の植え付け、help_query 
 ```
 
 - config ファイルのパスを取る要素の配線宣言。パス要素は普通の要素で、パス自体が値源ラダー (CLI > env > default) で解決される
-- 読み込んだ階層オブジェクトが値源ラダーの config 席 (§11.4 の 3) に供給される。**対応付けはデフォルトで同型対応** (name スコープ階層 ↔ config 階層)、明示 `config_key` (link の固定パス DSL、ルートからの絶対パス) で上書き。読込元は **config_provider** (registry の単一スロット、シグネチャ `(path: string) → object | null`、§13.1)。このシグネチャの機械可読宣言 (`role:"provider"` descriptor) の正本は `schema/builtin-descriptors.json` の `config_provider` (DR-107 §6)
+- 読み込んだ階層オブジェクトが値源ラダーの config 席 (§11.4 の 3) に供給される。**対応付けはデフォルトで同型対応** (結果スコープ階層 ↔ config 階層)、明示 `config_key` (link の固定パス DSL、ルートからの絶対パス) で上書き。読込元は **config_provider** (registry の単一スロット、シグネチャ `(path: string) → object | null`、§13.1)。このシグネチャの機械可読宣言 (`role:"provider"` descriptor) の正本は `schema/builtin-descriptors.json` の `config_provider` (DR-107 §6)
 - **config 値の期待型は要素の type**: string は CLI/env と同一の全段 pipeline (number/bool 要素へは parse 試行)、scalar (number/bool) は型一致なら T 域の座席のみ (value_filters / 確定後の final_filters・accum_filters — multiple 有無で対応する属性が決まる、DR-102。string 域の piece_filters / parse は型の帰結でスキップ)・**string 要素へは JSON 文字列化で受理** (寛容の双方向対称、数値は最短表現 `1.0` → `"1"`)、bool↔number の意味変換と構造不一致 (array/object ↔ scalar) は Error、array は分割済み pieces、object は同型再帰 (DR-050 §4)
 - 依存順序: 経路確定 → config_file 値確定 → provider 読込 → config 席有効化 → 最終値確定 → 遅延述語。**config は構造 (matcher / 経路探索) に影響しない**。config_file 要素自身は config 席を持てない (循環禁止)
 - committed なパス (CLI/env 明示) の読込失敗は Error、default 由来のパス不在は黙認
@@ -1549,7 +1567,7 @@ options / commands の `origin` は `"local"`、`{"kind":"global","declared_at":
 | **UsefulAST** | 人間が書く層 (各言語 DX コード) |
 | **AtomicAST** | パーサ正規形 (シリアライズ可能) |
 | **parse_definition()** | UsefulAST → AtomicAST 変換 |
-| **scope** | name で作られる結果スコープ = lexical スコープ |
+| **scope** | 結果キー軸の占有で作られる結果スコープ = lexical スコープ |
 | **key name** | 結果オブジェクトのキー (DR-024) |
 | **def name** | definitions のキー (参照名) |
 | **value_name** | help/usage の値プレースホルダ表示 |
@@ -1590,7 +1608,7 @@ options / commands の `origin` は `"local"`、`{"kind":"global","declared_at":
 | **help_installer** | 表示メタの回収、5 help preset の植え付け、help_query capability 提供の 3 役を担う installer (DR-113 §1) |
 | **グループ宣言エントリ** | `options[]` に置く、グループ属性だけを持つ entry。グループの表示順とメタが一箇所で完結する (§14.6、DR-113 §8.1) |
 | **config_provider** | config ファイル読込の registry 単一スロット。(path) → JSON 同型の階層オブジェクト \| null。フォーマットは provider の関心 (DR-050) |
-| **config_key** | config 階層への明示対応 (link の固定パス DSL、ルート絶対)。未指定なら name スコープ階層との同型対応 (DR-050) |
+| **config_key** | config 階層への明示対応 (link の固定パス DSL、ルート絶対)。未指定なら結果スコープ階層との同型対応 (DR-050) |
 | **tty_provider** | tty 判定値解決の registry 単一スロット。(stream: "stdin"\|"stdout"\|"stderr") → bool \| null。`builtin/tty` preset 型 (`type:` 経由) の暗黙 default がこの観測をそのまま消費する。cygwin pty を含めるか等の判定方言は provider 実装の内側の責務。ambient probe (isatty 呼び出し) は provider 実装に閉じ評価器の純粋性を崩さない (DR-099 §4、DR-129 §1) |
 | **null 座** | 成功 result で宣言キーは常に現れ、値源ラダーで値が確定しない座は `null` になる。値述語では不充足。未選択 scope は親キーの `null` で内側を畳む (DR-130) |
 | **export_key** | 結果キー軸の明示指定 (未指定 = name 由来)。null / "" = 結果キー軸なし → nameless 同化の透過。値の伝搬は止まらない (DR-052) |
