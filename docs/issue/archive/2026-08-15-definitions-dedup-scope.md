@@ -1,6 +1,6 @@
 ---
 title: definitions 配下の同名重複の扱いが spec 未規定
-status: idea
+status: resolved
 category: design
 created: 2026-08-15T23:00:25+09:00
 last_read:
@@ -9,10 +9,10 @@ wip_entered:
 blocked_entered:
 pending_entered:
 discarded_entered:
-resolved_entered:
+resolved_entered: 2026-08-16T01:39:39+09:00
 discard_reason:
 pending_reason:
-close_reason:
+close_reason: ["done: 前提不成立 (definitions は名前がキーの JSON object なので同名多重定義は wire 上表現不可能。区分違いの同名は区分が名前空間として既存規範のまま合法。scope と definitions の同名は DR-032 の解決順が既に仲裁)"]
 blocked_by:
 origin: 自リポ TODO
 ---
