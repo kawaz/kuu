@@ -150,7 +150,10 @@ error になる。`or` の別枝にある兄弟・排他の別 command 配下か
 - 「スコープ階層が違えば対象外」(DR-021)。別スコープの同キーは衝突ではない
 - **綴り (トリガ literal) 軸は本 DR の対象外** — 同一スコープのトリガ重複は静的 warn + 実行時
   ambiguous のまま (DR-041 / DR-059 §2 / DR-067 §1)。同名 command 2 本は綴り軸では合法で、結果キー軸で
-  衝突する (相異なる `export_key` を割れば両立する — command の name はトリガ綴りを保つ、DR-052 §2)
+  衝突する (command の name はトリガ綴りを保つ、DR-052 §2)。ただし `export_key` を割っても解けるのは
+  結果キー軸だけであり、`id` 未指定なら name が id 軸へ供給されたままなので参照識別子が重複する
+  (definition-error `duplicate-id`、DR-054 更新 5) — 同名 command 2 本を両立させるには **両軸とも割る**
+  必要がある
 
 ### 8. DR-073 の処遇 — 全体を Superseded とする
 

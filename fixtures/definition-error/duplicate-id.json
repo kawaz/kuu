@@ -1,5 +1,5 @@
 {
-  "why": "同一 lexical スコープに同じ**参照識別子 (id)** を持つ要素が 2 つ以上ある定義は definition-error kind=duplicate-id (DR-054 更新 5)。エラーの正体は id 軸の重複そのもの — ref / link の解決が曖昧になる (DR-032) からである。name はそれ自体が禁止対象ではなく、id 未指定時のデフォルト供給源 (DR-046 §1) として id へ流れ込むだけなので、同名でも相異なる明示 id を割れば合法 (fixtures/dd/duplicate-decl.json)。判定軸が id である以上、export_key で露出キーを割っても本 kind は掛かる。逆に露出キー軸の export-key-collision (DR-120 §1) は宣言名が異なっても掛かる — 2 kind は別軸で、同名かつ id / export_key 未指定の形では要素ごとに両方が立つ (DR-054 §4 の全列挙、抑制規則は無い)。\n\n1 定義に (x) 同名 option 2 本 (y) 同名だが export_key を割ったペア (z) options × positionals の面横断ペア (keep/hold + 同名 alias 2 本) (run) 同名 command 2 本 の 5 組を同居させ、errors の集合比較 (CONFORMANCE §3) で参加側と非参加側を対で固定する — 期待 errors がちょうど 10 件であること自体が「alias と command は duplicate-id に参加しない」の pin を兼ねる。element は当該要素の宣言名。",
+  "why": "同一 lexical スコープに同じ**参照識別子 (id)** を持つ要素が 2 つ以上ある定義は definition-error kind=duplicate-id (DR-054 更新 5)。エラーの正体は id 軸の重複そのもの — ref / link の解決が曖昧になる (DR-032) からである。name はそれ自体が禁止対象ではなく、id 未指定時のデフォルト供給源 (DR-046 §1) として id へ流れ込むだけなので、同名でも相異なる明示 id を割れば合法 (fixtures/dd/duplicate-decl.json)。判定軸が id である以上、export_key で露出キーを割っても本 kind は掛かる。逆に露出キー軸の export-key-collision (DR-120 §1) は宣言名が異なっても掛かる — 2 kind は別軸で、同名かつ id / export_key 未指定の形では要素ごとに両方が立つ (DR-054 §4 の全列挙、抑制規則は無い)。\n\n1 定義に (x) 同名 option 2 本 (y) 同名だが export_key を割ったペア (z) options × positionals の面横断ペア (keep/hold + 同名 alias 2 本) (run) 同名だが export_key を割った command 2 本 の 5 組を同居させ、errors の集合比較 (CONFORMANCE §3) で参加側と非参加側を対で固定する — 期待 errors がちょうど 12 件であること自体が「alias は duplicate-id に参加しない」の pin を兼ね、run の 2 件が「command は参加する — export_key を割っただけでは id 軸の重複は残る」の pin になる。element は当該要素の宣言名。",
   "query": "definition_error",
   "definition": {
     "options": [
@@ -24,7 +24,7 @@
   "cases": [
     {
       "id": "duplicate-id-participants-and-non-participants",
-      "why": "x は同名 2 本で id / export_key ともに未指定 — name が両軸へ供給する結果、参照識別子 x が重複 (duplicate-id) し、露出キー x にも 2 セルが解決する (export-key-collision) ので、要素ごとに 2 kind が立って計 4 件。y は export_key を y_first / y_second へ割ったので露出キー軸は無傷、id 軸だけが name 供給のまま重複して duplicate-id 2 件 — この組が 2 軸の違いを単独で pin する (DR-120 §3 の 4 行目は露出キー軸の判定であり、id 軸は本 kind が別途掛かる)。z は option と positional にまたがる同名で、DR-006 の「同一 lexical スコープ (options + positionals すべて) で id 重複禁止」がそのまま当たる面横断ペア — id / export_key 未指定なので x と同じく 2 kind × 2 要素。\n\n非参加側: alias 要素 both は 2 本とも name が同じだが、alias は入口だけの存在で結果スコープも実体も持たず (DR-057 §2)、name は入口綴りの再導出源 (DR-057 §3) なので参照識別子を占有しない — 同名 alias 2 本は綴り軸のトリガ重複 (DR-067 §1 で合法) にとどまる。command run は 2 本とも name が同じだが、command の name は綴り軸を保ち相異なる export_key を割れば両立する (DR-120 §7) ため duplicate-id にも export-key-collision にも掛からない。",
+      "why": "x は同名 2 本で id / export_key ともに未指定 — name が両軸へ供給する結果、参照識別子 x が重複 (duplicate-id) し、露出キー x にも 2 セルが解決する (export-key-collision) ので、要素ごとに 2 kind が立って計 4 件。y は export_key を y_first / y_second へ割ったので露出キー軸は無傷、id 軸だけが name 供給のまま重複して duplicate-id 2 件 — この組が 2 軸の違いを単独で pin する (DR-120 §3 の 4 行目は露出キー軸の判定であり、id 軸は本 kind が別途掛かる)。z は option と positional にまたがる同名で、DR-006 の「同一 lexical スコープ (options + positionals すべて) で id 重複禁止」がそのまま当たる面横断ペア — id / export_key 未指定なので x と同じく 2 kind × 2 要素。\n\ncommand run は 2 本とも name が同じで export_key を run_first / run_second へ割ってあるので露出キー軸は無傷だが、command も duplicate-id に参加する (DR-054 更新 5、CMDID-Q1=a) — command は実体を持ち id 軸を占有し、id 未指定なので name が供給した参照識別子 run が重複して 2 件が立つ。この組が「export_key を割っただけでは id 軸は解けない、両立させるには明示 id も割る」を pin する (DR-120 §7)。トリガ綴り run の重複そのものは綴り軸の話で静的にはエラーにならない (DR-067 §1 / DR-041 — 静的 warn + 実行時 ambiguous / 完全経路の一意性が仲裁する)。\n\n非参加側: alias 要素 both は 2 本とも name が同じだが、alias は入口だけの存在で結果スコープも実体も持たず (DR-057 §2)、name は入口綴りの再導出源 (DR-057 §3) なので参照識別子を占有しない — 同名 alias 2 本は綴り軸のトリガ重複 (DR-067 §1 で合法) にとどまる。",
       "expect": {
         "outcome": "definition-error",
         "errors": [
@@ -37,7 +37,9 @@
           {"element": "z", "kind": "duplicate-id"},
           {"element": "z", "kind": "duplicate-id"},
           {"element": "z", "kind": "export-key-collision"},
-          {"element": "z", "kind": "export-key-collision"}
+          {"element": "z", "kind": "export-key-collision"},
+          {"element": "run", "kind": "duplicate-id"},
+          {"element": "run", "kind": "duplicate-id"}
         ]
       }
     }

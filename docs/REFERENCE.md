@@ -128,8 +128,9 @@ wire 正規形のノードが持ちうる全属性。型・既定値・適用対
 名前軸 (key name / def name) のデフォルト供給源。配置で役割が決まる — `options[]`/`positionals[]`/
 `commands[]` に置けば key name (結果キー + lexical スコープを作る)、`definitions` 配下に置けば
 def name (ref/link 対象、結果非露出)。`id` 未指定なら参照識別子も name が供給し、同一 lexical
-スコープで参照識別子が重複する定義は definition-error `duplicate-id` (command と alias 要素は
-綴り軸を保つので参加しない)。禁止されるのは軸の値の重複であって name の綴りが揃うこと自体ではない
+スコープで参照識別子が重複する定義は definition-error `duplicate-id` (alias 要素は入口だけの存在で
+参照識別子を占有しないので参加しない。command は参加する — 綴り軸の重複は別層で、静的 warn + 実行時
+ambiguous が仲裁する)。禁止されるのは軸の値の重複であって name の綴りが揃うこと自体ではない
 — 明示 `id` / `export_key` で軸を割れば同名でも合法。
 最小例: `{"name": "verbose", "type": "flag", "long": true}`
 正本: DESIGN §2.1, §2.3, DR-024, DR-025, DR-054
