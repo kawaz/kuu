@@ -711,7 +711,68 @@
       "reasons": [
         "not_a_pair"
       ],
-      "description": "conformance 専用の単相 tuple 産出仮想型 (DR-137 / DR-138 波及、fixture ns = DR-132 §1)。out = tuple [int,int] (単相 — union でない tuple セル) で、単相 tuple の完成判定 (全座 non-null、DR-138 §1) の未完成確定 = kind parse / reason incomplete_value (DR-138 §4)、tuple パス DSL の定義時静的解決 (範囲外 / .name 降下 = definition-error absent-ref 系、負 index の静的解決、DR-137 §4) の乗り物。string 形は受理しない (全綴りを not_a_pair で Reject — 関心は link 経路のみの pin 専用住人)。位置書きの operand は座の type int のパーサが読む (DR-127 §3.2)。提供義務は conformance 実行文脈での解決可能性のみ (DR-132 §1)。"
+      "description": "conformance 専用の単相 tuple 産出仮想型 (DR-137 / DR-138 波及、fixture ns = DR-132 §1)。out = tuple [int,int] (単相 — union でない tuple セル)。string 形は fixture/int_range と同型の表層規則で受理する: 最初に現れる `,` で 1 回だけ分割した全体一致 `A,B` / `A,` / `,B` の 3 形のみ (バックトラックなしで決定的)、A/B は canonical default の int 受理輪郭。部分形は当該座を null とする長さ 2 の array を産出する (`5,` → [5, null] — tuple の null 座は正常な産出であり乖離 Error にならない、DR-137 §5 (c)。確定相の完成判定は DR-138 §1/§4 の関心)。pair 形に読めない綴り (`,` 無し・`,` 単体・構成部の int 不適合) は not_a_pair で Reject する。位置書き (link) の operand は座の type int のパーサが読む (DR-127 §3.2)。単相 tuple の未完成確定 (incomplete_value) と tuple パス DSL の定義時静的解決の乗り物。提供義務は conformance 実行文脈での解決可能性のみ (DR-132 §1)。"
+    },
+    "fixture/nested": {
+      "name": "fixture/nested",
+      "role": "type_parser",
+      "construction": "static",
+      "io_type": {
+        "input": "string",
+        "output": [
+          [
+            {
+              "tuple": [
+                "fixture/int_range",
+                "int"
+              ]
+            },
+            "bool"
+          ],
+          "string"
+        ]
+      },
+      "output_mode": "transform",
+      "fallibility": "reject",
+      "invocation": {
+        "encoding": "none",
+        "parameters": []
+      },
+      "reasons": [
+        "not_nested"
+      ],
+      "description": "conformance 専用の入れ子 union 産出仮想型 (DR-138 波及、fixture ns = DR-132 §1)。out = [[tuple [fixture/int_range, int], bool], string] — union の variant が union である宣言。入れ子 union は葉 variant の集合へ平坦化して読む (DR-138 §1 — 構造的型付けで variant 同一性を値に保存しない以上、入れ子の階層は観測を持たない)。パス `n[0]` は葉集合のうち tuple だけが構造に含むため静的合法 (DR-127 §2.2 union 行の静的規定を葉集合へ適用)、座 0 の型は fixture/int_range = record なので tuple 座の record 補形 (DR-130 §4.1) も同時に運ぶ。string 形は受理しない (全綴りを not_nested で Reject — link 経路専用の pin 住人)。提供義務は conformance 実行文脈での解決可能性のみ (DR-132 §1)。"
+    },
+    "fixture/deep_shape": {
+      "name": "fixture/deep_shape",
+      "role": "type_parser",
+      "construction": "static",
+      "io_type": {
+        "input": "string",
+        "output": [
+          {
+            "record": {
+              "a": "fixture/int_range"
+            }
+          },
+          {
+            "record": {
+              "a": "fixture/int_range",
+              "b": "int"
+            }
+          }
+        ]
+      },
+      "output_mode": "transform",
+      "fallibility": "reject",
+      "invocation": {
+        "encoding": "none",
+        "parameters": []
+      },
+      "reasons": [
+        "not_a_deep_shape"
+      ],
+      "description": "conformance 専用の union 産出仮想型 (DR-138 波及、fixture ns = DR-132 §1)。fixture/shape の入れ子版 — 共有フィールド a の型が record 産出型 (fixture/int_range) で、tie の interpretations に入れ子の null 補形差 ({a:{start,end:null}} vs {a:{...},b:null}) が現れる形の乗り物 (DR-138 §5 / DR-130 §4.2 追補)。共有フィールドの型は variant 間で一致 (DR-127 §2.2 の静的規定)。string 形は受理しない (全綴りを not_a_deep_shape で Reject)。提供義務は conformance 実行文脈での解決可能性のみ (DR-132 §1)。"
     }
   },
   "accumulators": {

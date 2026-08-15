@@ -601,7 +601,9 @@ enum にならない)。要素に配列があれば `seq` ブランチに展開�
 | `fixture/json` | fixture (static) | conformance 専用の value 産出仮想型。1 トークンを JSON テキストとして読む。DR-132 §3 |
 | `fixture/color` | fixture (static) | conformance 専用の union 産出仮想型 (`[{tuple:[int,int,int]}, string]`)。string 形は 1 トークンをそのまま string 枝の値として産出、tuple 枝へは link の位置書きだけが届く。DR-137 / DR-138 |
 | `fixture/shape` | fixture (static) | conformance 専用の union 産出仮想型 (共有フィールド `a` を持つ record 2 variant)。tie 規則 (DR-138 §5) の乗り物。string 形は受理しない。 |
-| `fixture/pair` | fixture (static) | conformance 専用の単相 tuple 産出仮想型 (`{tuple:[int,int]}`)。単相の未完成確定 (`incomplete_value`) と tuple パス DSL の静的解決の乗り物。string 形は受理しない。DR-137 / DR-138 |
+| `fixture/pair` | fixture (static) | conformance 専用の単相 tuple 産出仮想型 (`{tuple:[int,int]}`)。string 形は `A,B` / `A,` / `,B` の 3 形 (最初の `,` で 1 回だけ分割)、部分形は null 座持ち array を産出 (乖離 Error にならない、DR-137 §5 (c))。単相の未完成確定 (`incomplete_value`) と tuple パス DSL の静的解決の乗り物。DR-137 / DR-138 |
+| `fixture/nested` | fixture (static) | conformance 専用の入れ子 union 産出仮想型 (`[[{tuple:[fixture/int_range,int]}, bool], string]`)。入れ子 union の葉平坦化 (DR-138 §1) と tuple 座の record 補形の乗り物。string 形は受理しない。 |
+| `fixture/deep_shape` | fixture (static) | conformance 専用の union 産出仮想型 (共有フィールド `a: fixture/int_range` を持つ record 2 variant)。tie の interpretations に入れ子 null 補形差が現れる形の乗り物 (DR-138 §5)。string 形は受理しない。 |
 <!-- kuu-lint:end -->
 
 factory の定義側での参照形は `{"name": "<factory名>", "config": {...}}` (canonical default =
@@ -890,7 +892,9 @@ pin できない** — 定義から注入できる住人は builtin だけで、
 | `not_an_int_range` | `fixture/int_range` | range 形 (`A..B` / `A..` / `..B`) に読めない綴り — `..` 無し・`..` 単体・構成部の int 不適合を全て畳む (DR-132 §2.2)。link 注入経路の構成部失敗は `builtin/int_parser` の reasons が発生源どおり出る |
 | `not_json` | `fixture/json` | JSON テキストとして読めない綴り (DR-132 §3) |
 | `not_a_shape` | `fixture/shape` | fixture/shape は string 形を受理しない — 全綴りをこの reason で Reject する (link 経路専用の pin 住人、DR-138 波及) |
-| `not_a_pair` | `fixture/pair` | fixture/pair は string 形を受理しない — 全綴りをこの reason で Reject する (link 経路専用の pin 住人、DR-137 / DR-138 波及) |
+| `not_a_pair` | `fixture/pair` | pair 形 (`A,B` / `A,` / `,B`) に読めない綴り — `,` 無し・`,` 単体・構成部の int 不適合を全て畳む (fixture/int_range の not_an_int_range と同型)。link 注入経路の構成部失敗は `builtin/int_parser` の reasons が発生源どおり出る |
+| `not_nested` | `fixture/nested` | fixture/nested は string 形を受理しない — 全綴りをこの reason で Reject する (link 経路専用の pin 住人、DR-138 波及) |
+| `not_a_deep_shape` | `fixture/deep_shape` | fixture/deep_shape は string 形を受理しない — 全綴りをこの reason で Reject する (link 経路専用の pin 住人、DR-138 波及) |
 <!-- kuu-lint:end -->
 
 ### 7.6 builtin cell fn が emit する reason
