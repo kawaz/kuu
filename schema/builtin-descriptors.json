@@ -688,6 +688,30 @@
         "not_a_shape"
       ],
       "description": "conformance 専用の union 産出仮想型 (DR-138 波及、fixture ns = DR-132 §1)。tie 規則 (DR-138 §5) の乗り物 — out はフィールド集合の異なる record 2 variant の union で、共有フィールド a の型は variant 間で一致 (DR-127 §2.2 の静的規定を満たす)。共有フィールドへの link 部分書き (`link: \"s.a\"`) が両 variant へ並行着地し、両枝完成・tie・射影後の観測値 ({a:1} vs {a:1,b:null}、DR-130 §4.1) が異なるため ambiguous になる形を pin する。string 形は受理しない (全綴りを not_a_shape で Reject — 関心は link 経路のみの pin 専用住人)。提供義務は conformance 実行文脈での解決可能性のみ (DR-132 §1)。"
+    },
+    "fixture/pair": {
+      "name": "fixture/pair",
+      "role": "type_parser",
+      "construction": "static",
+      "io_type": {
+        "input": "string",
+        "output": {
+          "tuple": [
+            "int",
+            "int"
+          ]
+        }
+      },
+      "output_mode": "transform",
+      "fallibility": "reject",
+      "invocation": {
+        "encoding": "none",
+        "parameters": []
+      },
+      "reasons": [
+        "not_a_pair"
+      ],
+      "description": "conformance 専用の単相 tuple 産出仮想型 (DR-137 / DR-138 波及、fixture ns = DR-132 §1)。out = tuple [int,int] (単相 — union でない tuple セル) で、単相 tuple の完成判定 (全座 non-null、DR-138 §1) の未完成確定 = kind parse / reason incomplete_value (DR-138 §4)、tuple パス DSL の定義時静的解決 (範囲外 / .name 降下 = definition-error absent-ref 系、負 index の静的解決、DR-137 §4) の乗り物。string 形は受理しない (全綴りを not_a_pair で Reject — 関心は link 経路のみの pin 専用住人)。位置書きの operand は座の type int のパーサが読む (DR-127 §3.2)。提供義務は conformance 実行文脈での解決可能性のみ (DR-132 §1)。"
     }
   },
   "accumulators": {
