@@ -1,5 +1,5 @@
 {
-  "why": "option 直下 inline `or` の結果形 (枝が結果キーを持たない場合): `or` を持つ要素も、name が結果キー軸へ供給する以上 1 段の結果スコープを作る (DESIGN §2.3 / DR-025「解決後の結果キー (export_key) 軸を占有するノードが結果スコープを作る」、TRG-Q4=a)。枝は結果キーを持たないので透過し、DESIGN §5.1「or の値 = 選ばれた子の値」がそのまま `color` の値になる — DR-025 の --color 4 パターン表 A 型 (`or に name` / `子に name 無し`)。枝が結果キーを持つ対照は `or-parse/option-named-branch-leaves-kv.json` (C 型)。枝の本数は結果構造に効かない (対照: `or-parse/option-single-branch-degenerate.json`、DR-067 §2「or の children 数は 0 個・1 個とも合法、1 個は単体と等価」)。併存する別 option の結果キーも当然そのまま出る (or を持つ要素が親スコープを汚さないことの対照)。匿名枝は結果キーを持たないため effects (DR-045 の entity 単位の op 列) には現れない — 値の着地は result 側で検証する (`seq-parse/option-anonymous-children-array.json` と同じ扱い)。枝は int / bool で値空間が排他 ('5' は bool で not_a_bool、'true' は int で not_a_number) なので完全経路はちょうど 1 本 (DESIGN §15.1) — string 枝を混ぜると任意トークンを両枝が受理して ambiguous:2 になるため、露出構造の検証を単離するためにこの型を選ぶ。",
+  "why": "option 直下 inline `or` の結果形 (枝が結果キーを持たない場合): `or` を持つ要素も、name が結果キー軸へ供給する以上 1 段の結果スコープを作る (DESIGN §2.3 / DR-025「解決後の結果キー (export_key) 軸を占有するノードが結果スコープを作る」、TRG-Q4=a)。枝は結果キーを持たないので透過し、DESIGN §5.1「or の値 = 選ばれた子の値」がそのまま `color` の値になる — DR-025 の --color 4 パターン表 A 型 (`or に name` / `子に name 無し`)。枝が結果キーを持つ対照は `or-parse/option-named-branch-leaves-kv.json` (C 型)。枝の本数は結果構造に効かない (対照: `or-parse/option-single-branch-degenerate.json`、DR-067 §2「or の children 数は 0 個・1 個とも合法、1 個は単体と等価」)。併存する別 option の結果キーも当然そのまま出る (or を持つ要素が親スコープを汚さないことの対照)。枝が匿名でも、**セル `level` 自身への着地は effects に出る** (DR-045 の entity 単位 — `level` は name を持つ値セルであり、result / sources にも現に現れる)。effects に出ないのは**値の内部の要素座**に着地する場合 (`seq-parse/option-anonymous-children-array.json` の pair の値内部のような、セルではなく値構造の中の座) であって、枝が匿名であること自体とは別問題である。枝は int / bool で値空間が排他 ('5' は bool で not_a_bool、'true' は int で not_a_number) なので完全経路はちょうど 1 本 (DESIGN §15.1) — string 枝を混ぜると任意トークンを両枝が受理して ambiguous:2 になるため、露出構造の検証を単離するためにこの型を選ぶ。",
   "query": "parse",
   "definition": {
     "options": [
@@ -55,7 +55,7 @@
     },
     {
       "id": "sibling-option-coexists",
-      "why": "`--level 5 --verbose`: 併存する別 option の結果キーと同時に現れる。枝の値を親スコープへ平坦に落とす実装では `level` だけが消えて `{verbose:true}` になる — この消失が「root が scalar になる」現象と同じ根であることを、object が保たれる構成でも固定する。",
+      "why": "`--level 5 --verbose`: 併存する別 option の結果キーと同時に現れる。effects は args 適用順で `level` の set が先、`verbose` の set が後 (順序は同一性成分、DR-038/045) — 枝が匿名でもセルへの着地は effects に載る。枝の値を親スコープへ平坦に落とす実装では `level` だけが消えて `{verbose:true}` になる — この消失が「root が scalar になる」現象と同じ根であることを、object が保たれる構成でも固定する。",
       "args": [
         "--level",
         "5",
@@ -64,6 +64,12 @@
       "expect": {
         "outcome": "success",
         "effects": [
+          {
+            "entity": "level",
+            "op": "set",
+            "operand": 5,
+            "source": "cli"
+          },
           {
             "entity": "verbose",
             "op": "set",

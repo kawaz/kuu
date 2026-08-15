@@ -16,10 +16,15 @@
   "cases": [
     {
       "id": "ref-by-name-spelling-and-by-id-spelling-reach-the-same-element",
-      "why": "`box-width` の id は写像後の `box_width` (DR-136 §3)。`mirror-name` は **name の綴り** `box-width` で ref しており段 1 では当たらず段 2 の写像照合で届く。`mirror-id` は **id の綴り** `box_width` で ref しており段 1 の raw 一致で届く。どちらも同じ要素の構造 (`size-tmpl` 由来の number) を継承するので、3 つとも number を受理する — 継承が効いていなければ型が string へフォールバックして `12` が文字列で入り result が食い違う。\n\ntemplate 参照 `ref: \"size-tmpl\"` はハイフンを含む definitions キーへの raw 一致 (段 1 のみ)。result のキーは結果キー軸の綴り (`box_width` / `mirror_name` / `mirror_id`) で、トリガ綴りは kebab のまま (`--box-width` / `--mirror-name` / `--mirror-id`) — 2 軸が同時に観測できる。\n\n**effects は書かない**: 匿名 scalar template への `ref` が effects に現れない既知の bug (binding key が空文字列になる sentinel gate) があり、これは DR-136 とは無関係な別問題なので本 fixture では result だけで pin する (issue `docs/issue/2026-08-16-ref-anonymous-template-effects-binding.md`)。bug 修正時に effects 期待を復活させる。",
+      "why": "`box-width` の id は写像後の `box_width` (DR-136 §3)。`mirror-name` は **name の綴り** `box-width` で ref しており段 1 では当たらず段 2 の写像照合で届く。`mirror-id` は **id の綴り** `box_width` で ref しており段 1 の raw 一致で届く。どちらも同じ要素の構造 (`size-tmpl` 由来の number) を継承するので、3 つとも number を受理する — 継承が効いていなければ型が string へフォールバックして `12` が文字列で入り result が食い違う。\n\ntemplate 参照 `ref: \"size-tmpl\"` はハイフンを含む definitions キーへの raw 一致 (段 1 のみ)。effects の entity と result のキーはいずれも id / 結果キー軸の綴り (`box_width` / `mirror_name` / `mirror_id`) で、トリガ綴りは kebab のまま (`--box-width` / `--mirror-name` / `--mirror-id`) — 3 軸が同時に観測できる。effects の順序は args 適用順 (DR-038/045)。",
       "args": ["--box-width", "12", "--mirror-name", "34", "--mirror-id", "56"],
       "expect": {
         "outcome": "success",
+        "effects": [
+          {"entity": "box_width", "op": "set", "operand": 12, "source": "cli"},
+          {"entity": "mirror_name", "op": "set", "operand": 34, "source": "cli"},
+          {"entity": "mirror_id", "op": "set", "operand": 56, "source": "cli"}
+        ],
         "result": {
           "box_width": 12,
           "mirror_name": 34,

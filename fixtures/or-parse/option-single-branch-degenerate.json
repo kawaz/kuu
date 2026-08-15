@@ -22,7 +22,7 @@
   "cases": [
     {
       "id": "single-branch-same-shape-as-multi",
-      "why": "`--level 5 --verbose`: 枝 1 本でも `level` は結果キーとして立つ。2 枝版の sibling-option-coexists と結果形が一致する。",
+      "why": "`--level 5 --verbose`: 枝 1 本でも `level` は結果キーとして立ち、セルへの着地が effects にも載る (枝の匿名性はセルの effects 露出と無関係、DR-045 の entity 単位)。effects は args 適用順で `level` → `verbose`。2 枝版の sibling-option-coexists と effects / result の両方が一致する。",
       "args": [
         "--level",
         "5",
@@ -31,6 +31,12 @@
       "expect": {
         "outcome": "success",
         "effects": [
+          {
+            "entity": "level",
+            "op": "set",
+            "operand": 5,
+            "source": "cli"
+          },
           {
             "entity": "verbose",
             "op": "set",
