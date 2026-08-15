@@ -1,0 +1,25 @@
+{
+  "why": "明示 `id` を書いた `exact` は、置かれた文脈に関わらず id 軸に参加する (DR-054 更新 5、DR-046 §2 の一般原則 — id は参照識別子を割り当てる軸であって要素の種類を選ばない)。裸の exact は name も id も持たないので不参加だが、id を書いた瞬間に duplicate-id の判定対象になる、という縁を pin する。\n\n同時に **`errors[].element` が id の綴りで出る** (TRG-Q3=a) ことも固定する — 衝突する 2 要素は宣言名が `mode` と (name 無しの exact) で揃っていないのに、element はどちらも共有された id `shared` になる。element が name 由来だと片方が `mode`、もう片方が空か綴り `literal` になってしまい、集合比較が「同一 element の 2 件」を要求する本 fixture で落ちる。\n\n**綴り軸は無傷**: exact の照合綴りは literal の直値 `literal` のままで、`id` を書いても消費するトークンは変わらない (DR-136 §2 — exact は綴り軸に不参加で、id 軸とは別軸)。露出キー軸も破れない — exact は name も `export_key` も持たず結果キー軸を占有しないので (DR-120 §4)、立つ kind は `duplicate-id` だけの 2 件ちょうどになる。この「2 件だけ」が、id を持つ要素すべてを機械的に露出キー軸へも参加させる実装を落とす。",
+  "query": "definition_error",
+  "definition": {
+    "options": [
+      {"name": "mode", "id": "shared", "type": "string", "long": true}
+    ],
+    "positionals": [
+      {"exact": "literal", "id": "shared"}
+    ]
+  },
+  "cases": [
+    {
+      "id": "explicit-id-on-exact-participates-and-element-is-id-spelling",
+      "why": "option `mode` は明示 `id: \"shared\"` を持ち、positional の `exact` も同じ `shared` を名乗る — 同一 lexical スコープ (root) で参照識別子が重複するので duplicate-id が関与要素ごとに 1 件ずつ、計 2 件 (DR-054 §4 の全列挙)。element はどちらも id の綴り `shared`。\n\nexact 側が参加するのは明示 `id` を書いたからであって、exact だからでも positional 直下だからでもない — 同じ形から `id` を外せば裸の exact になり参照識別子を占有しないので、この定義は合法になる。`export-key-collision` は立たない (option の露出キーは `mode`、exact は結果キー軸を占有しない)。",
+      "expect": {
+        "outcome": "definition-error",
+        "errors": [
+          {"element": "shared", "kind": "duplicate-id"},
+          {"element": "shared", "kind": "duplicate-id"}
+        ]
+      }
+    }
+  ]
+}
