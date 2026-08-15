@@ -1,5 +1,5 @@
 {
-  "why": "DR-104 §3 明確化 note: 6 フィールド完全一致 (spelling/is_value/ty/origin/term/meta) だが completer が食い違う値位置候補の merge 規則を pin する。build/build という同名の 2 つの独立 command 定義がそれぞれ独自の target positional (completer 違い) を持つ — 参照実装は completer なしへ畳む。completer-merge-match.json (一致時に保持) と対。同名 sibling command は path 表現 (scope 名の列) で区別できない (DR-067 §1 が合法化する同名重複の兄弟版) ため、実装は Entity 収集時点で衝突検出する形になっている。同名 sibling command には `id` / `export_key` の両軸を割る (id 軸は DR-054 更新 5 の duplicate-id を、結果キー軸は DR-120 §1 を満たすため。name はトリガ綴りを保つ、DR-052 §2) — 検証したいのは綴り軸の重複だけであり、id 軸・結果キー軸の重複は作らない。",
+  "why": "DR-104 §3 明確化 note: 6 フィールド完全一致 (spelling/is_value/ty/origin/term/meta) だが completer が食い違う値位置候補の merge 規則を pin する。build/build という同名の 2 つの独立 command 定義がそれぞれ独自の target positional (completer 違い) を持つ — 参照実装は completer なしへ畳む。completer-merge-match.json (一致時に保持) と対。同名 sibling command は path 表現 (scope 名の列) で区別できない (DR-067 §2 が合法化する同名重複の兄弟版) ため、実装は Entity 収集時点で衝突検出する形になっている。同名 sibling command には `id` / `export_key` の両軸を割る (id 軸は DR-054 更新 5 の duplicate-id を、結果キー軸は DR-120 §1 を満たすため。name はトリガ綴りを保つ、DR-052 §2) — 検証したいのは綴り軸の重複だけであり、id 軸・結果キー軸の重複は作らない。",
   "query": "complete",
   "definition": {
     "commands": [

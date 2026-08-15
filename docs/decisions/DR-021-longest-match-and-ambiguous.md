@@ -88,7 +88,7 @@ kawaz の整理:
 ## 関連
 
 - DR-003 (name 3軸・露出キー)
-- DR-006 (スコープと lexical 解決・name 重複)
+- DR-006 (スコープと lexical 解決・参照識別子 (id) の重複)
 - DR-019 (上限なし multiple 複数の潜在 ambiguous)
 - DR-038 (完全経路の一意性・bounded path-search 実装契約)
 - DR-054 (warn 原則の適用層限定)

@@ -46,7 +46,7 @@ Claude が `namedExport: boolean | string` のような複合フィールドを�
 
 - **参照識別子 (id)** は同一 lexical スコープ (同じ command 配下の options + positionals すべて) で一意
 - **露出キー (export_key)** も同じスコープで一意 (DR-120 §1)
-- `id` (グローバル一意、オプション) はテンプレート用
+- `id` は参照識別子軸の明示指定。一意性が要求されるのは**同一 lexical スコープ内**であって global ではない (解決は lexical 連鎖、DR-006 / DR-046 §2)
 
 > **更新 (kawaz 裁定 2026-08-15): 一意性が要求されるのは `name` ではなく、name が供給しうる各軸の値である。** `name` は各軸のデフォルト供給源 (DR-046 §1) にすぎないので、同名の 2 要素が不正になるのは `id` / `export_key` 未指定のとき name が両軸へ供給され、**参照識別子が重複して ref/link 解決が曖昧になる** (definition-error `duplicate-id`、DR-054 更新 5) か、**露出キーが重複して結果キーが衝突する** (definition-error `export-key-collision`、DR-120 §1) からである。どちらか一方または双方の軸を明示フィールドで割ってあれば、name が揃っていても合法である。
 

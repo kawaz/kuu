@@ -104,7 +104,7 @@ AtomicAST (パース時): primitive/exact/or/seq + multiple 属性の同型表�
 
 - AtomicAST の正規形変換規則の網羅
 - values 展開ルールの正式仕様
-- or の細則: scope を作るか、name 重複
+- or の細則: scope を作るか、参照識別子 (id) の重複
 - これらが固まれば JSON Schema 発行
 
 DR-039 でこの「AtomicAST を単独で仕様確定してから実装する」方針自体が廃止され、垂直スライスで実装と共設計しながら削り出す方針に変更された。JSON Schema 発行は最後の工程と再定義された。当時の参照先 (CONTEXT.md および「論点 A〜M」) は journal 削除に伴い既に無効。

@@ -2,13 +2,20 @@
 
 ## 決定
 
-ref/link の解決は lexical scope chain:
-1. `id` で global 検索
-2. 自分の中の name
-3. 兄弟の name
-4. 親の name
-5. 親の親の name
-6. ... ルートまで
+ref/link の解決は lexical scope chain — 参照識別子 (id、未指定なら name が供給) を
+現在スコープから外側へ順に探す:
+
+1. 自分の中の参照識別子
+2. 兄弟の参照識別子
+3. 親の参照識別子
+4. 親の親の参照識別子
+5. ... ルートまで
+6. 見つからなければ `definitions` (DR-032)
+
+> **更新 (DR-046 §2): 旧手順 1 の「`id` で global 検索」は誤り。** id は name と同じ空間を
+> lexical 連鎖で解決する軸であって、global な名前空間を持たない (DR-046 §2 / DR-033)。
+> 明示 `id` を書くことは「name とは別の参照識別子を割り当てる」ことであって、
+> 探索範囲を global に広げることではない。
 
 **参照識別子 (id)** は **同一 lexical スコープ (options + positionals すべて) で重複禁止**。
 

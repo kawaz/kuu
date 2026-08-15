@@ -1,0 +1,32 @@
+{
+  "why": "匿名 structural (`name` も `id` も持たない `or` / `seq`) はスコープを作らない (DR-025 / DR-033 — スコープを作るのは name / id を持つノード) ので、その named 子は**囲みスコープの兄弟**として duplicate-id に参加する (DR-054 更新 5)。囲みの直下に居る同名要素と衝突する形を pin する — 判定はネストの深さではなくスコープ帰属で行うことの pin であり、「匿名枝の中だから別スコープ」と誤読する実装を落とす。\n\n対照として、**name を持つ枝**の内側に置いた同綴りの要素は当該枝が作るスコープの住人なので衝突しない (b の組)。この 2 組の対比が「スコープを作るのは匿名 structural ではなく名前を持つノード」を単独で固定する。",
+  "query": "definition_error",
+  "definition": {
+    "options": [
+      {"name": "a", "type": "string", "long": true},
+      {"or": [
+        {"name": "a", "type": "number", "long": true},
+        {"name": "other", "type": "string", "long": true}
+      ]},
+      {"name": "b", "type": "string", "long": true},
+      {"name": "wrap", "seq": [
+        {"name": "b", "type": "string", "long": true}
+      ]}
+    ]
+  },
+  "cases": [
+    {
+      "id": "anonymous-or-children-are-siblings-of-enclosing-scope",
+      "why": "a: 匿名 `or` は name / id を持たないのでスコープを作らず、その子 `a` は root スコープの兄弟。root 直下の `a` と参照識別子が重複して duplicate-id が 2 件 (関与要素ごとに 1 件、DR-054 §4 の全列挙)。露出キー軸も同時に破れる — 匿名 or は結果キー軸を持たない透過ノードで、子の結果キーが親スコープで参加する (DESIGN §2.4 / DR-052 §2 / DR-120 §4) ため、2 つの `a` は同じ root 結果スコープの露出キー `a` に解決して export-key-collision が 2 件立つ。or の別枝どうしでも検査は構造的で経路の到達可能性を見ない (DR-120 §6、`fixtures/export-key/collision-or-branch-siblings.json` と同型)。計 4 件。\n\nb: `wrap` は name を持つのでスコープを作る (DR-025 / DR-033)。その子 `b` は wrap スコープの住人であり、root 直下の `b` とは別スコープなので id 軸も露出キー軸も衝突しない (露出キーは `wrap` 配下の `b`)。`other` も衝突相手が居ない。errors がちょうど 4 件であること自体が、この非衝突側の pin を兼ねる。",
+      "expect": {
+        "outcome": "definition-error",
+        "errors": [
+          {"element": "a", "kind": "duplicate-id"},
+          {"element": "a", "kind": "duplicate-id"},
+          {"element": "a", "kind": "export-key-collision"},
+          {"element": "a", "kind": "export-key-collision"}
+        ]
+      }
+    }
+  ]
+}

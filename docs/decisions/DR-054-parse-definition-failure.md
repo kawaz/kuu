@@ -86,12 +86,15 @@ Error 検査は**単純な構文・値域・参照の検査に限る**。制約�
 >
 > - **name 重複そのものは非エラー**: `name` は各軸のデフォルト供給源にすぎず (DR-046 §1)、特別な地位を持たない。同一スコープの同名要素が問題になるのは、id 未指定のとき name が id 軸へ供給された結果として **id が重複する**からであり (露出キー軸では別途 `export-key-collision` になる)、どちらか一方または双方が明示 `id` を割って id 軸を分けてあれば同名のままで合法である (`fixtures/dd/duplicate-decl.json`)。したがって本 kind は id 軸だけを見る — 生の name 文字列を比較する kind ではない
 > - **export-key-collision との軸の違い**: `export_key` で露出キーを割った同名ペアは `export-key-collision` に掛からないが、id 軸は name 供給のままなので `duplicate-id` には掛かる。逆に id が異なるまま `export_key` を揃えたペア (`fixtures/export-key/collision.json` / `collision-identity.json`) は `export-key-collision` だけが立つ。両軸が同時に破れる形 (同名かつ `id` / `export_key` 未指定) では要素ごとに 2 kind が立ち、§4 の全列挙どおり両方を積む (一方を抑制する規則は置かない)
-> - **参加する要素**: 同一 lexical スコープ (DR-025 / DR-033 — name / id を持つノードが作る) にある、参照識別子を持つ宣言要素。`or` / `seq` の子も同一スコープの兄弟として参加する。**command も参加する** (CMDID-Q1=a、kawaz 裁定 2026-08-15) — command は実体を持ち id 軸を占有するので、同名 2 本が `id` 未指定なら参照識別子が重複する。値セルの有無や露出キーの占有 (DR-120 §4) は参加条件ではない — 非占有要素 (`export_key: null` の `config_file` 等) も参照識別子は持つ
-> - **command の綴り軸とは層が違う**: 静的にエラーなのは **id 軸の衝突**だけである。トリガ綴り (name → exact) の重複は綴り軸の話として合法のままで、静的 warn + 実行時 ambiguous / 完全経路の一意性が仲裁する (DR-067 §1 / DR-041)。したがって明示 `id` (と、結果キーが要るなら `export_key`) を割った同名 command 2 本は合法 — `commands` 糖衣は排他 or へ展開される (DR-018) ので、これは **or の枝 overload** として読める形である
+> - **参加する要素**: 同一 lexical スコープ (DR-025 / DR-033 — name / id を持つノードが作る) にある、参照識別子を持つ宣言要素。**command も参加する** (CMDID-Q1=a、kawaz 裁定 2026-08-15) — command は実体を持ち id 軸を占有するので、同名 2 本が `id` 未指定なら参照識別子が重複する。値セルの有無や露出キーの占有 (DR-120 §4) は参加条件ではない — 非占有要素 (`export_key: null` の `config_file` 等) も参照識別子は持つ
+> - **匿名 structural を挟んでも同じスコープ**: `name` / `id` を持たない `or` / `seq` はスコープを作らない (DR-025 / DR-033 — スコープを作るのは name / id を持つノード) ので、その **named 子は囲みスコープの兄弟として参加する**。`options: [{"name":"a"}, {"or":[{"name":"a"}, ...]}]` は 2 つの `a` が同一 lexical スコープに居る形であり `duplicate-id` が立つ (`fixtures/definition-error/duplicate-id-anonymous-structural.json`)
+> - **command の綴り軸とは層が違う**: 静的にエラーなのは **id 軸の衝突**だけである。トリガ綴り (name → exact) の重複は綴り軸の話として合法のままで、静的 warn + 実行時 ambiguous / 完全経路の一意性が仲裁する (DR-067 §2 / DR-041)。したがって明示 `id` (と、結果キーが要るなら `export_key`) を割った同名 command 2 本は合法 — サブコマンドと素の positional の排他は完全経路の一意性から創発する (DR-041 / DR-042 の greedy 背骨) ので、同名トリガの 2 本は **同じ綴りを持つ枝の overload** として読める形である
+> - **裸の `exact` は不参加、明示 `id` 付きの `exact` は参加**: `name` も `id` も持たない `exact` (DR-063 A.1 の裸文字列正規化形) は参照識別子を占有しないので判定対象外。逆に `{"exact": "init", "id": "init_lit"}` のように明示 `id` を書けば、置かれた文脈 (positional 直下 / `or` 枝の中) に関わらず id 軸に参加する — 「id は参照識別子を割り当てる軸であって要素の種類を選ばない」という DR-046 §2 の一般原則がそのまま当たる
 > - **参加しない要素**: **alias 要素** — 入口だけの存在で結果スコープも実体も持たず (DR-057 §2)、name は入口綴りの再導出源 (DR-057 §3) なので参照識別子を占有しない。DR-120 §4 の「name は綴り軸と id 軸にのみ効く」は結果キー軸に効かないことを述べる対比であり、alias 入口が独立した参照識別子を占有する意味ではない
+> - **検査の面**: **alias desugar / `global` コピーより前の lexical 宣言面**で判定する。id 軸は宣言そのものが持つ軸であり、入口の複製 (alias / global) は新しい参照識別子を作らないからである。露出キー軸の `export-key-collision` が全 installer 適用後の面で判定する (DR-120 §5) のとは非対称で、両 kind は面が違う
 > - **粒度**: 重複に関与する要素ごとに 1 件を全列挙する (DR-120 §5 と同じ理由 — 比較は `(element, kind)` の集合なので、重複グループの代表 1 件にすると相手が expect から読めなくなる)
 > - **対処**: 明示 `id` で参照識別子を分けるか、片方を rename する (hint は message の関心、§射程外)
-> - fixture: `fixtures/definition-error/duplicate-id.json` (中心形と、参加する command / 参加しない alias の対照)、`fixtures/export-key/collision-or-branch-siblings.json` (`or` 枝の兄弟が参加する形、2 kind の全列挙)
+> - fixture: `fixtures/definition-error/duplicate-id.json` (中心形と、参加する command / 参加しない alias の対照)、`fixtures/definition-error/duplicate-id-anonymous-structural.json` (匿名 or を挟んだ兄弟)、`fixtures/export-key/collision-or-branch-siblings.json` (`or` 枝の兄弟が参加する形、2 kind の全列挙)
 - DR-021 (warn 原則 — 適用層の限定、type フォールバックの例外は不変)
 - DR-053 (結末の union — 同族構造)
 - DR-032 (ref/link 解決 — 不在・循環の検査根拠)

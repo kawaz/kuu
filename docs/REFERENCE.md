@@ -212,9 +212,12 @@ registry.types.X → warn+string フォールバック`(ユーザ定義が組み
 正本: DESIGN §10.4, DR-035
 
 **`exact`**
-トークン照合消費プリミティブ。裸リテラル (`"red"` / `255` / `true`) の展開先。
-最小例: `{"exact": "red"}`
-正本: DESIGN §5.1〜5.2
+トークン照合消費プリミティブ。裸リテラル (`"red"` / `255` / `true`) の展開先。照合綴りは literal の
+直値であって name 由来ではない (綴り軸に不参加、DR-136 §2)。`id` は同居でき — positional 直下でも
+`or` 枝の中でも書ける — 明示すればその exact は参照識別子軸に参加する (ref/link の対象になり、
+`duplicate-id` の判定対象にもなる)。裸の exact は name も id も持たないので参照識別子を占有しない。
+最小例: `{"exact": "red"}` / `{"exact": "init", "id": "init_lit"}`
+正本: DESIGN §5.1〜5.2, DR-046 §2, DR-054 更新 5
 
 **`value`**
 非消費の literal 値。入口属性 (long/short/positional 位置) を持たない「実体だけノード」を作る
