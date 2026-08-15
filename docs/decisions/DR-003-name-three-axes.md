@@ -8,7 +8,7 @@
 
 1. **CLI マッチング (軸1)**: long opt の `--name` 生成、short opt のもとになる name、command のトリガ name、positional のヘルプ表示
 2. **結果 export key (軸2)**: 結果オブジェクトのキー (デフォルト name そのまま)
-3. **AST 内部参照 (軸3)**: ref/link の参照対象 (scope 内で重複禁止)
+3. **AST 内部参照 (軸3)**: ref/link の参照対象 (scope 内で参照識別子が重複禁止)
 
 別軸にしたいケースのために独立フィールド:
 
@@ -44,16 +44,20 @@ Claude が `namedExport: boolean | string` のような複合フィールドを�
 
 ## 重複ルール
 
-- `name` はスコープ内 (同じ command 配下の options + positionals すべて) で一意
-- 重複 = ref/link 解決の曖昧化 + 結果キー衝突
+- **参照識別子 (id)** は同一 lexical スコープ (同じ command 配下の options + positionals すべて) で一意
+- **露出キー (export_key)** も同じスコープで一意 (DR-120 §1)
 - `id` (グローバル一意、オプション) はテンプレート用
+
+> **更新 (kawaz 裁定 2026-08-15): 一意性が要求されるのは `name` ではなく、name が供給しうる各軸の値である。** `name` は各軸のデフォルト供給源 (DR-046 §1) にすぎないので、同名の 2 要素が不正になるのは `id` / `export_key` 未指定のとき name が両軸へ供給され、**参照識別子が重複して ref/link 解決が曖昧になる** (definition-error `duplicate-id`、DR-054 更新 5) か、**露出キーが重複して結果キーが衝突する** (definition-error `export-key-collision`、DR-120 §1) からである。どちらか一方または双方の軸を明示フィールドで割ってあれば、name が揃っていても合法である。
 
 ## 関連
 
 - DR-022: フィールド命名規約を snake_case に統一 (= `exportKey`/`export` → `export_key`/`export`)
 - DR-024: name の役割を `key name` / `def name` / `value_name` の3層に再整理
 - DR-052: export bool 廃止、export 抑制は `export_key: null` に統合
-- DR-006: name 重複ルールはセクション間も含む
+- DR-006: 重複禁止の対象は参照識別子 (id) 軸。スコープはセクション間 (options + positionals) にまたがる
+- DR-054 更新 5: 参照識別子の重複を報告する kind `duplicate-id`
+- DR-120: 露出キー軸の重複を報告する kind `export-key-collision`
 
 ## Superseded (歴史)
 

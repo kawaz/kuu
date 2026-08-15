@@ -10,7 +10,9 @@ ref/link の解決は lexical scope chain:
 5. 親の親の name
 6. ... ルートまで
 
-`name` は **スコープ内 (options + positionals すべて) で重複禁止**。
+**参照識別子 (id)** は **同一 lexical スコープ (options + positionals すべて) で重複禁止**。
+
+> **更新 (kawaz 裁定 2026-08-15): 重複禁止の対象は `name` ではなく参照識別子 (id) である。** `name` は各軸のデフォルト供給源にすぎず (DR-046 §1)、それ自体に重複禁止は掛からない。同一スコープの同名要素が問題になるのは、`id` 未指定のとき name が id 軸へ供給された結果 **id が重複して ref / link の解決対象が一意に定まらなくなる**からであり、露出キー衝突のほうは別軸として DR-120 の `export-key-collision` が引き取っている。したがって、どちらか一方または双方が明示 `id` (および必要なら `export_key`) を割って軸を分けてあれば、**同名のままで合法**である。報告 kind は definition-error `duplicate-id` (DR-054 更新 5)。
 
 スコープを作るのは **name を持つノード** (DR-025 / DR-033 で確定)。
 
@@ -18,19 +20,23 @@ ref/link の解決は lexical scope chain:
 
 スコープを作るかどうかを明示フラグで持つ必要はない。lexical scope chain なので祖先方向に探索すれば、暗黙でスコープが出来ても事故にならない。
 
-## name 重複ルール
+## 参照識別子の重複ルール
 
-options に `name: "config"` があって、positionals にも `name: "config"` があると:
-- ref/link 解決が曖昧
-- 結果オブジェクトのキー衝突
+options に `name: "config"` があって、positionals にも `name: "config"` があり、双方とも `id` /
+`export_key` を書いていないと、name が両軸へ供給された結果:
 
-なので **同じ scope 内 (options + positionals 含む) で重複禁止**。
+- 参照識別子 `config` が重複 → ref/link 解決が曖昧 (definition-error `duplicate-id`、DR-054 更新 5)
+- 露出キー `config` が重複 → 結果オブジェクトのキー衝突 (definition-error `export-key-collision`、DR-120 §1)
+
+禁じられているのはこの **2 つの軸の重複**であって、name という綴りが揃うこと自体ではない。軸ごとに
+明示フィールドで分ければ (`id` を割れば前者が、`export_key` を割れば後者が解ける) 同名の 2 要素は
+両立する。
 
 ## 効果
 
 - スコープを作るかどうかを意識せず書ける
 - ref/link が予測可能に解決される
-- name 重複による事故が防げる
+- 参照識別子の重複による事故が防げる
 
 ## 関連
 
@@ -38,10 +44,13 @@ options に `name: "config"` があって、positionals にも `name: "config"` 
 - DR-007 (definitions 領域)
 - DR-025 (name を持つノードがスコープを作る)
 - DR-033 (lexical = name scope の整理)
+- DR-046 (name は各軸のデフォルト供給源 — 重複禁止の対象が id 軸であることの根拠)
+- DR-054 更新 5 (`duplicate-id` — 本 DR の重複禁止を報告する kind)
+- DR-120 (露出キー軸の重複 — `export-key-collision`)
 
 ## Superseded (歴史)
 
-> **更新: DR-025 により本 DR の「スコープ単位」が「children を持つ要素」から「name を持つノード」に変更。DR-033 で lexical scope = name scope と整理。本 DR の lexical chain 探索順序・name 重複禁止ルールは引き続き有効。**
+> **更新: DR-025 により本 DR の「スコープ単位」が「children を持つ要素」から「name を持つノード」に変更。DR-033 で lexical scope = name scope と整理。本 DR の lexical chain 探索順序・重複禁止ルールは引き続き有効。**
 
 ### children を持つ要素がスコープを作る (DR-025 で更新)
 

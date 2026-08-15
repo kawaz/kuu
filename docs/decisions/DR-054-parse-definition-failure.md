@@ -82,15 +82,15 @@ Error 検査は**単純な構文・値域・参照の検査に限る**。制約�
 >
 > **schema との非対称**: `schema/fixture.schema.json` の definitionErrorExpect の kind enum に `unsupported` は**加えない**。fixture は spec の正解を固定するものであり、正解が「実装が未対応」を期待することは無い — 実装制限は実装ごとに違うので、fixture に書けば別の実装にとって偽の期待になる。`unsupported` は実装が実行時に返す値としてのみ正規であり、fixture の期待値としては非正規、という一方向の語彙である。
 >
-> **更新5 (DNR-Q1=a、kawaz 裁定 2026-08-14): `duplicate-name` を追加。** 同一 lexical スコープに同じ**参照識別子**を持つ要素が 2 つ以上ある定義 (DR-006 / DR-003 の name 重複禁止を報告する kind)。既存 kind に相乗りさせない: `invalid-range` は 1 要素内の属性の組合せが値域外であることの申告で別要素間の衝突を表せず、`export-key-collision` は露出キー軸の判定だからである。
+> **更新5 (DNR-Q1=a、kawaz 裁定 2026-08-14 / 枠付けは kawaz 裁定 2026-08-15 で訂正): `duplicate-id` を追加。** 同一 lexical スコープに同じ**参照識別子 (id)** を持つ要素が 2 つ以上ある定義。エラーの正体は **id 軸の重複そのもの** — ref / link の解決対象が一意に定まらない (DR-032) からである。既存 kind に相乗りさせない: `invalid-range` は 1 要素内の属性の組合せが値域外であることの申告で別要素間の衝突を表せず、`export-key-collision` は露出キー軸の判定だからである。
 >
-> - **判定軸は参照識別子** (DR-046 §1 の id 軸) — 明示 `id` があればその値、無ければ name が供給する (DR-046 §2)。生の name 文字列ではないので、同名でも相異なる `id` を割れば合法 (`fixtures/dd/duplicate-decl.json`)。DR-006 が重複を禁じた根拠 2 つのうち結果キー衝突は DR-120 が `export-key-collision` として引き取っており、本 kind に残るのは ref / link 解決の曖昧化 = 参照識別子軸である
-> - **export-key-collision との軸の違い**: `export_key` で露出キーを割った同名ペアは `export-key-collision` に掛からないが `duplicate-name` には掛かる。逆に宣言名が異なるまま `export_key` を揃えたペア (`fixtures/export-key/collision.json` / `collision-identity.json`) は `export-key-collision` だけが立つ。両軸が同時に破れる形 (同名かつ `export_key` 未指定) では要素ごとに 2 kind が立ち、§4 の全列挙どおり両方を積む (一方を抑制する規則は置かない)
+> - **name 重複そのものは非エラー**: `name` は各軸のデフォルト供給源にすぎず (DR-046 §1)、特別な地位を持たない。同一スコープの同名要素が問題になるのは、id 未指定のとき name が id 軸へ供給された結果として **id が重複する**からであり (露出キー軸では別途 `export-key-collision` になる)、どちらか一方または双方が明示 `id` を割って id 軸を分けてあれば同名のままで合法である (`fixtures/dd/duplicate-decl.json`)。したがって本 kind は id 軸だけを見る — 生の name 文字列を比較する kind ではない
+> - **export-key-collision との軸の違い**: `export_key` で露出キーを割った同名ペアは `export-key-collision` に掛からないが、id 軸は name 供給のままなので `duplicate-id` には掛かる。逆に id が異なるまま `export_key` を揃えたペア (`fixtures/export-key/collision.json` / `collision-identity.json`) は `export-key-collision` だけが立つ。両軸が同時に破れる形 (同名かつ `id` / `export_key` 未指定) では要素ごとに 2 kind が立ち、§4 の全列挙どおり両方を積む (一方を抑制する規則は置かない)
 > - **参加する要素**: 同一 lexical スコープ (DR-025 / DR-033 — name / id を持つノードが作る) にある、参照識別子を持つ宣言要素。`or` / `seq` の子も同一スコープの兄弟として参加する。値セルの有無や露出キーの占有 (DR-120 §4) は参加条件ではない — 非占有要素 (`export_key: null` の `config_file` 等) も参照識別子は持つ
-> - **参加しない要素**: **command** — name は綴り軸を保つため、相異なる `export_key` を割った同名 command 2 本は両立したままである (DR-120 §7、DR-067 §1 のトリガ重複合法)。**alias 要素** — 入口だけの存在で結果スコープも実体も持たず (DR-057 §2)、name は入口綴りの再導出源 (DR-057 §3)。DR-120 §4 の「name は綴り軸と id 軸にのみ効く」は結果キー軸に効かないことを述べる対比であり、alias 入口が独立した参照識別子を占有する意味ではない
+> - **参加しない要素**: **command** — name は綴り軸を保ち、相異なる `export_key` を割った同名 command 2 本は両立したままである (DR-120 §7、DR-067 §1 のトリガ重複合法)。**alias 要素** — 入口だけの存在で結果スコープも実体も持たず (DR-057 §2)、name は入口綴りの再導出源 (DR-057 §3) なので参照識別子を占有しない。DR-120 §4 の「name は綴り軸と id 軸にのみ効く」は結果キー軸に効かないことを述べる対比であり、alias 入口が独立した参照識別子を占有する意味ではない
 > - **粒度**: 重複に関与する要素ごとに 1 件を全列挙する (DR-120 §5 と同じ理由 — 比較は `(element, kind)` の集合なので、重複グループの代表 1 件にすると相手が expect から読めなくなる)
-> - **対処**: 片方を rename するか、明示 `id` で参照識別子を分ける (hint は message の関心、§射程外)
-> - fixture: `fixtures/definition-error/duplicate-name.json` (中心形と非参加要素の対照)、`fixtures/export-key/collision-or-branch-siblings.json` (`or` 枝の兄弟が参加する形、2 kind の全列挙)
+> - **対処**: 明示 `id` で参照識別子を分けるか、片方を rename する (hint は message の関心、§射程外)
+> - fixture: `fixtures/definition-error/duplicate-id.json` (中心形と非参加要素の対照)、`fixtures/export-key/collision-or-branch-siblings.json` (`or` 枝の兄弟が参加する形、2 kind の全列挙)
 - DR-021 (warn 原則 — 適用層の限定、type フォールバックの例外は不変)
 - DR-053 (結末の union — 同族構造)
 - DR-032 (ref/link 解決 — 不在・循環の検査根拠)
