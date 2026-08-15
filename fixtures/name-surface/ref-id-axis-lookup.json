@@ -1,0 +1,36 @@
+{
+  "why": "`ref` (構造継承、DR-029/DR-032) が指す先は **id 軸**であり、解決は各スコープでの raw 一致優先の 2 段ルックアップで行う (DR-136 §6)。参照文字列が name の綴りでも写像後の id の綴りでも同じ要素に届くこと (§4 の「どの綴りで書いても同じ結果に落ちる」保証が参照側にも及ぶこと) を pin する。\n\n`definitions` のキーは**書き手が直接書いた literal** なので写像を通さず raw 一致だけで解決する (DR-136 §6) — 本 fixture の template キー `size-tmpl` はハイフンを含むが、`ref: \"size-tmpl\"` は段 1 でそのまま当たる。ここに写像を掛けて `size_tmpl` を探しにいく実装は、テンプレートを見つけられず absent-ref になって落ちる。\n\n対して**要素**を指す `ref` は id 軸なので写像が効く: 記号入り name の要素は id が写像後の綴りになり、name の綴りで書いた参照は段 2 で届く。",
+  "query": "parse",
+  "definition": {
+    "definitions": {
+      "templates": {
+        "size-tmpl": {"type": "number"}
+      }
+    },
+    "options": [
+      {"name": "box-width", "ref": "size-tmpl", "long": true},
+      {"name": "mirror-name", "ref": "box-width", "long": true},
+      {"name": "mirror-id", "ref": "box_width", "long": true}
+    ]
+  },
+  "cases": [
+    {
+      "id": "ref-by-name-spelling-and-by-id-spelling-reach-the-same-element",
+      "why": "`box-width` の id は写像後の `box_width` (DR-136 §3)。`mirror-name` は **name の綴り** `box-width` で ref しており段 1 では当たらず段 2 の写像照合で届く。`mirror-id` は **id の綴り** `box_width` で ref しており段 1 の raw 一致で届く。どちらも同じ要素の構造 (`size-tmpl` 由来の number) を継承するので、3 つとも number を受理する — 継承が効いていなければ型が string へフォールバックして `12` が文字列で入り result が食い違う。\n\ntemplate 参照 `ref: \"size-tmpl\"` はハイフンを含む definitions キーへの raw 一致 (段 1 のみ)。effects の entity と result のキーはいずれも id / 結果キー軸の綴り (`box_width` / `mirror_name` / `mirror_id`) で、トリガ綴りは kebab のまま (`--box-width` / `--mirror-name` / `--mirror-id`) — 3 軸が同時に観測できる。",
+      "args": ["--box-width", "12", "--mirror-name", "34", "--mirror-id", "56"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "box_width", "op": "set", "operand": 12, "source": "cli"},
+          {"entity": "mirror_name", "op": "set", "operand": 34, "source": "cli"},
+          {"entity": "mirror_id", "op": "set", "operand": 56, "source": "cli"}
+        ],
+        "result": {
+          "box_width": 12,
+          "mirror_name": 34,
+          "mirror_id": 56
+        }
+      }
+    }
+  ]
+}

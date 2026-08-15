@@ -1,0 +1,24 @@
+{
+  "why": "候補の `origin` は由来要素の**参照識別子 (id)** であって生の name ではない (DR-104 §2、TRG-Q1=b)。記号を含む name の要素は id が写像後の綴りになる (DR-136 §3) ため、**綴り (spelling) と origin で綴りが割れる**形をここで pin する — `--log-file` の origin は `log_file`。\n\nname と id が一致する要素 (ASCII 英数だけの name) では従来と同じ綴りになるので、この分岐は記号入り name でしか観測できない。origin を name から取る実装は本 fixture でのみ落ちる。",
+  "query": "complete",
+  "definition": {
+    "options": [
+      {"name": "log-file", "type": "string", "long": true},
+      {"name": "verbose", "type": "flag", "long": true}
+    ]
+  },
+  "cases": [
+    {
+      "id": "origin-is-id-spelling-while-spelling-stays-kebab",
+      "why": "args_before 空: 2 つの trigger 候補が出る。`log-file` は綴り軸で `--log-file` (kebab 写像、DR-136 §2/§3)、origin は id 軸で `log_file` — **同じ要素について 2 つの軸の綴りが同時に観測される**。`verbose` は name に記号が無いので spelling `--verbose` / origin `verbose` で従来どおり一致し、分岐が記号入り name 由来であることの対照になる。",
+      "args_before": [],
+      "expect": {
+        "outcome": "complete",
+        "candidates": [
+          {"spelling": "--log-file", "is_value": false, "origin": "log_file", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}},
+          {"spelling": "--verbose", "is_value": false, "origin": "verbose", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}}
+        ]
+      }
+    }
+  ]
+}

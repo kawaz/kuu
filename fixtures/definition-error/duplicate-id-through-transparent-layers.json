@@ -1,0 +1,39 @@
+{
+  "why": "結果キー軸を占有しない段は結果スコープも lexical スコープも作らない (DR-025 / DR-033、TRG-Q4=a) ので、その named 子は**透過段を何段貫通しても囲みスコープの兄弟**になる。判定はネストの深さではなくスコープ帰属で行う、という規範を 2 つの形で同時に pin する。\n\n(a) **透過 command**: `export_key: null` の command は子 scope を作らないので (DR-054 更新 5「子 scope を作るのは結果キー軸を占有する command であって command であること自体ではない」)、その子は root の兄弟になる。command の入場自体はパース経路の話なので不変で (トリガ `serve` はそのまま消費される)、透けるのは名前の面だけである。\n\n(b) **透過段の多重ネスト**: 匿名 `or` (name も id も無い) の中の `export_key: null` を書いた named `or` という 2 段の透過を貫通して、最深の子が root の兄弟になる。1 段だけの fixture では「1 段は貫通するがそこで走査を打ち切る」実装と区別が付かないため、2 段で pin する。\n\nどちらも id 軸と露出キー軸が同時に破れる形なので、関与要素ごとに 2 kind が立って計 8 件になる (DR-054 §4 の全列挙、抑制規則なし)。",
+  "query": "definition_error",
+  "definition": {
+    "options": [
+      {"name": "a", "type": "string", "long": true},
+      {"or": [
+        {"name": "mid", "export_key": null, "or": [
+          {"name": "a", "type": "number", "long": true}
+        ]}
+      ]},
+      {"name": "port", "type": "string", "long": true}
+    ],
+    "commands": [
+      {"type": "command", "name": "serve", "export_key": null, "options": [
+        {"name": "port", "type": "number", "long": true}
+      ]}
+    ]
+  },
+  "cases": [
+    {
+      "id": "children-of-transparent-layers-are-siblings-of-enclosing-scope",
+      "why": "a: 匿名 `or` (透過) → `mid` (name はあるが `export_key: null` なので透過) → `a` と 2 段の透過を貫通して root の兄弟になり、root 直下の `a` と参照識別子が重複する (duplicate-id 2 件)。露出キー軸も透過段を素通りして root で参加するため (DESIGN §2.4 / DR-052 §2 / DR-120 §4)、露出キー `a` に 2 セルが解決して export-key-collision 2 件。`mid` 自身は id `mid` を持つ root の住人だが衝突相手が居ない (`export_key: null` は結果キー軸を消すだけで id 軸は消さない)。\n\nport: 透過 command `serve` の子 `port` が root の兄弟になり、root 直下の `port` と id・露出キーの両軸で衝突して 2 kind × 2 要素。`serve` のトリガ照合と入場は構造側の機構なので不変で、ここで透けているのは名前の面だけである (`fixtures/export-key/command-promote.json` が結果面の透過を parse で pin しており、本 case はその名前面の帰結を definition_error で pin する)。\n\n計 8 件ちょうどであることが、透過段で走査を打ち切る実装 (件数不足) と、透過段にもスコープを立てる実装 (衝突ゼロ) の両方を落とす。",
+      "expect": {
+        "outcome": "definition-error",
+        "errors": [
+          {"element": "a", "kind": "duplicate-id"},
+          {"element": "a", "kind": "duplicate-id"},
+          {"element": "a", "kind": "export-key-collision"},
+          {"element": "a", "kind": "export-key-collision"},
+          {"element": "port", "kind": "duplicate-id"},
+          {"element": "port", "kind": "duplicate-id"},
+          {"element": "port", "kind": "export-key-collision"},
+          {"element": "port", "kind": "export-key-collision"}
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "why": "`env_auto` (DR-049 §3、DR-100 で `auto_env` から改名) が導出する env 名は、name に **id 軸の文字写像を掛けてから大文字化**した綴りを使う (UPPER_SNAKE 供給、DR-136 §4 の系)。素朴な uppercase だと `{\"name\": \"log-file\"}` が `LOG-FILE` になり、これは **POSIX の環境変数名として不正** (名前に使えるのは英数と `_`) でシェルから設定する手段が無い — 写像を通せば `LOG_FILE` になり、`log_file` と書いた場合と同じ env 名に落ちる。\n\n記号入り name でしか差が出ないので、対照として記号を含まない name も 1 本置く。",
+  "query": "parse",
+  "definition": {
+    "config": {"env_auto": true, "env_prefix": "MYAPP"},
+    "options": [
+      {"name": "log-file", "type": "string", "long": true},
+      {"name": "port", "type": "number", "long": true}
+    ]
+  },
+  "cases": [
+    {
+      "id": "env-auto-derives-upper-snake-name",
+      "why": "`log-file` の env 席は写像 + 大文字化 + prefix で `MYAPP_LOG_FILE`。`MYAPP_LOG-FILE` を引く実装はこの env を読めず result が null に落ちる。`port` は記号が無いので `MYAPP_PORT` で従来どおり。cli 未供給なので env 席が発火し、sources は env 由来 (DR-031 のラダー)。",
+      "args": [],
+      "env": {"MYAPP_LOG_FILE": "/var/log/app.log", "MYAPP_PORT": "8080"},
+      "expect": {
+        "outcome": "success",
+        "effects": [],
+        "result": {
+          "log_file": "/var/log/app.log",
+          "port": 8080
+        },
+        "sources": {
+          "log_file": "env",
+          "port": "env"
+        }
+      }
+    }
+  ]
+}

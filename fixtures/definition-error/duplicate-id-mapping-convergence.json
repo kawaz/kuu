@@ -1,0 +1,25 @@
+{
+  "why": "**異なる name が同じ軸値へ収束する**形を pin する。`name` から各軸への供給は文字単位の写像 (DR-136 §3) なので、ASCII 非英数を含む相異なる 2 つの name が同一の id / 露出キーへ落ちうる — `\"a b\"` (空白) と `\"a_b\"` (下線) はどちらも id 軸で `a_b`、露出キー軸でも `a_b` になる。\n\n綴りが違う name を書いた書き手にとっては「別の要素を宣言したつもり」なので、衝突が**静かに**起きると result のキーが 1 つ潰れて気付けない。写像後の値で判定することで definition-error として顕在化する、というのが本 fixture の主張である (判定は写像**後**の値で行い、生の name 文字列を比較しない — DR-054 更新 5)。\n\nなお綴り軸でも両者は `--a-b` に収束するが、トリガ綴りの重複は合法のまま (静的 warn + 実行時 ambiguous、DR-067 §2 / DR-041) — 軸ごとに扱いが違うことも併せて確認できる形になっている。",
+  "query": "definition_error",
+  "definition": {
+    "options": [
+      {"name": "a b", "type": "string", "long": true},
+      {"name": "a_b", "type": "number", "long": true}
+    ]
+  },
+  "cases": [
+    {
+      "id": "distinct-names-converging-under-mapping-collide",
+      "why": "`a b` の id は空白が `_` へ写って `a_b`、`a_b` の id はそのまま `a_b` — 同一 lexical スコープで参照識別子が重複して duplicate-id が 2 件。露出キー軸も同じ写像なので両者とも `a_b` に解決して export-key-collision が 2 件。element は id の綴り (TRG-Q3=a) なのでどちらも `a_b` になり、集合比較は「同一 element の 2 件 × 2 kind」を要求する。\n\n生の name 文字列を比較する実装はここで落ちる — `\"a b\"` と `\"a_b\"` は文字列としては異なるため衝突を検出できない。",
+      "expect": {
+        "outcome": "definition-error",
+        "errors": [
+          {"element": "a_b", "kind": "duplicate-id"},
+          {"element": "a_b", "kind": "duplicate-id"},
+          {"element": "a_b", "kind": "export-key-collision"},
+          {"element": "a_b", "kind": "export-key-collision"}
+        ]
+      }
+    }
+  ]
+}
