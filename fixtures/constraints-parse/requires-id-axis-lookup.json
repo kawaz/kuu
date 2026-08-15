@@ -1,0 +1,75 @@
+{
+  "why": "制約属性 (`requires` / `conflicts_with` 等) が指す先は **id 軸**であり、解決は各スコープでの raw 一致優先の 2 段ルックアップで行う (DR-136 §6)。記号を含む name の要素は id が写像後の綴りになる (`force-mode` → `force_mode`、DR-136 §3) ため、参照側が name の綴りで書いたか id の綴りで書いたかで挙動が割れないことを pin する必要がある。\n\n1 定義で 3 点を同時に固定する: (i) 記号入り name の要素を **name の綴り**で参照した `requires` が段 2 (写像照合) で届く、(ii) 違反時の `errors[].element` は **id の綴り**で出る (TRG-Q3=a、CONFORMANCE §2)、(iii) 明示 `id` で分けた**同名 2 要素**を段 1 (raw 一致) で厳密に指し分けられる。\n\n(iii) の 2 要素は name を `target` で揃えたまま `id` / `trigger_name` / `export_key` を個別に割ってある — 3 軸が独立に分離できること (DR-136 §1) を使って、綴り軸の重複 (トリガ ambiguous) も結果キー軸の重複 (export-key-collision) も作らずに「同名だが別 id の 2 要素」を成立させる形である。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {"name": "dry-run", "type": "flag", "long": true},
+      {"name": "force-mode", "type": "flag", "long": true, "requires": ["dry-run"]},
+      {"name": "target", "id": "target_a", "trigger_name": "target-a", "export_key": "target_a", "type": "string", "long": true},
+      {"name": "target", "id": "target_b", "trigger_name": "target-b", "export_key": "target_b", "type": "string", "long": true},
+      {"name": "pick", "type": "flag", "long": true, "requires": ["target_b"]}
+    ]
+  },
+  "cases": [
+    {
+      "id": "requires-by-name-spelling-resolves-via-mapped-lookup",
+      "why": "(i) + (ii): `force-mode` の `requires: [\"dry-run\"]` は、段 1 の raw 一致では当たらない — 目的語の要素の id は写像後の `dry_run` だからである。段 2 で参照文字列 `dry-run` に id 軸の写像を掛けた `dry_run` が当たり、目的語が同定される。ここで `--force-mode` だけを撃つと目的語 `dry_run` の解決後の値が false なので requires 違反 (**bool 目的語の判定基準は「解決後の値が true」**、DR-047 §5 明確化 — bool は暗黙 default:false を常に持つので「値の有無」で判定すると vacuous に充足してしまうため)。kind:constraint (遅延述語違反、DR-065 §3)。**element は宣言元の id 綴り `force_mode`** であって name の `force-mode` ではない (TRG-Q3=a)。args_pos=1=args.length (制約は全消費後に評価)。\n\nもし段 2 が無ければ `dry-run` は解決先不在となり、constraint 違反ではなく `absent-ref` の definition-error になるはずなので、この case は段 2 の存在そのものを観測している。",
+      "args": ["--force-mode"],
+      "expect": {
+        "outcome": "failure",
+        "errors": [
+          {"element": "force_mode", "args_pos": 1, "kind": "constraint", "reason": "requires_violated"}
+        ]
+      }
+    },
+    {
+      "id": "requires-by-name-spelling-satisfied",
+      "why": "(i) の充足側: 目的語をトリガ綴り `--dry-run` (綴り軸は kebab 写像、DR-136 §2/§3) で供給すると述語が成立して success。**トリガは `--dry-run`、id は `dry_run`、結果キーも `dry_run`** と 3 軸の綴りが同時に観測できる — effects の entity は id 軸 (`dry_run` / `force_mode`)、result のキーは結果キー軸で同綴りになる。効果列は args 適用順 (DR-038/045)。",
+      "args": ["--force-mode", "--dry-run"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "force_mode", "op": "set", "operand": true, "source": "cli"},
+          {"entity": "dry_run", "op": "set", "operand": true, "source": "cli"}
+        ],
+        "result": {
+          "dry_run": true,
+          "force_mode": true,
+          "target_a": null,
+          "target_b": null,
+          "pick": false
+        }
+      }
+    },
+    {
+      "id": "requires-by-explicit-id-picks-exact-element-among-same-named",
+      "why": "(iii) の違反側: `pick` の `requires: [\"target_b\"]` は段 1 の raw 一致で **id `target_b` の要素だけ**を指す。目的語は string なので判定は「値の有無」(bool 目的語の true 判定 = DR-047 §5 とは別枝)。同名 (`target`) の兄弟 `target_a` を供給しても述語は充足しない — 「同名だから」「先に宣言されているから」で相手を取り違える実装をここで落とす。element は `pick` (記号を含まないので id も `pick`)。args_pos=3=args.length。",
+      "args": ["--pick", "--target-a", "x"],
+      "expect": {
+        "outcome": "failure",
+        "errors": [
+          {"element": "pick", "args_pos": 3, "kind": "constraint", "reason": "requires_violated"}
+        ]
+      }
+    },
+    {
+      "id": "requires-by-explicit-id-satisfied-by-the-named-element",
+      "why": "(iii) の充足側: `target_b` を供給すると述語が成立して success。前 case と args の綴りだけが違う対で、参照先の同定が id 軸で行われていることを単独で pin する。name を `target` で揃えたまま id / trigger_name / export_key を割った 2 要素が、綴り軸でも結果キー軸でも衝突せずに併存することも同時に観測される (トリガは `--target-a` / `--target-b`、結果キーは `target_a` / `target_b`)。",
+      "args": ["--pick", "--target-b", "y"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "pick", "op": "set", "operand": true, "source": "cli"},
+          {"entity": "target_b", "op": "set", "operand": "y", "source": "cli"}
+        ],
+        "result": {
+          "dry_run": false,
+          "force_mode": false,
+          "target_a": null,
+          "target_b": "y",
+          "pick": true
+        }
+      }
+    }
+  ]
+}
