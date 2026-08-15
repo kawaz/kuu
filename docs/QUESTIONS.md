@@ -37,13 +37,6 @@
 - [ ] b: **origin = 参照識別子 (id)** — 実体 identity に揃える (name はここでも値源にすぎない、の一貫)。DR-104 改稿 + dedup 挙動の再導出が必要
 - 付随: alias 経由候補の origin は canonical 側か alias 入口側か (どちらの案でも要明記)
 
-## 👺 TRG-Q2: 英数を含まない name (dd の "--" 等) への供給変換
-
-snake(name) を dd の name "--" に当てると id が "__" になり、`requires: "--"` (fixtures/constraints-parse/requires-dd-target.json) が absent-ref で壊れる。
-
-- [ ] a: **英数字を 1 文字も含まない name には変換を掛けない (統括推し)** — 変換の定義を「英数字を含む name の underscore↔hyphen 置換」に限定。dd は素通しで無傷、規則がシンプル
-- [ ] b: 掛ける (参照側 fixture も "__" へ追随)
-- [ ] c: dd の name は綴り軸専用で id 軸へ供給しない (DR-120 §4 の「dd の name はトリガ綴り軸にのみ効く」の延長) — ただし requires:"--" の解決根拠を別途規定する必要が生じる
 
 ## 👺 TRG-Q3: effects[].entity / errors[].element はどの軸の綴りか
 
