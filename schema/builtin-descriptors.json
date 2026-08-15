@@ -1,17 +1,22 @@
 {
   "$comment": "kuu builtin registry 住人の宣言集合 — 各エントリは schema/descriptor.schema.json に適合する。正本は docs/decisions/DR-095-builtin-descriptor-reasons.md (§3 filters / §4 factories) + DR-107-descriptor-orthogonal-axes.md (role/construction/io_type/output_mode/fallibility/invocation の直交軸) + DR-114-universal-fn-integration.md (cell_fns / fn role / observes / tagged Sentinel) + DR-117-completion-generator-abi.md (§7 completers)。DR-095 §射程外の通り、installer 発生源 (missing_operand 等) と constraint 系 reason (required_violated 等) は本ファイルの対象外 — 前者はエンジン構造の発生源で installer descriptor 側の宣言軸が未実体化、後者は constraint installer (DR-047/055) 側で別途宣言が必要。トップレベル区分名 (filters/cell_fns/types/accumulators/completers/providers) は DESIGN §13.1 の registry 区分名 (呼ばれるフィールド名の単位) を踏襲し、descriptor の `role` (DR-107) とは独立 — `types` registry 住人は `role:\"type_parser\"` を持つ (registry 区分名と role は別軸)。accumulators 区分は append/merge/kv_map の 3 住人 (DR-111 §3)、completers 区分は shell 委譲表に対応する files/dirs の 2 住人 (DR-117 §7) を収載する。types 区分には builtin ns の factory に加えて **fixture ns (conformance 専用 namespace、DR-128 §12 / DR-132) の仮想型住人**も収載する — 提供義務は conformance 実行文脈での解決可能性のみで、通常 registry への常設は実装裁量かつ安定性保証外 (DR-132 §1)。",
   "$schema-ref": "descriptor.schema.json",
-
   "filters": {
     "trim": {
       "name": "trim",
       "role": "filter",
       "construction": "static",
       "domain": "scalar",
-      "io_type": { "input": "string", "output": "string" },
+      "io_type": {
+        "input": "string",
+        "output": "string"
+      },
       "output_mode": "transform",
       "fallibility": "total",
-      "invocation": { "encoding": "colon_args", "parameters": [] },
+      "invocation": {
+        "encoding": "colon_args",
+        "parameters": []
+      },
       "reasons": [],
       "description": "文字列前後の ASCII 空白除去 (DESIGN §8.1 piece_filters 例)。fallibility:total (常に成功、DR-095 §3) — 非 string 入力は素通し (kuu.mbt filter_trim の defensive 実装、value_filters/piece_filters は string→string 契約前提なので通常到達しない)。"
     },
@@ -20,11 +25,19 @@
       "role": "filter",
       "construction": "static",
       "domain": "scalar",
-      "io_type": { "input": "string", "output": "string" },
+      "io_type": {
+        "input": "string",
+        "output": "string"
+      },
       "output_mode": "preserve",
       "fallibility": "reject",
-      "invocation": { "encoding": "colon_args", "parameters": [] },
-      "reasons": ["empty_value"],
+      "invocation": {
+        "encoding": "colon_args",
+        "parameters": []
+      },
+      "reasons": [
+        "empty_value"
+      ],
       "description": "空文字列を拒否する preserve+reject filter (DESIGN §8.1、DR-040 §filters 最小セット)。failure mode は空文字列の 1 種のみ。reason 名は docs/issue/2026-07-08-schema-materialization-and-reason-descriptors.md SCH-Q3-b の提示をそのまま採用 (DR-066 §3 v1 表には対応語彙が無いため DR-095 で builtin ns に新設)。"
     },
     "in_range": {
@@ -32,17 +45,33 @@
       "role": "filter",
       "construction": "static",
       "domain": "scalar",
-      "io_type": { "input": "number", "output": "number" },
+      "io_type": {
+        "input": "number",
+        "output": "number"
+      },
       "output_mode": "preserve",
       "fallibility": "reject",
       "invocation": {
         "encoding": "colon_args",
         "parameters": [
-          { "name": "min", "type": "number", "required": true, "constraint": "対象型の canonical number、負数・小数に制約なし (DR-105 §5(a))" },
-          { "name": "max", "type": "number", "required": true, "constraint": "min <= max は definition-time 検査 (kind=invalid-range)、対象型の canonical number、境界は inclusive (DR-105 §5(a))" }
+          {
+            "name": "min",
+            "type": "number",
+            "required": true,
+            "constraint": "対象型の canonical number、負数・小数に制約なし (DR-105 §5(a))"
+          },
+          {
+            "name": "max",
+            "type": "number",
+            "required": true,
+            "constraint": "min <= max は definition-time 検査 (kind=invalid-range)、対象型の canonical number、境界は inclusive (DR-105 §5(a))"
+          }
         ]
       },
-      "reasons": ["too_small", "too_large"],
+      "reasons": [
+        "too_small",
+        "too_large"
+      ],
       "description": "数値の範囲検証 (DESIGN §8.4 例、value_filters/final_filters 両方で使われる — count の上限もここ、DR-040/DR-102)。min 未満 = too_small、max 超過 = too_large。両 reason は DR-066 §2 本文・docs/PIPELINE.md・docs/CONFORMANCE.md §2 に既出 (DR-095 で descriptor 宣言として実体化)。DSL 引数の definition-time 検査規則は DR-105 §5(a) が確立 (ちょうど 2 個・型不一致は invalid-argument・min>max は invalid-range・境界 inclusive)。"
     },
     "regex_match": {
@@ -50,16 +79,26 @@
       "role": "filter",
       "construction": "static",
       "domain": "scalar",
-      "io_type": { "input": "string", "output": "string" },
+      "io_type": {
+        "input": "string",
+        "output": "string"
+      },
       "output_mode": "preserve",
       "fallibility": "reject",
       "invocation": {
         "encoding": "colon_args",
         "parameters": [
-          { "name": "pattern", "type": "string", "required": true, "constraint": "host 方言準拠の正規表現 (DR-085 §2)。compile 可否は definition-time に静的判定 — compile 失敗は kind=invalid-argument (DR-085 §1 / DR-082 §3)、実行時 reason 体系には含まれない。" }
+          {
+            "name": "pattern",
+            "type": "string",
+            "required": true,
+            "constraint": "host 方言準拠の正規表現 (DR-085 §2)。compile 可否は definition-time に静的判定 — compile 失敗は kind=invalid-argument (DR-085 §1 / DR-082 §3)、実行時 reason 体系には含まれない。"
+          }
         ]
       },
-      "reasons": ["pattern_no_match"],
+      "reasons": [
+        "pattern_no_match"
+      ],
       "description": "pattern に対する部分一致検証 (DR-085 §1、unanchored = 部分一致、全体一致は pattern 側の ^$ で表現)。**compile 失敗は本 descriptor の reasons に含めない** — DR-085 §1 / DR-082 §3 により kind=invalid-argument の definition-error に属し、実行時 reason 体系とは別軸 (DR-095 §3 の regex_match 行、DR-083 §5「静的に既知は定義時に倒す」)。実行時に残る failure mode は有効な pattern への不一致のみ。"
     },
     "increment": {
@@ -67,10 +106,16 @@
       "role": "filter",
       "construction": "static",
       "domain": "scalar",
-      "io_type": { "input": "number", "output": "number" },
+      "io_type": {
+        "input": "number",
+        "output": "number"
+      },
       "output_mode": "transform",
       "fallibility": "total",
-      "invocation": { "encoding": "colon_args", "parameters": [] },
+      "invocation": {
+        "encoding": "colon_args",
+        "parameters": []
+      },
       "reasons": [],
       "description": "number→number の total scalar transform filter。引数なしで入力を 1 増加させ、通常の filters seat から明示参照できる。fallibility:total かつ reasons は空で、runtime reason を持たない。"
     },
@@ -79,10 +124,20 @@
       "role": "filter",
       "construction": "static",
       "domain": "array",
-      "io_type": { "input": { "array": "value" }, "output": { "array": "value" } },
+      "io_type": {
+        "input": {
+          "array": "value"
+        },
+        "output": {
+          "array": "value"
+        }
+      },
       "output_mode": "transform",
       "fallibility": "total",
-      "invocation": { "encoding": "colon_args", "parameters": [] },
+      "invocation": {
+        "encoding": "colon_args",
+        "parameters": []
+      },
       "reasons": [],
       "description": "累積後の配列 (Acc→Acc、accum_filters 相、DR-102) から重複要素を除去 (kuu.mbt array_filter_unique、先勝ち順序保持)。fallibility:total 相当 (拒否を持たない純関数、kuu.mbt ArrayFilterDescriptor.run に Result 型が無いことが実装的裏付け)。"
     },
@@ -91,17 +146,37 @@
       "role": "filter",
       "construction": "static",
       "domain": "array",
-      "io_type": { "input": { "array": "value" }, "output": { "array": "value" } },
+      "io_type": {
+        "input": {
+          "array": "value"
+        },
+        "output": {
+          "array": "value"
+        }
+      },
       "output_mode": "preserve",
       "fallibility": "reject",
       "invocation": {
         "encoding": "colon_args",
         "parameters": [
-          { "name": "min", "type": "number", "required": true, "constraint": "非負整数限定 (負数・小数・非整数は kind=invalid-argument、DR-105 §5(a) の length_range 個別規則)" },
-          { "name": "max", "type": "number", "required": true, "constraint": "非負整数限定、min <= max は definition-time 検査 (kind=invalid-range)、境界は inclusive (DR-105 §5(a))" }
+          {
+            "name": "min",
+            "type": "number",
+            "required": true,
+            "constraint": "非負整数限定 (負数・小数・非整数は kind=invalid-argument、DR-105 §5(a) の length_range 個別規則)"
+          },
+          {
+            "name": "max",
+            "type": "number",
+            "required": true,
+            "constraint": "非負整数限定、min <= max は definition-time 検査 (kind=invalid-range)、境界は inclusive (DR-105 §5(a))"
+          }
         ]
       },
-      "reasons": ["too_short", "too_long"],
+      "reasons": [
+        "too_short",
+        "too_long"
+      ],
       "description": "累積後の配列長の範囲検証 (Acc→Acc、accum_filters 相、DR-102)。ARRAY filter registry 最初の Validate 系住人 (DR-105 §4/§5 — ARRAY filter registry の fallibility 確立)。min 未満 = too_short、max 超過 = too_long (scalar filter registry の in_range が持つ too_small/too_large と対の命名、DR-066 の reason 語彙規約)。DSL 呼び出し形は scalar 版 in_range と同型 (コロン区切り DSL) だが bound は非負整数限定 (DR-105 §5(a) の in_range との個別規則差)。"
     },
     "unwrap_single": {
@@ -109,10 +184,18 @@
       "role": "collector",
       "construction": "static",
       "domain": "array",
-      "io_type": { "input": { "array": "value" }, "output": "value" },
+      "io_type": {
+        "input": {
+          "array": "value"
+        },
+        "output": "value"
+      },
       "output_mode": "transform",
       "fallibility": "total",
-      "invocation": { "encoding": "object_args", "parameters": [] },
+      "invocation": {
+        "encoding": "object_args",
+        "parameters": []
+      },
       "reasons": [],
       "description": "累積結果 (T[]→U、collector 相、DR-036) — 長さ 1 配列を要素へ再帰的に畳む (0 個・2 個以上の配列は不変のまま通す、DR-034 縮退ケース)。multiple プリセット `override` の default_collector。domain:array/output_mode:transform/fallibility:total はいずれも collector 役割の const 固定 (DR-107 §7、DR-105 §4「構造畳み装置は total」)。呼び出し規約は filter chain の colon-DSL args とは異なる (multiple.collector の宣言から導出、DR-106、codex レビュー #2 M-21 の反映)。"
     },
@@ -121,32 +204,57 @@
       "role": "collector",
       "construction": "static",
       "domain": "array",
-      "io_type": { "input": { "array": "value" }, "output": { "map": "value" } },
+      "io_type": {
+        "input": {
+          "array": "value"
+        },
+        "output": {
+          "map": "value"
+        }
+      },
       "output_mode": "transform",
       "fallibility": "total",
       "invocation": {
         "encoding": "object_args",
         "parameters": [
-          { "name": "key", "type": "string", "required": false, "description": "指名 2 フィールド用法の key フィールド名、または key 昇格用法の昇格フィールド名 (DR-044)。" },
-          { "name": "value", "type": "string", "required": false, "description": "指名 2 フィールド用法の value フィールド名 (DR-044)。key と組で指定する。" }
+          {
+            "name": "key",
+            "type": "string",
+            "required": false,
+            "description": "指名 2 フィールド用法の key フィールド名、または key 昇格用法の昇格フィールド名 (DR-044)。"
+          },
+          {
+            "name": "value",
+            "type": "string",
+            "required": false,
+            "description": "指名 2 フィールド用法の value フィールド名 (DR-044)。key と組で指定する。"
+          }
         ]
       },
       "reasons": [],
       "description": "累積結果 (T[]→U、collector 相、DR-036/DR-044) — entries 配列形・指名 2 フィールド形・key 昇格形の 3 用法を一本で覆い Map へ変換する。domain:array/output_mode:transform/fallibility:total はいずれも collector 役割の const 固定 (DR-107 §7)。呼び出し規約は filter chain の colon-DSL args とは異なり、multiple.collector の object 形に resident 固有引数を載せる。現 descriptor schema の flat parameters は wire 3 形の排他的 union を表現できないため、key/value の意味を最大限宣言する簡略形に留める。完全な機械宣言は issue descriptor-conformance-promotion-revisit の射程。"
     }
   },
-
   "cell_fns": {
     "set": {
       "name": "set",
       "role": "fn",
       "construction": "static",
-      "io_type": { "output": "value" },
+      "io_type": {
+        "output": "value"
+      },
       "fallibility": "total",
       "invocation": {
         "encoding": "colon_args",
         "parameters": [
-          { "name": "value", "type": "value", "required": true, "repeat": { "min": 1 } }
+          {
+            "name": "value",
+            "type": "value",
+            "required": true,
+            "repeat": {
+              "min": 1
+            }
+          }
         ]
       },
       "observes": [],
@@ -157,9 +265,16 @@
       "name": "default",
       "role": "fn",
       "construction": "static",
-      "io_type": { "output": { "sentinel": "use_default" } },
+      "io_type": {
+        "output": {
+          "sentinel": "use_default"
+        }
+      },
       "fallibility": "total",
-      "invocation": { "encoding": "colon_args", "parameters": [] },
+      "invocation": {
+        "encoding": "colon_args",
+        "parameters": []
+      },
       "observes": [],
       "reasons": [],
       "description": "use_default sentinel を返し、cell を default placeholder へ戻す effect-mode cell operation (DR-114 §2/§9)。"
@@ -168,9 +283,16 @@
       "name": "unset",
       "role": "fn",
       "construction": "static",
-      "io_type": { "output": { "sentinel": "unset" } },
+      "io_type": {
+        "output": {
+          "sentinel": "unset"
+        }
+      },
       "fallibility": "total",
-      "invocation": { "encoding": "colon_args", "parameters": [] },
+      "invocation": {
+        "encoding": "colon_args",
+        "parameters": []
+      },
       "observes": [],
       "reasons": [],
       "description": "unset sentinel を返す effect-mode cell operation (DR-114 §2/§9)。"
@@ -179,9 +301,16 @@
       "name": "empty",
       "role": "fn",
       "construction": "static",
-      "io_type": { "output": { "sentinel": "empty" } },
+      "io_type": {
+        "output": {
+          "sentinel": "empty"
+        }
+      },
       "fallibility": "total",
-      "invocation": { "encoding": "colon_args", "parameters": [] },
+      "invocation": {
+        "encoding": "colon_args",
+        "parameters": []
+      },
       "observes": [],
       "reasons": [],
       "description": "empty sentinel を返し、array / map cell を空にする effect-mode cell operation (DR-114 §2/§9)。"
@@ -190,9 +319,14 @@
       "name": "incr",
       "role": "fn",
       "construction": "static",
-      "io_type": { "output": "number" },
+      "io_type": {
+        "output": "number"
+      },
       "fallibility": "total",
-      "invocation": { "encoding": "colon_args", "parameters": [] },
+      "invocation": {
+        "encoding": "colon_args",
+        "parameters": []
+      },
       "observes": [],
       "reasons": [],
       "description": "ctx.old を任意参照して old + 1 を返す count 更新 cell fn (DR-114 §2/§7)。old は対象 cell の内在状態なので observes edge ではない。暫定契約: 引数なしで number を total に返す。old が absent の場合を含む詳細契約は P3 の kuu.mbt 実装時に確定する。"
@@ -201,15 +335,23 @@
       "name": "borrow",
       "role": "fn",
       "construction": "static",
-      "io_type": { "output": "value" },
+      "io_type": {
+        "output": "value"
+      },
       "fallibility": "total",
       "invocation": {
         "encoding": "colon_args",
         "parameters": [
-          { "name": "source", "type": "string", "required": true }
+          {
+            "name": "source",
+            "type": "string",
+            "required": true
+          }
         ]
       },
-      "observes": ["option:<source>"],
+      "observes": [
+        "option:<source>"
+      ],
       "reasons": [],
       "description": "他 option の値を返す cell fn。observes template を decoded source へ束縛して依存 edge を作り、値不在は null Value を返す (DR-114 §2/§9/§10、DR-131 §1.1)。"
     },
@@ -217,15 +359,23 @@
       "name": "env",
       "role": "fn",
       "construction": "static",
-      "io_type": { "output": "value" },
+      "io_type": {
+        "output": "value"
+      },
       "fallibility": "total",
       "invocation": {
         "encoding": "colon_args",
         "parameters": [
-          { "name": "var", "type": "string", "required": true }
+          {
+            "name": "var",
+            "type": "string",
+            "required": true
+          }
         ]
       },
-      "observes": ["env:<var>"],
+      "observes": [
+        "env:<var>"
+      ],
       "reasons": [],
       "description": "明示した環境値を返す cell fn。値源ラダーの env 席とは別の universal fn 呼び出しで、値不在は null Value を返す (DR-114 §2/§4.1/§10、DR-131 §1.1)。"
     },
@@ -233,12 +383,18 @@
       "name": "uuid",
       "role": "fn",
       "construction": "static",
-      "io_type": { "output": "string" },
+      "io_type": {
+        "output": "string"
+      },
       "fallibility": "total",
       "invocation": {
         "encoding": "colon_args",
         "parameters": [
-          { "name": "version", "type": "string", "required": true }
+          {
+            "name": "version",
+            "type": "string",
+            "required": true
+          }
         ]
       },
       "observes": [],
@@ -249,117 +405,316 @@
       "name": "computed",
       "role": "fn",
       "construction": "static",
-      "io_type": { "output": "value" },
+      "io_type": {
+        "output": "value"
+      },
       "fallibility": "total",
       "invocation": {
         "encoding": "colon_args",
         "parameters": [
-          { "name": "key", "type": "string", "required": true }
+          {
+            "name": "key",
+            "type": "string",
+            "required": true
+          }
         ]
       },
-      "observes": ["system:<key>"],
+      "observes": [
+        "system:<key>"
+      ],
       "reasons": [],
       "description": "system key に対応する計算値を取得して返す cell fn。参照対象は observes template から concrete edge 化し、値不在は null Value を返す (DR-114 §2/§10、DR-131 §1.1)。"
     }
   },
-
   "types": {
     "builtin/number_parser": {
       "name": "builtin/number_parser",
       "role": "type_parser",
       "construction": "factory",
-      "io_type": { "input": "string", "output": "number" },
+      "io_type": {
+        "input": "string",
+        "output": "number"
+      },
       "output_mode": "transform",
       "fallibility": "reject",
-      "invocation": { "encoding": "none", "parameters": [] },
-      "config": {
-        "number_thousand_sep": { "value_type": { "array": "string" }, "default": ["_"], "description": "桁区切り文字集合 (DR-074 §1/§4)。canonical は underscore のみ、カンマは opt-in。" },
-        "number_allow_base_prefix": { "value_type": "bool", "default": false, "description": "0x/0o/0b 整数 + hex float の統合 opt-in (DR-074 §2)。" },
-        "number_leading_zero": { "value_type": "string", "enum": ["decimal", "octal"], "default": "decimal", "description": "先頭 0 の解釈 (DR-074 §4)。canonical は decimal、octal は移植ロック用 opt-in。" }
+      "invocation": {
+        "encoding": "none",
+        "parameters": []
       },
-      "reasons": ["not_a_number"],
+      "config": {
+        "number_thousand_sep": {
+          "value_type": {
+            "array": "string"
+          },
+          "default": [
+            "_"
+          ],
+          "description": "桁区切り文字集合 (DR-074 §1/§4)。canonical は underscore のみ、カンマは opt-in。"
+        },
+        "number_allow_base_prefix": {
+          "value_type": "bool",
+          "default": false,
+          "description": "0x/0o/0b 整数 + hex float の統合 opt-in (DR-074 §2)。"
+        },
+        "number_leading_zero": {
+          "value_type": "string",
+          "enum": [
+            "decimal",
+            "octal"
+          ],
+          "default": "decimal",
+          "description": "先頭 0 の解釈 (DR-074 §4)。canonical は decimal、octal は移植ロック用 opt-in。"
+        }
+      },
+      "reasons": [
+        "not_a_number"
+      ],
       "description": "number/float 共通の value_parser (DR-074 §1、DR-094 §9 案 A の新名 — 旧名 kuu_number_parser)。parse 相 (String→number) は構文不一致で reject しうる (fallibility:reject) — 構文不一致は全て not_a_number に帰着 (inf/nan 規定違反・hex float 未 opt-in 等も含む、DR-074 §1/§2/§7)。DR-066 §3 v1 表所収。"
     },
     "builtin/int_parser": {
       "name": "builtin/int_parser",
       "role": "type_parser",
       "construction": "factory",
-      "io_type": { "input": "string", "output": "number" },
+      "io_type": {
+        "input": "string",
+        "output": "number"
+      },
       "output_mode": "transform",
       "fallibility": "reject",
-      "invocation": { "encoding": "none", "parameters": [] },
-      "config": {
-        "int_round": { "value_type": "string", "enum": ["floor", "ceil", "trunc", "away", "half_floor", "half_ceil", "half_trunc", "half_away", "half_even", "error"], "default": "error", "description": "非整数値の丸めモード 10 種 (DR-075 §2)。canonical default は error。" }
+      "invocation": {
+        "encoding": "none",
+        "parameters": []
       },
-      "reasons": ["not_a_number", "not_an_integer", "int_out_of_range"],
+      "config": {
+        "int_round": {
+          "value_type": "string",
+          "enum": [
+            "floor",
+            "ceil",
+            "trunc",
+            "away",
+            "half_floor",
+            "half_ceil",
+            "half_trunc",
+            "half_away",
+            "half_even",
+            "error"
+          ],
+          "default": "error",
+          "description": "非整数値の丸めモード 10 種 (DR-075 §2)。canonical default は error。"
+        }
+      },
+      "reasons": [
+        "not_a_number",
+        "not_an_integer",
+        "int_out_of_range"
+      ],
       "description": "int の値空間判定 value_parser (DR-075 §1、DR-094 §9 案 A の新名 — 旧名 kuu_int_parser)。not_a_number = number として全く読めない入力。not_an_integer = 非整数値かつ int_round=error のときのみ emit (丸めモードでは丸めて成功するため emit しない、DR-075 §6 が reasons 宣言として明文)。int_out_of_range = 整数値だが canonical 値域 (絶対値 2^53 inclusive、AP2-Q1=a で固定 — DESIGN §3.3「整数の保証精度」、旧「実装定義」規定は superseded) を超える。"
     },
     "builtin/bool_parser": {
       "name": "builtin/bool_parser",
       "role": "type_parser",
       "construction": "factory",
-      "io_type": { "input": "string", "output": "bool" },
+      "io_type": {
+        "input": "string",
+        "output": "bool"
+      },
       "output_mode": "transform",
       "fallibility": "reject",
-      "invocation": { "encoding": "none", "parameters": [] },
-      "config": {
-        "bool_true_values": { "value_type": { "array": "string" }, "default": ["true", "1"], "description": "true と解釈する文字列集合 (DR-074 §3/§4、キー名は DR-100 で bool_ prefix 化)。" },
-        "bool_false_values": { "value_type": { "array": "string" }, "default": ["false", "0", ""], "description": "false と解釈する文字列集合。空文字列を含む (env の FLAG= 対応)。キー名は DR-100 で bool_ prefix 化。" },
-        "bool_case_insensitive": { "value_type": "bool", "default": true, "description": "大小無視で照合するか (DR-074 §3)。false で JSON/TOML 準拠の大小厳密方言。キー名は DR-100 で bool_ prefix 化。" }
+      "invocation": {
+        "encoding": "none",
+        "parameters": []
       },
-      "reasons": ["not_a_bool"],
+      "config": {
+        "bool_true_values": {
+          "value_type": {
+            "array": "string"
+          },
+          "default": [
+            "true",
+            "1"
+          ],
+          "description": "true と解釈する文字列集合 (DR-074 §3/§4、キー名は DR-100 で bool_ prefix 化)。"
+        },
+        "bool_false_values": {
+          "value_type": {
+            "array": "string"
+          },
+          "default": [
+            "false",
+            "0",
+            ""
+          ],
+          "description": "false と解釈する文字列集合。空文字列を含む (env の FLAG= 対応)。キー名は DR-100 で bool_ prefix 化。"
+        },
+        "bool_case_insensitive": {
+          "value_type": "bool",
+          "default": true,
+          "description": "大小無視で照合するか (DR-074 §3)。false で JSON/TOML 準拠の大小厳密方言。キー名は DR-100 で bool_ prefix 化。"
+        }
+      },
+      "reasons": [
+        "not_a_bool"
+      ],
       "description": "bool の value_parser (DR-074 §3、DR-094 §9 案 A)。config キーは factory 名 prefix 正準 (DR-100)。canonical 語彙外の入力 (例 \"yes\") は not_a_bool (DR-066 §3 v1 表、kawaz 裁定 2026-07-08 で追加、SCH-Q5 で自明と確認)。"
     },
     "builtin/tty": {
       "name": "builtin/tty",
       "role": "type_parser",
       "construction": "factory",
-      "io_type": { "input": "string", "output": "bool" },
+      "io_type": {
+        "input": "string",
+        "output": "bool"
+      },
       "output_mode": "transform",
       "fallibility": "reject",
-      "invocation": { "encoding": "none", "parameters": [] },
-      "config": {
-        "tty_stream": { "value_type": "string", "enum": ["stdin", "stdout", "stderr"], "required": true, "description": "tty_provider へ渡すストリーム識別子 (DR-099 §3)。必須 — 未指定 (bare `type: \"tty\"` を含む) は definition-error kind=invalid-range。要素名からの推測はしない (kawaz 裁定 TTY-Q2=(c))。" }
+      "invocation": {
+        "encoding": "none",
+        "parameters": []
       },
-      "reasons": ["not_a_bool"],
+      "config": {
+        "tty_stream": {
+          "value_type": "string",
+          "enum": [
+            "stdin",
+            "stdout",
+            "stderr"
+          ],
+          "required": true,
+          "description": "tty_provider へ渡すストリーム識別子 (DR-099 §3)。必須 — 未指定 (bare `type: \"tty\"` を含む) は definition-error kind=invalid-range。要素名からの推測はしない (kawaz 裁定 TTY-Q2=(c))。"
+        }
+      },
+      "reasons": [
+        "not_a_bool"
+      ],
       "description": "bool を値空間の土台にする preset 型 (DR-099 §1、DR-076 の flag/count と同族の糖衣プリセット)。DR-099 §1「それ以外のすべて (long/short/env 席の宣言可否、multiple、filters、required 充足) は素の bool と完全に同一に振る舞う」の通り、parse 相 (String→bool) は builtin/bool_parser と完全に同一の経路を通り、canonical bool 語彙外の文字列 (例 `--use-color yesplz`) は通常の bool parse と同じく `not_a_bool` で reject する。reasons の帰属は排他的所有ではないグローバル語彙 (`reasons` フィールドの description 参照) なので、`not_a_bool` を builtin/bool_parser と共有 emit することは compositional exemption を必要としない — 素の bool と完全に同一という DR-099 §1 の主張自体が fallibility:reject を要求する。値の由来 (tty_provider の bool 観測、null なら宣言 default) は値源ラダー §11.4 の `default` 席の型依存解決規則であり、この解決自体は failure mode を持たない — fallibility:reject は bool parse 相にのみ由来する。"
     },
     "fixture/int_range": {
       "name": "fixture/int_range",
       "role": "type_parser",
       "construction": "static",
-      "io_type": { "input": "string", "output": { "record": { "start": "int", "end": "int" } } },
+      "io_type": {
+        "input": "string",
+        "output": {
+          "record": {
+            "start": "int",
+            "end": "int"
+          }
+        }
+      },
       "output_mode": "transform",
       "fallibility": "reject",
-      "invocation": { "encoding": "none", "parameters": [] },
-      "reasons": ["not_an_int_range"],
+      "invocation": {
+        "encoding": "none",
+        "parameters": []
+      },
+      "reasons": [
+        "not_an_int_range"
+      ],
       "description": "conformance 専用の record 産出仮想型 (DR-132 §2、fixture ns = DR-128 §12)。実用型ではなく、複合値の pin (DR-127 波及 fixture (2)(5)(6): 値残余のフィールド書き・時系列上書き・sources の座 re-tag、および record null 補形 DR-130 §4.1) の乗り物。string 形は最初に現れる `..` で 1 回だけ分割した全体一致 `A..B` / `A..` / `..B` の 3 形のみ受理し (分割はバックトラックしない表層規則で決定的、DR-132 §2.1)、部分形は欠落フィールドをキーごと持たない部分 presence を産出する (`5..` → `{\"start\": 5}`、DR-127 §3.1)。A/B は canonical default の int 受理輪郭 (anchored、trim なし、DR-074/075) で読み、range 形に読めない綴り (`..` 無し・`..` 単体・構成部の int 不適合) は not_an_int_range で reject する。link 注入経路の operand はフィールド型 int のパーサが読み (DR-127 §3.2)、そこでは builtin/int_parser の reasons が発生源どおり emit される (DR-132 §2.2)。提供義務は conformance 実行文脈での解決可能性のみ (DR-132 §1)。"
     },
     "fixture/json": {
       "name": "fixture/json",
       "role": "type_parser",
       "construction": "static",
-      "io_type": { "input": "string", "output": "value" },
+      "io_type": {
+        "input": "string",
+        "output": "value"
+      },
       "output_mode": "transform",
       "fallibility": "reject",
-      "invocation": { "encoding": "none", "parameters": [] },
-      "reasons": ["not_json"],
+      "invocation": {
+        "encoding": "none",
+        "parameters": []
+      },
+      "reasons": [
+        "not_json"
+      ],
       "description": "conformance 専用の value 産出仮想型 (DR-132 §3、fixture ns = DR-128 §12)。入力 1 トークンを JSON テキスト (RFC 8259) として読み、その値をそのまま返す — 読めない綴りは not_json で reject。value 宣言座の実行時解決系 (DR-127 §2.2 遷移表の map/value 行、fixture (4): セル未確定 / キー不在 → 枝 Reject → 他枝勝ち、vivify 不可) の pin を担う。map out の住人は立てず value で代表 pin する (DR-127 §2.2 で map は value と同挙動)。fixture で使う JSON 値は host 差の出ない範囲 (安全整数・string・bool・null・object/array) に限る (DR-085 §3 と同じ姿勢、DR-132 §3)。提供義務は conformance 実行文脈での解決可能性のみ (DR-132 §1)。"
+    },
+    "fixture/color": {
+      "name": "fixture/color",
+      "role": "type_parser",
+      "construction": "static",
+      "io_type": {
+        "input": "string",
+        "output": [
+          {
+            "tuple": [
+              "int",
+              "int",
+              "int"
+            ]
+          },
+          "string"
+        ]
+      },
+      "output_mode": "transform",
+      "fallibility": "total",
+      "invocation": {
+        "encoding": "none",
+        "parameters": []
+      },
+      "reasons": [],
+      "description": "conformance 専用の union 産出仮想型 (DR-138 波及、fixture ns = DR-132 §1)。union 値の枝並行構築と確定相淘汰 (DR-138) の乗り物。out は tuple [int,int,int] と string の union (DR-137 / DR-126 §1)。string 形は 1 トークンをそのまま string 枝の値として産出する (total — 受理判定を持たない)。tuple 枝へは link の位置書き (`link: \"color[0]\"` 等、DR-127 §2 / DR-137 §4) だけが届き、位置書きの operand は座の type int のパーサが読む (builtin/int_parser の reasons が発生源どおり emit される、DR-127 §3.2)。提供義務は conformance 実行文脈での解決可能性のみ (DR-132 §1)。"
+    },
+    "fixture/shape": {
+      "name": "fixture/shape",
+      "role": "type_parser",
+      "construction": "static",
+      "io_type": {
+        "input": "string",
+        "output": [
+          {
+            "record": {
+              "a": "int"
+            }
+          },
+          {
+            "record": {
+              "a": "int",
+              "b": "int"
+            }
+          }
+        ]
+      },
+      "output_mode": "transform",
+      "fallibility": "reject",
+      "invocation": {
+        "encoding": "none",
+        "parameters": []
+      },
+      "reasons": [
+        "not_a_shape"
+      ],
+      "description": "conformance 専用の union 産出仮想型 (DR-138 波及、fixture ns = DR-132 §1)。tie 規則 (DR-138 §5) の乗り物 — out はフィールド集合の異なる record 2 variant の union で、共有フィールド a の型は variant 間で一致 (DR-127 §2.2 の静的規定を満たす)。共有フィールドへの link 部分書き (`link: \"s.a\"`) が両 variant へ並行着地し、両枝完成・tie・射影後の観測値 ({a:1} vs {a:1,b:null}、DR-130 §4.1) が異なるため ambiguous になる形を pin する。string 形は受理しない (全綴りを not_a_shape で Reject — 関心は link 経路のみの pin 専用住人)。提供義務は conformance 実行文脈での解決可能性のみ (DR-132 §1)。"
     }
   },
-
   "accumulators": {
     "append": {
       "name": "append",
       "role": "accumulator",
       "construction": "static",
-      "io_type": { "input": { "array": "value" }, "output": { "array": "value" } },
+      "io_type": {
+        "input": {
+          "array": "value"
+        },
+        "output": {
+          "array": "value"
+        }
+      },
       "output_mode": "transform",
       "fallibility": "total",
       "invocation": {
         "encoding": "object_args",
         "parameters": [
-          { "name": "flatten", "type": "bool", "required": false, "default": false, "description": "発火値が配列なら要素を 1 段だけ展開して積むダイヤル (DR-105 §1、既定 false = 発火値を丸ごと 1 要素として積む)。append 専用 — 他 accumulator への宣言はキーの存在自体が definition-error kind=invalid-range (DR-105 §2 の存在ベース wrong-seat 判定、この parameters 宣言がその機械可読な根拠、DR-111 §4)。" }
+          {
+            "name": "flatten",
+            "type": "bool",
+            "required": false,
+            "default": false,
+            "description": "発火値が配列なら要素を 1 段だけ展開して積むダイヤル (DR-105 §1、既定 false = 発火値を丸ごと 1 要素として積む)。append 専用 — 他 accumulator への宣言はキーの存在自体が definition-error kind=invalid-range (DR-105 §2 の存在ベース wrong-seat 判定、この parameters 宣言がその機械可読な根拠、DR-111 §4)。"
+          }
         ]
       },
       "reasons": [],
@@ -369,10 +724,20 @@
       "name": "merge",
       "role": "accumulator",
       "construction": "static",
-      "io_type": { "input": { "array": "value" }, "output": { "array": "value" } },
+      "io_type": {
+        "input": {
+          "array": "value"
+        },
+        "output": {
+          "array": "value"
+        }
+      },
       "output_mode": "transform",
       "fallibility": "total",
-      "invocation": { "encoding": "object_args", "parameters": [] },
+      "invocation": {
+        "encoding": "object_args",
+        "parameters": []
+      },
       "reasons": [],
       "description": "マージリスト累積 (DR-080、multiple プリセット merge の accumulator)。piece マーカー語彙 (remove `-x` / splice `@` / escape `+`) の認識と old 合成 (DR-080 §2/§3) は cell 解決相の関心で descriptor の io_type には現れない — 畳み相 (collect) は解決済み piece 値列を素の配列へ畳むのみ。separator 省略時は「発火 1 回 = piece 1 個」の縮退 (fixtures/multiple-parse/merge-no-separator.json、DR-036 表の default_separator \",\" は multiple registry プリセット \"merge\" 側の糖衣内容)。merge × ref は definition-error (DR-084 §3)。"
     },
@@ -380,21 +745,33 @@
       "name": "kv_map",
       "role": "accumulator",
       "construction": "static",
-      "io_type": { "input": { "array": "string" }, "output": { "map": "string" } },
+      "io_type": {
+        "input": {
+          "array": "string"
+        },
+        "output": {
+          "map": "string"
+        }
+      },
       "output_mode": "transform",
       "fallibility": "total",
-      "invocation": { "encoding": "object_args", "parameters": [] },
+      "invocation": {
+        "encoding": "object_args",
+        "parameters": []
+      },
       "reasons": [],
       "description": "piece `k=v` を最初の `=` で分割し Map へ畳む累積 (DR-091 §2)。重複キーは last-wins (DR-015 のあと勝ち規約)。`=` を含まない piece の reject は matcher 手前ゲート (accumulator 到達前の構造検査、kv resident の node 層) であり accumulator 自体の fallibility とは別軸 (DR-105 §4 が明記) — fallibility:total は畳み相に失敗経路が無いことを表す。input が {\"array\":\"string\"} なのは piece が常に k=v 形の生文字列であるため (separator 分割を必要としない「1 token = 1 piece」、DR-091 §2)。"
     }
   },
-
   "completers": {
     "files": {
       "name": "files",
       "role": "completer",
       "construction": "static",
-      "invocation": { "encoding": "none", "parameters": [] },
+      "invocation": {
+        "encoding": "none",
+        "parameters": []
+      },
       "reasons": [],
       "description": "ファイルとディレクトリの一般補完を shell 既存機能へ委譲する builtin completer (DR-117 §7)。生成器は completion_query 応答の :shell_action files を zsh _files / bash compgen -f / fish の対応機構へ翻訳する。completer 関数自体の io_type は宣言しない (DR-117 §8.3)。"
     },
@@ -402,19 +779,30 @@
       "name": "dirs",
       "role": "completer",
       "construction": "static",
-      "invocation": { "encoding": "none", "parameters": [] },
+      "invocation": {
+        "encoding": "none",
+        "parameters": []
+      },
       "reasons": [],
       "description": "ディレクトリのみの補完を shell 既存機能へ委譲する builtin completer (DR-117 §7)。生成器は completion_query 応答の :shell_action dirs を zsh _files -/ / bash compgen -d / fish の対応機構へ翻訳する。completer 関数自体の io_type は宣言しない (DR-117 §8.3)。"
     }
   },
-
   "providers": {
     "env_provider": {
       "name": "env_provider",
       "role": "provider",
       "construction": "static",
-      "io_type": { "input": "string", "output": ["string", "null"] },
-      "invocation": { "encoding": "none", "parameters": [] },
+      "io_type": {
+        "input": "string",
+        "output": [
+          "string",
+          "null"
+        ]
+      },
+      "invocation": {
+        "encoding": "none",
+        "parameters": []
+      },
       "reasons": [],
       "description": "環境変数解決 (DESIGN §12)。散文シグネチャ `(key: string) → string | null` の機械可読化 (DR-107 §6)。key は prefix 連結済みの最終名 (導出は installer 側に閉じる、DR-049)。null=未設定、空文字列は「設定されている」。registry の単一スロット。"
     },
@@ -422,8 +810,19 @@
       "name": "config_provider",
       "role": "provider",
       "construction": "static",
-      "io_type": { "input": "string", "output": [{ "map": "value" }, "null"] },
-      "invocation": { "encoding": "none", "parameters": [] },
+      "io_type": {
+        "input": "string",
+        "output": [
+          {
+            "map": "value"
+          },
+          "null"
+        ]
+      },
+      "invocation": {
+        "encoding": "none",
+        "parameters": []
+      },
       "reasons": [],
       "description": "config ファイル読込 (DESIGN §14.3、DR-050)。散文シグネチャ `(path: string) → object | null` の機械可読化 (DR-107 §6) — パス → JSON 同型の階層オブジェクト、フォーマット・探索・マージは provider の関心。output は map<string,value> で近似 (階層オブジェクトのフィールド構成は動的、固定 struct ではない)。null=読込なし (committed パスの読込失敗は Error、default 由来パスの不在は黙認、実装側の別関心)。registry の単一スロット。"
     },
@@ -431,8 +830,17 @@
       "name": "tty_provider",
       "role": "provider",
       "construction": "static",
-      "io_type": { "input": "string", "output": ["bool", "null"] },
-      "invocation": { "encoding": "none", "parameters": [] },
+      "io_type": {
+        "input": "string",
+        "output": [
+          "bool",
+          "null"
+        ]
+      },
+      "invocation": {
+        "encoding": "none",
+        "parameters": []
+      },
       "reasons": [],
       "description": "tty 判定値解決 (DESIGN §12b、DR-099 §4 / DR-129 §1)。散文シグネチャ `(stream: \"stdin\"|\"stdout\"|\"stderr\") → bool | null` の機械可読化 (DR-107 §6) — input は本来 3 値 enum だが io_type の値語彙にリテラル enum 制約が無いため string で近似 (許容値は本 description で明記)。output はそのストリームが端末か否かの bool 単一で、cygwin pty を含めるか等の判定方言は provider 実装の内側の責務 (特殊判定が要るホストは provider ごと差し替える)。null=提供なし。ambient probe (isatty 呼び出し) は provider 実装の責務に閉じ、評価器はこの純データ返却のみを見る (DR-098 §2、DR-099 でも不変)。registry の単一スロット。"
     }

@@ -599,6 +599,8 @@ enum にならない)。要素に配列があれば `seq` ブランチに展開�
 | `builtin/tty` | factory | bool を値空間の土台にする preset 型 — 暗黙 default = tty 観測 (§3.1 の tty 行・DR-099・DR-129) |
 | `fixture/int_range` | fixture (static) | conformance 専用の record 産出仮想型 (`{start?: int, end?: int}`)。string 形は `A..B` / `A..` / `..B` の 3 形 (最初の `..` で 1 回だけ分割)、部分形は部分 presence を産出。DR-132 §2 |
 | `fixture/json` | fixture (static) | conformance 専用の value 産出仮想型。1 トークンを JSON テキストとして読む。DR-132 §3 |
+| `fixture/color` | fixture (static) | conformance 専用の union 産出仮想型 (`[{tuple:[int,int,int]}, string]`)。string 形は 1 トークンをそのまま string 枝の値として産出、tuple 枝へは link の位置書きだけが届く。DR-137 / DR-138 |
+| `fixture/shape` | fixture (static) | conformance 専用の union 産出仮想型 (共有フィールド `a` を持つ record 2 variant)。tie 規則 (DR-138 §5) の乗り物。string 形は受理しない。 |
 <!-- kuu-lint:end -->
 
 factory の定義側での参照形は `{"name": "<factory名>", "config": {...}}` (canonical default =
@@ -848,6 +850,7 @@ installer 発生源 (下表) は `schema/builtin-descriptors.json` の descripto
 | `parse` | `duplicate_field` | 住人が、同じキーを 2 度産んだ (DR-126 §4 (a) 系 — wire JSON object が表現できない値) |
 | `parse` | `field_type_mismatch` | 宣言済みキーの値が、そのフィールドの type が名乗る `out` と合わない (DR-126 §4 (b)) |
 | `parse` | `output_shape_mismatch` | 産出値そのものが、住人の `io_type.output` 宣言の形と合わない |
+| `parse` | `incomplete_value` | 確定相の完成判定 (DR-138 §1) の失敗 — 書き込みはあるが値が完成値として組み上がらない (union の生存枝ゼロ / 単相 tuple の null 座残り。DR-138 §4) |
 | `constraint` | `required_violated` | `required` の値充足 (DR-047) 失敗 |
 | `constraint` | `required_group_violated` | `required_group` 内のいずれの member も値充足しない (DR-103) |
 | `constraint` | `requires_violated` | `requires` の目的語不足 |
@@ -885,6 +888,7 @@ pin できない** — 定義から注入できる住人は builtin だけで、
 | `not_a_bool` | `builtin/bool_parser` | canonical 語彙外の入力 (例 `"yes"`) |
 | `not_an_int_range` | `fixture/int_range` | range 形 (`A..B` / `A..` / `..B`) に読めない綴り — `..` 無し・`..` 単体・構成部の int 不適合を全て畳む (DR-132 §2.2)。link 注入経路の構成部失敗は `builtin/int_parser` の reasons が発生源どおり出る |
 | `not_json` | `fixture/json` | JSON テキストとして読めない綴り (DR-132 §3) |
+| `not_a_shape` | `fixture/shape` | fixture/shape は string 形を受理しない — 全綴りをこの reason で Reject する (link 経路専用の pin 住人、DR-138 波及) |
 <!-- kuu-lint:end -->
 
 ### 7.6 builtin cell fn が emit する reason

@@ -1,5 +1,13 @@
 # DR-127: link 固定パス DSL の実装可能化 — セル空間 / 値空間の 2 相分解、record 宣言による静的化、器の auto-vivify
 
+> **更新 (DR-137/138、2026-08-16): union 宣言セルの動的規定が supersede された (範囲の正本は
+> DR-138 §9 の逐条表)。** §2.2 union 行の実行時規定 (「合わなければ枝 Reject」) は枝並行着地 +
+> 確定相淘汰へ置換され、§3 の union 器は「適合する全 variant を並行 vivify」へ読み替え、§4 の
+> 時系列適用の射程は**単相セルと union セルの枝内**に限定される (枝間は淘汰 + 後勝ち)。
+> §2.2 union 行の静的規定・§5 (入力側部分注入禁止) を含む他の全規定は不変 — 枝並行構築は
+> 出力側の候補集合であり §5 の入力バッファではない。また DR-137 により §2.2 の遷移表に
+> tuple 行 (定義時静的・vivify 可、器 = 全座 null) が加わった。
+
 > **更新 (DR-130/131、2026-08-01、2026-08-02 EMP-Q1=a 追補): 値残余の座への部分書きは未充足座を null として保持し、nameless tuple は `[null, 2]`、record は `{until: X, since: null}` の形を取りうる。** record の宣言済み欠落フィールドは論理的に null と読む。値残余座で発火時 Reject となる Sentinel fn は `default` / `empty` で、`unset` は null Value を返す。Value 返し fn のうち `ctx.old` を要するものだけが未 vivify の空座で Reject になる。
 
 > 由来: kuu.mbt issue `2026-07-27-link-fixed-path-dsl-unimplemented` を起点にした設計検討 (2026-07-28) と、
