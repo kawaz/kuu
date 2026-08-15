@@ -10,12 +10,13 @@
   "cases": [
     {
       "id": "origin-is-id-spelling-while-spelling-stays-kebab",
-      "why": "args_before 空: 2 つの trigger 候補が出る。`log-file` は綴り軸で `--log-file` (kebab 写像、DR-136 §2/§3)、origin は id 軸で `log_file` — **同じ要素について 2 つの軸の綴りが同時に観測される**。`verbose` は name に記号が無いので spelling `--verbose` / origin `verbose` で従来どおり一致し、分岐が記号入り name 由来であることの対照になる。",
+      "why": "args_before 空: 2 つの trigger 候補が出る。`log-file` は綴り軸で `--log-file` (kebab 写像、DR-136 §2/§3)、origin は id 軸で `log_file` — **同じ要素について 2 つの軸の綴りが同時に観測される**。`log-file` は値を取る long なので、既定 config では `term: \"word_end\"` と `term: \"cont\"` の 2 候補が立つ (`--log-file=` に続けて値を書ける入口があるため、`fixtures/complete/eq-split-cont.json` が pin する規範)。**どちらの候補も origin は id 軸の `log_file`** で、term が違うだけの同一要素由来であることも同時に観測できる。\n\n`verbose` は flag (値を取らない) ので cont 候補は立たず word_end のみ、かつ name に記号が無いので spelling `--verbose` / origin `verbose` で従来どおり一致する — 記号の有無と cont の有無、2 つの対照を兼ねる。",
       "args_before": [],
       "expect": {
         "outcome": "complete",
         "candidates": [
           {"spelling": "--log-file", "is_value": false, "origin": "log_file", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}},
+          {"spelling": "--log-file", "is_value": false, "origin": "log_file", "term": "cont", "meta": {"is_alias": false, "hidden": false, "deprecated": false}},
           {"spelling": "--verbose", "is_value": false, "origin": "verbose", "term": "word_end", "meta": {"is_alias": false, "hidden": false, "deprecated": false}}
         ]
       }

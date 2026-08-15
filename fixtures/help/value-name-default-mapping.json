@@ -16,13 +16,12 @@
       "expect": {
         "outcome": "help",
         "command_path": ["prog"],
-        "usage": {"has_options": true, "positionals": []},
+        "usage": {"has_options": true},
         "options": [
           {"spellings": ["--dry-run"], "value_structure": {"single": {"value_name": "DRY_RUN", "type": "string"}}, "hidden": false, "deprecated": false, "origin": "local"},
           {"spellings": ["--log-file"], "value_structure": {"single": {"value_name": "LOG_FILE", "type": "string"}}, "hidden": false, "deprecated": false, "origin": "local"},
           {"spellings": ["--explicit"], "value_structure": {"single": {"value_name": "path/to/file", "type": "string"}}, "hidden": false, "deprecated": false, "origin": "local"}
-        ],
-        "positionals": []
+        ]
       }
     }
   ]
