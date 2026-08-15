@@ -17,6 +17,8 @@
 
 export_key と value_name は既にこのパターンの実例であり、本 DR は新設 2 軸 (id / display_name) を加えて全体を一般化する。
 
+> **更新 (DR-136、kawaz 裁定 2026-08-15): 綴り軸 `trigger_name` が加わり、デフォルト供給に軸ごとの変換が入る。** CLI 表面の照合綴り (long の基幹綴り / command のトリガ / alias の入口綴り) は `trigger_name` 軸が担い、`name` からのデフォルトは kebab(name)。同時に id / export_key は snake(name)、value_name は UPPER_SNAKE(name)、display_name は name 無変換となる (変換は underscore ↔ hyphen 置換と ASCII 大文字化のみ、明示指定には掛からない)。上表の value_name 行「upper(name)」は DR-136 §1 の表が正本。
+
 ### 2. id はスコープを生成せず、結果にも出ない
 
 スコープ生成 (DR-025) と結果露出は**結果キー軸の責務のまま**。id は参照解決のためだけに存在し、解決は lexical スコープ連鎖 (DR-032 / DR-033) で name と同じ空間を使う。id 未指定なら name が id を兼ねる (後方互換)。
@@ -58,6 +60,7 @@ nameless 要素への参照が不可能になり、目的間の namespace 被り
 - DR-025 / DR-033 (スコープ生成は結果キー軸の責務)
 - DR-029 / DR-032 (ref / link の解決 — 対象は id 軸、解決順は不変)
 - DR-052 (結果キー軸 export_key の確定 — bool の export 廃止)
+- DR-136 (綴り軸 trigger_name の追加と供給変換 — §1 の軸表の現行正本)
 - issue `2026-07-03-alias-normalization-help-completion-installer` (内部 id の利用先)
 - findings F-012 (help メタは AtomicAST 非搬送)
 

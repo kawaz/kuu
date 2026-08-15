@@ -6,7 +6,7 @@
 
 `name` フィールドは以下の3つの役割を兼ねる:
 
-1. **CLI マッチング (軸1)**: long opt の `--name` 生成、short opt のもとになる name、command のトリガ name、positional のヘルプ表示
+1. **CLI マッチング (軸1)**: long opt の `--name` 生成、short opt のもとになる name、command のトリガ name、positional のヘルプ表示 (→ DR-136 で綴り軸 `trigger_name` として分離)
 2. **結果 export key (軸2)**: 結果オブジェクトのキー (デフォルト name そのまま)
 3. **AST 内部参照 (軸3)**: ref/link の参照対象 (scope 内で参照識別子が重複禁止)
 
@@ -58,6 +58,7 @@ Claude が `namedExport: boolean | string` のような複合フィールドを�
 - DR-006: 重複禁止の対象は参照識別子 (id) 軸。スコープはセクション間 (options + positionals) にまたがる
 - DR-054 更新 5: 参照識別子の重複を報告する kind `duplicate-id`
 - DR-120: 露出キー軸の重複を報告する kind `export-key-collision`
+- DR-136: 綴り軸 `trigger_name` の分離と、各軸への供給変換 (軸表の現行正本は DR-136 §1)
 
 ## Superseded (歴史)
 
@@ -82,6 +83,10 @@ Claude が `namedExport: boolean | string` のような複合フィールドを�
 ### DR-004 への参照 (現役関連から外した経緯)
 
 旧「関連」セクションに記載されていた `DR-004 (3分割を捨てて or で書く方向に)` は、DR-003 の判断 (= name の役割兼任 + 独立フィールドで分離) とは別軸の議論。現役仕様への影響は DR-024 経由で吸収済みのため、現役関連からは外し参照経緯として記録のみ残す。
+
+### CLI マッチング軸 (軸1) の分離 (DR-136 で更新)
+
+> **更新: DR-136 により、CLI 表面の照合綴りは一級軸 `trigger_name` として分離された (name からのデフォルトは kebab(name))。** 本 DR の軸 1 が「name が CLI 表面の綴りを直接供給する」と読める点は現役仕様ではない。short が明示専用であること、positional が入口綴りを持たないことは DR-136 §2 が引き継ぐ。
 
 ### name の全軸兼任 (DR-046 で再解釈)
 

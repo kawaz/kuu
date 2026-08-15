@@ -23,7 +23,9 @@
 
 ### 3. short は不変
 
-short は variant 概念を持たず「presence + 綴り」を文字列 1 つで表現する。対称性は「入口軸が 1 フィールド」という形で回復する (型の違いは情報量の差 — long の綴りは name 由来で決まる)。
+short は variant 概念を持たず「presence + 綴り」を文字列 1 つで表現する。対称性は「入口軸が 1 フィールド」という形で回復する (型の違いは情報量の差 — long の基幹綴りは `trigger_name` 軸が供給する)。
+
+> **更新 (DR-136、kawaz 裁定 2026-08-15): 「long の綴りは name 由来で決まる」を訂正。** 綴りの供給元は一級軸 `trigger_name` (name からのデフォルトは kebab(name)) であり、name を直取りするのではない。variant の affix 構造と合成する点 (DR-011) は不変で、合成の素が name から trigger_name に変わる。short が明示専用で name から導出されないこと (本節の主張) は不変。
 
 ## 採用しなかった案
 

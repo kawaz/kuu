@@ -111,10 +111,11 @@ wire 正規形のノードが持ちうる全属性。型・既定値・適用対
 | `self` | `"drop"` \| `"keep"` | `"drop"` | `type:"dd"` の要素 |
 | `seq` | array[node] | なし | 枝ノード |
 | `short` | string | なし | option 要素 |
+| `trigger_name` | string | kebab(name) 導出 | 入口綴りを持つ要素 (long / command / alias) |
 | `type` | registryIdentifier | なし | 葉ノード / 任意ノード (糖衣プリセット選択) |
 | `value` | any | なし | 実体だけノード |
 | `value_filters` | filterChain | type 継承 | 値要素 |
-| `value_name` | string | uppercase 導出 | 値要素 (表示メタ) |
+| `value_name` | string | UPPER_SNAKE(name) 導出 | 値要素 (表示メタ) |
 <!-- kuu-lint:end -->
 
 正本: `schema/wire.schema.json` の `$defs.node.properties` (本表と 1:1 対応、`just lint-reference`
@@ -124,23 +125,48 @@ wire 正規形のノードが持ちうる全属性。型・既定値・適用対
 
 #### 名前・識別子
 
+**名前軸まとめ表** — `name` は各軸のデフォルト供給源であり、それ自体は CLI 表面にも結果にも
+直接現れない。供給時にだけ軸ごとの慣習的変換が掛かる (明示指定には掛からない)。正本: DR-136 §1。
+
+| 軸 | フィールド | 役割 | 結果露出 | `name` からのデフォルト |
+|---|---|---|---|---|
+| 綴り (トリガ) | `trigger_name` | CLI 表面の照合綴り | しない | kebab(name) — underscore → hyphen |
+| 参照識別子 | `id` | ref / link の解決対象 | しない | snake(name) — hyphen → underscore |
+| 結果キー | `export_key` | 結果オブジェクトのキー、スコープ生成 | する | snake(name) |
+| 値プレースホルダ | `value_name` | help / usage の `<PLACEHOLDER>` | しない | UPPER_SNAKE(name) |
+| 説明ラベル | `display_name` | help の人間可読名 | しない | name (無変換) |
+
+`{"name": "dry_run"}` と `{"name": "dry-run"}` はこの表を通ると全軸で同じ結果に落ちる
+(`--dry-run` / `dry_run` / `dry_run` / `DRY_RUN`)。
+
 **`name`**
-名前軸 (key name / def name) のデフォルト供給源。配置で役割が決まる — `options[]`/`positionals[]`/
-`commands[]` に置けば key name (結果キー + lexical スコープを作る)、`definitions` 配下に置けば
-def name (ref/link 対象、結果非露出)。`id` 未指定なら参照識別子も name が供給し、同一 lexical
+各名前軸のデフォルト供給源 (上のまとめ表)。汎用の名前系値源であり、**ハイフンも書ける** —
+綴り面が kebab に、キー面が snake に落ちることは軸ごとの供給変換が保証する (DR-136 §4)。
+配置で役割が決まる — `options[]`/`positionals[]`/`commands[]` に置けば key name (結果キー +
+lexical スコープを作る)、`definitions` 配下に置けば def name (ref/link 対象、結果非露出)。
+`id` 未指定なら参照識別子も name が供給し、同一 lexical
 スコープで参照識別子が重複する定義は definition-error `duplicate-id` (alias 要素は入口だけの存在で
 参照識別子を占有しないので参加しない。command は参加する — 綴り軸の重複は別層で、静的 warn + 実行時
 ambiguous が仲裁する)。禁止されるのは軸の値の重複であって name の綴りが揃うこと自体ではない
 — 明示 `id` / `export_key` で軸を割れば同名でも合法。
 最小例: `{"name": "verbose", "type": "flag", "long": true}`
-正本: DESIGN §2.1, §2.3, DR-024, DR-025, DR-054
+正本: DESIGN §2.1, §2.3, DR-024, DR-025, DR-054, DR-136 §1/§4
 
 **`id`**
 参照識別子。ref/link の解決対象になるが、結果には露出せずスコープも作らない。nameless 要素に
 ref/link したい場合に単独で付与する。同名要素へ明示 `id` を割れば参照識別子が分かれるので
 `duplicate-id` を避けられる。
 最小例: `{"id": "color_template", "type": "string"}`
-正本: DESIGN §2.1, DR-046
+正本: DESIGN §2.1, DR-046, DR-136 §1
+
+**`trigger_name`**
+綴り軸 — CLI 表面に現れる照合綴り。`long` の基幹綴り (`--<trigger_name>`)、`command` のトリガ
+綴り、`alias` の入口綴りを供給する。未指定なら kebab(name) が供給し、明示値には変換を掛けない
+(`{"trigger_name": "dry_run"}` はそのまま `--dry_run` を植える)。`positional` は入口綴りを持たず、
+`short` は明示専用で本軸から導出しない。`exact` 葉 / `values` 糖衣は literal の直値で name 由来では
+ないため無関係。variant の affix 構造との合成 (DR-011) は本軸の値を素に行う。
+最小例: `{"name": "dry_run", "type": "flag", "long": true, "trigger_name": "dryrun"}`
+正本: DR-136 §1〜§3, DR-071 §3, DR-057 §3
 
 **`type`**
 `definitions.types` / `registry.types` への型参照糖衣。解決順は `definitions.types.X →
@@ -234,9 +260,10 @@ command-scope/mid-global-repropagation.json`)。
 #### CLI 起動
 
 **`long`**
-long 入口。`true` = `[":set"]` の糖衣 (主入口のみ)。variant の各 item は colon-string または 1 段 array of string で、`["no","set","false"]` と `"no:set:false"` は同じ `cell_fns` 呼び出し。2 部品目が fn 名、後続部品が args となり、`set` / `default` / `unset` / `empty` に限らず任意の適合 cell fn を呼べる。同じ列で string / array を混在でき、array of array は受け入れない。`absent = false = [] = 入口なし` は全て同義。
+long 入口。基幹綴りは `trigger_name` 軸が供給する (`--<trigger_name>`、既定は kebab(name))。
+`true` = `[":set"]` の糖衣 (主入口のみ)。variant の各 item は colon-string または 1 段 array of string で、`["no","set","false"]` と `"no:set:false"` は同じ `cell_fns` 呼び出し。2 部品目が fn 名、後続部品が args となり、`set` / `default` / `unset` / `empty` に限らず任意の適合 cell fn を呼べる。同じ列で string / array を混在でき、array of array は受け入れない。`absent = false = [] = 入口なし` は全て同義。
 最小例: `{"name":"verbose","long":true}` / `{"name":"label","long":[["tag","set","a:b"]]}`
-正本: DESIGN §7.1, §7.3〜7.5, DR-071, DR-114 §2/§6
+正本: DESIGN §7.1, §7.3〜7.5, DR-071, DR-114 §2/§6, DR-136 §2
 
 **`short`**
 文字列の各文字が個別 short オプションになる (variant 概念を持たない)。
@@ -245,11 +272,11 @@ long 入口。`true` = `[":set"]` の糖衣 (主入口のみ)。variant の各 i
 
 **`alias`**
 canonical 実体への別入口参照 (参照ファミリーの 3 人目: `ref` = 構造継承 / `link` = 値同期 /
-`alias` = 別入口)。効果は canonical の実体セルへ、結果キーは canonical のみ。name から導出される
-入口 (long 配列・command 名照合) は alias の name で再導出されるが、明示綴り (`short` 等) は
-継承しない。
+`alias` = 別入口)。綴り軸の別名を追加する入口ノードで、効果は canonical の実体セルへ、結果キーは
+canonical のみ。入口綴りは alias ノード自身の `trigger_name` (既定 kebab(alias の name)) が供給し、
+canonical の variant 構造がその綴りで再導出される。明示綴り (`short` 等) は継承しない。
 最小例: `{"alias": "port", "short": "n"}`
-正本: DESIGN §14.5, DR-057
+正本: DESIGN §14.5, DR-057, DR-136 §5
 
 **`deprecated`**
 非推奨マーカー。受理は不変 (パース挙動に影響しない)、起動時に `ParserContext.warnings` へ構造化
@@ -429,10 +456,11 @@ UsefulAST 層 (各言語 DX) の関心。
 **`value_name`**
 型: string。適用対象: 値要素。
 意味論: help/usage の値プレースホルダ表示 (`<PLACEHOLDER>`)。指定なしなら key name / type 名 /
-def name を uppercase 化 (ASCII 英字のみ、非 ASCII はそのまま) して導出。ref 継承 + 入口側での
+def name を UPPER_SNAKE 化 (snake 化してから ASCII 英字を大文字化。非 ASCII はそのまま) して導出
+(DR-136 §1/§3 — `key-file` も `key_file` も `KEY_FILE`)。ref 継承 + 入口側での
 上書きが可能。
 最小例: `{"name": "port", "type": "int", "value_name": "PORT"}`
-正本: DESIGN §2.1〜2.2, DR-024, DR-046 §1/§3
+正本: DESIGN §2.1〜2.2, DR-024, DR-046 §1/§3, DR-136 §1/§3
 
 **`help_group_name`** / **`help_group_title`** / **`help_group_description`**
 型: いずれも string。適用対象: `options[]` の通常 entry (所属参照) / グループ宣言エントリ (宣言)。commands はグループ化しない。
