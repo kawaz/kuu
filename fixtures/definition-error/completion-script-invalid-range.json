@@ -19,7 +19,7 @@
       "expect": {
         "outcome": "definition-error",
         "errors": [
-          {"element": "completion-default-collision", "kind": "invalid-range"}
+          {"element": "completion_default_collision", "kind": "invalid-range"}
         ]
       }
     }

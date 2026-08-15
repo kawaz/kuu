@@ -35,12 +35,19 @@ DR-060 §2 のシグネチャ `{before, word, word_suffix?, after?}` を、`args
 | `spelling` | exact 候補の綴り (素の文字列)。`is_value:true` では意味を持たず省略可 (構造等価規約により省略 = `""` と等価、`Cand.spelling` の実装既定値と一致) | `is_value:false` では実質必須 |
 | `is_value` | この候補が exact トリガ綴りか値位置かの区別 | 必須 |
 | `ty` | 値位置候補の型 (`definition` の `type` 参照と同じ語彙、`"string"`/`"number"`/`"int"`/`"float"`/`"bool"`/`"flag"`/`"count"`/`"none"` 等)。`is_value:true` の時のみ意味を持つ | `is_value:true` では実質必須 |
-| `origin` | 由来要素名 | 必須 |
+| `origin` | 由来要素の参照識別子 (id) | 必須 |
 | `term` | 終端ヒント (`Cand.term`、`TermHint` の直列化): `"word_end"` (確定、スペース可) / `"cont"` (継続、`--key=` の後等スペース不可) | 必須 |
 | `meta` | `{is_alias, hidden, deprecated}` (`CandMeta` 直訳) | **必須 — 省略不可** (§3 参照) |
 | `completer` (optional) | 値位置候補の completer 名 (DR-060 §3「値位置: 型情報 + completer 名」)。**wire には持たせるが fixture では opt-in 検証** (書けば検証、書かなければ未検証) — 参照実装の `Cand` にはまだ completer 名フィールドが存在せず (`node.mbt:644-652`)、実装側の追随タスクとして残る | opt-in |
 
-`Cand.path` (祖先 scope 経路、DR-066 §4 由来) は **wire に含めない**。§3 の候補同一性判定から明示的に除外されている値であり (dedup 規則がまさに「path の違いを無視する」ことを目的とする)、含めても比較に使えない中途半端なフィールドになる。DR-073 の `claimants` のような「実体を区別する精密化」路線は本 DR では採らない — `origin` (由来要素名の文字列) までを候補同一性の粒度とする (§3)。
+> **更新 (TRG-Q1=b、kawaz 裁定 2026-08-15): `origin` は要素の生 name ではなく**参照識別子 (id)** を綴る。** name は各軸への値源にすぎない (DR-136 §1) ので、観測面が名乗るのは軸の値 — すなわち明示 `id` があればその値、無ければ name に id 軸の文字写像 (DR-136 §3) を掛けた値である。`effects[].entity` / `errors[].element` を id で綴る規範 (TRG-Q3=a、CONFORMANCE §2) と同じ軸に揃う。
+>
+> - **name と id が一致する要素では従来と同じ綴り**になる (ASCII 英数だけの name は写像で変化しない)。分岐するのはハイフン等の記号を含む name と、明示 `id` を持つ要素だけである
+> - **alias 経由の候補は canonical の id** — alias は id 軸を占有しない (DR-054 更新 5 / DR-120 §4) ので、指す先である canonical の参照識別子を名乗る。下記 (c) の「canonical 要素名を指す」がそのまま id 語彙になった形で、`fixtures/complete/meta.json` の pin (alias 候補の origin が canonical の `port`) は無変更で通る
+> - **匿名要素の fallback は不変** — 名前も id も持たない要素は参照識別子を持たないので、note (iii) の「spelling 自身を origin にする」fallback がそのまま生きる (`fixtures/complete/anonymous-exact-origin.json`)
+> - **dedup (§3 の 6 フィールド同一性) の粒度は「id の文字列一致」になる** — 同一 id を名乗る候補どうしが畳まれる。DR-073 の「実体 entity 水準への精密化は採らない」方針は不変で、比較するのは id の文字列であって実体の同一性ではない
+
+`Cand.path` (祖先 scope 経路、DR-066 §4 由来) は **wire に含めない**。§3 の候補同一性判定から明示的に除外されている値であり (dedup 規則がまさに「path の違いを無視する」ことを目的とする)、含めても比較に使えない中途半端なフィールドになる。DR-073 の `claimants` のような「実体を区別する精密化」路線は本 DR では採らない — `origin` (由来要素の参照識別子の文字列) までを候補同一性の粒度とする (§3)。
 
 > **明確化 (統括検証 2026-07-14、codex レビュー #2 の反映):**
 >
@@ -64,7 +71,7 @@ DR-060 §2 のシグネチャ `{before, word, word_suffix?, after?}` を、`args
 
 **2 つの候補が同一とみなされるのは、`spelling`/`is_value`/`ty`/`origin`/`term`/`meta` の 6 フィールドが完全一致する場合に限る。** 参照実装 (`kuu.mbt` `outcome.mbt:316-343` の `complete()` 内 dedup ループ) が既に pin している規則をそのまま spec へ格上げする — 実装コメントの論拠 (`outcome.mbt:322-326`)「DR-060 §1 の "union of what's readable" is a union over SPELLINGS, not over the scopes that offer them」を正とする。異なる祖先 scope 経由で供給された同一綴りの候補は 1 件に畳まれる。
 
-候補同一性の空白は DR-060/DR-066/DR-073 のいずれにも規定が存在しなかった (`docs/findings/2026-07-14-completion-constraint-and-identity.md` 調査項目 1 が確定させた事実)。`origin` (要素名の文字列) までを同一性の粒度とし、link/ref 越しの実体 id までの精密化 (DR-073 の「実体 entity」水準) は本 DR では採らない — `origin` の文字列一致で十分という実装の既定路線を追認する。
+候補同一性の空白は DR-060/DR-066/DR-073 のいずれにも規定が存在しなかった (`docs/findings/2026-07-14-completion-constraint-and-identity.md` 調査項目 1 が確定させた事実)。`origin` (参照識別子の文字列) までを同一性の粒度とし、link/ref 越しの実体 id までの精密化 (DR-073 の「実体 entity」水準) は本 DR では採らない — `origin` の文字列一致で十分という実装の既定路線を追認する。
 
 > **明確化 (統括検証 2026-07-14、codex レビュー #2 の反映): 候補同一性の規範は上記太字文の「6 フィールド record 完全一致」のみであり、実装コメントが引用する「union over SPELLINGS」は spelling 単独の dedup 基準ではない。** 「union over SPELLINGS, not over the scopes that offer them」という論拠は、**path (祖先 scope 経路) を同一性の成分から除外する**論拠として引用されているのであって、「spelling が同じなら他のフィールドを無視して畳む」という意味ではない。同じ綴り (spelling) でも `origin` が異なる候補 (DR-041 §4 が合法とする「同一スコープ内で異なる origin の要素が同じトリガ綴りを持つ」重複トリガのシナリオ) は、6 フィールド規則により dedup されず 2 件のまま併存する。`completer` は同一性の成分ではない (6 フィールドに含まれない) — 6 フィールドが完全一致すれば `completer` だけが異なる候補は同一候補として扱われる。この場合にどちらの `completer` を残すかの merge 規則は、`completer` の実装追随時 (§2(d) 参照) に確定する。
 

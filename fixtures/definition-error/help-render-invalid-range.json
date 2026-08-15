@@ -13,12 +13,12 @@
     "id": "help-render-invalid-range-collected",
     "why": "DR-115 §1.1/§1.2/§2.4/§5 と DR-082 §1 の集合比較により、6 種の違反 (席違い / value_structure_style 値域外 / entry 個別席値域外 / origin_style 値域外 / types_style 値域外 / template 構文不正) が独立に invalid-range として積まれる。opt-scope-mistake は席違いが理由で opt-bad-* とは違う軸 (§1.1) だが同 kind に帰着する。",
     "expect": {"outcome": "definition-error", "errors": [
-      {"element": "opt-scope-mistake", "kind": "invalid-range"},
-      {"element": "opt-bad-value-style", "kind": "invalid-range"},
-      {"element": "opt-bad-entry-style", "kind": "invalid-range"},
-      {"element": "opt-bad-origin-style", "kind": "invalid-range"},
-      {"element": "opt-bad-types-style", "kind": "invalid-range"},
-      {"element": "opt-bad-template", "kind": "invalid-range"}
+      {"element": "opt_scope_mistake", "kind": "invalid-range"},
+      {"element": "opt_bad_value_style", "kind": "invalid-range"},
+      {"element": "opt_bad_entry_style", "kind": "invalid-range"},
+      {"element": "opt_bad_origin_style", "kind": "invalid-range"},
+      {"element": "opt_bad_types_style", "kind": "invalid-range"},
+      {"element": "opt_bad_template", "kind": "invalid-range"}
     ]}
   }]
 }

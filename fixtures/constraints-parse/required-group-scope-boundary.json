@@ -1,5 +1,5 @@
 {
-  "why": "constraint 系 (required_group / exclusive_group / conflicts_with) の scope 境界挙動を pin する — SCB-Q1=a (kawaz 裁定 2026-07-17、docs/QUESTIONS.md の SCB batch、DR-103 §5 明確化 note): **未選択 (= 当該実行で入場していない) command scope に宣言された遅延述語は評価に参加しない**。原理は「グローバルオプション以外、サブコマンドは完全に別コマンドと見るべき」で、root scope (path=[]) は常に選択済み。constraint installer は各要素の group ラベルを **その要素が属する scope 内で集約**し、遅延述語をその scope の完全解決経路の成立条件として立てる — サブコマンド (子 scope、DR-018/025/041 §4) は独立した背骨・独立した完全経路を持つため、同名 group ラベルであっても親 scope の member と子 scope の member は別集合として集約される (集約は scope 内、越境しない、SCB-Q2=a)。異なる子 scope 間の同名 group も互いに独立の 2 述語。本 fixture は required_group で 3 属性共通の scope 境界規範を pin (constraint 系の scope 集約規範は 3 属性共通、DR-103 §5)。member を positional/option 混在にせず単純化 (constraint 系の positional 対応は `required-group-positional.json` 等の別 fixture が pin)。\n\n**group ラベルを scope ごとに分ける** (root=gr / child-a=ga / child-b=gb) 理由: 同名 label にすると constraint 違反 (`{element:g, args_pos, path}`) が別 scope 由来でも `element` が同じになり、DR-066 §4 の command scope 境界での path prepend + エラー dedup で **root scope 発の違反も child scope 発の違反も 1 件に潰れて区別できなくなる**。異名にすると `element` で由来を追えるため、gate の効き (未選択 child の述語が本当に評価から外れているか) を errors の element 顔ぶれで観測できる。",
+  "why": "constraint 系 (required_group / exclusive_group / conflicts_with) の scope 境界挙動を pin する — SCB-Q1=a (kawaz 裁定 2026-07-17、docs/QUESTIONS.md の SCB batch、DR-103 §5 明確化 note): **未選択 (= 当該実行で入場していない) command scope に宣言された遅延述語は評価に参加しない**。原理は「グローバルオプション以外、サブコマンドは完全に別コマンドと見るべき」で、root scope (path=[]) は常に選択済み。constraint installer は各要素の group ラベルを **その要素が属する scope 内で集約**し、遅延述語をその scope の完全解決経路の成立条件として立てる — サブコマンド (子 scope、DR-018/025/041 §4) は独立した背骨・独立した完全経路を持つため、同名 group ラベルであっても親 scope の member と子 scope の member は別集合として集約される (集約は scope 内、越境しない、SCB-Q2=a)。異なる子 scope 間の同名 group も互いに独立の 2 述語。本 fixture は required_group で 3 属性共通の scope 境界規範を pin (constraint 系の scope 集約規範は 3 属性共通、DR-103 §5)。member を positional/option 混在にせず単純化 (constraint 系の positional 対応は `required-group-positional.json` 等の別 fixture が pin)。\n\n**軸ごとの綴り**: 子 command の name は `child-a` / `child-b` なので、CLI トリガ綴りは kebab のまま `child-a` (args)、結果キー軸と result path の segment は id 系の写像で `child_a` / `child_b` になる (DR-136 §1/§3)。args と result で綴りが違うのは軸が違うためであり、この fixture はその分離も同時に観測している。\n\n**group ラベルを scope ごとに分ける** (root=gr / child-a=ga / child-b=gb) 理由: 同名 label にすると constraint 違反 (`{element:g, args_pos, path}`) が別 scope 由来でも `element` が同じになり、DR-066 §4 の command scope 境界での path prepend + エラー dedup で **root scope 発の違反も child scope 発の違反も 1 件に潰れて区別できなくなる**。異名にすると `element` で由来を追えるため、gate の効き (未選択 child の述語が本当に評価から外れているか) を errors の element 顔ぶれで観測できる。",
   "query": "parse",
   "definition": {
     "options": [
@@ -17,7 +17,7 @@
     "commands": [
       {
         "type": "command",
-        "name": "child-a",
+        "name": "child_a",
         "options": [
           {
             "name": "a1",
@@ -43,7 +43,7 @@
       },
       {
         "type": "command",
-        "name": "child-b",
+        "name": "child_b",
         "options": [
           {
             "name": "b1",
@@ -78,8 +78,8 @@
         ],
         "result": {
           "r1": true,
-          "child-a": null,
-          "child-b": null
+          "child_a": null,
+          "child_b": null
         }
       }
     },
@@ -115,7 +115,7 @@
             "kind": "constraint",
             "reason": "required_group_violated",
             "path": [
-              "child-a"
+              "child_a"
             ]
           },
           {
@@ -124,7 +124,7 @@
             "kind": "constraint",
             "reason": "required_group_violated",
             "path": [
-              "child-a"
+              "child_a"
             ]
           }
         ]
@@ -146,7 +146,7 @@
             "kind": "constraint",
             "reason": "required_group_violated",
             "path": [
-              "child-a"
+              "child_a"
             ]
           }
         ]
@@ -178,11 +178,11 @@
         ],
         "result": {
           "r1": true,
-          "child-a": {
+          "child_a": {
             "a1": true,
             "a2": null
           },
-          "child-b": null
+          "child_b": null
         }
       }
     },
@@ -201,7 +201,7 @@
             "kind": "constraint",
             "reason": "required_group_violated",
             "path": [
-              "child-b"
+              "child_b"
             ]
           },
           {
@@ -210,7 +210,7 @@
             "kind": "constraint",
             "reason": "required_group_violated",
             "path": [
-              "child-b"
+              "child_b"
             ]
           }
         ]

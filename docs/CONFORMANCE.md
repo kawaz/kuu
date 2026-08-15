@@ -73,7 +73,7 @@ fixture が期待する outcome の代わりに `kind: "unsupported"` の defini
 ```
 
 - **`effects` が判定の正本** (主 oracle、LOWERING §C.5)。要素は `{entity, path?, op, operand?, source}`。**配列順 = 適用順** (効果列の順序は同一性成分、DR-038/045)
-  - `entity`: 実体 (値セル) の name / id
+  - `entity`: 実体 (値セル) の**参照識別子 (id)** — 明示 `id` があればその値、無ければ name に id 軸の文字写像 (DR-136 §3) を掛けた値 (TRG-Q3=a、kawaz 裁定 2026-08-15)。name そのものではない
   - `path`: optional な name (string) / index (integer) segment 配列。`entity` から実際の着地座までの観測アドレスで、nameless 透過子や複合値内部の座を指す (DR-127 §6)。index は解決済みの非負値。省略は `[]` (= entity 自身への着地) と等価
   - `op`: DR-131 §6 の 3 op (`set` / `default` / `empty`) + DR-080 §2 の merge accumulator piece op のうち集合演算系 2 種 (`remove` / `splice`。add piece は通常の set として現れる、DR-080 §4)。計 5 op:
 
@@ -109,7 +109,7 @@ fixture が期待する outcome の代わりに `kind: "unsupported"` の defini
 
   **内部セルは射影しない**: `type: "none"` (DR-089) / dd trigger (DR-064) は `effects` / `result` / `sources` のいずれにも現れない。**`config_file` はここに含まれない** — 値 (パス) を持つ通常の値セルなので、露出キーがあれば `result` / `sources` に確定したパスが座り、cli / link 由来の発火は `effects` にも載る (DR-135)。
 
-  `effects[].entity` は**射影前の canonical entity name / id** であり `export_key` を適用しない (DR-045: 効果は cell 単位で記録する。entity は値セルであって露出パスではない)。したがって `effects` は宣言名軸、`result` / `sources` は結果アドレス軸であり、同じ cell でも綴りが異なる — `{"name":"verbose","export_key":"v"}` に `--verbose` を与えた場合、`effects[].entity` は `"verbose"`、`result` / `sources` のキーはともに `"v"` (`fixtures/export-key/rename-flag-default.json`)。
+  `effects[].entity` は**射影前の canonical entity の参照識別子 (id)** であり `export_key` を適用しない (DR-045: 効果は cell 単位で記録する。entity は値セルであって露出パスではない)。したがって `effects` は id 軸、`result` / `sources` は結果アドレス軸であり、同じ cell でも綴りが異なる — `{"name":"verbose","export_key":"v"}` に `--verbose` を与えた場合、`effects[].entity` は `"verbose"`、`result` / `sources` のキーはともに `"v"` (`fixtures/export-key/rename-flag-default.json`)。
 - **report 直下のフィールド名 (`result` / `effects` / `sources` / `warnings` 等) は entity name として予約しない** (SPK-Q2=a): `{"name": "sources"}` のような要素宣言は合法で、definition-error にしない。衝突が起きない構造的根拠 — entity の値は常に `result` **の中の**キーとして現れ (`result.sources`)、report 直下のフィールドとは階層が異なる。`sources` shadow tree のキー (`result` と同じ露出キー、DR-122) も `warnings[].element` (canonical セル参照、DR-058 §2) も結果面 / 宣言面の名前空間であり、report envelope のフィールド名空間とは交差しない。実装が flat な連想構造で report を組む場合の衝突は実装バグであって仕様の禁則対象ではない
 - **`warnings` (optional)**: 起動された deprecated 入口 (DR-058 §2) が積む構造化警告の配列、各要素 `{element, kind}`。`element` は canonical セル参照 (どの入口が deprecated かでなく代替すべき canonical、DR-058 §2)、`kind` は機械可読識別子 (v1 は `"deprecated"`)。ParserContext (DR-016) の warnings — DR-058 §2 による拡張フィールド — の projection であり、effects が cli / link 効果のみである規約は不変 (deprecated 警告はパース成功後の利用推奨であって args 順の効果ではない、filter warn とは別層)。比較は element の集合比較 (順序非規範)、`kind` は fixture 側に書かれた要素でのみ比較する (`errors.reason` と同じ optional 検証、§3)
 

@@ -26,7 +26,7 @@
       "args": [],
       "expect": {
         "outcome": "failure",
-        "errors": [{"element": "--", "args_pos": 0, "kind": "constraint", "reason": "required_violated"}]
+        "errors": [{"element": "__", "args_pos": 0, "kind": "constraint", "reason": "required_violated"}]
       }
     },
     {

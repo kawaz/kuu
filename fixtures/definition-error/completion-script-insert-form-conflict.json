@@ -30,8 +30,8 @@
       "expect": {
         "outcome": "definition-error",
         "errors": [
-          {"element": "completions-long", "kind": "invalid-range"},
-          {"element": "completions-sub", "kind": "invalid-range"}
+          {"element": "completions_long", "kind": "invalid-range"},
+          {"element": "completions_sub", "kind": "invalid-range"}
         ]
       }
     }

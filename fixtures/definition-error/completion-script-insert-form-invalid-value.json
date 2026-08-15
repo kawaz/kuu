@@ -18,7 +18,7 @@
       "expect": {
         "outcome": "definition-error",
         "errors": [
-          {"element": "completions-bad-form", "kind": "invalid-range"}
+          {"element": "completions_bad_form", "kind": "invalid-range"}
         ]
       }
     }

@@ -34,15 +34,15 @@
         "outcome": "definition-error",
         "errors": [
           {
-            "element": "dup-seat",
+            "element": "dup_seat",
             "kind": "invalid-range"
           },
           {
-            "element": "unknown-fn",
+            "element": "unknown_fn",
             "kind": "unknown-vocab"
           },
           {
-            "element": "sentinel-default",
+            "element": "sentinel_default",
             "kind": "invalid-range"
           }
         ]

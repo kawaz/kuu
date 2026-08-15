@@ -24,7 +24,7 @@ CLI 表面に現れる**照合綴り**を担う軸を `trigger_name` として�
 
 **担う**:
 
-- **long の基幹綴り** — `--<trigger_name>`。variant の affix 構造 (DR-011 の prefix) と合成する点は不変で、合成の素が name から trigger_name に変わる
+- **long の基幹綴り** — `--<trigger_name>`。variant の affix 構造 (DR-011 の prefix) と合成する点は不変で、合成の素が name から trigger_name に変わる。**variant DSL は基幹綴りを持たない** — DSL の各 item が持つのは affix (prefix) だけで、主入口の item (`":set"`) は prefix が空文字列である (DR-071 §1)。つまり具象綴りは DSL のどこにも書かれておらず、**基幹綴りの正本は常に trigger_name 軸**であり、DSL は「その綴りに何を前置し、どの cell fn を呼ぶか」だけを語る
 - **command のトリガ照合綴り** — 従来 name を直取りして exact に焼き込んでいた綴り
 - **alias の入口綴り** — §5
 
