@@ -1,5 +1,5 @@
 {
-  "why": "complete mode の child default seat は、消費読みの値 Pending を捨てず、空席 fallback から到達する downstream 候補と合流する。parse の consume/fallback 確定とは異なり、補完は生存 partial の候補和集合を返す。",
+  "why": "complete mode の child default seat は、消費読みの値 Pending を捨てず、空席 fallback から到達する downstream 候補と合流する。parse の consume/fallback 確定とは異なり、補完は生存 partial の候補和集合を返す (DR-060 §1 の「可読なものの和集合」、候補同一性は DR-104 §3)。\n\n**候補は 3 件**: b の値位置候補 / b を空席にした tail の値位置候補 / **`--pair` 自身の再発火トリガ候補** (repeat 宣言により同じ入口がもう一度撃てるので、入口の trigger 候補も同時に可読)。3 件目を落とす実装は「入口は 1 度撃ったら消える」と誤って畳んでいる。",
   "query": "complete",
   "definition": {
     "config": {"long_eq_sep": "deny"},
@@ -20,7 +20,7 @@
   "cases": [
     {
       "id": "default-child-value-and-fallback-tail-candidates-survive",
-      "why": "`--pair x` の終端では b の消費値を入力する候補と、b を空席にして tail を入力する候補がともに生存する。ChildDefault が head Pending を破棄すると b 候補だけが消える。",
+      "why": "`--pair x` の終端では b の消費値を入力する候補と、b を空席にして tail を入力する候補がともに生存する。child default 席の実装が head Pending を破棄すると b 候補だけが消える。",
       "args_before": ["--pair", "x"],
       "expect": {
         "outcome": "complete",

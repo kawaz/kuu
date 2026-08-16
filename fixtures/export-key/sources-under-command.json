@@ -130,7 +130,7 @@
     },
     {
       "id": "accum-multiple-firings-single-source-entry",
-      "why": "`--tags a --tags b`: accum セルが 2 回着席しても sources は射影後キー `t` の 1 エントリに畳まれる。sources は「キー → 値源タグ」のマップなので同一キーが複数回現れる形を持たない — binding ごとに無条件で積む実装はここで `t` を 2 つ出して落ちる。両発火とも `cli` なので本 case が pin するのは **dedup されること**だけで、どの発火が残るかは別 case (`unset-reopens-ladder-under-command`) が見る。未発火 flag `verbose` は default 席で確定。",
+      "why": "`--tags a --tags b`: accum セルが 2 回着席しても sources は射影後キー `t` の 1 エントリに畳まれる。sources は「キー → 値源タグ」のマップなので同一キーが複数回現れる形を持たない — binding ごとに無条件で積む実装はここで `t` を 2 つ出して落ちる。**`sources` は `result` と同形の shadow tree なので、accumulator の各要素に 1 タグずつ対応する** (DR-122 §1) — 2 発火なら `[\"cli\",\"cli\"]` の 2 要素で、1 件に畳まれるのではない。両発火とも `cli` なので本 case では席ごとの値の違いは観測できず、どの席が残るかは別 case (`unset-reopens-ladder-under-command`) が見る。未発火 flag `verbose` は default 席で確定。",
       "args": [
         "--tags",
         "a",

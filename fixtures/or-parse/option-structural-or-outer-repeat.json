@@ -1,5 +1,5 @@
 {
-  "why": "option 自身が structural or / seq (Group) で outer repeat を宣言した場合、トリガ 1 回で body が repeat の min/max に従って反復消費され、結果は row 配列 (DR-044 の rows — positional ref-repeat の `fixtures/repeat-parse/ref-or-template.json` と同形) になることを pin する (issue option-structural-or-group-outer-repeat-not-wired 受け入れ条件 4)。realized row は named or の全枝キー列挙 + null (DR-130 §4)。読みの一意性・ambiguous は通常の完全経路規範 (DR-038) がそのまま適用され、repeat が配線されない実装 (宣言 accepted-but-ignored) では 2 row ケースが残余トークンで失敗するため直接検出される。",
+  "why": "option 自身が structural or / seq (Group) で outer repeat を宣言した場合、トリガ 1 回で body が repeat の min/max に従って反復消費され、結果は row 配列 (DR-044 の rows — positional ref-repeat の `fixtures/repeat-parse/ref-or-template.json` と同形) になることを pin する (issue option-structural-or-group-outer-repeat-not-wired 受け入れ条件 4)。realized row は named or の全枝キー列挙 + null (DR-130 §4)。**未発火の反復セルは `null` ではなく `[]`** — 反復セルの default 席は宣言 default が無ければ暗黙に `[]` を供給するので席が常に埋まっており、DR-130 §1 の成功 result で `null` にならない (DR-123 §3)。本 fixture の 2 要素はどちらも `repeat` 宣言を持つので、片方だけ撃った case では**もう片方が `[]`** で現れる (`sources` にはタグが載らない — 暗黙 default の `[]` には値の座が無い、DR-123 §3 / DR-122 §2)。読みの一意性・ambiguous は通常の完全経路規範 (DR-038) がそのまま適用され、repeat が配線されない実装 (宣言 accepted-but-ignored) では 2 row ケースが残余トークンで失敗するため直接検出される。",
   "query": "parse",
   "definition": {
     "options": [
@@ -75,7 +75,7 @@
               "s2": null
             }
           ],
-          "g": null
+          "g": []
         }
       }
     },
@@ -111,7 +111,7 @@
               "s2": "b"
             }
           ],
-          "g": null
+          "g": []
         }
       }
     },
@@ -166,7 +166,7 @@
               "s2": "d"
             }
           ],
-          "g": null
+          "g": []
         }
       }
     },
@@ -271,7 +271,7 @@
               "gb": "d"
             }
           ],
-          "sel": null
+          "sel": []
         }
       }
     }

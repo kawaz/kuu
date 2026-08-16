@@ -1,5 +1,5 @@
 {
-  "why": "config の JSON null は provider 境界の『供給なし』としてラダーを通過する (DR-050 §4 / DR-130 §9.1)。これは成功 result の値空間で値なしを表す `null` とは別位相で、config null 自体が値として流入するわけではない。下位 default があればその値へ、無ければ結果射影で `null` 座になる。config_file 要素はインフラ要素なので結果キーを占有しない。",
+  "why": "config の JSON null は provider 境界の『供給なし』としてラダーを通過する (DR-050 §4 / DR-130 §9.1)。これは成功 result の値空間で値なしを表す `null` とは別位相で、config null 自体が値として流入するわけではない。下位 default があればその値へ、無ければ結果射影で `null` 座になる。config_file 要素は**値 (パス) を持つ通常の値セル**であり、結果キーを占有して result / sources に現れる (DR-135 §1 — 「内部セルの特別枠」は廃止済み)。",
   "query": "parse",
   "definition": {
     "options": [

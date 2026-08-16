@@ -1,5 +1,5 @@
 {
-  "why": "`sources-nested-scope-parity.json` の対。要素も argv も同一で、**未発火の dummy command を 1 つ足しただけ**の定義。両 fixture の `sources` が完全に一致することで「定義に command が在るかどうかで sources の path 軸が変わらない」が固定される。command は発火していない (argv に現れない) ので result にも sources にも現れず、差分は定義の存在だけ — それでも射影が変わってはならない。分岐が静的判定 (定義に command があるか) で行われていた実装は、発火の有無に関わらずここで別の形を出す。",
+  "why": "`sources-nested-scope-parity.json` の対。要素も argv も同一で、**未発火の dummy command を 1 つ足しただけ**の定義。両 fixture の `sources` が完全に一致することで「定義に command が在るかどうかで sources の path 軸が変わらない」が固定される。command は発火していないので **result にも sources にも座が `null` で立つ** (キーは現れる — DR-130 §1 / DR-122 §2 のキー集合一致)。差分は定義の存在だけ — それでも射影が変わってはならない。分岐が静的判定 (定義に command があるか) で行われていた実装は、発火の有無に関わらずここで別の形を出す。",
   "query": "parse",
   "definition": {
     "options": [

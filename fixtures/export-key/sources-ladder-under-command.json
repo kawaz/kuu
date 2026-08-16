@@ -1,5 +1,5 @@
 {
-  "why": "`sources` が報告するのは **最終的にその値セルを確定させた席** (操作 provenance、DR-081 / DESIGN §11.4) であり、途中で着席した席ではない。`multiple-parse/unset-env-fallback.json` が command 無しで pin する「unset がラダーを再び開き、下位席 (env → default) が最終値を決める」経路を、**command 木と export_key rename の下で**取り直す。両発火とも `cli` になる case (`sources-under-command.json :: accum-multiple-firings-single-source-entry`) では first-wins でも last-wins でも同じ結果になり、どの席が残るかを判別できない — 本 fixture はその識別力を持つ。キーは射影後の `t` (CONFORMANCE §2「sources のキーは result と同一のキー体系」)。",
+  "why": "`sources` が報告するのは **最終的にその値セルを確定させた席** (操作 provenance、DR-081 / DESIGN §11.4) であり、途中で着席した席ではない。`multiple-parse/unset-env-fallback.json` が command 無しで pin する「unset がラダーを再び開き、下位席 (env → default) が最終値を決める」経路を、**command 木と export_key rename の下で**取り直す。両発火とも `cli` になる case (`sources-under-command.json :: accum-multiple-firings-single-source-entry`。なお 0 発火の accumulator は `sources` でも `[]` — 暗黙 default の `[]` には値の座が無いので `default` タグは載らない、DR-123 §3 / DR-122 §2.1) では first-wins でも last-wins でも同じ結果になり、どの席が残るかを判別できない — 本 fixture はその識別力を持つ。キーは射影後の `t` (CONFORMANCE §2「sources のキーは result と同一のキー体系」)。",
   "query": "parse",
   "definition": {
     "options": [

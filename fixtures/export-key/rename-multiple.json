@@ -61,7 +61,7 @@
     },
     {
       "id": "renamed-key-zero-fire-empty-array",
-      "why": "0 発火 (対極): accumulate セルは fire 0 回でも null にならず一様配列 `[]` を描く (DR-044/051 §2、append.json の zero-fires-empty と同じ縮退規則)。この `[]` も export_key の射影を経てから結果に現れる — rename 済みキー `t` の下に `[]` が出ることが『rename は fold 済みの値 (0発火の空配列も含む) をそのまま写像するだけ』の固定点。labels は同様に未発火で null (export_key null は『存在時のキー名』の指定であり存在自体を作らない、command-promote.json / rename.json の未発火対照 と同じ道理)。",
+      "why": "0 発火 (対極): accumulate セルは fire 0 回でも null にならず一様配列 `[]` を描く (DR-044/051 §2、append.json の zero-fires-empty と同じ縮退規則)。この `[]` も export_key の射影を経てから結果に現れる — rename 済みキー `t` の下に `[]` が出ることが『rename は fold 済みの値 (0発火の空配列も含む) をそのまま写像するだけ』の固定点。labels は `export_key: null` の透過要素なので **kv result にキー自体が現れない** (0 発火の accumulator の値は `[]` だが、透過なのでその `[]` すら kv には出ない — 2 つの規則が重なる。command-promote.json / rename.json の未発火対照 と同じ道理)。",
       "args": [],
       "expect": {
         "outcome": "success",
@@ -73,7 +73,7 @@
     },
     {
       "id": "null-export-key-multiple-transparent",
-      "why": "(推定拡張、既存 pin 実例なし — DR-052 §2 の一般化による導出): labels は export_key:null の multiple 要素。transparent-kv.json は scalar flag での kv 透過 (『結果キー軸を持たない要素は kv 文脈で値ごと現れない』DR-052 §2) を pin 済みだが、multiple×null の組合せそのものは既存 fixture に無い。DR-052 §2 の規定文言はセル種別 (scalar/accum) を条件にしていない一般規則であり、本 fixture 冒頭の rename+multiple 導出と同じ一般化 (『export_key は fold 機構に関与しない、fold 済みの値をどう射影するかだけを決める』) を null 側に延長すれば、fold 済み配列 `[x,y]` も kv 文脈で丸ごと現れないはずである。`--labels x --labels y`: labels セルは2発火を fold し内部的に [x,y] を持つが、export_key null により kv result からキーごと消える (effects には両発火が entity=labels で残る — 値の伝搬自体は止まらない、transparent-kv.json と同じ『発火はするが痕跡が結果に残らない』構図)。tags は本 case で未発火だが、accum セルは 0 発火でも null にならない (DR-130 §2 の一様配列は絶対規則で export_key rename と直交) — rename 済みキー `t` で `[]` が result に現れる。透過で消えるのは export_key:null の labels だけである。",
+      "why": "(DR-052 §2 の一般化による導出): labels は export_key:null の multiple 要素。transparent-kv.json は scalar flag での kv 透過 (『結果キー軸を持たない要素は kv 文脈で値ごと現れない』DR-052 §2) を pin 済みだが、multiple×null の組合せそのものは既存 fixture に無い。DR-052 §2 の規定文言はセル種別 (scalar/accum) を条件にしていない一般規則であり、本 fixture 冒頭の rename+multiple 導出と同じ一般化 (『export_key は fold 機構に関与しない、fold 済みの値をどう射影するかだけを決める』) を null 側に延長すれば、fold 済み配列 `[x,y]` も kv 文脈で丸ごと現れないはずである。`--labels x --labels y`: labels セルは2発火を fold し内部的に [x,y] を持つが、export_key null により kv result からキーごと消える (effects には両発火が entity=labels で残る — 値の伝搬自体は止まらない、transparent-kv.json と同じ『発火はするが痕跡が結果に残らない』構図)。tags は本 case で未発火だが、accum セルは 0 発火でも null にならない (DR-130 §2 の一様配列は絶対規則で export_key rename と直交) — rename 済みキー `t` で `[]` が result に現れる。透過で消えるのは export_key:null の labels だけである。",
       "args": [
         "--labels",
         "x",

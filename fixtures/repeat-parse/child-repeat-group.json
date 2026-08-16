@@ -1,5 +1,5 @@
 {
-  "why": "positional group (`{\"name\":..,\"positionals\":[...]}` の入れ子、fixtures/repeat-parse/group-trailing-positional.json と同じ wire 形) の**子**が repeat を持つ配置を固定する。pin する輪郭は 2 つ: (1) 子の反復結果は group が作る結果スコープの中に留まり、root スコープに同名のセルが漏れない (DESIGN §2.3/§2.4 — name を持つ group が結果スコープを作り、それより深い name は止めた層の子スコープに属する。root に `{\"grp\": {...}, \"xs\": [...]}` のように子セルが二重露出する形は露出規則が許さない)、(2) 反復宣言子だけが配列になり、反復を宣言していない親 group は配列にならない (DR-044 — 配列化はカーディナリティでなく反復宣言の有無で決まる)。group 自身の repeat と子の repeat が同時に立つ入れ子 (2 例目の rows) では、外側 = 行の反復・内側 = 行内フィールドの反復として 2 段が独立に配列になる (DR-044「入れ子の各段が独立」)。",
+  "why": "positional group (`{\"name\":..,\"positionals\":[...]}` の入れ子、fixtures/repeat-parse/group-trailing-positional.json と同じ wire 形) の**子**が repeat を持つ配置を固定する。pin する輪郭は 2 つ: (1) 子の反復結果は group が作る結果スコープの中に留まり、root スコープに同名のセルが漏れない (DESIGN §2.3/§2.4 — 結果キー軸を占有する group が結果スコープを作り (TRG-Q4=a)、それより深い name は止めた層の子スコープに属する。root に `{\"grp\": {...}, \"xs\": [...]}` のように子セルが二重露出する形は露出規則が許さない)、(2) 反復宣言子だけが配列になり、反復を宣言していない親 group は配列にならない (DR-044 — 配列化はカーディナリティでなく反復宣言の有無で決まる)。group 自身の repeat と子の repeat が同時に立つ入れ子 (child-repeat-group-nested.json が pin) では、外側 = 行の反復・内側 = 行内フィールドの反復として 2 段が独立に配列になる (DR-044「入れ子の各段が独立」)。",
   "query": "parse",
   "definition": {
     "positionals": [
@@ -24,7 +24,7 @@
   "cases": [
     {
       "id": "child-cell-stays-inside-group-scope",
-      "why": "`a b c`: grp は repeat を持たないので 1 回だけ成立し、その中の子 xs が greedy に反復する。xs=[a,b,c] は後続の ctrl (非 repeat・消費 1 必須) を枯渇させるので取り分を 1 つ縮め、xs=[a,b] / ctrl=c で全消費が成立 (DR-043 の縮小再分割が group 境界を跨いで効く)。result の形が本 case の主眼: grp は name 持ちなので結果スコープを作り (DESIGN §2.3)、xs はその子スコープのキーになる。root スコープに現れるキーは grp と ctrl だけで、`xs` が root にも並ぶ形 (子セルの root 漏れ) にはならない — 露出規則が『最も浅い name 層で止め、それより深い name は止めた層の子スコープに属する』(DESIGN §2.4) と規定する以上、同じセルが 2 つの層に同時に現れる余地は無い。grp 自身は反復宣言を持たないので配列ではなく kv (DR-044)。",
+      "why": "`a b c`: grp は repeat を持たないので 1 回だけ成立し、その中の子 xs が greedy に反復する。xs=[a,b,c] は後続の ctrl (非 repeat・消費 1 必須) を枯渇させるので取り分を 1 つ縮め、xs=[a,b] / ctrl=c で全消費が成立 (DR-043 の縮小再分割が group 境界を跨いで効く)。result の形が本 case の主眼: grp は結果キー軸を占有するので結果スコープを作り (DESIGN §2.3、TRG-Q4=a)、xs はその子スコープのキーになる。root スコープに現れるキーは grp と ctrl だけで、`xs` が root にも並ぶ形 (子セルの root 漏れ) にはならない — 露出規則が『最も浅い name 層で止め、それより深い name は止めた層の子スコープに属する』(DESIGN §2.4) と規定する以上、同じセルが 2 つの層に同時に現れる余地は無い。grp 自身は反復宣言を持たないので配列ではなく kv (DR-044)。",
       "args": [
         "a",
         "b",

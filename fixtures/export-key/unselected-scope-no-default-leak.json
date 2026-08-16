@@ -1,5 +1,5 @@
 {
-  "why": "**選ばれていない command の配下セルは、preset default を持っていても結果に現れない** (DR-130 の null)。flag / bool は「値源ラダーを走らせない射影でも result に出る」扱いを受ける (LOWERING §A.5 / DR-130 §2 — 未発火でも `false` を持つので null にならない) が、その注入は **選ばれたスコープの配下に限る**。透過 command (`export_key: null`) で顕在化する — 未選択スコープの子が root へ昇格して、選んでもいない command の flag が結果に出てしまう形になる。identity command なら未選択スコープごと消えるので見えないが、根は同じ「選択判定なしにスコープを降りる」ことにある。`sources` 側には出ないので `result` と `sources` の非対称にもなる (DR-121 §2「席を持つのは結果アドレスを持つ値セル」)。",
+  "why": "**選ばれていない command の配下セルは、preset default を持っていても結果に注入されない** (未選択スコープの内側は展開されず、スコープの座が `null` になる — DR-130 §1)。flag / bool は「値源ラダーを走らせない射影でも result に出る」扱いを受ける (LOWERING §A.5 / DR-130 §2 — 未発火でも `false` を持つので null にならない) が、その注入は **選ばれたスコープの配下に限る**。透過 command (`export_key: null`) で顕在化する — 未選択スコープの子が root へ昇格して、選んでもいない command の flag が結果に出てしまう形になる。identity command なら未選択スコープごと消えるので見えないが、根は同じ「選択判定なしにスコープを降りる」ことにある。`sources` は `result` と同じキー集合を持つ shadow tree なので (DR-122 §2)、注入が起きると **両方に**現れる — 非対称になるのではなく、両面が揃って汚染される。",
   "query": "parse",
   "definition": {
     "commands": [
@@ -106,7 +106,7 @@
     },
     {
       "id": "no-command-selected-yields-empty-result",
-      "why": "引数なし: どの command も選ばれていないので、両方の配下 flag が結果に現れず result は空。選択判定が無い実装はここで透過側の `keep: false` を出す。",
+      "why": "引数なし: どの command も選ばれていないので、両方の配下 flag は注入されない。**result には各 command の座が `null` で立つ** (DR-130 §1 の全キー列挙) — 空になるのではない。選択判定が無い実装はここで透過側の `keep: false` を出す。",
       "args": [],
       "expect": {
         "outcome": "success",

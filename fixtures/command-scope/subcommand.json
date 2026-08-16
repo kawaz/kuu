@@ -1,5 +1,5 @@
 {
-  "why": "サブコマンドの入場と結果ネストの基本輪郭 (DR-018/025/041 §4): サブコマンドは親 greedy 面の『greedy マーク付き exact トリガ衛星』であり、その name を消費すると子スコープの新しい背骨に入る (親の greedy はそこへ届かない、DR-041 §4)。子スコープは結果スコープでもあるので (DR-025) 子で発火した効果はコマンド名の 1 段下にネストする。子だけが宣言するオプションは親スコープでは読めず、親に素で現れると残余トークン失敗になる (背骨が別、DR-041 §4)。未発火の flag は preset default false で result に present (DR-130)、default なしの値オプションは未発火なら null (キー消失、DR-130)。effects は cli 由来のパース時効果のみ (CONFORMANCE §2)、result はネスト込みの確定値。",
+  "why": "サブコマンドの入場と結果ネストの基本輪郭 (DR-018/025/041 §4): サブコマンドは親 greedy 面の『greedy マーク付き exact トリガ衛星』であり、その name を消費すると子スコープの新しい背骨に入る (親の greedy はそこへ届かない、DR-041 §4)。子スコープは結果スコープでもあるので (DR-025) 子で発火した効果はコマンド名の 1 段下にネストする。子だけが宣言するオプションは親スコープでは読めず、親に素で現れると残余トークン失敗になる (背骨が別、DR-041 §4)。未発火の flag は preset default false で result に present (DR-130)、default なしの値オプションは未発火なら null (**キーは立つ** — DR-130 §1 は成功 result で宣言キーを全列挙し、値の無さを `null` で表す)。effects は cli 由来のパース時効果のみ (CONFORMANCE §2)、result はネスト込みの確定値。",
   "query": "parse",
   "definition": {
     "commands": [
@@ -57,7 +57,7 @@
     },
     {
       "id": "flag-only-port-null",
-      "why": "serve 入場で release のみ発火。port は default なしの number で未発火 → null (キー消失、DR-130)。release は set true で子スコープにネスト。未発火の値オプションが result から消えることの固定。",
+      "why": "serve 入場で release のみ発火。port は default なしの number で未発火 → `null` (キー自体は立つ、DR-130 §1 の全キー列挙)。release は set true で子スコープにネスト。未発火の値オプションが **result にキーを残したまま `null` になる**ことの固定 (キーごと消える実装をここで落とす)。",
       "args": [
         "serve",
         "--release"

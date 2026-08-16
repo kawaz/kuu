@@ -1,5 +1,5 @@
 {
-  "why": "対照: requires の目的語が非 bool (string、default 無し) なら DR-047 §5 明確化の対象外で従来の「値の有無」判定。env で値を与えても env は committed を立てず「値の有無」にも参加しない (KTop の CLI 面判定) ため requires は充足しない。bool target 限定の新挙動が非 bool target へ漏れ出していないことの固定。",
+  "why": "対照: requires の目的語が非 bool (string、default 無し) なら DR-047 §5 明確化の対象外で従来の「値の有無」判定。env で値を与えると「値の有無」判定は**充足する** — 非 bool target の requires は値源を問わず「最終状態で値が在るか」で判定するので (DESIGN §9.4 / DR-088 §3)、env 供給でも成立し success になる (case 側の expect が正)。bool target 限定の新挙動 (解決後の値が true か、DR-047 §5) が非 bool target へ漏れ出していないことの固定。bool target 限定の新挙動が非 bool target へ漏れ出していないことの固定。",
   "query": "parse",
   "definition": {
     "options": [

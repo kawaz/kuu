@@ -1,5 +1,5 @@
 {
-  "why": "`type: \"none\"` のセルが `effects` / `result` / `sources` の **3 面すべて**から消えることを、**結果スコープを作る各構造の下**で固定する (DR-089: none は値を運ばず結果にキーが現れない)。既存の `none-value-space.json` は root 直下の none を pin しているが、内部セルの除外席がスコープを降りる経路 (command 木 / name を持つ seq) は corpus に無かった。除外の照合が結果アドレス軸 (export_key 適用後) で行われないと、scope が rename / 透過されたときに席が一致せず none が漏れる — 2026-07-26 に command scope の rename で実際に漏れていた。command は identity / renamed / transparent の 3 境界を並べる。none は照合消費を行う (トークンを 1 つ取る) 点に注意 — 消費 0 の literal は `value:` / `default:` で書く別の形 (DESIGN §5.2)。",
+  "why": "`type: \"none\"` のセルが `effects` / `result` / `sources` の **3 面すべて**から消えることを、**結果スコープを作る各構造の下**で固定する (DR-089: none は値を運ばず結果にキーが現れない)。既存の `none-value-space.json` は root 直下の none を pin しているが、内部セルの除外席がスコープを降りる経路 (command 木 / name を持つ seq) は corpus に無かった。除外の照合が結果アドレス軸 (export_key 適用後) で行われないと、scope が rename / 透過されたときに席が一致せず none が漏れる — 2026-07-26 に command scope の rename で実際に漏れていた。command は identity / renamed / transparent の 3 境界を並べる。none は照合消費を行う (トークンを 1 つ取る) 点に注意 — 消費 0 の literal は `value:` で書く別の形 (DESIGN §5.2 — `default:` は値源ラダーの席であって消費 0 literal の綴りではない、CHILDDEF-Q1=b)。",
   "query": "parse",
   "definition": {
     "options": [

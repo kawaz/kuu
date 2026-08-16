@@ -1,5 +1,5 @@
 {
-  "why": "after 整合フィルタは `Success`/`Ambiguous` なら残し `Failure` なら除外する (DR-104 §5) — `Ambiguous` を成功側として扱うのは `Success` とは独立した設計判断であり、`fixtures/complete/after-filter.json` の 10 ケースは全て `Success`/`Failure` の対立のみで `Ambiguous` 生存を検証しない (codex レビュー #2 M-10 の反映、統括検証 2026-07-14)。Ambiguous の供給源には構造的 ambiguity (short cluster の分割点、DR-041 §3 / DR-038、`matcher-readings/cluster-split-string.json` と同じ輪郭) を使う — 露出キー衝突は DR-120 で definition-error になり ambiguous を供給しなくなったため、供給源を構造側へ差し替えた (検証意図そのものは本 DR と無関係で維持が必要)。",
+  "why": "after 整合フィルタは `Success`/`Ambiguous` なら残し `Failure` なら除外する (DR-104 §5) — `Ambiguous` を成功側として扱うのは `Success` とは独立した設計判断であり、`fixtures/complete/after-filter.json` の 3 caseは全て `Success`/`Failure` の対立のみで `Ambiguous` 生存を検証しない (codex レビュー #2 M-10 の反映、統括検証 2026-07-14)。Ambiguous の供給源には構造的 ambiguity (short cluster の分割点、DR-041 §3 / DR-038、`matcher-readings/cluster-split-string.json` と同じ輪郭) を使う — 露出キー衝突は DR-120 で definition-error になり ambiguous を供給しなくなったため、供給源を構造側へ差し替えた (検証意図そのものは本 DR と無関係で維持が必要)。",
   "query": "complete",
   "definition": {
     "options": [

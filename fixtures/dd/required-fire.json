@@ -22,7 +22,7 @@
     },
     {
       "id": "dd-not-fired-violated",
-      "why": "args 空で `--` が未発火 (not committed) → required_violated で完全経路 0 本。kind:constraint、args_pos=0=args.length (制約は全消費後に評価、DR-047 §4 空 args の特別扱いは無い)。element=\"--\" (required の宣言元自身、DESIGN §9.3)。reason=required_violated (DR-066)。none 型でも required の明示強制が effective であることの negative 固定 (DR-093 §6『型保証の一様性』— none の保証は『発火した事実が必ずある』)。",
+      "why": "args 空で `--` が未発火 (not committed) → required_violated で完全経路 0 本。kind:constraint、args_pos=0=args.length (制約は全消費後に評価、DR-047 §4 空 args の特別扱いは無い)。element=\"__\" (required の宣言元自身の**参照識別子** — dd の name `--` は id 軸へ文字写像で供給されて `__` になる、DR-136 §3 / TRG-Q3=a。DESIGN §9.1)。reason=required_violated (DR-066)。none 型でも required の明示強制が effective であることの negative 固定 (DR-093 §6『型保証の一様性』— none の保証は『発火した事実が必ずある』)。",
       "args": [],
       "expect": {
         "outcome": "failure",

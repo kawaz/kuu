@@ -52,7 +52,7 @@
     },
     {
       "id": "transparent-command-scope-keeps-both-readings",
-      "why": "`draw --color 255 0 0`: 同じ曖昧性を透過 command (`export_key: null`) の下で起こす。子が root へ昇格するので結果 path は空になり、**command を持つ定義なのに全 path が空**という形になる。path の有無で射影経路を推測する実装 (= flat 射影とみなして key 単独で席を同定する類) はここで別スコープの同名キーを取り違える。両解釈とも paint 側の scalar が消えずに残ることを固定する。",
+      "why": "`draw --color 255 0 0`: 同じ曖昧性を透過 command (`export_key: null`) の下で起こす。子が root へ昇格するので結果 path は空になり、**command を持つ定義なのに全 path が空**という形になる。path の有無で射影経路を推測する実装 (= flat 射影とみなして key 単独で席を同定する類) はここで別スコープの同名キーを取り違える。両解釈とも当該スコープの席が取り違えられずに残ることを固定する (別スコープの同名キーへ吸われない)。",
       "args": ["draw", "--color", "255", "0", "0"],
       "expect": {
         "outcome": "ambiguous",

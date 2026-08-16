@@ -71,7 +71,7 @@
   "cases": [
     {
       "id": "inner-valueless-shadows-outer-default",
-      "why": "遮蔽の主題 case: `socket` を素で入場すると、子 `ttl` の default 席が `borrow:socket_ttl` を解決し、chain の 1 段目 (現在スコープ) にある子自身の `socket_ttl` 宣言で止まる (DESIGN §2.7 の「現在スコープ → 外側」— 名前は最近傍の宣言に束ねる)。その宣言は default を持たず CLI / env / config のどの席からも値を得ないので null (DR-130 §1)、よって borrow は `borrow の `null` 返し` となり呼び出し元の `ttl` も `null` に落ちる (DR-113 §5.4)。**外側 root の `socket_ttl` が default 60 を持っていても、そこへは抜けない** — これが遮蔽の観測点で、`socket.ttl` が 60 になればこの読みは破れている。子スコープの 2 キーとも null なので `socket` は全宣言座を `null` で持つオブジェクト (`command-scope/shadowing-3level-same-name.json` 等と同じ、入場済みで全メンバ null の scope は `{}`)、`sources` は result と同型の shadow tree (DR-122 §1) なので同じく `{}`。root の `socket_ttl` は自分の default 60 で present。effects は cli 発火が無いので空。outcome は success (null は失敗ではない、DR-130 §1)。",
+      "why": "遮蔽の主題 case: `socket` を素で入場すると、子 `ttl` の default 席が `borrow:socket_ttl` を解決し、chain の 1 段目 (現在スコープ) にある子自身の `socket_ttl` 宣言で止まる (DESIGN §2.7 の「現在スコープ → 外側」— 名前は最近傍の宣言に束ねる)。その宣言は default を持たず CLI / env / config のどの席からも値を得ないので null (DR-130 §1)、よって borrow は borrow の `null` 返し となり呼び出し元の `ttl` も `null` に落ちる (DR-113 §5.4)。**外側 root の `socket_ttl` が default 60 を持っていても、そこへは抜けない** — これが遮蔽の観測点で、`socket.ttl` が 60 になればこの読みは破れている。子スコープの 2 キーとも null なので `socket` は全宣言座を `null` で持つオブジェクト (入場済みの scope は**全メンバのキーが `null` で立つ** — DR-130 §1 の全キー列挙。`{}` にはならない)、`sources` は result と同型の shadow tree (DR-122 §1) なので同じく `{}`。root の `socket_ttl` は自分の default 60 で present。effects は cli 発火が無いので空。outcome は success (null は失敗ではない、DR-130 §1)。",
       "args": [
         "socket"
       ],
@@ -100,7 +100,7 @@
     },
     {
       "id": "inner-valueless-shadows-outer-cli",
-      "why": "遮蔽が値源に依らないことの固定: 外側で `--socket-ttl 30` を撃っても (socket トークンより前なので root 背骨で発火し root セルへ cli set)、子 `ttl` の borrow は前 case と同じく子自身の `socket_ttl` 宣言で止まるので `borrow の `null` 返し` のまま。default-fn-borrow-ladder.json の outer-cli-borrowed では同じ args の形で内側が 30 を引いたが、あちらは子に同名宣言が無い定義だった — 差は遮蔽宣言の有無だけで、borrow が「外側の値を探しに行く」機能ではないことを示す。root の座は cli で 30、子スコープの宣言座は `null`。effects は root セルの cli set 1 件 (entity は射影前 cell name の `socket_ttl`、撃たれたのが root セルであることは result のキー位置で判別する)。",
+      "why": "遮蔽が値源に依らないことの固定: 外側で `--socket-ttl 30` を撃っても (socket トークンより前なので root 背骨で発火し root セルへ cli set)、子 `ttl` の borrow は前 case と同じく子自身の `socket_ttl` 宣言で止まるので borrow の `null` 返し のまま。default-fn-borrow-ladder.json の outer-cli-borrowed では同じ args の形で内側が 30 を引いたが、あちらは子に同名宣言が無い定義だった — 差は遮蔽宣言の有無だけで、borrow が「外側の値を探しに行く」機能ではないことを示す。root の座は cli で 30、子スコープの宣言座は `null`。effects は root セルの cli set 1 件 (entity は射影前 cell name の `socket_ttl`、撃たれたのが root セルであることは result のキー位置で判別する)。",
       "args": [
         "--socket-ttl",
         "30",
@@ -205,7 +205,7 @@
     },
     {
       "id": "definitions-only-source-null",
-      "why": "chain 3 段目 (definitions) の単独観測: `probe` の `tmpl_ttl` は `borrow:ttl_tmpl` を書き、この名前は現在スコープにも外側スコープにも無く definitions にだけある (DESIGN §2.7 / DR-125 §4 の chain 最終段)。definitions の宣言は**テンプレ node であって値セルではない**ので解決値を持たず、borrow は参照先から値を取得できない = fn reason `borrow の `null` 返し` (REFERENCE の reasons 表: 「宣言した参照先から値を取得できない」) となり、呼び出し元 `tmpl_ttl` も `null` に落ちる (DR-113 §5.4)。template に書いた `default: 99` は**その template を `ref` / `type` で実体化したノードの default 席**の材料であって、template 自身が 99 という解決値を持つわけではない — したがって `probe.tmpl_ttl` が 99 になればこの読みは破れている。`probe` は唯一のメンバが null なので全宣言座を `null` で持つオブジェクト。outcome は success (definition-error ではない — CONFORMANCE §2 の通り `borrow の `null` 返し` は runtime fn reason であり definition-error kind に加えない)。",
+      "why": "chain 3 段目 (definitions) の単独観測: `probe` の `tmpl_ttl` は `borrow:ttl_tmpl` を書き、この名前は現在スコープにも外側スコープにも無く definitions にだけある (DESIGN §2.7 / DR-125 §4 の chain 最終段)。definitions の宣言は**テンプレ node であって値セルではない**ので解決値を持たず、borrow は参照先から値を取得できず **`null` を返す** (`borrow` は fallibility=total なので専用の failure reason は持たない — トップ why の「専用 failure reason も使わない」と同じ規範)。呼び出し元 `tmpl_ttl` も `null` に落ちる (DR-113 §5.4)。template に書いた `default: 99` は**その template を `ref` / `type` で実体化したノードの default 席**の材料であって、template 自身が 99 という解決値を持つわけではない — したがって `probe.tmpl_ttl` が 99 になればこの読みは破れている。`probe` は唯一のメンバが null なので全宣言座を `null` で持つオブジェクト。outcome は success (definition-error ではない — CONFORMANCE §2 の通り borrow の `null` 返し は runtime fn reason であり definition-error kind に加えない)。",
       "args": [
         "probe"
       ],

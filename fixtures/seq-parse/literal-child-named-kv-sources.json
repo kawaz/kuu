@@ -54,7 +54,7 @@
     },
     {
       "id": "undischarged-no-literal-alone",
-      "why": "`--pair` を全く発火させない (args なし): const は発火に付随するセル初期化位相の宣言定数であり (DESIGN §5.2)、literal 子 `mode` だけが未発火の `pair` から独立して着席することはない (DR-130 の null、DR-052 §3)。cli-and-literal-siblings-coexist の対偶 — 「named 子でも未発火なら literal だけが着席することはない」を pin する。`pair` ごと結果に現れず、result は `{}`、sources も `[]`。",
+      "why": "`--pair` を全く発火させない (args なし): const は発火に付随するセル初期化位相の宣言定数であり (DESIGN §5.2)、literal 子 `mode` だけが未発火の `pair` から独立して着席することはない (DR-130 の null、DR-052 §3)。cli-and-literal-siblings-coexist の対偶 — 「named 子でも未発火なら literal だけが着席することはない」を pin する。`pair` の座は `null` で立つ (result / sources とも `{\"pair\": null}` — DR-130 §1 の全キー列挙、DR-122 §2 のキー集合一致)。literal だけが着席して `pair` が値を持つことはない、が pin 対象。",
       "args": [],
       "expect": {
         "outcome": "success",
