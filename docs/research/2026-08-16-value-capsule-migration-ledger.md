@@ -37,10 +37,27 @@ fixture → 参照実装の順で同一 lockstep 窓に入れる** (単独 push 
   §6 / §8.3-8.5 (座席名と配置)、§10 (ref 合成の適用範囲)
 - **PIPELINE**: 段の名前 (座席 B/C/D1/D2 の綴り)
 - **CONFORMANCE**: §2/§3 の座席名言及 (argv_pos 規約の綴り)
-- **LOWERING**: multiple プリセット言及 (§A.5 count の accumulator 表現は DR-139 §1.3 の形へ)
+- **LOWERING**: multiple プリセット言及 (§A.5 count の accumulator 表現は DR-139 §1.3 の形へ)、
+  **`value:` const の 6 箇所** (:41 A.3 の書き場所指示、:67 「非消費の literal は value: フィールド
+  経由でのみ書く」+ 直後の `{type:"number", value:30}` 例、:103 「`value:` だけの literal は入力を
+  検査しない」、:125 / :220 / :227 の variant 縮退形の例) — いずれも DR-140 §2 の `const` field へ、
+  **§B.9 multiple installer の節ごと廃止** (DR-139 §5。repeat installer の書き先変更に伴い、
+  cardinality を導く座は値カプセル側へ移る)
 - **DR 更新注記** (DR-139/140 の波及節どおり): DR-030 / DR-031 / DR-034 / DR-036 /
   DR-063 / DR-079 / DR-102 / DR-113 / DR-135 — 起草サイクルでヘッダ注記済みのもの以外を
   移送時に確認
+- **DR 更新注記 (追補、2026-08-16 の全数監査 A9 で補完)** — 上の 9 本から漏れていた対象:
+  - **`value:` const の意味論・用例を持つ**: DR-008 / DR-009 / DR-011 / DR-015 (宣言定数の
+    出所そのもの) / DR-022 / DR-023 / DR-121
+  - **座席名・`multiple` 語彙を持つ**: DR-062 (DR-139 §263 が二形・合成規則の正本として名指し
+    参照する) / DR-080 / DR-083 / DR-084 / DR-089 / DR-090 / DR-091 / DR-094 / DR-098 /
+    DR-099 / DR-105 / DR-107 / DR-111 / DR-114 (§4 の供給糖衣表、DR-139 §1.1 と正面衝突) /
+    DR-123
+  - **判別式・値の有無の分界を持つ**: DR-134 (§3 の string const 例が DR-140 §2 の警告する
+    縮退形ハザードそのもの、`:108`「schema 変更は無い」も失効)
+  漏れの原因は、波及節が「DR-139/140 が名指しした DR」だけを拾い、**同じ語彙を持つが名指し
+  されなかった DR** を拾っていなかったこと。移送時は綴り (`value:` / 旧座席名 / `multiple`) の
+  grep を起点にする
 
 ## 4. kuu.mbt (lockstep、実装側 writer の領分)
 
