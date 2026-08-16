@@ -15,6 +15,7 @@ active な issue の一覧。close 済みは archive/ にあり、ここには�
 | 2026-07-23 | task | idea | [help-category-link-last-wins](./2026-07-23-help-category-link-last-wins.md) | M5 で #help_category 内部セルの link 配線実装時は at_pos ベース last-wins を使う (completion.mbt L42-72 pattern 再利用、宣言順 push 由来の bug class 回避) |
 | 2026-08-16 | design | open | [borrow-absent-target-not-checked](./2026-08-16-borrow-absent-target-not-checked.md) | `default_fn: "borrow:<存在しない対象>"` が definition ACCEPTED になり実行時に黙って値なし、link の absent-ref REJECTED と非対称 |
 | 2026-08-16 | task | open | [fixture-reason-vocab-lint](./2026-08-16-fixture-reason-vocab-lint.md) | fixture の errors[].reason が宣言語彙 (descriptor reasons + REFERENCE §7.3) に含まれるか検査する lint が無い |
+| 2026-08-16 | bug | open | [union-cell-fn-multi-invoke](./2026-08-16-union-cell-fn-multi-invoke.md) | union セルで cell fn が枝数倍実行され DR-114 一回実行不変条件と衝突、UC-Q4 裁定確定 (第3の形、入口単位1回発火+並行着地) |
 | 2026-08-12 | task | open | [ref-template-help-carrier](./2026-08-12-ref-template-help-carrier.md) | ref/template 由来 help_meta の provenance carrier 未実装、DR-116 §4 説明引き直しの ref 越し分を次サイクルへ |
 | 2026-08-12 | design | open | [nested-config-not-supplied](./2026-08-12-nested-config-not-supplied.md) | 参照実装が root 宣言の config_file を子スコープの要素へ供給しない (DR-050 §3 同型対応の nested 未実装) |
 | 2026-08-12 | design | open | [completion-ux-layer-completer-closure-abi](./2026-08-12-completion-ux-layer-completer-closure-abi.md) | completion ux 層の座席 (kuu.mbt vs kuu-cli lib) と形態 A completer クロージャ ABI が DR-117 波及節で未設計 |
@@ -29,7 +30,6 @@ active な issue の一覧。close 済みは archive/ にあり、ここには�
 | 2026-07-26 | design | open | [warnings-element-export-key-timing](./2026-07-26-warnings-element-export-key-timing.md) | warnings[].element のキー体系が export_key 適用の前後どちらか未規定 (sources 側は明確化済み、DR-058 §2 の canonical 解釈待ち) |
 | 2026-07-26 | task | open | [projection-verification-structural-gaps](./2026-07-26-projection-verification-structural-gaps.md) | 射影 (result/effects/sources) の検証断面に構造的な空白が残っている (P1/P2 の 8 テーマ) |
 | 2026-07-22 | task | wip | [dr-116-completion-generator-implementation](./2026-07-22-dr-116-completion-generator-implementation.md) | DR-116 (canonical 補完生成器の既定 policy) の実装 — 生成器・product test 未実装 |
-| 2026-08-16 | bug | blocked | [union-cell-fn-multi-invoke](./2026-08-16-union-cell-fn-multi-invoke.md) | union セルで cell fn が枝数倍実行され DR-114 一回実行不変条件と衝突、UC-Q4 裁定待ち |
 
 <!--
 雛形メモ (migrate sub-command 用):

@@ -1,10 +1,10 @@
 ---
-title: union セルでの cell fn 多重実行の解消 (UC-Q4 裁定待ち)
-status: blocked
+title: union セルでの cell fn 多重実行の解消 (UC-Q4 裁定確定)
+status: open
 category: bug
 created: 2026-08-16T10:22:51+09:00
 last_read: 2026-08-16T10:58:38+09:00
-open_entered:
+open_entered: 2026-08-16T10:59:32+09:00
 wip_entered:
 blocked_entered: 2026-08-16T10:22:51+09:00
 pending_entered:
@@ -13,7 +13,7 @@ resolved_entered:
 discard_reason:
 pending_reason:
 close_reason:
-blocked_by: UC-Q4
+blocked_by:
 origin: 実装 worker (codex レビュー #4, 2026-08-16)
 ---
 
@@ -32,22 +32,33 @@ origin: 実装 worker (codex レビュー #4, 2026-08-16)
 
 由来: codex レビュー #4 (2026-08-16)、実装 worker による正当な保留判断。
 
-解決は spec 側 UC-Q4 の裁定に依存する:
+## UC-Q4 裁定 (kawaz 2026-08-16 mid=45-47)
 
-- union 宣言セルへの `ctx.old` 依存 fn について
-  - 案 a: definition-error で静的に断つ → 残る fn は old 非依存となるため、
-    1 回実行 + 全枝共有で素直に解ける
-  - 案 b: 枝ごとに `old` を持たせる → 枝ごと実行が正しい挙動になる
+案 a (definition-error で静的に断つ) / 案 b (枝ごとに `old` を持たせる) の
+どちらでもない第 3 の形で確定:
+
+1. `ctx.old` = その時点のセルの観測値 (それまでの書き込みに淘汰+後勝ちを
+   逐次適用した勝ち値) で常に一意。成立値が無い時点は `null`
+   (DR-130 §1 と一貫)
+2. effect 関数 (set/incr 等の cell_fns) の発火は**入口単位** — 入口は自分の
+   引数が全部揃って初めて発火する (union でも非 union でも不変)。部分書き
+   (link の位置書き) は発火と別位相
+3. fn は発火ごとに 1 回実行、産出は通常の書き込みとして適合枝へ並行着地
+   (DR-138 §2-1)
+
+したがって修正方針 = `cull_union_cell` の variant ごと再実行を「1 回実行
+した産出の並行着地」へ改める + `FnFailed` は書き込み時位相 (DR-138 §6) で
+裁く。DR-138 への規範追記と pin fixture は spec 側 worker が並行作業中。
 
 裁定後は以下の 1 サイクルで閉じられる見込み:
 
-1. 裁定に応じた `cull_union_cell` の実装修正
-2. `FnFailed` の位相確定
+1. 上記裁定に応じた `cull_union_cell` の実装修正 (variant 再実行 → 1 回実行 + 並行着地)
+2. `FnFailed` の位相確定 (DR-138 §6、書き込み時位相)
 3. pin fixture の追加
 
 ## 受け入れ条件
 
-- [ ] spec 側 UC-Q4 の裁定が確定している
-- [ ] 裁定 (a/b) に応じて `cull_union_cell` の cell fn 実行回数が修正されている
+- [x] spec 側 UC-Q4 の裁定が確定している (上記「UC-Q4 裁定」参照)
+- [ ] 裁定内容 (入口単位 1 回発火 + 並行着地) に応じて `cull_union_cell` の cell fn 実行回数が修正されている
 - [ ] `FnFailed` の位相が確定し、実装に反映されている
 - [ ] 上記修正を検証する pin fixture が追加されている
