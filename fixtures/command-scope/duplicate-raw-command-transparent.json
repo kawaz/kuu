@@ -1,5 +1,5 @@
 {
-  "why": "同名 raw command の透過版 (両 export_key: null、id は明示分離 — 未分離だと duplicate-id) の occurrence 帰属。透過 command は結果キー軸を持たず、その子が親スコープで参加する (DR-120 §4 / DR-130 §1b)。未選択の透過スコープの子も親スコープの宣言キーとして立ち、値が無ければ null (DR-130 §1 — 露出キー持ち scope の 1 段 null 畳み (§2) は透過には適用されず、子のキーが直接親面に出る)。未選択スコープに宣言された遅延述語 (required) は評価に参加しない (DR-103 / DR-130 §2 の根拠付け替え)。期待値は起草時の規範導出で、実装実測との突き合わせ待ち。",
+  "why": "同名 raw command の透過版 (両 export_key: null、id は明示分離 — 未分離だと duplicate-id) の occurrence 帰属。透過 command の子は親の宣言キー空間に参加する (DR-120 §4 — 衝突検査の面) が、**結果への列挙は実現したスコープの内側に限る** (DR-130 §1「キーの列挙単位は実現したスコープ」): 透過スコープは結果キー層を持たないため、未選択時に子の null を置く座が無く、**未選択側の子は結果に一切現れない** (null も置かない — fixtures/export-key/unselected-scope-no-default-leak.json が pin する一般規則の適用。identity command の {g: null} 1 段畳み (DR-130 §2) は露出キーを持つ側の形で、透過には写らない)。未選択スコープに宣言された遅延述語 (required) は評価に参加しない (DR-103)。",
   "query": "parse",
   "definition": {
     "commands": [
@@ -34,8 +34,8 @@
   },
   "cases": [
     {
-      "id": "transparent-unselected-children-null-required-dormant",
-      "why": "`go --b y`: 先頭 go は go2 だけが viable (go1 は --b を消費できない)。透過なので g1/g2 キーは無く、子 a / b が親面のキー。未選択の go1 側の a は null で立ち、その required は非発火 (未選択スコープの遅延述語は評価に参加しない)。",
+      "id": "transparent-unselected-children-absent-required-dormant",
+      "why": "`go --b y`: 先頭 go は go2 だけが viable (go1 は --b を消費できない)。選ばれた透過スコープの子 b は親面へ昇格し、未選択の go1 側の子 a は結果にも sources にも現れない (null も置かない)。a の required は未選択スコープ内なので非発火。",
       "args": [
         "go",
         "--b",
@@ -52,11 +52,9 @@
           }
         ],
         "result": {
-          "a": null,
           "b": "y"
         },
         "sources": {
-          "a": null,
           "b": "cli"
         }
       }
