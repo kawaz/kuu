@@ -1,0 +1,137 @@
+{
+  "why": "union セルへの cell fn は特別扱いしない (DR-138 §6b、UC-Q4): ctx.old はその時点のセルの観測値 (淘汰 + 後勝ちの逐次適用の勝ち値、常に一意)、fn は発火ごとに 1 回実行され、産出 Value は通常の書き込みとして適合枝へ並行着地する。乗り物は fixture/scalar_mix ([number, string] — string 形は number に読めれば number、さもなくば string)。incr の観測は通常の set (DR-114 §6.1)。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {
+        "name": "x",
+        "type": "fixture/scalar_mix",
+        "long": [
+          ":set",
+          "bump:incr"
+        ]
+      }
+    ]
+  },
+  "cases": [
+    {
+      "id": "old-is-momentary-winner-across-branches",
+      "why": "`--x red --x 5 --bump-x`: 発火時点の観測値は逐次淘汰 + 後勝ちで 5 (number 枝が最終着地の勝ち — string 枝の \"red\" も完成しているが後勝ちで負けている)。incr は old=5 から 6 を産出し、number 枝だけに着地する (string 枝には型不適合で着地しない、DR-138 §2-1/§6b-3)。最終の勝ち枝は number、値 6。",
+      "args": [
+        "--x",
+        "red",
+        "--x",
+        "5",
+        "--bump-x"
+      ],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {
+            "entity": "x",
+            "op": "set",
+            "operand": "red",
+            "source": "cli"
+          },
+          {
+            "entity": "x",
+            "op": "set",
+            "operand": 5,
+            "source": "cli"
+          },
+          {
+            "entity": "x",
+            "op": "set",
+            "operand": 6,
+            "source": "cli"
+          }
+        ],
+        "result": {
+          "x": 6
+        },
+        "sources": {
+          "x": "cli"
+        }
+      }
+    },
+    {
+      "id": "per-firing-single-execution-folds-sequentially",
+      "why": "`--x 5 --bump-x --bump-x`: 各発火で 1 回ずつ実行され (DR-138 §6b-3)、old は直前の観測値 (5 → 6) を読む — 5 → 6 → 7。枝ごとの再実行があれば値が壊れる形。",
+      "args": [
+        "--x",
+        "5",
+        "--bump-x",
+        "--bump-x"
+      ],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {
+            "entity": "x",
+            "op": "set",
+            "operand": 5,
+            "source": "cli"
+          },
+          {
+            "entity": "x",
+            "op": "set",
+            "operand": 6,
+            "source": "cli"
+          },
+          {
+            "entity": "x",
+            "op": "set",
+            "operand": 7,
+            "source": "cli"
+          }
+        ],
+        "result": {
+          "x": 7
+        },
+        "sources": {
+          "x": "cli"
+        }
+      }
+    },
+    {
+      "id": "fn-output-participates-in-ordinary-timeline",
+      "why": "`--x 5 --bump-x --x red`: incr 産出 (6、number 枝) の後に \"red\" (string 枝) が最終着地 → 後勝ちで \"red\"。fn 産出は特別な優先を持たず、通常の書き込みとして時系列に並ぶだけ (DR-138 §6b-3 / §2)。",
+      "args": [
+        "--x",
+        "5",
+        "--bump-x",
+        "--x",
+        "red"
+      ],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {
+            "entity": "x",
+            "op": "set",
+            "operand": 5,
+            "source": "cli"
+          },
+          {
+            "entity": "x",
+            "op": "set",
+            "operand": 6,
+            "source": "cli"
+          },
+          {
+            "entity": "x",
+            "op": "set",
+            "operand": "red",
+            "source": "cli"
+          }
+        ],
+        "result": {
+          "x": "red"
+        },
+        "sources": {
+          "x": "cli"
+        }
+      }
+    }
+  ]
+}
