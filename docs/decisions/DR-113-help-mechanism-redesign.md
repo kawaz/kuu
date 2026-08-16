@@ -1,5 +1,8 @@
 # DR-113: help 機構の再設計 — help_installer・5 直交 type・構造化 model
 
+> **更新 (DR-140 §4、2026-08-16): §8.1 のグループ宣言 entry 判別条件「`type` を持たず」は
+> 「`value` (値カプセル、DR-140 §1) を持たず」に置き換わる。** 他の規定は不変。
+
 > **更新 (DR-124、2026-07-29): entry の `origin` から `{"kind": "inheritable", ...}` が抜けた。**
 > 値域は `"local"` / `{"kind":"global",...}` / `{"kind":"alias",...}` の 3 値。他は不変。
 
