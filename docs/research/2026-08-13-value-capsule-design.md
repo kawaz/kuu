@@ -283,6 +283,29 @@ map 化等の別の外形も取れるが、既定は array。§2.10 の「外に
 外から見えるのは **`array<string>` (T = string、cardinality = Acc)** だけで (§2.10 / §2.12)、
 `piece` 以下の並びは評価時にカプセル内で閉じる。
 
+### 2.16 filter 座名・defaults 配列・auto 注入 (kawaz 裁定 2026-08-16 mid=50-65)
+
+規範化は DR-139/DR-140。本節は裁定の記録のみ:
+
+- **変換 5 field の最終形 (CR-Q1=a)**: `pre_type_filters` / `type` / `post_type_filters` /
+  `final_filters` (非 accum 専用、綴り不変) / `post_accum_filters` (accum 専用、collector 前)。
+  §2.15 の例示名 (piece/each/settled/collected) と §4.4 の両案はいずれも不採用 —
+  DR-079 が棄却した「アンカー全明示」の再採用 (棄却理由はカプセル入れ子化で無効)。
+  mid=57 の「collector 後の共通座」案は不採用 (1 属性 1 registry の破壊 — DR-139
+  採用しなかった案)
+- **供給の canonical は `defaults` 配列** (mid=58-63): default provider fn の試行列
+  (順序 = 試行順、最初に成立した供給が勝つ)。要素は colon-string fn
+  (`env:X` / `config:p` / `borrow:y`) + literal は `{"value": ...}`。open set。
+  wire の `env:` / `config_key:` / `default:` / `default_fn:` は糖衣として残り lowering が
+  既定試行順で展開。**auto 系 (env_auto 等) は defaults へ要素を自動注入する installer**
+  (明示があれば注入しない)。CR-Q2 (縮退の曖昧) は配列化で問題ごと消滅
+- **effects の部分書き表現は現行 (path 付き set) のまま** — 新表現なし (mid=49)
+- **accum 4 パターンの例の正本は mid=50 応答**: append / append+flatten /
+  increment→number / append+from_entries→map
+- **type バンドル不要化の洞察** (mid=64-65、未裁定の見通し): number 系の scope config
+  ダイヤル類は「同名 number 型の shadow 再定義」(definitions.types) で置換できる見通し —
+  scope config の語彙縮小の検討は issue `2026-08-16-scope-config-shrink-by-type-shadow`
+
 ## 3. B' 案の現在形 — 時点構造つき値カプセル
 
 ### 3.1 骨格

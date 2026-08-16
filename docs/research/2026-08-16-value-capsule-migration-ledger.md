@@ -10,9 +10,10 @@
 | 対象 | 実測 | 変換 | expect |
 |---|---|---|---|
 | `type` を持つノード | 1081 ノード / 445 ファイル | `"type": X` → `"value": "X"` (縮退形、他の値属性が無い場合) / `"value": {"type": X, ...}` (同居時) | 不変 (機械変換) |
-| 座席 4 属性 (`piece_filters` / `value_filters` / `final_filters` / `accum_filters`) | 46 ノード / 41 ファイル | `pre_filters` / `post_filters` / `final_filters` / `collected_filters` として `value` 内へ | **不変が実測済み** (B' 報告 — 入れ子化のみの前提。リネーム込みで再確認) |
+| 座席 4 属性 (`piece_filters` / `value_filters` / `final_filters` / `accum_filters`) | 46 ノード / 41 ファイル | `pre_type_filters` / `post_type_filters` / `final_filters` (不変) / `post_accum_filters` として `value` 内へ (CR-Q1=a) | **不変が実測済み** (B' 報告 — 入れ子化のみの前提。リネーム込みで再確認)。非 accum/accum の排他 (wrong-seat) は属性分割ごと生存するため排他 pin (`accum-filters-on-non-multiple-invalid-range` 系) は新綴りへの改名で存続する |
 | `multiple` / `separator` | 98 ノード / 66 ファイル | 束ね名解体 → `value` 内の `separator` / `accumulator` / `collector` (+ `flatten` は accumulator の object 形へ) | **不変は未実測** — 移送時に実測してから主張する (fable M-3 の線) |
-| `value:` (宣言定数) | 15 ノード | `"value": {"const": X}` | 不変 (機械変換 — bare JSON とカプセル object は型が重ならず一意) |
+| `value:` (宣言定数) | 15 ノード | `"value": {"const": X}` | 不変 — ただし一意性は**時点前提** (DR-140 §2): 旧 string const は新 wire の縮退形と綴りが衝突するため、全定義が旧綴りの時点で一括変換する |
+| 供給 4 属性 (`default` / `default_fn` / `env` / `config_key`) | (移送時に実測) | カプセル内の糖衣キーへ移動 (綴り同じ・置き場が `value` 内へ)。canonical `defaults` への書き換えは任意 (糖衣は正規に残る、DR-139 §1.1) | 不変 (糖衣等価性 — source タグ保存) |
 | definition-error 系 (wrong-seat / unknown-vocab の旧綴り fixture) | 座席系 fixture の一部 (41 ファイル中 definition-error 配下 21) | 期待 kind は不変だが、旧綴り自体が unknown-vocab 化するため **fixture の意図 (何を pin しているか) を 1 本ずつ読み直して書き換える** — 機械変換不可の要判断枠 | 個別判断 |
 | corpus/ | 1 ファイル (座席使用) | 同上 | 不変 |
 
@@ -52,8 +53,8 @@ fixture → 参照実装の順で同一 lockstep 窓に入れる** (単独 push 
 ## 5. 新規 pin (移送と同時に足す観測点 — attribute-plane settlement ノート §6 の確定版)
 
 1. cardinality 導出 4 トリガ (separator / accumulator / collector 単独、repeat のみ) の各々
-2. `collected_filters` 単独宣言 (トリガなし) = invalid-range (導出の一方向性)
-3. `final_filters` × 収集トリガの同時宣言 = invalid-range (両方向)
+2. `post_accum_filters` 単独宣言 (トリガなし) = invalid-range (導出の一方向性)
+3. `final_filters` × 収集トリガの同時宣言 = invalid-range (両方向 — 既存排他 pin の新綴り改名で大半は存続、collector/separator 単独トリガ側だけ新規)
 4. type プリセット (count) 由来の accumulator で accum 適格 (AP-Q5=b)
 5. 合成: type プリセット chain への `{append: [...]}` 拡張 / ref + field 単位追記
 6. ref 元 field の丸ごと上書き (累積しない)
@@ -61,6 +62,9 @@ fixture → 参照実装の順で同一 lockstep 窓に入れる** (単独 push 
 8. const 吸収後の実体だけノード (source: const)
 9. グループ宣言 entry の判別 (カプセル不在) — help fixture
 10. 旧綴り (`type` 直下等) の unknown-vocab 化 (definition-error)
+11. **旧 string const の縮退形誤読の検知**: `"value": "<registry に無い綴り>"` が unknown-vocab で発覚することの pin + 移送 lint (旧 corpus の `value:` string 値が registry type 名と偶然一致していないかの一括検査 — 一致したら手動判断)
+12. defaults 配列の canonical 形 (試行順・{prepend,append} 合成・literal typed object) と糖衣展開の等価
+13. collector 単独宣言時の accumulator 既定 = append
 
 ## 6. 残課題 (移送スコープ外・別裁定)
 
