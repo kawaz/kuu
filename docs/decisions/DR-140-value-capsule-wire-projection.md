@@ -16,12 +16,18 @@
 ```jsonc
 {"name": "header", "long": true,
  "value": {
-   "default": [], "env": "APP_HEADERS", "config_key": ["headers"], "completer": "header_names",
-   "pre_filters": ["trim"], "type": "string", "post_filters": ["non_empty"],
-   "collected_filters": ["unique"],
+   "defaults": ["env:APP_HEADERS", "config:headers", {"value": []}],   // canonical (DR-139 §1.1)
+   "completer": "header_names",
+   "pre_type_filters": ["trim"], "type": "string", "post_type_filters": ["non_empty"],
+   "post_accum_filters": ["unique"],
    "accumulator": "append", "separator": ","
  }}
 ```
+
+供給の糖衣 4 属性 (`env:` / `config_key:` / `default:` / `default_fn:`) は**カプセル内の
+糖衣キー**として残り、lowering が既定試行順で `defaults` へ展開する (DR-139 §1.1 —
+`long: true` と同じ二形イディオム。糖衣と canonical `defaults` の同居時の合成も DR-139
+§1.1 の配列イディオムで決まる)。
 
 **string 縮退形**: `value` の値が string なら、それは `type` 単独指定の糖衣である —
 `"value": "number"` = `"value": {"type": "number"}`。縮退はカプセル名の下で起きるので
@@ -48,9 +54,15 @@ literal、DR-031 の const) は、カプセル内 `const` field へ移る:
 
 意味論は不変 (セル初期化位相・ラダー席でない・source は `const` — DR-031 の規定のまま)。
 `values:` (or のショートハンド糖衣、DESIGN §5.3) は消費構造の糖衣であり無関係 — 綴りも
-意味も変えない。旧 `value:` の「JSON 値を直に置く」形と新 `value` (カプセル object /
-type string) は型が重ならないため、機械変換は一意である (bare JSON scalar/array →
-`{"const": ...}` へ包む)。
+意味も変えない。
+
+**移送の一意性は時点前提である** — 旧 `value:` には string const が多数実在し
+(`{"name": "mode", "value": "cli"}` 等)、その綴りは新 wire では string 縮退形
+(`type: "cli"` の糖衣) として**合法にパースされてしまう**。旧形と新形は型で区別できない。
+機械変換が一意なのは「移送は全定義が旧綴りである時点に一括で行う」(v1 前の一斉更新、
+本 DR 冒頭) という前提によるのであって、綴りの排他によるのではない。移送後に紛れ込む
+旧形 string const の誤読 (存在しない type 名への縮退 → unknown-vocab で発覚するのが通常だが、
+registry に実在する綴りと偶然一致すると沈黙する) は移送台帳の検知 lint / pin で塞ぐ。
 
 ### 3. 要素直下から廃止される属性
 
@@ -61,12 +73,13 @@ type string) は型が重ならないため、機械変換は一意である (ba
 | 旧 (要素直下) | 新 (`value` 内) |
 |---|---|
 | `type` | `type` (または string 縮退形) |
-| `piece_filters` | `pre_filters` |
-| `value_filters` | `post_filters` |
-| `final_filters` | `final_filters` |
-| `accum_filters` | `collected_filters` |
+| `piece_filters` | `pre_type_filters` |
+| `value_filters` | `post_type_filters` |
+| `final_filters` | `final_filters` (綴り不変) |
+| `accum_filters` | `post_accum_filters` |
 | `multiple` (束ね名 + object 形) | `separator` / `accumulator` / `collector` へ解体 (DR-139 §5) |
-| `default` / `default_fn` / `env` / `config_key` / `completer` | 同名 field |
+| `default` / `default_fn` / `env` / `config_key` | カプセル内の**糖衣キー**として同綴り存続 — canonical は `defaults` 配列へ lowering 展開 (DR-139 §1.1) |
+| `completer` | 同名 field |
 | `value` (宣言定数) | `const` (§2) |
 
 要素直下に残る属性は DR-139 §1.1 の包含側列挙のとおり (名前系 5 軸・入口・構造・制約・
@@ -76,10 +89,14 @@ type string) は型が重ならないため、機械変換は一意である (ba
 
 - **グループ宣言 entry (DR-113 §8.1)**: 判別条件の「`type` を持たず」は
   「**`value` (カプセル) を持たず**」に置き換わる。schema/wire.schema.json の同旨条件も追随
-- **DR-135 §1 の分界** (「その要素が値を持つか」): カプセルの presence で構造的に言える
-  形になる (型別リストの数え上げから、`value` 属性の有無 + type:"none" の ⊘ へ)
-- **実体だけノード (DR-030)** の判別 (「入口なしで値だけ持つ」) は `value` の presence で
-  従来同様に成立する (§2 の形)
+- **DR-135 §1 / DR-130 §1b の「その要素が値を持つか」の分界**: **`value` の presence 単独
+  では取れない** — `type: "none"` はカプセル語彙上「カプセル ⊘」(DR-139 §2.2) だが wire
+  綴りとしては `"value": "none"` (縮退形) を持つ。正確な判別式は
+  「**`value` が不在、または `value` の type が `"none"` である**」。none を wire 上も
+  カプセル不在へ畳んで判別式を presence 単独に戻す案は issue
+  `2026-08-16-type-none-as-capsule-absence` の別検討
+- **実体だけノード (DR-030)** の判別 (「入口なしで値だけ持つ」) は上と同じ判別式で成立する
+  (§2 の形)
 
 ### 5. lowered 断面 (DR-063 §3) は形を変えず語彙だけ追随する
 
