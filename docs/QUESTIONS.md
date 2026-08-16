@@ -22,7 +22,21 @@
 
 ## 裁定待ち
 
-(現在なし)
+## 👺 TYF-Q1: value カプセル内 `type` の object 呼び出し形 (移送ブロッカー)
+
+DR-140 §1 は wire の `value.type` を「常に registry 識別子の string」と規定。一方、型が引数 (config) を取る場合の書き場所が未裁定。collector は object 呼び出し形 (DR-139 の表 — 引数を取る collector は object 形が canonical) を既に持つ。
+
+- [ ] a: **`"type": {"name": "int", "config": {...}}` の object 呼び出し形を許す (string は無引数の縮退)** — collector と同じイディオム (DR-044 §2) で対称。引数付き型を definitions.types で命名せず直書きできる
+- [ ] b: type は常に string、引数付きは definitions.types で命名必須 — wire は単純だが、単発利用でも命名を強制
+- [ ] c: 保留 (移送は b 相当の現状形で進め、後日拡張)
+
+## 👺 CDT-Q1: command の脱 type 化 (kawaz mid=78 発題への統括提案)
+
+`type:"command"` が type 座を占有し「値持ち command (version 等、DR-134) の値型を書く場所が無い」歪みがある。
+
+- [ ] a: **`"command": true` bool マーカー化 (統括推し)** — commands[] 配置時は省略可、positionals 内のみ必須。dd も `"dd": true` へ対称。type は値の型 (カプセル内) 専用に純化。GA-Q1=a (種別マーカーは要素直下) の綴りをこの形で確定
+- [ ] b: `type:"command"` を維持し、値持ち command の値型は別 field で書く
+- [ ] c: 別案 (自由文で)
 
 ## 確認待ち
 
