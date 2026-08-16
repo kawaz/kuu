@@ -51,6 +51,12 @@ descriptor レス化の境界線設計 (DR-107 §1 の適用明確化) とセッ
 関連: 受け入れ検証ノート 2026-08-16-capsule-acceptance-walkthrough.md §7 (descriptor 5
 目的の分解 — 型ローカルにはすべて不要の判定)。
 
+DX 目標を拡張 (kawaz mid=70、2026-08-16): 型ローカル filter だけでなく汎用 filter
+(registry 住人) も、各言語 DX でアダプタ interface (変換関数の型シグネチャ) を実装する
+だけで登録が済み、descriptor 相当 (io_type / fallibility / reasons 宣言) はホスト言語の
+型情報・実装から可能な限り自動導出される形を目指す。手書き descriptor は自動導出が
+届かない部分 (help 文言等) の補足に限る方向。
+
 ## 受け入れ条件
 
 - [ ] descriptor の 3 つの存在理由 (衝突管理 / reasons 完備チェック / help・lint 機械
@@ -60,3 +66,5 @@ descriptor レス化の境界線設計 (DR-107 §1 の適用明確化) とセッ
   を DR として起票する
 - [ ] descriptor レス化の境界線設計 (DR-107 §1) とセットで、ホスト言語側の自動導出
   (関数シグネチャから io_type を推論する等) を受け入れ条件に含める
+- [ ] 汎用 filter (registry 住人) のアダプタ IF 化: descriptor 相当をホスト言語の型情報・
+  実装から自動導出する設計を検討する
