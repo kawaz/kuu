@@ -37,3 +37,17 @@
 
 
 
+
+## 👺 GA-Q1: 値なし preset (dd / command / help) のカプセル射影
+
+DR-140 §3 は要素直下 type を無条件に value へ送るが、dd/command/help は値の宣言でなく構造・入口系の種別マーカー。DR 監査で 3 束が独立検出した未規定。
+
+- [ ] a: **dd / command / help の type は value カプセルへ送らず要素直下の種別マーカーとして残す (統括推し)** — 「value 不在 = 値空間なし」の判別と整合し、command の値担体 (DR-134) は別途 value を持てる形が自然
+- [ ] b: 一律 value へ送る (`"value": "command"`) — 判別式に例外が増える
+
+## 👺 GA-Q2: help model の CLI 表面綴りの軸
+
+help の command entry name / command_path / program_name が raw name 直取りのまま (DR-113/117)。TRG バッチは effects/errors/origin しか裁いておらず空白。
+
+- [ ] a: **trigger_name 軸 (CLI 表面綴り) — 統括推し**。help は CLI 表面を見せる文書なので、ユーザーが打つ綴りと一致すべき
+- [ ] b: raw name のまま (宣言 provenance)
