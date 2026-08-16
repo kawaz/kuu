@@ -15,7 +15,7 @@
 | `definition-error` | 定義時検査 (DR-054) を再現 | query: "definition_error" |
 | `completion` | complete クエリ (DR-060) を再現 | query: "complete" |
 
-parse-core は全実装必須の最小プロファイル (lowering を内包する — wire が宣言層 (DR-063) なので parse には lowering 実装が要る。lowering プロファイルは lowered 断面の緩比較까지検証する強い準拠)。他は opt-in。「kuu 準拠」を名乗る最小条件は parse-core green。
+parse-core は全実装必須の最小プロファイル (lowering を内包する — wire が宣言層 (DR-063) なので parse には lowering 実装が要る。lowering プロファイルは lowered 断面の緩比較まで検証する強い準拠)。他は opt-in。「kuu 準拠」を名乗る最小条件は parse-core green。
 
 > **更新 (DR-112 §11、2026-07-18): `help` プロファイル (query: "help"、help query の再現、fixtures/help/) が opt-in として追加され、プロファイルは 5 つになった。** spec の v1.0.0 発行条件も 5 プロファイル全 green に改訂 (DR-108 §3 の note 参照)。実装の準拠名乗り最小条件 (parse-core green) は不変。
 

@@ -60,6 +60,14 @@ camelCase → snake_case:
 - 正規形は snake 1つ、各言語は pluggable な変換器で自然に書ける。
 - 変換を言語ごとに固定しないため、新しい暗黙ルールを増やさない。
 
+
+> **更新 (DR-139 / DR-140、2026-08-16): 座席名・`multiple` 属性・`value:` の綴りは値カプセルへ
+> 移送される。** 座席は DR-102 の 4 綴りを経て DR-139 §1.2 のカプセル内 5 座席へ、`multiple` 属性は
+> DR-139 §5 で廃止 (cardinality はカプセルの座から導出)、消費 0 literal の `value:` は
+> DR-140 §2 の `const` field へ、供給 (`default` / `env` / `config_key` / `default_fn`) は
+> DR-139 §1.1 の `defaults` へ集約される。本 DR の**判断**は綴りの下で生きている。移送の作業単位は
+> `docs/research/2026-08-16-value-capsule-migration-ledger.md`。
+
 ## 関連
 
 - DR-010 (外部レジストリの外部注入) — case 変換 provider の土台

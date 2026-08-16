@@ -86,6 +86,10 @@ failure に partial な ParserContext (どこまで解釈できたかの部分�
 
 > **更新 (DR-112、2026-07-18): §2 の `fired_action` を発火させる宣言側の属性名は `on_failure` に確定した (DR-112 §8)。** 本 DR の構造 (`fired_action` / `help_entry` の座席、素材と文言の分離) は不変 — 宣言側 (`on_failure`) と報告側 (`fired_action`) が別語幹であることは意図的 (位相の混同回避)。
 
+> **更新 (SPK-Q2=a、2026-08-16): errors の dedupe 規約が CONFORMANCE §2 に置かれている。**
+> 同一 `(element, kind, args_pos)` の重複は 1 件に畳む (`push_error` の dedup)。本 DR の
+> outcome union の規定自体は不変で、追加されたのは列の作り方の規約。
+
 ## 関連
 
 - DR-066 (reason コード層 — errors 構造の拡張)

@@ -88,6 +88,14 @@ DR-056 の「参照」の直写しだが、ref / link / alias の参照ファミ
 - 宣言なき観測の静的検出ツール (lint の実装課題)
 - 組み込み factory の config キー全列挙 (DR-040 の canonical 字句仕様を config 語彙へ写像する作業はフェーズ 1 の Schema 実体化で行う)
 
+
+> **更新 (DR-139 / DR-140、2026-08-16): 座席名・`multiple` 属性・`value:` の綴りは値カプセルへ
+> 移送される。** 座席は DR-102 の 4 綴りを経て DR-139 §1.2 のカプセル内 5 座席へ、`multiple` 属性は
+> DR-139 §5 で廃止 (cardinality はカプセルの座から導出)、消費 0 literal の `value:` は
+> DR-140 §2 の `const` field へ、供給 (`default` / `env` / `config_key` / `default_fn`) は
+> DR-139 §1.1 の `defaults` へ集約される。本 DR の**判断**は綴りの下で生きている。移送の作業単位は
+> `docs/research/2026-08-16-value-capsule-migration-ledger.md`。
+
 ## 関連
 
 - DR-042 (installer 5 不変則 — owns は不変則③・completeness 検査の形式化)

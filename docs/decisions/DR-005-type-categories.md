@@ -47,7 +47,7 @@
 シュガー (flag/count/command/help) は、各々が独立した type ではなく、値型+挙動のプリセットと位置付けていた:
 - `flag` = boolean + defaultValue=false + 起動で true セット
 - `count` = number + defaultValue=0 + 起動で increment
-- `command` = name でトリガ (当時の表現では「children をスコープ」と書いていたが、DR-025/033 で「name でスコープ」に再定式化済み)
+- `command` = name でトリガ (当時の表現では「children をスコープ」と書いていたが、DR-025/033 で「name でスコープ」に再定式化され、**さらに TRG-Q4=a で「解決後の結果キー軸の占有」へ再訂正済み** (この注記自体が 1 世代前の呼称だった))
 - `help` = 起動時に ParserContext の help フラグセット
 
 version は専用 type ではなく、**ただのフラグ**。結果オブジェクトの `result.version` を見てアプリがバージョン出力。AST にバージョン文字列を持たせない。

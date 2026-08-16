@@ -148,6 +148,14 @@ DR-074 §5 の pre_filter 経路は「アプリ都合の狭め・広げ」の受
 
 §3 の通り "UP"/"DOWN" が「away/toward 0」の意味で「+∞/−∞ 方向」と誤読される。この分野で最も事故を生む語なので `half_away`/`half_trunc` に分解して排除した。
 
+
+> **更新 (DR-139 / DR-140、2026-08-16): 座席名・`multiple` 属性・`value:` の綴りは値カプセルへ
+> 移送される。** 座席は DR-102 の 4 綴りを経て DR-139 §1.2 のカプセル内 5 座席へ、`multiple` 属性は
+> DR-139 §5 で廃止 (cardinality はカプセルの座から導出)、消費 0 literal の `value:` は
+> DR-140 §2 の `const` field へ、供給 (`default` / `env` / `config_key` / `default_fn`) は
+> DR-139 §1.1 の `defaults` へ集約される。本 DR の**判断**は綴りの下で生きている。移送の作業単位は
+> `docs/research/2026-08-16-value-capsule-migration-ledger.md`。
+
 ## 関連
 
 - DR-074 (canonical number/bool 字句 — §2 暫定注記 (M2) を本 DR が値空間判定で解消、§4 config 表に `kuu_int_parser` / `int_round` 追加) / DESIGN §3.3-3.4 (int の値空間判定 + int_round + default error を反映、§3.4 factory config 例に kuu_int_parser)

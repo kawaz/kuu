@@ -140,6 +140,14 @@ DR-061 の例が示す map 形は表現力が高いが、canonical 運用では�
 
 本 DR は DR-040 §「canonical default の字句仕様」のうち **number の字句仕様を差し替え** (10 進最小 → 実用寛容固定字句 + 基数統合 opt-in + inf/nan 規定)、**bool の字句仕様を新設**する (DR-040 には bool の字句項がなかった、findings G1)。DR-040 の 3 層上書き構造・2 系統の方言軸 (pre_filter で狭める / value_parser 差し替え)・configurable factory 方式 (DR-061) は不変。exact / path / count 系の canonical 字句も不変。
 
+
+> **更新 (DR-139 / DR-140、2026-08-16): 座席名・`multiple` 属性・`value:` の綴りは値カプセルへ
+> 移送される。** 座席は DR-102 の 4 綴りを経て DR-139 §1.2 のカプセル内 5 座席へ、`multiple` 属性は
+> DR-139 §5 で廃止 (cardinality はカプセルの座から導出)、消費 0 literal の `value:` は
+> DR-140 §2 の `const` field へ、供給 (`default` / `env` / `config_key` / `default_fn`) は
+> DR-139 §1.1 の `defaults` へ集約される。本 DR の**判断**は綴りの下で生きている。移送の作業単位は
+> `docs/research/2026-08-16-value-capsule-migration-ledger.md`。
+
 ## 関連
 
 - DR-040 (type registry の方言 3 層 — 本 DR が number 字句を改訂・bool 字句を新設、3 層構造は不変) / docs/DESIGN.md §3.3-3.4 (canonical 字句の正本、本 DR で改訂)

@@ -72,6 +72,14 @@ DR-041/042 が「観測挙動が同一なら自由」とした実装内部の自
 - conformance fixture のフォーマット (定義 + argv + 期待値のスキーマ — 別途)
 - pending 状態 (トリガ消費・値待ち) の枝表現 — 評価器契約 (フェーズ 3) の論点。DR-060 の complete が別走査で成立することは slice 第 18 弾で実測済み
 
+
+> **更新 (DR-139 / DR-140、2026-08-16): 座席名・`multiple` 属性・`value:` の綴りは値カプセルへ
+> 移送される。** 座席は DR-102 の 4 綴りを経て DR-139 §1.2 のカプセル内 5 座席へ、`multiple` 属性は
+> DR-139 §5 で廃止 (cardinality はカプセルの座から導出)、消費 0 literal の `value:` は
+> DR-140 §2 の `const` field へ、供給 (`default` / `env` / `config_key` / `default_fn`) は
+> DR-139 §1.1 の `defaults` へ集約される。本 DR の**判断**は綴りの下で生きている。移送の作業単位は
+> `docs/research/2026-08-16-value-capsule-migration-ledger.md`。
+
 ## 関連
 
 - DR-039 (合流テーゼ — 直列形の範囲を本 DR が確定。テーゼ自体は維持)

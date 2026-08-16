@@ -65,6 +65,14 @@ REPDEF-Q1 の起票時に「DR-044 / DR-051 との整合が最も良い」とし
 - **kuu.mbt**: 反復セルを「初期値 `[]` 保持」から「空席 + 発火時初期化」へ再型付けし、未発火セルをラダー解決の対象に含める。`unset` 後の再解決が下位席まで落ちることの確認を含む
 - **issue / QUESTIONS**: REPDEF-Q1 は本 DR で解消
 
+
+> **更新 (DR-139 / DR-140、2026-08-16): 座席名・`multiple` 属性・`value:` の綴りは値カプセルへ
+> 移送される。** 座席は DR-102 の 4 綴りを経て DR-139 §1.2 のカプセル内 5 座席へ、`multiple` 属性は
+> DR-139 §5 で廃止 (cardinality はカプセルの座から導出)、消費 0 literal の `value:` は
+> DR-140 §2 の `const` field へ、供給 (`default` / `env` / `config_key` / `default_fn`) は
+> DR-139 §1.1 の `defaults` へ集約される。本 DR の**判断**は綴りの下で生きている。移送の作業単位は
+> `docs/research/2026-08-16-value-capsule-migration-ledger.md`。
+
 ## 関連
 
 - DR-031 (値源ラダー — 本 DR は最下段の中身を規定) / DR-081 (default 席書き換え) / DR-087 (default の遅延解決 — 空セルへ後から入る fallback モデル)

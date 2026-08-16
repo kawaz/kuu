@@ -27,6 +27,10 @@ JSON Schema (機械可読ファイル) が写像するのは主に構文層。�
 
 - **葉と枝の排他**: 葉は `children` (or / seq) を持たず値プリミティブとして振る舞い、枝は or / seq を持つ (DESIGN §1.1)。**`exact` は葉であり、同一ノードでの or / seq との同居は非合法** (or / seq の「子」に exact ノードが入るのは正常 — values → or 展開の枝等。非合法なのは 1 ノードが exact と children を兼ねる形で、A 群正規化はこの形を生成しない)。or と seq の同居も非合法 (choice か sequence のどちらか)。`type` (参照糖衣) は葉・枝どちらとも同居できる (§3.5 の合成順で解決 — type テンプレの構造を直書きが上書き)
 - **or / seq の children 数**: **0 個・1 個とも合法** (Error にしない)。意味論は定義済み — `or: []` は恒不成立 (選べる枝ゼロ)、`seq: []` は 0 消費の成功 (unit — repeat lowering の `Opt(X) = Or([X, Seq([])])` が内部利用する正規の形)、1 個は単体と等価 (退化、正規化はしない)。ユーザが直接書いた空 or / 空 seq は書き損じの公算が高いため**静的 warn** (lint、DR-021 の「warn はする、reject はしない」)
+> **更新 (DR-139 §5、2026-08-16): `multiple` 属性は廃止され cardinality は値カプセルの座から
+> 導出される。** 以下 2 条項の `multiple` は「cardinality を導く座 (accumulator / separator /
+> collector / repeat)」と読み替える — **配置制約を持たないという invariant 自体は不変**。
+
 - **multiple / repeat の配置制約**: **持たない** (or / seq の children 内の要素が multiple / repeat を持つのは合法)。multiple は値セルの畳み設定であり構造位置と直交する (DR-034/043)
 - **name / id の値**: **非空 string**。文字種・長さの制限は課さない (非 ASCII name は正規のユースケース、DESIGN §2.2)。唯一の予約は **`#` を含む name / id はユーザ定義で禁止** (unfold 内部 id の予約名前空間、DR-063 §3 / DR-046 §4)。name にも適用する理由: id 未指定なら name が id を兼ねる (DR-046 §2) ため、name だけ許すと `{"name": "src#cons"}` が repeat lowering の内部 template キーと衝突し「`#` 入り = templates、なし = entities/要素」の一意解決 (DR-063 §3) が壊れる。`export_key: ""` は null と同義 (DR-052) であり name の非空制約とは別物
 - **同一スコープ内のトリガ重複**: **合法** (Error にしない)。静的 warn + 実行時 ambiguous が既定の扱い (DR-041 / DESIGN §15.5-15.6 の再確認)

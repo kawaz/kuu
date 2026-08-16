@@ -58,7 +58,7 @@ options に `name: "config"` があって、positionals にも `name: "config"` 
 - DR-003 (name の3軸)
 - DR-007 (definitions 領域)
 - DR-025 (結果キー軸を占有するノードがスコープを作る)
-- DR-033 (lexical = name scope の整理)
+- DR-033 (lexical スコープ = 結果スコープ の整理。単位を決める条件は TRG-Q4=a で結果キー軸の占有へ訂正)
 - DR-046 (name は各軸のデフォルト供給源 — 重複禁止の対象が id 軸であることの根拠)
 - DR-054 更新 5 (`duplicate-id` — 本 DR の重複禁止を報告する kind)
 - DR-120 (露出キー軸の重複 — `export-key-collision`)

@@ -80,6 +80,14 @@ DR-037 の Error 意味論の適用先拡張 (「全段」に遅延述語を含�
 - 条件付き制約 (値依存の requires) は or 構造への誘導方針 (F-028) のまま、本 DR で確定しない
 - `at_least_one` 等の追加の制約語彙は、必要になった時に本 DR の 2 レイヤ + 判定入力 (値述語 / 指定述語) の枠組みで分類する
 
+
+> **更新 (DR-139 / DR-140、2026-08-16): 座席名・`multiple` 属性・`value:` の綴りは値カプセルへ
+> 移送される。** 座席は DR-102 の 4 綴りを経て DR-139 §1.2 のカプセル内 5 座席へ、`multiple` 属性は
+> DR-139 §5 で廃止 (cardinality はカプセルの座から導出)、消費 0 literal の `value:` は
+> DR-140 §2 の `const` field へ、供給 (`default` / `env` / `config_key` / `default_fn`) は
+> DR-139 §1.1 の `defaults` へ集約される。本 DR の**判断**は綴りの下で生きている。移送の作業単位は
+> `docs/research/2026-08-16-value-capsule-migration-ledger.md`。
+
 ## 関連
 
 - DR-038 (完全経路の一意性 — 「解決」の成立条件に遅延述語を追加)

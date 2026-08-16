@@ -79,6 +79,14 @@ accumulator 語彙で表現できる関心を別軸の属性に生やす二重�
 - piece_filters / parse との位相: マーカー認識と escape 剥がしは separator 分割直後・型 parse 前。remove operand は payload として型 parse を通る。piece_filters (DR-079 座席 B) は payload にのみ効き op を素通しする
 - effects oracle での piece op (add/remove/splice) の見せ方は fixture 設計時に確定 (issue list-merge-piece-op-vocabulary が追跡)
 
+
+> **更新 (DR-139 / DR-140、2026-08-16): 座席名・`multiple` 属性・`value:` の綴りは値カプセルへ
+> 移送される。** 座席は DR-102 の 4 綴りを経て DR-139 §1.2 のカプセル内 5 座席へ、`multiple` 属性は
+> DR-139 §5 で廃止 (cardinality はカプセルの座から導出)、消費 0 literal の `value:` は
+> DR-140 §2 の `const` field へ、供給 (`default` / `env` / `config_key` / `default_fn`) は
+> DR-139 §1.1 の `defaults` へ集約される。本 DR の**判断**は綴りの下で生きている。移送の作業単位は
+> `docs/research/2026-08-16-value-capsule-migration-ledger.md`。
+
 ## 関連
 
 - DR-036 (multiple registry / accumulators) / DR-077 §3 (accumulator の純化、append/merge 等)

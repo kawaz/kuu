@@ -58,8 +58,9 @@ final / post_accum) とラダー宣言 (defaults の試行順) という **2 本
   不変 — `defaults` は CLI/link の committed 供給が無い場合の試行列である (DR-138 §3 の
   セル単位 gate も不変)
 
-**カプセル外に残るもの** (包含側列挙): 名前系 5 軸 (`name` / `trigger_name` / `id` /
-`export_key` / `value_name` / `display_name` — DR-136。`value_name` を降ろすと名前軸だけが
+**カプセル外に残るもの** (包含側列挙): 名前系 5 軸 (`trigger_name` / `id` / `export_key` /
+`value_name` / `display_name`) **と、それらへの供給源である `name`** (DR-136 §1 — `name` は
+軸ではなく各軸のデフォルト供給源なので軸の数には入らない。`value_name` を降ろすと名前軸だけが
 2 箇所に散るため外)、入口 (`long` / `short` / `alias` / `exact` / `match` / `self`)、構造
 (`or` / `seq` / `options` / `positionals` / `commands` / `ref` / `link` / `optional` /
 **`repeat`**)、制約 (`required` / `requires` / `conflicts_with` / `exclusive_group` /

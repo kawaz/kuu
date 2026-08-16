@@ -47,6 +47,14 @@ DR-080 §3 の「マーカーなし発火 = 上書き」に落とすと merge �
 - kuu.mbt: issue multiple-ref-accum-gap の解消 — ref 要素 (ref_target 持ち) にも accumulator を配線 (installer の entity 登録スキップの解除)、repeat×multiple の発火境界保存、merge×ref の decode 時 definition-error
 - issue ref-nested-consumption-fixture-gap は論点 3 の fixture 追従完了時に close
 
+
+> **更新 (DR-139 / DR-140、2026-08-16): 座席名・`multiple` 属性・`value:` の綴りは値カプセルへ
+> 移送される。** 座席は DR-102 の 4 綴りを経て DR-139 §1.2 のカプセル内 5 座席へ、`multiple` 属性は
+> DR-139 §5 で廃止 (cardinality はカプセルの座から導出)、消費 0 literal の `value:` は
+> DR-140 §2 の `const` field へ、供給 (`default` / `env` / `config_key` / `default_fn`) は
+> DR-139 §1.1 の `defaults` へ集約される。本 DR の**判断**は綴りの下で生きている。移送の作業単位は
+> `docs/research/2026-08-16-value-capsule-migration-ledger.md`。
+
 ## 関連
 
 - DR-034 (multiple = 複数発火の値折り) / DR-043 (repeat と multiple の軸分離) / DR-044 (一様配列) / DR-051 §2 (0 発火 = [])

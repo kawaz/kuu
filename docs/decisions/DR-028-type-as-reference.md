@@ -81,6 +81,12 @@ kawaz:
 
 → 組み込み型も「最初から登録済みのプリセット」。string は value_parser:string→string が登録されたエントリ、number は string→number、flag は bool+default+挙動。**type フィールドは『定義済みプリセットへの参照』** という一貫した見方。
 
+
+> **更新 (DR-136 §1〜§3、2026-08-16): name から各軸への供給には文字写像が掛かる。** `name` は
+> 各軸のデフォルト供給源にすぎず、CLI 表面の綴りは `trigger_name` 軸 (ASCII 非英数 → `-`)、
+> id / 結果キーは id 軸の写像 (→ `_`)、`value_name` はその写像 + ASCII 大文字化で供給される。
+> 本 DR 本文の「name をそのまま使う」「name 完全一致」系の記述はこの供給を通したものとして読む。
+
 ## 関連
 
 - DR-005 (type categories) — flag等を糖衣に再整理、本 DR で更新

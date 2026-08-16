@@ -100,6 +100,14 @@ entry 列に要素を刺すための語彙で、shadow tree では不要 (同 is
   同じ構造を辿るので、露出キー軸の再計算 (`walk_export_path`) は流用できる
 - **kuu-cli**: sources の JSON 出力形を追随
 
+
+> **更新 (DR-139 / DR-140、2026-08-16): 座席名・`multiple` 属性・`value:` の綴りは値カプセルへ
+> 移送される。** 座席は DR-102 の 4 綴りを経て DR-139 §1.2 のカプセル内 5 座席へ、`multiple` 属性は
+> DR-139 §5 で廃止 (cardinality はカプセルの座から導出)、消費 0 literal の `value:` は
+> DR-140 §2 の `const` field へ、供給 (`default` / `env` / `config_key` / `default_fn`) は
+> DR-139 §1.1 の `defaults` へ集約される。本 DR の**判断**は綴りの下で生きている。移送の作業単位は
+> `docs/research/2026-08-16-value-capsule-migration-ledger.md`。
+
 ## 関連
 
 - DR-031 (source タグの語彙と確定ルール — タグの決定単位は不変)

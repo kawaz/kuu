@@ -526,6 +526,12 @@ collector で最終形へ:
 
 ### 6.3 multiple 無しは縮退ケース
 
+> **更新 (DR-139 §5、2026-08-16): 本節は supersede 対象。** `multiple` 属性は廃止され、
+> cardinality は値カプセルの座 (accumulator / separator / collector / repeat) から導出される
+> (DR-139 §2.1)。「multiple を書かないノードは縮退ケース」という**縮退の考え方自体は生きて**おり、
+> 変わるのは「何を書かないと縮退か」の綴りである。移送の作業単位は
+> `docs/research/2026-08-16-value-capsule-migration-ledger.md`。
+
 multiple を書かないノードは内部的に上記モデルの特殊ケース:
 
 - separator: なし (常に長さ1の `[piece]`)

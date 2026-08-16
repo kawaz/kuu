@@ -7,7 +7,7 @@
 `name` フィールドは以下の3つの役割を兼ねる:
 
 1. **CLI マッチング (軸1)**: long opt の `--name` 生成、short opt のもとになる name、command のトリガ name、positional のヘルプ表示 (→ DR-136 で綴り軸 `trigger_name` として分離)
-2. **結果 export key (軸2)**: 結果オブジェクトのキー (デフォルト name そのまま)
+2. **結果 export key (軸2)**: 結果オブジェクトのキー (デフォルトは name の文字写像、DR-136 §3)
 3. **AST 内部参照 (軸3)**: ref/link の参照対象 (scope 内で参照識別子が重複禁止)
 
 別軸にしたいケースのために独立フィールド:

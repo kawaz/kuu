@@ -47,6 +47,14 @@ DESIGN の「所属配列で役割が定まるので type フィールドは省�
 - DESIGN: §1.4 の type 行に「省略 = none」を注記、型プリセット節 (§2.x) に none を追加
 - issue typeless-option-default-semantics は本 DR で close
 
+
+> **更新 (DR-139 / DR-140、2026-08-16): 座席名・`multiple` 属性・`value:` の綴りは値カプセルへ
+> 移送される。** 座席は DR-102 の 4 綴りを経て DR-139 §1.2 のカプセル内 5 座席へ、`multiple` 属性は
+> DR-139 §5 で廃止 (cardinality はカプセルの座から導出)、消費 0 literal の `value:` は
+> DR-140 §2 の `const` field へ、供給 (`default` / `env` / `config_key` / `default_fn`) は
+> DR-139 §1.1 の `defaults` へ集約される。本 DR の**判断**は綴りの下で生きている。移送の作業単位は
+> `docs/research/2026-08-16-value-capsule-migration-ledger.md`。
+
 ## 関連
 
 - DESIGN §5.2 (消費数は Accept の報告値 — 直交の根拠) / DR-051 §1・§4 (値の無さはフィールド不在、null なし) / DR-016 (2 層分離 — 観測はメタ層) / DR-064 (dd — 消費するが値を運ばない先行例) / DR-083 §5 (静的既知は定義時に倒す)

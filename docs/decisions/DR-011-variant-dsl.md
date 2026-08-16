@@ -115,6 +115,12 @@ variant 構造は **AtomicAST には残らない**。parseDefinition() の時点
 
 `set` 効果の variant は **exact + literal value 発生**に展開され、構造としては消える。
 
+
+> **更新 (DR-136 §1〜§3、2026-08-16): name から各軸への供給には文字写像が掛かる。** `name` は
+> 各軸のデフォルト供給源にすぎず、CLI 表面の綴りは `trigger_name` 軸 (ASCII 非英数 → `-`)、
+> id / 結果キーは id 軸の写像 (→ `_`)、`value_name` はその写像 + ASCII 大文字化で供給される。
+> 本 DR 本文の「name をそのまま使う」「name 完全一致」系の記述はこの供給を通したものとして読む。
+
 ## 関連
 
 - DR-009 (filter chain は同じ文法を使う)

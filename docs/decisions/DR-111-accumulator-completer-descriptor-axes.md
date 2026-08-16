@@ -126,6 +126,14 @@ provider の 3 スロット enum (DR-107 §6) と同様に builtin completer 名
 - **docs/REFERENCE.md**: §multiple / §definitions の accumulator 記述への descriptor 正本参照の追記は別コミットの追随課題 (`just lint-reference` は accumulators 区分を検査対象にしていないため機械検査への影響なし)
 - **kuu.mbt**: 追随不要 — 本 DR は宣言軸の確定のみで実装挙動を変えない (DR-061 §4「descriptor は validator ではない」の継承)。completers registry の実体化 (runtime 問い合わせ ABI) は引き続き別 issue の射程
 
+
+> **更新 (DR-139 / DR-140、2026-08-16): 座席名・`multiple` 属性・`value:` の綴りは値カプセルへ
+> 移送される。** 座席は DR-102 の 4 綴りを経て DR-139 §1.2 のカプセル内 5 座席へ、`multiple` 属性は
+> DR-139 §5 で廃止 (cardinality はカプセルの座から導出)、消費 0 literal の `value:` は
+> DR-140 §2 の `const` field へ、供給 (`default` / `env` / `config_key` / `default_fn`) は
+> DR-139 §1.1 の `defaults` へ集約される。本 DR の**判断**は綴りの下で生きている。移送の作業単位は
+> `docs/research/2026-08-16-value-capsule-migration-ledger.md`。
+
 ## 関連
 
 - docs/issue/2026-07-16-completer-accumulator-descriptor-axes.md (発注書)

@@ -105,6 +105,11 @@ filter は **値の変換と検証だけ** に集中。
 
 ### filter chain の構造は pieceProcessor + collector に再構成
 
+> **追補 (2026-08-16): 座席名は 2 世代進んでいる。** DR-034 の再構成 → DR-079/DR-102 の 4 座席
+> (`piece_filters` / `value_filters` / `final_filters` / `accum_filters`) → DR-139 §1.2 の
+> カプセル内 5 座席、という変遷であり、本 DR の段名・`multiple.kind` の綴りはいずれも現役ではない。
+> 段を分けるという判断そのものは生きている。
+
 > **更新: DR-034 により本 DR の 3 段構造が `pieceProcessor` (pre/parse/post) + `collector` の枠に再構成。本 DR の `@base` sentinel・filter の純粋関数性・`each` 暗黙・DSL 文法は引き続き有効。**
 
 DR-009 の 3 段 (pre_split / per-item / post) は構造としては今も有効だが、

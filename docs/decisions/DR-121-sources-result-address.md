@@ -108,7 +108,12 @@ nameless tuple の sources は **shadow tree の要素対応** (DR-122 §1/§3) 
 
 ```json
 {"name":"pair","seq":[{"type":"string"},{"type":"string","value":"fallback"}]}
---pair x → result: {"pair":["x","fallback"]}、sources: {"pair":["cli","const"]}
+
+
+> **更新 (DR-140 §2、2026-08-16): 上の例の `value: "fallback"` は移送後の綴りでは
+> `"value": {"const": "fallback"}` になる。** 要素直下の `value` が値カプセルの席になるため、
+> 旧綴りのままだと**カプセルの縮退形として合法にパースされ意味が変わる** (DR-140 §2 が警告する
+> ハザード)。本 DR は DR-122 / DR-130 から現役規範として参照されるので読み替えを明示する。--pair x → result: {"pair":["x","fallback"]}、sources: {"pair":["cli","const"]}
 ```
 
 `value:` の literal 成分は独立の値源装置ではなく発火が産出する定数 (source タグは `const`、

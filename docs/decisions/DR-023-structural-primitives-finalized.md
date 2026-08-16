@@ -56,6 +56,10 @@ AtomicAST (パース時): primitive/exact/or/seq + multiple 属性の同型表�
 
 定義時の配置主軸・type 省略と、パース時の同型は、**type の省略/復元**で繋がる (DR-017)。
 
+> **更新 (DR-113、2026-08-16): 本 DR が書いた help 糖衣の形は DR-113 以前のもの。** help は
+> DR-113 で help_installer + 5 preset (`help` / `help_all_category` / `help_category` /
+> `help_show_hidden` / `help_tree`) と help model へ再設計された。
+
 ## 関連
 
 - DR-001 (2層 AST)

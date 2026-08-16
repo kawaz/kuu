@@ -99,6 +99,14 @@ map 形 (各段の `multiple.collector` に `{"from_entries": "path"}`):
 
 `-D KEY=VAL` 型 — 1 トークン (piece) 内の separator 分割による kv 抽出と value 型注釈 (findings F-021 の残り半分) — は本 DR では確定しない。本 DR の `from_entries {key: ...}` は「グループ内フィールドからのキー昇格」であり、piece 内 2D separator は別途確定する。
 
+
+> **更新 (DR-139 / DR-140、2026-08-16): 座席名・`multiple` 属性・`value:` の綴りは値カプセルへ
+> 移送される。** 座席は DR-102 の 4 綴りを経て DR-139 §1.2 のカプセル内 5 座席へ、`multiple` 属性は
+> DR-139 §5 で廃止 (cardinality はカプセルの座から導出)、消費 0 literal の `value:` は
+> DR-140 §2 の `const` field へ、供給 (`default` / `env` / `config_key` / `default_fn`) は
+> DR-139 §1.1 の `defaults` へ集約される。本 DR の**判断**は綴りの下で生きている。移送の作業単位は
+> `docs/research/2026-08-16-value-capsule-migration-ledger.md`。
+
 ## 関連
 
 - DR-025 (結果キー軸の占有が結果スコープを作る — 配列既定はその反復版)
