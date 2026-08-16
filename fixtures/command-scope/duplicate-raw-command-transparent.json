@@ -1,0 +1,65 @@
+{
+  "why": "同名 raw command の透過版 (両 export_key: null、id は明示分離 — 未分離だと duplicate-id) の occurrence 帰属。透過 command は結果キー軸を持たず、その子が親スコープで参加する (DR-120 §4 / DR-130 §1b)。未選択の透過スコープの子も親スコープの宣言キーとして立ち、値が無ければ null (DR-130 §1 — 露出キー持ち scope の 1 段 null 畳み (§2) は透過には適用されず、子のキーが直接親面に出る)。未選択スコープに宣言された遅延述語 (required) は評価に参加しない (DR-103 / DR-130 §2 の根拠付け替え)。期待値は起草時の規範導出で、実装実測との突き合わせ待ち。",
+  "query": "parse",
+  "definition": {
+    "commands": [
+      {
+        "type": "command",
+        "name": "go",
+        "id": "go1",
+        "export_key": null,
+        "options": [
+          {
+            "name": "a",
+            "type": "string",
+            "long": true,
+            "required": true
+          }
+        ]
+      },
+      {
+        "type": "command",
+        "name": "go",
+        "id": "go2",
+        "export_key": null,
+        "options": [
+          {
+            "name": "b",
+            "type": "string",
+            "long": true
+          }
+        ]
+      }
+    ]
+  },
+  "cases": [
+    {
+      "id": "transparent-unselected-children-null-required-dormant",
+      "why": "`go --b y`: 先頭 go は go2 だけが viable (go1 は --b を消費できない)。透過なので g1/g2 キーは無く、子 a / b が親面のキー。未選択の go1 側の a は null で立ち、その required は非発火 (未選択スコープの遅延述語は評価に参加しない)。",
+      "args": [
+        "go",
+        "--b",
+        "y"
+      ],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {
+            "entity": "b",
+            "op": "set",
+            "operand": "y",
+            "source": "cli"
+          }
+        ],
+        "result": {
+          "a": null,
+          "b": "y"
+        },
+        "sources": {
+          "a": null,
+          "b": "cli"
+        }
+      }
+    }
+  ]
+}

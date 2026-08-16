@@ -108,6 +108,62 @@
           }
         }
       }
+    },
+    {
+      "id": "no-reentry-into-spent-declaration",
+      "why": "`go --a x go`: 末尾の go は未消費の go2 だけに入場でき、消費済みの go1 へ再入場する読みは存在しない — 完全経路は 1 本 (先頭=go1{a:x} + 末尾=go2 空選択)。修正前の実装は同一宣言への再入場読みを計数して ambiguous:2 を返していた (issue の gap そのもの) ため、本 case が回帰検出器。選択された空スコープは宣言キーを null で列挙する (DR-130 §1)。",
+      "args": [
+        "go",
+        "--a",
+        "x",
+        "go"
+      ],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {
+            "entity": "a",
+            "op": "set",
+            "operand": "x",
+            "source": "cli"
+          }
+        ],
+        "result": {
+          "g1": {
+            "a": "x"
+          },
+          "g2": {
+            "b": null
+          }
+        },
+        "sources": {
+          "g1": {
+            "a": "cli"
+          },
+          "g2": {
+            "b": null
+          }
+        }
+      }
+    },
+    {
+      "id": "occurrences-beyond-declarations-fail",
+      "why": "`go go go`: 宣言は 2 本なので 3 個目の go に受け手が無い。どの読みでも残余は位置 2 の \"go\" (先頭 2 個が go1/go2 をどの順に埋めても 3 個目は残る) → unexpected_token (element 省略、args_pos = 残余先頭 — CONFORMANCE §2)。",
+      "args": [
+        "go",
+        "go",
+        "go"
+      ],
+      "expect": {
+        "outcome": "failure",
+        "errors": [
+          {
+            "args_pos": 2,
+            "kind": "parse",
+            "reason": "unexpected_token"
+          }
+        ]
+      }
     }
   ]
 }
