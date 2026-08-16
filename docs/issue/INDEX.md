@@ -14,6 +14,7 @@ active な issue の一覧。close 済みは archive/ にあり、ここには�
 | 2026-07-15 | design | idea | [descriptor-conformance-promotion-revisit](./2026-07-15-descriptor-conformance-promotion-revisit.md) | descriptor 検証の conformance 昇格の再検討 (DAX-Q6 先送り分、独自フィルタ実装ラップ or 2言語目着手で再検討) |
 | 2026-07-23 | task | idea | [help-category-link-last-wins](./2026-07-23-help-category-link-last-wins.md) | M5 で #help_category 内部セルの link 配線実装時は at_pos ベース last-wins を使う (completion.mbt L42-72 pattern 再利用、宣言順 push 由来の bug class 回避) |
 | 2026-08-16 | design | open | [borrow-absent-target-not-checked](./2026-08-16-borrow-absent-target-not-checked.md) | `default_fn: "borrow:<存在しない対象>"` が definition ACCEPTED になり実行時に黙って値なし、link の absent-ref REJECTED と非対称 |
+| 2026-08-16 | design | open | [type-none-as-capsule-absence](./2026-08-16-type-none-as-capsule-absence.md) | type:"none" を廃しカプセル不在で「値空間なし」を表現する案 (opus レビュー C4、DR-140 §4 presence 判別式の自己矛盾解消) |
 | 2026-08-16 | task | open | [fixture-reason-vocab-lint](./2026-08-16-fixture-reason-vocab-lint.md) | fixture の errors[].reason が宣言語彙 (descriptor reasons + REFERENCE §7.3) に含まれるか検査する lint が無い |
 | 2026-08-16 | bug | open | [union-cell-fn-multi-invoke](./2026-08-16-union-cell-fn-multi-invoke.md) | union セルで cell fn が枝数倍実行され DR-114 一回実行不変条件と衝突、UC-Q4 裁定確定 (第3の形、入口単位1回発火+並行着地) |
 | 2026-08-12 | task | open | [ref-template-help-carrier](./2026-08-12-ref-template-help-carrier.md) | ref/template 由来 help_meta の provenance carrier 未実装、DR-116 §4 説明引き直しの ref 越し分を次サイクルへ |
