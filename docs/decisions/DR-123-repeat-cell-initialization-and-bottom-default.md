@@ -28,6 +28,19 @@ repeat / multiple / `optional: true` 糖衣 (以下まとめて**反復セル**)
 
 この配置により、反復セルは default 席が常に埋まっている (宣言 default か暗黙 `[]` か) ため、DR-130 §1 の成功 result で `null` にならない。型導出も native default ありの分岐により `T` となる。
 
+> **適用範囲の明確化 (2026-08-16): 本項は「実現した経路上のセル」の規則である。** `[]` は
+> **ラダー最下段の default 席が供給する値**なので、ラダーが走らないセルには供給されない。
+> 具体的には **未選択の `or` 枝の内側にある反復セルは `[]` ではなく `null`** になる —
+> DR-130 §4 の named 枝の or 席が「**未選択枝の default は充填せず、枝の default はその枝が
+> 選択された場合だけ生きる**」と規定しており、暗黙 `[]` もその「枝の default」だからである。
+> 上の「`null` にならない」が参照しているのも DR-130 **§1** (実現したスコープの全キー列挙) で
+> あって §4 ではない。
+>
+> したがって二段構えになる: **枝が実現していない → `null` (DR-130 §4 / §2 が優先)**、
+> **実現したスコープで 0 発火 → `[]` (本項)**。pin: 前者は
+> `fixtures/or-parse/child-repeat-branch.json`、後者は
+> `fixtures/or-parse/option-structural-or-outer-repeat.json`。
+
 `unset` fn が返す null を反復セルへ set すると committed=false でラダーを開放し、下位席があればその値が供給され、無ければ最下段の暗黙 default `[]` に落ちる (DR-131 §2、`fixtures/multiple-parse/unset-env-fallback.json`)。
 
 なお最下段の暗黙 default が供給する `[]` には値の座が無いため、`sources` にはタグが載らず `[]` のままである (DR-122 §2) — DESIGN §11.4 の「未発火要素の sources は `default`」は値の座を持つセル (flag の `false` 等) の規則であり、空コレクションはその適用対象ではない。
