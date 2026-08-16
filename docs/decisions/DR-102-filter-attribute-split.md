@@ -3,9 +3,11 @@
 > **更新 (DR-139、2026-08-16): §1 の `is_accum_elem` (multiple ∨ repeat ∨ separator) は
 > cardinality 導出 (repeat ∨ separator ∨ accumulator ∨ collector — DR-139 §2.1) へ置換され、
 > §2/§3 の判定入力は registry 解決・カプセル合成後の平面になった (AP-Q5=b)。** 綴りは
-> `accum_filters` → `collected_filters`、`piece_filters`/`value_filters` →
-> `pre_filters`/`post_filters` (DR-140 §3)。§2 の「自 registry の owns のみ」・§3 の
-> 構造ゲート先行 (wrong-seat 成立時は中身を解釈しない)・§4 の argv_pos 帰属・§5 は生存。
+> `accum_filters` → `post_accum_filters`、`piece_filters`/`value_filters` →
+> `pre_type_filters`/`post_type_filters` (`final_filters` は不変 — CR-Q1=a、DR-140 §3)。
+> 非 accum / accum の属性分割そのもの (本 DR の中核) は不変で、§2 の「自 registry の owns
+> のみ」・§3 の構造ゲート先行 (wrong-seat 成立時は中身を解釈しない)・§4 の argv_pos 帰属・
+> §5 は生存。
 
 > 由来: `cell_filters` が multiple 宣言の有無によって `T→T` (scalar filter registry) と `Acc→Acc` (ARRAY filter registry) という型の異なる 2 つの語彙を 1 つの属性名に内包している構造的欠陥について、kawaz が前提を棄却する裁定 (2026-07-13、issue `2026-07-14-cell-filters-attribute-split.md`)。「cell という名前自体が『値の置き場』という内部事情由来で利用者の目的に合っていない」「両方を 1 つのクロージャで扱いたい人はいない。違うものを同じものとして扱わない。解像度が上がった時点で名付けを正す」「既存を壊すことは正しさがあれば問題ない (ドラフト期)」。この前提棄却により、DR-101 §3 の判定マトリクス・層違い invalid-range 判定・旧 DR-102 (非 accum 位置の cell_filters に ARRAY-only 綴りを書いた場合の invalid-range 判定、未 push のまま abandon) が丸ごと不要化した。SPL-Q1〜Q6 の裁定バッチ (docs/QUESTIONS.md 経由、kawaz 2026-07-14) を反映する。
 

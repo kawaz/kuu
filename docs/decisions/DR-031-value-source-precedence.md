@@ -1,5 +1,12 @@
 # DR-031: 値源の優先順位
 
+> **更新 (DR-139 §1.1、2026-08-16): 席順序の固定は部分 superseded。** canonical の宣言は
+> 値カプセルの `defaults` 配列 (default provider fn の試行列 — 宣言順 = 試行順) になり、
+> CLI/link 未満の並びは書ける。本 DR の固定順 (env > config > default) は**糖衣 4 綴り
+> (`env:` / `config_key:` / `default:` / `default_fn:`) の既定展開順**として生存する。
+> CLI/link が最上位であること・source 語彙 (7 語彙)・const の位相・追記 (UX-Q7R / EXP-Q1)
+> は不変。
+
 > **更新 (DR-130、2026-08-01): ラダーを回しても値が確定しない宣言座は成功 result で `null` になり、`sources` も同じ座に `null` を持つ。** 値源の優先順位と source タグ語彙は不変。null は「確定主体なし」を表し、値述語では不充足として扱う。
 
 > **更新 (DR-120、2026-07-30): 共露出構造そのものが定義時に潰れたため、UX-Q7R / EXP-Q1 の追記 note は
