@@ -773,6 +773,26 @@
         "not_a_deep_shape"
       ],
       "description": "conformance 専用の union 産出仮想型 (DR-138 波及、fixture ns = DR-132 §1)。fixture/shape の入れ子版 — 共有フィールド a の型が record 産出型 (fixture/int_range) で、tie の interpretations に入れ子の null 補形差 ({a:{start,end:null}} vs {a:{...},b:null}) が現れる形の乗り物 (DR-138 §5 / DR-130 §4.2 追補)。共有フィールドの型は variant 間で一致 (DR-127 §2.2 の静的規定)。string 形は受理しない (全綴りを not_a_deep_shape で Reject)。提供義務は conformance 実行文脈での解決可能性のみ (DR-132 §1)。"
+    },
+    "fixture/scalar_mix": {
+      "name": "fixture/scalar_mix",
+      "role": "type_parser",
+      "construction": "static",
+      "io_type": {
+        "input": "string",
+        "output": [
+          "number",
+          "string"
+        ]
+      },
+      "output_mode": "transform",
+      "fallibility": "total",
+      "invocation": {
+        "encoding": "none",
+        "parameters": []
+      },
+      "reasons": [],
+      "description": "conformance 専用の union 産出仮想型 (DR-138 §6b 波及、fixture ns = DR-132 §1)。out = [number, string] の primitive union。string 形は canonical default の number 受理輪郭 (DR-074) で読めれば number を、さもなくばトークンをそのまま string を産出する (total — 受理判定を持たない)。union セルへの cell fn (incr 等) の ctx.old = 時点観測値・産出の並行着地 (DR-138 §6b) の乗り物。提供義務は conformance 実行文脈での解決可能性のみ (DR-132 §1)。"
     }
   },
   "accumulators": {

@@ -604,6 +604,7 @@ enum にならない)。要素に配列があれば `seq` ブランチに展開�
 | `fixture/pair` | fixture (static) | conformance 専用の単相 tuple 産出仮想型 (`{tuple:[int,int]}`)。string 形は `A,B` / `A,` / `,B` の 3 形 (最初の `,` で 1 回だけ分割)、部分形は null 座持ち array を産出 (乖離 Error にならない、DR-137 §5 (c))。単相の未完成確定 (`incomplete_value`) と tuple パス DSL の静的解決の乗り物。DR-137 / DR-138 |
 | `fixture/nested` | fixture (static) | conformance 専用の入れ子 union 産出仮想型 (`[[{tuple:[fixture/int_range,int]}, bool], string]`)。入れ子 union の葉平坦化 (DR-138 §1) と tuple 座の record 補形の乗り物。string 形は受理しない。 |
 | `fixture/deep_shape` | fixture (static) | conformance 専用の union 産出仮想型 (共有フィールド `a: fixture/int_range` を持つ record 2 variant)。tie の interpretations に入れ子 null 補形差が現れる形の乗り物 (DR-138 §5)。string 形は受理しない。 |
+| `fixture/scalar_mix` | fixture (static) | conformance 専用の union 産出仮想型 (`[number, string]`)。string 形は number に読めれば number、さもなくば string を産出 (total)。union セルへの cell fn (ctx.old = 時点観測値、DR-138 §6b) の乗り物。 |
 <!-- kuu-lint:end -->
 
 factory の定義側での参照形は `{"name": "<factory名>", "config": {...}}` (canonical default =
