@@ -1,0 +1,79 @@
+{
+  "why": "union / tuple セルが同一定義に複数同居しても、各セルの淘汰・完成判定は独立に走る — 1 セル目の成功 (淘汰完了) が 2 セル目の検査を飛ばさず、複数セルの生存ゼロ / 未完成は errors に全保持される (DR-053 / CONFORMANCE §3 の集合比較)。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {
+        "name": "color",
+        "type": "fixture/color",
+        "long": true
+      },
+      {
+        "name": "r",
+        "type": "int",
+        "long": true,
+        "link": "color[0]"
+      },
+      {
+        "name": "p2",
+        "type": "fixture/pair"
+      },
+      {
+        "name": "a",
+        "type": "int",
+        "long": true,
+        "link": "p2[0]"
+      }
+    ]
+  },
+  "cases": [
+    {
+      "id": "first-cell-success-does-not-skip-second",
+      "why": "`--color red --a 1`: color は string 枝で成功確定するが、p2 [1,null] の未完成は独立に検査され失敗する。",
+      "args": [
+        "--color",
+        "red",
+        "--a",
+        "1"
+      ],
+      "expect": {
+        "outcome": "failure",
+        "errors": [
+          {
+            "element": "p2",
+            "args_pos": 3,
+            "kind": "parse",
+            "reason": "incomplete_value"
+          }
+        ]
+      }
+    },
+    {
+      "id": "both-cells-incomplete-both-reported",
+      "why": "`--r 0 --a 1`: color 生存ゼロ (args_pos 1) と p2 未完成 (args_pos 3) の両方が errors に載る (全保持・集合比較)。",
+      "args": [
+        "--r",
+        "0",
+        "--a",
+        "1"
+      ],
+      "expect": {
+        "outcome": "failure",
+        "errors": [
+          {
+            "element": "color",
+            "args_pos": 1,
+            "kind": "parse",
+            "reason": "incomplete_value"
+          },
+          {
+            "element": "p2",
+            "args_pos": 3,
+            "kind": "parse",
+            "reason": "incomplete_value"
+          }
+        ]
+      }
+    }
+  ]
+}

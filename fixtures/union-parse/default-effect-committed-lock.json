@@ -1,0 +1,82 @@
+{
+  "why": "union セルへの明示 `default` 効果 (op=default、committed=true — DR-045 §2) はラダーをロックし、下位席 (env) は上書きできない。default 席の宣言値は完全値 1 発の供給 (DR-138 §3) で、完成 tuple なら tuple 枝の値として確定する。source は op=default 適用後の規則どおり cli (DR-031 — 値を確定させたのはユーザの明示操作)。対比: 未発火なら env が先に埋める (落ちる境界)。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {
+        "name": "color",
+        "type": "fixture/color",
+        "long": [
+          ":set",
+          "def:default"
+        ],
+        "env": "COLOR",
+        "default": [
+          1,
+          2,
+          3
+        ]
+      },
+      {
+        "name": "r",
+        "type": "int",
+        "long": true,
+        "link": "color[0]"
+      }
+    ]
+  },
+  "cases": [
+    {
+      "id": "explicit-default-locks-ladder-over-env",
+      "why": "`--def-color` + env COLOR=red: op=default が default 席の [1,2,3] (完成 tuple) を committed=true で確定。env は開かない。effects は operand 無しの default 1 件、source は cli (DR-031 の op=default 規則)。",
+      "args": [
+        "--def-color"
+      ],
+      "env": {
+        "COLOR": "red"
+      },
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {
+            "entity": "color",
+            "op": "default",
+            "source": "cli"
+          }
+        ],
+        "result": {
+          "color": [
+            1,
+            2,
+            3
+          ]
+        },
+        "sources": {
+          "color": [
+            "cli",
+            "cli",
+            "cli"
+          ]
+        }
+      }
+    },
+    {
+      "id": "unfired-cell-env-wins-over-default-seat",
+      "why": "引数なし + env COLOR=red: 書き込みゼロ → ラダー通常順 (env > default) — env の string \"red\" が string 枝の完全値として供給される。default 席 [1,2,3] は env より下段なので使われない。",
+      "args": [],
+      "env": {
+        "COLOR": "red"
+      },
+      "expect": {
+        "outcome": "success",
+        "effects": [],
+        "result": {
+          "color": "red"
+        },
+        "sources": {
+          "color": "env"
+        }
+      }
+    }
+  ]
+}

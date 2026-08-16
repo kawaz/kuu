@@ -1,0 +1,79 @@
+{
+  "why": "入れ子 union は葉 variant の集合へ平坦化して読む (DR-138 §1 — 構造的型付けの帰結)。`n[0]` は葉集合 (tuple / bool / string) のうち tuple だけが構造に含むため静的合法 (DR-127 §2.2 union 行の静的規定を葉集合へ適用) で、書きは tuple 枝だけに着地する (DR-138 §2-1/§6 (b))。座 0 の型は fixture/int_range (record) — 座への set の operand は座の type のパーサが読み (DR-127 §3.2 / DR-137 §4)、部分形の record は presence のまま座って射影層が null 補形する (DR-130 §4.1 — tuple 座の内側にも届く)。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {
+        "name": "n",
+        "type": "fixture/nested"
+      },
+      {
+        "name": "ra",
+        "type": "fixture/int_range",
+        "long": true,
+        "link": "n[0]"
+      },
+      {
+        "name": "rn",
+        "type": "int",
+        "long": true,
+        "link": "n[1]"
+      }
+    ]
+  },
+  "cases": [
+    {
+      "id": "path-descends-flattened-leaves-record-in-tuple-seat",
+      "why": "`--ra 5.. --rn 7`: n[0] の operand \"5..\" は座の type fixture/int_range が読み {start:5} を産出 (部分 presence)。n[1]=7 で tuple [={start:5}, 7] が完成 (座 0 は record 値で non-null)。bool / string の葉 variant は着地ゼロで淘汰。result の tuple 座 0 は null 補形適用後の {start:5, end:null}。sources は座単位の構造分解 (DR-127 §6 / DR-132) — 座 0 の record は link 書き由来、end は確定主体なしの null。",
+      "args": [
+        "--ra",
+        "5..",
+        "--rn",
+        "7"
+      ],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {
+            "entity": "n",
+            "path": [
+              0
+            ],
+            "op": "set",
+            "operand": {
+              "start": 5
+            },
+            "source": "link"
+          },
+          {
+            "entity": "n",
+            "path": [
+              1
+            ],
+            "op": "set",
+            "operand": 7,
+            "source": "link"
+          }
+        ],
+        "result": {
+          "n": [
+            {
+              "start": 5,
+              "end": null
+            },
+            7
+          ]
+        },
+        "sources": {
+          "n": [
+            {
+              "start": "link",
+              "end": null
+            },
+            "link"
+          ]
+        }
+      }
+    }
+  ]
+}

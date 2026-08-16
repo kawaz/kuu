@@ -1,0 +1,40 @@
+{
+  "why": "errors[].element は参照識別子 (id) 軸 (DR-136 §6 / CONFORMANCE §2) — incomplete_value の element も、name でなく明示 id の綴りで出る。link の参照も id 軸なので link パスは id で書く。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {
+        "name": "p2",
+        "id": "pair_cell",
+        "type": "fixture/pair"
+      },
+      {
+        "name": "a",
+        "type": "int",
+        "long": true,
+        "link": "pair_cell[0]"
+      }
+    ]
+  },
+  "cases": [
+    {
+      "id": "incomplete-value-element-uses-id",
+      "why": "`--a 1`: [1,null] 未完成 → incomplete_value。element は明示 id \"pair_cell\" (name \"p2\" ではない)。",
+      "args": [
+        "--a",
+        "1"
+      ],
+      "expect": {
+        "outcome": "failure",
+        "errors": [
+          {
+            "element": "pair_cell",
+            "args_pos": 1,
+            "kind": "parse",
+            "reason": "incomplete_value"
+          }
+        ]
+      }
+    }
+  ]
+}

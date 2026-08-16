@@ -1,0 +1,84 @@
+{
+  "why": "消費の or (DR-018/038 — parse 時の経路分岐) とセル union (DR-138 — 確定相の淘汰) の共存。両機構は別位相 (DR-138 §8) で、消費 ambiguous の各読みの内側でも union セルの確定相 (淘汰 + 後勝ち) は独立に回る。interpretations は parse 相の sparse 差分ビュー (DR-130 §4.2 本文 — 消費 ambiguous 側なので carve-out の対象外) で、union セルの表示値は淘汰後の勝ち値。link 参照ノード p/q は結果キーを占有しない (DR-120 §4) ため view に現れない。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {
+        "name": "j",
+        "type": "fixture/color"
+      },
+      {
+        "name": "c",
+        "long": true,
+        "or": [
+          {
+            "seq": [
+              {
+                "type": "string",
+                "name": "a1"
+              },
+              {
+                "type": "string",
+                "name": "a2"
+              }
+            ]
+          },
+          {
+            "type": "string",
+            "name": "s1"
+          }
+        ]
+      }
+    ],
+    "positionals": [
+      {
+        "name": "p",
+        "type": "string",
+        "repeat": {
+          "min": 0,
+          "max": 1
+        },
+        "link": "j"
+      },
+      {
+        "name": "q",
+        "type": "int",
+        "repeat": {
+          "min": 0,
+          "max": 1
+        },
+        "link": "j[0]"
+      }
+    ]
+  },
+  "cases": [
+    {
+      "id": "ambiguous-readings-each-run-culling",
+      "why": "`--c red blue 0`: 読み A = seq(red,blue) + p=\"0\" (j へ丸ごと set、string 枝完成) → j=\"0\"。読み B = s1=red + p=blue (j=\"blue\") + q=0 (j[0]=0 → tuple 枝 [0,null,null] 未完成)。B の確定相で tuple 枝は淘汰され (q の書きは黙って消える、DR-138 §2)、生存 string 枝の \"blue\" が確定 — B も完全経路。両読みとも完全 → 消費 ambiguous (DR-038)。各 interpretation の union セル値は淘汰済みの勝ち値。",
+      "args": [
+        "--c",
+        "red",
+        "blue",
+        "0"
+      ],
+      "expect": {
+        "outcome": "ambiguous",
+        "interpretations": [
+          {
+            "c": {
+              "a1": "red",
+              "a2": "blue"
+            },
+            "j": "0"
+          },
+          {
+            "c": {
+              "s1": "red"
+            },
+            "j": "blue"
+          }
+        ]
+      }
+    }
+  ]
+}

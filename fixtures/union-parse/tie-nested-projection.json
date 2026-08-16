@@ -1,0 +1,50 @@
+{
+  "why": "tie の interpretations は null 補形適用後の結果ビュー (DR-138 §5 / DR-130 §4.2 追補) — 補形は入れ子の record (variant の共有フィールドが record 産出型) の内側にも届き、interpretations の差は入れ子の null 補形差として現れる。乗り物は fixture/deep_shape (共有フィールド a: fixture/int_range を持つ record 2 variant)。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {
+        "name": "s",
+        "type": "fixture/deep_shape"
+      },
+      {
+        "name": "sa",
+        "type": "fixture/int_range",
+        "long": true,
+        "link": "s.a"
+      }
+    ]
+  },
+  "cases": [
+    {
+      "id": "nested-null-projection-divergence",
+      "why": "`--sa 5..`: 部分 record {start:5} が両 variant の a 座へ並行着地、両枝完成 (presence-optional)・同一書きで tie。射影後の観測値は {a:{start:5,end:null}} と {a:{start:5,end:null},b:null} で異なる → ambiguous。a の内側の end:null (int_range の補形) と b:null (variant の補形) は同じ null 補形規則の 2 段適用。",
+      "args": [
+        "--sa",
+        "5.."
+      ],
+      "expect": {
+        "outcome": "ambiguous",
+        "interpretations": [
+          {
+            "s": {
+              "a": {
+                "start": 5,
+                "end": null
+              }
+            }
+          },
+          {
+            "s": {
+              "a": {
+                "start": 5,
+                "end": null
+              },
+              "b": null
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

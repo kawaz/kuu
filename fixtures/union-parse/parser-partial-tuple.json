@@ -1,0 +1,119 @@
+{
+  "why": "tuple parser 産の null 座は正常な生値 (DR-137 §5 (c) — 乖離 Error にならない) であり、確定相の完成判定 (DR-138 §1/§4) だけが未完成を裁く。fixture/pair の string 形 (`A,B` / `A,` / `,B`) が部分形で null 座持ち array を産出する。後続の位置書き (link) が null 座を埋めれば完成して成功する — parser 産の null 座は『まだ埋まっていない座』として通常の時系列適用 (枝内 fold、DR-138 §2-1) に参加する。effects の operand は補形前の生出力 (DR-132)。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {
+        "name": "p2",
+        "type": "fixture/pair",
+        "long": true
+      },
+      {
+        "name": "a",
+        "type": "int",
+        "long": true,
+        "link": "p2[0]"
+      }
+    ]
+  },
+  "cases": [
+    {
+      "id": "partial-parser-output-then-link-completes",
+      "why": "`--p2 ,9 --a 1`: parser 産 [null,9] がセルに座り (output contract は弾かない — DR-137 §5 (c))、後続の link 書き p2[0]=1 が null 座を埋めて [1,9] の完成値になる。",
+      "args": [
+        "--p2",
+        ",9",
+        "--a",
+        "1"
+      ],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {
+            "entity": "p2",
+            "op": "set",
+            "operand": [
+              null,
+              9
+            ],
+            "source": "cli"
+          },
+          {
+            "entity": "p2",
+            "path": [
+              0
+            ],
+            "op": "set",
+            "operand": 1,
+            "source": "link"
+          }
+        ],
+        "result": {
+          "p2": [
+            1,
+            9
+          ]
+        },
+        "sources": {
+          "p2": [
+            "link",
+            "cli"
+          ]
+        }
+      }
+    },
+    {
+      "id": "partial-parser-output-unfilled-is-incomplete",
+      "why": "`--p2 5,`: parser 産 [5,null] は正常に座るが、確定相で全座充足に達しない → incomplete_value (args_pos = 最深着地の operand 位置 1)。産出自体は output_shape_mismatch でない (乖離検査は長さ・非 null 座の型のみ、DR-137 §5)。",
+      "args": [
+        "--p2",
+        "5,"
+      ],
+      "expect": {
+        "outcome": "failure",
+        "errors": [
+          {
+            "element": "p2",
+            "args_pos": 1,
+            "kind": "parse",
+            "reason": "incomplete_value"
+          }
+        ]
+      }
+    },
+    {
+      "id": "complete-parser-output-succeeds",
+      "why": "`--p2 5,9`: 完全形。丸ごと set 1 件で完成。",
+      "args": [
+        "--p2",
+        "5,9"
+      ],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {
+            "entity": "p2",
+            "op": "set",
+            "operand": [
+              5,
+              9
+            ],
+            "source": "cli"
+          }
+        ],
+        "result": {
+          "p2": [
+            5,
+            9
+          ]
+        },
+        "sources": {
+          "p2": [
+            "cli",
+            "cli"
+          ]
+        }
+      }
+    }
+  ]
+}
