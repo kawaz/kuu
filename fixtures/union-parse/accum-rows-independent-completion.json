@@ -1,0 +1,152 @@
+{
+  "why": "accum 要素 (multiple / repeat) の row ごとの tuple 値は、各 row (発火値、DR-034/DR-084 §1) が独立に完成判定を受ける — 完成判定 (DR-138 §1) は『値』への述語であり、accum セルの値は row ごとに別の値なので、row #0 と row #1 の部分値が 1 セルの座へ混ざって互いを補完することはない (セル単位規範 DR-138 §2/§3 の帰結 — link パスに row 添字は無く (DR-029 文法)、row の null 座を後続の書きで治す経路も存在しない)。未完成 row は kind=parse / reason=incomplete_value (DR-138 §4 — 単相 tuple の null 座残り確定と同じ現れ)、args_pos は当該 row の operand 位置、複数 row の違反は errors に全保持 (DR-053、args_pos が違うので dedupe されない)。row 混成バグ (row0 [1,null] + row1 [null,9] → [1,9] の合成成功) はこの pin と正面衝突する。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {
+        "name": "p",
+        "type": "fixture/pair",
+        "long": true,
+        "multiple": "append"
+      }
+    ],
+    "positionals": [
+      {
+        "name": "ps",
+        "type": "fixture/pair",
+        "repeat": {
+          "min": 0,
+          "max": 3
+        }
+      }
+    ]
+  },
+  "cases": [
+    {
+      "id": "complete-rows-accumulate-independently",
+      "why": "`--p 1,2 --p 3,4`: 各 row の parser 産出が完成値なのでそのまま積まれる。rows は独立の tuple 値 2 個。",
+      "args": [
+        "--p",
+        "1,2",
+        "--p",
+        "3,4"
+      ],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {
+            "entity": "p",
+            "op": "set",
+            "operand": [
+              1,
+              2
+            ],
+            "source": "cli"
+          },
+          {
+            "entity": "p",
+            "op": "set",
+            "operand": [
+              3,
+              4
+            ],
+            "source": "cli"
+          }
+        ],
+        "result": {
+          "p": [
+            [
+              1,
+              2
+            ],
+            [
+              3,
+              4
+            ]
+          ],
+          "ps": []
+        },
+        "sources": {
+          "p": [
+            [
+              "cli",
+              "cli"
+            ],
+            [
+              "cli",
+              "cli"
+            ]
+          ],
+          "ps": []
+        }
+      }
+    },
+    {
+      "id": "partial-row-is-not-completed-by-sibling-row",
+      "why": "`--p 1,2 --p 3,`: row #1 の [3,null] は row #0 の座を借りて完成しない — 独立判定で未完成のまま確定し incomplete_value (args_pos = row #1 の operand 位置 3)。row 混成なら [3,2] 等の合成で成功してしまう。",
+      "args": [
+        "--p",
+        "1,2",
+        "--p",
+        "3,"
+      ],
+      "expect": {
+        "outcome": "failure",
+        "errors": [
+          {
+            "element": "p",
+            "args_pos": 3,
+            "kind": "parse",
+            "reason": "incomplete_value"
+          }
+        ]
+      }
+    },
+    {
+      "id": "two-partial-rows-do-not-merge",
+      "why": "`--p 1, --p ,9`: row #0 [1,null] と row #1 [null,9] を混ぜれば [1,9] の完成値になるが、混成は起きない — 両 row とも独立に未完成で、errors に 2 件全保持 (args_pos 1 / 3、DR-053 の 4-tuple dedupe は args_pos 違いで併存)。",
+      "args": [
+        "--p",
+        "1,",
+        "--p",
+        ",9"
+      ],
+      "expect": {
+        "outcome": "failure",
+        "errors": [
+          {
+            "element": "p",
+            "args_pos": 1,
+            "kind": "parse",
+            "reason": "incomplete_value"
+          },
+          {
+            "element": "p",
+            "args_pos": 3,
+            "kind": "parse",
+            "reason": "incomplete_value"
+          }
+        ]
+      }
+    },
+    {
+      "id": "repeat-rows-judged-independently",
+      "why": "repeat (positional) の rows も同じ — `1,2 3,` は row #0 完成・row #1 未完成で、row #1 のトークン位置 1 に帰属する incomplete_value。",
+      "args": [
+        "1,2",
+        "3,"
+      ],
+      "expect": {
+        "outcome": "failure",
+        "errors": [
+          {
+            "element": "ps",
+            "args_pos": 1,
+            "kind": "parse",
+            "reason": "incomplete_value"
+          }
+        ]
+      }
+    }
+  ]
+}
