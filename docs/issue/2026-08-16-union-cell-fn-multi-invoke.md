@@ -3,7 +3,7 @@ title: union セルでの cell fn 多重実行の解消 (UC-Q4 裁定待ち)
 status: blocked
 category: bug
 created: 2026-08-16T10:22:51+09:00
-last_read:
+last_read: 2026-08-16T10:58:38+09:00
 open_entered:
 wip_entered:
 blocked_entered: 2026-08-16T10:22:51+09:00
