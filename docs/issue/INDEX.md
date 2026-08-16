@@ -17,6 +17,7 @@ active な issue の一覧。close 済みは archive/ にあり、ここには�
 | 2026-08-16 | design | open | [type-none-as-capsule-absence](./2026-08-16-type-none-as-capsule-absence.md) | type:"none" を廃しカプセル不在で「値空間なし」を表現する案 (opus レビュー C4、DR-140 §4 presence 判別式の自己矛盾解消) |
 | 2026-08-16 | task | open | [fixture-reason-vocab-lint](./2026-08-16-fixture-reason-vocab-lint.md) | fixture の errors[].reason が宣言語彙 (descriptor reasons + REFERENCE §7.3) に含まれるか検査する lint が無い |
 | 2026-08-16 | bug | open | [union-cell-fn-multi-invoke](./2026-08-16-union-cell-fn-multi-invoke.md) | union セルで cell fn が枝数倍実行され DR-114 一回実行不変条件と衝突、UC-Q4 裁定確定 (第3の形、入口単位1回発火+並行着地) |
+| 2026-08-16 | design | open | [scope-config-shrink-by-type-shadow](./2026-08-16-scope-config-shrink-by-type-shadow.md) | scope config の number 系ダイヤル類を definitions.types の同名 shadow 再定義で置換できるか (値カプセル化 DR-139 の副産物) |
 | 2026-08-12 | task | open | [ref-template-help-carrier](./2026-08-12-ref-template-help-carrier.md) | ref/template 由来 help_meta の provenance carrier 未実装、DR-116 §4 説明引き直しの ref 越し分を次サイクルへ |
 | 2026-08-12 | design | open | [nested-config-not-supplied](./2026-08-12-nested-config-not-supplied.md) | 参照実装が root 宣言の config_file を子スコープの要素へ供給しない (DR-050 §3 同型対応の nested 未実装) |
 | 2026-08-12 | design | open | [completion-ux-layer-completer-closure-abi](./2026-08-12-completion-ux-layer-completer-closure-abi.md) | completion ux 層の座席 (kuu.mbt vs kuu-cli lib) と形態 A completer クロージャ ABI が DR-117 波及節で未設計 |
