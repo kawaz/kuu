@@ -13,6 +13,7 @@ active な issue の一覧。close 済みは archive/ にあり、ここには�
 | 2026-07-14 | design | idea | [argv0-preset-type](./2026-07-14-argv0-preset-type.md) | busybox型 multi-call binary の argv0 分岐は kuu対象外、値注入presetの構想 (需要が出たら) |
 | 2026-07-15 | design | idea | [descriptor-conformance-promotion-revisit](./2026-07-15-descriptor-conformance-promotion-revisit.md) | descriptor 検証の conformance 昇格の再検討 (DAX-Q6 先送り分、独自フィルタ実装ラップ or 2言語目着手で再検討) |
 | 2026-07-23 | task | idea | [help-category-link-last-wins](./2026-07-23-help-category-link-last-wins.md) | M5 で #help_category 内部セルの link 配線実装時は at_pos ベース last-wins を使う (completion.mbt L42-72 pattern 再利用、宣言順 push 由来の bug class 回避) |
+| 2026-08-16 | design | open | [borrow-absent-target-not-checked](./2026-08-16-borrow-absent-target-not-checked.md) | `default_fn: "borrow:<存在しない対象>"` が definition ACCEPTED になり実行時に黙って値なし、link の absent-ref REJECTED と非対称 |
 | 2026-08-16 | task | open | [fixture-reason-vocab-lint](./2026-08-16-fixture-reason-vocab-lint.md) | fixture の errors[].reason が宣言語彙 (descriptor reasons + REFERENCE §7.3) に含まれるか検査する lint が無い |
 | 2026-08-12 | task | open | [ref-template-help-carrier](./2026-08-12-ref-template-help-carrier.md) | ref/template 由来 help_meta の provenance carrier 未実装、DR-116 §4 説明引き直しの ref 越し分を次サイクルへ |
 | 2026-08-12 | design | open | [nested-config-not-supplied](./2026-08-12-nested-config-not-supplied.md) | 参照実装が root 宣言の config_file を子スコープの要素へ供給しない (DR-050 §3 同型対応の nested 未実装) |
