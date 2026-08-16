@@ -28,6 +28,7 @@ active な issue の一覧。close 済みは archive/ にあり、ここには�
 | 2026-07-26 | design | open | [warnings-element-export-key-timing](./2026-07-26-warnings-element-export-key-timing.md) | warnings[].element のキー体系が export_key 適用の前後どちらか未規定 (sources 側は明確化済み、DR-058 §2 の canonical 解釈待ち) |
 | 2026-07-26 | task | open | [projection-verification-structural-gaps](./2026-07-26-projection-verification-structural-gaps.md) | 射影 (result/effects/sources) の検証断面に構造的な空白が残っている (P1/P2 の 8 テーマ) |
 | 2026-07-22 | task | wip | [dr-116-completion-generator-implementation](./2026-07-22-dr-116-completion-generator-implementation.md) | DR-116 (canonical 補完生成器の既定 policy) の実装 — 生成器・product test 未実装 |
+| 2026-08-16 | bug | blocked | [union-cell-fn-multi-invoke](./2026-08-16-union-cell-fn-multi-invoke.md) | union セルで cell fn が枝数倍実行され DR-114 一回実行不変条件と衝突、UC-Q4 裁定待ち |
 
 <!--
 雛形メモ (migrate sub-command 用):
