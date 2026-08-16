@@ -1,0 +1,33 @@
+{
+  "why": "option structural or の outer repeat も zero-progress 検査の対象であることを pin する (issue option-structural-or-group-outer-repeat-not-wired 受け入れ条件 3 — 従来の検査は positionals/commands のみ走査で options の repeat head を見ていなかった)。or 枝が `seq: []` (unit、消費 0 — DR-067 §2 で構文合法) のみの body は恒 0 消費で、無制限 repeat と組むと上限なしに unfold し続ける全入力破壊 (DR-054 の Error 基準)。kind は参照層の `zero-progress` (DR-054 §4 / DR-067 §1)。`fixtures/definition-error/child-repeat-zero-progress.json` (positional 側) の option 版。",
+  "query": "definition_error",
+  "definition": {
+    "options": [
+      {
+        "name": "z",
+        "long": true,
+        "or": [
+          {
+            "seq": []
+          }
+        ],
+        "repeat": true
+      }
+    ]
+  },
+  "cases": [
+    {
+      "id": "zero-consumption-or-body-unbounded-repeat",
+      "why": "or の唯一の枝が unit (seq []) = 恒 0 消費 → 無制限 repeat のゼロ進捗。",
+      "expect": {
+        "outcome": "definition-error",
+        "errors": [
+          {
+            "element": "z",
+            "kind": "zero-progress"
+          }
+        ]
+      }
+    }
+  ]
+}

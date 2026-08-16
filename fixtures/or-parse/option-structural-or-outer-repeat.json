@@ -1,0 +1,279 @@
+{
+  "why": "option 自身が structural or / seq (Group) で outer repeat を宣言した場合、トリガ 1 回で body が repeat の min/max に従って反復消費され、結果は row 配列 (DR-044 の rows — positional ref-repeat の `fixtures/repeat-parse/ref-or-template.json` と同形) になることを pin する (issue option-structural-or-group-outer-repeat-not-wired 受け入れ条件 4)。realized row は named or の全枝キー列挙 + null (DR-130 §4)。読みの一意性・ambiguous は通常の完全経路規範 (DR-038) がそのまま適用され、repeat が配線されない実装 (宣言 accepted-but-ignored) では 2 row ケースが残余トークンで失敗するため直接検出される。",
+  "query": "parse",
+  "definition": {
+    "options": [
+      {
+        "name": "sel",
+        "long": true,
+        "or": [
+          {
+            "type": "number",
+            "name": "n"
+          },
+          {
+            "seq": [
+              {
+                "type": "string",
+                "name": "s1"
+              },
+              {
+                "type": "string",
+                "name": "s2"
+              }
+            ]
+          }
+        ],
+        "repeat": {
+          "min": 1,
+          "max": 2
+        }
+      },
+      {
+        "name": "g",
+        "long": true,
+        "seq": [
+          {
+            "type": "string",
+            "name": "ga"
+          },
+          {
+            "type": "string",
+            "name": "gb"
+          }
+        ],
+        "repeat": {
+          "min": 1,
+          "max": 2
+        }
+      }
+    ]
+  },
+  "cases": [
+    {
+      "id": "single-number-row",
+      "why": "`--sel 7`: number 枝 1 row で完結 (seq 枝は 2 トークン必要で不成立)。row は全枝キー列挙 + null。",
+      "args": [
+        "--sel",
+        "7"
+      ],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {
+            "entity": "n",
+            "op": "set",
+            "operand": 7,
+            "source": "cli"
+          }
+        ],
+        "result": {
+          "sel": [
+            {
+              "n": 7,
+              "s1": null,
+              "s2": null
+            }
+          ],
+          "g": null
+        }
+      }
+    },
+    {
+      "id": "single-seq-row",
+      "why": "`--sel a b`: 文字は number 枝で reject され seq 枝 1 row が一意。",
+      "args": [
+        "--sel",
+        "a",
+        "b"
+      ],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {
+            "entity": "s1",
+            "op": "set",
+            "operand": "a",
+            "source": "cli"
+          },
+          {
+            "entity": "s2",
+            "op": "set",
+            "operand": "b",
+            "source": "cli"
+          }
+        ],
+        "result": {
+          "sel": [
+            {
+              "n": null,
+              "s1": "a",
+              "s2": "b"
+            }
+          ],
+          "g": null
+        }
+      }
+    },
+    {
+      "id": "two-rows-within-max",
+      "why": "`--sel a b c d`: repeat 配線があれば seq 2 rows (max 2 の内側) で完結する一意の読み。配線されないバグでは 1 row 消費後の c d が残余になり失敗する — 本 case がバグを直接検出する。",
+      "args": [
+        "--sel",
+        "a",
+        "b",
+        "c",
+        "d"
+      ],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {
+            "entity": "s1",
+            "op": "set",
+            "operand": "a",
+            "source": "cli"
+          },
+          {
+            "entity": "s2",
+            "op": "set",
+            "operand": "b",
+            "source": "cli"
+          },
+          {
+            "entity": "s1",
+            "op": "set",
+            "operand": "c",
+            "source": "cli"
+          },
+          {
+            "entity": "s2",
+            "op": "set",
+            "operand": "d",
+            "source": "cli"
+          }
+        ],
+        "result": {
+          "sel": [
+            {
+              "n": null,
+              "s1": "a",
+              "s2": "b"
+            },
+            {
+              "n": null,
+              "s1": "c",
+              "s2": "d"
+            }
+          ],
+          "g": null
+        }
+      }
+    },
+    {
+      "id": "branch-split-ambiguous",
+      "why": "`--sel 1 2`: number×2 rows と seq×1 row の両読みが全消費で完結 → ambiguous (DR-038 — repeat の反復数と枝選択の直積も完全経路の一意性で裁かれ、優先規則で潰さない)。interpretations は sparse 差分ビュー (row は選択枝のキーのみ、ref-or-template の pin と同形)。",
+      "args": [
+        "--sel",
+        "1",
+        "2"
+      ],
+      "expect": {
+        "outcome": "ambiguous",
+        "interpretations": [
+          {
+            "sel": [
+              {
+                "n": 1
+              },
+              {
+                "n": 2
+              }
+            ]
+          },
+          {
+            "sel": [
+              {
+                "s1": "1",
+                "s2": "2"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "max-cap-leaves-residue",
+      "why": "`--sel a b c`: seq 1 row (a,b) の後の c は number 枝でも seq 枝 (2 トークン) でも読めず、max 2 の反復余地があっても row が組めない → 残余トークン (element 省略、args_pos = 残余先頭 3、reason unexpected_token — CONFORMANCE §2)。",
+      "args": [
+        "--sel",
+        "a",
+        "b",
+        "c"
+      ],
+      "expect": {
+        "outcome": "failure",
+        "errors": [
+          {
+            "args_pos": 3,
+            "kind": "parse",
+            "reason": "unexpected_token"
+          }
+        ]
+      }
+    },
+    {
+      "id": "group-two-rows",
+      "why": "seq (Group) 側の対照: `--g a b c d` → 2 rows。or 側と同じ repeat spine 契約 (issue 受け入れ条件 1 の両 arm)。",
+      "args": [
+        "--g",
+        "a",
+        "b",
+        "c",
+        "d"
+      ],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {
+            "entity": "ga",
+            "op": "set",
+            "operand": "a",
+            "source": "cli"
+          },
+          {
+            "entity": "gb",
+            "op": "set",
+            "operand": "b",
+            "source": "cli"
+          },
+          {
+            "entity": "ga",
+            "op": "set",
+            "operand": "c",
+            "source": "cli"
+          },
+          {
+            "entity": "gb",
+            "op": "set",
+            "operand": "d",
+            "source": "cli"
+          }
+        ],
+        "result": {
+          "g": [
+            {
+              "ga": "a",
+              "gb": "b"
+            },
+            {
+              "ga": "c",
+              "gb": "d"
+            }
+          ],
+          "sel": null
+        }
+      }
+    }
+  ]
+}
