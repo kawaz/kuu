@@ -1,5 +1,5 @@
 {
-  "why": "`sources` の **path 軸**が、定義に command があるかどうかで変わらないことを固定する。name を持つ `seq` / `or` は 1 段の結果スコープを作る (DESIGN §2.3) ので、その中のセルは `path` にスコープ名を持つ。射影経路を command の有無で分岐させ、片方だけ path を落とす実装はここで落ちる — 実際 2026-07-26 に「command が無ければ path を捨て、あれば載せる」分岐があり、未発火の dummy command を 1 つ足すだけで sources の形が変わっていた。root 直下のセルだけを見る fixture ではこの断面を踏まない (path が空同士で一致してしまう)。対になる定義 2 つは command の有無だけが違う。",
+  "why": "`sources` の **path 軸**が、定義に command があるかどうかで変わらないことを固定する。結果キー軸を占有する `seq` / `or` は 1 段の結果スコープを作る (DESIGN §2.3、TRG-Q4=a) ので、その中のセルは `path` にスコープ名を持つ。射影経路を command の有無で分岐させ、片方だけ path を落とす実装はここで落ちる — 実際 2026-07-26 に「command が無ければ path を捨て、あれば載せる」分岐があり、未発火の dummy command を 1 つ足すだけで sources の形が変わっていた。root 直下のセルだけを見る fixture ではこの断面を踏まない (path が空同士で一致してしまう)。対になる定義 2 つは command の有無だけが違う。",
   "query": "parse",
   "definition": {
     "options": [

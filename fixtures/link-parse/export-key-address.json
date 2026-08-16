@@ -1,5 +1,5 @@
 {
-  "why": "link 越しの効果と export_key の直交性を pin する (DR-121 §5 / §1)。effects の entity は宣言名軸で export_key を適用しない (`format`) が、result / sources は結果アドレス軸で export_key 適用後の露出キー (`fmt`) を使う。link-parse/basic.json の link-entry-fires と同じ発火だが export_key を足した対照: source タグ `link` 自体は export_key の有無に影響されず、名乗るキーだけが変わることを固定する。",
+  "why": "link 越しの効果と export_key の直交性を pin する (DR-121 §5 / §1)。effects の entity はid 軸 (TRG-Q3=a)で export_key を適用しない (`format`) が、result / sources は結果アドレス軸で export_key 適用後の露出キー (`fmt`) を使う。link-parse/basic.json の link-entry-fires と同じ発火だが export_key を足した対照: source タグ `link` 自体は export_key の有無に影響されず、名乗るキーだけが変わることを固定する。",
   "query": "parse",
   "definition": {
     "options": [

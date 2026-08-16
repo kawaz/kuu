@@ -1,5 +1,5 @@
 {
-  "why": "positional 直下の `or` も option と同じ規則で露出する (DESIGN §2.3 は配置に依らない — 役割は所属配列で決まる (§1.3) が、結果スコープを決めるのは name の有無だけ)。name を持つ positional の or は 1 段の結果スコープを作り、name の無い匿名 or は従来どおり透過する (`path-search/held-errors-distinct-depth.json` / `-same-depth.json` が匿名側を pin)。**この fixture が pin する退行**: decode 段で positional の or 分岐が宣言 `name` を無条件に捨てると、宣言した結果キーが lowering に届く前に消える。",
+  "why": "positional 直下の `or` も option と同じ規則で露出する (DESIGN §2.3 は配置に依らない — 役割は所属配列で決まる (§1.3) が、結果スコープを決めるのは結果キー軸を占有するか否かだけ (TRG-Q4=a))。結果キー軸を占有する positional の or は 1 段の結果スコープを作り、占有しない匿名 or は従来どおり透過する (`path-search/held-errors-distinct-depth.json` / `-same-depth.json` が匿名側を pin)。**この fixture が pin する退行**: decode 段で positional の or 分岐が宣言 `name` を無条件に捨てると、宣言した結果キーが lowering に届く前に消える。",
   "query": "parse",
   "definition": {
     "positionals": [

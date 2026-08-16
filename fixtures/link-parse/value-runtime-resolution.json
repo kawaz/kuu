@@ -115,7 +115,7 @@
     },
     {
       "id": "unset-cell-rejects",
-      "why": "`--wk 5` 単独: `value` 宣言座はセル未確定で解決先が無く、vivify もしない (DR-127 §3 の表) — 解決失敗はその枝の Reject で、他に成立する解釈が無いので全体パース失敗 (DR-127 §4)。全枝落ちでは ParseError の合成が義務 (DR-127 §4.2 — 無言の全枝落ちは DR-037 の帰属原則違反)。element は合流先の実体 `j` — link の binding は id 層の合流で合流先セルに属する (DR-045、effects の entity が `j` になるのと同じ宣言名軸 DR-121 §5)。args_pos は当該 binding の at_pos = operand トークン位置 1 (DR-127 §4.2)。",
+      "why": "`--wk 5` 単独: `value` 宣言座はセル未確定で解決先が無く、vivify もしない (DR-127 §3 の表) — 解決失敗はその枝の Reject で、他に成立する解釈が無いので全体パース失敗 (DR-127 §4)。全枝落ちでは ParseError の合成が義務 (DR-127 §4.2 — 無言の全枝落ちは DR-037 の帰属原則違反)。element は合流先の実体 `j` — link の binding は id 層の合流で合流先セルに属する (DR-045、effects の entity が `j` になるのと同じid 軸 (TRG-Q3=a) DR-121 §5)。args_pos は当該 binding の at_pos = operand トークン位置 1 (DR-127 §4.2)。",
       "args": [
         "--wk",
         "5"

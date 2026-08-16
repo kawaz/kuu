@@ -43,7 +43,7 @@
     },
     {
       "id": "positional-single-side-ok",
-      "why": "positional a のみ発火 (option --b 未供給で非 committed) → 述語不成立、success。effects は a の cli set 1 件のみ。b は option で未発火 → 結果に現れない (null の一般規則、DR-130)。",
+      "why": "positional a のみ発火 (option --b 未供給で非 committed) → 述語不成立、success。effects は a の cli set 1 件のみ。b は option で未発火 → `null` (キーは立つ、DR-130 §1 の全キー列挙)。",
       "args": [
         "x"
       ],

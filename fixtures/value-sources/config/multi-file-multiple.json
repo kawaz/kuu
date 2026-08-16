@@ -1,5 +1,5 @@
 {
-  "why": "**供給順が fold の順を決める** (DR-133 §2)。`multiple` の config_file 要素が複数パスを供給すると、供給された順にそのまま列になり、後のパスのトップキーが前を置き換える。同じ 2 本を逆順に供給すると勝者が入れ替わることを対で固定する — 列の順序が意味を持つ (= 集合ではない) ことの pin。\n\n併せて **DR-135 の結果面**を固定する: config_file 要素自身が通常要素として result / sources に座り、`multiple` なら値は**供給順のパス列** (`string[]`)、sources は shadow tree として要素ごとのタグ配列 (DR-122)。cli 発火は 1 供給 1 件で `effects` にも載る (DR-135 §3。effects は宣言名軸なので綴りは要素名)。\n\n本 fixture は cli 供給のみで観測する (宣言 default を持たない要素にして、列の中身が供給そのものだけで決まる形にしてある)。既定パス列と席ごとの入れ替えは multi-file.json、供給なし = 空列と env 席は multi-file-path-absent.json が持つ。CONFIG 入力表記は `config_files` {パス→オブジェクト}。",
+  "why": "**供給順が fold の順を決める** (DR-133 §2)。`multiple` の config_file 要素が複数パスを供給すると、供給された順にそのまま列になり、後のパスのトップキーが前を置き換える。同じ 2 本を逆順に供給すると勝者が入れ替わることを対で固定する — 列の順序が意味を持つ (= 集合ではない) ことの pin。\n\n併せて **DR-135 の結果面**を固定する: config_file 要素自身が通常要素として result / sources に座り、`multiple` なら値は**供給順のパス列** (`string[]`)、sources は shadow tree として要素ごとのタグ配列 (DR-122)。cli 発火は 1 供給 1 件で `effects` にも載る (DR-135 §3。effects はid 軸 (TRG-Q3=a)なので綴りは要素名)。\n\n本 fixture は cli 供給のみで観測する (宣言 default を持たない要素にして、列の中身が供給そのものだけで決まる形にしてある)。既定パス列と席ごとの入れ替えは multi-file.json、供給なし = 空列と env 席は multi-file-path-absent.json が持つ。CONFIG 入力表記は `config_files` {パス→オブジェクト}。",
   "query": "parse",
   "definition": {
     "options": [

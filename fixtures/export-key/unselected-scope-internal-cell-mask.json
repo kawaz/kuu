@@ -122,7 +122,7 @@
     },
     {
       "id": "selected-transparent-config-file-carries-its-path",
-      "why": "`c --cfgpath /u.toml --mark`: 昇格露出した config_file にパスを供給すると、その値 (確定したパス) が root の座に現れ sources は自分のラダー席 `cli` になる。cli 発火なので `effects` にも 1 件載る (DR-135 §3 — effects は宣言名軸なので `cfgpath` の綴りで書く)。同じスコープの `mark` (none) は発火しても effects / result のどちらにも現れないままで、値を持つ要素と持たない要素の分界が 1 ケース内で対比できる。`config_files` に `/u.toml` を空オブジェクトで置いてあるのは、**committed (cli) なパスの読込失敗が Error になる** (DR-050 §2 / DR-133 §3) のを避けて成功輪郭に留めるため。中身を空にしてあるので、供給される config 値は無く、スコープをまたぐ config 供給の未確定論点 (DR-133 §5 の射程外) に本 fixture は依存しない。",
+      "why": "`c --cfgpath /u.toml --mark`: 昇格露出した config_file にパスを供給すると、その値 (確定したパス) が root の座に現れ sources は自分のラダー席 `cli` になる。cli 発火なので `effects` にも 1 件載る (DR-135 §3 — effects はid 軸 (TRG-Q3=a)なので `cfgpath` の綴りで書く)。同じスコープの `mark` (none) は発火しても effects / result のどちらにも現れないままで、値を持つ要素と持たない要素の分界が 1 ケース内で対比できる。`config_files` に `/u.toml` を空オブジェクトで置いてあるのは、**committed (cli) なパスの読込失敗が Error になる** (DR-050 §2 / DR-133 §3) のを避けて成功輪郭に留めるため。中身を空にしてあるので、供給される config 値は無く、スコープをまたぐ config 供給の未確定論点 (DR-133 §5 の射程外) に本 fixture は依存しない。",
       "args": [
         "c",
         "--cfgpath",

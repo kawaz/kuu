@@ -1,5 +1,5 @@
 {
-  "why": "option 直下 inline seq の結果形 (結果キーを持つ子): 露出規則 (DESIGN §2.4 — 最も浅い name 層で止め、それより深い name は止めた層が作る子スコープに属する) と DESIGN §2.5 (name を持つ子が並べば結果が自然に kv になる、例 `[{name:r},{name:g},{name:b}] → {r,g,b}`) の合成により、`pair` の値は子ごとの単一キー object の配列ではなく **1 個の kv** になる。同じ消費文法を definitions.templates 経由で書いた ref 版 (`repeat-parse/ref-template-no-repeat-degenerate.json :: single-rgb-degenerate-row` が `{hlcolor:{r,g,b}}` を pin) と一致する — inline `seq` と `ref` は同じ構造の別の書き口 (DR-078 §1) なので**結果形は経路に依らない**。DESIGN §5.1 の「子の値の配列」は結果キーを持つ子が 1 つも無いときの形であり、その対照は `seq-parse/option-anonymous-children-array.json`。",
+  "why": "option 直下 inline seq の結果形 (結果キーを持つ子): 露出規則 (DESIGN §2.4 — 最も浅い**結果キー層**で止め、それより深い結果キーは止めた層が作る子スコープに属する) と DESIGN §2.5 (name を持つ子が並べば結果が自然に kv になる、例 `[{name:r},{name:g},{name:b}] → {r,g,b}`) の合成により、`pair` の値は子ごとの単一キー object の配列ではなく **1 個の kv** になる。同じ消費文法を definitions.templates 経由で書いた ref 版 (`repeat-parse/ref-template-no-repeat-degenerate.json :: single-rgb-degenerate-row` が `{hlcolor:{r,g,b}}` を pin) と一致する — inline `seq` と `ref` は同じ構造の別の書き口 (DR-078 §1) なので**結果形は経路に依らない**。DESIGN §5.1 の「子の値の配列」は結果キーを持つ子が 1 つも無いときの形であり、その対照は `seq-parse/option-anonymous-children-array.json`。",
   "query": "parse",
   "definition": {
     "options": [

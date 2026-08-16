@@ -1,5 +1,5 @@
 {
-  "why": "失敗時アクション (DR-048) の到達可能性の輪郭: 完全経路 0 本の失敗時、候補経路のいずれかで失敗時アクション持ち要素 (help) が selected なら、保持 Error に代えて help を発火する (DR-048 §2)。発火するには help のトリガ (--help) が args 順で実際に到達・消費される必要がある。fired_action は発火要素の name (DR-053 §2)。help が発火しても errors は構造として残る (表示が置換されるだけ、DR-053 §2)。help は type:\"help\" プリセット (失敗時アクション同梱、long:true で --help トリガ生成、DR-071)。",
+  "why": "失敗時アクション (DR-048) の到達可能性の輪郭: 完全経路 0 本の失敗時、候補経路のいずれかで失敗時アクション持ち要素 (help) が selected なら、保持 Error に代えて help を発火する (DR-048 §2)。発火するには help のトリガ (--help) が args 順で実際に到達・消費される必要がある。fired_action は発火要素の**参照識別子 (id)** (DR-053 §2 / TRG-Q3=a — 観測面の要素参照は id 軸で綴る)。help が発火しても errors は構造として残る (表示が置換されるだけ、DR-053 §2)。help は type:\"help\" プリセット (失敗時アクション同梱、long:true で --help トリガ生成、DR-071)。",
   "query": "parse",
   "definition": {
     "options": [
