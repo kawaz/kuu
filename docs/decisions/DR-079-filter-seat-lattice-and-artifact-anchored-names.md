@@ -1,5 +1,11 @@
 # DR-079: filter 座席の完全格子と作用対象アンカー命名 (piece / value / cell)
 
+> **更新 (DR-139 §1.2、AP-Q1 裁定 2026-08-16): §2 の命名 (作用対象アンカー) は部分
+> superseded。** カプセル field 名は `pre_filters` / `post_filters` / `final_filters` /
+> `collected_filters` — pre/post は復活するが**両方とも type (parse) 基準**に統一されて
+> おり、本 DR §2 が排除した「別軸が対に見える」非対称は再来しない。§1 の座席格子
+> (A/B/C/D1/D2 の構造)・§3 の `raw_filters` 予約・§4 の registry 純化・§5 は生存。
+
 > 由来: 「pre_filters と post_filters があるのに中間層だけ無印の `filters` で、意味が曖昧すぎて誤読が多発する」(kawaz、2026-07-10 チャット議論)。意味整理で命名以前の構造欠陥 2 つと座席格子の不完全性を特定し、作用対象 artifact 名でアンカーする命名へ全面移行を裁定。DESIGN §6.2 の相ラベル事故 (issue design-6-2-piece-post-label-collision) と DR-050 の「post_filters のみ」読み分け不能が実害の実例。
 
 ## 特定した構造欠陥

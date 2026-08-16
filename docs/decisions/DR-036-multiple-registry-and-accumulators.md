@@ -1,5 +1,11 @@
 # DR-036: multiple registry の追加、accumulators の属性セット拡張、collectors は filters 統合
 
+> **更新 (DR-139 §5、2026-08-16): multiple registry と `multiple` 属性の書き方は superseded。**
+> 収集装置は値カプセルの `separator` / `accumulator` / `collector` field へ直書きし (DR-140 §3)、
+> よくある組合せの 1 語プリセットは definitions の type プリセットで作る。本 DR の
+> **accumulators registry の属性セット拡張 (accumulator + default_collector +
+> default_separator) と collectors の filters 統合は生存** — プリセットの実質はこちらが担う。
+
 ## 決定
 
 ### multiple registry の追加 (7→8 区分)

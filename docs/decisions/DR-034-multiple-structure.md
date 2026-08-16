@@ -1,5 +1,10 @@
 # DR-034: multiple の構造モデル (piece_processor / separator / accumulator / collector)
 
+> **更新 (DR-139、2026-08-16): §「type と multiple は同じ属性平面への参照」の属性平面が
+> 値カプセルとして実体化された。** field 列挙・4 段合成・cardinality 導出の現行正本は
+> DR-139、wire 綴りは DR-140。本 DR の平面概念と合成順の裁定は DR-139 に引き継がれ生存、
+> `multiple` の束ね名と multiple registry (DR-036) は DR-139 §5 で廃止された。
+
 ## 決定
 
 multiple 関連の処理を以下の4要素で構成する:
