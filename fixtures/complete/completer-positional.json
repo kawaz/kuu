@@ -1,5 +1,5 @@
 {
-  "why": "DR-060 §4: positional の値位置候補にも completer が配線されることの pin — DR-060 §4 は「アプリ固有の動的候補」を option 限定と規定していない (option 専用の hidden とは対照的)。",
+  "why": "DR-060 §4: positional の値位置候補にも completer が配線されることの pin — DR-060 §4 は「アプリ固有の動的候補」を option 限定と規定していない (`hidden` も node 共通属性であり option 専用ではない — REFERENCE §2.1 の適用対象を参照)。",
   "query": "complete",
   "definition": {
     "positionals": [
