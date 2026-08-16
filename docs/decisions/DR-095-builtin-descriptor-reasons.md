@@ -24,7 +24,7 @@ DESIGN §8 (filter chain) と kuu.mbt `src/core/filters.mbt` (参照実装 regis
 | `non_empty` | Validate | `["empty_value"]` | 空文字列を拒否する単一の failure mode。SCH-Q3-b 提示の命名をそのまま採用 (issue 裁定に明記済み) — DR-066 §3 v1 表に対応語彙が無いため本 DR で新設する builtin ns 語彙 |
 | `in_range` | Validate | `["too_small", "too_large"]` | DR-066 §2 本文・docs/PIPELINE.md §2 (段 5 reject 表・IO 端点表)・docs/CONFORMANCE.md §2 (`filter` kind の例) の全てが `in_range` の failure mode としてこの 2 語を既に例示している。min 未満 = `too_small` / max 超過 = `too_large` |
 | `regex_match` | Validate | `["pattern_no_match"]` | **compile 失敗は本 descriptor の reasons に含めない** — DR-085 §1「pattern の compile 失敗は definition-error (kind=invalid-argument)」/ DR-082 §3「装置引数の値そのものが不正で装置側の構築が失敗する場合は invalid-argument」により、compile 失敗は実行時 reason 体系 (kind=parse/filter/constraint の `reason`) ではなく definition-error の `kind` 側に属する — 両者は DR-083 §5 の「静的に既知は定義時に倒す」原則の対象が違う (pattern は定義の一部で compile 可否は定義時に静的判定できる)。実行時に残る failure mode は「valid にコンパイルされた pattern に対象文字列が不一致」の 1 種のみ、`pattern_no_match` と命名する (SCH-Q3-b 提示の命名を実行時 reason 側にのみ残す) |
-| `increment` | Transform | `[]` | count 要素の value_filters/update transform として使われる前提で数値入力のみ受ける。Transform なので失敗しない (§本節冒頭の判定根拠) |
+| `increment` | Transform | `[]` | count 要素の座席 transform として使われる前提で数値入力のみ受ける (**根拠にしていた `update` effect は DR-114 §6.1 で廃止済み、座席名も DR-102/DR-139 で再編 — 住人としての判定根拠だけが生きている**)。Transform なので失敗しない (§本節冒頭の判定根拠) |
 | `unique` (array cell_filter、`Array[Value] → Array[Value]`) | Transform 相当 | `[]` | 累積後の配列から重複除去する純関数、拒否を持たない。kuu.mbt `ArrayFilterDescriptor` の `run` シグネチャに `Result` が無い (`array_filter_unique` 参照) こと自体が failure mode 皆無の実装的裏付け |
 
 `filter_rejected` (kuu.mbt 現状の全 filter Err 潰し) は本 DR の宣言集合には含めない — SCH-Q4 として §5 に扱いを記す。

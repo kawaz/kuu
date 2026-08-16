@@ -92,6 +92,12 @@ AtomicAST (パース時): primitive/exact/or/seq + multiple 属性の同型表�
 - **repeat (構造閉包)**: 「同じ要素を複数回」という反復構造。再帰 ref への lowering で表現され、min/max は path-search の枝生成に効く構造制約。
 - **multiple (値の畳み)**: option の複数回発火などが生む値列を積む DR-034 のパイプライン (separator / accumulator / collector)。出現回数・位置の制約は持たない。
 
+> **更新 (2026-08-16): 「現行は DR-034 / DR-036 を参照」というポインタは 2 ホップ空振りになる。**
+> DR-034 の属性平面と DR-036 の multiple registry は、**DR-139 (値カプセル: 供給の `defaults`
+> 一本化・5 座席・`multiple` 属性の廃止) と DR-140 (wire 射影: 要素直下 `value` 1 属性)** で
+> 再編された。現行の読み先は DR-139 / DR-140、移送の作業単位は
+> `docs/research/2026-08-16-value-capsule-migration-ledger.md`。
+
 この分離により、値属性表の `multiple` 行から「positional の個数」「repeat はここに統合」の面は更新された (反復個数は repeat が、値の畳みは multiple が担う)。DR-019 の「repeat を独立構造要素にしない (要素属性で表す)」判断自体は引き続き有効で、本 DR の「4プリミティブ + multiple 属性 + 糖衣展開」骨格のうち multiple 属性自体も有効。詳細は DR-043 を参照。
 
 ### `exact` の位置付け (DR-026 により本 DR の `exact` がプリミティブから葉要素に再分類。役割自体は不変)

@@ -37,7 +37,7 @@ Claude が当初「サブコマンドは特別な type」と整理していた�
 
 ## 関連
 
-- [external: kuu.mbt DR-053] (primitive decomposition) と同じ発想
+- 参照実装 (kuu.mbt) 側の primitive decomposition の判断と同じ発想 (旧記載の `[external: kuu.mbt DR-053]` は宛先不在 — kuu.mbt 側の DR は MDR-001〜006 の体系)
 - 結果オブジェクトの構造化ルール「name を持つ要素が1階層作る」も同じ原理
 
 ## Superseded (歴史)

@@ -43,5 +43,5 @@ DESIGN §7.1/§7.3、LOWERING §B.1、schema (long: boolean | array)、fixtures 
 
 - DR-011 (variant DSL — §2 の set 二形拡張で更新)
 - DR-063 §4 (構造等価 — absent/false/[] 同義の根拠) / DR-067 (well-formedness — 二形の型)
-- DR-057 (別綴りは alias — 主入口綴りが name 由来のみである根拠)
+- DR-057 (別綴りは alias — 制定時に「主入口綴りが name 由来のみ」と読んだ根拠。**§3 の DR-136 注記でこの前提は訂正済み** — 綴りの供給元は `trigger_name` 軸)
 - docs/journal/2026-07-05-phase2-lowering-fixtures.md (absent long conflation の検出経緯)

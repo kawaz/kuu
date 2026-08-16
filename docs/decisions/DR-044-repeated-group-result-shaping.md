@@ -105,5 +105,5 @@ map 形 (各段の `multiple.collector` に `{"from_entries": "path"}`):
 - DR-034 / DR-036 (collector の座席と合成順 — from_entries はここに乗る)
 - DR-042 (multiple installer — 「発火ごと蓄積」の宣言)
 - DR-043 (repeat / multiple 分離 — 蓄積 (値面) と反復 (構造面) の役割分担)
-- 垂直スライス PoC 第 4 弾 (journal `2026-07-02-slice-poc.md`)
+- 垂直スライス PoC 第 4 弾 (当時の journal はリポ再編で本リポに存在しない)
 - findings `2026-06-29-ast-missing-pieces.md` F-021 (片翼確定、separator 2D 側は残)

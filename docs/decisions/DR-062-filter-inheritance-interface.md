@@ -11,6 +11,13 @@
 
 ### 2. string 短縮形 | object 詳細形の二形 (既存イディオムの再適用)
 
+> **更新 (DR-139 §1.2/§1.3、2026-08-16): 座席名と `multiple` の綴りは現役ではない。** 本 DR は
+> DR-139 が**二形および合成規則の正本として名指し参照する**ので、読み替えを明示する — 座席は
+> DR-102 で 4 綴り (`piece_filters` / `value_filters` / `final_filters` / `accum_filters`) になり、
+> DR-139 §1.2 でカプセル内の 5 座席へ再編される。`multiple` 属性は DR-139 §5 で廃止 (cardinality は
+> カプセルの座が担う)。**二形 (文字列 DSL | オブジェクト形式) を取るという規定と、field 単位で
+> 後勝ちする合成規則そのものは不変**であり、それが本 DR の生きている部分である。移送の作業単位は `docs/research/2026-08-16-value-capsule-migration-ledger.md` が持つ。
+
 `filters` / `pre_filters` / `post_filters` の各フィールドは二形を取る (`multiple: "append" | {accumulator: ...}` / variant の文字列 DSL | オブジェクト形式と同族):
 
 ```json

@@ -40,7 +40,7 @@ DR-099 §2 の `resolved_default = fold(観測) ?? 宣言 default ?? absent` か
 
 観測が優先で宣言 default はフォールバック、という序列 (「明示 (CLI/env/config) > 観測 (tty) >
 宣言既定 (default)」、DR-098 §5 / DR-125) は不変。source タグ (`tty` / `default`) も不変で、
-観測由来か宣言 default 由来かの診断区別は維持される。値源ラダー (DESIGN §11.4) が 4 段固定である点も不変
+観測由来か宣言 default 由来かの診断区別は維持される。値源ラダー (DESIGN §11.4) の段構成に本 DR が触れない点も不変 (**「4 段固定」の記述は DR-139 §1.1 で部分 supersede** — 供給が `defaults` 一本へ集約され、env / config は provider fn として表現される)
 (DR-099 §2 の「tty 席はラダーに無く型の解決規則として吸収される」構造は変わらない)。
 
 ### 4. `tty_provider` の record 化は不要になる
@@ -145,5 +145,5 @@ DR-099 §4 が 2 値観測を採った動機は「fold の方言 (`tty_cygwin`) 
 - DR-126 §波及 (tty_provider の record 化が旗艦例だった箇所 — §4 で不要になる)
 - DR-107 §3/§6 (`io_type` の値型体系・provider 3 種の descriptor 収載 — 出力型の宣言先)
 - DR-061 §4 (registry 装置の自己記述・config 検証は factory の責務 — 方言を住人側に置く構図の元)
-- DR-031 / DESIGN §11.4 (値源ラダー 4 段固定 — 本 DR でも不変)
+- DR-031 / DESIGN §11.4 (値源ラダー — 本 DR は段構成に触れない。段の綴りは DR-139 §1.1 で `defaults` へ再編)
 - DESIGN §12b (tty 判定値の正本記述)

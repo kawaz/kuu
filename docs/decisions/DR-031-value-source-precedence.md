@@ -71,7 +71,12 @@ source は「**最終値を確定させた効果 / 充填の由来**」であり
 - **あと勝ち mutation 後は最後に勝った効果の source** (履歴は効果列 = 詳細モードの関心、DR-045)
 - **effect op=default** (`--no-x` の "no:default"、committed=true) 適用後は `cli` — 値の内容が default 値と同じでも、その値を確定させたのはユーザの明示操作
 - **effect op=unset** (committed=false) は「触っていないことにする」ので source を確定させない — その後に勝った席の充填の source になる (env が埋めれば `env`、最後まで無ければ `default`)
-- **消費 0 literal (`value:`、位置を問わない) が置いた値 = `const`** — 宣言に書かれた定数がセルに最初から居るだけで、効果でも席の充填でもない。nameless 子の値が wrapper の結果アドレスへ畳まれる場合 (DR-121 §3)、wrapper セルを確定させたのは発火経路なので wrapper の source は `cli` (または `link`) — literal 成分は形の一部であり独立の由来を主張しない。named literal 子は自分の結果キーを持つので、そのセルの source が `const` になる
+> **更新 (DR-140 §2、2026-08-16): `value:` の綴りは値カプセル内の `const` field へ移った**
+> (`{"name":"timeout","value":{"const":30}}`)。**要素直下の `value` は値カプセルそのものの席**に
+> なるため、本 DR 本文の `value:` は「カプセル内の `const`」と読み替える。`const` がセル初期化位相に
+> 属し値源ラダーの充填ではない、という意味論は不変。
+>
+> - **消費 0 literal (`value:`、位置を問わない) が置いた値 = `const`** — 宣言に書かれた定数がセルに最初から居るだけで、効果でも席の充填でもない。nameless 子の値が wrapper の結果アドレスへ畳まれる場合 (DR-121 §3)、wrapper セルを確定させたのは発火経路なので wrapper の source は `cli` (または `link`) — literal 成分は形の一部であり独立の由来を主張しない。named literal 子は自分の結果キーを持つので、そのセルの source が `const` になる
 
 ## committed/selected との直交性 (DR-016 維持)
 

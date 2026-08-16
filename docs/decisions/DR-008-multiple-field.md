@@ -112,6 +112,11 @@ key として使われた要素は value 内にも残る (扱いやすさのた�
 - DR-019 (repeat 統合で min/max 追加)
 - DR-022 (フィールド名 snake_case 化、itemSeparator→item_separator 等)
 - DR-034 (multiple の4要素再構成: pieceProcessor/separator/accumulator/collector)
+> **更新 (2026-08-16): 「現行は DR-034 / DR-036 を参照」というポインタは 2 ホップ空振りになる。**
+> DR-034 の属性平面と DR-036 の multiple registry は、**DR-139 (値カプセル: 供給の `defaults`
+> 一本化・5 座席・`multiple` 属性の廃止) と DR-140 (wire 射影: 要素直下 `value` 1 属性)** で
+> 再編された。現行の読み先は DR-139 / DR-140、移送の作業単位は
+> `docs/research/2026-08-16-value-capsule-migration-ledger.md`。
 - DR-036 (multiple registry 追加、collectors は filters 統合)
 
 ## Superseded (歴史)

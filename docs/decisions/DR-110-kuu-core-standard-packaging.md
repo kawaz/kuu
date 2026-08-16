@@ -1,7 +1,7 @@
 # DR-110: kuu-core 標準パッケージング — engine / builtins / assembly の 3 層
 
 > **更新 (DR-125、2026-07-29): canonical installer と値源ラダー席から `inherit` が抜けた。**
-> §2 の builtins 行の installer 列挙と §3 の PKG-#11 の席順序 (`cli > env > config > inherit >
+> §1 の表 (builtins 行) の installer 列挙と §3 の PKG-#11 の席順序 (`cli > env > config > inherit >
 > default`) に残る `inherit` は対象を失っており、現行ラダーは CLI/link > env > config > default の
 > 4 段。「席順序は engine 契約で設定可能にしない」「席内解決に builtin 語彙を要するものは
 > descriptor が解決子を提供する」という 3 層の分界そのものは不変。祖先スコープの値を既定値にする

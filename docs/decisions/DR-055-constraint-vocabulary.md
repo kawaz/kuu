@@ -45,7 +45,13 @@ F-028 の「専用フィールドは追加しない」は維持し、誘導先�
 
 ### 5. constraint installer
 
-requires / exclusive_group / conflicts_with は **constraint installer** の所有語彙とする (DR-042 の canonical セットに追加)。回収した制約を遅延述語 (DR-047) として宣言する席宣言型 (構造衛星は足さない)。required は制約 3 種と同じ遅延述語だが、値充足という値セル側の性質 (DR-047 §5) であり所有はコア骨格に残る。
+requires / exclusive_group / conflicts_with / **required_group** は **constraint installer** の所有語彙とする (DR-042 の canonical セットに追加)。
+
+> **更新 (DR-103、2026-08-16): 本節の所有語彙列挙に `required_group` が欠けていた。** DR-103 が
+> at-least-one を `required_group` として一級化しており、constraint installer が回収する属性は
+> 4 種である (集約はスコープ内、越境しない = DR-103 §5)。あわせて §4「oneof は既存合成で足りる」の
+> 判断は、**排他を伴わない「どれか 1 つ以上」**については DR-103 が専用語彙を置く形に更新された
+> (`{"required": true, "or": [...]}` は or の排他が付くので at-least-one とは別物)。回収した制約を遅延述語 (DR-047) として宣言する席宣言型 (構造衛星は足さない)。required は制約 3 種と同じ遅延述語だが、値充足という値セル側の性質 (DR-047 §5) であり所有はコア骨格に残る。
 
 ## 採用しなかった案
 

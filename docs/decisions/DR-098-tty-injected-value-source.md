@@ -50,7 +50,7 @@ tty_provider の返り値は string でなく既に bool である。DR-050 §4 
 1. CLI 明示 / link
 2. 環境変数 (env)
 3. config ファイル
-4. inherit (祖先 scope)
+4. inherit (祖先 scope) — **DR-125 で廃止済み** (ヘッダ注記は §5 限定だが、本 §6 の列挙も同じ改訂の対象)
 5. tty (本 DR)
 6. default / value
 ```

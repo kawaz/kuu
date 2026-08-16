@@ -86,6 +86,11 @@ filter は **値の変換と検証だけ** に集中。
 - DR-011 (variant DSL と同一文法)
 - DR-022 (snake_case 化)
 - DR-034 (pieceProcessor pre/parse/post + collector への再構成)
+> **更新 (2026-08-16): 「現行は DR-034 / DR-036 を参照」というポインタは 2 ホップ空振りになる。**
+> DR-034 の属性平面と DR-036 の multiple registry は、**DR-139 (値カプセル: 供給の `defaults`
+> 一本化・5 座席・`multiple` 属性の廃止) と DR-140 (wire 射影: 要素直下 `value` 1 属性)** で
+> 再編された。現行の読み先は DR-139 / DR-140、移送の作業単位は
+> `docs/research/2026-08-16-value-capsule-migration-ledger.md`。
 - DR-037 (filter のレスポンスを Reject/Error の2種類に拡張)
 
 ## Superseded (歴史)

@@ -20,7 +20,7 @@
 
 - fixture 専用の簡略形は作らない (DR-065 §2 と同じ原則)。definition-error fixture に argv は不要 (定義の静的検査であり実行しない) — cases の `argv` は省略
 - **比較は element + kind の組の集合比較**。`message` / `hint` はレンダラ管轄の文言なので fixture に書かず比較もしない (parse fixture の errors が message を比較しないのと同流儀、CONFORMANCE §2)
-- kind の語彙は DR-054 §4 の列挙 (vocab-intersection / unknown-vocab / invalid-range / absent-ref / circular-ref / zero-progress / config-cycle / invalid-argument、invalid-argument は DR-085 訂正で追加) をそのまま使う
+- kind の語彙は DR-054 §4 の列挙 (vocab-intersection / unknown-vocab / invalid-range / absent-ref / circular-ref / zero-progress / config-cycle / invalid-argument / export-key-collision / duplicate-id、invalid-argument は DR-085 訂正、export-key-collision は DR-120 §5、duplicate-id は DR-054 更新 5 で追加) をそのまま使う。**列挙の正本は DR-054 §4 であり本 DR は複製**なので、kind 追加時は両方を更新する (手保守なので漏れやすい — 実際 2 語が漏れていた)
 
 ### 2. 「未対応構成」系の kind は invalid-range
 

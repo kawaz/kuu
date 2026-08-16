@@ -40,4 +40,4 @@ JSON 化時に:
 
 ## 関連
 
-- [external: kuu.mbt DR-053] (primitive decomposition) と同じ発想を AST 仕様レベルに引き上げた形
+- 参照実装 (kuu.mbt) 側の primitive decomposition の判断と同じ発想を AST 仕様レベルに引き上げた形 (旧記載の `[external: kuu.mbt DR-053]` は宛先不在 — kuu.mbt 側の DR は MDR-001〜006 の体系で、番号も本リポの DR-053 と衝突する)

@@ -111,7 +111,7 @@ fold 計算 (`terminal || (tty_cygwin && cygwin)`) が provider 実装側に隠�
 
 ### `tty_stream` に既定値を持たせる (例: `"stdout"` 既定、または要素名から推測)
 
-kawaz 裁定 (TTY-Q2=(c)、2026-07-12) で明示却下。`stdout` 既定 (色制御用途が最頻) と `stdin` 既定 (die のような入力分岐用途) はどちらも妥当な用途を持ち、一方を canonical default に選ぶこと自体が推測の押し付けになる。要素名からの推測 (`"stdin_tty"` という名前から stream を導く等) は DR-046 の name 3 軸分離の精神に反する (name は CLI マッチング/結果キー/内部参照の軸であり、config 値の暗黙供給源ではない)。必須にすることで宣言側の意図を明示させる。
+kawaz 裁定 (TTY-Q2=(c)、2026-07-12) で明示却下。`stdout` 既定 (色制御用途が最頻) と `stdin` 既定 (die のような入力分岐用途) はどちらも妥当な用途を持ち、一方を canonical default に選ぶこと自体が推測の押し付けになる。要素名からの推測 (`"stdin_tty"` という名前から stream を導く等) は DR-046 の**名前軸分解**の精神に反する (name は各名前軸へのデフォルト供給源であって、config 値の暗黙供給源ではない)。必須にすることで宣言側の意図を明示させる。
 
 ## 射程外
 
@@ -140,7 +140,13 @@ kawaz 裁定 (TTY-Q2=(c)、2026-07-12) で明示却下。`stdout` 既定 (色制
 - DR-094 (registry 語彙の namespace — `builtin/tty`、bare `tty` は builtin ns の糖衣)
 - DR-049 (env lookup の契約 — 単一スロット provider の先行例、tty_provider のシグネチャ改訂もこの型を踏襲)
 - DR-050 (config ファイル値源 — 型一致で T 域直行の先行例)
-- DR-046 (name 3 軸分離 — tty_stream 必須化の理由づけ、name からの推測を却下する根拠)
+- DR-046 (name の軸分解 — tty_stream 必須化の理由づけ、name からの推測を却下する根拠)
+
+> **更新 (2026-08-16): 本 DR が「DR-046 の name 3 軸分離」と引用していたのは二重に不正確。**
+> DR-046 は 4 軸 (id / 結果キー / value_name / display_name) への**分解**であり、**name 自体を
+> 軸から降ろして「各軸のデフォルト供給源」に位置づけた** DR である (3 軸兼任は DR-003 の原型)。
+> さらに DR-136 で綴り軸 `trigger_name` が加わり現行は 5 軸。理由づけ (name からの暗黙推測を
+> 却下する) は、むしろ「name は供給源にすぎない」という現行の読みで**より強く**成立する。
 - DESIGN §13.9 (AtomicAST 未予約 / 責務外の周辺概念 — DR-098 §7 の改訂は本 DR でも無傷)
 - kawaz/die `docs/decisions/DR-0008-stdin-tty-routing-and-help-option.md` (informative、cygwin 既定 true の参照根拠)
 - kawaz/die `docs/findings/2026-06-28-tty-detection-cross-os.md` (informative、provider 実装の見るポイント)

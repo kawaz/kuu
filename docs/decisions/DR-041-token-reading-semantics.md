@@ -114,7 +114,7 @@ matcher を植え付ける installer のアーキテクチャ (所有語彙・�
 - DR-018 (commands の or 糖衣; command 名の照合は素の exact であり matcher の関与なし)
 - journal `2026-06-29-arggen-phase0-alignment.md` (ロード段階の経緯)
 - findings `2026-06-29-ast-missing-pieces.md` F-001 / F-002 / F-003 / F-004 (一部)
-- 垂直スライス PoC (slice 枝 `poc/`、journal `2026-07-02-slice-poc.md`) — §4 トリガ語彙拡張と sever 実装形の実測根拠
+- 垂直スライス PoC (slice 枝 `poc/`) — §4 トリガ語彙拡張と sever 実装形の実測根拠 (当時の journal はリポ再編で本リポに存在しない)
 
 ## Superseded (歴史)
 

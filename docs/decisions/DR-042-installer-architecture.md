@@ -30,6 +30,13 @@ installer の合成を順序非依存・冪等に保つ。組み込み installer
 1. **宣言層は読み取り専用、寄与は追加**: installer は所有語彙を読むだけで、削除も書き換えもしない (意味論的削除 — 評価ループは installer 所有語彙をそもそも見ないので、残っていても「ないのと同じ」)。寄与は lowered 層への**決定的な追加**であり、同一寄与の再追加は no-op (add-if-absent) — 冪等はここから出る。未知語彙の完全性検査は「registry の所有語彙集合に載らない特殊語彙の検出」で行い、エラー + 次の手 hint (§13.5 の型) を出す。宣言属性が inert に残ることで help 生成・diagnose・再シリアライズが元の宣言情報を保持できる。
 2. **追加的寄与**: 既存要素への in-place 操作は値源席への宣言まで。構造の寄与は衛星 (新要素) の追加で行い、**他 installer の lowered 産物 (衛星・matcher・席) を書き換えない・読んで反応しない**。宣言層への追加 (global の宣言的コピー等) だけが後続の回収対象になる。第 3 の寄与形として**自要素の決定的下降**を認める — 所有語彙が付いた要素自身の消費形を決定的に与える lowering (repeat の cons 化、command の部分木配線など)。自要素の宣言のみから決まるため交換可能性を壊さない (7 installer 全順列で実測済み)。
 3. **所有語彙の交差禁止**: 同一語彙を 2 つの installer が所有したら registry 登録時にエラー。
+> **更新 (DR-139 §1.1、2026-08-16): 供給は `defaults` 一本へ集約される。** 値源系 installer が
+> 席へ lookup を宣言するという本節の**機構**は生きているが、宣言の書き先は要素直下の個別属性
+> (`env` / `config_key` / `default` / `default_fn`) ではなく**値カプセル内の `defaults`** になり、
+> env / config は provider fn として `defaults` の中に並ぶ。`inherit` 席は DR-125 で廃止済み。
+> あわせて **`owns` (所有語彙) の単位もカプセル内の field へ一般化**される — installer が所有する
+> のは要素直下の綴りではなくカプセル内の座になる。移送の作業単位は `docs/research/2026-08-16-value-capsule-migration-ledger.md` が持つ。
+>
 4. **値源はラダー席への宣言**: 値源系 installer (env 等) は default_fn を直接ラップせず、**エンジンが所有する DR-031 の優先順位ラダー**の席 (env / config / inherit / default) に lookup を宣言する。lookup は (value, source) を返し、ParserContext の source タグ (DR-016 / DR-031) を保存する。ラダーの順序自体は installer から動かせない。
 5. **背骨 (spine) の切替は構造で表現する**: greedy が発火できるのは**宣言スコープの背骨** (そのスコープの positional 進行の消費点列) に復帰した箇所のみ。command 部分木は新しい背骨を宣言し (祖先の greedy は届かない)、greedy の内部消費と dd の継続には背骨がない (何も発火しない)。スコープ越えの可用性は評価器の例外ではなく global installer の**構造コピー**で表現する (祖先背骨を重ねる評価器実装は、観測等価な encoding としてなら自由)。
 
@@ -161,4 +168,4 @@ slice PoC で確認済み: canonical 4 installer の全 24 順列一致・1 要�
 - DR-039 (垂直スライス共設計 — シグネチャ確定の場)
 - journal `2026-06-29-arggen-phase0-alignment.md`
 - findings `2026-06-29-ast-missing-pieces.md` F-002 / F-003 / F-007 / F-029 / F-031 / F-035 / F-041
-- 垂直スライス PoC (slice 枝 `poc/`、journal `2026-07-02-slice-poc.md`) — 24 順列一致・matcher 座席・2 類型の実測根拠
+- 垂直スライス PoC (slice 枝 `poc/`) — 24 順列一致・matcher 座席・2 類型の実測根拠 (当時の journal はリポ再編で本リポに存在しない)

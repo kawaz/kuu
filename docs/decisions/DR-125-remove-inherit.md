@@ -61,7 +61,15 @@ DR-114 §8 の canonical 住人だから。
 ### 4. `borrow:<source>` の名前解決は lexical scope chain
 
 `borrow` が受ける `<source>` は、ref / link と同じ既存の名前解決規則で解決する: 現在スコープ →
-外側スコープへ順に → definitions (DESIGN §2.7、DR-006 / DR-033 / DR-032)。§3 の例で子コマンド
+外側スコープへ順に → definitions (DESIGN §2.7、DR-006 / DR-033 / DR-032)。
+
+> **更新 (2026-08-16、2 点):**
+>
+> - **照合は id 軸の 2 段ルックアップ** (DR-136 §6 が `borrow` を名指し) — 各スコープで raw 一致
+>   → 写像後一致 の順、`definitions` のキーは段 1 のみ
+> - **`default_fn` は値カプセルの `defaults` 要素へ一般化される** (DR-139 §1.1) — 供給が
+>   `defaults` 一本に集約されるため、`borrow:` も `defaults` の中の fn として並ぶ。解決規則
+>   そのものは不変§3 の例で子コマンド
 `socket` の中から root の `socket_ttl` に届くのはこの規則による。
 
 これは新しい決定ではなく、**既存の名前解決規則が `observes: option:<source>` の解決にも適用される

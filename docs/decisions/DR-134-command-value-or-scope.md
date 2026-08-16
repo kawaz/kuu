@@ -107,6 +107,12 @@ value を名乗ろうとスコープを名乗ろうと、command は親スコー
 
 ### 7. schema 変更は無い
 
+> **更新 (DR-140、2026-08-16): 本節は失効した。** 値カプセルの導入で要素直下の `type` / `value` /
+> 座席群は `value` 属性 (カプセル) の下へ移るため、schema (`wire.schema.json`) の properties 集合が
+> 変わる。また §3 の string const の例 (`{"type":"string","value":"..."}` 形) は、**DR-140 §2 が
+> 警告する縮退形ハザード**そのもの — 移送後は `"value": {"const": "..."}` と書く必要があり、
+> 旧綴りのままだと「カプセルの縮退形 (type 指定)」として合法にパースされて意味が変わる。移送の作業単位は `docs/research/2026-08-16-value-capsule-migration-ledger.md` が持つ。
+
 `schema/wire.schema.json` は `commands` の要素を `#/$defs/node` として再帰参照しており、`value` は
 node 共通属性である。spec 側は最初から合法であり、本 DR が変えるのは**規範の明示と共存規則の追加**だけ
 である。乖離していたのは参照実装 (「波及」節)。

@@ -47,7 +47,7 @@ DR-059 の prefix 生成規則 (`<定義スコープ名>-<name>`)、祖先スコ
 - 値の序列も同じ: 内側 CLI > (env / config) > inherit (= 外側の解決値) > 内側 default (DESIGN §11.4)
 - 外側で書いた値が外側スコープの結果キーに出る点も同じ (`socket_ttl` は普通の option なので当然)
 
-新機構はゼロで、`inherit: {"from": ...}` (DESIGN §11.2) と通常の option 宣言の合成だけで閉じる。
+新機構はゼロで、`inherit: {"from": ...}` と通常の option 宣言の合成だけで閉じる。
 
 ### 3. inherit は存続する — inherit と inheritable は別機能
 
@@ -117,4 +117,6 @@ inheritable の逆方向は実需が見つからなかった。片翼だけ残�
 - DR-059 (inheritable の prefix 生成 — 本 DR が全体を Superseded)
 - DR-031 (値源の優先順位 — inherit 席は不変) / DR-087 / DR-088 (inherit 宣言の遅延解決)
 - DR-042 (installer — canonical セットから 1 件減る) / DR-113 §4.3 (help origin の値域)
-- DESIGN §11.2 (inherit と `inherit: {from}` — 代替パターンの正本)
+- DESIGN §11.4 (値源の優先順位) / DR-125 (inherit 廃止 — 代替パターンの現行正本)
+
+> **更新 (2026-08-16): 本 DR が代替パターンの正本として指していた DESIGN §11.2 は欠番。** `inherit` 自体が DR-125 で廃止され、DESIGN §11 配下は現在 §11.1 / §11.4 のみである。代替パターンの現行の読み先は DR-125 (廃止の判断と移行) と DESIGN §11.4 (残った値源席の優先順位)。

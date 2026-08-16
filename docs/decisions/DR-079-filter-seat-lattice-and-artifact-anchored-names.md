@@ -66,7 +66,7 @@ v1 前 (MDR-001)。旧フィールド名の受理・warn 移行は設けず、sp
 
 ### D = `accum_filters`
 
-accumulator 直後という位置は明確だが、multiple 無し要素 (accumulator 不在の縮退、DR-034 §6.3 相当) で名前が浮く。`cell` は値セル・cell 上書き等の既存語彙と直結し、scalar でも自然。
+accumulator 直後という位置は明確だが、multiple 無し要素 (accumulator 不在の縮退、DR-034 §「multiple 無しは「縮退」として統一モデルに収まる」相当) で名前が浮く。`cell` は値セル・cell 上書き等の既存語彙と直結し、scalar でも自然。
 
 ### post だけ再アンカー (既存名温存)
 

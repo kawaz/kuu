@@ -6,7 +6,7 @@
 
 ### 1. namespace (ns) を導入し、スコープは registry 識別子全域とする
 
-filter 名 (`value_filters`/`piece_filters`/`cell_filters` に現れる名前)・configurable factory 名 (DR-061 §3 の `name` フィールド)・type 参照名 (`"type": "..."` が引く types registry のキー)・reason 語彙 (DR-066 の `reason` フィールド値、descriptor `reasons` 宣言の識別子) のすべてに ns を通す。DESIGN §13.1 の 6 レジストリ区分 (types / filters / accumulators / multiple / env_provider / config_provider / completers) と installers descriptor の config キー宣言に一様に適用する — DR-061 §3 が「types を筆頭に filters/accumulators/completers/installer 自身の config にも一様に適用できる」と述べた configurable factory の射程と同じ範囲。
+filter 名 (`value_filters`/`piece_filters`/`cell_filters` に現れる名前)・configurable factory 名 (DR-061 §3 の `name` フィールド)・type 参照名 (`"type": "..."` が引く types registry のキー)・reason 語彙 (DR-066 の `reason` フィールド値、descriptor `reasons` 宣言の識別子) のすべてに ns を通す。DESIGN §13.1 の レジストリ区分 (制定時は 6 と書いて 7 を列挙していた。現行の区分は DESIGN §13.1 が正本で 10 — 本 DR の数え上げは判断記録として読む) (types / filters / accumulators / multiple / env_provider / config_provider / completers) と installers descriptor の config キー宣言に一様に適用する — DR-061 §3 が「types を筆頭に filters/accumulators/completers/installer 自身の config にも一様に適用できる」と述べた configurable factory の射程と同じ範囲。
 
 **installer が所有する特殊語彙のフィールド名自体 (`long` / `short` / `env` / `repeat` 等) は対象外**。これらは AtomicAST の構造プリミティブであり、registry の「住人の名前」ではない (DESIGN §13.9 の周辺概念と同族、名前解決の対象ではなく構造キーワード)。
 
@@ -76,6 +76,11 @@ DR-061 §3 / DR-074 / DR-075 で導入された `kuu_` prefix は、ns が正式
 
 推奨は案 A。実際のリネーム作業 (fixtures 一括更新 + DESIGN.md 該当箇所) は本 DR の射程外とし、別 issue で実施する。
 
+> **更新 (2026-08-16): 案 A は採用され、着地済み。** `builtin/number_parser` / `builtin/bool_parser` /
+> `builtin/int_parser` への改名は DR-095 §4 / DR-100 の綴り正規化と同じ流れで完了しており、
+> `schema/builtin-descriptors.json` と fixtures の実物がその綴りになっている。「別 issue で実施する」
+> は済んだ作業を指す。
+
 ## 採用しなかった案
 
 上記「決定」節の各所で個別に理由を述べた `:` 区切り・`.` 区切りに加え、以下も不採用:
@@ -92,7 +97,7 @@ DR-061 §3 / DR-074 / DR-075 で導入された `kuu_` prefix は、ns が正式
 
 - `builtin` ns 内の語彙全列挙 (`schema/builtin-descriptors.json` 等への実体化) — Schema 実体化 issue (docs/issue/2026-07-08-schema-materialization-and-reason-descriptors.md) 側の作業
 - 拡張 ns の命名規約の正式化 (パッケージ名との対応・予約語彙の有無等) — spec は ns 名自体への強制機構を持たない、運用規約は各ホスト実装の関心
-- `kuu_number_parser` 等の実際のリネーム作業 (fixtures 一括更新、DESIGN.md 該当箇所反映) — 案 A 採用が確定した後の別 issue
+- `kuu_number_parser` 等の実際のリネーム作業 (fixtures 一括更新、DESIGN.md 該当箇所反映) — 案 A 採用が確定した後の別 issue (**2026-08-16 時点で着地済み**、§9 の更新注記参照)
 - schema/wire.schema.json への ns 語彙パターンの反映 — SCH-Q1 (Schema 実体化のスコープ) 側の作業
 
 ## 関連

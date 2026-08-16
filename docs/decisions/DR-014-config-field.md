@@ -70,6 +70,11 @@ kawaz:
 
 - `long_prefix` / `short_prefix`: 表記の慣習
 - `env_prefix` / `auto_env`: 環境変数の慣習
+
+> **更新 (DR-100 §1、2026-08-16 に本 DR へ追記): config キー `auto_env` は `env_auto` へ改名された**
+> (DR-096 の軸 prefix 先頭規律を env 軸にも適用し、`env_prefix` と並びを揃えるため)。機能・意味論は
+> 不変。本 DR 本文と §「決定」の JSON 例の `auto_env` は現行綴り `env_auto` と読み替える。
+> あわせて env 名の導出は id 軸の写像 + 大文字化 (DR-136 §4 の系、DR-049 §3)。
 - `allow_equal_separator`: `--name=value` の許可
 - `short_combine`: `-abc` の結合許可
 

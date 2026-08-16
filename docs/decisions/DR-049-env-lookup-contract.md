@@ -72,7 +72,7 @@ prefix / スコープの知識が provider に漏れ、差し替え時に全実�
 - DR-031 (値源ラダー — env 席の位置、source タグ)
 - DR-034 (pieceProcessor — env 値の通過経路)
 - DR-014 (config の階層継承 — auto_env / env_prefix の供給源、要素単位上書き)
-- DR-022 (snake_case wire format — 導出が uppercase のみで済む根拠)
+- DR-022 (snake_case wire format — 制定時に「導出が uppercase のみで済む」と読んだ根拠。**§3 の DR-136 注記でこの前提は撤回済み** — 現行は id 軸の写像 + 大文字化)
 - DR-011 (variant args は string で CLI と同じ手順 — 同族の流儀)
 - DR-010 (registry 階層 — env_provider はコア帰属)
 - findings `2026-06-29-ast-missing-pieces.md` F-030 / F-031 (解消)、F-029 (DR-050 で確定)、F-033 (射程外)

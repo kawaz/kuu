@@ -55,7 +55,7 @@ DR-060 §2 のシグネチャ `{before, word, word_suffix?, after?}` を、`args
 >
 > (b) `ty` 行の「等」は誤り。値位置候補に出る型は解決済み primitive の `"string"`/`"number"`/`"int"`/`"float"`/`"bool"` の 5 種のみ (flag/count/none は値スロットを取らないため値位置候補として出現しない)。custom type の `ty` 表現は未確定のまま残る (実装追随時に確定)。
 >
-> (c) `origin` は alias 経由でも canonical 要素名を指す (DR-057 §26「効果は canonical の実体セルへ、結果キーは canonical のみ」の帰結、`fixtures/complete/meta.json` で pin 済み)。ref template 越し・lowering 生成要素の決定則は後段の明確化 note (i)〜(iv) に従う。
+> (c) `origin` は alias 経由でも canonical 要素名を指す (DR-057 §2「効果は canonical の実体セルへ、結果キーは canonical のみ」の帰結、`fixtures/complete/meta.json` で pin 済み)。ref template 越し・lowering 生成要素の決定則は後段の明確化 note (i)〜(iv) に従う。
 >
 > (d) `completer` は参照実装の追随まで fixture に書かない — word_before/word_after と同じ「参照実装が追随するまで fixture では書かない」注記を明示する (書くなら実装追随と同一サイクルで着手する)。
 >

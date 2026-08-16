@@ -1,5 +1,13 @@
 # DR-132: conformance 複合値ビークル — `fixture/*` namespace の仮想型 2 住人 (`fixture/int_range` / `fixture/json`)
 
+> **更新 (2026-08-16): `fixture/*` の住人は 2 ではなく 8。** `schema/builtin-descriptors.json` の
+> 実測で `fixture/color` / `fixture/deep_shape` / `fixture/int_range` / `fixture/json` /
+> `fixture/nested` / `fixture/pair` / `fixture/scalar_mix` / `fixture/shape` の 8 住人が収載されて
+> いる。本 DR が裁定したのは**制定時の 2 住人**であり、その後 DR-127 / DR-128 / DR-137 の複合値
+> サイクルで住人が足された。**うち `fixture/pair` / `fixture/nested` / `fixture/deep_shape` /
+> `fixture/scalar_mix` の 4 件はどの DR も明示的に裁定していない** (descriptor と fixture が先に
+> 実在する状態) ので、住人カタログの正本をどこに置くかの手当てが要る。
+
 > 由来: kawaz チャット裁定 2026-08-02 (mid=48〜56 + 統括確定)。下敷きは
 > `docs/research/2026-08-02-record-builtin-type-design.md` (RECB-Q1〜Q6 — 本 DR が確定形。
 > 下敷きの推し案「timestamp / timerange / json の 3 住人」は 2 住人構成へ置き換えて裁定された)。
