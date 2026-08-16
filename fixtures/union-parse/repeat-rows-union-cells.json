@@ -1,0 +1,35 @@
+{
+  "why": "**淘汰のグループ identity は実 runtime scope (row ごと)** であることを pin する。union 宣言セルの確定 (並行着地 → 未完成淘汰 → 最終着地の後勝ち、DR-138 §2) は**セル単位**の規範であり、repeat の各 row は別々の runtime scope に別々のセルを持つ (DR-084 §1 — repeat の発火値は row)。したがって row #0 の `c` と row #1 の `c` は**同じ宣言から生まれた別のセル**であって、淘汰のグループを共有しない。\n\n淘汰の単位を宣言 (要素) 側の identity で取ると、2 row が 1 グループに畳まれて後勝ちが row を跨いで効き、**行が潰れて `{g: [{c: \"blue\"}]}` になる**。全コードレビュー C2 で実際に起きた形であり、本 fixture はその恒久 pin (回帰検出器) である。\n\n姉妹 pin との棲み分け: `union-parse/accum-rows-independent-completion.json` は**完成判定**が row 独立であること (未完成 row を隣の row が補完しない、DR-138 §1/§4) を見る。本 fixture は**淘汰と結果の畳み**が row 独立であること (行そのものが潰れない) を見る — 前者は 1 行の中身の話、後者は行の本数の話である。",
+  "query": "parse",
+  "definition": {
+    "positionals": [
+      {
+        "name": "g",
+        "repeat": {"min": 1, "max": 2},
+        "seq": [
+          {"name": "c", "type": "fixture/color"}
+        ]
+      }
+    ]
+  },
+  "cases": [
+    {
+      "id": "repeat-rows-hold-independent-union-cells",
+      "why": "`red` `blue` の 2 トークンで repeat が 2 row 発火する。各 row の `c` は `fixture/color` の union セルで、link の位置書きが無いので tuple 枝には何も着地せず、string 枝に着地した 1 トークンがそのまま確定値になる (`fixture/color` は total、string 形は 1 トークンをそのまま産出)。\n\n`g` は結果キー軸を占有するので 1 段のスコープを作り、repeat の発火が rows になるため結果は**配列オブジェクト** (DR-044 — 各 row が `{c: <値>}`)。row ごとに別セルなので `{g: [{c: \"red\"}, {c: \"blue\"}]}` の 2 行が残る。**淘汰が row を跨ぐ実装では後勝ちで 1 行に潰れて `{g: [{c: \"blue\"}]}` になる** — 期待が 2 行ちょうどであることがその回帰を落とす。\n\neffects は row の leaf entity ごとの set が消費順に並ぶ (DR-084 §1) ので entity はどちらも `c` になり、**effects だけでは row の境界を観測できない** — 行の独立は result / sources の構造で観測する、という役割分担もここで固定される。sources は result と同じ形の shadow tree (DR-122) で、各 row の座が `cli` タグを持つ。",
+      "args": ["red", "blue"],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {"entity": "c", "op": "set", "operand": "red", "source": "cli"},
+          {"entity": "c", "op": "set", "operand": "blue", "source": "cli"}
+        ],
+        "result": {
+          "g": [{"c": "red"}, {"c": "blue"}]
+        },
+        "sources": {
+          "g": [{"c": "cli"}, {"c": "cli"}]
+        }
+      }
+    }
+  ]
+}
