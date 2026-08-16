@@ -34,13 +34,3 @@
 
 
 
-## 👺 AP-Q1: カプセル field の命名軸 (詳細: research/2026-08-16-attribute-plane-settlement.md §7)
-
-- [ ] a: 作用対象アンカー維持 (`piece`/`value`/`final`/`accum`、DR-079 §2 不変、`_filters` 接尾辞は落とす)
-- [ ] b: **時点系の例示名 (`piece`/`each`/`settled`/`collected`) — 統括推し**。kawaz が全部入り例 (mid=26 応答) で自然に読めた実績。注意: piece=対象・each=単位・settled/collected=様態の 3 軸混在という指摘があるが、読み手が迷わない具体名を優先する立場。DR-079 §2 は supersede
-
-
-
-
-
-
