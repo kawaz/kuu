@@ -1,0 +1,57 @@
+{
+  "why": "id 未分離の同名 sibling command 2 本は、id 軸 (name が id を兼ねる — DR-046 §2) と露出キー軸 (command は占有 scope 生成要素で 1 キー — DR-120 §4) の両方が破れる — DR-120 §3 の表 1 行目 (同名ペアは 2 軸ともに破れて要素ごとに 2 kind) の command 版。issue dup-raw-command-ordinal-marker-occurrence-gap の定義時ゲート側の恒久 pin: 実行時の occurrence 帰属 (fixtures/command-scope/duplicate-raw-command-occurrence.json) が成立するのは id / export_key を明示分離した場合だけで、未分離は definition-error で止まる。kind と要素ごとの列挙は fixtures/definition-error/duplicate-id.json (options の x ペア) と同じ慣例。",
+  "query": "definition_error",
+  "definition": {
+    "commands": [
+      {
+        "type": "command",
+        "name": "go",
+        "options": [
+          {
+            "name": "a",
+            "type": "string",
+            "long": true
+          }
+        ]
+      },
+      {
+        "type": "command",
+        "name": "go",
+        "options": [
+          {
+            "name": "b",
+            "type": "string",
+            "long": true
+          }
+        ]
+      }
+    ]
+  },
+  "cases": [
+    {
+      "id": "same-name-sibling-commands-break-both-axes",
+      "why": "両 command とも id = name = \"go\"、露出キーも \"go\" — duplicate-id (DR-054 更新 5) と export-key-collision (DR-120 §1) が要素ごとに立つ。",
+      "expect": {
+        "outcome": "definition-error",
+        "errors": [
+          {
+            "element": "go",
+            "kind": "duplicate-id"
+          },
+          {
+            "element": "go",
+            "kind": "duplicate-id"
+          },
+          {
+            "element": "go",
+            "kind": "export-key-collision"
+          },
+          {
+            "element": "go",
+            "kind": "export-key-collision"
+          }
+        ]
+      }
+    }
+  ]
+}

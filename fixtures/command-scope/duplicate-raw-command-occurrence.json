@@ -1,0 +1,113 @@
+{
+  "why": "同名 raw command (トリガ綴り重複、id / export_key は明示分離) の occurrence 帰属の恒久 pin — issue dup-raw-command-ordinal-marker-occurrence-gap: id 軸 (DR-136 §6 / DR-046) が宣言 label を一意化し、トリガ綴りは trigger_name 軸が保持するため、同一トリガ \"go\" の複数宣言が合法なまま (DR-067 §2 — 静的 warn + 実行時 ambiguous が既定) 各 occurrence が正しい宣言へ帰属する。読みの選別は完全経路の存在 (DR-097 の viability — 中身を消費できない側の command へ倒した読みは完全経路を持たず落ちる) が行い、宣言順の優先規則は使わない (DR-038)。未選択の兄弟 command は親レベルで null (DR-130 §2)。",
+  "query": "parse",
+  "definition": {
+    "commands": [
+      {
+        "type": "command",
+        "name": "go",
+        "id": "go1",
+        "export_key": "g1",
+        "options": [
+          {
+            "name": "a",
+            "type": "string",
+            "long": true
+          }
+        ]
+      },
+      {
+        "type": "command",
+        "name": "go",
+        "id": "go2",
+        "export_key": "g2",
+        "options": [
+          {
+            "name": "b",
+            "type": "string",
+            "long": true
+          }
+        ]
+      }
+    ]
+  },
+  "cases": [
+    {
+      "id": "single-occurrence-attributes-by-viability",
+      "why": "`go --a x`: 先頭 go は go1/go2 の多重 Accept (DR-041) だが、go2 側の読みは --a を消費できず完全経路を持たない (early-close で親へ戻しても親に受け手が無い — fixtures/command-scope/early-close-viability.json の機構) → go1 読みだけが完全。g2 は未選択で null。",
+      "args": [
+        "go",
+        "--a",
+        "x"
+      ],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {
+            "entity": "a",
+            "op": "set",
+            "operand": "x",
+            "source": "cli"
+          }
+        ],
+        "result": {
+          "g1": {
+            "a": "x"
+          },
+          "g2": null
+        },
+        "sources": {
+          "g1": {
+            "a": "cli"
+          },
+          "g2": null
+        }
+      }
+    },
+    {
+      "id": "two-occurrences-attribute-independently",
+      "why": "`go --a x go --b y`: 1 個目の occurrence は --a を消費できる go1 へ、2 個目は残る go2 へ帰属し、両スコープが実現する。effects は宣言順でなく args 出現順 (DR-045)。ordinal marker の gap (両 occurrence が同一宣言へ潰れて片方の値が消える) はこの case が正面から検出する。",
+      "args": [
+        "go",
+        "--a",
+        "x",
+        "go",
+        "--b",
+        "y"
+      ],
+      "expect": {
+        "outcome": "success",
+        "effects": [
+          {
+            "entity": "a",
+            "op": "set",
+            "operand": "x",
+            "source": "cli"
+          },
+          {
+            "entity": "b",
+            "op": "set",
+            "operand": "y",
+            "source": "cli"
+          }
+        ],
+        "result": {
+          "g1": {
+            "a": "x"
+          },
+          "g2": {
+            "b": "y"
+          }
+        },
+        "sources": {
+          "g1": {
+            "a": "cli"
+          },
+          "g2": {
+            "b": "cli"
+          }
+        }
+      }
+    }
+  ]
+}
