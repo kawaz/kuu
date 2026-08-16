@@ -1,5 +1,5 @@
 {
-  "why": "ref-or-template.json の対照: repeat を持たない単発 ref は縮退形 = row 単体 (templates/ref は DR-078 §1、row 形は DESIGN §2.4/§2.5 — issue 2026-07-09-ref-template-result-shape で裁定)。hlcolor := color (repeat 無し) は 1 回しか発火できないので、result のセル型は T[] でなく T そのもの (row 単体) — repeat が『配列に包む』操作を担っており (DESIGN §6.1)、それを外すと row がそのまま値になる。row の形自体は ref-or-template.json と同じ露出規則 (DESIGN §2.4/2.5) に従う: colorname 枝は {r:null,g:null,b:null,colorname:string}、rgb 枝は名前付き子が並ぶので kv {r,g,b,colorname:null}。repeat 無しでは or 枝を跨いだ複数回発火の余地が無いため、数値 3 個の入力で colorname 枝 (1 トークンのみ消費) を選ぶと残り 2 トークンが未消費で経路不成立になり、rgb 枝 (3 トークン消費) のみが完全経路として残る — ref-or-template.json の rgb-vs-3-names-ambiguous (repeat ありなら両経路が完全消費で両立し ambiguous) との対照点。",
+  "why": "ref-or-template.json の対照: repeat を持たない単発 ref は縮退形 = row 単体 (templates/ref は DR-078 §1、row 形は DESIGN §2.4/§2.5 — issue 2026-07-09-ref-template-result-shape で裁定)。hlcolor := color (repeat 無し) は 1 回しか発火できないので、result のセル型は T[] でなく T そのもの (row 単体) — repeat が『配列に包む』操作を担っており (LOWERING §B.8 / DR-043)、それを外すと row がそのまま値になる。row の形自体は ref-or-template.json と同じ露出規則 (DESIGN §2.4/2.5) に従う: colorname 枝は {r:null,g:null,b:null,colorname:string}、rgb 枝は名前付き子が並ぶので kv {r,g,b,colorname:null}。repeat 無しでは or 枝を跨いだ複数回発火の余地が無いため、数値 3 個の入力で colorname 枝 (1 トークンのみ消費) を選ぶと残り 2 トークンが未消費で経路不成立になり、rgb 枝 (3 トークン消費) のみが完全経路として残る — ref-or-template.json の rgb-vs-3-names-ambiguous (repeat ありなら両経路が完全消費で両立し ambiguous) との対照点。",
   "query": "parse",
   "definition": {
     "definitions": {
@@ -40,7 +40,7 @@
   "cases": [
     {
       "id": "single-string-degenerate-row",
-      "why": "非数値トークン 1 個は colorname 枝のみ成立、1 回発火で経路完結 (repeat が無いのでこれ以上の消費対象も無い)。hlcolor の result は row 単体 {r:null,g:null,b:null,colorname:\"red\"} — [{r:null,g:null,b:null,colorname:\"red\"}] のような配列包装はされない (repeat 無し = T[] でなく T、DESIGN §6.1 の逆)。",
+      "why": "非数値トークン 1 個は colorname 枝のみ成立、1 回発火で経路完結 (repeat が無いのでこれ以上の消費対象も無い)。hlcolor の result は row 単体 {r:null,g:null,b:null,colorname:\"red\"} — [{r:null,g:null,b:null,colorname:\"red\"}] のような配列包装はされない (repeat 無し = T[] でなく T、LOWERING §B.8 / DR-043 の逆)。",
       "args": [
         "red"
       ],

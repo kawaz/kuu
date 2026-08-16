@@ -1,5 +1,5 @@
 {
-  "why": "`empty` cell fn の target は array / map / record に限られ、scalar・union・その他は definition-error invalid-range (DR-131 §7)。union 宣言セル (fixture/color) への :empty variant は淘汰位相に到達する前に定義時に倒れる — union セルへの cell fn 語彙の適格性は DR-138 が変えていないことの pin。",
+  "why": "`empty` cell fn の target は array / map / record に限られ、scalar・union・その他は definition-error invalid-range (DR-131 §3.1)。union 宣言セル (fixture/color) への :empty variant は淘汰位相に到達する前に定義時に倒れる — union セルへの cell fn 語彙の適格性は DR-138 が変えていないことの pin。",
   "query": "definition_error",
   "definition": {
     "options": [
@@ -16,7 +16,7 @@
   "cases": [
     {
       "id": "empty-variant-on-union-cell",
-      "why": "union は empty の型別空値を持たない (どの variant の空か決まらない) — DR-131 §7 の列挙どおり invalid-range。",
+      "why": "union は empty の型別空値を持たない (どの variant の空か決まらない) — DR-131 §3.1 の列挙どおり invalid-range。",
       "expect": {
         "outcome": "definition-error",
         "errors": [

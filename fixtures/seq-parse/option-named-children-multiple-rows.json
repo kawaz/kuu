@@ -1,5 +1,5 @@
 {
-  "why": "inline seq × multiple の畳み単位は**発火 1 回ぶんの行 (row)**: seq が結果キーを持つ子から作る 1 個の kv がそのまま accumulator の入力単位になり (DR-034 §6.2 のパイプライン、DR-044 §1 の一様配列)、発火 1 回あたりの余分な配列階層は付かない。ref-template 版の同型が `multiple-parse/ref-rows-append.json :: two-fires-branch-append` (`{hlcolors:[{colorname:\"red\"},{r,g,b}]}`) — inline `seq` と `ref` で結果形が一致することを、multiple を被せた面でも固定する。0 発火でも `[]` (DR-044 §1 / DR-130 §1)。",
+  "why": "inline seq × multiple の畳み単位は**発火 1 回ぶんの行 (row)**: seq が結果キーを持つ子から作る 1 個の kv がそのまま accumulator の入力単位になり (DR-034 §「type と multiple は同じ属性平面への参照」 のパイプライン、DR-044 §1 の一様配列)、発火 1 回あたりの余分な配列階層は付かない。ref-template 版の同型が `multiple-parse/ref-rows-append.json :: two-fires-branch-append` (`{hlcolors:[{colorname:\"red\"},{r,g,b}]}`) — inline `seq` と `ref` で結果形が一致することを、multiple を被せた面でも固定する。0 発火でも `[]` (DR-044 §1 / DR-130 §1)。",
   "query": "parse",
   "definition": {
     "options": [

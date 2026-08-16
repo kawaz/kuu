@@ -1,5 +1,5 @@
 {
-  "why": "separator を宣言しない merge accumulator の縮退輪郭。DESIGN §6.2「separator: 指定なければ分割しない」+ DR-034 §6.3「multiple 無しは常に長さ1の [piece]」の合成により、multiple 自体は宣言されている (accumulator: merge) が separator を省略した場合も『発火1回 = piece 1個』の同じ長さ1縮退に落ちる — multiple 完全省略のケースと同じ pieceProcessor の管を通ることになる。separator の有無に関わらず piece 列である以上、マーカー語彙 (DR-080 §2、piece 全体一致で判定) は同一に適用される: 1個しかない piece がそのまま remove/splice/add/escape の判定対象になる。effects は merge-basic.json 等と同じ piece op 語彙 (add={op:'set'}, remove={op:'remove',operand}, splice={op:'splice'})。暗黙補完される先頭 @ は実 CLI 入力でないため effects 非掲載 (team-lead 裁定済み)。",
+  "why": "separator を宣言しない merge accumulator の縮退輪郭。DESIGN §6.2「separator: 指定なければ分割しない」+ DR-034 §「multiple 無しは縮退として統一モデルに収まる」「multiple 無しは常に長さ1の [piece]」の合成により、multiple 自体は宣言されている (accumulator: merge) が separator を省略した場合も『発火1回 = piece 1個』の同じ長さ1縮退に落ちる — multiple 完全省略のケースと同じ pieceProcessor の管を通ることになる。separator の有無に関わらず piece 列である以上、マーカー語彙 (DR-080 §2、piece 全体一致で判定) は同一に適用される: 1個しかない piece がそのまま remove/splice/add/escape の判定対象になる。effects は merge-basic.json 等と同じ piece op 語彙 (add={op:'set'}, remove={op:'remove',operand}, splice={op:'splice'})。暗黙補完される先頭 @ は実 CLI 入力でないため effects 非掲載 (team-lead 裁定済み)。",
   "query": "parse",
   "definition": {
     "options": [

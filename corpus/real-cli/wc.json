@@ -17,7 +17,7 @@
   "cases": [
     {
       "id": "single-flag-one-file",
-      "why": "`wc -l file.txt` (実機は行数のみ)。-l 発火 true、file.txt が files に落ちる。未発火 flag は preset default false で result に present (DR-051 §2)。files は repeat 配列。",
+      "why": "`wc -l file.txt` (実機は行数のみ)。-l 発火 true、file.txt が files に落ちる。未発火 flag は preset default false で result に present (DR-130 §1 (DR-051 は DR-130 に全面 supersede))。files は repeat 配列。",
       "args": ["-l", "file.txt"],
       "expect": {
         "outcome": "success",

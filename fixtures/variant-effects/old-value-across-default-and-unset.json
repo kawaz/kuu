@@ -1,5 +1,5 @@
 {
-  "why": "`ctx.old` を読む cell fn (`incr`) が、宣言 default・`unset`・`default` 効果と組み合わさったときに何を old として読むかを固定する。DR-114 §7 は effect mode の old を『発火直前の cell 値』と定め、DR-131 §2b は `set(null)` を席を開ける unset と定め、DR-081 §2 は op=default をその時点の書き換え済み default をセルへ書く操作と定める。3 つが交差する組合せは既存 corpus に 1 件も無く (count preset の宣言 default が 0 固定で、old が absent か 0 かを incr が区別できないため)、effects と result が食い違っても検出できなかった。宣言 default を非ゼロにすると両者の差が観測面に出る。",
+  "why": "`ctx.old` を読む cell fn (`incr`) が、宣言 default・`unset`・`default` 効果と組み合わさったときに何を old として読むかを固定する。DR-114 §6.1/§6.2 は effect mode の old を『発火直前の cell 値』と定め、DR-131 §2b は `set(null)` を席を開ける unset と定め、DR-081 §2 は op=default をその時点の書き換え済み default をセルへ書く操作と定める。3 つが交差する組合せは既存 corpus に 1 件も無く (count preset の宣言 default が 0 固定で、old が absent か 0 かを incr が区別できないため)、effects と result が食い違っても検出できなかった。宣言 default を非ゼロにすると両者の差が観測面に出る。",
   "query": "parse",
   "definition": {
     "options": [
@@ -65,7 +65,7 @@
     },
     {
       "id": "unset-reopens-old-to-declared-default",
-      "why": "`clear:unset` は `set(null)` = 席を開ける (DR-131 §2b)。席が開いた座の old は宣言 default (DR-114 §7 / DR-077 §1 — 値源ラダーの他席は old に参加しない) なので、直後の `--n` は 6 に戻る。座に `null` を書き込む実装だと次の incr が Some(Null) を受けて落ち、operand の無い生 invoke に化ける。",
+      "why": "`clear:unset` は `set(null)` = 席を開ける (DR-131 §2b)。席が開いた座の old は宣言 default (DR-114 §6.1/§6.2 / DR-077 §1 — 値源ラダーの他席は old に参加しない) なので、直後の `--n` は 6 に戻る。座に `null` を書き込む実装だと次の incr が Some(Null) を受けて落ち、operand の無い生 invoke に化ける。",
       "args": [
         "--n",
         "--clear-n",

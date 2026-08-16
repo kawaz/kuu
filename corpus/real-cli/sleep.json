@@ -1,5 +1,5 @@
 {
-  "why": "sleep (BSD, macOS 2026-07-07 実機) のプローブ: 必須の数値 positional 1 個以上 (BSD は複数 operand を合計する — POSIX の単一 operand の拡張)。プローブ対象 = repeat {min:1} で『1 個以上の必須 positional』を表現できるか (DESIGN §6.1 / DR-043)。既知の表現ギャップ: BSD の operand は `number[unit]` (例 `5s`/`1.5h`) で単位 suffix を許すが、これは canonical number 字句 (DR-074、anchored 全体一致) の範囲外で duration 型 (型の領分、§3.3) が要る — ここでは単位なしの純数値 sleep のみ定義し、単位付きは別 type のプローブとして扱う (issue 候補)。",
+  "why": "sleep (BSD, macOS 2026-07-07 実機) のプローブ: 必須の数値 positional 1 個以上 (BSD は複数 operand を合計する — POSIX の単一 operand の拡張)。プローブ対象 = repeat {min:1} で『1 個以上の必須 positional』を表現できるか (LOWERING §B.8 / DR-043)。既知の表現ギャップ: BSD の operand は `number[unit]` (例 `5s`/`1.5h`) で単位 suffix を許すが、これは canonical number 字句 (DR-074、anchored 全体一致) の範囲外で duration 型 (型の領分、§3.3) が要る — ここでは単位なしの純数値 sleep のみ定義し、単位付きは別 type のプローブとして扱う (issue 候補)。",
   "query": "parse",
   "definition": {
     "positionals": [

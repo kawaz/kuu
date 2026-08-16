@@ -9,7 +9,7 @@
   "cases": [
     {
       "id": "scalar-only-spelling-in-accum-filters-is-unknown-vocab",
-      "why": "`ports` は multiple 宣言を持つ accum 要素で、accum_filters (ARRAY filter registry Acc→Acc 専用、DR-102 §1) を宣言している — 席自体は正しい (wrong-seat ではない)。しかし `in_range` は scalar filter registry のエントリ (DR-095 §3、value_filters/final_filters で使われる Validate) であり、ARRAY filter registry の owns 集合には存在しない。1 属性 1 registry の対応 (DR-102 §2) により、装置選択の段で失敗し unknown-vocab で reject される — scalar registry に `in_range` が実在するという事実は kind の選択に影響しない (層違い比較は発生しない、DR-101 §3 は superseded)。",
+      "why": "`ports` は multiple 宣言を持つ accum 要素で、accum_filters (ARRAY filter registry Acc→Acc 専用、DR-102 §1) を宣言している — 席自体は正しい (wrong-seat ではない)。しかし `in_range` は scalar filter registry のエントリ (DR-095 §3、value_filters/final_filters で使われる Validate) であり、ARRAY filter registry の owns 集合には存在しない。1 属性 1 registry の対応 (DR-102 §2) により、装置選択の段で失敗し unknown-vocab で reject される — scalar registry に `in_range` が実在するという事実は kind の選択に影響しない (層違い比較は発生しない、DR-102 §1 (DR-101 §3 は DR-102 で superseded) は superseded)。",
       "expect": {
         "outcome": "definition-error",
         "errors": [{"element": "ports", "kind": "unknown-vocab"}]

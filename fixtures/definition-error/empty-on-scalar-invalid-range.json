@@ -1,5 +1,5 @@
 {
-  "why": "cell fn `empty` の target 型制約 (REFERENCE §7.3): `empty` は `Sentinel(Empty)` を返し array / map / record を committed=true で空にする fn であり、scalar 等それ以外の target への宣言は definition-error `invalid-range` である。『空にする』が定義できる値形は container だけなので、宣言が非 container を静的に確定する target への empty 入口は全入力で壊れる構成 (DR-082 §2 の『構文上は書けるが構成として不成立』枠)。対照として accumulator セルは cardinality 不問で常に配列 (DR-044 §1) なので、要素型が scalar でも `empty` は正当 (`fixtures/variant-effects/empty-clear.json` が実行時挙動を pin 済み)。",
+  "why": "cell fn `empty` の target 型制約 (REFERENCE §6b / DR-131 §3.1): `empty` は `Sentinel(Empty)` を返し array / map / record を committed=true で空にする fn であり、scalar 等それ以外の target への宣言は definition-error `invalid-range` である。『空にする』が定義できる値形は container だけなので、宣言が非 container を静的に確定する target への empty 入口は全入力で壊れる構成 (DR-082 §2 の『構文上は書けるが構成として不成立』枠)。対照として accumulator セルは cardinality 不問で常に配列 (DR-044 §1) なので、要素型が scalar でも `empty` は正当 (`fixtures/variant-effects/empty-clear.json` が実行時挙動を pin 済み)。",
   "query": "definition_error",
   "definition": {
     "options": [
@@ -10,7 +10,7 @@
   "cases": [
     {
       "id": "empty-on-scalar-is-invalid-range-accumulator-empty-is-not",
-      "why": "同一定義に不成立構成と一見似て正当な構成を同居させ検査境界を対で固定する: (1) `v` は type string の scalar セルで、`clear:empty` は空にできない値形への empty 宣言 — element=v、kind=invalid-range (REFERENCE §7.3)。(2) `tags` は multiple の accumulator セルで、要素型が同じ string でもセル値は常に配列 (DR-044 §1) なので `clear:empty` は正当でエラーにならない。errors は全列挙 + 集合比較 (DR-054 §4 / CONFORMANCE §3) なので、期待 errors が {v} のみであること自体が『tags はエラーでない』の pin を兼ねる。args は書かない (定義の静的検査であり実行しない、DR-082 §1)。",
+      "why": "同一定義に不成立構成と一見似て正当な構成を同居させ検査境界を対で固定する: (1) `v` は type string の scalar セルで、`clear:empty` は空にできない値形への empty 宣言 — element=v、kind=invalid-range (REFERENCE §6b / DR-131 §3.1)。(2) `tags` は multiple の accumulator セルで、要素型が同じ string でもセル値は常に配列 (DR-044 §1) なので `clear:empty` は正当でエラーにならない。errors は全列挙 + 集合比較 (DR-054 §4 / CONFORMANCE §3) なので、期待 errors が {v} のみであること自体が『tags はエラーでない』の pin を兼ねる。args は書かない (定義の静的検査であり実行しない、DR-082 §1)。",
       "expect": {
         "outcome": "definition-error",
         "errors": [

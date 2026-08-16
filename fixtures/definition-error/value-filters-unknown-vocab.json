@@ -9,7 +9,7 @@
   "cases": [
     {
       "id": "unknown-vocab-in-value-filters",
-      "why": "`port` の value_filters に持つ `nonexistent_filter` は bare 綴りで DR-094 §9 の bare = builtin ns 糖衣により `builtin/nonexistent_filter` として解決を試みるが、builtin filters registry の owns 集合 (DR-095 の canonical filter リスト trim / non_empty / in_range / regex_match / increment (unique / length_range は ARRAY lane 専用で scalar 席の owns には無い、DR-102 §2) に該当しない) に載らないため装置選択の段で失敗する。装置の構築 (regex compile 等) まで届かないため invalid-argument (DR-085 の内部妥当性、単一引数値が装置の受理範囲外) ではなく、綴りそのものが未知の unknown-vocab (DR-082 §2) を適用する。",
+      "why": "`port` の value_filters に持つ `nonexistent_filter` は bare 綴りで DR-094 §3 の bare = builtin ns 糖衣により `builtin/nonexistent_filter` として解決を試みるが、builtin filters registry の owns 集合 (DR-095 の canonical filter リスト trim / non_empty / in_range / regex_match / increment (unique / length_range は ARRAY lane 専用で scalar 席の owns には無い、DR-102 §2) に該当しない) に載らないため装置選択の段で失敗する。装置の構築 (regex compile 等) まで届かないため invalid-argument (DR-085 の内部妥当性、単一引数値が装置の受理範囲外) ではなく、綴りそのものが未知の unknown-vocab (DR-082 §2) を適用する。",
       "expect": {
         "outcome": "definition-error",
         "errors": [{"element": "port", "kind": "unknown-vocab"}]
