@@ -39,28 +39,14 @@
 - [ ] a: 作用対象アンカー維持 (`piece`/`value`/`final`/`accum`、DR-079 §2 不変、`_filters` 接尾辞は落とす)
 - [ ] b: **時点系の例示名 (`piece`/`each`/`settled`/`collected`) — 統括推し**。kawaz が全部入り例 (mid=26 応答) で自然に読めた実績。注意: piece=対象・each=単位・settled/collected=様態の 3 軸混在という指摘があるが、読み手が迷わない具体名を優先する立場。DR-079 §2 は supersede
 
-## 👺 AP-Q2: カプセル名は `value` + const 吸収で良いか
 
-- [ ] a: **`value` — 統括推し**。「この要素の値の作られ方」として利用者語彙で最自然。現行 `value:` 属性 (const 席) は カプセル内 `const` field へ吸収して名前を空ける (DR-030/031 の規定移動が波及)。懸念: `values` (or 糖衣) との字面近接
-- [ ] b: 別の新語 (候補があれば指定を)
 
-## 👺 AP-Q3: multiple registry (プリセット名) の去就
 
-- [ ] a: 断片プリセット参照 field を新設して温存
-- [ ] b: **廃止 — 統括推し**。束ね名解体後は accumulator の属性セットが実質を担い、残余は 2 field → 1 語の糖衣のみ。DR-036 の「展示価値」発言を覆す点は明示
 
-## 👺 AP-Q4: union の descriptor 露出範囲
 
-- [ ] a: **構造の分岐 (input_structure の or) は宣言に出す / string 内の字句分岐は parser の関心のまま — 統括推し** (DR-128 §2 / DR-132 の現行線と一致)
-- [ ] b: 字句分岐まで出す (二重管理の懸念)
+## 👺 UC-Q4: union 宣言セルへの ctx.old 依存 fn (incr 等) の扱い
 
-## 👺 AP-Q5: cardinality 導出・wrong-seat 検査の入力位相
+DR-138 §2-1 は書き込みの並行着地を定めたが、ctx.old (セルの現在値、DR-114 §7) は枝候補集合の下で一意でない — old の意味論が未規定。
 
-- [ ] a: カプセル (type) プリセットは accum 適格性に寄与できない、と明文化
-- [ ] b: **判定入力を registry 解決・合成後の平面へ移す — 統括推し**。count preset の increment accumulator が既に (a) の反例 (実物)
-
-## 👺 AP-Q6: wire 射影 (入れ子税の解)
-
-- [ ] a: **フル入れ子 + type の string 縮退形 — 統括推し**。カプセル値が string ならそれは type 単独指定の糖衣 (`"<カプセル名>": "number"`)。縮退はカプセル名の下で起きるので「要素直下の二形」問題 (opus M2 の警告) に当たらず、type 1 個だけの要素 407 本の入れ子税が 1 token 差に縮む
-- [ ] b: 縮退なしの一律フル入れ子
-- [ ] c: 他案 (ノート §5.1 に 4 案比較あり)
+- [ ] a: **union セルへの ctx.old 依存 fn は definition-error (統括推し)** — multiple × update の静的封じ (DR-077 §2) と同型。候補集合に対する「現在値」は概念として成立しないので静的に断つ
+- [ ] b: 枝ごとに old を取り、戻り値が枝ごとに割れる — 状態爆発、非推奨
