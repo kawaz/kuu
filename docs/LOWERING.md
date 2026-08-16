@@ -315,7 +315,7 @@ dd 専用の特別規則はゼロである。`--` が寛容な positional に値
 ```
 
 **規則**: command installer は `commands[]` / `type: "command"` を回収し、greedy 面に「greedy マーク付き exact
-(name 完全一致)」のトリガ衛星を植え、各コマンドの部分木を **新しい背骨** として宣言する (祖先の greedy はそこに
+(`trigger_name` 完全一致 — 未指定なら name の文字写像、DR-136 §1〜§3)」のトリガ衛星を植え、各コマンドの部分木を **新しい背骨** として宣言する (祖先の greedy はそこに
 届かない、DR-041 §4)。素の positional との排他は完全経路の一意性から、「commands が先」は先食いから、それぞれ
 創発する (専用の順序規則を持たない)。command の配置位置に制約は課さない — 曖昧さなく完全経路で一意に解ける限り
 positionals / options の要素として command を直接置いてよい。

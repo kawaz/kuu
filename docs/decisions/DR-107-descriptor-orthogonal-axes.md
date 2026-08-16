@@ -64,6 +64,11 @@ union (`[T1, T2, ...]`) は主に「値が無い」を表す `null` との組合
 > という原則のうち**値域**の側 (固定幅なし・値域制約は filter の領分) は不変 — record が精密化するのは
 > 構造だけである。キー語彙が実行時にしか決まらない object を `{"map": "value"}` / `"value"` で宣言する道も
 > 塞がない (DR-126 §5)。tuple / literal-enum / 型変数は引き続き射程外。
+>
+> **更新 (DR-137、2026-08-16): tuple は射程外ではなくなった。** DR-137 §1 で tuple が
+> 第一級の value_type として導入され (union をタグ付き形へ寄せる当初の予告とは逆に、**tuple 側が
+> タグ付きの位置構造**として実施された)、本注記の「tuple は引き続き射程外」および §「union を
+> タグ付き形へ」の予告は現役ではない。value_type 体系の現行正本は DR-126 §1 + DR-137 §1。
 
 `value = "value"` の定義域は JSON value 全体 (kuu Value 相当の string/number/bool/null/array/object) であり、host native object は含まない — パーサ実装が host 言語のネイティブ型へ変換するのは実装の自由 (§ 上記) だが、`value_type` 自身が指す定義域は常に JSON 表現可能な範囲に閉じる。union の bare array 記法 (`[value_type, ...]`) は、将来 tuple 型を導入する場合に構文が衝突しうる (`["string", "number"]` が union か 2 要素 tuple か構文上曖昧になる) — 本 DR の射程では tuple 型を導入しないため現時点で衝突は発生しないが、将来 tuple 導入時は union を `{"union": [...]}` 等のタグ付き形へ移行する必要がある (射程外、上記「射程外」節に追記)。
 

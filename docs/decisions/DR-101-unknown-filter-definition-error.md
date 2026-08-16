@@ -73,6 +73,15 @@ DR-054 §4 の kind 集合を増やす案。`unknown-vocab` が既に「語彙�
 
 > **更新: 以下の記述は後続 DR で覆された。現役仕様の理解には不要、判断経緯としてのみ残す。**
 
+### §1 の座席列挙 (DR-102 で更新)
+
+> **更新 (2026-08-16): §1 が列挙する `cell_filters` は DR-102 で `final_filters` / `accum_filters`
+> に分割され、綴りとしては消滅している。** したがって Superseded 節の「§1 は不変」という宣言は
+> 座席名の面で成り立たない — §1 の**規範**(座席に書かれた filter 名が registry の descriptor に
+> 登録されていること) は生きているので、座席名を現行の 4 綴り (`piece_filters` / `value_filters` /
+> `final_filters` / `accum_filters`) に読み替えて読む。さらに DR-139 §1.2 で座席はカプセル内の
+> 5 座席へ再編される (移送は台帳の担当)。
+
 ### §3 (accum 位置の cell_filters 判定マトリクス) (DR-102 で更新)
 
 > **更新: `cell_filters` の multiple 有無による位置依存判定は、属性そのものの分割 (DR-102: `final_filters`/`accum_filters`) により前提から解消された。1 属性 1 registry の対応になったため、§3 が規定していた「一次 unknown-vocab → 二次 invalid-range (層違い)」の 2 段判定マトリクスは不要 — 各属性は自 registry の owns 集合のみで unknown-vocab を一意判定する。§1 (filter 名未登録は unknown-vocab) と §2 (専用 kind を新設しない) は不変。**

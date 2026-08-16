@@ -8,7 +8,7 @@
 
 spec-as-core の筋: 仕様は fixture で実証されて初めて確定と呼べる。フェーズ 2 (蒸留) 完了時ではなく、**参照実装 (kuu.mbt 新 main) が fixture 全 pass した時点**で spec バージョン v1.0.0 と JSON Schema 確定版を同時発行する。それまでは**ドラフト期** — 現行の DESIGN §0.1 宣言 (「共設計段階、全域で破壊的変更を許容」) がそのまま生きる。
 
-> **明確化 (DR-108、kawaz 裁定 V1-Q1=b の反映)**: 「conformance fixture を green にした時」は DR-069 の 4 プロファイル (parse-core / lowering / definition-error / completion) **全ての** green を指す。DR-069 §1 の「parse-core green が kuu 準拠を名乗る最小条件」は**実装が準拠を名乗る条件**であり、**spec が v1.0.0 を発行する条件** (本項) とは別軸 — 両者は独立した基準であって矛盾ではない。実装は parse-core のみで「kuu 準拠 (parse-core)」を名乗れるが、spec バンドルの v1.0.0 確定は 4 プロファイル全 green を要求する。
+> **明確化 (DR-108、kawaz 裁定 V1-Q1=b の反映)**: 「conformance fixture を green にした時」は DR-069 の **5 プロファイル** (parse-core / lowering / definition-error / completion / help) **全ての** green を指す (`help` は DR-112 §11 で追加、DR-069 §1 の同旨注記が正本)。DR-069 §1 の「parse-core green が kuu 準拠を名乗る最小条件」は**実装が準拠を名乗る条件**であり、**spec が v1.0.0 を発行する条件** (本項) とは別軸 — 両者は独立した基準であって矛盾ではない。実装は parse-core のみで「kuu 準拠 (parse-core)」を名乗れるが、spec バンドルの v1.0.0 確定は 5 プロファイル全 green を要求する。
 
 ### 2. バージョンの単位は「kuu spec」全体 (Schema 単独でバージョンしない)
 

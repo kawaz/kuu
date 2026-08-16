@@ -11,6 +11,13 @@
 | **構文層** | 本 DR §2 の構造 invariant (葉/枝の排他、children の形 等) | definition Error (DR-054) |
 | **語彙層** | 全フィールド語彙が登録済み descriptor の所有集合の和に含まれる (DR-061/063) | unknown-vocab Error (DR-054) |
 | **参照層** | ref / link / type / alias の解決可能性、循環・ゼロ進捗の不在 (DR-054 §1) | absent-ref / circular-ref / zero-progress Error |
+| **一意性層** | 同一 lexical スコープでの参照識別子 (id) の重複、1 結果スコープでの露出キーの重複 | duplicate-id (DR-054 更新 5) / export-key-collision (DR-120 §1) Error |
+
+> **更新 (2026-08-16): 一意性層を追加。** 制定時の 3 層は「解決できるか」までを見ており、
+> 「**同じ名前空間に 2 つ居ないか**」を扱う層が無かった。その後 `export-key-collision` (DR-120)
+> と `duplicate-id` (DR-054 更新 5) が定義され、どちらも構文層・語彙層・参照層のいずれにも属さない
+> (個々の要素は構文的に正しく語彙も既知で、参照も解決できるのに、**組が衝突する**)。したがって
+> 本表の「3 層で尽きる」という網羅主張は成り立たず、4 層目として明示する。
 
 3 層はいずれも「定義が不正」を判定する。definition-error kind `unsupported` (DR-054 更新4) はこの 3 層のどれにも属さない — 定義は 3 層すべてを満たすが当該実装が未対応、という別軸の申告であり、wire の合法性判定の結果ではない。
 

@@ -39,4 +39,4 @@ completion まで含む全実装を最初から要求すると移植の敷居が
 - DR-061 / DR-066 (descriptor — §2 の要求レベル分離の対象)
 - DR-063 (宣言層 wire — parse-core が lowering 実装を内包する根拠)
 - ROADMAP (フェーズ 2 再構成と同時決定)
-- DR-108 (spec リリースプロセス — v1.0.0 発行条件は本 DR の 4 プロファイル全 green、V1-Q1=b)
+- DR-108 (spec リリースプロセス — v1.0.0 発行条件は本 DR の **5 プロファイル**全 green、V1-Q1=b。`help` 追加は §1 の DR-112 §11 注記)

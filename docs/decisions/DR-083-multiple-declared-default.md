@@ -45,6 +45,12 @@ DR-051 §2b を「[] 固定」と読む案。schema が default を任意 JSON �
 
 - fixtures: default-cell-ops.json に宣言 default 付き accum の case を追加 (accum-fold サイクルで退避した hosts case の復活 — value_filters/cell_filters の T 域通過の実証込み)。ラダー供給 (未発火) case、scalar×配列 default の definition-error fixture、merge 要素への default 供給 (マーカー不活性) case
 - kuu.mbt: Entity の default 保持を長さ 1 縮退の統一列 (`default_values: Array[Value]?`、scalar = 長さ 1) へ再型付け (accum-fold サイクルで一度取り下げた設計を、fixture の正当化により採用)。decoder は scalar JSON → [v] 持ち上げ、配列は multiple 要素のみ合法
+
+> **更新 (2026-08-16): 「配列は multiple 要素のみ合法」は現役ではない。** DR-126 §1 (record) /
+> DR-137 §1 (tuple 第一級) / DR-139 §6 (供給表) により、**単一の完全値として配列形を取る型**
+> (tuple、array を out に持つ型、union の配列枝) が存在する。したがって「配列 = 累積」という
+> 対応は成り立たず、宣言 default が配列であることは multiple の証拠にならない — 判定は
+> **cardinality (Acc か)** で行い、値の外形では行わない (値カプセルノート §2.10 / §2.12)。
 - issue multiple-declared-default-semantics は fixture / 実装の追従完了時に close (本 DR 起草時点で wip)
 
 ## 関連

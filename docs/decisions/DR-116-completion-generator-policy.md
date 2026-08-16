@@ -14,7 +14,20 @@ canonical 補完生成器は complete query の候補素材と help model を組
 
 canonical 生成器は help_query capability から得た help model の options / commands 列を参照する。この列は DR-113 §8 の「明示 order と宣言 index による安定ソート → `help_after` 配置」を適用済みであり、その順序を候補提示順の正本とする。
 
-- candidate の `origin` を help model の entry または definition 内の対応要素へ突き合わせ、definition 由来候補を対応 entry の順に整列する
+- candidate を help model の entry または definition 内の対応要素へ突き合わせ、definition 由来候補を対応 entry の順に整列する (結合キーは下記注記)
+
+> **更新 (TRG-Q1=b / help model 実物、2026-08-16): 結合キーの規定が二重に不成立だったので置き換える。**
+>
+> 1. candidate の `origin` は **id 軸**を綴る (TRG-Q1=b — 明示 `id`、無ければ name の文字写像。
+>    DR-104 §2 の更新注記が正本)。「canonical 要素名」ではない。
+> 2. help model の option entry に **`name` field は存在しない** (`schema/fixture.schema.json` の
+>    `helpOptionEntry` は `spellings` 始まりで、required に `name` を含まない)。突き合わせ先として
+>    entry の `name` を参照することはできない。
+>
+> したがって整列の結合キーは **entry の `spellings` と candidate の `spelling`** で取る (綴り軸
+> どうしの照合)。command entry のように `name` を持つ entry 種別 (helpCommandEntry) では、その
+> `name` の軸が G-Q4 の裁定待ちであるため、綴り軸での結合を既定とする。同一 entry 由来の複数候補
+> (canonical + alias、eq-split の `cont` 形等) が素材配列の出現順を保つ規定は不変。
 - 同じ entry に属する複数候補は生成器の安定順を保つ
 - 値位置候補は、その候補を生む definition entry の順序に従属する
 - 対象 shell に供給順保持手段がある場合、生成器はその手段へ翻訳する。供給順を保持できない shell の最終表示順は保証しない

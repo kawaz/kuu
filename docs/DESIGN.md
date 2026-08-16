@@ -193,7 +193,7 @@ CLI 表面の照合綴りも `name` から直取りするのではなく、独�
 
 ### 2.2 value_name のデフォルトと上書き
 
-- 指定なし → uppercase で導出 (key name / type 名 / def name を大文字化)。大文字化は ASCII 英字のみ、非 ASCII 文字はそのまま (ロケール変換しない)
+- 指定なし → **name の文字写像 + ASCII 大文字化**で導出 (key name / type 名 / def name に id 軸の写像 — ASCII 非英数 → `_` — を掛けてから大文字化、DR-136 §1/§3)。大文字化は ASCII 英字のみ、非 ASCII 文字はそのまま (ロケール変換しない)。`{"name": "dry-run"}` も `{"name": "dry_run"}` も `DRY_RUN` になる
 - 明示 → そちらを採用
 - ref 継承 + 上書き可: definitions 側の `value_name: "COLOR"` を入口側で `value_name: "FG_COLOR"` で上書きできる
 
@@ -209,17 +209,17 @@ children の有無でも name の有無でもなく **結果キー軸を占有�
 はスコープを作らず子が外へ透過し、`{"id": "x", "export_key": "box"}` (name 無し) はスコープを作る。
 結果スコープと lexical スコープは同じ判定を共有する (DR-033) — 露出が透けるなら名前も透ける。
 
-### 2.4 露出規則: 最も浅い name 層
+### 2.4 露出規則: 最も浅い結果キー層
 
-結果への露出は以下の規則で決まる:
+結果への露出は以下の規則で決まる (判定の単位は §2.3 と同じ**結果キー軸の占有**):
 
-1. 根から降りていって、最も浅い (祖先側の) name 層で止める
-2. その層にある name 持ちノードを**全て**結果キーにする (同じ層の name 兄弟は全部拾う)
-3. それより深い name は、止めた層のノードが作る子スコープに属する (再帰)
+1. 根から降りていって、最も浅い (祖先側の) **結果キー層**で止める
+2. その層にある**結果キー軸を占有するノード**を**全て**結果キーにする (同じ層の兄弟は全部拾う)
+3. それより深い結果キーは、止めた層のノードが作る子スコープに属する (再帰)
 
-`name` 無しノードは結果に痕跡を残さず、値の畳み方 (配列 or kv) だけ効かせる。
+**結果キー軸を占有しないノード**は結果に痕跡を残さず、値の畳み方 (配列 or kv) だけ効かせる。
 
-結果キーは `export_key` で明示できる (未指定 = name 由来、DR-046/052): 文字列でキー名を上書き、**null (または "") で結果キー軸なし** — name 無しノードと同じ透過挙動になる (kv 文脈では現れず、seq 文脈では値が親の配列要素として残る)。露出規則では export_key: null の層を結果キー層と数えず、子の結果キー持ちが昇格露出する。lexical スコープ (§2.7) と id (ref/link) は export_key と直交で不変。
+結果キーは `export_key` で明示する (未指定なら name の文字写像が供給、DR-046/052/136 §1): 文字列でキー名を上書き、**null (または "") で結果キー軸なし** — 透過挙動になる (kv 文脈では現れず、seq 文脈では値が親の配列要素として残る)。露出規則では `export_key: null` の層を結果キー層と数えず、子の結果キー持ちが昇格露出する。**lexical スコープ (§2.7) は結果スコープと同じ判定を共有し** (DR-033、TRG-Q4=a)、id (ref/link) は結果キー軸と直交で不変。
 
 ### 2.5 object は独立構造でなく露出の帰結
 
@@ -302,7 +302,7 @@ bytes / binary 型は組み込みに持たない。必要なら拡張 type (regi
 - `flag` = bool + default:false + 起動で true
 - `count` = number + default:0 + 起動時に `cell_fns` の `incr` を呼ぶ (値は取らない — `--verbose=3` は読みが立たず素通し、DR-114 §2/§6.1)
 - `count_or_set` = count + optional 値スロット (repeat {min:0,max:1})。`-v` は `incr`、`-v 3` / `--verbose=3` は `set`。取り分選好は DR-043 が確定する。標準層 (DR-040)
-- `command` = 結果キー軸を占有してスコープを作り、name の完全一致でトリガ
+- `command` = 結果キー軸を占有してスコープを作り、**`trigger_name` の完全一致**でトリガ (未指定なら name の文字写像が供給、DR-136 §1〜§3)
 - help 系 5 preset は help_installer が内部セル link + `cell_fns` 固定値供給へ展開する (§14.1、DR-113)。`help_all_category` (category 絞りなし) / `help_category` (named category) / `help_show_hidden` (hidden 露出の独立軸) / `help_tree` (全 tree) は `help` と直交して合成できる
 - `completion_script` = shell 名を必須値に取る string preset。`#completion_script` へ値を供給して同名 capability を発火する。値域は自由入力で、値位置の候補には実装対応 shell 名を提示する (§15.13、DR-117)
 - `tty` (= `builtin/tty`、DR-099) = bool + 暗黙 default = tty 観測。configurable factory config は `tty_stream` (`"stdin"｜"stdout"｜"stderr"`、必須 — 未指定は definition-error) のみ (DR-129)。long/short/env 席の宣言可否・multiple・filters・required 充足は素の bool と完全に同一 — preset が同梱するのは暗黙 default のみ (詳細は §12b)
@@ -369,7 +369,7 @@ canonical は「最も寛容」でも「最小」でもなく、**言語中立�
 
 ### 4.3 command 一級扱い、内部正規形は同型 (DR-017)
 
-定義時は command を1級として扱う (commands[]、`type: "command"`)。パース時 (AtomicAST) は同型要素 (exact + or/seq) に展開され、パースループは「name でトリガしうる要素」という同型表現で動く。
+定義時は command を1級として扱う (commands[]、`type: "command"`)。パース時 (AtomicAST) は同型要素 (exact + or/seq) に展開され、パースループは「トリガ綴り (`trigger_name` 軸) でトリガしうる要素」という同型表現で動く。
 
 ### 4.4 復帰・途中分岐は構造プリミティブで組む (DR-020)
 
@@ -407,7 +407,7 @@ repeat: true の要素, children: [
 
 | プリミティブ | 役割 | 値の伝搬 |
 |---|---|---|
-| `exact` | name の完全一致でトリガ | value あれば literal、なければ値なし |
+| `exact` | **literal の直値**の完全一致でトリガ (name 由来ではない、DR-136 §2) | value あれば literal、なければ値なし |
 | `or` | 子から1つ選択 (排他) | 選ばれた子の値 |
 | `seq` | 子を順に消費 | 子の値の配列 (要素数によらず常に配列)。結果キーを持つ子が 1 つでもあれば代わりに 1 個の kv (§2.5、DR-120) |
 | primitive (`string`/`number`/...) | 引数1個消費 or value literal | 自身の値 |

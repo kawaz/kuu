@@ -98,6 +98,17 @@ DR-087 / DR-088 の default_fn 概念を明示 DSL とし、**default 席だけ*
 
 #### 4.1 値源ラダーの席と precedence は維持する
 
+> **更新 (DR-139 §1.1、2026-08-16): 本節と §4 の糖衣表は値カプセルへの移送で組み替わる。**
+> DR-139 §1.1 は供給を **`defaults` 一本**へ集約し、`default` / `env` / `config_key` /
+> `default_fn` はいずれも `defaults` へ展開される糖衣とした。したがって:
+>
+> - 「`env` は default_fn 糖衣ではない」「config は `cell_fns` の対象にしない」という本 DR の
+>   線引きは、**env / config が `defaults` の中で provider fn として表現される**形に置き換わる
+> - 席と precedence を維持する (`inherit` は DR-125 で廃止済み) という本節の**主張自体は生きて
+>   おり**、変わったのは「どの綴りで宣言するか」である
+>
+> 移送の作業単位は `docs/research/2026-08-16-value-capsule-migration-ledger.md` が持つ。
+
 fn への統合は値源の共存を廃止しない。DR-031 / DR-081 の CLI / link > env > config > inherit > default の席と precedence、`source` タグを維持する。
 
 - `env: "VAR"` は env 席に `env(VAR)` の placeholder を宣言する

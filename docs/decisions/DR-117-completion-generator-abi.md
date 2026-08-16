@@ -221,7 +221,20 @@ words, cword
 
 **prefix 絞りで候補がゼロになった場合は空リストを返す** (kawaz 裁定 2026-07-23)。入力済みのカーソル単語はそのまま残る (例: 値が `foo|bar|baz` の 3 択で `--choice c<TAB>` → 候補なし、`c` は消えない)。ユーザが入力中の文字列には意味があるかもしれず、勝手に消すのはユーザの意図に反するリスクが高い。対案 (一致ゼロなら入力を消して全候補を出し直す) は不採用 — その実現自体が bash の標準 programmable completion 枠組み (`complete -F` + `COMPREPLY`) の外に出る。kuu の glue は標準枠組みの内側に留まる (`bind -x` による TAB 乗っ取りは既存 bash-completion エコシステムと共存できない)。
 
-順序整列の突き合わせ規則 (DR-116 §2 の実装形): candidate の `origin` (canonical 要素名、DR-104 明確化 (c)) を help model の options / commands entry の name に突き合わせる。同一 entry 由来の複数候補 (canonical + alias、eq-split の `cont` 形等) は素材配列の出現順を保つ。値位置候補は由来 entry の順序に従属する。匿名 exact 候補 (origin = spelling 自身、DR-104 明確化 (iii)) は help model に対応 entry を持たないため positional の定義順 (DR-113 §4.4) に従属させる — 匿名 exact 候補は裸文字列→exact 正規化 (DR-063 A.1) が生む名前なし要素由来であり、options / commands の entry は名前を持つ (DR-067 の name 非空制約) ため、この規則の適用対象は positional 側に閉じる (前提確認: DR-104 明確化 (iii))。completer 由来候補は supplier の返却順のまま由来 entry の位置に挿入する。
+順序整列の突き合わせ規則 (DR-116 §2 の実装形): candidate を help model の options / commands entry へ突き合わせる (結合キーは下記注記)。同一 entry 由来の複数候補 (canonical + alias、eq-split の `cont` 形等) は素材配列の出現順を保つ。値位置候補は由来 entry の順序に従属する。匿名 exact 候補 (origin = spelling 自身、DR-104 明確化 (iii)) は help model に対応 entry を持たないため positional の定義順 (DR-113 §4.4) に従属させる — 匿名 exact 候補は裸文字列→exact 正規化 (DR-063 A.1) が生む名前なし要素由来であり、options / commands の entry は名前を持つ (DR-067 の name 非空制約) ため、この規則の適用対象は positional 側に閉じる (前提確認: DR-104 明確化 (iii))。completer 由来候補は supplier の返却順のまま由来 entry の位置に挿入する。
+
+> **更新 (TRG-Q1=b / help model 実物、2026-08-16): 結合キーの規定が二重に不成立だったので置き換える。**
+>
+> 1. candidate の `origin` は **id 軸**を綴る (TRG-Q1=b — 明示 `id`、無ければ name の文字写像。
+>    DR-104 §2 の更新注記が正本)。「canonical 要素名」ではない。
+> 2. help model の option entry に **`name` field は存在しない** (`schema/fixture.schema.json` の
+>    `helpOptionEntry` は `spellings` 始まりで、required に `name` を含まない)。突き合わせ先として
+>    entry の `name` を参照することはできない。
+>
+> したがって整列の結合キーは **entry の `spellings` と candidate の `spelling`** で取る (綴り軸
+> どうしの照合)。command entry のように `name` を持つ entry 種別 (helpCommandEntry) では、その
+> `name` の軸が G-Q4 の裁定待ちであるため、綴り軸での結合を既定とする。同一 entry 由来の複数候補
+> (canonical + alias、eq-split の `cont` 形等) が素材配列の出現順を保つ規定は不変。
 
 既存の `kuu complete` (素の DR-104 wire candidates を JSON で出す素材 API) はそのまま残す。query 応答は「policy 適用済み・行指向・shell glue 専用」で位相が違い、同じ口に混ぜると素材とポリシーの分離 (DR-060 §3) を CLI 面で崩すため別口とする。
 

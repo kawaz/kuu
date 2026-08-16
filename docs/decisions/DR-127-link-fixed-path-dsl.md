@@ -68,12 +68,17 @@ bare name では lexical 外で見えない対象に、root を lexical 解決�
 残余の解決は**現在位置の value_type ごとに決まり、判定は segment ごとに宣言を辿って適用する**。
 value_type の体系 (DR-126 §1) は全域が下表で尽きる:
 
+> **更新 (DR-137 §4、2026-08-16): tuple 行を追加した。** 制定時の本表は DR-126 §1 の体系
+> (record / array / map / value / primitive / union) を尽くしていたが、DR-137 §1 で **tuple が
+> 第一級の value_type になった**ため、tuple 行が無いままでは「全域が下表で尽きる」が偽になる。
+
 | 現在の value_type | 次 segment の静的判定 | 実行時に残るもの | vivify (§3) |
 |---|---|---|---|
 | record | フィールド語彙も型も静的。当たらなければ definition-error `absent-ref` (第 1 相と同じ系) | presence 判定と値読み | 可 (器 `{}`) |
 | array | `[int]` の**構造**は静的に続行する (要素型を辿って降下を継続)。`.name` は definition-error | index の存在 (範囲・負 index の現在長での解決、§1) は実行時。失敗は枝 Reject (§4) | 不可 (要素の存在が実行時) |
 | `map` / `value` | 以降の segment は全て実行時 | 全部 (キー不在・セル未確定も実行時に落ちる) | 不可 |
 | primitive (`string` / `number` / `bool` / `null`) | 残余 segment があれば**恒真不成立**なので definition-error | — | — |
+| tuple | 位置は静的 (固定長・位置ごとに型が決まる、DR-137 §1)。範囲外の index は definition-error | index 解決は静的に済むので実行時に残らない (要素の値が未確定なら通常のセル未確定として落ちる) | 可 (器は全位置分の枠。ただし tuple は全位置充足が値の意味なので、埋まらない位置が残れば値として不成立 — 値カプセルノート §2.13) |
 | union | パスを含む variant が 1 つ以上あれば静的合法 (0 なら definition-error)。含有 variant 間で当該フィールドの型が一致しなければ definition-error (operand のパース型が定まらない、§3.2) | 実行時の現在値の構造で判定する — record は構造的型付けであり variant の同一性を値に保存しないので、合わなければ枝 Reject **(→ superseded by DR-138 §2 — 並行着地・確定相淘汰へ置換、枝 Reject は発生しない)** | 可 (含有 variant の器 `{}`。構造的なので variant 選択は不要) |
 
 各 segment はこの表を 1 段ずつ適用して降りる。フィールドの型は type 参照である (DR-126 §1) ため、

@@ -23,7 +23,7 @@ fixture → 参照実装の順で同一 lockstep 窓に入れる** (単独 push 
 ## 2. schema
 
 - **wire.schema.json**: 要素直下から §廃止表 (DR-140 §3) の属性を削除、`value` を
-  string | object 二形で追加 (object の properties = DR-139 の 14 field、accum 排他は
+  string | object 二形で追加 (object の properties = DR-139 の canonical 11 field + 糖衣 4 (defaults へ展開)、accum 排他は
   if/then 補助)、グループ宣言 entry の判別条件を「value 不在」へ (DR-140 §4)
 - **descriptor.schema.json**: 変更なし (value_type 体系は DR-126/137 のまま — wire の
   `value.type` は registry 識別子 string)

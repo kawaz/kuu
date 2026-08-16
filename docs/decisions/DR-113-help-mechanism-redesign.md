@@ -4,7 +4,13 @@
 > 「`value` (値カプセル、DR-140 §1) を持たず」に置き換わる。** 他の規定は不変。
 
 > **更新 (DR-124、2026-07-29): entry の `origin` から `{"kind": "inheritable", ...}` が抜けた。**
-> 値域は `"local"` / `{"kind":"global",...}` / `{"kind":"alias",...}` の 3 値。他は不変。
+> 値域は `"local"` / `{"kind":"global",...}` の **2 値**。他は不変。
+>
+> **訂正 (2026-08-16): 上記注記が「`{"kind":"alias",...}` を含む 3 値」としていたのは誤り。**
+> alias は canonical entry の `alias_spellings` / `aliases` に併記して独立一覧しないので
+> (§4.4)、`origin` に alias 形は存在しない — 本 DR 本文 (§ origin の説明) がそう明言しており、
+> `schema/fixture.schema.json` の `helpOrigin` も `kind` の enum を `["global"]` に閉じている。
+> 本文中の「3 形」表記および §「inheritable」の残存記述も、この 2 値として読む。
 
 > **更新 (DR-125、2026-07-29): `inherit` はラダー席としても `cell_fns` の住人としても廃止された。**
 > §5.2 の糖衣表の `inherit` 行と、直後の「env / config / inherit / default の異なる値源席は共存

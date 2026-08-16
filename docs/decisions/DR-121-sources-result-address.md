@@ -151,7 +151,7 @@ decode と独立タグとしての emit を実装済み (DR-127 第 1 波で追�
 `effects[].entity` は**射影前の canonical entity name / id** であり `export_key` を適用しない
 (DR-045: 効果は cell 単位で記録する。entity は値セルであって露出パスではない)。
 
-したがって `effects` は宣言名軸、`result` / `sources` は結果アドレス軸であり、
+したがって `effects` は **id 軸**、`result` / `sources` は結果アドレス軸であり、
 同じ cell でも綴りが異なる:
 
 ```json
@@ -208,5 +208,7 @@ sources: [{"path":[],"key":"v","source":"cli"}]            ← 露出キー
 
 - **§4 (`link` は独立した値源タグ)** — LINKSRC-Q1=a はタグの**語彙**の裁定であり、タグをどう配置するか
   (entry 配列 / shadow tree) とは独立。実装追随は §4.2 のとおり完了済み
-- **§5 (effects との軸の違い)** — `effects[].entity` が宣言名軸、`result` / `sources` が結果アドレス軸
+- **§5 (effects との軸の違い)** — `effects[].entity` が **id 軸**、`result` / `sources` が結果アドレス軸
+
+> **更新 (TRG-Q3=a、2026-08-15): §5 で「宣言名軸」と呼んでいた軸の綴りは参照識別子 (id) に確定した。** `effects[].entity` / `errors[].element` は明示 `id` があればその値、無ければ name に id 軸の文字写像 (DR-136 §3) を掛けた値を綴る (生の name ではない)。結果アドレス軸との対比という §5 の主張自体は不変。正本は CONFORMANCE §2。
   である対比は不変。§5 の例に出る `sources` の綴りだけが shadow tree 形 (`{"v": "cli"}`) になる
