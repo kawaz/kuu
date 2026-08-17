@@ -37,9 +37,11 @@
 
 dd は値空間を持たない (DR-130) ので type 座との衝突は起きないが、installer 語彙が値の座を借りている点は command と同族。また現行の name によるトリガ綴り供給は DR-136 §2 の literal 直値特例 (文字写像を通さない) を背負っている。
 
-- [ ] β-a: **`"dd": true` マーカー化 + 綴りは既存入口属性 `exact` に乗せる (統括推し)** — `{"dd": true}` (exact 既定 `"--"`) / `{"dd": true, "exact": "++"}` / `{"dd": true, "match": "^[^\\-]", "self": "keep"}`。dd の lowered 実体は exact 衛星 (DR-042) なので綴りの座が実体と一致し、DR-136 §2 の name 特例が消せる。新語ゼロ。match / self は入口族 (DR-139 §1.1) のまま不動
-- [ ] β-b: `"dd": true` マーカー化 + 綴りは新設 `dd_marker:` (kawaz mid=87 案) — dd 専用と明示される代わり新語 1 個
-- [ ] β-c: dd は `type:"dd"` 維持 (変更を必要性のある所に限る)
+dd 専用語彙 (`match` / `self`) は dd 以外の要素が読まないのに要素直下の共通名前空間に裸の一般名で座っており、単体で意味が読めない (kawaz mid=97 指摘)。dd object 形はこれも同時に解消する。
+
+- [ ] β-a: **`"dd": true | object` の二形 (統括推し)** — dd 専用語彙を器の中に収める: `{"dd": true}` (marker 既定 `"--"`) / `{"dd": {"marker": "++"}}` / `{"dd": {"match": "^[^\\-]", "self": "keep"}}`。DR-136 §2 の name literal 特例が消え、要素直下から dd 専用語が消滅。string | object 二形は確立イディオム (DR-011/062)
+- [ ] β-b: β-a + 器に入れるついでに `self` を自明な名に改名 (`keep_marker: true` bool 化 等 — 具体名は追って設計)
+- [ ] β-c: dd は `type:"dd"` 維持 (変更を必要性のある所に限る。match/self の裸置きも現状のまま)
 
 ### CDT-Q1γ: help 系 5 preset の扱い
 
