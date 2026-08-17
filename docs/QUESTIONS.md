@@ -30,7 +30,7 @@
 
 ### CDT-Q1α: command のマーカー化 (mid=85 で内定済みの確認)
 
-- [x] α-a: `"command": true` bool マーカー。commands[] 配置時は省略可、positionals 内は必須。値持ち command は `{"command": true, "value": "string"}` と書けて歪み解消
+- [ ] α-a: **(統括推し、mid=85 で前向き反応)** `"command": true` bool マーカー。commands[] 配置時は省略可、positionals 内は必須。値持ち command は `{"command": true, "value": "string"}` と書けて歪み解消
 - [ ] α-b: 現状維持 (`type:"command"` を要素直下に残す)
 
 ### CDT-Q1β: dd の対称化と綴りの座
