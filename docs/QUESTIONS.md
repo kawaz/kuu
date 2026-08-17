@@ -22,42 +22,31 @@
 
 ## 裁定待ち
 
-## 👺 CDT-Q1: command の脱 type 化 (kawaz mid=78 発題への統括提案)
+## 👺 CDT-Q1: installer 所有プリセットの type 座返上 (command / dd / help)
 
-`type:"command"` が type 座を占有し「値持ち command (version 等、DR-134) の値型を書く場所が無い」歪みがある。
+### 問題の体系的な位置
 
-command:true は内定 (kawaz mid=85)。残る論点は **dd の対称化の要否**。
+`type:` はプリセット選択の座 (DR-028、DESIGN §3.3「独立の type ではなく属性プリセットへの名前」)。ただしプリセットには**所有者の違い**があり、flag / count / tty は**値平面** (カプセルの中身) を構成するプリセット、command / dd は **installer 所有の構造・入口語彙** (DR-042、DESIGN §13.1 installers 行)、help 系 5 種は help_installer 所有。値カプセル移送 (DR-140 §3) で値平面のプリセットは `value` 内に移るが、構造・入口系プリセットは値でないため行き場が無い — GA-Q1=a (要素直下の種別マーカーとして残す) が暫定裁定だが、その**綴り**が未確定。加えて値持ち command (DR-134) は `type:"command"` が座を占有するため値型を書けない歪みがある (kawaz mid=78 発題)。
 
-### dd の現行形と可能な全オプション (spec 実物からの採取)
+### CDT-Q1α: command のマーカー化 (mid=85 で内定済みの確認)
 
-宣言例 (fixtures/dd/ の実物):
+- [x] α-a: `"command": true` bool マーカー。commands[] 配置時は省略可、positionals 内は必須。値持ち command は `{"command": true, "value": "string"}` と書けて歪み解消
+- [ ] α-b: 現状維持 (`type:"command"` を要素直下に残す)
 
-```jsonc
-{"name": "--", "type": "dd"}                                    // 基本形 (basic.json)
-{"name": "++", "type": "dd"}                                    // 方言綴り (dialect-name.json)
-{"name": "utility_marker", "type": "dd",
- "match": "^[^\\-]", "self": "keep"}                            // pattern dd = xargs 型 (match-self-keep.json)
-{"name": "--", "type": "dd", "required": true}                  // 発火強制 (required-fire.json)
-{"name": "--", "type": "dd", "export_key": "marker"}            // export_key は inert (export-key-inert.json)
-```
+### CDT-Q1β: dd の対称化と綴りの座
 
-dd が持てる属性の全リスト:
+dd は値空間を持たない (DR-130) ので type 座との衝突は起きないが、installer 語彙が値の座を借りている点は command と同族。また現行の name によるトリガ綴り供給は DR-136 §2 の literal 直値特例 (文字写像を通さない) を背負っている。
 
-| 属性 | 意味 | 根拠 |
-|---|---|---|
-| `name` | トリガ綴り (literal 直値、文字写像を通さない特例。省略時 `--` 供給)。`match` があるときは同一性・表示軸のみ | DR-136 §2 / DR-064 §5 |
-| `type: "dd"` | 種別マーカー (現行) | DR-064 |
-| `match` | regex トリガ (dd 専用) | DR-090 §2 |
-| `self` | `"drop"` 既定 / `"keep"` (dd 専用) | DR-090 §2 |
-| `required` | 発火 (committed) で充足 (型委譲判定) | DR-093 |
-| `export_key` | **inert** (dd は露出キーを占有しない) | DR-130 |
-| 表示メタ (`help` / `hidden` 等) | 共通 inert 属性 | DR-046 §3 |
+- [ ] β-a: **`"dd": true` マーカー化 + 綴りは既存入口属性 `exact` に乗せる (統括推し)** — `{"dd": true}` (exact 既定 `"--"`) / `{"dd": true, "exact": "++"}` / `{"dd": true, "match": "^[^\\-]", "self": "keep"}`。dd の lowered 実体は exact 衛星 (DR-042) なので綴りの座が実体と一致し、DR-136 §2 の name 特例が消せる。新語ゼロ。match / self は入口族 (DR-139 §1.1) のまま不動
+- [ ] β-b: `"dd": true` マーカー化 + 綴りは新設 `dd_marker:` (kawaz mid=87 案) — dd 専用と明示される代わり新語 1 個
+- [ ] β-c: dd は `type:"dd"` 維持 (変更を必要性のある所に限る)
 
-**dd は値空間を持たない** (値セルなし・子なし・result 全キー列挙にも出ない)。つまり command と違い「type 座を占有されて値型が書けない」歪みは **dd では発生しない** — dd 対称化の動機は綴りの一貫性 (種別マーカーは全部 bool) だけで、必要性由来ではない。
+### CDT-Q1γ: help 系 5 preset の扱い
 
-- [ ] a: command / dd とも bool マーカー化 (`"command": true` / `"dd": true`) — 種別マーカーの綴りが一貫。dd 側は美観のみの変更
-- [ ] b: **command のみ `"command": true`、dd は `type:"dd"` 維持 (統括推し格上げ)** — 変更を必要性のある所に限る。dd は値空間がなく type 座と衝突しない。「type = 値の型」の純化からは外れるが、dd の type は none 系 (値空間なし) の宣言とも読める
-- [ ] c: 別案 (自由文で)
+同じ「installer 所有プリセットが type 座に居る」族。値担体は内部セル側なので command ほどの歪みは無い。
+
+- [ ] γ-a: 同時に裁く (`"help": true | {...}` 等 — 具体形は追って設計)
+- [ ] γ-b: **後続の別バッチに切り出す (統括推し)** — command/dd と違い緊急の歪みが無く、5 preset × on_failure 既定の設計量が大きい
 
 ## 確認待ち
 
