@@ -26,8 +26,37 @@
 
 `type:"command"` が type 座を占有し「値持ち command (version 等、DR-134) の値型を書く場所が無い」歪みがある。
 
-- [ ] a: **`"command": true` bool マーカー化 (統括推し)** — commands[] 配置時は省略可、positionals 内のみ必須。dd も `"dd": true` へ対称。type は値の型 (カプセル内) 専用に純化。GA-Q1=a (種別マーカーは要素直下) の綴りをこの形で確定
-- [ ] b: `type:"command"` を維持し、値持ち command の値型は別 field で書く
+command:true は内定 (kawaz mid=85)。残る論点は **dd の対称化の要否**。
+
+### dd の現行形と可能な全オプション (spec 実物からの採取)
+
+宣言例 (fixtures/dd/ の実物):
+
+```jsonc
+{"name": "--", "type": "dd"}                                    // 基本形 (basic.json)
+{"name": "++", "type": "dd"}                                    // 方言綴り (dialect-name.json)
+{"name": "utility_marker", "type": "dd",
+ "match": "^[^\\-]", "self": "keep"}                            // pattern dd = xargs 型 (match-self-keep.json)
+{"name": "--", "type": "dd", "required": true}                  // 発火強制 (required-fire.json)
+{"name": "--", "type": "dd", "export_key": "marker"}            // export_key は inert (export-key-inert.json)
+```
+
+dd が持てる属性の全リスト:
+
+| 属性 | 意味 | 根拠 |
+|---|---|---|
+| `name` | トリガ綴り (literal 直値、文字写像を通さない特例。省略時 `--` 供給)。`match` があるときは同一性・表示軸のみ | DR-136 §2 / DR-064 §5 |
+| `type: "dd"` | 種別マーカー (現行) | DR-064 |
+| `match` | regex トリガ (dd 専用) | DR-090 §2 |
+| `self` | `"drop"` 既定 / `"keep"` (dd 専用) | DR-090 §2 |
+| `required` | 発火 (committed) で充足 (型委譲判定) | DR-093 |
+| `export_key` | **inert** (dd は露出キーを占有しない) | DR-130 |
+| 表示メタ (`help` / `hidden` 等) | 共通 inert 属性 | DR-046 §3 |
+
+**dd は値空間を持たない** (値セルなし・子なし・result 全キー列挙にも出ない)。つまり command と違い「type 座を占有されて値型が書けない」歪みは **dd では発生しない** — dd 対称化の動機は綴りの一貫性 (種別マーカーは全部 bool) だけで、必要性由来ではない。
+
+- [ ] a: command / dd とも bool マーカー化 (`"command": true` / `"dd": true`) — 種別マーカーの綴りが一貫。dd 側は美観のみの変更
+- [ ] b: **command のみ `"command": true`、dd は `type:"dd"` 維持 (統括推し格上げ)** — 変更を必要性のある所に限る。dd は値空間がなく type 座と衝突しない。「type = 値の型」の純化からは外れるが、dd の type は none 系 (値空間なし) の宣言とも読める
 - [ ] c: 別案 (自由文で)
 
 ## 確認待ち
