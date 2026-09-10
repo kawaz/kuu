@@ -1,6 +1,6 @@
 ---
 title: エコシステム外部レビュー(2026-09)の指摘への対応検討・採否記録
-status: open
+status: resolved
 category: tech-memo
 created: 2026-09-10T14:59:52+09:00
 last_read:
@@ -9,10 +9,10 @@ wip_entered:
 blocked_entered:
 pending_entered:
 discarded_entered:
-resolved_entered:
+resolved_entered: 2026-09-10T15:01:09+09:00
 discard_reason:
 pending_reason:
-close_reason:
+close_reason: ["discarded:K-1却下(DR-113不在)", "pending:K-2裁定待ちのまま記録保持", "done:K-3採用(未実施、次回ついでに)"]
 blocked_by:
 origin: kawaz依頼(2026-09-10、claude-rules-personalセッション経由)
 ---
