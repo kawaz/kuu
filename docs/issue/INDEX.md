@@ -5,6 +5,7 @@ active な issue の一覧。close 済みは archive/ にあり、ここには�
 | date | category | status | slug | 概要 |
 |---|---|---|---|---|
 | 2026-09-19 | task | idea | [replace-chat-refs-with-quotes](./2026-09-19-replace-chat-refs-with-quotes.md) | ccmsg room/メッセージ参照を引用形式に置き換える (mid= 参照 181 件、room log 廃止前) |
+| 2026-09-19 | task | idea | [split-superseded-sections-to-archive](./2026-09-19-split-superseded-sections-to-archive.md) | DR の Superseded 節を archive へ分離する (docs lint PoC で 41 本発火、フラグ止まり) |
 | 2026-09-10 | task | open | [ecosystem-review-2026-09](./2026-09-10-ecosystem-review-2026-09.md) | エコシステム外部レビュー (2026-09) の指摘への対応検討 |
 | 2026-08-02 | design | open | [accum-cell-value-path-semantics](./2026-08-02-accum-cell-value-path-semantics.md) | accumulator セルへの link 値空間パスの意味論が未規定。v1 は Unsupported (definition-error) で塞ぐ裁定 (DR-127 第2波) |
 | 2026-07-29 | design | idea | [unset-variant-on-repeat-closure-interaction](./2026-07-29-unset-variant-on-repeat-closure-interaction.md) | unset variant を repeat 閉包を持つ要素へ撃つ場合の相互作用 (min 消費段・途中発火・再初期化) が未規定 |
